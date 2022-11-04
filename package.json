@@ -1,0 +1,100 @@
+{
+  "name": "cube-db",
+  "productName": "CubeDB",
+  "version": "1.0.0",
+  "description": "A big database for speedcubers and Rubik's Cube-related",
+  "homepage": "https://github.com/isaacvr/cube-db",
+  "private": true,
+  "type": "module",
+  "author": {
+    "name": "Isaac Vega",
+    "email": "isaacvega1996@gmail.com"
+  },
+  "keywords": [
+    "cube",
+    "rubik",
+    "speedsolving",
+    "speedcubing",
+    "wca",
+    "angular",
+    "angular 10",
+    "electron",
+    "nodejs",
+    "typescript",
+    "windows"
+  ],
+  "main": "src/index.js",
+  "scripts": {
+    "start": "concurrently \"npm:dev\" \"electron-forge start -- --serve\"",
+    "package": "electron-forge package",
+    "make": "electron-forge make",
+    "publish": "electron-forge publish",
+    "lint": "echo \"No linting configured\"",
+    "build": "vite build",
+    "dev": "vite",
+    "preview": "vite preview"
+  },
+  "license": "MIT",
+  "config": {
+    "forge": {
+      "packagerConfig": {},
+      "makers": [
+        {
+          "name": "@electron-forge/maker-squirrel",
+          "config": {
+            "name": "crawler"
+          }
+        },
+        {
+          "name": "@electron-forge/maker-zip",
+          "platforms": [
+            "darwin"
+          ]
+        },
+        {
+          "name": "@electron-forge/maker-deb",
+          "config": {}
+        },
+        {
+          "name": "@electron-forge/maker-rpm",
+          "config": {}
+        }
+      ]
+    }
+  },
+  "dependencies": {
+    "@electron/remote": "^2.0.8",
+    "chart.js": "2.9.3",
+    "chartjs-plugin-zoom": "0.7.7",
+    "electron-reload": "^1.5.0",
+    "electron-squirrel-startup": "^1.0.0",
+    "moment": "^2.29.4",
+    "nedb": "1.8.0",
+    "ng2-charts": "0.0.0",
+    "svelte-material-icons": "^2.0.4",
+    "svelte-routing": "^1.6.0",
+    "three": "0.120.1"
+  },
+  "devDependencies": {
+    "@electron-forge/cli": "^6.0.0-beta.50",
+    "@electron-forge/maker-deb": "^6.0.0-beta.50",
+    "@electron-forge/maker-rpm": "^6.0.0-beta.50",
+    "@electron-forge/maker-squirrel": "^6.0.0-beta.50",
+    "@electron-forge/maker-zip": "^6.0.0-beta.50",
+    "@sveltejs/vite-plugin-svelte": "^1.1.0",
+    "@tsconfig/svelte": "^3.0.0",
+    "autoprefixer": "^10.4.13",
+    "concurrently": "^5.1.0",
+    "electron": "8.0.2",
+    "electron-builder": "23.1.0",
+    "postcss": "^8.4.18",
+    "postcss-load-config": "^4.0.1",
+    "svelte": "^3.19.1",
+    "svelte-check": "^2.9.2",
+    "svelte-preprocess": "^4.10.7",
+    "tailwindcss": "^3.2.1",
+    "tslib": "^2.4.0",
+    "typescript": "^4.8.4",
+    "vite": "^3.2.2"
+  }
+}
