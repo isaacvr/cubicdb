@@ -1,5 +1,7 @@
-<script>
+<script lang="ts">
+  import { onMount, onDestroy } from 'svelte';
   import { Link } from 'svelte-routing';
+  import { currentPath } from '../stores/path';
 
   let parts = [
     { link: '/', name: "Home" },
@@ -7,39 +9,32 @@
     { link: '/', name: "Home" },
     { link: '/', name: "Home" },
   ];
-  // this.router.events.subscribe((event) => {
-  //     if (event instanceof NavigationEnd) {
-  //       let parts = decodeURIComponent(event.urlAfterRedirects).split('?')[0].split('/');
-  //       // console.log("URL: ", event.urlAfterRedirects);
 
-  //       this.parts.length = 0;
+  let pathSub;
 
-  //       this.parts.push({
-  //         name: 'Home',
-  //         link: '/'
-  //       });
+  onMount(() => {
+    pathSub = currentPath.subscribe((v) => {
+      let arr = v.split('?')[0].split('/').filter(e => e != '');
 
-  //       for (let i = 1, maxi = parts.length; i < maxi; i += 1) {
-  //         if ( parts[i].trim() === '' ) {
-  //           continue;
-  //         }
-          
-  //         if ( parts[i].indexOf('=') > -1 ) {
-  //           break;
-  //         } else {
-  //           this.parts.push({
-  //             name: decodeURIComponent(parts[i]),
-  //             link: decodeURIComponent(parts.slice(0, i + 1).join('/'))
-  //           });
-  //         }
-  //       }
-  //     }
-  //   });
+      parts.length = 0;
+      parts = [
+        { link: '/', name: 'Home' },
+        ...arr.map((e, p) => ({
+          link: "/" + arr.slice(0, p + 1).join('/'),
+          name: e
+        })),
+      ];
+    });
+  });
+
+  onDestroy(() => {
+    pathSub();
+  });
 </script>
 
-<nav class="w-full px-5 inline-flex mt-10 select-none">
+<nav class="w-full px-5 inline-flex mt-10 select-none fixed z-10">
   {#each parts as part}
-    <Link class="mr-1 rounded-sm shadow-md uppercase p-2"
-    to="{part.link}"> {part.name} </Link>
+  <Link class="mr-1 rounded-sm shadow-md uppercase p-2 bg-white bg-opacity-10 text-gray-400"
+  to="{part.link}"> {part.name} </Link>
   {/each}
 </nav>

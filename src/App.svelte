@@ -1,17 +1,25 @@
 <script lang="ts">
   import './App.css';
-  import { currentPath } from './stores/path.js';
-  import Frame from './components/Frame.svelte';
-  import Navbar from './components/Navbar.svelte';
+  /// Svelte Stuff
   import { Route, Router } from 'svelte-routing';
   import { globalHistory } from 'svelte-routing/src/history';
   import { onDestroy, onMount } from 'svelte';
+  
+  /// Components
+  import Frame from './components/Frame.svelte';
+  import Navbar from './components/Navbar.svelte';
   import Home from './components/Home.svelte';
   import Tutorials from './components/Tutorials.svelte';
+  import Timer from './components/timer/Timer.svelte';
+  
+  /// Services
+  import { currentPath } from './stores/path';
 
   let unsub;
 
   onMount(() => {
+    $currentPath = window.location.pathname;
+
     unsub = globalHistory.listen(({ location }) => {
       $currentPath = location.pathname;
     });
@@ -25,20 +33,9 @@
 <Router>
   <Frame />
   <Navbar />
-  <Route path="/" component={ Home }/>
-  <Route path="/tutorials" component={ Tutorials }/>
+  <main class="pt-24">
+    <Route path="/" component={ Home }/>
+    <Route path="/tutorials" component={ Tutorials }/>
+    <Route path="/timer" component={ Timer }/>
+  </main>
 </Router>
-
-<style lang="postcss" global>
-  .container {
-    @apply mt-4 px-5;
-  }
-
-  button {
-    @apply flex items-center justify-center;
-  }
-
-  button.stroked {
-    @apply border p-2 rounded-sm border-gray-500;
-  }
-</style>

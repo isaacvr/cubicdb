@@ -1,6 +1,5 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
-
 let NeDB = require('nedb');
 
 let win = null;
@@ -46,6 +45,8 @@ ipcMain.on('cards', (event) => {
 
 /// Tutorials handler
 ipcMain.on('get-tutorials', (event) => {
+  console.log("GET_TUTORIALS");
+  
   Tutorials.find({}, (err, tutorials) => {
     return event.sender.send('tutorial', ['get-tutorials', err ? null : tutorials]);
   });
@@ -70,7 +71,8 @@ ipcMain.on('update-tutorial', (event, arg) => {
       titleLower: arg.titleLower,
       puzzle: arg.puzzle,
       algs: arg.algs,
-      content: arg.content
+      content: arg.content,
+      level: arg.level || 0
     }
   }, function(err) {
     return event.sender.send('tutorial', [ 'update-tutorial', err ? null : arg ]);
@@ -92,8 +94,8 @@ ipcMain.on('add-session', (event, arg) => {
 
 ipcMain.on('remove-session', (event, arg) => {
   Solves.remove({ session: arg._id }, function(err) {
-    Sessions.remove({ _id: arg._id }, function(err1, session) {
-      return event.sender.send('session', [ 'remove-session', err1 ? null : session ]);
+    Sessions.remove({ _id: arg._id }, function(err1) {
+      return event.sender.send('session', [ 'remove-session', err1 ? null : arg ]);
     });
   });
 });
@@ -124,7 +126,7 @@ ipcMain.on('update-solve', (event, arg) => {
       penalty: arg.penalty
     }
   }, (err, n, solve) => {
-    return event.sender.send('solves', ['update-solve', err ? null : true ]);
+    return event.sender.send('solves', ['update-solve', err ? null : arg ]);
   });
 });
 
@@ -160,12 +162,9 @@ function createWindow() {
     frame: false,
     closable: true,
     webPreferences: {
-      // plugins: true,
-      // nodeIntegration: true,
-      // contextIsolation: false,
-      // backgroundThrottling: false,
-      // webSecurity: false,
-      // preload: path.join( app.getAppPath(), 'preload.js' ),
+      contextIsolation: true,
+      backgroundThrottling: false,
+      preload: path.join(__dirname, 'preload.js' ),
     },
     icon: __dirname + '/logo.png'
   });
@@ -203,6 +202,7 @@ function createWindow() {
 }
 
 try {
+  app.allowRendererProcessReuse = true;
   app.on('ready', () => setTimeout(createWindow, 400));
 
   app.on('window-all-closed', () => {

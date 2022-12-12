@@ -38,7 +38,7 @@
   }
 </script>
 
-<section class="w-full h-8 shadow-sm bg-gray-700 text-gray-400 fixed z-10 mb-3 select-none flex items-center">
+<section class="w-full h-8 shadow-sm bg-white bg-opacity-10 text-gray-400 fixed z-10 mb-3 select-none flex items-center">
 
   <img draggable="false" src="../assets/logo.png" alt="" class="ml-1 w-8 flex my-auto">
   

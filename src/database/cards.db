@@ -1,0 +1,5 @@
+{"title":"Tutorials","scramble":"","route":"/tutorials","cubeType":"rubik","cubeMode":0,"order":[3],"timer":false,"createdAt":1599815091901,"_id":"1tJu5QIHjPsXlztI"}
+{"title":"Algorithms","scramble":"F R' F' R U R U' R'","route":"/algorithms","cubeType":"rubik","cubeMode":9,"order":[3],"timer":false,"createdAt":1599815057146,"_id":"Oem7LZ5tteQaNY8B"}
+{"title":"Timer","scramble":"","route":"/timer","cubeType":"rubik","cubeMode":0,"order":[3],"timer":true,"createdAt":1599815113162,"_id":"ePktnYqNlhfO8Ft4"}
+{"title":"Settings","scramble":"","route":"/settings","cubeType":"rubik","cubeMode":11,"order":[2],"timer":false,"createdAt":1599815258510,"_id":"rS4AqC1aIVe5egwt"}
+{"title":"PLL Recognition","scramble":"M2 U M2 U2 M2 U M2","route":"/pll-trainer","cubeType":"rubik","cubeMode":2,"order":[3],"timer":true,"createdAt":1599815229306,"_id":"zYry263JJwrrBa2R"}

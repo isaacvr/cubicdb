@@ -3,6 +3,8 @@
 
   export let checked = false;
   export let undef = false;
+  export let label = '';
+  export let disabled = false;
   let _class = '';
   export { _class as class };
   
@@ -14,23 +16,31 @@
     !checked && dispatch('unchecked');
     dispatch('change', { value: checked });
   }
+
 </script>
 
-<div class={"wrapper " + _class}>
-  <div class:checked class:undef class="box" on:click={ toggle }>
+<div class="wrapper flex items-center" class:disabled>
+  <div class:checked class:undef class="box { _class }" on:click={ toggle }>
     <div class="mark"></div>
   </div>
+  {#if label} <span class="label ml-1 cursor-pointer" on:click={ toggle }> {label} </span> {/if}
 </div>
 
 <style lang="postcss">
   .box {
-    @apply flex items-center justify-center h-4 w-4
+    @apply flex items-center justify-center
     shadow-sm border-2 border-blue-400 rounded-sm
-    hover:cursor-pointer transition-all duration-100
-    hover:border-blue-500;
+    hover:cursor-pointer transition-all duration-100;
   }
 
-  .box.checked {
+  .wapper.disabled .box {
+    @apply border-gray-400;
+  }
+  .wapper:not(.disabled) .box {
+    @apply hover:border-blue-500;
+  }
+
+  .wrapper:not(.disabled) .box.checked {
     @apply bg-blue-400 hover:bg-blue-500;
   }
 

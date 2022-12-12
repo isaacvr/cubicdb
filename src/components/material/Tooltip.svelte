@@ -79,7 +79,7 @@
   }
 
   .tooltip {
-    @apply absolute bg-neutral-600 px-2
+    @apply fixed bg-neutral-600 px-2
       rounded-sm outline outline-1 outline-gray-600 flex
       transition-all text-neutral-200;
     width: max-content;
@@ -89,6 +89,7 @@
     left: var(--x);
     top: var(--y);
     z-index: 999;
+    font-size: 1rem;
   }
 
   .tooltip:not(.visible) {
