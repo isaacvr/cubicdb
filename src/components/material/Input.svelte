@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
+  import { createEventDispatcher, tick } from 'svelte';
 
   const dispatch = createEventDispatcher();
   
@@ -19,9 +19,9 @@
   let ref: HTMLInputElement;
 
   $: type = ['text', 'number', 'date'].indexOf(type) === -1 ? 'text' : type;
-  // $: focus ? (ref && ref.focus()) : null;
+  $: focus ? ref && tick().then(() => ref.focus()) : ref && tick().then(() => ref.blur());
   
-  function keyup(e: KeyboardEvent) { dispatch("keyup", e); }
+  function keyup(e: KeyboardEvent) { dispatch("keyup", e);  }
   function keydown(e: KeyboardEvent) { dispatch("keydown", e); }
   function input(e) { dispatch("input", e); }
 
@@ -31,7 +31,6 @@
   duration-200 border border-solid border-gray-400 wrapper { cl || "" }">
   {#if type === 'text'}
   <input
-    autofocus={ focus }
     bind:this={ref} bind:value
     on:keydown={keydown} on:keyup={keyup} on:input={ input }
     {disabled} type="text" { size } placeholder="">

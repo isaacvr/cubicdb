@@ -19,6 +19,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getSessions: () => ipc.send('get-sessions'),
   removeSession: (s) => ipc.send('remove-session', s),
   renameSession: (s) => ipc.send('rename-session', s),
+  updateSession: (s) => ipc.send('update-session', s),
   handleSessions: (dir) => ipc.on('session', dir),
   
   addTutorial: (t) => ipc.send('add-tutorial', t),

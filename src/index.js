@@ -87,7 +87,7 @@ ipcMain.on('get-sessions', (event) => {
 });
 
 ipcMain.on('add-session', (event, arg) => {
-  Sessions.insert({ name: arg.name }, function(err, session) {
+  Sessions.insert({ name: arg.name, settings: arg.settings }, function(err, session) {
     return event.sender.send('session', [ 'add-session', err ? null: session ]);
   });
 });
@@ -103,6 +103,12 @@ ipcMain.on('remove-session', (event, arg) => {
 ipcMain.on('rename-session', (event, arg) => {
   Sessions.update({ _id: arg._id }, { $set: { name: arg.name } }, function(err, session) {
     return event.sender.send('session', [ 'rename-session', err ? null : arg ]);
+  });
+});
+
+ipcMain.on('update-session', (event, arg) => {
+  Sessions.update({ _id: arg._id }, { $set: { name: arg.name, settings: arg.settings } }, function(err, session) {
+    return event.sender.send('session', [ 'update-session', err ? null : arg ]);
   });
 });
 
@@ -191,7 +197,13 @@ function createWindow() {
   Sessions.count({}, function(err, count) {
     if ( !count ) {
       Sessions.insert({
-        name: "Session 1"
+        name: "Session 1",
+        settings: {
+          hasInspection: true,
+          inspection: 15,
+          showElapsedTime: true,
+          calcAoX: 0
+        }
       });
     }
   });

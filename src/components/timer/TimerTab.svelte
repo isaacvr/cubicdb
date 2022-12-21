@@ -16,36 +16,35 @@
 
   /// Components
   import Tooltip from '@material/Tooltip.svelte';
-
-  /// Helpers
-  import timer from '@helpers/timer';
-  import { onDestroy, onMount } from 'svelte';
-  import { DataService } from '@stores/data.service';
   import Modal from '@components/Modal.svelte';
   import Button from '@components/material/Button.svelte';
   import TextArea from '@components/material/TextArea.svelte';
-    import Checkbox from '@components/material/Checkbox.svelte';
-    import Input from '@components/material/Input.svelte';
-    import Toggle from '@components/material/Toggle.svelte';
+  import Checkbox from '@components/material/Checkbox.svelte';
+  import Input from '@components/material/Input.svelte';
+  import Toggle from '@components/material/Toggle.svelte';
+
+  /// Helpers
+  import timer from '@helpers/timer';
+  import { onMount } from 'svelte';
+  import { DataService } from '@stores/data.service';
   
   export let context: TimerContext;
 
   const {
-    state, ready, tab, solves, allSolves, session, Ao5, stats, calcAoX,
+    state, ready, tab, solves, allSolves, session, Ao5, stats,
     scramble, group, mode, hintDialog, hint, cross, xcross, preview,
     sortSolves, initScrambler, updateStatistics, selectedGroup, setConfigFromSolve
   } = context;
   
   /// LAYOUT
   const textColor = 'text-gray-400';
-  let enableKeyboard: boolean = true;
   let isValid: boolean = true;
   let ref: number = 0;
   let refPrevention: number = 0;
   let itv: any;
   let selected: number = 0;
-  let hasInspection: boolean = false;
-  let inspectionTime: number = 15000;
+  // let hasInspection: boolean = false;
+  // let inspectionTime: number = 15000;
   let lastSolve: Solve;
   let prob: number = null;
   let prevExpanded: boolean = false;
@@ -63,6 +62,7 @@
   let openDialog = (ev: string, dt: any, fn: Function) => {
     type = ev; modalData = dt; closeHandler = fn; show = true;
   };
+  
   let options = [
     { text: "Reload", icon: Refresh, handler: () => initScrambler() },
     { text: "Edit", icon: Pencil, handler: () => {
@@ -73,21 +73,12 @@
     } },
     { text: "Copy scramble", icon: Copy, handler: () => copyToClipboard() },
     { text: "Settings", icon: Settings, handler: () => {
-      openDialog('settings', {
-        hasInspection, inspection: inspectionTime / 1000,
-        showElapsedTime: showTime, calcAoX: $calcAoX
-      }, (data) => {
-        if ( data ) {
-          hasInspection = data.hasInspection;
-          inspectionTime = data.inspection * 1000;
-          showTime = data.showElapsedTime;
+      let initialCalc = $session.settings.calcAoX;
 
-          if ( $calcAoX != data.calcAoX ) {
-            $calcAoX = data.calcAoX;
-            updateStatistics(false);
-          } else {
-            $calcAoX = data.calcAoX;
-          }
+      openDialog('settings', $session, (data) => {
+        if ( data && initialCalc != $session.settings.calcAoX ) {
+          dataService.updateSession($session);
+          updateStatistics(false);
         }
       });
     } },
@@ -95,14 +86,21 @@
 
   /// CLOCK
   let time: number = 0;
-  let showTime: boolean = true;
+  // let showTime: boolean = true;
   let decimals: boolean = true;
   let solveControl = [
-    { text: "Delete", icon: Close, handler: () => {} },
-    { text: "DNF", icon: ThumbDown, handler: () => {} },
-    { text: "+2", icon: Flag, handler: () => {} },
-    { text: "Comment", icon: Comment, handler: () => {} },
-    // delete([lastSolve]), dnf(), plus2(), editSolve(lastSolve)
+    { text: "Delete", icon: Close, highlight: _ => false, handler: () => {
+      dataService.removeSolves([ $solves[0] ]);
+      reset();
+    }},
+    { text: "DNF", icon: ThumbDown, highlight: (s) => s.penalty === Penalty.DNF, handler: () => {
+      $solves[0].penalty = $solves[0].penalty === Penalty.DNF ? Penalty.NONE : Penalty.DNF;
+      dataService.updateSolve($solves[0]);
+    } },
+    { text: "+2", icon: Flag, highlight: (s) => s.penalty === Penalty.P2, handler: () => {
+      $solves[0].penalty = $solves[0].penalty === Penalty.P2 ? Penalty.NONE : Penalty.P2;
+      dataService.updateSolve($solves[0]);
+    } },
   ];
 
   const dataService = DataService.getInstance();
@@ -140,7 +138,7 @@
   }
 
   function keyDown(event: KeyboardEvent) {
-    if ( !enableKeyboard ) {
+    if ( (<any> window).modals ) {
       return;
     }
     
@@ -240,10 +238,10 @@
   }
 
   function keyUp(event: KeyboardEvent) {
-    if ( !enableKeyboard ) {
+    if ( (<any> window).modals ) {
       return;
     }
-    
+
     if ( $tab ) {
       return;
     }
@@ -255,13 +253,13 @@
         if ( $ready ) {
           createNewSolve();
           
-          if ( hasInspection ) {
+          if ( $session.settings.hasInspection ) {
             debug('INSPECTION');
             $state = TimerState.INSPECTION;
             decimals = false;
             time = 0;
             $ready = false;
-            ref = performance.now() + inspectionTime;
+            ref = performance.now() + $session.settings.inspection * 1000;
             runTimer(-1, true);
           } else {
             debug('RUNNING');
@@ -314,19 +312,13 @@
   }
 
   onMount(() => {
-    window.addEventListener('keyup', keyUp);
-    window.addEventListener('keydown', keyDown);
-
     $group = 0;
     selectedGroup();
     updateStatistics(false);
   });
-
-  onDestroy(() => {
-    window.removeEventListener('keyup', keyUp);
-    window.removeEventListener('keydown', keyDown);
-  })
 </script>
+
+<svelte:window on:keyup={ keyUp } on:keydown={ keyDown }></svelte:window>
 
 <div class="w-full h-full { textColor }">
   <div id="scramble" class="transition-all duration-300">
@@ -352,16 +344,16 @@
       class="timer { textColor }"
       class:prevention={ $state === TimerState.PREVENTION }
       class:ready={$ready}
-      hidden={$state === TimerState.RUNNING && !showTime}
+      hidden={$state === TimerState.RUNNING && !$session.settings.showElapsedTime}
       >{timer(time, decimals, false)}</span>
     <span
       class="timer"
-      hidden={!($state === TimerState.RUNNING && !showTime)}>----</span>
+      hidden={!($state === TimerState.RUNNING && !$session.settings.showElapsedTime)}>----</span>
     {#if $state === TimerState.STOPPED}
       <div class="flex justify-center w-full" class:show={$state === TimerState.STOPPED}>
         {#each solveControl as control}
           <Tooltip class="cursor-pointer" position="top" text={ control.text }>
-            <div class="my-3 mx-1 w-5 h-5" on:click={ control.handler }>
+            <div class="my-3 mx-1 w-5 h-5 { control.highlight($solves[0]) ? 'text-red-500' : '' }" on:click={ control.handler }>
               <svelte:component this={control.icon} width="100%" height="100%"/>
             </div>
           </Tooltip>
@@ -483,9 +475,9 @@
           {#each $solves as s }
             <span class="
               col-span-3 cursor-pointer hover:text-blue-400 my-2 text-left
-              text-ellipsisoverflow-hidden whitespace-nowrap
+              text-ellipsis overflow-hidden whitespace-nowrap
             " on:click={ () => select(s) }>{ s.scramble }</span>
-            <span class="col-span-1">{ timer(s.time, false, true) }</span>
+            <span class="col-span-1 flex items-center justify-center">{ timer(s.time, false, true) }</span>
           {/each}
         </div>
       {/if}
@@ -493,26 +485,26 @@
       {#if type === 'settings'}
         <section>
           <Checkbox
-            bind:checked={ modalData.hasInspection }
+            bind:checked={ modalData.settings.hasInspection }
             class="w-5 h-5" label="Inspection"/>
           
-          <Input type="number" class="mt-2 bg-gray-700 hidden-markers { modalData.hasInspection ? 'text-gray-200' : '' }"
-            disabled={ !modalData.hasInspection } bind:value={ modalData.inspection }
+          <Input type="number" class="mt-2 bg-gray-700 hidden-markers { modalData.settings.hasInspection ? 'text-gray-200' : '' }"
+            disabled={ !modalData.settings.hasInspection } bind:value={ modalData.settings.inspection }
             min={5} max={60} step={5}/>
         </section>
         <section>
-          <Checkbox bind:checked={ modalData.showElapsedTime } class="w-5 h-5 my-2" label="Show time when running"/>
+          <Checkbox bind:checked={ modalData.settings.showElapsedTime } class="w-5 h-5 my-2" label="Show time when running"/>
         </section>
         <section class="mt-4">
           AoX calculation:
           <div class="flex gap-2 items-center">
-            <Toggle checked={ !!modalData.calcAoX } on:change={ (v) => modalData.calcAoX = ~~v.detail.value }/>
-            <span class="ml-3">{ ['Sequential', 'Group of X'][ ~~modalData.calcAoX ] }</span>
+            <Toggle checked={ !!modalData.settings.calcAoX } on:change={ (v) => modalData.settings.calcAoX = ~~v.detail.value }/>
+            <span class="ml-3">{ ['Sequential', 'Group of X'][ ~~modalData.settings.calcAoX ] }</span>
           </div>
         </section>
         <section class="flex mt-4">
           <Button flat on:click={ () => modal.close() }>Cancel</Button>
-          <Button flat on:click={ () => modal.close(modalData) }>Save</Button>
+          <Button flat on:click={ () => modal.close(true) }>Save</Button>
         </section>
       {/if}
     </div>

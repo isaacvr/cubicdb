@@ -35,7 +35,9 @@
   let LAST_CLICK = 0;
 
   let modal;
+  let deleteAllModal;
   let show = false;
+  let showDeleteAll = false;
   let sSolve: Solve;
   let gSolve: Solve;
   let preview = '';
@@ -51,7 +53,6 @@
   }
 
   function editSolve(s: Solve) {
-    console.log('editSolve');
     gSolve = s;
     sSolve = { ...s };
     
@@ -93,7 +94,7 @@
   }
 
   function deleteAll() {
-    console.log('Delete All');
+    showDeleteAll = true;
   }
 
   function selectAll() {
@@ -235,6 +236,14 @@
         <button mat-button (click)="setPenalty(0)" [class.green]="rawData.penalty == 0">No Penalty</button> -->
       </div>
     <!-- {/if} -->
+  </Modal>
+
+  <Modal bind:this={ deleteAllModal } bind:show={ showDeleteAll } onClose={ (res) => res && _delete($solves) }>
+    <h1 class="text-gray-400 mb-4 text-lg">Do you want to remove all solves?</h1>
+    <div class="flex justify-evenly">
+      <Button on:click={ () => deleteAllModal.close() }>Cancel</Button>
+      <Button class="bg-red-800 hover:bg-red-700 text-gray-400" on:click={ () => deleteAllModal.close(true) }>Delete</Button>
+    </div>
   </Modal>
 </main>
 

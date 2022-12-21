@@ -24,6 +24,12 @@
       ready: false,
       cube: '/assets/cube.png',
     }, {
+      title: "PLL Recognition",
+      route: "/pll-trainer",
+      timer: true,
+      ready: false,
+      cube: '/assets/pll.png',
+    }, {
       title: "Puzzle simulator",
       route: "/simulator",
       timer: true,
@@ -36,12 +42,6 @@
       ready: false,
       cube: '/assets/logo.png',
       puzzle: Puzzle.fromSequence("z2", { type: 'rubik', mode: CubeMode.GRAY, order: [2] }, true)
-    }, {
-      title: "PLL Recognition",
-      route: "/pll-trainer",
-      timer: true,
-      ready: false,
-      cube: '/assets/pll.png',
     }, {
       title: 'Import / Export',
       route: '/import_export',

@@ -35,6 +35,7 @@ interface IPC extends IpcRenderer {
   getSessions?: (args?) => any;
   removeSession?: (args?) => any;
   renameSession?: (args?) => any;
+  updateSession?: (args?) => any;
   handleSessions?: (args?) => any;
 
   addTutorial?: (args?) => any;
@@ -175,6 +176,11 @@ export class DataService {
   renameSession(s: Session) {
     // this.isElectron && this.ipc.send('rename-session', s);
     this.isElectron && this.ipc.renameSession(s);
+  }
+
+  updateSession(s: Session) {
+    // this.isElectron && this.ipc.send('rename-session', s);
+    this.isElectron && this.ipc.updateSession(s);
   }
 
   minimize() {

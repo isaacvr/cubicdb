@@ -66,16 +66,27 @@
 
   function updateChart(sv: Solve[]) {
     const len = sv.length - 1;
-    chart.data.datasets[0].data = <any> sv.map((e, p) => ({x: p.toString(), y: sv[len - p].time }));
 
+    /// Regular solves
+    chart.data.datasets[0].data = <any> sv.map((e, p) => ({x: p.toString(), y: sv[len - p].time }));
+      
     let avgs = [ 5, 12, 50, $AoX ];
 
+    /// Ao5 to AoX
     avgs.forEach((e, i) => {
       chart.data.datasets[i + 1].data = <any> getAverage(e, sv, calcAoX).map((e, p) => ({ x: p.toString(), y: e }));
       chart.data.datasets[i + 1].label = 'Ao' + e;
     });
-
+    
+    /// Best solves
     chart.data.datasets[5].data = getBest(sv, true);
+    
+    /// Least square
+    const lsqr = sv.reduce((acc, y, x) => [acc[0] + x, acc[1] + y.time, acc[2] + x ** 2, acc[3] + x * y.time], [0, 0, 0, 0]);
+    const m = ( (len + 1) * lsqr[3] - lsqr[0] * lsqr[1] ) / ( (len + 1) * lsqr[2] - lsqr[0] ** 2 );
+    const n = (lsqr[1] - m * lsqr[0]) / (len + 1);
+    chart.data.datasets[6].data = <any>[{ x: "0", y: n }, { x: len.toString(), y: m * len + n }];
+    
     chart.update();
   }
 
@@ -83,12 +94,15 @@
     const common = {
       showLine: true,
       fill: false,
-      tension: .2,
+      tension: .1,
       xAxisID: 'xAxis',
       yAxisID: 'yAxis',
     };
 
     ctx = chartElement.getContext('2d');
+    
+    Chart.defaults.color = '#bbbbbb';
+
     chart = new Chart(ctx, {
       type: 'line',
       data: {
@@ -99,6 +113,7 @@
           { data: [], type: 'scatter', hidden: true, label: 'Ao50', ...common },
           { data: [], type: 'scatter', hidden: true, label: 'AoX', ...common },
           { data: [], type: 'scatter', label: 'Best', borderDash: [5, 5], ...common },
+          { data: [], type: 'scatter', label: 'Trend', borderDash: [5, 5], ...common,  },
         ]
       },
       options: {
@@ -113,7 +128,6 @@
             position: 'left',
             grid: { color: '#555' },
             ticks: {
-              color: '#bbbbbb',
               callback: (value: number) => timer(value, false, true)
             }
           }

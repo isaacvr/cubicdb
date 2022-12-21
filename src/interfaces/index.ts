@@ -8,6 +8,15 @@ import type { Writable } from 'svelte/store';
 export declare type PuzzleType = 'rubik' | 'skewb' | 'square1' | 'pyraminx' | 'axis' | 'fisher' | 'ivy' | 'clock' | 'megaminx' | 'mirror' | 'dino' | 'rex' | 'redi' | 'mixup' | 'pyramorphix' | 'gear' | 'dreidel' | 'bandaged222' | 'bicube' | 'square2';
 export declare type CubeView = 'plan' | 'trans' | '2d';
 
+export enum TimerState {
+  CLEAN = 0, STOPPED = 1, PREVENTION = 2, INSPECTION = 3, RUNNING = 4
+};
+
+export enum AverageSetting {
+  SEQUENTIAL = 0,
+  GROUP = 1
+}
+
 export interface Card {
   title: string;
   cube: string;
@@ -101,11 +110,19 @@ export interface Solve {
   prob?: number;
 }
 
+export interface Settings {
+  hasInspection: boolean;
+  inspection: number;
+  showElapsedTime: boolean;
+  calcAoX: AverageSetting;
+}
+
 export interface Session {
   _id: string;
   name: string;
   editing?: boolean;
   tName?: string;
+  settings: Settings;
 }
 
 export interface TimerPuzzleCategory {
@@ -190,19 +207,10 @@ export interface TimerContext {
   xcross: Writable<string>;
   preview: Writable<string>;
   prob: Writable<number>;
-  calcAoX: Writable<AverageSetting>;
+  
   sortSolves();
   updateStatistics(inc ?: boolean);
   initScrambler(scr?: string, _mode ?: string);
   selectedGroup();
   setConfigFromSolve(s: Solve);
-}
-
-export enum TimerState {
-  CLEAN = 0, STOPPED = 1, PREVENTION = 2, INSPECTION = 3, RUNNING = 4
-};
-
-export enum AverageSetting {
-  SEQUENTIAL = 0,
-  GROUP = 1
 }

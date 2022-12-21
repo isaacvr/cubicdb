@@ -1,5 +1,3 @@
-import { max } from "rxjs/operators";
-
 const scrambleReg = /^([\d]+)?([FRUBLDfrubldzxySME])(?:([w])|&sup([\d]);)?([2'])?$/;
 
 export class ScrambleParser {

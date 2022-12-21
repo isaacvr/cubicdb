@@ -92,7 +92,7 @@
   let xcross = writable<string>();
   let preview = writable<string>("");
   let prob = writable<number>(null);
-  let calcAoX = writable<AverageSetting>(AverageSetting.SEQUENTIAL);
+  // let calcAoX = writable<AverageSetting>(AverageSetting.SEQUENTIAL);
         
   function getAverage(n: number, arr: Solve[], calc: AverageSetting): number[] {
     let res = [];
@@ -154,7 +154,7 @@
     }, 0) ) : null;
     
     for (let i = 0, maxi = AON.length; i < maxi; i += 1) {
-      let avgs = getAverage(AON[i], $solves, $calcAoX);
+      let avgs = getAverage(AON[i], $solves, $session?.settings?.calcAoX);
       BEST[i] = avgs.reduce((b, e) => (e) ? Math.min(b, e) : b, BEST[i]);
       let lastAvg = avgs.pop();
       AVG[i] = ( lastAvg ) ? lastAvg : -1;
@@ -186,9 +186,6 @@
       //   color: '#00ff0099'
       // });
     }
-
-    console.log("UPDATE STATS: ", $stats);
-
   }
 
   function updateSolves() {
@@ -239,6 +236,7 @@
     if ( sessions.indexOf( $session ) < 0 ) {
       $session = sessions[0];
     }
+    closeAddSession();
     openEdit = false;
   }
 
@@ -249,10 +247,13 @@
     }
   }
 
-  function handleInputKeyUp(e: any) {
+  function handleInputKeyUp(ce: any) {
+    const e = ce.detail;
     e.stopPropagation();
     if ( e.key === 'Enter' ) {
       newSession();
+    } else if ( e.key === 'Escape' ) {
+      closeAddSession();
     }
   }
 
@@ -317,7 +318,12 @@
     let name = newSessionName.trim();
 
     if ( name != '' ) {
-      dataService.addSession({ _id: null, name });
+      dataService.addSession({ _id: null, name, settings: {
+        hasInspection: true,
+        showElapsedTime: true,
+        inspection: 15,
+        calcAoX: AverageSetting.SEQUENTIAL,
+      } });
       closeAddSession();
       selectedSession();
     }
@@ -329,13 +335,13 @@
     }
   }
 
-  function updateSession(s: Session) {
+  function renameSession(s: Session) {
     s.editing = false;
 
     if ( s.tName.trim() === '' ) {
       return;
     }
-    dataService.renameSession({ _id: s._id, name: s.tName.trim() });
+    dataService.updateSession({ _id: s._id, name: s.tName.trim(), settings: s.settings });
   }
 
   onMount(() => {
@@ -395,10 +401,12 @@
             localStorage.setItem('session', $session._id); 
             break;
           }
-          case 'rename-session': {
+          case 'rename-session':
+          case 'update-session': {
             let session = <Session> data.data;
-            let renamedSession = sessions.find(s => s._id === session._id);
-            renamedSession.name = session.name;
+            let updatedSession = sessions.find(s => s._id === session._id);
+            updatedSession.name = session.name;
+            updatedSession.settings = session.settings;
             sessions = sessions;
             break;
           }
@@ -432,7 +440,7 @@
 
   let context: TimerContext = {
     state, ready, tab, solves, allSolves, session, Ao5, AoX, stats, scramble,
-    group, mode, hintDialog, hint, cross, xcross, preview, prob, calcAoX,
+    group, mode, hintDialog, hint, cross, xcross, preview, prob,
     sortSolves, updateStatistics, initScrambler, selectedGroup, setConfigFromSolve
   };
 
@@ -527,47 +535,44 @@
           <Input
             disabled={ !s.editing }
             class="bg-transparent text-gray-400 flex-1 { !s.editing ? 'border-transparent' : '' }"  
-            bind:value={ s.tName }/>
+            bind:value={ s.tName } focus={ s.editing } on:keyup={ (e) => {
+              switch ( e.detail.code ) {
+                case 'Enter': {
+                  s.editing = false;
+                  renameSession(s);
+                  break;
+                }
+                case 'Escape': {
+                  e.detail.stopPropagation();
+                  s.editing = false;
+                  break;
+                }
+              }
+            }}/>
           <div class="flex mx-2 flex-grow-0 w-10 items-center justify-center">
-            {#if s.editing && !creatingSession}
-              <span class="text-gray-400 w-8 h-8 cursor-pointer" on:click={ () => updateSession(s) }>
-                <CheckIcon width="100%" height="100%"/>
-              </span>
-              <span class="text-gray-400 w-8 h-8 cursor-pointer" on:click={() => s.editing = false}>
-                <CloseIcon width="100%" height="100%"/>
-              </span>
-            {/if}
-
             {#if !s.editing && !creatingSession}
-              <span class="text-gray-400 w-8 h-8 cursor-pointer" on:click={() => s.editing = true}>
+              <span class="text-gray-400 w-8 h-8 cursor-pointer" on:click={() => {
+                sessions.forEach(s1 => s1.editing = false);
+                s.editing = true;
+              }}>
                 <PencilIcon width="100%" height="100%"/>
               </span>
               <span class="text-gray-400 w-8 h-8 cursor-pointer" on:click={() => deleteSession(s)}>
                 <DeleteIcon width="100%" height="100%"/>
               </span>
             {/if}
+
+            {#if s.editing && !creatingSession}
+              <span class="text-gray-400 w-8 h-8 cursor-pointer" on:click={ () => renameSession(s) }>
+                <CheckIcon width="100%" height="100%"/>
+              </span>
+              <span class="text-gray-400 w-8 h-8 cursor-pointer" on:click={() => s.editing = false}>
+                <CloseIcon width="100%" height="100%"/>
+              </span>
+            {/if}
           </div>
         </div>
       {/each}
-      <!--
-        <tr *ngFor="let s of rawData">
-          <td>
-            <mat-form-field>
-              <input
-                #newName
-                (keyup.enter)="updateSession(s, newName.value)"
-                [value]="s.name"
-                [disabled]="!s.editing" matInput type="text">
-            </mat-form-field>
-          </td>
-          <td>
-            <mat-icon *ngIf="s.editing && !creatingSession" (click)="updateSession(s, newName.value)" svgIcon="check"></mat-icon>
-            <mat-icon *ngIf="s.editing && !creatingSession" (click)="s.editing = false" svgIcon="close"></mat-icon>
-            <mat-icon *ngIf="!s.editing && !creatingSession" (click)="s.editing = true" svgIcon="pencil"></mat-icon>
-            <mat-icon *ngIf="!s.editing && !creatingSession && rawData.length > 1" (click)="deleteSession(s)" svgIcon="delete"></mat-icon>
-          </td>
-        </tr>
-      -->
     </div>
   </Modal>
 </main>
