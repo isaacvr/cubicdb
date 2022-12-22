@@ -1,12 +1,13 @@
 <script lang="ts">
+  import { evalLine, map, rotatePoint, rotateSegment } from '@helpers/math';
   import timer from '@helpers/timer';
-  import { AverageSetting, Penalty, type Solve } from '@interfaces';
-  import Chart from 'chart.js/auto';
+  import { AverageSetting, Penalty, type Solve, type TimerContext } from '@interfaces';
+  import Chart, { type Plugin } from 'chart.js/auto';
   import { onMount } from 'svelte';
 
-  export let context;
+  export let context: TimerContext;
 
-  let { solves, AoX } = context;
+  let { solves, AoX, stats } = context;
   
   const calcAoX = AverageSetting.SEQUENTIAL;
   let chartElement: HTMLCanvasElement;
@@ -86,7 +87,6 @@
     const m = ( (len + 1) * lsqr[3] - lsqr[0] * lsqr[1] ) / ( (len + 1) * lsqr[2] - lsqr[0] ** 2 );
     const n = (lsqr[1] - m * lsqr[0]) / (len + 1);
     chart.data.datasets[6].data = <any>[{ x: "0", y: n }, { x: len.toString(), y: m * len + n }];
-    
     chart.update();
   }
 
@@ -102,6 +102,50 @@
     ctx = chartElement.getContext('2d');
     
     Chart.defaults.color = '#bbbbbb';
+
+    const shadingArea: Plugin = {
+      id: 'shadingArea',
+      beforeDatasetsDraw(ch) {
+        const { ctx, scales: {yAxis} } = ch;
+        const { data, hidden } = ch.getDatasetMeta(6);
+
+        if ( data.length < 2 || hidden ) {
+          return;
+        }
+        
+        // Data coordinates
+        let pd1 = [data[0].x, data[0].y];
+        let pd2 = [data[1].x, data[1].y];
+        let dev = (yAxis.max - yAxis.min) * $stats.dev.value / yAxis.height / 500;
+        let rv = rotatePoint(pd2[0] - pd1[0], pd2[1] - pd1[1], Math.PI / 2);
+        let norm = Math.sqrt( rv[0] ** 2 + rv[1] ** 2 );
+        rv = rv.map(e => e * dev / norm);
+
+        // Rectangle in data coordinates
+        let p1 = evalLine(pd1[0], pd1[0] + rv[0], pd1[1] + rv[1], pd2[0] + rv[0], pd2[1] + rv[1]);
+        let p2 = evalLine(pd2[0], pd1[0] + rv[0], pd1[1] + rv[1], pd2[0] + rv[0], pd2[1] + rv[1]);
+        let p3 = evalLine(pd2[0], pd1[0] - rv[0], pd1[1] - rv[1], pd2[0] - rv[0], pd2[1] - rv[1]);
+        let p4 = evalLine(pd1[0], pd1[0] - rv[0], pd1[1] - rv[1], pd2[0] - rv[0], pd2[1] - rv[1]);
+
+        // Rectangle in graphic coordinates
+        let pg1 = [ pd1[0], p1 ];
+        let pg2 = [ pd2[0], p2 ];
+        let pg3 = [ pd2[0], p3 ];
+        let pg4 = [ pd1[0], p4 ];
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.fillStyle = 'rgba(255, 255, 255, .1)';
+        ctx.moveTo(pg1[0], pg1[1]);
+        ctx.lineTo(pg2[0], pg2[1]);
+        ctx.lineTo(pg3[0], pg3[1]);
+        ctx.lineTo(pg4[0], pg4[1]);
+        ctx.lineTo(pg1[0], pg1[1]);
+        ctx.fill();
+        ctx.restore();
+
+      }
+    };
 
     chart = new Chart(ctx, {
       type: 'line',
@@ -145,9 +189,10 @@
               },
               title: (items) => `Solve #${items[0].parsed.x + 1}`
             }
-          }
+          },
         }
-      }
+      },
+      plugins: [ shadingArea ],
     });
 
     updateChart($solves);

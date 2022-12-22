@@ -30,6 +30,11 @@ body {
   @apply mt-4 px-5;
 }
 
+.puzzle-img {
+  @apply w-40 h-40;
+}
+
+/* Custom scrollbar */
 ::-webkit-scrollbar {
   width: .7rem;
 }

@@ -8,17 +8,12 @@
   export let items: any[];
   export let onChange = (item?: any, pos?: number) => {};
   export let label = (item?: any) => (item || "");
+  export let transform = (item: any) => item.value;
 
   let showOptions = false;
 
   function handleClick(e: MouseEvent) {
     showOptions = true;
-  }
-
-  function getContent() {
-    let p = items.indexOf(value);
-    console.log(items, value, p);
-    return p < 0 ? placeholder : label(items[p]);
   }
 </script>
 
@@ -28,7 +23,7 @@
   <div
     on:click|self|stopPropagation={handleClick}
     class="content bg-gray-700 p-2 h-10 rounded-md select-none pr-8">{
-    items.indexOf(value) < 0 ? placeholder : label( items.find(e => e == value) )
+    items.some(a => transform(a) === value) ? label( items.find(e => transform(e) === value) ) : placeholder
   }</div>
   <div class="expand w-5 h-5 absolute right-2 top-3 pointer-events-none">
     <ExpandIcon width="100%" height="100%"/>
@@ -43,7 +38,7 @@
         class="option transition-all duration-200 hover:bg-gray-800 p-1 rounded-md"
         on:click={ () => {
           showOptions = false;
-          value = item;
+          value = transform(item);
           onChange(item, pos);
         } }>{ label(item) }</span>
     {/each}

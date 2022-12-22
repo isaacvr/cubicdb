@@ -458,20 +458,20 @@
     
     <Select
       placeholder="Select session..."
-      value={ $session } items={ sessions } label={ (s) => (s || {}).name }
+      value={ $session } items={ sessions } label={ (s) => (s || {}).name } transform={ e => e }
       onChange={ (g) => { $session = g; selectedSession(); } }
     />
 
     {#if $tab === 0}
       <Select
         placeholder="Select group"
-        value={ groups[$group] } items={ groups }
+        value={ groups[$group] } items={ groups } transform={ e => e }
         onChange={ (g, p) => { $group = p; selectedGroup(); } }
       />
 
       <Select
         placeholder={['Select mode']}
-        value={ $mode } items={ modes } label={ e => e[0] }
+        value={ $mode } items={ modes } label={ e => e[0] } transform={ e => e }
         onChange={ (g) => { $mode = g; selectedMode(); } }
         />
     {/if}
@@ -487,15 +487,8 @@
     {#if $tab === 2}
       <Input min={3} max={100}
         class="hidden-markers bg-gray-700 rounded-md"
-        type="number" bind:value={ $AoX }/>
+        type="number" bind:value={ $AoX } on:keyup={ e => e.detail.stopPropagation() }/>
     {/if}
-    <!--
-    <mat-form-field *ngIf="tab == 2">
-      <input matInput
-        [value]="AoX"
-        (change)="changeAoX($event)"
-        type="number" value="100" min="10" max="10000" step="1">
-    </mat-form-field> -->
   </div>
 
   <TabGroup bind:this={ tabs } class="absolute w-full" onChange={ t => $tab = t }>

@@ -76,9 +76,9 @@
       let initialCalc = $session.settings.calcAoX;
 
       openDialog('settings', $session, (data) => {
-        if ( data && initialCalc != $session.settings.calcAoX ) {
+        if ( data ) {
           dataService.updateSession($session);
-          updateStatistics(false);
+          initialCalc != $session.settings.calcAoX && updateStatistics(false);
         }
       });
     } },

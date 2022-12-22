@@ -1,24 +1,30 @@
-<script lang="ts">
-  interface Column {
+<script context="module" lang="ts">
+  export interface Column {
     name: string;
     text: string;
   };
+</script>
 
-  import { onMount } from "svelte";
+<script lang="ts">
   import Checkbox from "./Checkbox.svelte";
   let selectAll = false;
+  let cl = '';
   export let title: string = '';
   export let columns: Column[] = [];
   export let rows: any[] = [];
+  export let selection: boolean = false;
+  export let map = (item?: any) => item;
+  export { cl as class };
+
   let _rows: any[] = [];
 
   $: {
-    rows.length > _rows.length && _rows.concat( (new Array(rows.length - _rows.length).fill(false)) );
+    rows.length > _rows.length && _rows.concat( (new Array(rows.length - _rows.length).fill( (new Array(columns.length).fill(false)) )) );
     rows.length < _rows.length && (_rows = _rows.slice(0, rows.length));
+    _rows = rows.map((r, p) => [ (_rows[p] || [!1])[0], ...map(r) ]);
+    console.log("_ROWS: ", _rows, rows);
     changeSingle();
   }
-
-  onMount(() => { _rows = rows.map(() => false); });
 
   function changeAll(ev) {
     let v = ev.detail.value;
@@ -30,35 +36,29 @@
   }
 </script>
 
-<div class="wrapper">
+<div class="wrapper {cl || ''}">
   <h2>{title}</h2>
   <table>
     <thead>
       <tr>
-        <th><Checkbox bind:checked={ selectAll } on:change={changeAll}/></th>
+        {#if selection}<th><Checkbox bind:checked={ selectAll } on:change={changeAll}/></th>{/if}
         {#each columns as hd}
         <th>{hd.text}</th>
         {/each}
       </tr>
     </thead>
     <tbody>
-      <tr class:selected={ _rows[0] }>
-        <td><Checkbox bind:checked={_rows[0]} on:change={changeSingle}/></td>  
-        <td>2</td>
-        <td>3</td>
-        <td>4</td>
-      </tr>
-      <!-- {#each _rows as r}
+      {#each _rows as r}
       <tr class:selected={ r[0] }>
         {#each r as v, i}
           {#if i == 0}
-          <td><Checkbox bind:checked={r[0]} on:change={changeSingle}/></td>  
+            {#if selection} <td><Checkbox bind:checked={r[0]} on:change={changeSingle}/></td> {/if}
           {:else}
           <td>{v}</td>
           {/if}
         {/each}
       </tr>
-      {/each} -->
+      {/each}
     </tbody>
   </table>
 </div>
@@ -77,7 +77,7 @@
   }
 
   thead tr {
-    @apply border-b border-b-gray-300 text-gray-500;
+    @apply border-b border-b-gray-300 text-gray-400;
   }
 
   td, th {
@@ -89,14 +89,14 @@
   }
 
   tbody tr:nth-child(even) {
-    @apply bg-gray-200;
+    @apply bg-gray-500;
   }
 
   tbody tr:nth-child(odd) {
-    @apply bg-gray-300;
+    @apply bg-gray-600;
   }
 
   tbody tr.selected {
-    @apply bg-blue-200;
+    @apply bg-blue-300;
   }
 </style>

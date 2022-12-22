@@ -6,11 +6,12 @@
   import { onDestroy, onMount } from 'svelte';
   
   /// Components
-  import Frame from './components/Frame.svelte';
-  import Navbar from './components/Navbar.svelte';
-  import Home from './components/Home.svelte';
-  import Tutorials from './components/Tutorials.svelte';
-  import Timer from './components/timer/Timer.svelte';
+  import Frame from '@components/Frame.svelte';
+  import Navbar from '@components/Navbar.svelte';
+  import Home from '@components/Home.svelte';
+  import Tutorials from '@components/Tutorials.svelte';
+  import Timer from '@components/timer/Timer.svelte';
+  import PllTrainer from '@components/PllTrainer.svelte';
   
   /// Services
   import { currentPath } from './stores/path';
@@ -37,5 +38,6 @@
     <Route path="/" component={ Home }/>
     <Route path="/tutorials" component={ Tutorials }/>
     <Route path="/timer" component={ Timer }/>
+    <Route path="/pll-trainer" component={ PllTrainer }/>
   </main>
 </Router>

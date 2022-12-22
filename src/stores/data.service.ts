@@ -179,7 +179,7 @@ export class DataService {
   }
 
   updateSession(s: Session) {
-    // this.isElectron && this.ipc.send('rename-session', s);
+    // this.isElectron && this.ipc.send('update-session', s);
     this.isElectron && this.ipc.updateSession(s);
   }
 

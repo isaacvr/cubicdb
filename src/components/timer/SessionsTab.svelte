@@ -144,7 +144,7 @@
 </script>
 
 <main class="w-full h-full">
-  <div id="grid" class="text-gray-400 mx-8 grid">
+  <div id="grid" class="text-gray-400 mx-8 grid h-full overflow-scroll">
     {#each $solves as solve}
     <div
       class="shadow-md w-24 h-12 rounded-md m-3 p-1 bg-white bg-opacity-10 relative
