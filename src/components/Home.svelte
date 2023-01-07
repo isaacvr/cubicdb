@@ -3,7 +3,7 @@
   import { Link } from "svelte-routing";
   import { CubeMode } from "@constants";
   import { generateCubeBundle } from "@helpers/cube-draw";
-
+  
   let cards = [
     {
       title: "Tutorials",
@@ -41,7 +41,7 @@
       timer: false,
       ready: false,
       cube: '/assets/logo.png',
-      puzzle: Puzzle.fromSequence("z2", { type: 'rubik', mode: CubeMode.GRAY, order: [2] }, true)
+      puzzle: new Puzzle({ type: 'rubik', mode: CubeMode.GRAY, order: [2] })
     }, {
       title: 'Import / Export',
       route: '/import_export',
@@ -58,19 +58,14 @@
     return ac;
   }, []);
 
-  let subsc = generateCubeBundle(cubes, null, false, true).subscribe((c) => {
-    console.log("c: ", c);
-    if ( c === '__complete__' ) {
-      subsc();
-      
-      for (let i = 0, maxi = cards.length; i < maxi; i += 1) {
-        cards[i].ready = true;
-        if ( cards[i].puzzle ) {
-          cards[i].cube = (<any> cards[i].puzzle).img;
-        }
+  generateCubeBundle(cubes, null, false, true).then(gen => {
+    let subsc = gen.subscribe((c) => {
+      if ( c === null ) {
+        subsc();
+        cards = cards;
       }
-    }
-  });
+    });
+  })
 </script>
 
 <main class="container-mini">
@@ -82,7 +77,7 @@
         bg-white bg-opacity-10 text-gray-400
 
         hover:rotate-3 hover:shadow-lg">
-          <img class="w-32 h-32" src={card.cube} alt={card.title}>
+          <img class="w-32 h-32" src={card.puzzle ? card.puzzle.img : card.cube} alt={card.title}>
           <h2>{card.title}</h2>
         </li>
       </Link>

@@ -5,7 +5,7 @@ import type { PuzzleInterface } from '@interfaces';
 import { STANDARD_PALETTE } from "@constants";
 import { Piece } from './Piece';
 import { Sticker } from './Sticker';
-import { assignColors, getAllStickers, roundCorners } from './puzzleUtils';
+import { assignColors, getAllStickers } from './puzzleUtils';
 
 export function BDG(): PuzzleInterface {
 
@@ -17,7 +17,8 @@ export function BDG(): PuzzleInterface {
     faceVectors: [],
     getAllStickers: null,
     faceColors: [ 'y', 'o', 'g', 'w', 'r', 'b' ],
-    move: () => true
+    move: () => true,
+    roundParams: [],
   };
 
   bdg.getAllStickers = getAllStickers.bind(bdg);
@@ -94,7 +95,7 @@ export function BDG(): PuzzleInterface {
   ];
 
   assignColors(bdg, bdg.faceColors);
-  roundCorners(bdg);
+  // roundCorners(bdg);
 
   return bdg;
 

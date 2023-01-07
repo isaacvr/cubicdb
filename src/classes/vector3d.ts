@@ -139,7 +139,11 @@ export class Vector3D {
   }
 
   abs(): number {
-    return (this.x ** 2 + this.y ** 2 + this.z ** 2) ** 0.5;
+    return this.abs2() ** .5;
+  }
+
+  abs2(): number {
+    return (this.x ** 2 + this.y ** 2 + this.z ** 2);
   }
 
   unit(): Vector3D {

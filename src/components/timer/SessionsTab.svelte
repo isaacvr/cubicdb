@@ -1,6 +1,6 @@
 <script lang="ts">
   import moment from "moment";
-  import { Penalty, type Solve } from "@interfaces";
+  import { Penalty, type Solve, type TimerContext } from "@interfaces";
   import { DataService } from "@stores/data.service";
   import timer from "@helpers/timer";
   import Modal from "@components/Modal.svelte";
@@ -24,12 +24,13 @@
   import ArrowExpandIcon from '@icons/ArrowExpandHorizontal.svelte';
   import SelectInverseIcon from '@icons/SelectInverse.svelte';
   import SelectOffIcon from '@icons/SelectOff.svelte';
+    import { PX_IMAGE } from "@constants";
 
   const dataService = DataService.getInstance();
 
-  export let context;
+  export let context: TimerContext;
 
-  let { solves } = context;
+  let { solves, tab } = context;
 
   let selected = 0;
   let LAST_CLICK = 0;
@@ -40,7 +41,7 @@
   let showDeleteAll = false;
   let sSolve: Solve;
   let gSolve: Solve;
-  let preview = '';
+  let preview = PX_IMAGE;
   let cube;
   
   function closeHandler(s?: Solve) {
@@ -58,16 +59,19 @@
     
     let md = options.has(sSolve.mode) ? sSolve.mode : '333';
     
-    cube = new Puzzle({ ...options.get(md), headless: true });
-    cube.move(sSolve.scramble);
+    cube = Puzzle.fromSequence(sSolve.scramble, { ...options.get(md), headless: true });
 
-    let subscr = generateCubeBundle([cube], 200).subscribe((img: string) => {
-      if ( img != null ) {
-        preview = img;
-      } else {
-        setTimeout(() => subscr());
-      }
-    });
+    generateCubeBundle([cube], 200).then(g => {
+      let subscr = g.subscribe((img: string) => {
+        if ( img === '__initial__' ) return;
+
+        if ( img != null ) {
+          preview = img;
+        } else {
+          subscr();
+        }
+      });
+    })
     
     show = true;
   }
@@ -141,10 +145,26 @@
     _delete( $solves.filter(s => s.selected) );
     selected = 0;
   }
+
+  function handleKeyUp(e: KeyboardEvent) {
+    if ( $tab != 1 ) return;
+    switch(e.code) {
+      case 'KeyC':
+      case 'Escape': selectNone(); break;
+      case 'KeyA': selectAll(); break;
+      case 'KeyT': selectInterval(); break;
+      case 'KeyV': selectInvert(); break;
+      case 'KeyD': selected ? deleteSelected() : deleteAll(); break;
+      case 'Enter': showDeleteAll && deleteAllModal.close(true);
+    }
+  }
+
 </script>
 
+<svelte:window on:keyup={ handleKeyUp }></svelte:window>
+
 <main class="w-full h-full">
-  <div id="grid" class="text-gray-400 mx-8 grid h-full overflow-scroll">
+  <div id="grid" class="text-gray-400 mx-8 grid h-max-[100%] overflow-scroll">
     {#each $solves as solve}
     <div
       class="shadow-md w-24 h-12 rounded-md m-3 p-1 bg-white bg-opacity-10 relative
@@ -167,7 +187,7 @@
 
   <div class="absolute top-3 right-2 text-gray-400 my-3 mx-1">
     {#if $solves.length > 0}
-      <Tooltip position="left" text="Delete all">
+      <Tooltip position="left" text="Delete all [D]">
         <span on:click={ deleteAll } class="cursor-pointer grid place-items-center">
           <DeleteAllIcon width="1.2rem" height="1.2rem"/>
         </span>
@@ -177,11 +197,11 @@
 
   <div class:isVisible={ selected } class="fixed rounded-md p-2 top-0 opacity-0 pointer-events-none
     transition-all duration-300 bg-gray-700 shadow-md flex w-max max-w-full actions z-20">
-    <Button flat on:click={() => selectAll()}> <SelectAllIcon width="1.2rem" height="1.2rem" /> Select All </Button>
-    <Button flat on:click={() => selectInterval()}> <ArrowExpandIcon width="1.2rem" height="1.2rem" /> Select Interval </Button>
-    <Button flat on:click={() => selectInvert()}> <SelectInverseIcon width="1.2rem" height="1.2rem" /> Invert Selection </Button>
-    <Button flat on:click={() => selectNone()}> <SelectOffIcon width="1.2rem" height="1.2rem" /> Cancel </Button>
-    <Button flat on:click={() => deleteSelected()}> <DeleteIcon width="1.2rem" height="1.2rem" /> Delete </Button>
+    <Button flat on:click={() => selectAll()}> <SelectAllIcon width="1.2rem" height="1.2rem" /> Select All [A] </Button>
+    <Button flat on:click={() => selectInterval()}> <ArrowExpandIcon width="1.2rem" height="1.2rem" /> Select Interval [T] </Button>
+    <Button flat on:click={() => selectInvert()}> <SelectInverseIcon width="1.2rem" height="1.2rem" /> Invert Selection [V] </Button>
+    <Button flat on:click={() => selectNone()}> <SelectOffIcon width="1.2rem" height="1.2rem" /> Cancel [C / Esc] </Button>
+    <Button flat on:click={() => deleteSelected()}> <DeleteIcon width="1.2rem" height="1.2rem" /> Delete [D] </Button>
 
     <!-- <button mat-button (click)="selectAll()"> <mat-icon svgIcon="select-all"></mat-icon> Select All</button>
     <button mat-button (click)="selectInterval()"> <mat-icon svgIcon="arrow-expand-horizontal"></mat-icon> Select Interval</button>

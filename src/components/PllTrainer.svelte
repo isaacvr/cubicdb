@@ -4,9 +4,9 @@
   import { generateCubeBundle } from "@helpers/cube-draw";
   import Select from "@components/material/Select.svelte";
   import Button from "@components/material/Button.svelte";
+  import Modal from "@components/Modal.svelte";
   
   import CheckIcon from '@icons/Check.svelte';
-  import { onMount } from "svelte";
   import timer from "@helpers/timer";
 
   const TOP_FACE = [
@@ -39,6 +39,7 @@
   let lastAnswer: string = null;
 
   let lastTime: number;
+  let showModal: boolean = false;
 
   function next() {
     switch(stage) {
@@ -126,13 +127,36 @@
       }
     }, 1000);
   }
+
+  function handleKeyUp(e: KeyboardEvent) {
+    if ( stage != 1 ) return;
+
+    let gFilters = [ /^(Numpad|Digit)1$/, /^(Numpad|Digit)2$/, /^(Numpad|Digit)3$/, /^(Numpad|Digit)4$/ ];
+    let twoFilter = /^Key[AJNRU]$/;
+    let singleFilter = /^Key[EFHTVYZ]$/;
+
+    if ( gFilters.some(r => r.test(e.code)) ) {
+      addAnswer([ 'Ga', 'Gb', 'Gc', 'Gd' ][ +e.code.slice(-1) - 1 ]);
+    } else if ( twoFilter.test(e.code) ) {
+      addAnswer(e.code.slice(-1) + (e.shiftKey ? 'b' : 'a'));
+    } else if ( singleFilter.test(e.code) ) {
+      addAnswer(e.code.slice(-1));
+    }
+  }
 </script>
+
+<svelte:window on:keyup={ handleKeyUp }></svelte:window>
 
 <div
   class="text-gray-400 container-mini bg-white bg-opacity-10 w-4/5 mx-auto rounded-md
-    flex flex-col items-center px-4 py-8 cnt
+    flex flex-col items-center px-4 py-8 cnt relative
   ">
   <h1 class="text-center text-3xl mb-4 text-gray-300 font-bold">PLL Trainer</h1>
+
+  <span class="absolute right-4 top-4 bg-gray-500 text-gray-200 w-6 h-6 flex items-center justify-center
+    cursor-pointer rounded-full shadow-md hover:shadow-lg hover:bg-gray-400 font-bold
+    transition-all duration-200
+  " on:click={ () => showModal = true }>?</span>
   
   {#if stage === 0}
     <div class="grid grid-cols-2 w-max items-center mx-auto gap-4">
@@ -185,6 +209,19 @@
       {/each}
     </div>
   {/if}
+
+  <Modal bind:show={ showModal }>
+    <h1>Key bindings</h1>
+
+    <h2>Single letter PLL</h2>
+    <blockquote>Just tap the letter to answer the quiz.</blockquote>
+    
+    <h2>Two variants PLL</h2>
+    <blockquote>For PLL's like <mark>Ja</mark> and <mark>Jb</mark>, lowercase letter is the <mark>a</mark> variant <mark>(j is Ja)</mark> and capital letter is the <mark>b</mark> variant <mark>(J is Jb)</mark></blockquote>
+
+    <h2>G perms</h2>
+    <blockquote>For the G Perms you can use the numbers <mark>1</mark> to <mark>4</mark> (Ga, Gb, Gc and Gd).</blockquote>
+  </Modal>
 </div>
 
 <style lang="postcss">
@@ -206,5 +243,18 @@
   
   .answer.wrong {
     @apply border-red-400 text-red-400 shadow-red-400 shadow-md;
+  }
+
+  h1 {
+    @apply text-2xl font-bold text-gray-300 text-center;
+  }
+
+  h2 {
+    @apply text-xl font-bold text-gray-300 mt-4;
+  }
+
+  mark {
+    @apply bg-purple-600 p-1 text-slate-200 inline-flex items-center justify-center;
+    border-radius: .25rem;
   }
 </style>

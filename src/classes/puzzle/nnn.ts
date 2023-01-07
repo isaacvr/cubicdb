@@ -1,10 +1,10 @@
-import { LEFT, UP, BACK, RIGHT, FRONT, DOWN, CENTER } from './../vector3d';
-import { Vector3D } from '../../classes/vector3d';
+import { LEFT, UP, BACK, RIGHT, FRONT, DOWN, CENTER } from '@classes/vector3d';
+import { Vector3D } from '@classes/vector3d';
 import type { PuzzleInterface } from '@interfaces';
 import { STANDARD_PALETTE } from "@constants";
 import { Piece } from './Piece';
 import { Sticker } from './Sticker';
-import { assignColors, getAllStickers, roundCorners, random } from './puzzleUtils';
+import { assignColors, getAllStickers, random } from './puzzleUtils';
 import { Vector3 } from 'three';
 
 export function RUBIK(a: number, b?:number, c?:number): PuzzleInterface {
@@ -23,7 +23,8 @@ export function RUBIK(a: number, b?:number, c?:number): PuzzleInterface {
     getAllStickers: null,
     dims: [a, b, c],
     faceColors: [ 'w', 'r', 'g', 'y', 'o', 'b' ],
-    move: () => false
+    move: () => false,
+    roundParams: [],
   };
 
   let fc = rubik.faceColors;
@@ -166,8 +167,8 @@ export function RUBIK(a: number, b?:number, c?:number): PuzzleInterface {
   ];
 
   assignColors(rubik, rubik.faceColors);
-  isCube && roundCorners(rubik, null, null, null, (s: Sticker) => s.color != 'x');
-  !isCube && roundCorners(rubik);
+  // isCube && roundCorners(rubik, null, null, null, (s: Sticker) => s.color != 'x');
+  // !isCube && roundCorners(rubik);
   // roundCorners(rubik);
 
   return rubik;

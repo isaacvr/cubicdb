@@ -70,3 +70,5 @@ export const STANDARD_PALETTE = {
   d: getColorByName('black'),
   v: getColorByName('violet'),
 };
+
+export const PX_IMAGE = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQIW2NgAAIAAAUAAR4f7BQAAAAASUVORK5CYII=";

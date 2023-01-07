@@ -5,7 +5,7 @@ import type { PuzzleInterface } from '@interfaces';
 import { STANDARD_PALETTE } from "@constants";
 import { Piece } from './Piece';
 import { Sticker } from './Sticker';
-import { assignColors, assignVectors, getAllStickers, roundCorners } from './puzzleUtils';
+import { assignColors, assignVectors, getAllStickers } from './puzzleUtils';
 
 function pc(x, y, z) {
   return LEFT.add(UP).add(BACK).add(
@@ -23,7 +23,8 @@ export function BICUBE(): PuzzleInterface {
     faceVectors: [],
     getAllStickers: null,
     faceColors: [ 'y', 'g', 'r', 'w', 'b', 'o' ],
-    move: () => true
+    move: () => true,
+    roundParams: [],
   };
 
   bicube.getAllStickers = getAllStickers.bind(bicube);
@@ -97,7 +98,6 @@ export function BICUBE(): PuzzleInterface {
   ];
 
   assignColors(bicube, bicube.faceColors);
-  roundCorners(bicube);
   assignVectors(bicube);
 
   for (let i = 0, maxi = pieces.length; i < maxi; i += 1) {

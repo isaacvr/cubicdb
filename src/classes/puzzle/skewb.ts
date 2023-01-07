@@ -5,7 +5,7 @@ import type { PuzzleInterface } from '@interfaces';
 import { STANDARD_PALETTE } from "@constants";
 import { Piece } from './Piece';
 import { Sticker } from './Sticker';
-import { assignColors, getAllStickers, roundCorners } from './puzzleUtils';
+import { assignColors, getAllStickers } from './puzzleUtils';
 
 export function SKEWB(): PuzzleInterface {
   let skewb: PuzzleInterface = {
@@ -16,7 +16,8 @@ export function SKEWB(): PuzzleInterface {
     faceVectors: [],
     getAllStickers: null,
     faceColors: [ 'w', 'r', 'g', 'y', 'o', 'b' ],
-    move: () => true
+    move: () => true,
+    roundParams: [],
   };
 
   skewb.getAllStickers = getAllStickers.bind(skewb);
@@ -140,7 +141,7 @@ export function SKEWB(): PuzzleInterface {
   ];
 
   assignColors(skewb, skewb.faceColors);
-  roundCorners(skewb, null, 0.95);
+  // roundCorners(skewb, null, 0.95);
 
   return skewb;
 

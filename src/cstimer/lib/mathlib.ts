@@ -666,8 +666,7 @@ _.updatePrun = function (targetDepth) {
       return;
     }
     this.prunDepth = depth;
-    DEBUG &&
-      console.log(depth, this.prunTableSize - this.prevSize, +new Date() - t);
+    DEBUG && console.log(depth, this.prunTableSize - this.prevSize, +new Date() - t);
     this.prevSize = this.prunTableSize;
   }
 };
@@ -802,7 +801,6 @@ let randGen = (function () {
 
   function random() {
     rndCnt++;
-    // console.log(rndCnt);
     return rndFunc.randomReal53();
   }
 

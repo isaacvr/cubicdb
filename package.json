@@ -5,7 +5,6 @@
   "description": "A big database for speedcubers and Rubik's Cube-related",
   "homepage": "https://github.com/isaacvr/cube-db",
   "private": true,
-  "type": "module",
   "author": {
     "name": "Isaac Vega",
     "email": "isaacvega1996@gmail.com"
@@ -16,11 +15,11 @@
     "speedsolving",
     "speedcubing",
     "wca",
-    "angular",
-    "angular 10",
+    "svelte",
     "electron",
     "nodejs",
     "typescript",
+    "desktop",
     "windows"
   ],
   "main": "src/index.js",
@@ -65,7 +64,7 @@
   "dependencies": {
     "@electron/remote": "^2.0.8",
     "chart.js": "^4.0.1",
-    "chartjs-plugin-zoom": "0.7.7",
+    "chartjs-plugin-zoom": "^2.0.0",
     "electron-reload": "^1.5.0",
     "electron-squirrel-startup": "^1.0.0",
     "moment": "^2.29.4",
@@ -84,8 +83,9 @@
     "@tsconfig/svelte": "^3.0.0",
     "autoprefixer": "^10.4.13",
     "concurrently": "^5.1.0",
-    "electron": "8.0.2",
+    "electron": "^22.0.0",
     "electron-builder": "23.1.0",
+    "esbuild": "^0.16.14",
     "postcss": "^8.4.18",
     "postcss-load-config": "^4.0.1",
     "svelte": "^3.19.1",

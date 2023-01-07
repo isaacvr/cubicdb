@@ -3,11 +3,12 @@ import { Vector3D } from '../../classes/vector3d';
 import type { PuzzleInterface } from '@interfaces';
 import { Piece } from './Piece';
 import { Sticker } from './Sticker';
-import { assignColors, getAllStickers, roundCorners } from './puzzleUtils';
+import { assignColors, getAllStickers } from './puzzleUtils';
 import { Vector3 } from 'three';
 
 export function MEGAMINX(_n: number, headless?: false): PuzzleInterface {
-  const n = Math.max(3, ~~(_n / 2) * 2 + 1);
+  // const n = Math.max(3, ~~(_n / 2) * 2 + 1);
+  const n = Math.max(2, ~~_n);
   const n_2 = ~~(n / 2);
 
   const mega: PuzzleInterface = {
@@ -34,7 +35,8 @@ export function MEGAMINX(_n: number, headless?: false): PuzzleInterface {
     getAllStickers: null,
     dims: [],
     faceColors: [ "white", "yellow", "violet", "green", "red", "blue", "orange", "lblue", "lyellow", "pink", "lgreen", "gray" ],
-    move: () => false
+    move: () => false,
+    roundParams: [],
   };
 
   mega.getAllStickers = getAllStickers.bind(mega);
@@ -48,7 +50,7 @@ export function MEGAMINX(_n: number, headless?: false): PuzzleInterface {
   const SIDE = R_INT / F_INT;
   const R_EXT = SIDE * F_EXT;
   const RAD = sq( R_EXT ** 2 - R_INT ** 2 );
-  const FACTOR = 2 / (2 * n  - 1);
+  const FACTOR = 2 / (2 * n - n % 2);
   const FACE_ANG = PI - Math.acos( Math.tan(18 * PI / 180) * Math.tan(54 * PI / 180) );
   const INNER_ANG = 2 * PI / 5;
   const PI23 = PI * 2 / 3;
@@ -115,7 +117,7 @@ export function MEGAMINX(_n: number, headless?: false): PuzzleInterface {
   }
 
   let center = new Piece([
-    new Sticker(topCenter),
+    new Sticker(topCenter, 'b'),
     new Sticker(topCenter).add( new Vector3D(0, V11.y, 0) )
   ]);
 
@@ -219,7 +221,7 @@ export function MEGAMINX(_n: number, headless?: false): PuzzleInterface {
   };
 
   assignColors(mega, mega.faceColors);
-  roundCorners(mega);
+  // roundCorners(mega);
 
   mega.raw = [ anchors, FACE_ANG, FACTOR, RAD, SIDE ];
 

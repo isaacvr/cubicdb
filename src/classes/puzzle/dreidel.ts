@@ -4,11 +4,9 @@ import type { PuzzleInterface } from '@interfaces';
 import { STANDARD_PALETTE } from "@constants";
 import { Piece } from './Piece';
 import { Sticker } from './Sticker';
-import { assignColors, getAllStickers, roundCorners } from './puzzleUtils';
+import { assignColors, getAllStickers } from './puzzleUtils';
 import { Vector3 } from 'three';
 import { FaceSticker } from './FaceSticker';
-import { Sphere } from './Sphere';
-import { Color } from '../Color';
 import { Vector2D } from '../vector2-d';
 
 function clerp(a: Vector2D, b: Vector2D, t: number): Vector2D {
@@ -53,7 +51,8 @@ export function DREIDEL(): PuzzleInterface {
     getAllStickers: null,
     dims: [],
     faceColors: [ 'w', 'r', 'g', 'y', 'o', 'b' ],
-    move: () => false
+    move: () => false,
+    roundParams: [],
   };
 
   dreidel.getAllStickers = getAllStickers.bind(dreidel);
@@ -279,7 +278,7 @@ export function DREIDEL(): PuzzleInterface {
 
   
   assignColors(dreidel, dreidel.faceColors);
-  roundCorners(dreidel, null, null, null, (s: Sticker) => !(s instanceof FaceSticker));
+  // roundCorners(dreidel, null, null, null, (s: Sticker) => !(s instanceof FaceSticker));
 
   dreidel.getAllStickers().forEach(s => {
     if ( s instanceof FaceSticker ) {

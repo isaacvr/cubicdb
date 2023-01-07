@@ -1,34 +1,31 @@
 <script lang="ts">
-  import { onMount, onDestroy } from 'svelte';
+  import { onDestroy } from 'svelte';
   import { Link } from 'svelte-routing';
-  import { currentPath } from '../stores/path';
+  import { globalHistory } from 'svelte-routing/src/history';
 
-  let parts = [
-    { link: '/', name: "Home" },
-    { link: '/', name: "Home" },
-    { link: '/', name: "Home" },
-    { link: '/', name: "Home" },
-  ];
+  let parts = [];
 
-  let pathSub;
+  function updateParts(v) {
+    let arr = v.split('?')[0].split('/').filter(e => e != '');
 
-  onMount(() => {
-    pathSub = currentPath.subscribe((v) => {
-      let arr = v.split('?')[0].split('/').filter(e => e != '');
+    parts.length = 0;
+    parts = [
+      { link: '/', name: 'Home' },
+      ...arr.map((e, p) => ({
+        link: "/" + arr.slice(0, p + 1).join('/'),
+        name: e
+      })),
+    ];
+  }
 
-      parts.length = 0;
-      parts = [
-        { link: '/', name: 'Home' },
-        ...arr.map((e, p) => ({
-          link: "/" + arr.slice(0, p + 1).join('/'),
-          name: e
-        })),
-      ];
-    });
+  let hSub = globalHistory.listen(({ location }) => {
+    updateParts(location.pathname || '');
   });
 
+  updateParts(window.location.pathname);
+
   onDestroy(() => {
-    pathSub();
+    hSub();
   });
 </script>
 

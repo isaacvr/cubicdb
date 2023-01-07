@@ -4,7 +4,7 @@ import type { PuzzleInterface } from '@interfaces';
 import { STANDARD_PALETTE } from "@constants";
 import { Vector3D } from '../vector3d';
 import { Sticker } from './Sticker';
-import { assignColors, getAllStickers, roundCorners } from './puzzleUtils';
+import { assignColors, getAllStickers } from './puzzleUtils';
 import { Vector3 } from 'three';
 
 export function FISHER(): PuzzleInterface {
@@ -17,7 +17,8 @@ export function FISHER(): PuzzleInterface {
     rotation: {},
     getAllStickers: null,
     faceColors: [ 'y', 'o', 'g', 'w', 'r', 'b' ],
-    move: () => true
+    move: () => true,
+    roundParams: [],
   };
 
   fisher.getAllStickers = getAllStickers.bind(fisher);
@@ -158,7 +159,7 @@ export function FISHER(): PuzzleInterface {
   ];
 
   assignColors(fisher, fisher.faceColors);
-  roundCorners(fisher);
+  // roundCorners(fisher);
 
   return fisher;
 

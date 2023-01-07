@@ -4,7 +4,7 @@ import type { PuzzleInterface } from '@interfaces';
 import { STANDARD_PALETTE } from "@constants";
 import { Piece } from './Piece';
 import { Sticker } from './Sticker';
-import { assignColors, getAllStickers, roundCorners } from './puzzleUtils';
+import { assignColors, getAllStickers } from './puzzleUtils';
 import { Vector3 } from 'three';
 
 export function MIXUP(): PuzzleInterface {
@@ -20,7 +20,8 @@ export function MIXUP(): PuzzleInterface {
     getAllStickers: null,
     dims: [n, n, n],
     faceColors: [ 'w', 'r', 'g', 'y', 'o', 'b' ],
-    move: () => false
+    move: () => false,
+    roundParams: [],
   };
 
   mixup.getAllStickers = getAllStickers.bind(mixup);
@@ -210,7 +211,7 @@ export function MIXUP(): PuzzleInterface {
   ];
 
   assignColors(mixup, mixup.faceColors);
-  roundCorners(mixup);
+  // roundCorners(mixup);
 
   return mixup;
 

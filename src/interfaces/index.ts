@@ -58,6 +58,7 @@ export interface Algorithm {
   tips ?: number[];
   parentPath ?: string;
   view?: CubeView;
+  _puzzle?: Puzzle;
 }
 
 export interface NavigationRoute {
@@ -74,7 +75,8 @@ export interface PuzzleInterface {
   faceColors: string[];
   getAllStickers: () => Sticker[];
   move: (any) => any;
-
+  roundParams: any[];
+  isRounded?: boolean;
   dims?: number[];
   raw?: any;
   scramble?: () => any;
@@ -89,6 +91,7 @@ export interface PuzzleOptions {
   view?: CubeView;
   tips?: number[];
   headless?: boolean;
+  sequence?: string; // This field has no effects in the constructor
 }
 
 export enum Penalty {
@@ -115,6 +118,8 @@ export interface Settings {
   inspection: number;
   showElapsedTime: boolean;
   calcAoX: AverageSetting;
+  genImage: boolean;
+  scrambleAfterCancel: boolean;
 }
 
 export interface Session {
@@ -147,10 +152,11 @@ export interface RawPuzzle {
   raw?: any; // Intended for user specific purposes
 }
 
-export declare type CubeType = Puzzle | RawPuzzle | { type: 'arrow', text: string } | { tp: 'arrow', tx: string };
+declare type ArrowLarge = { type: 'arrow', text: string };
+export declare type CubeType = Puzzle | RawPuzzle | ArrowLarge;
 
 export interface BlockType {
-  type: "title" | "text" | "cubes";
+  type: "title" | "subtitle" | "text" | "cubes";
   content ?: string;
   cubes?: CubeType[];
 }
@@ -207,6 +213,7 @@ export interface TimerContext {
   xcross: Writable<string>;
   preview: Writable<string>;
   prob: Writable<number>;
+  isRunning: Writable<boolean>;
   
   sortSolves();
   updateStatistics(inc ?: boolean);

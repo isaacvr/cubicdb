@@ -1,6 +1,7 @@
 import { Vector3D } from './../vector3d';
 import { Sticker } from './Sticker';
 import type { PuzzleInterface } from '@interfaces';
+import { FaceSticker } from './FaceSticker';
 
 export function assignColors(p: PuzzleInterface, cols ?: string[]) {
   let colors = cols || [ 'y', 'o', 'g', 'w', 'r', 'b' ];
@@ -8,21 +9,19 @@ export function assignColors(p: PuzzleInterface, cols ?: string[]) {
   let stickers: Sticker[] = p.getAllStickers();
   let pieces = p.pieces;
 
+  // Adjust -1, 0 and 1 values for better precision
   for (let i = 0, maxi = stickers.length; i < maxi; i += 1) {
     let sticker = stickers[i];
     let points = sticker.points;
     for (let j = 0, maxj = points.length; j < maxj; j += 1) {
       for (let k = -1; k <= 1; k += 1) {
         if ( Math.abs( points[j].x - k ) < 1e-6 ) {
-          // console.log('Fixing X => ', points[j].x, k);
           points[j].x = k;
         }
         if ( Math.abs( points[j].y - k ) < 1e-6 ) {
-          // console.log('Fixing Y => ', points[j].y, k);
           points[j].y = k;
         }
         if ( Math.abs( points[j].z - k ) < 1e-6 ) {
-          // console.log('Fixing Z => ', points[j].z, k);
           points[j].z = k;
         }
       }
@@ -85,7 +84,6 @@ export function getAllStickers(): Sticker[] {
 export function scaleSticker(st: Sticker, scale: number): Sticker {
   const SCALE = scale || 0.925;
   let n = st.getOrientation();
-  // console.log("ORIENTATION: ", n);
   let cm = st.updateMassCenter();
   return st.sub(cm).mul(SCALE).add(cm).add( n.mul(0.005) );
 }
@@ -118,12 +116,14 @@ export function roundStickerCorners(s: Sticker, rd?: number, scale?: number, ppc
   return scaleSticker(newSt, SCALE);
 }
 
-export function roundCorners(
-  p: PuzzleInterface,
-  rd ?: number, scale ?: number, ppc ?: number,
-  fn ?: Function, justScale ?: boolean) {
-  const CHECK = fn || (() => true);
-
+export function roundCorners(p: PuzzleInterface, rd ?: number, scale ?: number, ppc ?: number, fn ?: Function, justScale ?: boolean) {
+  if ( p.isRounded ) {
+    return;
+  }
+  
+  const CHECK = fn || ((s: Sticker) => !(s instanceof FaceSticker));
+  
+  p.isRounded = true;
   let pieces = p.pieces;
 
   for (let i = 0, maxi = pieces.length; i < maxi; i += 1) {

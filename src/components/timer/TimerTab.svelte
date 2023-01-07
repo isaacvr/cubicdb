@@ -6,7 +6,6 @@
   import Close from '@icons/Close.svelte';
   import ThumbDown from '@icons/ThumbDown.svelte';
   import Flag from '@icons/FlagOutline.svelte';
-  import Comment from '@icons/CommentPlusOutline.svelte';
   import Refresh from '@icons/Refresh.svelte';
   import Pencil from '@icons/PencilOutline.svelte';
   import Calendar from '@icons/CalendarTextOutline.svelte';
@@ -31,8 +30,8 @@
   export let context: TimerContext;
 
   const {
-    state, ready, tab, solves, allSolves, session, Ao5, stats,
-    scramble, group, mode, hintDialog, hint, cross, xcross, preview,
+    state, ready, tab, solves, allSolves, session, Ao5, stats, scramble,
+    group, mode, hintDialog, hint, cross, xcross, preview, isRunning,
     sortSolves, initScrambler, updateStatistics, selectedGroup, setConfigFromSolve
   } = context;
   
@@ -43,16 +42,13 @@
   let refPrevention: number = 0;
   let itv: any;
   let selected: number = 0;
-  // let hasInspection: boolean = false;
-  // let inspectionTime: number = 15000;
   let lastSolve: Solve;
   let prob: number = null;
   let prevExpanded: boolean = false;
-  
-  /// MODAL
-  let show = false;
-  let modal;
 
+  /// MODAL
+  let modal;
+  let show = false;
   let type = '';
   let modalData;
   let closeHandler: Function = () => {};
@@ -64,11 +60,11 @@
   };
   
   let options = [
-    { text: "Reload", icon: Refresh, handler: () => initScrambler() },
-    { text: "Edit", icon: Pencil, handler: () => {
+    { text: "Reload scramble [S]", icon: Refresh, handler: () => initScrambler() },
+    { text: "Edit [E]", icon: Pencil, handler: () => {
       openDialog('edit-scramble', $scramble, (scr) => scr && initScrambler(scr));
     } },
-    { text: "Use old scramble", icon: Calendar, handler: () => {
+    { text: "Use old scramble [O]", icon: Calendar, handler: () => {
       openDialog('old-scrambles', null, () => {});
     } },
     { text: "Copy scramble", icon: Copy, handler: () => copyToClipboard() },
@@ -141,11 +137,13 @@
     if ( (<any> window).modals ) {
       return;
     }
+
+    const { code } = event;
     
     switch( $tab ) {
       case 0: {
-        // debug("KEYDOWN EVENT: ", event);
-        if ( event.code === 'Space' ) {
+        debug("KEYDOWN EVENT: ", event);
+        if ( code === 'Space' ) {
           if ( !isValid && $state === TimerState.RUNNING ) {
             return;
           }
@@ -172,11 +170,17 @@
             lastSolve.time = time;
             initScrambler();
           }
-        } else if ( ['KeyR', 'Escape', 'KeyS'].indexOf(event.code) > -1 ) {
-          reset();
-          if ( event.code === 'KeyS' ) {
+        } else if ( ['KeyR', 'Escape', 'KeyS'].indexOf(code) > -1 ) {
+          if ( code === 'KeyS' ||
+            (code === 'Escape' &&
+              ($state === TimerState.INSPECTION || $state === TimerState.RUNNING) &&
+              $session.settings.scrambleAfterCancel ) ) {
+            reset();
             initScrambler();
+          } else {
+            reset();
           }
+          prevExpanded = false;
         } else if ( $state === TimerState.RUNNING ) {
           debug('STOP');
           stopTimer();
@@ -190,7 +194,7 @@
         break;
       }
       case 1: {
-        if ( event.code === 'Escape' && selected ) {
+        if ( code === 'Escape' && selected ) {
           selectNone();
         }
         break;
@@ -238,16 +242,11 @@
   }
 
   function keyUp(event: KeyboardEvent) {
-    if ( (<any> window).modals ) {
-      return;
-    }
-
     if ( $tab ) {
       return;
     }
 
     isValid = true;
-    // debug("KEYUP EVENT: ", event);
     if ( event.code === 'Space' ) {
       if ( $state === TimerState.PREVENTION ) {
         if ( $ready ) {
@@ -292,6 +291,12 @@
 
         runTimer(1);
       }
+    } else if ( event.code === 'KeyE' ) {
+      if ( !show || (show && type != 'edit-scramble') ) {
+        openDialog('edit-scramble', $scramble, (scr) => scr && initScrambler(scr));
+      }
+    } else if ( event.code === 'KeyO' ) {
+      openDialog('old-scrambles', null, () => {});
     }
   }
 
@@ -301,8 +306,14 @@
     });
   }
 
-  function modalKeydownHandler(e) {
-    show = (e.key === 'Escape' ? modal.close() : show);
+  function modalKeyupHandler(e) {
+    let kevent: KeyboardEvent = e.detail;
+    kevent.stopPropagation();
+    show = (kevent.code === 'Escape' ? modal.close() : show);
+
+    if ( kevent.code === 'Enter' && kevent.ctrlKey ) {
+      modal.close( modalData.trim() );
+    }
   }
 
   function select(s: Solve) {
@@ -316,6 +327,8 @@
     selectedGroup();
     updateStatistics(false);
   });
+
+  $: $solves.length === 0 && reset();
 </script>
 
 <svelte:window on:keyup={ keyUp } on:keydown={ keyDown }></svelte:window>
@@ -324,10 +337,9 @@
   <div id="scramble" class="transition-all duration-300">
     {#if !$scramble}
       <span> {stateMessage}
-        <!-- <mat-progress-bar mode="indeterminate"></mat-progress-bar> -->
       </span>
     {/if}
-    <span contenteditable="false" bind:innerHTML={$scramble}></span>
+    <span class:isRunning={ $isRunning } contenteditable="false" bind:innerHTML={$scramble}></span>
     <div class="absolute top-1 right-12">
       {#each options as option}
         <Tooltip class="cursor-pointer" position="left" text={ option.text }>
@@ -353,7 +365,7 @@
       <div class="flex justify-center w-full" class:show={$state === TimerState.STOPPED}>
         {#each solveControl as control}
           <Tooltip class="cursor-pointer" position="top" text={ control.text }>
-            <div class="my-3 mx-1 w-5 h-5 { control.highlight($solves[0]) ? 'text-red-500' : '' }" on:click={ control.handler }>
+            <div class="my-3 mx-1 w-5 h-5 { control.highlight($solves[0] || {}) ? 'text-red-500' : '' }" on:click={ control.handler }>
               <svelte:component this={control.icon} width="100%" height="100%"/>
             </div>
           </Tooltip>
@@ -444,6 +456,7 @@
     </div>
   </div>
 
+  {#if $session?.settings?.genImage}
   <div
     id="preview-container"
     class="absolute bottom-2 flex items-center justify-center w-full transition-all duration-300
@@ -455,11 +468,12 @@
       class="bottom-2 transition-all duration-300 cursor-pointer w-full h-full object-contain"
       src={ $preview } alt="">
   </div>
+  {/if}
 
   <Modal bind:this={ modal } bind:show={ show } onClose={ closeHandler }>
     <div class="max-w-lg max-h-96 overflow-scroll">
       {#if type === 'edit-scramble'}
-        <TextArea on:keydown={ modalKeydownHandler }
+        <TextArea on:keyup={ modalKeyupHandler }
           class="bg-gray-600 text-gray-200"
           bind:value={ modalData }/>
         <div class="flex w-full justify-center my-2">
@@ -494,6 +508,13 @@
         </section>
         <section>
           <Checkbox bind:checked={ modalData.settings.showElapsedTime } class="w-5 h-5 my-2" label="Show time when running"/>
+        </section>
+        <section>
+          <Checkbox bind:checked={ modalData.settings.genImage } class="w-5 h-5 my-2" label="Generate image from scramble"/>
+          <i class="text-sm">(This can hurt performance for complex cubes)</i>
+        </section>
+        <section>
+          <Checkbox bind:checked={ modalData.settings.scrambleAfterCancel } class="w-5 h-5 my-2" label="Refresh scramble after cancel"/>
         </section>
         <section class="mt-4">
           AoX calculation:

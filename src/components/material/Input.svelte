@@ -2,10 +2,12 @@
   import { createEventDispatcher, tick } from 'svelte';
 
   const dispatch = createEventDispatcher();
-  
+ 
+  type InputType = 'text' | 'number' | 'date';
+
   export let placeholder = '';
   export let value: Date | string | number = '';
-  export let type = "text";
+  export let type: InputType = "text";
   export let size = undefined;
   export let disabled = false;
   export let focus = false;

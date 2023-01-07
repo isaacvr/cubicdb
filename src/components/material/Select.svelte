@@ -19,7 +19,7 @@
 
 <svelte:window on:click|capture={() => showOptions = false}></svelte:window>
 
-<main class={`select-container relative cursor-pointer ` + (cl || '')}>
+<main class={`select-container max-w-[13rem] relative cursor-pointer ` + (cl || '')}>
   <div
     on:click|self|stopPropagation={handleClick}
     class="content bg-gray-700 p-2 h-10 rounded-md select-none pr-8">{
@@ -47,9 +47,7 @@
 
 <style lang="postcss">
   .select-container {
-    width: max-content;
     min-width: 10rem;
-    max-width: 13rem;
   }
 
   .options.visible {

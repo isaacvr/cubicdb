@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onDestroy, onMount } from 'svelte';
+  import { onMount } from 'svelte';
 
   type Direction = 'right' | 'left' | 'top' | 'bottom';
 
@@ -16,11 +16,27 @@
   function mouseenter() { resize(); isVisible = true; }
   function mouseleave() { isVisible = false; }
 
+  function hasTransform(e): boolean {
+    return e.computedStyleMap().get('transform').constructor.name === 'CSSTransformValue';
+  }
+
   function resize() {
     let ce = elem.getBoundingClientRect();
     let ct = tt.getBoundingClientRect();
 
     x = ce.x; y = ce.y;
+
+    let e1 = elem;
+
+    do {
+      e1 = e1.parentElement;
+      if ( hasTransform(e1) ) {
+        let cp = e1.getBoundingClientRect();
+        x -= cp.x;
+        y -= cp.y;
+        break;
+      }
+    } while ( e1.parentElement );
 
     if ( position === 'right' || position === 'left' ) {
       x = position === 'left' ? `calc(${x - ct.width}px - 0.5rem)` : `calc(${x + ce.width}px + 0.5rem)`;
@@ -40,14 +56,10 @@
 
   onMount(() => {
     resize();
-    window.addEventListener('resize', resize, false);
   });
-
-  onDestroy(() => {
-    window.removeEventListener('resize', resize, false);
-  })
-
 </script>
+
+<svelte:window on:resize={ resize }></svelte:window>
 
 <div
   on:mouseenter={mouseenter}
@@ -74,14 +86,13 @@
 
 <style lang="postcss">
   .wrapper {
-    @apply w-fit;
+    @apply w-fit h-fit;
     display: initial;
   }
 
   .tooltip {
-    @apply fixed bg-neutral-600 px-2
-      rounded-sm outline outline-1 outline-gray-600 flex
-      transition-all text-neutral-200;
+    @apply fixed bg-neutral-600 px-3 py-2
+      rounded-sm flex transition-all text-neutral-200;
     width: max-content;
     max-width: 14rem;
     transition-duration: var(--duration);

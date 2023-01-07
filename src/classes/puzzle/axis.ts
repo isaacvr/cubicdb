@@ -5,7 +5,7 @@ import { STANDARD_PALETTE } from '@constants';
 import type { PuzzleInterface } from '@interfaces';
 import { Vector3D } from '../vector3d';
 import { Piece } from './Piece';
-import { assignColors, getAllStickers, roundCorners } from './puzzleUtils';
+import { assignColors, getAllStickers } from './puzzleUtils';
 
 export function AXIS(): PuzzleInterface {
 
@@ -17,7 +17,8 @@ export function AXIS(): PuzzleInterface {
     rotation: {},
     getAllStickers: null,
     faceColors: [ 'y', 'o', 'g', 'w', 'r', 'b' ],
-    move: () => true
+    move: () => true,
+    roundParams: []
   };
 
   axis.getAllStickers = getAllStickers.bind(axis);
@@ -166,7 +167,7 @@ export function AXIS(): PuzzleInterface {
   ];
 
   assignColors(axis, axis.faceColors);
-  roundCorners(axis);
+  // roundCorners(axis);
 
   return axis;
 

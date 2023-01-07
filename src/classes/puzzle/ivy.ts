@@ -5,7 +5,7 @@ import type { PuzzleInterface } from '@interfaces';
 import { STANDARD_PALETTE } from "@constants";
 import { Piece } from './Piece';
 import { Sticker } from './Sticker';
-import { assignColors, getAllStickers, roundCorners } from './puzzleUtils';
+import { assignColors, getAllStickers } from './puzzleUtils';
 
 export function IVY(): PuzzleInterface {
 
@@ -17,7 +17,8 @@ export function IVY(): PuzzleInterface {
     faceVectors: [],
     getAllStickers: null,
     faceColors: [ 'y', 'o', 'g', 'w', 'r', 'b' ],
-    move: () => true
+    move: () => true,
+    roundParams: [],
   };
 
   ivy.getAllStickers = getAllStickers.bind(ivy);
@@ -108,7 +109,7 @@ export function IVY(): PuzzleInterface {
   ];
 
   assignColors(ivy, ivy.faceColors);
-  roundCorners(ivy, 0.05, 0.97);
+  // roundCorners(ivy, 0.05, 0.97);
 
   return ivy;
 

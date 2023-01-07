@@ -8,7 +8,7 @@
   import { solve_cross, solve_xcross } from '@cstimer/tools/cross';
   
   /// Data
-  import { MENU } from './TimerMenu';
+  import { isNNN, MENU } from './TimerMenu';
   import { DataService } from '@stores/data.service';
   
   /// Components
@@ -37,7 +37,8 @@
   /// Types
   import { TimerState, AverageSetting, type Solve, type Session, Penalty, type Statistics, type TimerContext } from '@interfaces';
   import { Puzzle } from '@classes/puzzle/puzzle';
-  
+  import { PX_IMAGE } from '@constants';
+  import { ScrambleParser } from '@classes/scramble-parser';
 
   const INITIAL_STATISTICS: Statistics = {
     best: { value: 0, better: false },
@@ -90,10 +91,12 @@
   let hint = writable<boolean>();
   let cross = writable<string[]>();
   let xcross = writable<string>();
-  let preview = writable<string>("");
+  let preview = writable<string>(PX_IMAGE);
   let prob = writable<number>(null);
-  // let calcAoX = writable<AverageSetting>(AverageSetting.SEQUENTIAL);
-        
+  let isRunning = writable<boolean>(false);
+  
+  $: $isRunning = !($state === TimerState.CLEAN || $state === TimerState.STOPPED);
+
   function getAverage(n: number, arr: Solve[], calc: AverageSetting): number[] {
     let res = [];
     let len = arr.length - 1;
@@ -131,6 +134,7 @@
     modes = menu[1];
     $mode = ( typeof s.group != 'undefined' ) ? menu[1].filter(m => m[1] === s.mode)[0] : menu[1][0];
     $prob = s.prob;
+    selectedFilter();
   }
 
   function updateStatistics(inc ?: boolean) {
@@ -249,48 +253,58 @@
 
   function handleInputKeyUp(ce: any) {
     const e = ce.detail;
-    e.stopPropagation();
     if ( e.key === 'Enter' ) {
       newSession();
     } else if ( e.key === 'Escape' ) {
       closeAddSession();
     }
+    e.stopPropagation();
+  }
+
+  function updateImage(md) {
+    let cb = Puzzle.fromSequence( $scramble, { ...all.pScramble.options.get(md), headless: true } );
+
+    generateCubeBundle([cb], 500).then(gen => {
+      let subsc = gen.subscribe((c: string) => {
+        if (c === '__initial__') return;
+
+        if ( c === null ) {
+          subsc();
+        } else {
+          $preview = c;
+        }
+      });
+    });
   }
 
   function initScrambler(scr?: string, _mode ?: string) {
     $scramble = null;
     $hintDialog = false;
 
-    setTimeout(() => {
-      let md = (_mode) ? _mode : $mode[1];
+    let md = _mode || $mode[1];
 
-      $scramble = (scr) ? scr : all.pScramble.scramblers.get(md).apply(null, [
-        md, Math.abs($mode[2]), $prob < 0 ? undefined : $prob
-      ]).replace(/\\n/g, '<br>').trim();
+    $scramble = (scr) ? scr : all.pScramble.scramblers.get(md).apply(null, [
+      md, Math.abs($mode[2]), $prob < 0 ? undefined : $prob
+    ]).replace(/\\n/g, '<br>').trim();
 
-      let modes = ["333", "333fm" ,"333oh" ,"333o" ,"easyc" ,"333ft"];
+    if ( isNNN(md) ) {
+      $scramble = ScrambleParser.parseNNNString($scramble);
+    }
 
-      if ( modes.indexOf(md) > -1 ) {
-        $cross = solve_cross($scramble).map(e => e.map(e1 => e1.trim()).join(' '))[0];
-        $xcross = solve_xcross($scramble, 0).map(e => e.trim()).join(' ');
-        $hintDialog = true;
-      } else {
-        $hint = false;
-        $hintDialog = false;
-      }
+    const modes = ["333", "333fm" ,"333oh" ,"333o" ,"easyc" ,"333ft"];
 
-      if ( all.pScramble.options.has(md) ) {
-        let cb = Puzzle.fromSequence( $scramble, { ...all.pScramble.options.get(md), headless: true } );
-        
-        let subscr = generateCubeBundle([cb], 500).subscribe((res: string) => {
-          if ( res !== null ) {
-            $preview = res;
-          } else {
-            setTimeout(() => subscr());
-          }
-        });
-      }
-    }, 10);
+    if ( modes.indexOf(md) > -1 ) {
+      $cross = solve_cross($scramble).map(e => e.map(e1 => e1.trim()).join(' '))[0];
+      $xcross = solve_xcross($scramble, 0).map(e => e.trim()).join(' ');
+      $hintDialog = true;
+    } else {
+      $hint = false;
+      $hintDialog = false;
+    }
+
+    if ( all.pScramble.options.has(md) && $session?.settings?.genImage ) {
+      updateImage(md);
+    }
   }
 
   function selectedFilter() {
@@ -323,9 +337,10 @@
         showElapsedTime: true,
         inspection: 15,
         calcAoX: AverageSetting.SEQUENTIAL,
+        genImage: true,
+        scrambleAfterCancel: false,
       } });
       closeAddSession();
-      selectedSession();
     }
   }
 
@@ -393,20 +408,27 @@
         switch ( data.type ) {
           case 'get-sessions': {
             sessions = (<Session[]> data.data).map(s => { s.tName = s.name; return s; });
+
+            if ( sessions.length === 0 ) {
+              newSessionName = 'Session 1';
+              newSession();
+              return;
+            }
+
             let ss = localStorage.getItem('session');
             let currentSession = sessions.find(s => s._id === ss);
             $session = currentSession || sessions[0];
-            localStorage.setItem('session', $session._id);
-            setSolves();
-            localStorage.setItem('session', $session._id); 
+            selectedSession();
             break;
           }
           case 'rename-session':
           case 'update-session': {
             let session = <Session> data.data;
             let updatedSession = sessions.find(s => s._id === session._id);
-            updatedSession.name = session.name;
-            updatedSession.settings = session.settings;
+            if ( updatedSession ) {
+              updatedSession.name = session.name;
+              updatedSession.settings = session.settings;
+            }
             sessions = sessions;
             break;
           }
@@ -421,6 +443,13 @@
           case 'remove-session': {
             let s = <Session> data.data;
             sessions = sessions.filter(s1 => s1._id != s._id);
+
+            if ( sessions.length === 0 ) {
+              newSessionName = 'Session 1';
+              newSession();
+              return;
+            }
+
             if ( s._id === $session._id ) {
               $session = sessions[0];
             }
@@ -440,7 +469,7 @@
 
   let context: TimerContext = {
     state, ready, tab, solves, allSolves, session, Ao5, AoX, stats, scramble,
-    group, mode, hintDialog, hint, cross, xcross, preview, prob,
+    group, mode, hintDialog, hint, cross, xcross, preview, prob, isRunning,
     sortSolves, updateStatistics, initScrambler, selectedGroup, setConfigFromSolve
   };
 
@@ -449,9 +478,8 @@
 <svelte:window on:keyup={ handleKeyUp }></svelte:window>
 
 <main>
-  <div class="
-    -translate-x-1/2 left-1/2
-    fixed z-10 grid grid-flow-col gap-2 w-max top-12 items-center justify-center text-gray-400">
+  <div class="fixed w-max -translate-x-1/2 left-1/2 z-10 grid grid-flow-col
+    gap-2 top-12 items-center justify-center text-gray-400">
     <Tooltip text="Manage sessions">
       <span on:click={ editSessions } class="cursor-pointer"><TuneIcon width="1.2rem" height="1.2rem"/> </span>
     </Tooltip>

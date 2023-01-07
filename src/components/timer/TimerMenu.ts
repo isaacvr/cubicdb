@@ -196,3 +196,9 @@ export const MENU: Menu[] = [
     ]
   ],
 ];
+
+export function isNNN(mode: string): boolean {
+  return [
+    R222, R333, R444, R555, R666, R777
+  ].some(l => l.some(m => m === mode))
+}

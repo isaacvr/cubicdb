@@ -31,7 +31,7 @@
   <div id="wrapper"
     on:mousedown|self|stopPropagation={ () => cancel && close(null) }
     class="fixed bg-black bg-opacity-80 top-0 left-0 w-full h-full
-      flex items-center justify-center transition-all">
+      flex items-center justify-center transition-all z-50">
     <div class="bg-gray-800 rounded-md show p-4 pt-3">
       <slot />
     </div>

@@ -4,12 +4,12 @@
 
 @font-face {
   font-family: 'Raleway';
-  src: url('assets/fonts/Raleway-Regular.ttf');
+  src: url('/assets/fonts/Raleway-Regular.ttf');
 }
 
 @font-face {
   font-family: 'Roboto';
-  src: url('assets/fonts/Roboto-Medium.ttf');
+  src: url('/assets/fonts/Roboto-Medium.ttf');
 }
 
 @font-face {

@@ -5,7 +5,7 @@ import { Vector3D, CENTER } from '../../classes/vector3d';
 import type { PuzzleInterface } from '@interfaces';
 import { STANDARD_PALETTE } from "@constants";
 import { Sticker } from './Sticker';
-import { assignColors, getAllStickers, roundCorners } from './puzzleUtils';
+import { assignColors, getAllStickers } from './puzzleUtils';
 
 function its(a: Vector3D, b: Vector3D, axis: string): Vector3D {
   let ini = 0;
@@ -30,7 +30,8 @@ export function SQUARE2(): PuzzleInterface {
     faceVectors: [],
     getAllStickers: null,
     faceColors: [ 'w', 'b', 'r', 'y', 'g', 'o' ],
-    move: () => true
+    move: () => true,
+    roundParams: [],
   };
 
   sq2.getAllStickers = getAllStickers.bind(sq2);
@@ -174,7 +175,7 @@ export function SQUARE2(): PuzzleInterface {
   ];
 
   assignColors(sq2, sq2.faceColors);
-  roundCorners(sq2, null, 0.95);
+  // roundCorners(sq2, null, 0.95);
 
   return sq2;
 

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { evalLine, map, rotatePoint, rotateSegment } from '@helpers/math';
+    import { trendLSV } from '@helpers/statistics';
   import timer from '@helpers/timer';
   import { AverageSetting, Penalty, type Solve, type TimerContext } from '@interfaces';
   import Chart, { type Plugin } from 'chart.js/auto';
@@ -81,11 +82,9 @@
     
     /// Best solves
     chart.data.datasets[5].data = getBest(sv, true);
-    
+
     /// Least square
-    const lsqr = sv.reduce((acc, y, x) => [acc[0] + x, acc[1] + y.time, acc[2] + x ** 2, acc[3] + x * y.time], [0, 0, 0, 0]);
-    const m = ( (len + 1) * lsqr[3] - lsqr[0] * lsqr[1] ) / ( (len + 1) * lsqr[2] - lsqr[0] ** 2 );
-    const n = (lsqr[1] - m * lsqr[0]) / (len + 1);
+    const { m, n } = trendLSV(sv.map((s, p) => [len - p, s.time]));
     chart.data.datasets[6].data = <any>[{ x: "0", y: n }, { x: len.toString(), y: m * len + n }];
     chart.update();
   }
@@ -116,7 +115,7 @@
         // Data coordinates
         let pd1 = [data[0].x, data[0].y];
         let pd2 = [data[1].x, data[1].y];
-        let dev = (yAxis.max - yAxis.min) * $stats.dev.value / yAxis.height / 500;
+        let dev = yAxis.height * $stats.dev.value / (yAxis.max - yAxis.min);
         let rv = rotatePoint(pd2[0] - pd1[0], pd2[1] - pd1[1], Math.PI / 2);
         let norm = Math.sqrt( rv[0] ** 2 + rv[1] ** 2 );
         rv = rv.map(e => e * dev / norm);

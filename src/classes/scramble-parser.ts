@@ -1,3 +1,5 @@
+import { Interpreter } from "./scrambleInterpreter";
+
 const scrambleReg = /^([\d]+)?([FRUBLDfrubldzxySME])(?:([w])|&sup([\d]);)?([2'])?$/;
 
 export class ScrambleParser {
@@ -32,8 +34,10 @@ export class ScrambleParser {
 	}
 
   static parseNNN(scramble: string, order: number) {
+    let scr = ScrambleParser.parseNNNString(scramble);
+
     const MOVE_MAP = "URFDLB";
-    let moves = ScrambleParser.parseScramble(scramble, MOVE_MAP);
+    let moves = ScrambleParser.parseScramble(scr, MOVE_MAP);
     let res = [];
     for (let i = 0, maxi = moves.length; i < maxi; i += 1) {
       if (moves[i][1] > 0) {
@@ -74,7 +78,6 @@ export class ScrambleParser {
         }
       }
     } else if ( /(\+\+|\-\-)/.test(scramble) ) {
-      // console.info('Pochmann');
       let moves = scramble.match(/[RD](?:\+\+|--)|U'?/g);
       for (let i = 0, maxi = moves.length; i < maxi; i += 1) {
         switch (moves[i]) {
@@ -151,7 +154,7 @@ export class ScrambleParser {
     let res = [];
     if ( scramble.indexOf('/') > -1 ) { /// Concise notation
       // let parts = scramble.split('/');
-      // console.info('Concise notation not implemented yet!');
+      console.info('Concise notation not implemented yet!');
     } else if ( !/(u|d)/.test(scramble) ) { /// WCA notation
       let letters = [ 'UL', 'UR', 'DL', 'DR', 'ALL', 'U', 'R', 'D', 'L' ];
       let pins = [ 0x8, 0x4, 0x2, 0x1, 0xf, 0xc, 0x5, 0x3, 0xa ];
@@ -203,4 +206,7 @@ export class ScrambleParser {
     return res;
   }
 
+  static parseNNNString(scramble: string): string {
+    return (new Interpreter()).input(scramble);
+  }
 }

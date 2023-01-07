@@ -5,7 +5,7 @@ import type { PuzzleInterface } from '@interfaces';
 import { STANDARD_PALETTE } from "@constants";
 import { Piece } from './Piece';
 import { Sticker } from './Sticker';
-import { assignColors, getAllStickers, roundCorners } from './puzzleUtils';
+import { assignColors, getAllStickers } from './puzzleUtils';
 
 function getAngle(a: Vector3D, b: Vector3D): number {
   return Math.acos( a.unit().dot( b.unit() ) );
@@ -21,7 +21,8 @@ export function REX(): PuzzleInterface {
     faceVectors: [],
     getAllStickers: null,
     faceColors: [ 'y', 'o', 'g', 'w', 'r', 'b' ],
-    move: () => true
+    move: () => true,
+    roundParams: [],
   };
 
   rex.getAllStickers = getAllStickers.bind(rex);
@@ -142,7 +143,7 @@ export function REX(): PuzzleInterface {
   ];
 
   assignColors(rex, rex.faceColors);  
-  roundCorners(rex, null, null, null, null, true);
+  // roundCorners(rex, null, null, null, null, true);
 
   return rex;
 

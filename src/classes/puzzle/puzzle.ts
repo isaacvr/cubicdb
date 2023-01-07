@@ -2,7 +2,7 @@ import { UP, Vector3D } from './../vector3d';
 import type { Sticker } from './Sticker';
 import { Color } from './../Color';
 import { ScrambleParser } from './../scramble-parser';
-import { CubeMode, strToHex } from '@constants';
+import { CubeMode, PX_IMAGE, strToHex } from '@constants';
 import type { Piece } from './Piece';
 import type { PuzzleInterface, PuzzleOptions, PuzzleType, CubeView } from '@interfaces';
 import * as puzzles from './allPuzzles';
@@ -20,12 +20,18 @@ export class Puzzle {
   mode: CubeMode;
   view: CubeView;
   headless: boolean;
+  img: string;
+  options: PuzzleOptions;
 
   constructor(options: PuzzleOptions) {
+    this.options = options;
     this.type = options.type || 'rubik';
     this.mode = options.mode || CubeMode.NORMAL;
     this.view = options.view || 'trans';
     this.headless = !!options.headless;
+    this.img = PX_IMAGE;
+
+    this.options.sequence = '';
 
     if ( this.view === 'plan' ) {
       switch(this.type) {
@@ -75,7 +81,7 @@ export class Puzzle {
     this.order = a;
     this.rotation = this.p.rotation;
 
-    this.adjustColors();    
+    this.adjustColors();
 
   }
 
@@ -295,7 +301,9 @@ export class Puzzle {
 
   static fromSequence(scramble: string, options: PuzzleOptions, inv ?: boolean): Puzzle {
     let p = new Puzzle(options);
-    p.move( (inv) ? Puzzle.inverse(options.type, scramble) : scramble);
+    let s = (inv) ? Puzzle.inverse(options.type, scramble) : scramble;
+    p.move(s);
+    p.options.sequence = s;
     return p;
   }
 
@@ -392,7 +400,7 @@ export class Puzzle {
   }
 
   clone(newMode?: CubeMode): Puzzle {
-    let res = new Puzzle({
+let res = new Puzzle({
       type: this.type,
       mode: typeof newMode != 'undefined' ? newMode : this.mode,
       view: this.view,
@@ -408,11 +416,9 @@ export class Puzzle {
       res.p.pieces.push( pieces[i].clone() );
     }
     res.p.center = this.p.center.clone();
-    res.p.dims = this.p.dims.map(e => e);
-    // res.p.faceColors = this.p.faceColors.map(e => e);
-    // res.p.faceVectors = this.p.faceVectors.map(e => e.clone());
+    res.p.dims = (this.p.dims || []).map(e => e);
     res.p.rotation = Object.assign({}, this.p.rotation);
-    res.rotation = res.p.rotation;
+    res.rotation = Object.assign({}, this.rotation);
 
     return res;
   }

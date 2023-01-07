@@ -2,7 +2,7 @@ import { Vector3 } from 'three';
 import { Vector3D, UP, DOWN, FRONT, CENTER } from '../vector3d';
 import { Sticker } from './Sticker';
 import { Piece } from './Piece';
-import { assignColors, getAllStickers, roundCorners } from './puzzleUtils';
+import { assignColors, getAllStickers } from './puzzleUtils';
 import type { PuzzleInterface } from '@interfaces';
 import { STANDARD_PALETTE } from "@constants";
 
@@ -15,7 +15,9 @@ export function PYRAMINX(n: number): PuzzleInterface {
     faceVectors: [],
     getAllStickers: null,
     faceColors: [ 'g', 'b', 'y', 'r' ],
-    move: () => true
+    move: () => true,
+    dims: [],
+    roundParams: [],
   };
 
   pyra.getAllStickers = getAllStickers.bind(pyra);
@@ -149,7 +151,7 @@ export function PYRAMINX(n: number): PuzzleInterface {
   };
 
   assignColors(pyra, pyra.faceColors);
-  roundCorners(pyra);
+  // roundCorners(pyra);
 
   // Initial rotation
   pyra.rotation = {

@@ -5,7 +5,7 @@ import type { PuzzleInterface } from '@interfaces';
 import { STANDARD_PALETTE } from "@constants";
 import { Piece } from './Piece';
 import { Sticker } from './Sticker';
-import { assignColors, getAllStickers, roundCorners } from './puzzleUtils';
+import { assignColors, getAllStickers } from './puzzleUtils';
 
 export function REDI(): PuzzleInterface {
 
@@ -17,7 +17,9 @@ export function REDI(): PuzzleInterface {
     faceVectors: [],
     getAllStickers: null,
     faceColors: [ 'y', 'o', 'g', 'w', 'r', 'b' ],
-    move: () => true
+    move: () => true,
+    dims: [],
+    roundParams: [],
   };
 
   redi.getAllStickers = getAllStickers.bind(redi);
@@ -97,7 +99,7 @@ export function REDI(): PuzzleInterface {
   ];
 
   assignColors(redi, redi.faceColors);  
-  roundCorners(redi);
+  // roundCorners(redi);
 
   return redi;
 

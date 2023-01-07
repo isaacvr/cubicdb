@@ -9,12 +9,15 @@ export class Piece {
   anchor: Vector3D;
   _cached_mass_center: Vector3D;
   raw: any;
+  allPointsRef: number[][];
 
   constructor(stickers?: Sticker[]) {
     this.stickers = (stickers || []).map(e => e.clone());
     this.updateMassCenter();
     this.hasCallback = false;
     this.callback = null;
+    this.allPointsRef = [];
+    this.computeBoundingBox();
   }
 
   updateMassCenter(recursive?: boolean): Vector3D {
@@ -45,7 +48,7 @@ export class Piece {
   getAllPoints(): Vector3D[] {
     let res = [];
     for (let i = 0, maxi = this.stickers.length; i < maxi; i += 1) {
-      res.push(...this.stickers[i].points);
+      res.push(...this.stickers[i]._generator.points);
     }
     return res;
   }
@@ -129,15 +132,16 @@ export class Piece {
 
   direction(p1: Vector3D, p2: Vector3D, p3: Vector3D, useMassCenter?: boolean, disc ?): -1 | 0 | 1 {
     let dirs = [0, 0, 0];
-    let pts = this.stickers;
+    let st = this.stickers;
     let len = 0;
     let fn = disc || (() => true);
 
-    for (let i = 0, maxi = pts.length; i < maxi; i += 1) {
-      if ( fn(pts[i]) ) {
+    for (let i = 0, maxi = st.length; i < maxi; i += 1) {
+      if ( fn(st[i]) ) {
         len += 1;
-        dirs[ pts[i].direction(p1, p2, p3, useMassCenter) + 1 ] += 1;
+        dirs[ st[i].direction(p1, p2, p3, useMassCenter) + 1 ] += 1;
         if (dirs[0] > 0 && dirs[2] > 0) {
+          console.log("STICKER INTERSECTION: ", st[i], st.map(s => fn(s) ? s.direction(p1, p2, p3, useMassCenter) : null));
           return 0;
         }
       }
@@ -221,6 +225,7 @@ export class Piece {
       res.callback = this.callback;
     }
     this.anchor && (res.anchor = this.anchor.clone());
+    res.allPointsRef = this.allPointsRef.map(e => e.slice());
     return res;
   }
 

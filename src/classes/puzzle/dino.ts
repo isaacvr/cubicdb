@@ -5,7 +5,7 @@ import type { PuzzleInterface } from '@interfaces';
 import { STANDARD_PALETTE } from "@constants";
 import { Piece } from './Piece';
 import { Sticker } from './Sticker';
-import { assignColors, getAllStickers, roundCorners } from './puzzleUtils';
+import { assignColors, getAllStickers } from './puzzleUtils';
 
 export function DINO(): PuzzleInterface {
 
@@ -17,7 +17,8 @@ export function DINO(): PuzzleInterface {
     faceVectors: [],
     getAllStickers: null,
     faceColors: [ 'y', 'o', 'g', 'w', 'r', 'b' ],
-    move: () => true
+    move: () => true,
+    roundParams: [],
   };
 
   dino.getAllStickers = getAllStickers.bind(dino);
@@ -72,8 +73,7 @@ export function DINO(): PuzzleInterface {
   ];
 
   assignColors(dino, dino.faceColors);
-  // roundCorners(dino, 0.05, 0.97);
-  roundCorners(dino);
+  // roundCorners(dino);
 
   return dino;
 

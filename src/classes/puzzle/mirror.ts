@@ -4,7 +4,7 @@ import type { PuzzleInterface } from '@interfaces';
 import { STANDARD_PALETTE } from "@constants";
 import { Piece } from './Piece';
 import { Sticker } from './Sticker';
-import { assignColors, getAllStickers, random, roundCorners } from './puzzleUtils';
+import { assignColors, getAllStickers, random } from './puzzleUtils';
 import { Vector3 } from 'three';
 
 export function MIRROR(n: number): PuzzleInterface {
@@ -19,7 +19,8 @@ export function MIRROR(n: number): PuzzleInterface {
     getAllStickers: null,
     dims: [n, n, n],
     faceColors: [ 'w', 'r', 'g', 'y', 'o', 'b' ],
-    move: () => false
+    move: () => false,
+    roundParams: [],
   };
 
   let fc = mirror.faceColors;
@@ -199,7 +200,7 @@ export function MIRROR(n: number): PuzzleInterface {
 
   assignColors(mirror, mirror.faceColors);
   // roundCorners(mirror, null, null, null, null, (s: Sticker) => s.color != 'x');
-  roundCorners(mirror);
+  // roundCorners(mirror);
 
   pieces.forEach(p => p.stickers.forEach(s => s.color = (!s.color.match(/^[xd]$/)) ? 'gray' : s.color));
 

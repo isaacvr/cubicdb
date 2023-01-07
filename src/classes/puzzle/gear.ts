@@ -5,7 +5,7 @@ import type { PuzzleInterface } from '@interfaces';
 import { STANDARD_PALETTE } from "@constants";
 import { Piece } from './Piece';
 import { Sticker } from './Sticker';
-import { assignColors, getAllStickers, roundCorners } from './puzzleUtils';
+import { assignColors, getAllStickers } from './puzzleUtils';
 
 function stickerFromPath(px: number[], py: number[], a1: Vector3D, a2: Vector3D, a3: Vector3D): Sticker {
   let cx = [ ...px ];
@@ -52,7 +52,8 @@ export function GEAR(): PuzzleInterface {
     faceVectors: [],
     getAllStickers: null,
     faceColors: [ 'y', 'o', 'g', 'w', 'r', 'b' ],
-    move: () => true
+    move: () => true,
+    roundParams: [0.2, 0.9, null, (s: Sticker) => s.color != 'x'],
   };
 
   gear.getAllStickers = getAllStickers.bind(gear);
@@ -235,8 +236,7 @@ export function GEAR(): PuzzleInterface {
   ];
 
   assignColors(gear, gear.faceColors);  
-  // roundCorners(gear, 0.2, 0.9);
-  roundCorners(gear, 0.2, 0.9, null, (s: Sticker) => s.color != 'x');
+  // roundCorners(gear, 0.2, 0.9, null, (s: Sticker) => s.color != 'x');
 
   pieces.forEach(p => p.stickers.forEach(s => {
     if ( s.color == 'x' ) {
