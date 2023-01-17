@@ -15,6 +15,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
   removeSolves: (s) => ipc.send('remove-solves', s),
   handleSolves: (dir) => ipc.on('solves', dir),
   
+  addContest: (s) => ipc.send('add-contest', s),
+  getContests: () => ipc.send('get-contests'),
+  updateContest: (s) => ipc.send('update-contest', s),
+  removeContests: (s) => ipc.send('remove-contests', s),
+  handleContests: (dir) => ipc.on('contests', dir),
+  
   addSession: (s) => ipc.send('add-session', s),
   getSessions: () => ipc.send('get-sessions'),
   removeSession: (s) => ipc.send('remove-session', s),
@@ -30,4 +36,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   minimize: () => ipc.send('minimize'),
   maximize: () => ipc.send('maximize'),
   close: () => ipc.send('close'),
+  generatePDF: (opts) => ipc.send('generate-pdf', opts),
+  zipPDF: (sheets) => ipc.send('zip-pdf', sheets),
+  openFile: (f) => ipc.send('open-file', f),
+  revealFile: (f) => ipc.send('reveal-file', f),
+  handleAny: (cb) => ipc.on('any', cb),
 });

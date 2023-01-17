@@ -1,3 +1,4 @@
+import { STANDARD_PALETTE } from '@constants';
 import type { PuzzleInterface } from '@interfaces';
 
 export function CLOCK(): PuzzleInterface {
@@ -9,7 +10,11 @@ export function CLOCK(): PuzzleInterface {
     faceVectors: null,
     getAllStickers: null,
     move: () => true,
-    palette: null,
+    palette: {
+      black: '#181818',
+      white: '#aaa',
+      gray: '#7f7f7f',
+    },
     pieces: null,
     rotation: {
       x: 0,
@@ -17,6 +22,8 @@ export function CLOCK(): PuzzleInterface {
       z: 0,
     },
     dims: null,
+    roundParams: [],
+    isRounded: true,
   };
 
   let pins: boolean[] = [ false, false, false, false ];

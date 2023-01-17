@@ -1,7 +1,11 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, shell } = require('electron');
 const path = require('path');
+const fs = require('fs');
+const os = require('os');
 const NeDB = require('nedb');
 const electronReload = require('electron-reload');
+const archiver = require('archiver');
+const { exec } = require('child_process');
 
 let win = null;
 const args = process.argv.slice(1),
@@ -12,6 +16,7 @@ let Cards = new NeDB({ filename: __dirname + '/database/cards.db', autoload: tru
 let Tutorials = new NeDB({ filename: __dirname + '/database/tutorials.db', autoload: true });
 let Sessions = new NeDB({ filename: __dirname + '/database/sessions.db', autoload: true });
 let Solves = new NeDB({ filename: __dirname + '/database/solves.db', autoload: true });
+let Contests = new NeDB({ filename: __dirname + '/database/contests.db', autoload: true });
 
 /// Algorithms handler
 ipcMain.on('algorithms', (event, arg) => {
@@ -46,8 +51,6 @@ ipcMain.on('cards', (event) => {
 
 /// Tutorials handler
 ipcMain.on('get-tutorials', (event) => {
-  console.log("GET_TUTORIALS");
-  
   Tutorials.find({}, (err, tutorials) => {
     return event.sender.send('tutorial', ['get-tutorials', err ? null : tutorials]);
   });
@@ -143,6 +146,44 @@ ipcMain.on('remove-solves', (event, arg) => {
   });
 });
 
+/// Contests handler
+ipcMain.on('get-contests', (event) => {
+  Contests.find({}, (err, contests) => {
+    return event.sender.send('contests', ['get-contests', err ? null : contests ]);
+  });
+});
+
+ipcMain.on('add-contest', (event, arg) => {
+  Contests.insert(arg, function(err, contest) {
+    console.log("INSERT CB: ", err, contest);
+    return event.sender.send('contests', ['add-contest', err ? null : contest ]);
+  });
+});
+
+ipcMain.on('update-contest', (event, arg) => {
+  Contests.update({ _id: arg._id }, {
+    $set: {
+      name: arg.name,
+      place: arg.place,
+      date: arg.date,
+      status: arg.status,
+      contestants: arg.contestants,
+      inscriptionI: arg.inscriptionI,
+      inscriptionF: arg.inscriptionF,
+      inscriptionCost: arg.inscriptionCost,
+      rounds: arg.rounds,
+    }
+  }, (err) => {
+    return event.sender.send('contests', ['update-contest', err ? null : arg ]);
+  });
+});
+
+ipcMain.on('remove-contests', (event, arg) => {
+  Contests.remove({ _id: { $in: arg } }, { multi: true }, function(err) {
+    return event.sender.send('contests', ['remove-contests', err ? null : arg ]);
+  });
+});
+
 /// Other Stuff
 ipcMain.on('minimize', () => {
   win.minimize();
@@ -158,6 +199,92 @@ ipcMain.on('maximize', () => {
 
 ipcMain.on('close', () => {
   app.exit();
+});
+
+ipcMain.on('generate-pdf', (event, arg) => {
+  let pdfWin = new BrowserWindow({
+    width: arg.width,
+    height: arg.height,
+    webPreferences: { offscreen: true },
+    show: false,
+  });
+
+  const tmpDir = path.join(os.tmpdir(), '/CubeDB/');
+
+  if ( !fs.existsSync( tmpDir ) ) {
+    fs.mkdirSync( tmpDir, { recursive: true } );
+  }
+
+  let date = (new Date).toLocaleDateString().replace(/\//g, '-');
+  let tempFile = path.join(tmpDir, 'Contest-' + (Math.random().toString().split('.')[1]) + '.html');
+  // let pdfFile = path.join(os.tmpdir(), `/CubeDB/Contest (${arg.mode} Round ${arg.round})_${date}.pdf`);
+
+  try {
+    fs.writeFileSync(tempFile, arg.html);
+
+    pdfWin.webContents.once('did-finish-load', () => {
+      pdfWin.webContents.printToPDF({
+        printBackground: true,
+      }).then((buffer) => {
+        event.sender.send('any', ['generate-pdf', {
+          name: `${arg.mode} - Round ${arg.round}_${date}.pdf`,
+          buffer,
+          mode: arg.mode,
+          round: arg.round,
+        }]);
+
+        try {
+          fs.unlinkSync(tempFile);
+        } catch(err) {}
+
+      }).catch((err) => {
+        event.sender.send('any', ['generate-pdf-error', err]);
+      });
+    });
+  
+    pdfWin.loadFile(tempFile);
+  } catch(err) {
+    return event.sender.send('any', ['generate-pdf-error', err]);
+  }
+});
+
+ipcMain.on('zip-pdf', (event, data) => {
+  const tmpDir = path.join(os.tmpdir(), '/CubeDB/');
+  const { name, files } = data;
+
+  if ( !fs.existsSync( tmpDir ) ) {
+    fs.mkdirSync( tmpDir, { recursive: true } );
+  }
+
+  const output = fs.createWriteStream( path.join(tmpDir, name + '.zip') );  
+
+  output.on('close', () => {
+    event.sender.send('any', ['zip-pdf', path.join(tmpDir, name + '.zip')]);
+  });
+
+  const archive = archiver('zip', {
+    zlib: { level: 1 }
+  });
+
+  archive.on('error', (err) => {
+    event.sender.send('any', ['zip-pdf-error', err]);
+  });
+
+  archive.pipe(output);
+
+  for (let i = 0, maxi = files.length; i < maxi; i += 1) {
+    archive.append(Buffer.from(files[i].buffer), { name: files[i].name });
+  }
+
+  archive.finalize();
+});
+
+ipcMain.on('open-file', (_, dir) => {
+  shell.openExternal("file://" + dir);
+});
+
+ipcMain.on('reveal-file', (_, dir) => {
+  exec('explorer /select,' + dir);
 });
 
 function createWindow() {
@@ -177,7 +304,6 @@ function createWindow() {
   });
 
   if (serve) {
-    console.log('SERVE');
     win.webContents.openDevTools();
 
     electronReload(__dirname, {
@@ -187,7 +313,6 @@ function createWindow() {
     win.loadURL('http://localhost:5000');
 
   } else {
-    console.log('SERVENT');
     win.loadURL(String(Object.assign(new URL('http://a.com'), {
       pathname: path.join(__dirname, 'dist/index.html'),
       protocol: 'file:',

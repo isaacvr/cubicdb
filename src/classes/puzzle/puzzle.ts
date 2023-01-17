@@ -400,12 +400,15 @@ export class Puzzle {
   }
 
   clone(newMode?: CubeMode): Puzzle {
-let res = new Puzzle({
+    let res = new Puzzle({
       type: this.type,
       mode: typeof newMode != 'undefined' ? newMode : this.mode,
       view: this.view,
       order: [this.order[0]],
-      tips: this.arrows
+      tips: this.arrows,
+      headless: this.options.headless,
+      rounded: this.options.rounded,
+      sequence: this.options.sequence
     });
 
     res.p.pieces.length = 0;

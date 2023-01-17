@@ -27,9 +27,9 @@
   <textarea
     on:keyup={ keyup } on:keydown={ keydown }
     { placeholder }
-    bind:value class="bg-white bg-opacity-10 text-gray-400 flex m-auto p-2 rounded-md
-  border-4 border-solid border-transparent focus:text-gray-300 outline-none
-  transition-all duration-200 absolute inset-0 w-full h-full resize-none { cl || '' }"></textarea>
+    bind:value class="text-gray-400 flex m-auto p-2 rounded-md
+  border border-solid border-gray-400 focus:text-gray-300 outline-none
+  transition-all duration-200 absolute inset-0 w-full h-full resize-none { cl || "bg-gray-600 text-gray-300" }"></textarea>
 </div>
 
 <style>

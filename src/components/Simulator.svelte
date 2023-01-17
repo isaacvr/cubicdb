@@ -180,14 +180,12 @@
     let children = scene.children;
     scene.remove(...children);
 
-    console.time('puzzle');
     cube = Puzzle.fromSequence(scramble, {
       type: selectedPuzzle,
       view: "trans",
       order: [order, order, order],
       mode: CubeMode.NORMAL,
     });
-    console.timeEnd('puzzle');
 
     if (sc && cube.p.scramble) {
       cube.p.scramble();

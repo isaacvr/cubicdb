@@ -22,7 +22,6 @@
     rows.length > _rows.length && _rows.concat( (new Array(rows.length - _rows.length).fill( (new Array(columns.length).fill(false)) )) );
     rows.length < _rows.length && (_rows = _rows.slice(0, rows.length));
     _rows = rows.map((r, p) => [ (_rows[p] || [!1])[0], ...map(r) ]);
-    console.log("_ROWS: ", _rows, rows);
     changeSingle();
   }
 

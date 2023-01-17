@@ -8,7 +8,7 @@
   import { solve_cross, solve_xcross } from '@cstimer/tools/cross';
   
   /// Data
-  import { isNNN, MENU } from './TimerMenu';
+  import { isNNN, MENU } from '@constants';
   import { DataService } from '@stores/data.service';
   
   /// Components
@@ -39,6 +39,7 @@
   import { Puzzle } from '@classes/puzzle/puzzle';
   import { PX_IMAGE } from '@constants';
   import { ScrambleParser } from '@classes/scramble-parser';
+  import { getAverageS } from '@helpers/statistics';
 
   const INITIAL_STATISTICS: Statistics = {
     best: { value: 0, better: false },
@@ -95,38 +96,7 @@
   let prob = writable<number>(null);
   let isRunning = writable<boolean>(false);
   
-  $: $isRunning = !($state === TimerState.CLEAN || $state === TimerState.STOPPED);
-
-  function getAverage(n: number, arr: Solve[], calc: AverageSetting): number[] {
-    let res = [];
-    let len = arr.length - 1;
-    let elems = [];
-    let disc = (n === 3) ? 0 : Math.ceil(n * 0.05);
- 
-    for (let i = 0, maxi = len; i <= maxi; i += 1) {
-      if ( arr[len - i].penalty === Penalty.DNF ) {
-        res.push(null);
-        continue;
-      }
-
-      elems.push( arr[len - i].time );
-      if ( elems.length < n ) {
-        res.push(null);
-      } else {
-        let e1 = elems.map(e => e).sort((a, b) => a - b);
-        let sumd = e1.reduce((s, e, p) => {
-          return (p >= disc && p < n - disc) ? s + e : s;
-        }, 0);
-        
-        res.push( sumd / (n - disc * 2) );
-
-        calc === AverageSetting.GROUP && (elems.length = 0);
-        calc === AverageSetting.SEQUENTIAL && elems.shift();
-      }
-    }
-
-    return res;
-  }
+  $: $isRunning = $state === TimerState.INSPECTION || $state === TimerState.RUNNING;
 
   function setConfigFromSolve(s: Solve) {
     $group = s.group || 0;
@@ -158,7 +128,7 @@
     }, 0) ) : null;
     
     for (let i = 0, maxi = AON.length; i < maxi; i += 1) {
-      let avgs = getAverage(AON[i], $solves, $session?.settings?.calcAoX);
+      let avgs = getAverageS(AON[i], $solves, $session?.settings?.calcAoX);
       BEST[i] = avgs.reduce((b, e) => (e) ? Math.min(b, e) : b, BEST[i]);
       let lastAvg = avgs.pop();
       AVG[i] = ( lastAvg ) ? lastAvg : -1;
@@ -262,7 +232,7 @@
   }
 
   function updateImage(md) {
-    let cb = Puzzle.fromSequence( $scramble, { ...all.pScramble.options.get(md), headless: true } );
+    let cb = Puzzle.fromSequence( $scramble, { ...all.pScramble.options.get(md), rounded: true, headless: true } );
 
     generateCubeBundle([cb], 500).then(gen => {
       let subsc = gen.subscribe((c: string) => {
@@ -374,8 +344,11 @@
           }
           case 'add-solve': {
             let s = $allSolves.find(s => s.date === data.data[0].date);
-            s._id = data.data[0]._id;
-            updateSolves();
+            
+            if (s) {
+              s._id = data.data[0]._id;
+              updateSolves();
+            }
             break;
           }
           case 'remove-solves': {

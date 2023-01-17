@@ -1,4 +1,5 @@
 export default function timer(val: number, dec?: boolean, suff?: boolean, html?: boolean): string {
+  if ( val === Infinity ) return "DNF";
   if ( isNaN(val) ) return ( dec ) ? "0.00" : "0";
 
   let v = ~~(val / 10);

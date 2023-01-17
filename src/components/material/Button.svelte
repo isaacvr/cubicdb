@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { ripple } from './actions/ripple.js';
+  import { ripple } from './actions/ripple';
   import { createEventDispatcher } from 'svelte';
 
   const dispatch = createEventDispatcher();

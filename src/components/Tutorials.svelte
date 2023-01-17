@@ -16,8 +16,6 @@
 
   let tutSub = dataService.tutSub.subscribe((t) => {
     if ( !t ) return;
-    
-    console.log("TUTORIALS: ", t);
 
     switch(t[0]) {
       case 'get-tutorials': {

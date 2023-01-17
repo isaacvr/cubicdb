@@ -92,6 +92,7 @@ export interface PuzzleOptions {
   tips?: number[];
   headless?: boolean;
   sequence?: string; // This field has no effects in the constructor
+  rounded?: boolean;
 }
 
 export enum Penalty {
@@ -220,4 +221,70 @@ export interface TimerContext {
   initScrambler(scr?: string, _mode ?: string);
   selectedGroup();
   setConfigFromSolve(s: Solve);
+}
+
+export const ROLES = {
+  CONTESTANT: 1 << 0,
+  JUDGE:      1 << 1,
+  SCRAMBLER:  1 << 2,
+  ORGANIZER:  1 << 3,
+  DELEGATE:   1 << 4,
+  SPONSOR:    1 << 5,
+  GUEST:      1 << 6,
+};
+
+// export const ROLES_STR = [ "Contestant", "Judge", "Scrambler", "Organizer", "Delegate", "Sponsor", "Guest" ];
+export const ROLES_STR = [ "Competidor", "Juez", "Scrambler", "Organizador", "Delegado", "Patrocinador", "Invitado" ];
+
+export interface ContestResult {
+  round: number;
+  solves: Solve[];
+}
+
+export interface Contestant {
+  fullname: string;
+  oid: string;
+  age: number;
+  // gender: "Male" | "Female";
+  gender: "Hombre" | "Mujer";
+  categories: string[];
+  results: {
+    [key: string]: ContestResult[];
+  };
+  role: number; // mask
+  otherData: string;
+  expanded?: boolean;
+}
+
+export interface CubeEvent {
+  _id: string;
+  name: string;
+  place: string;
+  date: string;
+  status: "editing" | "running";
+  contestants: Contestant[];
+  inscriptionI: string;
+  inscriptionF: string;
+  inscriptionCost: number;
+  rounds: {
+    [key: string]: number;
+  }
+}
+
+export interface Sheet {
+  name: string;
+  mode: string;
+  round: number;
+  buffer: Buffer;
+}
+
+export interface SheetRegistry {
+  count: number;
+  total: number;
+  sheets: Sheet[];
+  clear: () => any;
+  save: () => any;
+  addCount: (c: number) => any;
+  addTotal: (c: number) => any;
+  addSheet: (s: Sheet) => any;
 }

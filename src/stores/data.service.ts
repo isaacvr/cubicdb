@@ -1,4 +1,4 @@
-import type { Algorithm, RawCard, Solve, Session, Tutorial } from '../interfaces';
+import type { Algorithm, RawCard, Solve, Session, Tutorial, Sheet, CubeEvent } from '../interfaces';
 import type { IpcRenderer, BrowserWindow } from 'electron';
 import type { Writable } from 'svelte/store';
 import { writable } from 'svelte/store';
@@ -13,9 +13,22 @@ interface SolveSub {
   data: Solve | Solve[];
 }
 
+interface ContestSub {
+  type: string;
+  data: CubeEvent | CubeEvent[];
+}
+
 interface SessionSub {
   type: string;
   data: Session[];
+}
+
+interface PDFOptions {
+  width: number;
+  height: number;
+  html: string;
+  mode: string;
+  round: number;
 }
 
 interface IPC extends IpcRenderer {
@@ -30,6 +43,12 @@ interface IPC extends IpcRenderer {
   updateSolve?: (args?) => any;
   removeSolves?: (args?) => any;
   handleSolves?: (args?) => any;
+  
+  addContest?: (args?) => any;
+  getContests?: (args?) => any;
+  updateContest?: (args?) => any;
+  removeContests?: (args?) => any;
+  handleContests?: (args?) => any;
   
   addSession?: (args?) => any;
   getSessions?: (args?) => any;
@@ -46,6 +65,11 @@ interface IPC extends IpcRenderer {
   minimize?: (args?) => any;
   maximize?: (args?) => any;
   close?: (args?) => any;
+  generatePDF?: (args?) => any;
+  zipPDF?: (args?) => any;
+  openFile?: (args?) => any;
+  revealFile?: (args?) => any;
+  handleAny?: (args?) => any;
 }
 
 export class DataService {
@@ -55,7 +79,9 @@ export class DataService {
   cardSub: Writable< RawCard[] >;
   tutSub: Writable< TutorialData >;
   solveSub: Writable<SolveSub>;
+  contestSub: Writable<ContestSub>;
   sessSub: Writable< { type: string, data: Session | Session[] } >;
+  anySub: Writable<any>;
   isElectron: boolean;
 
   private static _instance: DataService;
@@ -67,6 +93,8 @@ export class DataService {
     this.solveSub = writable< SolveSub >();
     this.tutSub = writable< TutorialData >();
     this.sessSub = writable< SessionSub >();
+    this.contestSub = writable< ContestSub >();
+    this.anySub = writable<any>();
 
     if ( navigator.userAgent.indexOf('Electron') ) {
       this.ipc = (<any> window).electronAPI;
@@ -98,10 +126,17 @@ export class DataService {
       this.cardSub.set(cards);
     });
 
-    this.ipc.handleSolves((_, recs) => {
+    this.ipc.handleSolves((_, slv) => {
       this.solveSub.set({
-        type: recs[0],
-        data: recs[1]
+        type: slv[0],
+        data: slv[1]
+      });
+    });
+    
+    this.ipc.handleContests((_, cnt) => {
+      this.contestSub.set({
+        type: cnt[0],
+        data: cnt[1]
       });
     });
 
@@ -112,25 +147,27 @@ export class DataService {
       });
     });
 
+    this.ipc.handleAny((_, ev) => {
+      this.anySub.set({
+        type: ev[0],
+        data: ev[1],
+      });
+    });
   }
 
   getAlgorithms(dir: string): void {
-    // this.isElectron && this.ipc.send('algorithms', dir);
     this.isElectron && this.ipc.getAlgorithms(dir);
   }
 
   getCards(): void {
-    // this.isElectron && this.ipc.send('cards');
     this.isElectron && this.ipc.getCards();
   }
 
   getTutorials() {
     this.isElectron && this.ipc.getTutorials();
-    // this.isElectron && this.ipc.send('get-tutorials');
   }
 
   addTutorial(t: Tutorial) {
-    // this.isElectron && this.ipc.send('add-tutorial', t);
     this.isElectron && this.ipc.addTutorial(t);
   }
 
@@ -139,62 +176,82 @@ export class DataService {
   }
 
   getSolves() {
-    // this.isElectron && this.ipc.send('get-solves');
     this.isElectron && this.ipc.getSolves();
   }
 
   addSolve(s: Solve) {
-    // this.isElectron && this.ipc.send('add-solve', s);
     this.isElectron && this.ipc.addSolve(s);
   }
 
   updateSolve(s: Solve) {
-    // this.isElectron && this.ipc.send('update-solve', s);
     this.isElectron && this.ipc.updateSolve(s);
   }
 
   removeSolves(s: Solve[]) {
-    // this.isElectron && this.ipc.send('remove-solves', s.map(e => e._id));
     this.isElectron && this.ipc.removeSolves(s.map(e => e._id));
   }
 
   getSessions() {
-    // this.isElectron && this.ipc.send('get-sessions');
     this.isElectron && this.ipc.getSessions();
   }
 
   addSession(s: Session) {
-    // this.isElectron && this.ipc.send('add-session', s);
     this.isElectron && this.ipc.addSession(s);
   }
 
   removeSession(s: Session) {
-    // this.isElectron && this.ipc.send('remove-session', s);
     this.isElectron && this.ipc.removeSession(s);
   }
 
   renameSession(s: Session) {
-    // this.isElectron && this.ipc.send('rename-session', s);
     this.isElectron && this.ipc.renameSession(s);
   }
 
   updateSession(s: Session) {
-    // this.isElectron && this.ipc.send('update-session', s);
     this.isElectron && this.ipc.updateSession(s);
   }
 
+  addContest(c: CubeEvent) {
+    this.isElectron && this.ipc.addContest(c);
+  }
+
+  getContests() {
+    this.isElectron && this.ipc.getContests();
+  }
+
+  updateContest(c: CubeEvent) {
+    this.isElectron && this.ipc.updateContest(c);
+  }
+
+  removeContests(c: CubeEvent[]) {
+    this.isElectron && this.ipc.removeContests(c);
+  }
+
   minimize() {
-    // this.isElectron && this.ipc.send('minimize');
     this.isElectron && this.ipc.minimize();
   }
 
   maximize() {
-    // this.isElectron && this.ipc.send('maximize');
     this.isElectron && this.ipc.maximize();
   }
 
   close() {
-    // this.isElectron && this.ipc.send('close');
     this.isElectron && this.ipc.close();
+  }
+
+  generatePDF(args: PDFOptions) {
+    this.isElectron && this.ipc.generatePDF(args);
+  }
+
+  zipPDF(s: { name: string, files: Sheet[]}) {
+    this.isElectron && this.ipc.zipPDF(s);
+  }
+
+  openFile(f: string) {
+    this.isElectron && this.ipc.openFile(f);
+  }
+
+  revealFile(f: string) {
+    this.isElectron && this.ipc.revealFile(f);
   }
 }

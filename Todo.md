@@ -1,11 +1,16 @@
 # TODO
 ## General
+- [-] Add competition sheet
 - [ ] Add sparring session
-- [ ] Add competition sheet
 - [ ] Add notification system for feedback
 - [x] Check Tooltip position that can be affected by css transforms.
 - [x] Fix plan view
 - [x] Add scramble interpreter
+
+## Contest
+- [ ] Use grid layout for certain scrambles
+- [ ] Add palette to Clock
+- [x] Fix Megaminx color scheme
 
 ## Algorithms
 - [ ] Practice for subsets
@@ -21,7 +26,8 @@
 - [ ] Add smart cubes sync
 - [ ] Pre-defined settings through URL or props
 - [ ] Headless version for quick use
-- [ ] Hide elements when timer is in prevention or running
+- [x] Hide elements when timer is in prevention or running
+- [x] Add zoom and pan to chart
 - [x] Cube image render on a worker
 - [x] settings: Optional - Generate images for better performance
 - [x] settings: Optional - Refresh scramble after cancelled solve
@@ -42,8 +48,26 @@
 - [ ] Tabs for dedicated settings
 
 ## Import-Export
+- [ ] Create adaptors for different apps
+  * Every adaptor should have modes of input and output, depending on the modes of the app.
+  * Adaptor input should get a string, validate it and parse according to a mode of input. The result should be CubeDB related data.
+  * Adaptor output should get a CubeDB related data, validate it and parse according to a mode of output.
 - [ ] Add Cube Desk
 - [ ] Improve UX
+- [ ] Basic migration
+
+## Modelation
+### Cuboids
+- [ ] 1xNxM
+- [ ] 2x2x(2k + 1), k = 1, 2, 3, ...
+
+### Notes
+- 1xNxM puzzles are just flat with 180deg turns only.
+- 2x2x(2k + 1) does not shape shift and they have 180deg turns except for the 2x2 slices (90deg).
+- 2x2x(2k) have a 2x2 core and every piece sticks to that core. That way it can shape shift but they are like a 2x2 with extended pieces.
+
+## Database
+- [ ] Add adaptors for NeDB, localStorage and browser DB.
 
 ## Bugs
 - [ ] Fix F2L 8

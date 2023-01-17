@@ -3,8 +3,9 @@ import { Vector3D } from '../../classes/vector3d';
 import type { PuzzleInterface } from '@interfaces';
 import { Piece } from './Piece';
 import { Sticker } from './Sticker';
-import { assignColors, getAllStickers } from './puzzleUtils';
+import { assignColors, getAllStickers, roundCorners } from './puzzleUtils';
 import { Vector3 } from 'three';
+import { STANDARD_PALETTE } from '@constants';
 
 export function MEGAMINX(_n: number, headless?: false): PuzzleInterface {
   // const n = Math.max(3, ~~(_n / 2) * 2 + 1);
@@ -13,22 +14,7 @@ export function MEGAMINX(_n: number, headless?: false): PuzzleInterface {
 
   const mega: PuzzleInterface = {
     pieces: [],
-    palette: {
-      "white": "rgb(255, 255, 255)",
-      "yellow": "rgb(255,235,59)",
-      "violet": "rgb(144, 60, 154)",
-      "green": "rgb(0, 109, 76)",
-      "red": "rgb(229,57,53)",
-      "blue": "rgb(0, 87, 196)",
-      "lgreen": "rgb(74, 217, 49)",
-      "gray": "rgb(150, 153, 153)",
-      "orange": "rgb(255,167,38)",
-      "pink": "rgb(237, 150, 161)",
-      "lyellow": "rgb(220, 211, 165)",
-      "lblue": "rgb(83, 177, 243)",
-      "d": "rgb(0, 0, 0)",
-      "x": "rgb(80, 80, 80)",
-    },
+    palette: STANDARD_PALETTE,
     rotation: {},
     center: new Vector3D(0, 0, 0),
     faceVectors: [],

@@ -71,7 +71,7 @@ export function cubeToThree(cube: Puzzle, F: number = 1) {
 }
 
 export async function generateCubeBundle(
-  cubes: Puzzle[], width ?: number, all ?: boolean, inCube?: boolean
+  cubes: Puzzle[], width ?: number, all ?: boolean, inCube?: boolean, printable?: boolean
 ): Promise< Writable< string | string[] > > {
   let observer = writable<string | string[]>('__initial__');
 
@@ -83,15 +83,28 @@ export async function generateCubeBundle(
   imageWorker.onmessage = (e) => {
     if ( !e.data ) return observer.update(() => null);
 
-    if ( !all && inCube ) {
+    if ( !all && !inCube ) {
+      observer.update(() => e.data);
+    } else if ( !all && inCube ) {
       cubes[n++].img = e.data;
       if ( n >= cubes.length ) observer.update(() => null);
     } else {
+      if ( inCube ) {
+        if ( !all ) {
+          cubes[n++].img = e.data;
+        } else {
+          for (let i = 0, maxi = cubes.length; i < maxi; i += 1) {
+            cubes[i].img = e.data[i];
+          }
+        }
+      }
       observer.update(() => e.data);
+
+      if ( n >= cubes.length || all ) observer.update(() => null);
     }
   };
 
-  imageWorker.postMessage([cubes.map(c => c.options), width, all]);
+  imageWorker.postMessage([cubes.map(c => c.options), width, all, printable]);
 
   return observer;
 }

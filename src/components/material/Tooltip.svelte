@@ -91,8 +91,8 @@
   }
 
   .tooltip {
-    @apply fixed bg-neutral-600 px-3 py-2
-      rounded-sm flex transition-all text-neutral-200;
+    @apply fixed bg-neutral-600 px-3 py-2 rounded-sm flex
+      transition-all text-neutral-200 items-center justify-center text-center;
     width: max-content;
     max-width: 14rem;
     transition-duration: var(--duration);
@@ -101,6 +101,7 @@
     top: var(--y);
     z-index: 999;
     font-size: 1rem;
+    filter: drop-shadow(0 0 0.2rem #222);
   }
 
   .tooltip:not(.visible) {

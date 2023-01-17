@@ -34,6 +34,11 @@ body {
   @apply w-40 h-40;
 }
 
+mark {
+  @apply bg-purple-600 p-1 text-slate-200 inline-flex items-center justify-center;
+  border-radius: .25rem;
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: .7rem;

@@ -13,7 +13,7 @@ export function MIXUP(): PuzzleInterface {
 
   const mixup: PuzzleInterface = {
     pieces: [],
-    palette: Object.assign({ gray: "#E8E8E8" }, STANDARD_PALETTE),
+    palette: STANDARD_PALETTE,
     rotation: {},
     center: new Vector3D(0, 0, 0),
     faceVectors: [],

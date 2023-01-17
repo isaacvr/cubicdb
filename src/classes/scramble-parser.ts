@@ -203,6 +203,7 @@ export class ScrambleParser {
       //   res.push([ parseInt(pins.replace('U', '1').replace('d', '0'), 2), d, u ]);
       // }
     }
+
     return res;
   }
 

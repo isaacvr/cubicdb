@@ -120,7 +120,7 @@ export function roundCorners(p: PuzzleInterface, rd ?: number, scale ?: number, 
   if ( p.isRounded ) {
     return;
   }
-  
+
   const CHECK = fn || ((s: Sticker) => !(s instanceof FaceSticker));
   
   p.isRounded = true;

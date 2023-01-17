@@ -1,9 +1,10 @@
 <script lang="ts">
+  import Chart, { type Plugin } from 'chart.js/auto';
+  import zoomPlugin from 'chartjs-plugin-zoom';
   import { evalLine, map, rotatePoint, rotateSegment } from '@helpers/math';
-    import { trendLSV } from '@helpers/statistics';
+  import { trendLSV } from '@helpers/statistics';
   import timer from '@helpers/timer';
   import { AverageSetting, Penalty, type Solve, type TimerContext } from '@interfaces';
-  import Chart, { type Plugin } from 'chart.js/auto';
   import { onMount } from 'svelte';
 
   export let context: TimerContext;
@@ -59,7 +60,7 @@
       }
       if ( arr[ idx(i) ].time < best ) {
         best = arr[ idx(i) ].time;
-        bests.push({ x: i.toString(), y: best });
+        bests.push({ x: i, y: best });
       }
     }
 
@@ -70,22 +71,29 @@
     const len = sv.length - 1;
 
     /// Regular solves
-    chart.data.datasets[0].data = <any> sv.map((e, p) => ({x: p.toString(), y: sv[len - p].time }));
-      
+    // chart.data.datasets[0].data = sv.map((e, p) => ({x: p, y: sv[len - p].time }));
+    // chart.data.datasets[0].data = sv.map((e, p) => sv[len - p].time);
+    chart.data.datasets[0].data.length = 0;
+    chart.data.datasets[0].data = sv.map((e, p) => [p, sv[len - p].time]);
+    chart.options.plugins.zoom.limits.x.max = len + 1;
+    
     let avgs = [ 5, 12, 50, $AoX ];
 
     /// Ao5 to AoX
     avgs.forEach((e, i) => {
-      chart.data.datasets[i + 1].data = <any> getAverage(e, sv, calcAoX).map((e, p) => ({ x: p.toString(), y: e }));
+      chart.data.datasets[i + 1].data.length = 0;
+      chart.data.datasets[i + 1].data = getAverage(e, sv, calcAoX).map((e, p) => ({ x: p, y: e }));
       chart.data.datasets[i + 1].label = 'Ao' + e;
     });
     
     /// Best solves
+    chart.data.datasets[5].data.length = 0;
     chart.data.datasets[5].data = getBest(sv, true);
 
     /// Least square
     const { m, n } = trendLSV(sv.map((s, p) => [len - p, s.time]));
-    chart.data.datasets[6].data = <any>[{ x: "0", y: n }, { x: len.toString(), y: m * len + n }];
+    chart.data.datasets[6].data.length = 0;
+    chart.data.datasets[6].data = <any>[{ x: 0, y: n }, { x: len, y: m * len + n }];
     chart.update();
   }
 
@@ -94,18 +102,19 @@
       showLine: true,
       fill: false,
       tension: .1,
-      xAxisID: 'xAxis',
-      yAxisID: 'yAxis',
+      xAxisID: 'x',
+      yAxisID: 'y',
     };
 
     ctx = chartElement.getContext('2d');
     
+    Chart.register(zoomPlugin);
     Chart.defaults.color = '#bbbbbb';
 
     const shadingArea: Plugin = {
       id: 'shadingArea',
       beforeDatasetsDraw(ch) {
-        const { ctx, scales: {yAxis} } = ch;
+        const { ctx, scales: {y} } = ch;
         const { data, hidden } = ch.getDatasetMeta(6);
 
         if ( data.length < 2 || hidden ) {
@@ -115,7 +124,7 @@
         // Data coordinates
         let pd1 = [data[0].x, data[0].y];
         let pd2 = [data[1].x, data[1].y];
-        let dev = yAxis.height * $stats.dev.value / (yAxis.max - yAxis.min);
+        let dev = y.height * $stats.dev.value / (y.max - y.min);
         let rv = rotatePoint(pd2[0] - pd1[0], pd2[1] - pd1[1], Math.PI / 2);
         let norm = Math.sqrt( rv[0] ** 2 + rv[1] ** 2 );
         rv = rv.map(e => e * dev / norm);
@@ -147,7 +156,6 @@
     };
 
     chart = new Chart(ctx, {
-      type: 'line',
       data: {
         datasets: [
           { data: [], type: 'scatter', label: 'Time', ...common },
@@ -163,11 +171,11 @@
         responsive: true,
         maintainAspectRatio: true,
         scales: {
-          xAxis:{
+          x:{
             ticks: { display: false },
             grid: { display: false },
           },
-          yAxis: {
+          y: {
             position: 'left',
             grid: { color: '#555' },
             ticks: {
@@ -189,8 +197,24 @@
               title: (items) => `Solve #${items[0].parsed.x + 1}`
             }
           },
+          zoom: {
+            zoom: {
+              wheel: {
+                enabled: true
+              },
+              mode: 'x',
+              scaleMode: "x",
+            },
+            pan: {
+              enabled: true,
+              mode: "x",
+            },
+            limits: {
+              x: { min: 1, max: 40 },
+            },
+          }
         }
-      },
+      },//*/
       plugins: [ shadingArea ],
     });
 

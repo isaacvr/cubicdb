@@ -48,6 +48,11 @@
       cube: '/assets/logo.png',
       ready: true,
       timer: false,
+    }, {
+      title: 'Contest',
+      route: '/contest',
+      cube: '/assets/logo.png',
+      puzzle: new Puzzle({ type: 'redi' })
     }
   ];
 

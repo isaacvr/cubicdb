@@ -24,7 +24,7 @@
   import ArrowExpandIcon from '@icons/ArrowExpandHorizontal.svelte';
   import SelectInverseIcon from '@icons/SelectInverse.svelte';
   import SelectOffIcon from '@icons/SelectOff.svelte';
-    import { PX_IMAGE } from "@constants";
+  import { PX_IMAGE } from "@constants";
 
   const dataService = DataService.getInstance();
 
@@ -211,51 +211,41 @@
   </div>
 
   <Modal bind:this={ modal } bind:show={ show } onClose={ closeHandler }>
-    <!-- {#if type === 'edit-scramble'} -->
-      <div class="flex justify-between items-center text-gray-400 m-2">
-        <h2 class="m-1 w-max">{ timer(sSolve.time, false, true) }
-          {#if sSolve.penalty === Penalty.P2}<span class="font-small text-red-500">+2</span>{/if}
-          {#if sSolve.penalty === Penalty.DNF}<span class="font-small text-red-500">DNF</span>{/if}
-        </h2>
-        <span class="flex items-center font-small">
-          <CalendarIcon width="1.2rem" height="1.2rem"/>
-          <span class="ml-2">
-            { moment(sSolve.date).format('D MMM YYYY') } <br>
-            { moment(sSolve.date).format('HH:MM') }
-          </span>
+    <div class="flex justify-between items-center text-gray-400 m-2">
+      <h2 class="m-1 w-max">{ timer(sSolve.time, false, true) }
+        {#if sSolve.penalty === Penalty.P2}<span class="font-small text-red-500">+2</span>{/if}
+        {#if sSolve.penalty === Penalty.DNF}<span class="font-small text-red-500">DNF</span>{/if}
+      </h2>
+      <span class="flex items-center font-small">
+        <CalendarIcon width="1.2rem" height="1.2rem"/>
+        <span class="ml-2">
+          { moment(sSolve.date).format('D MMM YYYY') } <br>
+          { moment(sSolve.date).format('HH:MM') }
         </span>
-      </div>
-      <!-- <mat-divider></mat-divider> -->
-      <div class="algorithm-container text-gray-400 m-2">
-        <Dice5Icon /> <span>{ sSolve.scramble }</span>
-        <img src={ preview } class="preview col-start-1 col-end-3 mb-2" alt="">
-        
-        <CommentIcon /> <TextArea bind:value={ sSolve.comments } placeholder="Comment..."/>
-      </div>
-      <!-- <mat-divider></mat-divider> -->
-      <div class="mt-2 flex">
-        <Button flat><DeleteIcon /> Delete</Button>
-        <Button flat on:click={ () => modal.close() }><CloseIcon /> Cancel</Button>
-        <Button flat on:click={ () => modal.close(sSolve) } class="mr-2"><SendIcon /> Save</Button>
-        <Button flat
-          class={ sSolve.penalty === Penalty.P2 ? 'text-red-500' : '' }
-          on:click={ () => setPenalty(Penalty.P2) }>+2</Button>
+      </span>
+    </div>
+    <div class="algorithm-container text-gray-400 m-2">
+      <Dice5Icon /> <span>{ sSolve.scramble }</span>
+      <img src={ preview } class="preview col-start-1 col-end-3 mb-2" alt="">
+      
+      <CommentIcon /> <TextArea bind:value={ sSolve.comments } placeholder="Comment..."/>
+    </div>
+    <div class="mt-2 flex">
+      <Button flat><DeleteIcon /> Delete</Button>
+      <Button flat on:click={ () => modal.close() }><CloseIcon /> Cancel</Button>
+      <Button flat on:click={ () => modal.close(sSolve) } class="mr-2"><SendIcon /> Save</Button>
+      <Button flat
+        class={ sSolve.penalty === Penalty.P2 ? 'text-red-500' : '' }
+        on:click={ () => setPenalty(Penalty.P2) }>+2</Button>
 
+      <Button flat
+        class={ sSolve.penalty === Penalty.DNF ? 'text-red-500' : '' }
+        on:click={ () => setPenalty(Penalty.DNF) }>DNF</Button>
+      
         <Button flat
-          class={ sSolve.penalty === Penalty.DNF ? 'text-red-500' : '' }
-          on:click={ () => setPenalty(Penalty.DNF) }>DNF</Button>
-        
-          <Button flat
-          class={ sSolve.penalty === Penalty.NONE ? 'text-green-500' : '' }
-          on:click={ () => setPenalty(Penalty.NONE) }>No Penalty</Button>
-        <!-- <button mat-button (click)="deleteSolve(rawData)"><mat-icon svgIcon="delete"></mat-icon> Delete </button>
-        <button mat-button (click)="close()"><mat-icon svgIcon="close"></mat-icon> Cancel</button>
-        <button mat-button (click)="close(rawData)"><mat-icon svgIcon="send"></mat-icon> Save</button>
-        <button mat-button (click)="setPenalty(1)" [class.red]="rawData.penalty == 1">+2</button>
-        <button mat-button (click)="setPenalty(2)" [class.red]="rawData.penalty == 2">DNF</button>
-        <button mat-button (click)="setPenalty(0)" [class.green]="rawData.penalty == 0">No Penalty</button> -->
-      </div>
-    <!-- {/if} -->
+        class={ sSolve.penalty === Penalty.NONE ? 'text-green-500' : '' }
+        on:click={ () => setPenalty(Penalty.NONE) }>No Penalty</Button>
+    </div>
   </Modal>
 
   <Modal bind:this={ deleteAllModal } bind:show={ showDeleteAll } onClose={ (res) => res && _delete($solves) }>
@@ -270,6 +260,7 @@
 <style lang="postcss">
 #grid {
   grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr));
+  max-height: calc(100vh - 8rem);
 }
 
 .font-small {

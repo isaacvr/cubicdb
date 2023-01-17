@@ -13,6 +13,7 @@
   import Algorithms from '@components/Algorithms.svelte';
   import Simulator from '@components/Simulator.svelte';
   import TutorialParser from '@components/TutorialParser.svelte';
+  import Contest from '@components/Contest.svelte';
 </script>
 
 <Router>
@@ -27,5 +28,6 @@
     <Route path="/timer" component={ Timer }/>
     <Route path="/pll-trainer" component={ PllTrainer }/>
     <Route path="/simulator" component={ Simulator }/>
+    <Route path="/contest" component={ Contest }/>
   </main>
 </Router>

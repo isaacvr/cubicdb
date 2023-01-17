@@ -72,15 +72,20 @@
           }) );
         }
 
-        let subscr = generateCubeBundle(puzzles, null, true).subscribe((res: string[]) => {
-          if ( res !== null ) {
-            images.push(...res);
-          } else {
-            lastTime = Date.now();
-            stage = 1;
-            setTimeout(() => subscr());
-          }
-        });
+
+        generateCubeBundle(puzzles, null, true).then(g => {
+          let subscr = g.subscribe((res: string[]) => {
+            if ( (res as unknown) === '__initial__' ) return;
+
+            if ( res !== null ) {
+              images.push(...res);
+            } else {
+              lastTime = Date.now();
+              stage = 1;
+              setTimeout(() => subscr());
+            }
+          });
+        })
         break;
       }
       case 1: {
@@ -251,10 +256,5 @@
 
   h2 {
     @apply text-xl font-bold text-gray-300 mt-4;
-  }
-
-  mark {
-    @apply bg-purple-600 p-1 text-slate-200 inline-flex items-center justify-center;
-    border-radius: .25rem;
   }
 </style>

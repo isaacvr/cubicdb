@@ -141,7 +141,6 @@ export class Piece {
         len += 1;
         dirs[ st[i].direction(p1, p2, p3, useMassCenter) + 1 ] += 1;
         if (dirs[0] > 0 && dirs[2] > 0) {
-          console.log("STICKER INTERSECTION: ", st[i], st.map(s => fn(s) ? s.direction(p1, p2, p3, useMassCenter) : null));
           return 0;
         }
       }

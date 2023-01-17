@@ -3,6 +3,7 @@ import { roundCorners, roundStickerCorners } from "@classes/puzzle/puzzleUtils";
 import { Sticker } from "@classes/puzzle/Sticker";
 import { Vector2D } from "@classes/vector2-d";
 import { BACK, CENTER, DOWN, FRONT, LEFT, RIGHT, UP, Vector3D } from "@classes/vector3d";
+import { PRINTABLE_PALETTE } from "@constants";
 import { cubeToThree } from "@helpers/cube-draw";
 import { map } from "@helpers/math";
 import type { PuzzleOptions } from "@interfaces";
@@ -244,7 +245,7 @@ function projectedView(cube: Puzzle, DIM: number) {
   const PI_3 = PI / 3;
   const PI_6 = PI / 6;
   const FACTOR = 2.1;
-  let LW = 3;  
+  let LW = DIM * 0.007;
 
   if ( cube.type === 'pyraminx' ) {
     H = W / 1.1363636363636365;
@@ -357,8 +358,7 @@ function projectedView(cube: Puzzle, DIM: number) {
             points[j] = SQ1_ANCHORS[0].clone();
           }
 
-          // let rounded = st1;
-          let rounded = roundStickerCorners(st1, null, 0.95);
+          let rounded = cube.options.rounded ? roundStickerCorners(st1, ...cube.p.roundParams) : st1;
           rounded.color = st.color;
           rounded.oColor = st.oColor;
 
@@ -475,8 +475,10 @@ function projectedView(cube: Puzzle, DIM: number) {
       limits[0] = __min(limits[0], p.x); limits[1] = __max(limits[1], p.x);
       limits[2] = __min(limits[2], p.y); limits[3] = __max(limits[3], p.y);
     });
-  }  
+  }
 
+  allStickers.sort((s1, s2) => s1.color === 'd' ? -1 : 1);
+  
   const PAD = 2;
 
   for (let i = 0, maxi = allStickers.length; i < maxi; i += 1) {
@@ -605,12 +607,10 @@ function clockImage(cube: Puzzle, DIM: number) {
   const PINS2 = cube.p.raw[0].map((e, p) => !PINS1[ ((p >> 1) << 1) + 1 - (p & 1) ]);
   const MAT = cube.p.raw[1];
   const RAD = DIM / 2;
-
-  const theme = 'dark';
-
-  const BLACK = '#181818';
-  const WHITE = (theme === 'dark') ? '#aaa' : '#eee';
-  const GRAY = '#7f7f7f';
+  
+  const BLACK = cube.p.palette.black;
+  const WHITE = cube.p.palette.white;
+  const GRAY = cube.p.palette.gray;
 
   drawSingleClock(ctx, RAD, RAD, RAD, MAT[0], PINS2, BLACK, WHITE, GRAY);
   drawSingleClock(ctx, RAD, canvas.width - RAD, RAD, MAT[1], PINS1, WHITE, BLACK, GRAY);
@@ -618,10 +618,15 @@ function clockImage(cube: Puzzle, DIM: number) {
   return canvas.convertToBlob();
 }
 
-async function generateCube(options: PuzzleOptions[], width ?: number, all ?: boolean) {
+async function generateCube(options: PuzzleOptions[], width ?: number, all ?: boolean, printable ?: boolean) {
   const W = width || 250;
   const cubes = options.map(o => {
     let p = Puzzle.fromSequence(o.sequence || '', o);
+
+    if ( printable ) p.p.palette = PRINTABLE_PALETTE;
+    if ( o.rounded ) {
+      roundCorners(p.p, ...p.p.roundParams);
+    }
     return p;
   });
 
@@ -676,7 +681,7 @@ async function generateCube(options: PuzzleOptions[], width ?: number, all ?: bo
 
 onmessage = function(e) {
   const { data } = e;
-  generateCube(data[0], data[1], data[2]);
+  generateCube(data[0], data[1], data[2], data[3]);
 }
 
 export {};

@@ -31,7 +31,7 @@
 
   const {
     state, ready, tab, solves, allSolves, session, Ao5, stats, scramble,
-    group, mode, hintDialog, hint, cross, xcross, preview, isRunning,
+    group, mode, hintDialog, hint, cross, xcross, preview,isRunning,
     sortSolves, initScrambler, updateStatistics, selectedGroup, setConfigFromSolve
   } = context;
   
@@ -134,10 +134,6 @@
   }
 
   function keyDown(event: KeyboardEvent) {
-    if ( (<any> window).modals ) {
-      return;
-    }
-
     const { code } = event;
     
     switch( $tab ) {
@@ -171,10 +167,8 @@
             initScrambler();
           }
         } else if ( ['KeyR', 'Escape', 'KeyS'].indexOf(code) > -1 ) {
-          if ( code === 'KeyS' ||
-            (code === 'Escape' &&
-              ($state === TimerState.INSPECTION || $state === TimerState.RUNNING) &&
-              $session.settings.scrambleAfterCancel ) ) {
+          if ( (code === 'KeyS' && !$isRunning) ||
+            (code === 'Escape' && $isRunning && $session.settings.scrambleAfterCancel ) ) {
             reset();
             initScrambler();
           } else {
@@ -291,12 +285,14 @@
 
         runTimer(1);
       }
-    } else if ( event.code === 'KeyE' ) {
-      if ( !show || (show && type != 'edit-scramble') ) {
-        openDialog('edit-scramble', $scramble, (scr) => scr && initScrambler(scr));
+    } else if ( !$isRunning ) {
+      if ( event.code === 'KeyE' ) {
+        if ( !show || (show && type != 'edit-scramble') ) {
+          openDialog('edit-scramble', $scramble, (scr) => scr && initScrambler(scr));
+        }
+      } else if ( event.code === 'KeyO' ) {
+        openDialog('old-scrambles', null, () => {});
       }
-    } else if ( event.code === 'KeyO' ) {
-      openDialog('old-scrambles', null, () => {});
     }
   }
 
@@ -340,7 +336,7 @@
       </span>
     {/if}
     <span class:isRunning={ $isRunning } contenteditable="false" bind:innerHTML={$scramble}></span>
-    <div class="absolute top-1 right-12">
+    <div class="absolute top-1 right-12" class:isRunning={ $isRunning }>
       {#each options as option}
         <Tooltip class="cursor-pointer" position="left" text={ option.text }>
           <div class="my-3 mx-1 w-5 h-5 { textColor }" on:click={ option.handler }>
@@ -381,7 +377,7 @@
   <div id="hints"
     class="bg-white bg-opacity-10 w-max p-2 { textColor } rounded-md
       shadow-md absolute select-none left-0 top-1/4 transition-all duration-1000"
-    class:isVisible={$hintDialog && $state <= 2}>
+    class:isVisible={$hintDialog && !$isRunning}>
 
     <table class="inline-block align-middle transition-all duration-300" class:nshow={!$hint}>
       <tr><td>Cross</td> <td>{$cross}</td></tr>
@@ -403,7 +399,7 @@
 
   <div id="statistics"
     class="{ textColor } pointer-events-none transition-all duration-300"
-    class:isVisible={$state <= 2}>
+    class:isRunning={ $isRunning }>
 
     <div class="left absolute select-none bottom-0 left-0 ">
       <table class="ml-3">
@@ -462,6 +458,7 @@
     class="absolute bottom-2 flex items-center justify-center w-full transition-all duration-300
       select-none bg-transparent h"
     class:expanded={ prevExpanded }
+    class:isRunning={ $isRunning }
     on:click={() => prevExpanded = !prevExpanded }>
     <img
       on:dragstart|preventDefault
@@ -575,10 +572,6 @@
     @apply ml-0 text-amber-300;
   }
 
-  #statistics:not(.isVisible) {
-    opacity: 0;
-  }
-
   #statistics tr.better {
     text-decoration: underline;
     font-weight: bold;
@@ -611,5 +604,9 @@
   #preview-container.expanded {
     height: 98%;
     background-color: rgba(0, 0, 0, 0.4);
+  }
+
+  .isRunning {
+    @apply transition-all duration-200 pointer-events-none opacity-0;
   }
 </style>

@@ -2,6 +2,8 @@
 /src/scrappers
 /src/database/solves.db
 /src/database/sessions.db
+/src/database/contests.db
+/src/components/Contest.svelte
 /dist
 
 # Logs
