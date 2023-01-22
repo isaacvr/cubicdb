@@ -1,8 +1,6 @@
 import type { PuzzleOptions } from '@interfaces';
 import { rn, rndEl, rndProb } from '../lib/mathlib';
 
-const DEBUG = false;
-
 export function mega(turns, suffixes, length) {
   turns = turns || [[""]];
   suffixes = suffixes || [""];
@@ -39,8 +37,6 @@ export let probs: Map<string, number[]> = new Map<string, number[]>();
 export let options: Map<string, PuzzleOptions> = new Map<string, PuzzleOptions> ();
 
 export function regScrambler(mode: string | string[], callback: Function, filter_and_probs?) {
-  DEBUG && console.log('[regscr]', mode);
-
   if ( Array.isArray(mode) ) {
     for (let i = 0; i < mode.length; i++) {
       scramblers.set(mode[i], callback);

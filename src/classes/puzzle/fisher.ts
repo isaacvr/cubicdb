@@ -5,7 +5,6 @@ import { STANDARD_PALETTE } from "@constants";
 import { Vector3D } from '../vector3d';
 import { Sticker } from './Sticker';
 import { assignColors, getAllStickers } from './puzzleUtils';
-import { Vector3 } from 'three';
 
 export function FISHER(): PuzzleInterface {
 
@@ -131,13 +130,6 @@ export function FISHER(): PuzzleInterface {
   //   "L": { plane: upFace[0].stickers[2].points.map(e => e.clone()).reverse(), angle: -90 },
   //   "B": { plane: upFace[5].stickers[2].points.map(e => e.clone()), angle: -90 },
   // };
-
-  fisher.vectorsFromCamera = function(vecs: any[], cam) {
-    return vecs.map(e => {
-      let vp = new Vector3(e.x, e.y, e.z).project(cam);
-      return new Vector3D(vp.x, -vp.y, 0);
-    });
-  };
 
   fisher.toMove = function(piece: Piece, sticker: Sticker, dir: Vector3D) {
     let mc = piece.updateMassCenter();

@@ -1,4 +1,3 @@
-import { Vector3 } from 'three';
 import { LEFT, UP, BACK, RIGHT, FRONT, DOWN, CENTER } from './../vector3d';
 import { Vector3D } from '../../classes/vector3d';
 import type { PuzzleInterface } from '@interfaces';
@@ -45,13 +44,6 @@ export function DINO(): PuzzleInterface {
     pieces.push( pieceLT.rotate(CENTER, UP, PI_2 * i).rotate(CENTER, FRONT, PI) );
     pieces.push( pieceLT.rotate(ref, ref, -2 * PI / 3).rotate(CENTER, UP, PI_2 * i) );
   }
-
-  dino.vectorsFromCamera = function(vecs: any[], cam) {
-    return vecs.map(e => {
-      let vp = new Vector3(e.x, e.y, e.z).project(cam);
-      return new Vector3D(vp.x, -vp.y, 0);
-    });
-  };
 
   dino.toMove = function(piece: Piece, sticker: Sticker, dir: Vector3D) {
     let mc = sticker.updateMassCenter();

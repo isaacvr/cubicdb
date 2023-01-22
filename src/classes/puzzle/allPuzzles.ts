@@ -19,6 +19,9 @@ import { BDG } from './bandaged222';
 import { BICUBE } from './bicube';
 import { SQUARE2 } from './square2';
 import { registerPuzzle } from './puzzleRegister';
+import { PANDORA } from './pandora';
+import { ULTIMATE_SKEWB } from './ultimateSkewb';
+import { PYRAMINX_CRYSTAL } from './pyraminxCrystal';
 
 registerPuzzle("rubik", "Rubik's Cube", RUBIK, true);
 registerPuzzle("mirror", "Mirror", MIRROR, true);
@@ -40,3 +43,6 @@ registerPuzzle("gear", "Gear", GEAR, false);
 registerPuzzle("dreidel", "Dreidel", DREIDEL, false);
 registerPuzzle("bandaged222", "Bandaged 2x2x2", BDG, false);
 registerPuzzle("bicube", "Bicube", BICUBE, false);
+registerPuzzle("pandora", "Pandora", PANDORA, false);
+registerPuzzle("ultimateSkewb", "Ultimate Skewb", ULTIMATE_SKEWB, false);
+registerPuzzle("pyraminxCrystal", "Pyraminx Crystal", PYRAMINX_CRYSTAL, false);

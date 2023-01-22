@@ -74,21 +74,22 @@
     // chart.data.datasets[0].data = sv.map((e, p) => ({x: p, y: sv[len - p].time }));
     // chart.data.datasets[0].data = sv.map((e, p) => sv[len - p].time);
     chart.data.datasets[0].data.length = 0;
-    chart.data.datasets[0].data = sv.map((e, p) => [p, sv[len - p].time]);
-    chart.options.plugins.zoom.limits.x.max = len + 1;
+    // chart.data.datasets[0].data = sv.map((e, p) => ({x: p, y: sv[len - p].time}));
+    chart.data.datasets[0].data = sv.map((e, p) => sv[len - p].time);
+    chart.options.plugins.zoom.limits.x.max = len + 1;  
     
-    let avgs = [ 5, 12, 50, $AoX ];
+    // let avgs = [ 5, 12, 50, $AoX ];
 
-    /// Ao5 to AoX
-    avgs.forEach((e, i) => {
-      chart.data.datasets[i + 1].data.length = 0;
-      chart.data.datasets[i + 1].data = getAverage(e, sv, calcAoX).map((e, p) => ({ x: p, y: e }));
-      chart.data.datasets[i + 1].label = 'Ao' + e;
-    });
+    // /// Ao5 to AoX
+    // avgs.forEach((e, i) => {
+    //   chart.data.datasets[i + 1].data.length = 0;
+    //   chart.data.datasets[i + 1].data = getAverage(e, sv, calcAoX).map((e, p) => ({ x: p, y: e }));
+    //   chart.data.datasets[i + 1].label = 'Ao' + e;
+    // });
     
-    /// Best solves
-    chart.data.datasets[5].data.length = 0;
-    chart.data.datasets[5].data = getBest(sv, true);
+    // /// Best solves
+    // chart.data.datasets[5].data.length = 0;
+    // chart.data.datasets[5].data = getBest(sv, true);
 
     /// Least square
     const { m, n } = trendLSV(sv.map((s, p) => [len - p, s.time]));
@@ -104,6 +105,10 @@
       tension: .1,
       xAxisID: 'x',
       yAxisID: 'y',
+    };
+
+    const fastOptions = {
+      normalized: true,
     };
 
     ctx = chartElement.getContext('2d');
@@ -158,13 +163,13 @@
     chart = new Chart(ctx, {
       data: {
         datasets: [
-          { data: [], type: 'scatter', label: 'Time', ...common },
-          { data: [], type: 'scatter', hidden: true, label: 'Ao5', ...common },
-          { data: [], type: 'scatter', hidden: true, label: 'Ao12', ...common },
-          { data: [], type: 'scatter', hidden: true, label: 'Ao50', ...common },
-          { data: [], type: 'scatter', hidden: true, label: 'AoX', ...common },
-          { data: [], type: 'scatter', label: 'Best', borderDash: [5, 5], ...common },
-          { data: [], type: 'scatter', label: 'Trend', borderDash: [5, 5], ...common,  },
+          { data: [], type: 'line', label: 'Time', ...common, ...fastOptions },
+          { data: [], type: 'line', hidden: true, label: 'Ao5', ...common, ...fastOptions },
+          { data: [], type: 'line', hidden: true, label: 'Ao12', ...common, ...fastOptions },
+          { data: [], type: 'line', hidden: true, label: 'Ao50', ...common, ...fastOptions },
+          { data: [], type: 'line', hidden: true, label: 'AoX', ...common, ...fastOptions },
+          { data: [], type: 'line', label: 'Best', borderDash: [5, 5], ...common, ...fastOptions },
+          { data: [], type: 'line', label: 'Trend', borderDash: [5, 5], ...common,  },
         ]
       },
       options: {

@@ -3,8 +3,7 @@ import { Vector3D } from '../../classes/vector3d';
 import type { PuzzleInterface } from '@interfaces';
 import { Piece } from './Piece';
 import { Sticker } from './Sticker';
-import { assignColors, getAllStickers, roundCorners } from './puzzleUtils';
-import { Vector3 } from 'three';
+import { assignColors, getAllStickers } from './puzzleUtils';
 import { STANDARD_PALETTE } from '@constants';
 
 export function MEGAMINX(_n: number, headless?: false): PuzzleInterface {
@@ -183,13 +182,6 @@ export function MEGAMINX(_n: number, headless?: false): PuzzleInterface {
       }
     }
     return true;
-  };
-
-  mega.vectorsFromCamera = function(vecs: any[], cam) {
-    return vecs.map(e => {
-      let vp = new Vector3(e.x, e.y, e.z).project(cam);
-      return new Vector3D(vp.x, -vp.y, 0);
-    });
   };
 
   mega.toMove = function(pc: Piece, st: Sticker, u: Vector3D) {

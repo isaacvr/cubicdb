@@ -1,4 +1,3 @@
-import { Vector3 } from 'three';
 import { LEFT, UP, BACK, RIGHT, FRONT, DOWN, CENTER } from './../vector3d';
 import { Vector3D } from '../../classes/vector3d';
 import type { PuzzleInterface } from '@interfaces';
@@ -67,13 +66,6 @@ export function BICUBE(): PuzzleInterface {
   pieces.push( ...group.map(e => e.rotate(CENTER, FRONT, PI_2)) );
   pieces.pop();
   pieces.push( big1 );
-
-  bicube.vectorsFromCamera = function(vecs: any[], cam) {
-    return vecs.map(e => {
-      let vp = new Vector3(e.x, e.y, e.z).project(cam);
-      return new Vector3D(vp.x, -vp.y, 0);
-    });
-  };
 
   bicube.toMove = function(piece: Piece, sticker: Sticker, dir: Vector3D) {
     let mc = sticker.updateMassCenter();

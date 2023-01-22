@@ -25,7 +25,6 @@ ipcMain.on('algorithms', (event, arg) => {
     parentPath: arg
   }, (err, algs) => {
     if ( err ) {
-      console.error('Server error :(');
       event.sender.send('algorithms', []);
       return;
     }
@@ -39,7 +38,6 @@ ipcMain.on('algorithms', (event, arg) => {
 ipcMain.on('cards', (event) => {
   Cards.find({}, (err, algs) => {
     if ( err ) {
-      console.error('Server error :(');
       event.sender.send('cards', []);
       return;
     }
@@ -91,7 +89,11 @@ ipcMain.on('get-sessions', (event) => {
 });
 
 ipcMain.on('add-session', (event, arg) => {
-  Sessions.insert({ name: arg.name, settings: arg.settings }, function(err, session) {
+  Sessions.insert({
+    name: arg.name,
+    settings: arg.settings,
+    tName: arg.tName || "",
+  }, function(err, session) {
     return event.sender.send('session', [ 'add-session', err ? null: session ]);
   });
 });
@@ -155,7 +157,6 @@ ipcMain.on('get-contests', (event) => {
 
 ipcMain.on('add-contest', (event, arg) => {
   Contests.insert(arg, function(err, contest) {
-    console.log("INSERT CB: ", err, contest);
     return event.sender.send('contests', ['add-contest', err ? null : contest ]);
   });
 });

@@ -1,4 +1,3 @@
-import { Vector3 } from 'three';
 import { RIGHT, LEFT, DOWN, FRONT } from './../vector3d';
 import { Vector3D, CENTER, BACK, UP } from '../../classes/vector3d';
 import type { PuzzleInterface } from '@interfaces';
@@ -112,13 +111,6 @@ export function SKEWB(): PuzzleInterface {
         }
       }
     }
-  };
-
-  skewb.vectorsFromCamera = function(vecs: any[], cam) {
-    return vecs.map(e => {
-      let vp = new Vector3(e.x, e.y, e.z).project(cam);
-      return new Vector3D(vp.x, -vp.y, 0);
-    });
   };
 
   skewb.toMove = function(piece: Piece, sticker: Sticker, dir: Vector3D) {

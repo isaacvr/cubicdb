@@ -1,4 +1,3 @@
-import { Vector3 } from 'three';
 import { Sticker } from './Sticker';
 import { LEFT, UP, BACK, FRONT, RIGHT, CENTER, DOWN } from './../vector3d';
 import { STANDARD_PALETTE } from '@constants';
@@ -139,13 +138,6 @@ export function AXIS(): PuzzleInterface {
   }
 
   pieces.forEach(p => p.stickers.forEach(s => s.vecs = vdir.map(e => e.clone())));
-
-  axis.vectorsFromCamera = function(vecs: any[], cam) {
-    return vecs.map(e => {
-      let vp = new Vector3(e.x, e.y, e.z).project(cam);
-      return new Vector3D(vp.x, -vp.y, 0);
-    });
-  };
 
   axis.toMove = function(piece: Piece, sticker: Sticker, dir: Vector3D) {
     let mc = piece.updateMassCenter();

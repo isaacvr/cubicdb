@@ -1,5 +1,4 @@
 import { MersenneTwisterObject } from "./mersennetwister";
-const DEBUG = false;
 
 export const Cnk = [];
 export const fact = [1];
@@ -528,7 +527,6 @@ export function createPrun(
     if (done == 0) {
       break;
     }
-    DEBUG && console.log("[prun]", done);
   }
 }
 
@@ -666,7 +664,6 @@ _.updatePrun = function (targetDepth) {
       return;
     }
     this.prunDepth = depth;
-    DEBUG && console.log(depth, this.prunTableSize - this.prevSize, +new Date() - t);
     this.prevSize = this.prunTableSize;
   }
 };

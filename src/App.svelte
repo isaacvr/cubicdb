@@ -1,5 +1,4 @@
 <script lang="ts">
-  import './App.css';
   /// Svelte Stuff
   import { Route, Router } from 'svelte-routing';
 
@@ -14,6 +13,7 @@
   import Simulator from '@components/Simulator.svelte';
   import TutorialParser from '@components/TutorialParser.svelte';
   import Contest from '@components/Contest.svelte';
+  import ImportExport from '@components/import-export/ImportExport.svelte';
 </script>
 
 <Router>
@@ -29,5 +29,6 @@
     <Route path="/pll-trainer" component={ PllTrainer }/>
     <Route path="/simulator" component={ Simulator }/>
     <Route path="/contest" component={ Contest }/>
+    <Route path="/import-export" component={ ImportExport }/>
   </main>
 </Router>

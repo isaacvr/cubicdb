@@ -1,4 +1,3 @@
-import { Vector3 } from 'three';
 import { Vector3D, UP, DOWN, FRONT, CENTER } from '../vector3d';
 import { Sticker } from './Sticker';
 import { Piece } from './Piece';
@@ -91,13 +90,6 @@ export function PYRAMORPHIX(): PuzzleInterface {
   ];
 
   pieces.forEach(p => p.stickers.forEach(s => s.vecs = vdirs.map(v => v.clone())));
-  
-  pyra.vectorsFromCamera = function(vecs: any[], cam) {
-    return vecs.map(e => {
-      let vp = new Vector3(e.x, e.y, e.z).project(cam);
-      return new Vector3D(vp.x, -vp.y, 0);
-    });
-  };
 
   pyra.toMove = function(piece: Piece, sticker: Sticker, dir: Vector3D) {
     let mc = sticker.updateMassCenter();

@@ -1275,7 +1275,6 @@ function initRawSymPrun(PrunTable, N_RAW, N_SYM, RawMove, RawConj, SymMove, SymS
         }
       }
     }
-    // console.log(depth, done, InitPrunProgress);
   }
   setPruning(PrunTable, N_SIZE, (depth + 1) ^ 0xf);
   return depth + 1;

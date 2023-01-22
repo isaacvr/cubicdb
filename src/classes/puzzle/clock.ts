@@ -1,4 +1,4 @@
-import { STANDARD_PALETTE } from '@constants';
+// import { STANDARD_PALETTE } from '@constants';
 import type { PuzzleInterface } from '@interfaces';
 
 export function CLOCK(): PuzzleInterface {

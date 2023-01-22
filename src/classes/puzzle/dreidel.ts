@@ -5,7 +5,6 @@ import { STANDARD_PALETTE } from "@constants";
 import { Piece } from './Piece';
 import { Sticker } from './Sticker';
 import { assignColors, getAllStickers } from './puzzleUtils';
-import { Vector3 } from 'three';
 import { FaceSticker } from './FaceSticker';
 import { Vector2D } from '../vector2-d';
 
@@ -213,13 +212,6 @@ export function DREIDEL(): PuzzleInterface {
     pieces.push( edgePiece.rotate(CENTER, LEFT, PI_2).rotate(CENTER, UP, PI_2 * i) );
     pieces.push( edgePiece.rotate(CENTER, LEFT, PI).rotate(CENTER, UP, PI_2 * i) );
   }
-
-  dreidel.vectorsFromCamera = function(vecs: any[], cam) {
-    return vecs.map(e => {
-      let vp = new Vector3(e.x, e.y, e.z).project(cam);
-      return new Vector3D(vp.x, -vp.y, 0);
-    });
-  };
 
   dreidel.toMove = function(piece: Piece, sticker: Sticker, dir: Vector3D) {
     let normalTurn = [ LEFT, UP, BACK ].reduce((ac, v) => ac || v.cross(dir).abs() < 1e-6, false);

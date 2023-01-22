@@ -85,7 +85,6 @@ export class Color {
         break;
       }
       default: {
-        console.log('Invalid parameters: ', arguments);
         // throw new TypeError(`Invalid parameters`);
       }
     }

@@ -1499,7 +1499,6 @@ function createPrun_0() {
       }
     }
     ++depth;
-    // console.log(depth + '\t' + done_0 + '\t' + (+new Date - start));
   }
 }
 

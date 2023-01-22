@@ -1,4 +1,3 @@
-import { Vector3 } from 'three';
 import { LEFT, UP, BACK, RIGHT, FRONT, DOWN, CENTER } from './../vector3d';
 import { Vector3D } from '../../classes/vector3d';
 import type { PuzzleInterface } from '@interfaces';
@@ -20,7 +19,7 @@ export function REX(): PuzzleInterface {
     center: new Vector3D(0, 0, 0),
     faceVectors: [],
     getAllStickers: null,
-    faceColors: [ 'y', 'o', 'g', 'w', 'r', 'b' ],
+    faceColors: [ 'w', 'r', 'g', 'y', 'o', 'b' ],
     move: () => true,
     roundParams: [],
   };
@@ -115,13 +114,6 @@ export function REX(): PuzzleInterface {
   pieces.push( ...groupSmall.map(e => e.rotate(CENTER, FRONT, PI)) );
 
   pieces.push( piece3.rotate(CENTER, RIGHT, PI_2), piece3.rotate(CENTER, LEFT, PI_2) );
-
-  rex.vectorsFromCamera = function(vecs: any[], cam) {
-    return vecs.map(e => {
-      let vp = new Vector3(e.x, e.y, e.z).project(cam);
-      return new Vector3D(vp.x, -vp.y, 0);
-    });
-  };
 
   rex.toMove = function(piece: Piece, sticker: Sticker, dir: Vector3D) {;
     let c = new Vector3D( Math.sign(dir.x) / 3, Math.sign(dir.y) / 3, Math.sign(dir.z) / 3 );

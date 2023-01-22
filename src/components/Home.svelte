@@ -44,11 +44,12 @@
       puzzle: new Puzzle({ type: 'rubik', mode: CubeMode.GRAY, order: [2] })
     }, {
       title: 'Import / Export',
-      route: '/import_export',
+      route: '/import-export',
       cube: '/assets/logo.png',
       ready: true,
       timer: false,
-    }, {
+    },
+    {
       title: 'Contest',
       route: '/contest',
       cube: '/assets/logo.png',

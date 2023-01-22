@@ -5,7 +5,7 @@ import type { Vector3D } from '../classes/vector3d';
 import type { CubeMode } from "../constants";
 import type { Writable } from 'svelte/store';
 
-export declare type PuzzleType = 'rubik' | 'skewb' | 'square1' | 'pyraminx' | 'axis' | 'fisher' | 'ivy' | 'clock' | 'megaminx' | 'mirror' | 'dino' | 'rex' | 'redi' | 'mixup' | 'pyramorphix' | 'gear' | 'dreidel' | 'bandaged222' | 'bicube' | 'square2';
+export declare type PuzzleType = 'rubik' | 'skewb' | 'square1' | 'pyraminx' | 'axis' | 'fisher' | 'ivy' | 'clock' | 'megaminx' | 'mirror' | 'dino' | 'rex' | 'redi' | 'mixup' | 'pyramorphix' | 'gear' | 'dreidel' | 'bandaged222' | 'bicube' | 'square2' | 'pandora' | 'ultimateSkewb' | 'pyraminxCrystal';
 export declare type CubeView = 'plan' | 'trans' | '2d';
 
 export enum TimerState {
@@ -287,4 +287,17 @@ export interface SheetRegistry {
   addCount: (c: number) => any;
   addTotal: (c: number) => any;
   addSheet: (s: Sheet) => any;
+}
+
+export interface CubeDBData {
+  sessions: Session[];
+  solves: Solve[];
+}
+
+// This is for import/export adaptors to implement
+export interface CubeDBAdaptor {
+  name: string;
+  modes: string[];
+  toCubeDB: (scr: string, mode?: number) => CubeDBData;
+  fromCubeDB: (data: CubeDBData, mode?: number) => string;
 }

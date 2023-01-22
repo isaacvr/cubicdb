@@ -1,4 +1,3 @@
-import { Vector3 } from 'three';
 import { Piece } from './Piece';
 import { RIGHT, LEFT, BACK, UP, FRONT, DOWN } from './../vector3d';
 import { Vector3D, CENTER } from '../../classes/vector3d';
@@ -136,13 +135,6 @@ export function SQUARE2(): PuzzleInterface {
   
   pieces.push(mid);
   pieces.push(mid.rotate(CENTER, UP, PI));
-
-  sq2.vectorsFromCamera = function(vecs: any[], cam) {
-    return vecs.map(e => {
-      let vp = new Vector3(e.x, e.y, e.z).project(cam);
-      return new Vector3D(vp.x, -vp.y, 0);
-    });
-  };
 
   sq2.toMove = function(piece: Piece, sticker: Sticker, dir: Vector3D) {
     let ang = (sticker.vecs[0].cross( UP ).abs() < 1e-6) ? PI_6 : PI;

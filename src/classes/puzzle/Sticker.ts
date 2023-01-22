@@ -141,7 +141,6 @@ export class Sticker {
     s.oColor = this.oColor;
     s._cached_mass_center = this._cached_mass_center.clone();
     s.vecs = this.vecs.map(e => e.clone());
-    // s.boundingBox = this.boundingBox.map(e => e.clone());
     return s;
   }
 

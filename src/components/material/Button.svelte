@@ -6,11 +6,24 @@
 
   export let flat = false;
   export let rp = {};
+  export let file = null;
   let cl = "";
   export { cl as class };
 
   function handleClick(...args) {
     dispatch('click', ...args);
+
+    if ( file ) {
+      let f = document.createElement('input');
+      f.type = 'file';
+      f.style.display = 'none';
+      f.addEventListener('change', (e) => {
+        dispatch('files', f.files);
+        f.remove();
+      });
+      document.body.appendChild(f);
+      f.click();
+    }
   }
 </script>
 

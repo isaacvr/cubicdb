@@ -471,7 +471,6 @@ function utilscramble(type, len) {
 			], 0, len);
 			return ret.replace(/ /g, "");
 	}
-	console.log('Error: ', type);
 }
 
 regScrambler([

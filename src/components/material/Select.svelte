@@ -6,9 +6,9 @@
   export let placeholder: any = 'Select';
   export let value: any = placeholder;
   export let items: any[];
-  export let onChange = (item?: any, pos?: number) => {};
+  export let onChange = (item?: any, pos?: number, arr?: any) => {};
   export let label = (item?: any) => (item || "");
-  export let transform = (item: any) => item.value;
+  export let transform = (item: any, pos?: number, arr?: any) => item.value;
 
   let showOptions = false;
 
@@ -23,13 +23,15 @@
   <div
     on:click|self|stopPropagation={handleClick}
     class="content bg-gray-700 p-2 h-10 rounded-md select-none pr-8">{
-    items.some(a => transform(a) === value) ? label( items.find(e => transform(e) === value) ) : placeholder
+    items.some((a, p, i) => transform(a, p, i) === value)
+      ? label( items.find((e, p, i) => transform(e, p, i) === value) )
+      : placeholder
   }</div>
   <div class="expand w-5 h-5 absolute right-2 top-3 pointer-events-none">
     <ExpandIcon width="100%" height="100%"/>
   </div>
   <div class="options
-    bg-gray-700 bg-opacity-100 p-2 w-full rounded-md border-2 border-gray-800
+    bg-gray-700 bg-opacity-100 p-2 w-full rounded-md border border-solid border-gray-400
     absolute z-10 grid grid-cols-1 max-h-72 overflow-x-hidden overflow-y-scroll"
     class:visible={ showOptions }
     >
@@ -38,8 +40,8 @@
         class="option transition-all duration-200 hover:bg-gray-800 p-1 rounded-md"
         on:click={ () => {
           showOptions = false;
-          value = transform(item);
-          onChange(item, pos);
+          value = transform(item, pos, items);
+          onChange(item, pos, items);
         } }>{ label(item) }</span>
     {/each}
   </div>

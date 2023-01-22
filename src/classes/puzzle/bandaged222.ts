@@ -1,4 +1,3 @@
-import { Vector3 } from 'three';
 import { LEFT, UP, BACK, RIGHT, FRONT, DOWN, CENTER } from './../vector3d';
 import { Vector3D } from '../../classes/vector3d';
 import type { PuzzleInterface } from '@interfaces';
@@ -66,13 +65,6 @@ export function BDG(): PuzzleInterface {
 
   pieces.push( big );
   pieces.push( big.rotate(CENTER, FRONT, PI).rotate(CENTER, UP, PI_2) );
-
-  bdg.vectorsFromCamera = function(vecs: any[], cam) {
-    return vecs.map(e => {
-      let vp = new Vector3(e.x, e.y, e.z).project(cam);
-      return new Vector3D(vp.x, -vp.y, 0);
-    });
-  };
 
   bdg.toMove = function(piece: Piece, sticker: Sticker, dir: Vector3D) {
     let mc = sticker.updateMassCenter();

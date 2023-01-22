@@ -1,4 +1,3 @@
-import * as THREE from 'three';
 import { LEFT, UP, BACK, RIGHT, FRONT, DOWN, CENTER } from './../vector3d';
 import { Vector3D } from '../../classes/vector3d';
 import type { PuzzleInterface } from '@interfaces';
@@ -26,12 +25,19 @@ function getType(p: Piece): number {
   return p.stickers.filter(s => s.color != 'd').length;
 }
 
-function edgeCallback(p: Piece, center: Vector3D, dir: Vector3D, ang: number, three ?: boolean) {
+function edgeCallback(p: Piece, center: Vector3D, dir: Vector3D, ang: number, three ?: boolean, vc?: any) {
   if ( three ) {
-    let p1 = <THREE.Object3D> (<any>p);
+    // let p1 = <THREE.Object3D> (<any>p);
+    // let dir1 = new Vector3D(dir.x, dir.y, dir.z);
+    // let a = (<Piece>p1.userData).anchor.rotate(center, dir1, ang);
+    // let u1 = new Vector3(a.x, a.y, a.z);
+    // let u1n = u1.clone().normalize();
+    // p1.rotateOnWorldAxis(<any>dir, ang);
+    // p1.rotateOnWorldAxis(u1n, -ang * 4 / 3);
+    let p1 = <any> p;
     let dir1 = new Vector3D(dir.x, dir.y, dir.z);
     let a = (<Piece>p1.userData).anchor.rotate(center, dir1, ang);
-    let u1 = new THREE.Vector3(a.x, a.y, a.z);
+    let u1 = new vc(a.x, a.y, a.z);
     let u1n = u1.clone().normalize();
     p1.rotateOnWorldAxis(<any>dir, ang);
     p1.rotateOnWorldAxis(u1n, -ang * 4 / 3);
@@ -172,13 +178,6 @@ export function GEAR(): PuzzleInterface {
 
   pieces.push( centerPiece.rotate(CENTER, RIGHT, PI_2) );
   pieces.push( centerPiece.rotate(CENTER, LEFT, PI_2) );
-
-  gear.vectorsFromCamera = function(vecs: any[], cam) {
-    return vecs.map(e => {
-      let vp = new THREE.Vector3(e.x, e.y, e.z).project(cam);
-      return new Vector3D(vp.x, -vp.y, 0);
-    });
-  };
 
   gear.toMove = function(piece: Piece, sticker: Sticker, dir: Vector3D) {
     if ( ![ LEFT, UP, FRONT ].reduce((ac, v) => ac || v.cross(dir).abs() < 1e-6, false) ) {

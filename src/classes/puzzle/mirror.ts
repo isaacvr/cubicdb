@@ -5,14 +5,13 @@ import { STANDARD_PALETTE } from "@constants";
 import { Piece } from './Piece';
 import { Sticker } from './Sticker';
 import { assignColors, getAllStickers, random } from './puzzleUtils';
-import { Vector3 } from 'three';
 
 export function MIRROR(n: number): PuzzleInterface {
   const len = 2;
 
   const mirror: PuzzleInterface = {
     pieces: [],
-    palette: Object.assign({ gray: "#E8E8E8" }, STANDARD_PALETTE),
+    palette: STANDARD_PALETTE,
     rotation: {},
     center: new Vector3D(0, 0, 0),
     faceVectors: [],
@@ -140,24 +139,12 @@ export function MIRROR(n: number): PuzzleInterface {
   .add( FRONT.mul( getPosition(1, n - 1) ) )
   .add( RIGHT.mul( getPosition(0, n - 1) ) );
   
-  // console.log("INI_FIN: ", ini, fin);
   mirror.center = ini.add(fin).div(2);
 
   let c1 = boundingBox[0].add(boundingBox[1]).div(2);
 
-  // console.log( "RANGE: ", computeBoundingBox(pieces));
-
   pieces.forEach(p => p.sub(c1, true).mul(len / n, true));
   mirror.center.sub(c1, true).mul(len / n, true);
-  
-  // console.log('CENTER: ', mirror.center, computeBoundingBox());
-  
-  mirror.vectorsFromCamera = function(vecs: any[], cam) {
-    return vecs.map(e => {
-      let vp = new Vector3(e.x, e.y, e.z).project(cam);
-      return new Vector3D(vp.x, -vp.y, 0);
-    });
-  };
 
   mirror.toMove = function(piece: Piece, sticker: Sticker, dir: Vector3D) {
     let st = piece.stickers.find(s => s.color === 'x' && s.normal().cross(dir).abs() < 1e-6);
@@ -167,7 +154,7 @@ export function MIRROR(n: number): PuzzleInterface {
     }
 
     st = st._generator;
-    // console.log("STICKER: ", st, st.normal());
+    
     let ac = st.updateMassCenter().add( st.normal().mul(-0.01) );
     let toMovePieces = pieces.filter(p => p.direction1(ac, dir) === 0);
     return {
@@ -202,7 +189,7 @@ export function MIRROR(n: number): PuzzleInterface {
   // roundCorners(mirror, null, null, null, null, (s: Sticker) => s.color != 'x');
   // roundCorners(mirror);
 
-  pieces.forEach(p => p.stickers.forEach(s => s.color = (!s.color.match(/^[xd]$/)) ? 'gray' : s.color));
+  pieces.forEach(p => p.stickers.forEach(s => s.color = (!s.color.match(/^[xd]$/)) ? 'lightGray' : s.color));
 
   return mirror;
 

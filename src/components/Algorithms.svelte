@@ -7,7 +7,7 @@
   import type { Algorithm, Card } from "@interfaces";
   import { DataService } from "@stores/data.service";
   import Tooltip from "./material/Tooltip.svelte";
-    import { getSearchParams } from "@helpers/strings";
+  import { getSearchParams } from "@helpers/strings";
 
   export let location;
   

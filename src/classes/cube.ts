@@ -126,7 +126,7 @@ class CubeBase {
           this.layerColor["B"] = this.colors[i];
         }
       } else {
-        console.error("ERROR in sub-cube position of edges");
+        // throw new Error("Error in sub-cube position of edges");
       }
     }
   }
@@ -647,14 +647,11 @@ export class Cube {
     if ( sequenceRegex.test(seq) ) {
       let moves;
       
-      // console.log('MOVE: ', seq);
 
       if( inv ) {
         moves = Cube.inverse(seq).split(' ');
-        // console.log('MOVE-INV: ', moves);
       } else {
         moves = Cube.sanitizeSequence(seq);
-        // console.log('MOVE-SAN: ', moves);
       }
 
       for (let i = 0, maxi = moves.length; i < maxi; i += 1) {

@@ -8,6 +8,17 @@ export default defineConfig({
   server: {
     port: 5000
   },
+  build: {
+    sourcemap: false,
+    rollupOptions: {
+      // cache: false,
+      output: {
+        sourcemap: false,
+        format: "esm",
+        dir: "dist",
+      }
+    }
+  },
   resolve: {
     alias: {
       "@icons": "svelte-material-icons",
@@ -20,6 +31,7 @@ export default defineConfig({
       "@interfaces": path.resolve(__dirname, './src/interfaces/index.ts'),
       "@stores": path.resolve(__dirname, './src/stores'),
       "@workers": path.resolve(__dirname, './src/workers'),
-    }
+    },
+    dedupe: ["three"]
   }
 })

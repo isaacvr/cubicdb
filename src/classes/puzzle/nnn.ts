@@ -5,14 +5,12 @@ import { STANDARD_PALETTE } from "@constants";
 import { Piece } from './Piece';
 import { Sticker } from './Sticker';
 import { assignColors, getAllStickers, random } from './puzzleUtils';
-import { Vector3 } from 'three';
 
-export function RUBIK(a: number, b?:number, c?:number): PuzzleInterface {
-  // const a = n;
-  // const b = n;
-  // const c = n;
+export function RUBIK(_a: number, _b:number, _c:number): PuzzleInterface {
+  const dims = [_a, _b, _c].sort();
+  const a = dims[0], b = dims[1], c = dims[2];
   const isCube = a == b && b == c;
-  const len = [a, b, c].reduce((m, e) => Math.min(m, 2 / e), 2);
+  const len = dims.reduce((m, e) => Math.min(m, 2 / e), 2);
 
   const rubik: PuzzleInterface = {
     pieces: [],
@@ -21,7 +19,7 @@ export function RUBIK(a: number, b?:number, c?:number): PuzzleInterface {
     center: new Vector3D(0, 0, 0),
     faceVectors: [],
     getAllStickers: null,
-    dims: [a, b, c],
+    dims,
     faceColors: [ 'w', 'r', 'g', 'y', 'o', 'b' ],
     move: () => false,
     roundParams: [],
@@ -40,6 +38,12 @@ export function RUBIK(a: number, b?:number, c?:number): PuzzleInterface {
   const PI = Math.PI;
   const PI_2 = PI / 2;
   const vdir = [ RIGHT, FRONT, UP ];
+  const turns: { 0: Vector3D, 1: number }[] = [
+    [ UP, PI_2 * (1 + (a === 1 ? 1 : ((a ^ b) & 1))) ],
+    [ FRONT, PI_2 * (1 + (a === 1 ? 1 : ((a ^ c) & 1))) ],
+    [ RIGHT, PI_2 * (1 + (a === 1 ? 1 : ((b ^ c) & 1))) ],
+  ];
+  // const shapeShifts = turns.some(t => t[1] < 3) && turns.some(t => t[1] > 3);
 
   for (let z = 0; z < c; z += 1) {
     for (let y = 0; y < b; y += 1) {
@@ -129,19 +133,13 @@ export function RUBIK(a: number, b?:number, c?:number): PuzzleInterface {
     return true;
   };
 
-  rubik.vectorsFromCamera = function(vecs: any[], cam) {
-    return vecs.map(e => {
-      let vp = new Vector3(e.x, e.y, e.z).project(cam);
-      return new Vector3D(vp.x, -vp.y, 0);
-    });
-  };
-
   rubik.toMove = function(piece: Piece, sticker: Sticker, dir: Vector3D) {
     let mc = sticker.updateMassCenter();
     let toMovePieces = pieces.filter(p => p.direction1(mc, dir) === 0);
+    let tn = turns.map((e) => [ e[0].cross(dir).abs2(), e[1] ]).sort((a, b) => a[0] - b[0]);
     return {
       pieces: toMovePieces,
-      ang: PI_2
+      ang: tn[0][1]
     };
   };
 

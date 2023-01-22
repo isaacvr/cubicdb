@@ -1,4 +1,3 @@
-import { Vector3 } from 'three';
 import { Vector3D, UP, DOWN, FRONT, CENTER } from '../vector3d';
 import { Sticker } from './Sticker';
 import { Piece } from './Piece';
@@ -132,13 +131,6 @@ export function PYRAMINX(n: number): PuzzleInterface {
       }
     }
     return true;
-  };
-
-  pyra.vectorsFromCamera = function(vecs: any[], cam) {
-    return vecs.map(e => {
-      let vp = new Vector3(e.x, e.y, e.z).project(cam);
-      return new Vector3D(vp.x, -vp.y, 0);
-    });
   };
 
   pyra.toMove = function(piece: Piece, sticker: Sticker, dir: Vector3D) {

@@ -4,7 +4,6 @@
   import { CubeMode } from "@constants";
   import { Puzzle } from "@classes/puzzle/puzzle";
   import type { PuzzleType } from "@interfaces";
-  import * as THREE from "three";
   import { TrackballControls } from "three/examples/jsm/controls/TrackballControls";
   import { puzzleReg } from "@classes/puzzle/puzzleRegister";
   import { cubeToThree } from "@helpers/cube-draw";
@@ -13,28 +12,40 @@
   import Tooltip from "@components/material/Tooltip.svelte";
   import Modal from "@components/Modal.svelte";
   import Select from "@components/material/Select.svelte";
-  import Input from "@components/material/Input.svelte";
   import Button from "@components/material/Button.svelte";
+  import Input from "@components/material/Input.svelte";
+  import {
+    DoubleSide, Matrix4, Mesh, MeshBasicMaterial, Object3D, PerspectiveCamera,
+    PlaneBufferGeometry, PointLight, Raycaster, Scene, Vector2, Vector3, WebGLRenderer,
+    type Intersection
+  } from "three";
+
+  function vectorsFromCamera(vecs: any[], cam) {
+    return vecs.map(e => {
+      let vp = new Vector3(e.x, e.y, e.z).project(cam);
+      return new Vector3D(vp.x, -vp.y, 0);
+    });
+  }
 
   function mouseIntersection(
     mx: number,
     my: number,
     arr: any[],
-    camera: THREE.PerspectiveCamera
-  ): THREE.Intersection[] {
-    let mouse = new THREE.Vector2(mx, my);
-    let raycaster = new THREE.Raycaster();
+    camera: PerspectiveCamera
+  ): Intersection[] {
+    let mouse = new Vector2(mx, my);
+    let raycaster = new Raycaster();
     raycaster.setFromCamera(mouse, camera);
     return raycaster.intersectObjects(arr);
   }
 
   function drag(
-    piece: THREE.Intersection,
-    ini: THREE.Vector2,
-    fin: THREE.Vector2,
+    piece: Intersection,
+    ini: Vector2,
+    fin: Vector2,
     cube: Puzzle,
-    group: THREE.Object3D,
-    camera: THREE.PerspectiveCamera
+    group: Object3D,
+    camera: PerspectiveCamera
   ) {
     camera.updateMatrix();
     camera.updateMatrixWorld();
@@ -46,7 +57,7 @@
     let v = fin.clone().sub(ini);
     let vv = new Vector3D(v.x, v.y, 0);
 
-    let faceVectors = cube.p.vectorsFromCamera(vecs, camera, u);
+    let faceVectors = vectorsFromCamera(vecs, camera);
 
     let dir: number;
     let best: Vector3D;
@@ -60,12 +71,12 @@
       }
       return ac;
     }, -Infinity);
-
+    
     if (!best) {
       return null;
     }
 
-    let animationBuffer: THREE.Object3D[][] = [];
+    let animationBuffer: Object3D[][] = [];
     let userData: any[][] = [];
     let angs: number[] = [];
     let animationTimes: number[] = [];
@@ -85,7 +96,7 @@
 
     groupToMove.forEach((g) => {
       let pieces: Piece[] = g.pieces;
-      let subBuffer: THREE.Object3D[] = [];
+      let subBuffer: Object3D[] = [];
       let subUserData = [];
 
       group.children.forEach((p) => {
@@ -114,17 +125,14 @@
   const ANIMATION_TIME = 200; /// Default animation time: 200ms
 
   let cube: Puzzle;
-  let scramble = [
-    "(-5,0)", "/", "(0,3)", "/", "(-3,0)", "/", "(5,-4)", "/", "(-3,0)",
-    "/", "(3,0)", "/", "(-2,0)", "/", "(-3,-3)", "/", "(1,0)", "/", "(-2,0)",
-    "/", "(-4,-2)", "/", "(0,-2)", "/", "(0,-3)", "/", "(3,0)"].join(" ");
-  // let scramble = "";
+  let scramble = "";
   let dragging = false;
-  let group: THREE.Object3D;
+  let group: Object3D;
 
   /// GUI
   let puzzles: any[] = [];
-  let selectedPuzzle: PuzzleType = "square1";
+  let selectedPuzzle: PuzzleType = "pyraminxCrystal";
+  // let order = [2, 2, 4];
   let order = 3;
   let hasOrder = false;
   let GUIExpanded = false;
@@ -133,13 +141,13 @@
   let animating = false;
   let timeIni: number;
   let animationTimes: number[] = [];
-  let from: THREE.Matrix4[][] = [];
-  let animBuffer: THREE.Object3D[][] = [];
+  let from: Matrix4[][] = [];
+  let animBuffer: Object3D[][] = [];
   let userData: any[][];
   let u: Vector3D;
   let angs: number[];
 
-  let renderer = new THREE.WebGLRenderer({
+  let renderer = new WebGLRenderer({
     antialias: true,
     alpha: true,
     powerPreference: "high-performance",
@@ -148,10 +156,10 @@
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setPixelRatio(window.devicePixelRatio);
 
-  let scene = new THREE.Scene();
-  let geo = new THREE.PlaneBufferGeometry(4, 4, 3, 3);
-  let mat = new THREE.MeshBasicMaterial({ color: '0xffffff', side: THREE.DoubleSide });
-  let plane = new THREE.Mesh(geo, mat);
+  let scene = new Scene();
+  let geo = new PlaneBufferGeometry(4, 4, 3, 3);
+  let mat = new MeshBasicMaterial({ color: '0xffffff', side: DoubleSide });
+  let plane = new Mesh(geo, mat);
   
   scene.add(plane);
 
@@ -161,11 +169,11 @@
   canvas.style.top = "0";
   canvas.style.left = "0";
 
-  let camera = new THREE.PerspectiveCamera( 40, window.innerWidth / window.innerHeight, 1, 14);
+  let camera = new PerspectiveCamera( 40, window.innerWidth / window.innerHeight, 1, 14);
   let controls = new TrackballControls(camera, canvas);
   controls.rotateSpeed = 3;
   controls.noPan = true;
-  controls.minDistance = 2;
+  controls.minDistance = 3;
   controls.maxDistance = 9;
 
   function resetCamera() {
@@ -183,7 +191,7 @@
     cube = Puzzle.fromSequence(scramble, {
       type: selectedPuzzle,
       view: "trans",
-      order: [order, order, order],
+      order: Array.isArray(order) ? order : [order, order, order],
       mode: CubeMode.NORMAL,
     });
 
@@ -197,8 +205,8 @@
 
     scene.add(group);
 
-    // let light = new THREE.HemisphereLight('#ffffff', '#000000', 0.5);
-    let light = new THREE.PointLight("#ffffff", 1, 2, 3);
+    // let light = new HemisphereLight('#ffffff', '#000000', 0.5);
+    let light = new PointLight("#ffffff", 1, 2, 3);
     light.position.set(2, 2, 2);
 
     scene.add(light);
@@ -222,7 +230,7 @@
   
   resetPuzzle();
 
-  let piece: THREE.Intersection = null;
+  let piece: Intersection = null;
   let ini = null;
   let iniM = null;
   let mcx, mcy; // Mouse coordinates
@@ -237,8 +245,8 @@
 
     dragging = true;
 
-    ini = new THREE.Vector2(event.clientX, event.clientY);
-    iniM = new THREE.Vector3(
+    ini = new Vector2(event.clientX, event.clientY);
+    iniM = new Vector3(
       (event.clientX / window.innerWidth) * 2 - 1,
       -(event.clientY / window.innerHeight) * 2 + 1
     );
@@ -276,7 +284,7 @@
       return;
     }
 
-    let fin = new THREE.Vector2(event.clientX, event.clientY);
+    let fin = new Vector2(event.clientX, event.clientY);
 
     if (piece && fin.clone().sub(ini).length() > 40) {
       let data = drag(piece, ini, fin, cube, group, camera);
@@ -305,17 +313,17 @@
   canvas.addEventListener("touchmove", (e) => moveHandler(e.touches[0]), { passive: true });
   document.body.appendChild(canvas);
 
-  let interpolate = (data: THREE.Object3D[], from: THREE.Matrix4[], ang: number, userData: Piece[]) => {
-    let nu = new THREE.Vector3(u.x, u.y, u.z).normalize();
+  let interpolate = (data: Object3D[], from: Matrix4[], ang: number, userData: Piece[]) => {
+    let nu = new Vector3(u.x, u.y, u.z).normalize();
     let center = cube.p.center;
-    let c = new THREE.Vector3(center.x, center.y, center.z);
+    let c = new Vector3(center.x, center.y, center.z);
 
     userData.forEach((p, idx) => {
       let d = data[idx];
       d.rotation.setFromRotationMatrix(from[idx]);
       d.position.setFromMatrixPosition(from[idx]);
       if (p.hasCallback) {
-        p.callback(d, new THREE.Vector3(0, 0, 0), u, ang, true);
+        p.callback(d, new Vector3(0, 0, 0), u, ang, true, Vector3);
       } else {
         d.parent.localToWorld(d.position);
         d.position.sub(c);
@@ -379,7 +387,7 @@
 
   resizeHandler();
 
-  function moveFromKeyboard(vec: THREE.Vector2) {
+  function moveFromKeyboard(vec: Vector2) {
     if ( animating ) return;
 
     let allStickers = [];
@@ -388,7 +396,7 @@
       allStickers.push(...c.children);
     });
 
-    let mcm = new THREE.Vector3(
+    let mcm = new Vector3(
       (mcx / window.innerWidth) * 2 - 1,
       -(mcy / window.innerHeight) * 2 + 1
     );
@@ -406,7 +414,7 @@
 
     if ( !piece ) return;
 
-    let data = drag(piece, new THREE.Vector2(mcx, mcy), vec, cube, group, camera);
+    let data = drag(piece, new Vector2(mcx, mcy), vec, cube, group, camera);
 
     if (data) {
       animBuffer = data.buffer;
@@ -422,22 +430,22 @@
   }
 
   function keyDownHandler(e: KeyboardEvent) {
-    let mc = new THREE.Vector2(mcx, mcy);
+    let mc = new Vector2(mcx, mcy);
     switch(e.code) {
       case 'ArrowUp': {
-        moveFromKeyboard(mc.add( new THREE.Vector2(0, -50) ));
+        moveFromKeyboard(mc.add( new Vector2(0, -50) ));
         break;
       }
       case 'ArrowDown': {
-        moveFromKeyboard(mc.add( new THREE.Vector2(0, 50) ));
+        moveFromKeyboard(mc.add( new Vector2(0, 50) ));
         break;
       }
       case 'ArrowLeft': {
-        moveFromKeyboard(mc.add( new THREE.Vector2(-50, 0) ));
+        moveFromKeyboard(mc.add( new Vector2(-50, 0) ));
         break;
       }
       case 'ArrowRight': {
-        moveFromKeyboard(mc.add( new THREE.Vector2(50, 0) ));
+        moveFromKeyboard(mc.add( new Vector2(50, 0) ));
         break;
       }
     }
@@ -448,6 +456,7 @@
   onDestroy(() => {
     renderer.domElement.remove();
     renderer.dispose();
+    controls.dispose();
   });
 
   /// GUI

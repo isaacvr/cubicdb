@@ -7,7 +7,7 @@ import { PRINTABLE_PALETTE } from "@constants";
 import { cubeToThree } from "@helpers/cube-draw";
 import { map } from "@helpers/math";
 import type { PuzzleOptions } from "@interfaces";
-import * as THREE from "three";
+import { Geometry, Material, PerspectiveCamera, Scene, WebGLRenderer } from "three";
 
 interface FileReaderSync {
   readAsArrayBuffer(blob: Blob): ArrayBuffer;
@@ -635,7 +635,7 @@ async function generateCube(options: PuzzleOptions[], width ?: number, all ?: bo
 
   let cv: any = new OffscreenCanvas(W, W);
 
-  let renderer = new THREE.WebGLRenderer({
+  let renderer = new WebGLRenderer({
     antialias: true,
     alpha: true,
     powerPreference: 'high-performance',
@@ -644,8 +644,8 @@ async function generateCube(options: PuzzleOptions[], width ?: number, all ?: bo
   
   renderer.setSize(W, W, false);
   
-  let scene = new THREE.Scene();
-  let camera = new THREE.PerspectiveCamera(40, 0.95, 2, 7);
+  let scene = new Scene();
+  let camera = new PerspectiveCamera(40, 0.95, 2, 7);
 
   camera.position.z = 5.5;
   
@@ -666,8 +666,10 @@ async function generateCube(options: PuzzleOptions[], width ?: number, all ?: bo
       res = cv.convertToBlob();
 
       // clean up
-      scene.remove(ctt.group);
-      ctt.meshes.map(m => (<THREE.Material> m.material).dispose());
+      // scene.remove(ctt.group);
+      scene.children.length = 0;
+      ctt.meshes.map(m => (<Material> m.material).dispose());
+      ctt.meshes.map(m => (<Geometry> m.geometry).dispose());
     }
     
     let img = f1.readAsDataURL(await res);

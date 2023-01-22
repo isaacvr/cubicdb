@@ -48,13 +48,16 @@
 - [ ] Tabs for dedicated settings
 
 ## Import-Export
-- [ ] Create adaptors for different apps
+- [ ] Create selector for sessions to import
+- [ ] Add CubeDB
+- [-] Add Cube Desk
+- [x] Add Twisty Timer
+- [x] Add CSTimer
+- [x] Improve UX
+- [x] Create adaptors for different apps
   * Every adaptor should have modes of input and output, depending on the modes of the app.
   * Adaptor input should get a string, validate it and parse according to a mode of input. The result should be CubeDB related data.
   * Adaptor output should get a CubeDB related data, validate it and parse according to a mode of output.
-- [ ] Add Cube Desk
-- [ ] Improve UX
-- [ ] Basic migration
 
 ## Modelation
 ### Cuboids

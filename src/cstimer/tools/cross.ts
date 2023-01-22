@@ -8,8 +8,6 @@ let fmul = [];
 let e1mv = [];
 let c1mv = [];
 
-const DEBUG = false;
-
 function pmv(a, c) {
   let b = cmv[c][~~(a / 24)];
   return 24 * ~~(b / 384) + pmul[a % 24][(b >> 4) % 24]
@@ -185,7 +183,6 @@ function idaxcross(q, t, e, c, obj, l, lm, sol) {
           cx = c1mv[cx][m];
           if (idaxcross(p, s, ex, cx, obj, l - 1, m, sol)) {
             sol.push("FRUBLD".charAt(m) + " 2'".charAt(a));
-            DEBUG && console.log("IDAXCROSS SOL: ", sol);
             return (true);
           }
         }
@@ -211,7 +208,6 @@ function idacross(q, t, l, lm, sol) {
           s = fmv(s, m);
           if (idacross(p, s, l - 1, m, sol)) {
             sol.push("FRUBLD".charAt(m) + " 2'".charAt(a));
-            DEBUG && console.log("IDACROSS SOL: ", sol);
             return (true);
           }
         }
@@ -278,7 +274,6 @@ export function solve_cross(moves) {
     ret.push(sol);
   }
 
-  DEBUG && console.log('CROSS RET:', ret);
   return ret;
 }
 
@@ -315,7 +310,6 @@ export function solve_xcross(moves: string, face) {
   }
   sol.reverse();
 
-  DEBUG && console.log('XCROSS RET:', sol);
   return sol;
 }
 

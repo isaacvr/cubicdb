@@ -3,6 +3,9 @@
   import Minus from 'svelte-material-icons/Minus.svelte';
   import Close from 'svelte-material-icons/Close.svelte';
   import { onDestroy, onMount } from 'svelte';
+  import { DataService } from '@stores/data.service';
+
+  const dataService = DataService.getInstance();
 
   let date, itv;
 
@@ -19,22 +22,11 @@
   });
 
   function minimize() {
-    console.log("minimize");
-    // this.dataService.window.minimize();
-  }
-
-  function maximize() {
-    console.log('maximize');
-    // if ( this.dataService.window.isMaximized ) {
-    //   this.dataService.window.unmaximize();
-    // } else {
-    //   this.dataService.window.maximize();
-    // }
+    dataService.minimize();
   }
 
   function close() {
-    console.log('close');
-    // this.dataService.close();
+    dataService.close();
   }
 </script>
 
@@ -49,7 +41,7 @@
     <span class="ml-2 cursor-pointer" on:click={ minimize }>
       <Minus />
     </span>
-    <span class="ml-2 mr-1 cursor-pointer" on:click={ maximize }>
+    <span class="ml-2 mr-1 cursor-pointer" on:click={ close }>
       <Close height="100%"/>
     </span>
   </div>

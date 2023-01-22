@@ -14,8 +14,6 @@ interface Token {
   value: any;
 }
 
-const debug = false;
-
 const Spec = [
   // Whitespaces:
   [ /^\s+/, null ],
@@ -44,18 +42,15 @@ class Tokenizer {
   private _cursor: number;
 
   init(string) {
-    debug && console.log("init tokenizer");
     this._string = string;
     this._cursor = 0;
   }
 
   hasMoreTokens() {
-    this._cursor >= this._string.length && debug && console.log("No more tokens");
     return this._cursor < this._string.length;
   }
 
   isEOF() {
-    this._cursor === this._string.length && debug && console.log("EOF");
     return this._cursor === this._string.length;
   }
     
@@ -71,8 +66,6 @@ class Tokenizer {
 
       if ( tokenValue == null ) continue;
       if ( tokenType == null ) return this.getNextToken();
-
-      debug && console.log("NextToken: ", { type: tokenType, value: tokenValue });
 
       return { type: tokenType, value: tokenValue };
     }
@@ -170,15 +163,12 @@ export class Interpreter {
   private _lookahead: Token;
 
   constructor() {
-    debug && console.log("init parser");
     this._tokenizer = new Tokenizer();
     this._solver = new Solver();
     this._lookahead = null;
   }
 
   input(string: string) {
-    debug && console.log("parse: ", string);
-
     this._tokenizer.init(string.replaceAll("’", "'"));
     this._lookahead = this._tokenizer.getNextToken();
 
@@ -187,9 +177,6 @@ export class Interpreter {
     if ( this._lookahead ) {
       throw new SyntaxError(`Missing operators`);
     }
-
-    // console.log("PROGRAM: ");
-    // console.log( JSON.stringify(pr, null, 2) );
 
     return this._solver.solve(pr);
   }
@@ -212,7 +199,6 @@ export class Interpreter {
    *  ;
    */
   Expression(): Token {
-    debug && console.log("Expression");
     if ( !this._lookahead ) return { type: 'Expression', value: [] };
 
     let moves = [];
@@ -234,7 +220,6 @@ export class Interpreter {
    *  ; '(' Expression ')'
    */
   ParentesizedExpression(): Token {
-    debug && console.log("ParentesizedExpression");
     this._eat('(');
     let expr = this.Expression();
     let cant = +this._eat(')').value.slice(1) || 1;
@@ -246,7 +231,6 @@ export class Interpreter {
    *  ; '[' Expression ',' Expression ']'
    */
   ConmutatorExpression(): Token {
-    debug && console.log("ConmutatorExpression");
     this._eat('[');
     let expr1 = this.Expression();
     this._eat(',');
@@ -270,12 +254,10 @@ export class Interpreter {
    */
   Move(): Token {
     const token = this._eat("MOVE");
-    debug && console.log("Move: ", token);
     return { type: "Move", value: token.value };
   }
 
   _eat(tokenType: any, tokenValue ?: any) {
-    debug && console.log("_eat: ", tokenType);
     const token = this._lookahead;
 
     if ( token == null ) {
@@ -291,8 +273,7 @@ export class Interpreter {
     }
 
     this._lookahead = this._tokenizer.getNextToken();
-    debug && console.log("_eat lookahead: ", this._lookahead);
-
+    
     return token;
   }
 }

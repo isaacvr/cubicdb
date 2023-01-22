@@ -5,7 +5,6 @@ import { STANDARD_PALETTE } from "@constants";
 import { Piece } from './Piece';
 import { Sticker } from './Sticker';
 import { assignColors, getAllStickers } from './puzzleUtils';
-import { Vector3 } from 'three';
 
 export function MIXUP(): PuzzleInterface {
   const n = 3;
@@ -143,20 +142,7 @@ export function MIXUP(): PuzzleInterface {
     i < 2 && pieces.push( centerPiece.rotate(CENTER, RIGHT, PI_2 * Math.pow(-1, i)) );
   }
 
-  mixup.vectorsFromCamera = function(vecs: any[], cam, u: Vector3D) {
-    return vecs.map(e => {
-      let vp = new Vector3(e.x, e.y, e.z).project(cam);
-      return new Vector3D(vp.x, -vp.y, 0);
-    });
-  };
-
   mixup.toMove = function(piece: Piece, sticker: Sticker, dir: Vector3D) {
-    // let refDirs = corner.stickers.filter(s => s.color.match(/^[^xd]$/)).map(s => s.getOrientation());
-
-    // if ( !refDirs.reduce((ac, v) => ac || v.cross(dir).abs() < 1e-6, false) ) {
-    //   return { pieces: [], ang: 0 };
-    // }
-
     let type = piece.stickers.filter(s => !s.color.match(/^[xd]$/)).length;
     let mc = piece.updateMassCenter();
     let planes = piece.stickers.reduce((ac, s) => {
@@ -178,10 +164,7 @@ export function MIXUP(): PuzzleInterface {
       st.length && ac.push( p );
       return ac;
     }, []);
-
-    // console.log('PLANES: ', planes);
-    // console.log('CROSSED: ', crossed);
-
+    
     if ( crossed.length ) {
       let crossCorner = !!crossed.find(p => p.stickers.filter(s => /^[^xd]$/.test(s.color)).length == 3);
       if ( type < 3 && crossCorner ) {
@@ -189,8 +172,6 @@ export function MIXUP(): PuzzleInterface {
       }
     };
 
-    // let dirId = vdir.map(v => v.cross(dir).abs() < 1e-6).indexOf(true);
-    // let toMovePieces = pieces.filter(p => p.direction1(mc, dir) === 0);
     let toMovePieces = ( type == 3 )
       ? pieces.filter(p => p.direction1(mc, dir) >= 0)
       : pieces.filter(p => p.direction1(mc, dir) === 0);

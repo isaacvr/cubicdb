@@ -1,3 +1,5 @@
+import type { Vector3D } from "@classes/vector3d";
+
 export function map(v: number, a: number, b: number, A: number, B: number): number {
   return b === a ? A : (v - a) * (B - A) / (b - a) + A;
 }
@@ -26,4 +28,23 @@ export function rotateSegment(x1: number, y1: number, x2: number, y2: number, an
   let p1 = rotatePoint(x1 - ox, y1 - oy, ang);
   let p2 = rotatePoint(x2 - ox, y2 - oy, ang);
   return [ p1[0] + ox, p1[1] + oy, p2[0] + ox, p2[1] + oy ];
+}
+
+export function between(n: number, a: number, b: number): number {
+  return Math.min(b, Math.max(a, n));
+}
+
+export function planeLineIntersection(p0: Vector3D, n: Vector3D, l0: Vector3D, l: Vector3D): Vector3D {
+  let num = p0.sub(l0).dot(n);
+  let den = l.dot(n);
+
+  if ( den === 0 ) {
+    return null;
+  }
+
+  if ( num === 0 ) {
+    return undefined;
+  }
+
+  return l0.add( l.mul(num / den) );
 }

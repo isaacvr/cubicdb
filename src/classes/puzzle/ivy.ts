@@ -1,4 +1,3 @@
-import { Vector3 } from 'three';
 import { LEFT, UP, BACK, RIGHT, FRONT, DOWN, CENTER } from './../vector3d';
 import { Vector3D } from '../../classes/vector3d';
 import type { PuzzleInterface } from '@interfaces';
@@ -81,14 +80,7 @@ export function IVY(): PuzzleInterface {
     centerPiece.rotate(CENTER, UP, PI_2).rotate(CENTER, BACK, PI_2),
     centerPiece.rotate(CENTER, UP, PI).rotate(CENTER, RIGHT, PI),
   );
-
-  ivy.vectorsFromCamera = function(vecs: any[], cam) {
-    return vecs.map(e => {
-      let vp = new Vector3(e.x, e.y, e.z).project(cam);
-      return new Vector3D(vp.x, -vp.y, 0);
-    });
-  };
-
+  
   ivy.toMove = function(piece: Piece, sticker: Sticker, dir: Vector3D) {
     let mc = sticker.updateMassCenter();
     let toMovePieces = pieces.filter(p => p.direction1(mc, dir) === 0);
