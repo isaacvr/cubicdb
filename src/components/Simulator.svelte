@@ -29,7 +29,7 @@
 
   /// GUI
   let puzzles: any[] = [];
-  let selectedPuzzle: PuzzleType = "tetraminx";
+  let selectedPuzzle: PuzzleType = "meierHalpernPyramid";
   // let order = [2, 2, 4];
   let order = 3;
   let hasOrder = false;

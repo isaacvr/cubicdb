@@ -23,6 +23,7 @@ import { PANDORA } from './pandora';
 import { ULTIMATE_SKEWB } from './ultimateSkewb';
 import { PYRAMINX_CRYSTAL } from './pyraminxCrystal';
 import { TETRAMINX } from './tetraminx';
+import { MEIER_HALPERN_PYRAMIND } from './meierHalpernPyramind';
 
 registerPuzzle("rubik", "Rubik's Cube", RUBIK, true);
 registerPuzzle("mirror", "Mirror", MIRROR, true);
@@ -48,3 +49,4 @@ registerPuzzle("pandora", "Pandora", PANDORA, false);
 registerPuzzle("ultimateSkewb", "Ultimate Skewb", ULTIMATE_SKEWB, false);
 registerPuzzle("pyraminxCrystal", "Pyraminx Crystal", PYRAMINX_CRYSTAL, false);
 registerPuzzle("tetraminx", "Tetraminx", TETRAMINX, false);
+registerPuzzle("meierHalpernPyramid", "Meier-Halpern Pyramid", MEIER_HALPERN_PYRAMIND, false);

@@ -22,7 +22,7 @@
 <main class={`select-container max-w-[13rem] relative cursor-pointer ` + (cl || '')}>
   <div
     on:click|self|stopPropagation={handleClick}
-    class="content bg-gray-700 p-2 h-10 rounded-md select-none pr-8">{
+    class="content bg-gray-700 p-2 h-10 rounded-md select-none pr-8 whitespace-nowrap text-ellipsis">{
     items.some((a, p, i) => transform(a, p, i) === value)
       ? label( items.find((e, p, i) => transform(e, p, i) === value) )
       : placeholder
