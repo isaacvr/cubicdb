@@ -20,6 +20,31 @@
     type Intersection
   } from "three";
 
+  const ANIMATION_TIME = 200; /// Default animation time: 200ms
+
+  let cube: Puzzle;
+  let scramble = "";
+  let dragging = false;
+  let group: Object3D;
+
+  /// GUI
+  let puzzles: any[] = [];
+  let selectedPuzzle: PuzzleType = "tetraminx";
+  // let order = [2, 2, 4];
+  let order = 3;
+  let hasOrder = false;
+  let GUIExpanded = false;
+
+  /// Animation
+  let animating = false;
+  let timeIni: number;
+  let animationTimes: number[] = [];
+  let from: Matrix4[][] = [];
+  let animBuffer: Object3D[][] = [];
+  let userData: any[][];
+  let u: Vector3D;
+  let angs: number[];
+
   function vectorsFromCamera(vecs: any[], cam) {
     return vecs.map(e => {
       let vp = new Vector3(e.x, e.y, e.z).project(cam);
@@ -121,31 +146,6 @@
       animationTime: animationTimes,
     };
   }
-
-  const ANIMATION_TIME = 200; /// Default animation time: 200ms
-
-  let cube: Puzzle;
-  let scramble = "";
-  let dragging = false;
-  let group: Object3D;
-
-  /// GUI
-  let puzzles: any[] = [];
-  let selectedPuzzle: PuzzleType = "pyraminxCrystal";
-  // let order = [2, 2, 4];
-  let order = 3;
-  let hasOrder = false;
-  let GUIExpanded = false;
-
-  /// Animation
-  let animating = false;
-  let timeIni: number;
-  let animationTimes: number[] = [];
-  let from: Matrix4[][] = [];
-  let animBuffer: Object3D[][] = [];
-  let userData: any[][];
-  let u: Vector3D;
-  let angs: number[];
 
   let renderer = new WebGLRenderer({
     antialias: true,
