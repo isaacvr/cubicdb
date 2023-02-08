@@ -39,12 +39,14 @@
   import { Puzzle } from '@classes/puzzle/puzzle';
   import { PX_IMAGE } from '@constants';
   import { ScrambleParser } from '@classes/scramble-parser';
-  import { getAverageS } from '@helpers/statistics';
+  import { bundleAverageS, getAverageS } from '@helpers/statistics';
+    import { infinitePenalty } from '@helpers/timer';
 
   const INITIAL_STATISTICS: Statistics = {
     best: { value: 0, better: false },
     worst: { value: 0, better: false },
     count: { value: 0, better: false },
+    time: { value: 0, better: false },
     avg: { value: 0, better: false },
     dev: { value: 0, better: false },
     Mo3: { value: -1, better: false },
@@ -56,6 +58,11 @@
     Ao500: { value: -1, better: false },
     Ao1k: { value: -1, better: false },
     Ao2k: { value: -1, better: false },
+
+    NP:    { value: 0, better: false },
+    P2:    { value: 0, better: false },
+    DNS:   { value: 0, better: false },
+    DNF:   { value: 0, better: false },
     __counter: 0,
   };
 
@@ -110,21 +117,27 @@
   function updateStatistics(inc ?: boolean) {
     let AON = [ 3, 5, 12, 50, 100, 200, 500, 1000, 2000 ];
     let AVG = [ 0, 0, 0, 0, 0, 0, 0, 0, 0 ];
-    let BEST = AVG.map(_ => 1/0);
+    let BEST = [];
     let len = $solves.length;
     let sum = 0, avg = 0, dev = 0;
+    let pMap: Map<Penalty, number> = new Map([
+      [Penalty.DNF, 0], [Penalty.DNS, 0], [Penalty.P2, 0], [Penalty.NONE, 0]
+    ]);
+
     let bw = $solves.reduce((ac: number[], e) => {
-      if ( e.penalty === Penalty.DNF ) {
+      pMap.set( e.penalty, pMap.get(e.penalty) + 1 );
+
+      if ( infinitePenalty(e) ) {
         len -= 1;
       } else {
         sum += e.time;
       }
-      return ( e.penalty === Penalty.DNF ) ? ac : [ Math.min(ac[0], e.time), Math.max(ac[1], e.time) ];
+      return infinitePenalty(e) ? ac : [ Math.min(ac[0], e.time), Math.max(ac[1], e.time) ];
     }, [Infinity, 0]);
 
     avg = (len > 0) ? sum / len : null;
     dev = (len > 0) ? Math.sqrt( $solves.reduce((acc, e) => {
-      return e.penalty === Penalty.DNF ? acc : (acc + (e.time - avg)**2 / len);
+      return infinitePenalty(e) ? acc : (acc + (e.time - avg)**2 / len);
     }, 0) ) : null;
     
     for (let i = 0, maxi = AON.length; i < maxi; i += 1) {
@@ -134,6 +147,10 @@
       AVG[i] = ( lastAvg ) ? lastAvg : -1;
     }
 
+    // let bundle = bundleAverageS(AON, $solves, $session?.settings?.calcAoX || AverageSetting.SEQUENTIAL);
+    // BEST = bundle.map(arr => arr.reduce((a, b) => b ? Math.min(a, b) : a, Infinity) );
+    // AVG = bundle.map(arr => arr[arr.length - 1] || -1);
+
     let ps = Object.assign({}, $stats);
 
     $stats = {
@@ -142,6 +159,7 @@
       avg:   { value: avg, better: false },
       dev:   { value: dev, better: false },
       count: { value: $solves.length, better: false },
+      time:  { value: sum, better: false },
       Mo3:   { value: AVG[0], better: AVG[0] <= BEST[0] },
       Ao5:   { value: AVG[1], better: AVG[1] <= BEST[1] },
       Ao12:  { value: AVG[2], better: AVG[2] <= BEST[2] },
@@ -151,6 +169,12 @@
       Ao500: { value: AVG[6], better: AVG[6] <= BEST[6] },
       Ao1k:  { value: AVG[7], better: AVG[7] <= BEST[7] },
       Ao2k:  { value: AVG[8], better: AVG[8] <= BEST[8] },
+      
+      // Penalties
+      NP:    { value: pMap.get(Penalty.NONE), better: false },
+      P2:    { value: pMap.get(Penalty.P2), better: false },
+      DNS:   { value: pMap.get(Penalty.DNS), better: false },
+      DNF:   { value: pMap.get(Penalty.DNF), better: false },
       __counter: (inc) ? ps.__counter + 1 : ps.__counter,
     };
 
@@ -480,13 +504,13 @@
     {#if filters.length > 0 && $tab === 0}
       <Select
         placeholder="Select filter"
-        value={ $prob } items={ filters } label={ e => e.toUpperCase() }
-        onChange={ (p) => { $prob = p; selectedFilter(); } }
+        value={ $prob } items={ filters } label={ e => e.toUpperCase() } transform={ (i, p) => p }
+        onChange={ (i, p) => { $prob = p; selectedFilter(); } }
       />
     {/if}
     
     {#if $tab === 2}
-      <Input min={3} max={100}
+      <Input min={3} max={1000}
         class="hidden-markers bg-gray-700 rounded-md"
         type="number" bind:value={ $AoX } on:keyup={ e => e.detail.stopPropagation() }/>
     {/if}

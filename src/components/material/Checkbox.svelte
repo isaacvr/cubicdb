@@ -28,7 +28,7 @@
 
 <style lang="postcss">
   .box {
-    @apply flex items-center justify-center
+    @apply flex items-center justify-center w-5 h-5
     shadow-sm border-2 border-blue-400 rounded-sm
     hover:cursor-pointer transition-all duration-100;
   }

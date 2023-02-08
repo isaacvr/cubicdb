@@ -96,7 +96,7 @@ export interface PuzzleOptions {
 }
 
 export enum Penalty {
-  NONE = 0, P2 = 1, DNF = 2
+  NONE = 0, P2 = 1, DNF = 2, DNS = 3
 }
 
 export interface Solve {
@@ -183,6 +183,7 @@ export interface Statistics {
   avg: Metric;
   dev: Metric;
   count: Metric;
+  time: Metric;
   Mo3: Metric;
   Ao5: Metric;
   Ao12: Metric;
@@ -192,6 +193,12 @@ export interface Statistics {
   Ao500: Metric;
   Ao1k: Metric;
   Ao2k: Metric;
+
+  // Penalties
+  NP: Metric;
+  P2: Metric;
+  DNF: Metric;
+  DNS: Metric;
   __counter: number;
 }
 
@@ -300,4 +307,45 @@ export interface CubeDBAdaptor {
   modes: string[];
   toCubeDB: (scr: string, mode?: number) => CubeDBData;
   fromCubeDB: (data: CubeDBData, mode?: number) => string;
+}
+
+export interface IPC {
+  getAlgorithms?: (args?) => any;
+  handleAlgorithms?: (args?) => any;
+  
+  getCards?: (args?) => any;
+  handleCards?: (args?) => any;
+  
+  addSolve?: (args?) => any;
+  getSolves?: (args?) => any;
+  updateSolve?: (args?) => any;
+  removeSolves?: (args?) => any;
+  handleSolves?: (args?) => any;
+  
+  addContest?: (args?) => any;
+  getContests?: (args?) => any;
+  updateContest?: (args?) => any;
+  removeContests?: (args?) => any;
+  handleContests?: (args?) => any;
+  
+  addSession?: (args?) => any;
+  getSessions?: (args?) => any;
+  removeSession?: (args?) => any;
+  renameSession?: (args?) => any;
+  updateSession?: (args?) => any;
+  handleSessions?: (args?) => any;
+
+  addTutorial?: (args?) => any;
+  getTutorials?: (args?) => any;
+  updateTutorial?: (args?) => any;
+  handleTutorials?: (args?) => any;
+
+  minimize?: (args?) => any;
+  maximize?: (args?) => any;
+  close?: (args?) => any;
+  generatePDF?: (args?) => any;
+  zipPDF?: (args?) => any;
+  openFile?: (args?) => any;
+  revealFile?: (args?) => any;
+  handleAny?: (args?) => any;
 }

@@ -15,9 +15,11 @@ export default defineConfig({
       output: {
         sourcemap: false,
         format: "esm",
-        dir: "dist",
-      }
-    }
+        dir: "./dist",
+      },
+      treeshake: true,
+    },
+    minify: true,
   },
   resolve: {
     alias: {

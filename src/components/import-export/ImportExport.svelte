@@ -4,17 +4,13 @@
   import Select from "@components/material/Select.svelte";
   import { onDestroy, onMount } from "svelte";
   import * as Adaptors from "./adaptors";
-  import { MENU } from "@constants";
-  import timer from "@helpers/timer";
+  import { MODE_MAP } from "@constants";
+  import { timer } from "@helpers/timer";
   import { DataService } from "@stores/data.service";
   import type { Unsubscriber } from "svelte/store";
+    import Checkbox from "@components/material/Checkbox.svelte";
 
   let dataService = DataService.getInstance();
-
-  const MODS_O: any = MENU[0][1].map(e => [ e[0], e[1], e[2], e[3], e[4] ]);
-  const MOD_MAP_O: Map<string, any> = new Map();
-
-  MODS_O.forEach(m => MOD_MAP_O.set(m[1], [m[0], m[2], m[3], m[4]]));
 
   let parsers = Object.keys(Adaptors).map(k => new Adaptors[k]);
   let parser = 0;
@@ -37,6 +33,7 @@
       if ( cubeData.sessions.length === 0 ) {
         cubeData = null;
       } else {
+        cubeData.sessions.forEach(s => s.editing = true);
         sSession = cubeData.sessions[0];
       }
     });
@@ -47,6 +44,8 @@
   function save() {
     for (let i = 0, maxi = cubeData.sessions.length; i < maxi; i += 1) {
       let s = cubeData.sessions[i];
+      if ( !s.editing ) continue;
+
       s.tName = s._id;
       
       delete s._id;
@@ -54,6 +53,16 @@
       rem += 1;
       dataService.addSession(s);
     }
+  }
+
+  function selectAll() {
+    cubeData.sessions.forEach(s => s.editing = true);
+    cubeData.sessions = cubeData.sessions;
+  }
+
+  function selectNone() {
+    cubeData.sessions.forEach(s => s.editing = false);
+    cubeData.sessions = cubeData.sessions;
   }
 
   onMount(() => {
@@ -85,7 +94,7 @@
     sSub();
   });
 
-  $: fSolves = cubeData?.solves.filter(s => s.session === sSession?._id);
+  $: fSolves = cubeData?.solves.filter(s => s.session === sSession?._id) || [];
 
 </script>
 
@@ -107,20 +116,25 @@
         {/if}
 
         <Button class="bg-purple-800 text-gray-300" file on:files={ e => processFiles(e.detail) }>Select file</Button>
+        
         {#if cubeData}
+          <Button on:click={ selectAll } class="bg-orange-800 text-gray-300">Select All</Button>
+          <Button on:click={ selectNone } class="bg-orange-800 text-gray-300">Select None</Button>
           <Button on:click={ save } class="bg-green-800 text-gray-300">Save</Button>
         {/if}
       </div>
     </section>
 
     {#if cubeData}
-      <ul class="flex flex-wrap mt-4 gap-2 justify-center">
+      <ul class="flex flex-wrap mt-4 gap-2 justify-center" style="row-gap: 1rem;">
         {#each cubeData.sessions as s}
-          <li
-            on:click={ () => sSession = s }
-            class="p-2 bg-blue-700 bg-opacity-40 text-gray-300 rounded-md font-bold shadow-md cursor-pointer"
-            class:selected={ s === sSession }>
-            {s.name}
+          <li class="flex gap-1 mr-2">
+            <Checkbox bind:checked={ s.editing }/>
+            <Button on:click={ () => console.log(sSession = s) }
+              class="p-2 bg-blue-700 bg-opacity-40 text-gray-300 rounded-md font-bold shadow-md cursor-pointer
+              { s === sSession ? "bg-opacity-100 underline" : "" }
+              "
+            >{s.name}</Button>
           </li>
         {/each}
       </ul>
@@ -131,7 +145,7 @@
         {#each fSolves.slice(0, 50) as s, i}
           <li class="grid grid-cols-6 border-none border-b border-gray-500">
             <span>{ i + 1 }</span>
-            <span>{ MOD_MAP_O.get(s.mode)[0] }</span>
+            <span>{ MODE_MAP.get(s.mode) || "--" }</span>
             <span>{ timer( s.time, true, true ) }</span>
             <span class="overflow-hidden text-ellipsis whitespace-nowrap col-span-3 text-left">{ s.scramble }</span>
           </li>

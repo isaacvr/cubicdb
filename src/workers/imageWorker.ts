@@ -4,7 +4,7 @@ import { Sticker } from "@classes/puzzle/Sticker";
 import { Vector2D } from "@classes/vector2-d";
 import { BACK, CENTER, DOWN, FRONT, LEFT, RIGHT, UP, Vector3D } from "@classes/vector3d";
 import { PRINTABLE_PALETTE } from "@constants";
-import { cubeToThree } from "@helpers/cube-draw";
+import { cubeToThree } from "@helpers/cubeToThree";
 import { map } from "@helpers/math";
 import type { PuzzleOptions } from "@interfaces";
 import { Geometry, Material, PerspectiveCamera, Scene, WebGLRenderer } from "three";

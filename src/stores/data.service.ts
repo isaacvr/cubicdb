@@ -1,5 +1,5 @@
-import type { Algorithm, RawCard, Solve, Session, Tutorial, Sheet, CubeEvent } from '../interfaces';
-import type { IpcRenderer, BrowserWindow } from 'electron';
+import type { Algorithm, RawCard, Solve, Session, Tutorial, Sheet, CubeEvent, IPC } from '@interfaces';
+import type { BrowserWindow } from 'electron';
 import type { Writable } from 'svelte/store';
 import { writable } from 'svelte/store';
 
@@ -31,47 +31,6 @@ interface PDFOptions {
   round: number;
 }
 
-interface IPC extends IpcRenderer {
-  getAlgorithms?: (args?) => any;
-  handleAlgorithms?: (args?) => any;
-  
-  getCards?: (args?) => any;
-  handleCards?: (args?) => any;
-  
-  addSolve?: (args?) => any;
-  getSolves?: (args?) => any;
-  updateSolve?: (args?) => any;
-  removeSolves?: (args?) => any;
-  handleSolves?: (args?) => any;
-  
-  addContest?: (args?) => any;
-  getContests?: (args?) => any;
-  updateContest?: (args?) => any;
-  removeContests?: (args?) => any;
-  handleContests?: (args?) => any;
-  
-  addSession?: (args?) => any;
-  getSessions?: (args?) => any;
-  removeSession?: (args?) => any;
-  renameSession?: (args?) => any;
-  updateSession?: (args?) => any;
-  handleSessions?: (args?) => any;
-
-  addTutorial?: (args?) => any;
-  getTutorials?: (args?) => any;
-  updateTutorial?: (args?) => any;
-  handleTutorials?: (args?) => any;
-
-  minimize?: (args?) => any;
-  maximize?: (args?) => any;
-  close?: (args?) => any;
-  generatePDF?: (args?) => any;
-  zipPDF?: (args?) => any;
-  openFile?: (args?) => any;
-  revealFile?: (args?) => any;
-  handleAny?: (args?) => any;
-}
-
 export class DataService {
   ipc: IPC;
   window: BrowserWindow;
@@ -96,7 +55,7 @@ export class DataService {
     this.contestSub = writable< ContestSub >();
     this.anySub = writable<any>();
 
-    if ( navigator.userAgent.indexOf('Electron') ) {
+    if ( navigator.userAgent.indexOf('Electron') > -1 ) {
       this.ipc = (<any> window).electronAPI;
       this.isElectron = true;
       this.setIpc();

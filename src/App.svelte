@@ -8,7 +8,7 @@
   import Home from '@components/Home.svelte';
   import Tutorials from '@components/Tutorials.svelte';
   import Timer from '@components/timer/Timer.svelte';
-  import PllTrainer from '@components/PllTrainer.svelte';
+  import PllRecognition from '@components/PllRecognition.svelte';
   import Algorithms from '@components/Algorithms.svelte';
   import Simulator from '@components/Simulator.svelte';
   import TutorialParser from '@components/TutorialParser.svelte';
@@ -26,7 +26,7 @@
     <Route path="/tutorials/:puzzle/:tutorial" component={ TutorialParser }/>
     <Route path="/algorithms/*" component={ Algorithms }/>
     <Route path="/timer" component={ Timer }/>
-    <Route path="/pll-trainer" component={ PllTrainer }/>
+    <Route path="/pll-trainer" component={ PllRecognition }/>
     <Route path="/simulator" component={ Simulator }/>
     <Route path="/contest" component={ Contest }/>
     <Route path="/import-export" component={ ImportExport }/>

@@ -24,6 +24,10 @@ body {
   margin: 0;
   padding: 0;
   font-family: 'Raleway';
+  min-width: 100vw;
+  min-width: 100dvw;
+  min-height: 100vh;
+  min-height: 100dvh;
 }
 
 .container-mini {

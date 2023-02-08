@@ -19,6 +19,7 @@
 ## Tutorials
 - [x] Basic migration
 - [ ] Practice for subsets
+- [ ] Tutorial pro parser (AST and more)
 
 ## Timer
 - [ ] Generate scramble batch in background (scramble pool?)
@@ -71,6 +72,24 @@
 
 ## Database
 - [ ] Add adaptors for NeDB, localStorage and browser DB.
+
+## Statistics
+- [x] AoX
+- [x] Best time
+- [x] Worst time
+- [x] Average
+- [x] Standard deviation
+- [x] Count
+- [x] Total time
+- [x] Week time distribution
+- [x] Hour time distribution
+- [ ] Correlation between time and day
+- [ ] Correlation between time and hour
+- [ ] Probability Distribution (right skewed)
+- [x] Penalties
+  - [x] DNF's
+  - [x] +2's
+  - [x] DNS's
 
 ## Bugs
 - [ ] Fix F2L 8

@@ -7,7 +7,7 @@
   import Modal from "@components/Modal.svelte";
   
   import CheckIcon from '@icons/Check.svelte';
-  import timer from "@helpers/timer";
+  import { timer } from "@helpers/timer";
 
   const TOP_FACE = [
     { value: 'random', label: 'Color neutral' },
@@ -156,7 +156,7 @@
   class="text-gray-400 container-mini bg-white bg-opacity-10 w-4/5 mx-auto rounded-md
     flex flex-col items-center px-4 py-8 cnt relative
   ">
-  <h1 class="text-center text-3xl mb-4 text-gray-300 font-bold">PLL Trainer</h1>
+  <h1 class="text-center text-3xl mb-4 text-gray-300 font-bold">PLL Recognition Trainer</h1>
 
   <span class="absolute right-4 top-4 bg-gray-500 text-gray-200 w-6 h-6 flex items-center justify-center
     cursor-pointer rounded-full shadow-md hover:shadow-lg hover:bg-gray-400 font-bold

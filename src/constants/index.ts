@@ -337,3 +337,9 @@ export function isNNN(mode: string): boolean {
     R222, R333, R444, R555, R666, R777
   ].some(l => l.some(m => m === mode))
 }
+
+export const MODE_MAP = new Map<string, string>(
+  MENU.reduce((acc, gp) => [...acc, ...gp[1].map(md =>
+    [md[1], md[0] === 'WCA' ? gp[0] : md[0]]
+  )], [])
+);

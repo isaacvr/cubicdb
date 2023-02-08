@@ -92,21 +92,25 @@ export function BICUBE(): PuzzleInterface {
   assignColors(bicube, bicube.faceColors);
   assignVectors(bicube);
 
-  for (let i = 0, maxi = pieces.length; i < maxi; i += 1) {
-    let st = pieces[i].stickers;
-    let f: Sticker;
+  pieces.forEach(p => {
+    p.stickers = p.stickers.filter(s => s.color != "x");
+  });
+  
+  // for (let i = 0, maxi = pieces.length; i < maxi; i += 1) {
+  //   let st = pieces[i].stickers;
+  //   let f: Sticker;
 
-    while( true ) {
-      f = st.find(s => s.color === 'x');
+  //   while( true ) {
+  //     f = st.find(s => s.color === 'x');
 
-      if ( f ) {
-        st.splice( st.indexOf(f), 1 );
-        st.splice( st.indexOf(f._generator), 1 );
-      } else {
-        break;
-      }
-    }
-  }
+  //     if ( f ) {
+  //       st.splice( st.indexOf(f), 1 );
+  //       st.splice( st.indexOf(f._generator), 1 );
+  //     } else {
+  //       break;
+  //     }
+  //   }
+  // }
 
   return bicube;
 

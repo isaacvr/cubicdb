@@ -1,8 +1,8 @@
 <script lang="ts">
   import moment from "moment";
-  import { Penalty, type Solve, type TimerContext } from "@interfaces";
+  import { AverageSetting, Penalty, type Solve, type TimerContext } from "@interfaces";
   import { DataService } from "@stores/data.service";
-  import timer from "@helpers/timer";
+  import { infinitePenalty, sTimer, timer } from "@helpers/timer";
   import Modal from "@components/Modal.svelte";
   import Button from "@components/material/Button.svelte";
   import Tooltip from "@components/material/Tooltip.svelte";
@@ -10,6 +10,8 @@
   import { Puzzle } from "@classes/puzzle/puzzle";
   import { generateCubeBundle } from "@helpers/cube-draw";
   import { options } from "@cstimer/scramble/scramble";
+  import { PX_IMAGE } from "@constants";
+  import { Paginator } from "@classes/Paginator";
 
   /// ICONS
   import CommentPlusIcon from '@icons/CommentPlusOutline.svelte';
@@ -24,7 +26,12 @@
   import ArrowExpandIcon from '@icons/ArrowExpandHorizontal.svelte';
   import SelectInverseIcon from '@icons/SelectInverse.svelte';
   import SelectOffIcon from '@icons/SelectOff.svelte';
-  import { PX_IMAGE } from "@constants";
+  import ChevronLeftIcon from '@icons/ChevronLeft.svelte';
+  import ChevronRightIcon from '@icons/ChevronRight.svelte';
+  import ChevronDoubleLeftIcon from '@icons/ChevronDoubleLeft.svelte';
+  import ChevronDoubleRightIcon from '@icons/ChevronDoubleRight.svelte';
+  import ShareIcon from '@icons/Share.svelte';
+    import { getAverageS } from "@helpers/statistics";
 
   const dataService = DataService.getInstance();
 
@@ -32,6 +39,7 @@
 
   let { solves, tab } = context;
 
+  let pg = new Paginator([], 100);
   let selected = 0;
   let LAST_CLICK = 0;
 
@@ -159,13 +167,71 @@
     }
   }
 
+  function updatePaginator(s: any) {
+    pg.setData($solves);
+    pg = pg;
+  }
+
+  function setPage(p: number) {
+    p === -1 && pg.nextPage();
+    p === -2 && pg.prevPage();
+    p != -1 && p != -2 && pg.setPage(p);
+    pg = pg;
+  }
+
+  function copyToClipboard(text: string) {
+    navigator.clipboard.writeText(text).then(() => {
+      console.log("Copied to clipboard");
+    });
+  }
+
+  function shareAoX(n: number) {
+    let sv = $solves.slice(0, n).reverse();
+    let Ao5 = getAverageS(n, sv, AverageSetting.SEQUENTIAL);
+    let minTime = (a: Solve, b: Solve) => {
+      if ( infinitePenalty(a) ) return b;
+      if ( infinitePenalty(b) ) return a;
+      return a.time < b.time ? a : b;
+    };
+
+    let minMax = sv.reduce((acc, s) => [
+      minTime(acc[0], s) === s ? s : acc[0],
+      minTime(acc[1], s) === s ? acc[1] : s,
+    ], [sv[0], sv[0]]);
+
+    if ( Ao5.length === n ) {
+      copyToClipboard(`Ao${n}: ${ timer(Ao5[n - 1], true) } = ${ sv.map(s =>
+        s === minMax[0] || s === minMax[1] ? '(' + sTimer(s, true) + ')' : sTimer(s, true)
+      ).join(', ') }`);
+    }
+  }
+
+  $: updatePaginator($solves);
+
 </script>
 
 <svelte:window on:keyup={ handleKeyUp }></svelte:window>
 
 <main class="w-full h-full">
-  <div id="grid" class="text-gray-400 mx-8 grid h-max-[100%] overflow-scroll">
-    {#each $solves as solve}
+  {#if pg.pages > 1}
+    <ul class="w-max flex justify-center mx-auto gap-2 text-gray-400">
+      <li class="paginator-item"
+        on:click={ () => setPage(1) }> <ChevronDoubleLeftIcon /> </li>
+      <li class="paginator-item"
+        on:click={ () => setPage(-2) }> <ChevronLeftIcon /> </li>
+      {#each pg.labels as lb}
+        <li class="paginator-item" class:selected={ pg.page === lb }
+          on:click={ () => setPage(lb) }>{ lb }</li>
+      {/each}
+      <li class="paginator-item"
+        on:click={ () => setPage(-1) }><ChevronRightIcon /></li>
+      <li class="paginator-item"
+        on:click={ () => setPage(Infinity) }><ChevronDoubleRightIcon /></li>
+    </ul>
+  {/if}
+
+  <div id="grid" class="text-gray-400 ml-8 mr-12 grid h-max-[100%] overflow-scroll">
+    {#each $solves.slice(pg.start, pg.end) as solve}
     <div
       class="shadow-md w-24 h-12 rounded-md m-3 p-1 bg-white bg-opacity-10 relative
         flex items-center justify-center transition-all duration-200 select-none cursor-pointer
@@ -185,14 +251,24 @@
     {/each}
   </div>
 
-  <div class="absolute top-3 right-2 text-gray-400 my-3 mx-1">
+  <div class="absolute top-3 right-2 text-gray-400 my-3 mx-1 flex flex-col gap-2">
     {#if $solves.length > 0}
       <Tooltip position="left" text="Delete all [D]">
         <span on:click={ deleteAll } class="cursor-pointer grid place-items-center">
           <DeleteAllIcon width="1.2rem" height="1.2rem"/>
         </span>
       </Tooltip>
-    {/if}
+      {/if}
+      <Tooltip position="left" text="Share Ao5">
+        <span on:click={ () => shareAoX(5) } class="cursor-pointer grid place-items-center">
+          <ShareIcon width="1.2rem" height="1.2rem"/>
+        </span>
+      </Tooltip>
+      <Tooltip position="left" text="Share Ao12">
+        <span on:click={ () => shareAoX(12) } class="cursor-pointer grid place-items-center">
+          <ShareIcon width="1.2rem" height="1.2rem"/>
+        </span>
+      </Tooltip>
   </div>
 
   <div class:isVisible={ selected } class="fixed rounded-md p-2 top-0 opacity-0 pointer-events-none
@@ -202,12 +278,6 @@
     <Button flat on:click={() => selectInvert()}> <SelectInverseIcon width="1.2rem" height="1.2rem" /> Invert Selection [V] </Button>
     <Button flat on:click={() => selectNone()}> <SelectOffIcon width="1.2rem" height="1.2rem" /> Cancel [C / Esc] </Button>
     <Button flat on:click={() => deleteSelected()}> <DeleteIcon width="1.2rem" height="1.2rem" /> Delete [D] </Button>
-
-    <!-- <button mat-button (click)="selectAll()"> <mat-icon svgIcon="select-all"></mat-icon> Select All</button>
-    <button mat-button (click)="selectInterval()"> <mat-icon svgIcon="arrow-expand-horizontal"></mat-icon> Select Interval</button>
-    <button mat-button (click)="selectInvert()"> <mat-icon svgIcon="select-inverse"></mat-icon> Invert Selection</button>
-    <button mat-button (click)="selectNone()"> <mat-icon svgIcon="select-off"></mat-icon> Cancel </button>
-    <button mat-button (click)="deleteSelected()"> <mat-icon svgIcon="delete"></mat-icon> Delete</button> -->
   </div>
 
   <Modal bind:this={ modal } bind:show={ show } onClose={ closeHandler }>
@@ -283,5 +353,16 @@
 
 .isVisible {
   @apply top-12 opacity-100 pointer-events-auto;
+}
+
+.paginator-item {
+  @apply w-8 h-8 bg-violet-400 bg-opacity-30 grid place-items-center rounded-md cursor-pointer shadow-md
+    transition-all duration-300 select-none
+    
+    hover:bg-opacity-40 hover:text-gray-300;
+}
+
+.paginator-item.selected {
+  @apply bg-violet-500 text-gray-200 bg-opacity-60 hover:bg-opacity-50;
 }
 </style>

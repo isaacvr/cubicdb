@@ -48,3 +48,23 @@ export function planeLineIntersection(p0: Vector3D, n: Vector3D, l0: Vector3D, l
 
   return l0.add( l.mul(num / den) );
 }
+
+export function search(v: number, arr: number[], bound?: boolean): number {
+  let ini = 0, fin = arr.length;
+
+  while (ini < fin) {
+    let mid = (ini + fin) >> 1;
+
+    if ( !bound && arr[mid] === v ) {
+      return mid;
+    }
+
+    if ( arr[mid] < v ) {
+      ini = mid + 1;
+    } else {
+      fin = mid;
+    } 
+  }
+
+  return bound ? ini : -1;
+}

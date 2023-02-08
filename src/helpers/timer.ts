@@ -1,4 +1,6 @@
-export default function timer(val: number, dec?: boolean, suff?: boolean, html?: boolean): string {
+import { Penalty, type Solve } from "@interfaces";
+
+export function timer(val: number, dec?: boolean, suff?: boolean, html?: boolean): string {
   if ( val === Infinity ) return "DNF";
   if ( isNaN(val) ) return ( dec ) ? "0.00" : "0";
 
@@ -24,4 +26,14 @@ export default function timer(val: number, dec?: boolean, suff?: boolean, html?:
     : newP1);
 
   return time + ((suff) ? sf : '');
+}
+
+export function sTimer(s: Solve, dec?: boolean, suff?: boolean, html?: boolean): string {
+  if ( s.penalty === Penalty.DNS ) return 'DNS';
+  if ( s.penalty === Penalty.DNF ) return 'DNF';
+  return timer(s.time, dec, suff, html);
+}
+
+export function infinitePenalty(s: Solve): boolean {
+  return s.penalty === Penalty.DNF || s.penalty === Penalty.DNS;
 }

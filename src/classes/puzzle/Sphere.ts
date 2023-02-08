@@ -1,9 +1,5 @@
 import { Vector3D, UP, CENTER, BACK, DOWN } from './../vector3d';
 
-function map(v, a, b, A, B) {
-  return (v - a) * (B - A) / (b - a) + A; 
-}
-
 export class Sphere {
   points: Vector3D[];
   faces: number[][];

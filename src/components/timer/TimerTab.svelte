@@ -12,6 +12,7 @@
   import Copy from '@icons/ContentCopy.svelte';
   import Settings from '@icons/Settings.svelte';
   import LightBulb from '@icons/LightbulbOn.svelte';
+  import NoteIcon from '@icons/NoteEdit.svelte';
 
   /// Components
   import Tooltip from '@material/Tooltip.svelte';
@@ -23,7 +24,7 @@
   import Toggle from '@components/material/Toggle.svelte';
 
   /// Helpers
-  import timer from '@helpers/timer';
+  import { timer } from '@helpers/timer';
   import { onMount } from 'svelte';
   import { DataService } from '@stores/data.service';
   
@@ -46,6 +47,14 @@
   let prob: number = null;
   let prevExpanded: boolean = false;
 
+  /// NOTES
+  let showNotes = false;
+  let notesW = 250;
+  let notesH = 250;
+  let notesL = document.body.clientWidth - notesW - 50;
+  let notesT = (document.body.clientHeight - notesH) / 2;
+  let noteContent = "";
+
   /// MODAL
   let modal;
   let show = false;
@@ -60,14 +69,15 @@
   };
   
   let options = [
-    { text: "Reload scramble [S]", icon: Refresh, handler: () => initScrambler() },
-    { text: "Edit [E]", icon: Pencil, handler: () => {
+    { text: "Reload scramble [Ctrl + S]", icon: Refresh, handler: () => initScrambler() },
+    { text: "Edit [Ctrl + E]", icon: Pencil, handler: () => {
       openDialog('edit-scramble', $scramble, (scr) => scr && initScrambler(scr));
     } },
-    { text: "Use old scramble [O]", icon: Calendar, handler: () => {
+    { text: "Use old scramble [Ctrl + O]", icon: Calendar, handler: () => {
       openDialog('old-scrambles', null, () => {});
     } },
-    { text: "Copy scramble", icon: Copy, handler: () => copyToClipboard() },
+    { text: "Copy scramble [Ctrl + C]", icon: Copy, handler: () => copyToClipboard() },
+    { text: "Notes [Ctrl + N]", icon: NoteIcon, handler: () => showNotes = true },
     { text: "Settings", icon: Settings, handler: () => {
       let initialCalc = $session.settings.calcAoX;
 
@@ -167,7 +177,7 @@
             initScrambler();
           }
         } else if ( ['KeyR', 'Escape', 'KeyS'].indexOf(code) > -1 ) {
-          if ( (code === 'KeyS' && !$isRunning) ||
+          if ( (code === 'KeyS' && event.ctrlKey && !$isRunning) ||
             (code === 'Escape' && $isRunning && $session.settings.scrambleAfterCancel ) ) {
             reset();
             initScrambler();
@@ -286,12 +296,16 @@
         runTimer(1);
       }
     } else if ( !$isRunning ) {
-      if ( event.code === 'KeyE' ) {
+      if ( event.code === 'KeyE' && event.ctrlKey ) {
         if ( !show || (show && type != 'edit-scramble') ) {
           openDialog('edit-scramble', $scramble, (scr) => scr && initScrambler(scr));
         }
-      } else if ( event.code === 'KeyO' ) {
+      } else if ( event.code === 'KeyO' && event.ctrlKey ) {
         openDialog('old-scrambles', null, () => {});
+      } else if ( event.code === 'KeyC' && event.ctrlKey ) {
+        copyToClipboard();
+      } else if ( event.code === 'KeyN' && event.ctrlKey ) {
+        showNotes = true;
       }
     }
   }
@@ -318,6 +332,27 @@
     modal.close();
   }
 
+  let mx = 0, my = 0, cx = notesL, cy = notesT, dragging = false;
+
+  function handleMouseDown(e: MouseEvent) {
+    mx = e.clientX;
+    my = e.clientY;
+    cx = notesL;
+    cy = notesT;
+    dragging = true;
+  }
+
+  function handleMouseMove(e: MouseEvent) {
+    if ( dragging ) {
+      notesL = cx + e.clientX - mx;
+      notesT = cy + e.clientY - my;
+    }
+  }
+
+  function handleMouseUp() {
+    dragging = false;
+  }
+
   onMount(() => {
     $group = 0;
     selectedGroup();
@@ -327,9 +362,14 @@
   $: $solves.length === 0 && reset();
 </script>
 
-<svelte:window on:keyup={ keyUp } on:keydown={ keyDown }></svelte:window>
+<svelte:window
+  on:keyup={ keyUp }
+  on:keydown={ keyDown }
+  on:mousemove={ handleMouseMove }
+  on:mouseup={ handleMouseUp }></svelte:window>
 
 <div class="w-full h-full { textColor }">
+  <!-- Scramble and options -->
   <div id="scramble" class="transition-all duration-300">
     {#if !$scramble}
       <span> {stateMessage}
@@ -347,6 +387,24 @@
     </div>
   </div>
 
+  <!-- Notes -->
+  {#if showNotes}
+    <div id="notes" class="fixed z-10 w-56 h-56 bg-violet-400 rounded-md" style="
+      --left: { notesL }px;
+      --top: { notesT }px;
+      --width: { notesW }px;
+      --height: calc({ notesH }px + 1.5rem);
+    ">
+      <div class="relative w-full h-6 cursor-move flex items-center" on:mousedown={ handleMouseDown }>
+        <span class="ml-auto mr-2 cursor-pointer text-gray-700" on:click={ () => showNotes = false }>
+          <Close width="1.2rem" height="1.2rem"/>
+        </span>
+      </div>
+      <TextArea bind:value={ noteContent } cClass="w-full h-full" class="bg-gray-600 text-gray-300 p-4"></TextArea>
+    </div>
+  {/if}
+
+  <!-- Timer -->
   <div class="absolute w-full top-1/3 text-center" style="font-size: 130px;">
     <span
       class="timer { textColor }"
@@ -374,6 +432,7 @@
     {/if}
   </div>
 
+  <!-- Hints -->
   <div id="hints"
     class="bg-white bg-opacity-10 w-max p-2 { textColor } rounded-md
       shadow-md absolute select-none left-0 top-1/4 transition-all duration-1000"
@@ -397,6 +456,7 @@
     </div>
   </div>
 
+  <!-- Statistics -->
   <div id="statistics"
     class="{ textColor } pointer-events-none transition-all duration-300"
     class:isRunning={ $isRunning }>
@@ -452,19 +512,20 @@
     </div>
   </div>
 
+  <!-- Image -->
   {#if $session?.settings?.genImage}
-  <div
-    id="preview-container"
-    class="absolute bottom-2 flex items-center justify-center w-full transition-all duration-300
-      select-none bg-transparent h"
-    class:expanded={ prevExpanded }
-    class:isRunning={ $isRunning }
-    on:click={() => prevExpanded = !prevExpanded }>
-    <img
-      on:dragstart|preventDefault
-      class="bottom-2 transition-all duration-300 cursor-pointer w-full h-full object-contain"
-      src={ $preview } alt="">
-  </div>
+    <div
+      id="preview-container"
+      class="absolute bottom-2 flex items-center justify-center w-full transition-all duration-300
+        select-none bg-transparent h"
+      class:expanded={ prevExpanded }
+      class:isRunning={ $isRunning }
+      on:click={() => prevExpanded = !prevExpanded }>
+      <img
+        on:dragstart|preventDefault
+        class="bottom-2 transition-all duration-300 cursor-pointer w-full h-full object-contain"
+        src={ $preview } alt="">
+    </div>
   {/if}
 
   <Modal bind:this={ modal } bind:show={ show } onClose={ closeHandler }>
@@ -547,6 +608,17 @@
     font-size: 1.5em;
     width: calc(100% - 240px);
     word-spacing: 10px;
+  }
+
+  #notes {
+    left: var(--left, 0px);
+    top: var(--top, 0px);
+    width: var(--width, 100px);
+    height: var(--height, 100px);
+    display: grid;
+    grid-template-rows: 1.5rem 1fr;
+    resize: both;
+    overflow: hidden;
   }
 
   table.nshow {

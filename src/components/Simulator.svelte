@@ -6,7 +6,6 @@
   import type { PuzzleType } from "@interfaces";
   import { TrackballControls } from "three/examples/jsm/controls/TrackballControls";
   import { puzzleReg } from "@classes/puzzle/puzzleRegister";
-  import { cubeToThree } from "@helpers/cube-draw";
   import { onDestroy } from "svelte";
   import SettingsIcon from '@icons/Settings.svelte';
   import Tooltip from "@components/material/Tooltip.svelte";
@@ -19,6 +18,7 @@
     PlaneBufferGeometry, PointLight, Raycaster, Scene, Vector2, Vector3, WebGLRenderer,
     type Intersection
   } from "three";
+    import { cubeToThree } from "@helpers/cubeToThree";
 
   const ANIMATION_TIME = 200; /// Default animation time: 200ms
 
@@ -29,7 +29,7 @@
 
   /// GUI
   let puzzles: any[] = [];
-  let selectedPuzzle: PuzzleType = "meierHalpernPyramid";
+  let selectedPuzzle: PuzzleType = "bicube";
   // let order = [2, 2, 4];
   let order = 3;
   let hasOrder = false;

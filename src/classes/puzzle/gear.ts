@@ -27,13 +27,6 @@ function getType(p: Piece): number {
 
 function edgeCallback(p: Piece, center: Vector3D, dir: Vector3D, ang: number, three ?: boolean, vc?: any) {
   if ( three ) {
-    // let p1 = <THREE.Object3D> (<any>p);
-    // let dir1 = new Vector3D(dir.x, dir.y, dir.z);
-    // let a = (<Piece>p1.userData).anchor.rotate(center, dir1, ang);
-    // let u1 = new Vector3(a.x, a.y, a.z);
-    // let u1n = u1.clone().normalize();
-    // p1.rotateOnWorldAxis(<any>dir, ang);
-    // p1.rotateOnWorldAxis(u1n, -ang * 4 / 3);
     let p1 = <any> p;
     let dir1 = new Vector3D(dir.x, dir.y, dir.z);
     let a = (<Piece>p1.userData).anchor.rotate(center, dir1, ang);
