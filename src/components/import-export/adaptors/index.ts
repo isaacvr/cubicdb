@@ -1,3 +1,11 @@
-export { TwistyTimer } from "./TwistyTimer";
-export { CSTimer } from "./CSTimer";
-export { CubeDesk } from "./CubeDesk";
+import { TwistyTimer } from "./TwistyTimer";
+import { CSTimer } from "./CSTimer";
+import { CubeDesk } from "./CubeDesk";
+
+const Adaptors = [
+  new TwistyTimer,
+  new CSTimer,
+  new CubeDesk
+]
+
+export default Adaptors;

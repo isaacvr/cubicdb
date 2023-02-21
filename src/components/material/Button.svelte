@@ -6,12 +6,12 @@
 
   export let flat = false;
   export let rp = {};
-  export let file = null;
+  export let file: boolean = false;
   let cl = "";
   export { cl as class };
 
-  function handleClick(...args) {
-    dispatch('click', ...args);
+  function handleClick(e: MouseEvent) {
+    dispatch('click', e);
 
     if ( file ) {
       let f = document.createElement('input');

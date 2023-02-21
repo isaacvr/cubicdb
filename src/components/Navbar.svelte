@@ -1,32 +1,38 @@
 <script lang="ts">
-  import { onDestroy } from 'svelte';
-  import { Link } from 'svelte-routing';
-  import { globalHistory } from 'svelte-routing/src/history';
+  import { getContext, onMount } from 'svelte';
+  import { Link, navigate } from 'svelte-routing';
+  import { ROUTER } from 'svelte-routing/src/contexts';
 
-  let parts = [];
+  const { activeRoute } = getContext(ROUTER) as any;
+  let parts: any[] = [];
 
-  function updateParts(v) {
-    let arr = v.split('?')[0].split('/').filter(e => e != '');
-
+  function updateParts(ar: any) {
     parts.length = 0;
     parts = [
-      { link: '/', name: 'Home' },
-      ...arr.map((e, p) => ({
+      { link: '/', name: 'Home' }
+    ];
+
+    if ( !ar ) {
+      navigate("/");
+      return;
+    }
+
+    let arr = ar.route._path.replace("*", ar.params['*'] || "").split('?')[0].split('/').filter((e: string) => e);
+    parts = [
+      ...parts,
+      ...arr.map((e: string, p: number) => ({
         link: "/" + arr.slice(0, p + 1).join('/'),
         name: e
       })),
     ];
   }
 
-  let hSub = globalHistory.listen(({ location }) => {
-    updateParts(location.pathname || '');
-  });
+  $: updateParts($activeRoute);
 
-  updateParts(window.location.pathname);
+  // onMount(() => {
+    // navigate('/');
+  // });
 
-  onDestroy(() => {
-    hSub();
-  });
 </script>
 
 <nav class="w-full px-5 inline-flex mt-10 select-none fixed z-10">

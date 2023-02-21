@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { onDestroy, onMount } from 'svelte';
+  import { createEventDispatcher, onDestroy, onMount } from 'svelte';
   import { generateCubeBundle } from '@helpers/cube-draw';
-  import { writable } from 'svelte/store';
+  import { writable, type Unsubscriber } from 'svelte/store';
   
   /// Modules
   import * as all from '@cstimer/scramble';
@@ -35,12 +35,18 @@
   import DeleteIcon from '@icons/Delete.svelte';
   
   /// Types
-  import { TimerState, AverageSetting, type Solve, type Session, Penalty, type Statistics, type TimerContext } from '@interfaces';
+  import { TimerState, AverageSetting, type Solve, type Session, Penalty, type Statistics, type TimerContext, type PuzzleOptions } from '@interfaces';
   import { Puzzle } from '@classes/puzzle/puzzle';
   import { PX_IMAGE } from '@constants';
   import { ScrambleParser } from '@classes/scramble-parser';
-  import { bundleAverageS, getAverageS } from '@helpers/statistics';
-    import { infinitePenalty } from '@helpers/timer';
+  import { getAverageS } from '@helpers/statistics';
+  import { infinitePenalty } from '@helpers/timer';
+  
+  export let battle = false;
+  export let useScramble = '';
+  export let useMode = '';
+  export let genScramble = true;
+  export let enableKeyboard = true;
 
   const INITIAL_STATISTICS: Statistics = {
     best: { value: 0, better: false },
@@ -63,7 +69,7 @@
     P2:    { value: 0, better: false },
     DNS:   { value: 0, better: false },
     DNF:   { value: 0, better: false },
-    __counter: 0,
+    counter: { value: 0, better: false },
   };
 
   /// SERVICES
@@ -74,8 +80,9 @@
   let modes: { 0: string, 1: string, 2: number }[] = [];
   let filters: string[] = [];
   let sessions: Session[] = [];  
-  let subs = [];
+  let subs: Unsubscriber[] = [];
   let tabs: TabGroup;
+  let dispatch = createEventDispatcher();
   
   /// MODAL
   let openEdit = false;
@@ -88,8 +95,8 @@
   let tab = writable<number>(0);
   let solves = writable<Solve[]>([]);
   let allSolves = writable<Solve[]>([]);
-  let session = writable<Session>(null);
-  let Ao5 = writable<number[]>(null);
+  let session = writable<Session>();
+  let Ao5 = writable<number[]>();
   let AoX = writable<number>(100);
   let stats = writable<Statistics>(INITIAL_STATISTICS);
   let scramble = writable<string>();
@@ -97,10 +104,10 @@
   let mode = writable<{ 0: string, 1: string, 2: number }>();
   let hintDialog = writable<boolean>();
   let hint = writable<boolean>();
-  let cross = writable<string[]>();
+  let cross = writable<string>();
   let xcross = writable<string>();
   let preview = writable<string>(PX_IMAGE);
-  let prob = writable<number>(null);
+  let prob = writable<number>();
   let isRunning = writable<boolean>(false);
   
   $: $isRunning = $state === TimerState.INSPECTION || $state === TimerState.RUNNING;
@@ -109,23 +116,22 @@
     $group = s.group || 0;
     let menu = MENU[ $group ];
     modes = menu[1];
-    $mode = ( typeof s.group != 'undefined' ) ? menu[1].filter(m => m[1] === s.mode)[0] : menu[1][0];
-    $prob = s.prob;
+    let fModes = modes.filter(m => m[1] === s.mode);
+    $mode = fModes.length ? fModes[0] : modes[0];
+    $prob = s.prob || -1;
     selectedFilter();
   }
 
   function updateStatistics(inc ?: boolean) {
     let AON = [ 3, 5, 12, 50, 100, 200, 500, 1000, 2000 ];
     let AVG = [ 0, 0, 0, 0, 0, 0, 0, 0, 0 ];
-    let BEST = [];
+    let BEST: number[] = [];
     let len = $solves.length;
     let sum = 0, avg = 0, dev = 0;
-    let pMap: Map<Penalty, number> = new Map([
-      [Penalty.DNF, 0], [Penalty.DNS, 0], [Penalty.P2, 0], [Penalty.NONE, 0]
-    ]);
+    let pMap: Map<Penalty, number> = new Map();
 
     let bw = $solves.reduce((ac: number[], e) => {
-      pMap.set( e.penalty, pMap.get(e.penalty) + 1 );
+      pMap.set( e.penalty, (pMap.get(e.penalty) || 0) + 1 );
 
       if ( infinitePenalty(e) ) {
         len -= 1;
@@ -135,10 +141,10 @@
       return infinitePenalty(e) ? ac : [ Math.min(ac[0], e.time), Math.max(ac[1], e.time) ];
     }, [Infinity, 0]);
 
-    avg = (len > 0) ? sum / len : null;
+    avg = (len > 0) ? sum / len : 0;
     dev = (len > 0) ? Math.sqrt( $solves.reduce((acc, e) => {
       return infinitePenalty(e) ? acc : (acc + (e.time - avg)**2 / len);
-    }, 0) ) : null;
+    }, 0) ) : 0;
     
     for (let i = 0, maxi = AON.length; i < maxi; i += 1) {
       let avgs = getAverageS(AON[i], $solves, $session?.settings?.calcAoX);
@@ -171,11 +177,11 @@
       Ao2k:  { value: AVG[8], better: AVG[8] <= BEST[8] },
       
       // Penalties
-      NP:    { value: pMap.get(Penalty.NONE), better: false },
-      P2:    { value: pMap.get(Penalty.P2), better: false },
-      DNS:   { value: pMap.get(Penalty.DNS), better: false },
-      DNF:   { value: pMap.get(Penalty.DNF), better: false },
-      __counter: (inc) ? ps.__counter + 1 : ps.__counter,
+      NP:    { value: pMap.get(Penalty.NONE) || 0, better: false },
+      P2:    { value: pMap.get(Penalty.P2) || 0, better: false },
+      DNS:   { value: pMap.get(Penalty.DNS) || 0, better: false },
+      DNF:   { value: pMap.get(Penalty.DNF) || 0, better: false },
+      counter: { value: (inc) ? ps.counter.value + 1 : ps.counter.value, better: false },
     };
 
     if ( $stats.best.better && ps.best.value != Infinity ) {
@@ -202,7 +208,7 @@
       let sum = arr.reduce((ac, e) => ac + e, 0);
       $Ao5 = [ ( sum - arr[3] ) / 3, ( sum - arr[0] ) / 3 ].sort((a, b) => a - b);
     } else {
-      $Ao5 = null;
+      $Ao5 = [];
     }
   }
 
@@ -239,13 +245,17 @@
   }
 
   function handleKeyUp(e: KeyboardEvent) {
-    if ( $state === TimerState.CLEAN || $state === TimerState.STOPPED ) {
+    if ( !enableKeyboard ) return;
+
+    if ( !battle && ($state === TimerState.CLEAN || $state === TimerState.STOPPED) ) {
       if ( e.key === 'ArrowRight' ) { tabs.nextTab(); }
       else if ( e.key === 'ArrowLeft' ) { tabs.prevTab(); }
     }
   }
 
   function handleInputKeyUp(ce: any) {
+    if ( !enableKeyboard ) return;
+
     const e = ce.detail;
     if ( e.key === 'Enter' ) {
       newSession();
@@ -255,11 +265,15 @@
     e.stopPropagation();
   }
 
-  function updateImage(md) {
-    let cb = Puzzle.fromSequence( $scramble, { ...all.pScramble.options.get(md), rounded: true, headless: true } );
+  function updateImage(md: string) {
+    let cb = Puzzle.fromSequence( $scramble, {
+      ...all.pScramble.options.get(md),
+      rounded: true,
+      headless: true
+    } as PuzzleOptions);
 
     generateCubeBundle([cb], 500).then(gen => {
-      let subsc = gen.subscribe((c: string) => {
+      let subsc = gen.subscribe((c: any) => {
         if (c === '__initial__') return;
 
         if ( c === null ) {
@@ -272,22 +286,30 @@
   }
 
   function initScrambler(scr?: string, _mode ?: string) {
-    $scramble = null;
     $hintDialog = false;
+    
+    if ( !$mode ) {
+      $mode = MENU[ $group || 0 ][1][0];
+    }
 
-    let md = _mode || $mode[1];
-
-    $scramble = (scr) ? scr : all.pScramble.scramblers.get(md).apply(null, [
-      md, Math.abs($mode[2]), $prob < 0 ? undefined : $prob
-    ]).replace(/\\n/g, '<br>').trim();
+    let md = useMode || _mode || $mode[1];
+    let s = useScramble || scr;
+    
+    if ( !genScramble ) {
+      $scramble = scr || useScramble;
+    } else {
+      $scramble = (s) ? s : (all.pScramble.scramblers.get(md) as any).apply(null, [
+        md, Math.abs($mode[2]), $prob < 0 ? undefined : $prob
+      ]).replace(/\\n/g, '<br>').trim();
+    }
 
     if ( isNNN(md) ) {
       $scramble = ScrambleParser.parseNNNString($scramble);
     }
 
-    const modes = ["333", "333fm" ,"333oh" ,"333o" ,"easyc" ,"333ft"];
+    const dialogModes = ["333", "333fm" ,"333oh" ,"333o" ,"easyc" ,"333ft"];
 
-    if ( modes.indexOf(md) > -1 ) {
+    if ( dialogModes.indexOf(md) > -1 ) {
       $cross = solve_cross($scramble).map(e => e.map(e1 => e1.trim()).join(' '))[0];
       $xcross = solve_xcross($scramble, 0).map(e => e.trim()).join(' ');
       $hintDialog = true;
@@ -326,7 +348,7 @@
     let name = newSessionName.trim();
 
     if ( name != '' ) {
-      dataService.addSession({ _id: null, name, settings: {
+      dataService.addSession({ _id: '', name, settings: {
         hasInspection: true,
         showElapsedTime: true,
         inspection: 15,
@@ -347,117 +369,137 @@
   function renameSession(s: Session) {
     s.editing = false;
 
-    if ( s.tName.trim() === '' ) {
+    if ( s.tName?.trim() === '' ) {
       return;
     }
-    dataService.updateSession({ _id: s._id, name: s.tName.trim(), settings: s.settings });
+
+    dataService.updateSession({ _id: s._id, name: s.tName?.trim() || "Session -", settings: s.settings });
   }
 
   onMount(() => {
-    subs = [
-      dataService.solveSub.subscribe((data) => {
-        if ( !data || !data.data ) {
-          return;
-        }
-        
-        switch(data.type) {
-          case 'get-solves': {
-            $allSolves = <Solve[]> data.data;
-            setSolves();
-            break;
+    if ( battle ) {
+      $session = {
+        _id: '',
+        name: 'Battle',
+        settings: {
+          calcAoX: AverageSetting.SEQUENTIAL,
+          genImage: true,
+          hasInspection: true,
+          inspection: 15,
+          scrambleAfterCancel: false,
+          showElapsedTime: true,
+          input: 'Keyboard',
+        },
+        editing: false,
+        tName: '',
+      };
+    } else {
+      subs = [
+        dataService.solveSub.subscribe((data) => {
+          if ( !data || !data.data ) {
+            return;
           }
-          case 'add-solve': {
-            let s = $allSolves.find(s => s.date === data.data[0].date);
-            
-            if (s) {
-              s._id = data.data[0]._id;
-              updateSolves();
+          
+          switch(data.type) {
+            case 'get-solves': {
+              $allSolves = <Solve[]> data.data;
+              setSolves();
+              break;
             }
-            break;
-          }
-          case 'remove-solves': {
-            let ids = <Solve[]> data.data;
-            for (let i = $allSolves.length - 1; i >= 0; i -= 1) {
-              ids.indexOf($allSolves[i]._id) > -1 && $allSolves.splice(i, 1);
+            case 'add-solve': {
+              let d = (data.data as Solve[])[0];
+              let s = $allSolves.find(s => s.date === d.date);
+              
+              if (s) {
+                s._id = d._id;
+                updateSolves();
+              }
+              break;
             }
-            setSolves();
-            break;
-          }
-          case 'update-solve': {
-            let updatedSolve = <Solve> data.data;
-            if ( updatedSolve ) {
-              for (let i = 0, maxi = $allSolves.length; i < maxi; i += 1) {
-                if ( $allSolves[i]._id === updatedSolve._id ) {
-                  $allSolves[i].comments = updatedSolve.comments;
-                  $allSolves[i].penalty = updatedSolve.penalty;
-                  break;
-                }
+            case 'remove-solves': {
+              let ids = <Solve[]> data.data;
+              for (let i = $allSolves.length - 1; i >= 0; i -= 1) {
+                ids.indexOf($allSolves[i]._id) > -1 && $allSolves.splice(i, 1);
               }
               setSolves();
+              break;
             }
-            break;
-          }
-        }
-      }),
-      dataService.sessSub.subscribe((data) => {
-        if ( !data || !data.data ) return;
-
-        switch ( data.type ) {
-          case 'get-sessions': {
-            sessions = (<Session[]> data.data).map(s => { s.tName = s.name; return s; });
-
-            if ( sessions.length === 0 ) {
-              newSessionName = 'Session 1';
-              newSession();
-              return;
+            case 'update-solve': {
+              let updatedSolve = <Solve> data.data;
+              if ( updatedSolve ) {
+                for (let i = 0, maxi = $allSolves.length; i < maxi; i += 1) {
+                  if ( $allSolves[i]._id === updatedSolve._id ) {
+                    $allSolves[i].comments = updatedSolve.comments;
+                    $allSolves[i].penalty = updatedSolve.penalty;
+                    break;
+                  }
+                }
+                setSolves();
+              }
+              break;
             }
-
-            let ss = localStorage.getItem('session');
-            let currentSession = sessions.find(s => s._id === ss);
-            $session = currentSession || sessions[0];
-            selectedSession();
-            break;
           }
-          case 'rename-session':
-          case 'update-session': {
-            let session = <Session> data.data;
-            let updatedSession = sessions.find(s => s._id === session._id);
-            if ( updatedSession ) {
-              updatedSession.name = session.name;
-              updatedSession.settings = session.settings;
+        }),
+        dataService.sessSub.subscribe((data) => {
+          if ( !data || !data.data ) return;
+
+          switch ( data.type ) {
+            case 'get-sessions': {
+              sessions = (<Session[]> data.data).map(s => { s.tName = s.name; return s; });
+
+              if ( sessions.length === 0 ) {
+                newSessionName = 'Session 1';
+                newSession();
+                return;
+              }
+
+              let ss = localStorage.getItem('session');
+              let currentSession = sessions.find(s => s._id === ss);
+              $session = currentSession || sessions[0];
+              selectedSession();
+              break;
             }
-            sessions = sessions;
-            break;
-          }
-          case 'add-session': {
-            let ns = <Session> data.data;
-            ns.tName = ns.name;
-            sessions = [ ...sessions, ns ];
-            $session = ns;
-            selectedSession();
-            break;
-          }
-          case 'remove-session': {
-            let s = <Session> data.data;
-            sessions = sessions.filter(s1 => s1._id != s._id);
-
-            if ( sessions.length === 0 ) {
-              newSessionName = 'Session 1';
-              newSession();
-              return;
+            case 'rename-session':
+            case 'update-session': {
+              let session = <Session> data.data;
+              let updatedSession = sessions.find(s => s._id === session._id);
+              if ( updatedSession ) {
+                updatedSession.name = session.name;
+                updatedSession.settings = session.settings;
+              }
+              sessions = sessions;
+              break;
             }
-
-            if ( s._id === $session._id ) {
-              $session = sessions[0];
+            case 'add-session': {
+              let ns = <Session> data.data;
+              ns.tName = ns.name;
+              sessions = [ ...sessions, ns ];
+              $session = ns;
+              selectedSession();
+              break;
             }
-            break;
-          }
-        }
-      }),
-    ];
+            case 'remove-session': {
+              let s = <Session> data.data;
+              sessions = sessions.filter(s1 => s1._id != s._id);
 
-    dataService.getSessions();
-    dataService.getSolves();
+              if ( sessions.length === 0 ) {
+                newSessionName = 'Session 1';
+                newSession();
+                return;
+              }
+
+              if ( s._id === $session._id ) {
+                $session = sessions[0];
+              }
+              break;
+            }
+          }
+        }),
+      ];
+
+      dataService.getSessions();
+      dataService.getSolves();
+    }
   });
 
   onDestroy(() => {
@@ -470,63 +512,73 @@
     sortSolves, updateStatistics, initScrambler, selectedGroup, setConfigFromSolve
   };
 
+  $: (useScramble || useMode) ? initScrambler(useScramble, useMode) : initScrambler();
+
 </script>
 
 <svelte:window on:keyup={ handleKeyUp }></svelte:window>
 
-<main>
-  <div class="fixed w-max -translate-x-1/2 left-1/2 z-10 grid grid-flow-col
-    gap-2 top-12 items-center justify-center text-gray-400">
-    <Tooltip text="Manage sessions">
-      <span on:click={ editSessions } class="cursor-pointer"><TuneIcon width="1.2rem" height="1.2rem"/> </span>
-    </Tooltip>
-    
-    <Select
-      placeholder="Select session..."
-      value={ $session } items={ sessions } label={ (s) => (s || {}).name } transform={ e => e }
-      onChange={ (g) => { $session = g; selectedSession(); } }
+<main class="w-full h-full">
+  {#if battle}
+    <TimerTab
+      { context } { battle } { enableKeyboard }
+      on:solve={ (s) => dispatch("solve", s.detail) }
+      on:update={ (s) => dispatch("solve", s.detail) }
     />
-
-    {#if $tab === 0}
+  {:else}
+    <div class="fixed w-max -translate-x-1/2 left-1/2 z-10 grid grid-flow-col
+      gap-2 top-12 items-center justify-center text-gray-400">
+      <Tooltip text="Manage sessions">
+        <span on:click={ editSessions } class="cursor-pointer"><TuneIcon width="1.2rem" height="1.2rem"/> </span>
+      </Tooltip>
+      
       <Select
-        placeholder="Select group"
-        value={ groups[$group] } items={ groups } transform={ e => e }
-        onChange={ (g, p) => { $group = p; selectedGroup(); } }
+        placeholder="Select session..."
+        value={ $session } items={ sessions } label={ (s) => (s || {}).name } transform={ e => e }
+        onChange={ (g) => { $session = g; selectedSession(); } }
       />
 
-      <Select
-        placeholder={['Select mode']}
-        value={ $mode } items={ modes } label={ e => e[0] } transform={ e => e }
-        onChange={ (g) => { $mode = g; selectedMode(); } }
+      {#if $tab === 0}
+        <Select
+          placeholder="Select group"
+          value={ groups[$group] } items={ groups } transform={ e => e }
+          onChange={ (g, p) => { $group = p || 0; selectedGroup(); } }
         />
-    {/if}
 
-    {#if filters.length > 0 && $tab === 0}
-      <Select
-        placeholder="Select filter"
-        value={ $prob } items={ filters } label={ e => e.toUpperCase() } transform={ (i, p) => p }
-        onChange={ (i, p) => { $prob = p; selectedFilter(); } }
-      />
-    {/if}
-    
-    {#if $tab === 2}
-      <Input min={3} max={1000}
-        class="hidden-markers bg-gray-700 rounded-md"
-        type="number" bind:value={ $AoX } on:keyup={ e => e.detail.stopPropagation() }/>
-    {/if}
-  </div>
+        <Select
+          placeholder={['Select mode']}
+          value={ $mode } items={ modes } label={ e => e[0] } transform={ e => e }
+          onChange={ (g) => { $mode = g; selectedMode(); } }
+          />
+      {/if}
 
-  <TabGroup bind:this={ tabs } class="absolute w-full" onChange={ t => $tab = t }>
-    <Tab name="" icon={ TimerIcon }>
-      <TimerTab { context }/>
-    </Tab>
-    <Tab name="" icon={ ListIcon }>
-      <SessionsTab { context }/>
-    </Tab>
-    <Tab name="" icon={ ChartIcon }>
-      <StatsTab { context }/>
-    </Tab>
-  </TabGroup>
+      {#if filters.length > 0 && $tab === 0}
+        <Select
+          placeholder="Select filter"
+          value={ $prob } items={ filters } label={ e => e.toUpperCase() } transform={ (i, p) => p }
+          onChange={ (i, p) => { $prob = p || 0; selectedFilter(); } }
+        />
+      {/if}
+      
+      {#if $tab === 2}
+        <Input min={3} max={1000}
+          class="hidden-markers bg-gray-700 rounded-md"
+          type="number" bind:value={ $AoX } on:keyup={ e => e.detail.stopPropagation() }/>
+      {/if}
+    </div>
+
+    <TabGroup bind:this={ tabs } class="absolute w-full" onChange={ t => $tab = t || 0 }>
+      <Tab name="" icon={ TimerIcon }>
+        <TimerTab { context }/>
+      </Tab>
+      <Tab name="" icon={ ListIcon }>
+        <SessionsTab { context }/>
+      </Tab>
+      <Tab name="" icon={ ChartIcon }>
+        <StatsTab { context }/>
+      </Tab>
+    </TabGroup>
+  {/if}
 
   <Modal show={ openEdit } onClose={ handleClose }>
     <Button on:click={ openAddSession }> <PlusIcon /> Add new Session </Button>
@@ -534,7 +586,7 @@
       {#if creatingSession}
         <div class="flex">
           <Input
-            focus={ creatingSession }
+            focus={ true }
             class="bg-gray-600 text-gray-200 flex-1"  
             bind:value={ newSessionName } on:keyup={ (e) => handleInputKeyUp(e) }/>
           <div class="flex mx-2 flex-grow-0 w-10 items-center justify-center">

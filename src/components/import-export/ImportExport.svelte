@@ -3,22 +3,21 @@
   import Button from "@components/material/Button.svelte";
   import Select from "@components/material/Select.svelte";
   import { onDestroy, onMount } from "svelte";
-  import * as Adaptors from "./adaptors";
+  import Adaptors from "./adaptors";
   import { MODE_MAP } from "@constants";
   import { timer } from "@helpers/timer";
   import { DataService } from "@stores/data.service";
   import type { Unsubscriber } from "svelte/store";
-    import Checkbox from "@components/material/Checkbox.svelte";
+  import Checkbox from "@components/material/Checkbox.svelte";
 
   let dataService = DataService.getInstance();
 
-  let parsers = Object.keys(Adaptors).map(k => new Adaptors[k]);
   let parser = 0;
   let mode = 0;
-  let cubeData: CubeDBData = null;
-  let sSession: Session = null;
+  let cubeData: CubeDBData | null = null;
+  let sSession: Session;
   let fSolves: Solve[] = [];
-  let sSub: Unsubscriber = null;
+  let sSub: Unsubscriber;
 
   let isImport = true;
   let rem = 0;
@@ -27,8 +26,8 @@
     let fr = new FileReader();
 
     fr.addEventListener('loadend', (e) => {
-      cubeData = parsers[ parser ].toCubeDB(fr.result as string, mode);
-      cubeData.sessions = cubeData.sessions.filter(ss => cubeData.solves.reduce((acc, e) => acc + (e.session === ss._id ? 1 : 0), 0));
+      cubeData = Adaptors[ parser ].toCubeDB(fr.result as string, mode);
+      cubeData.sessions = cubeData.sessions.filter(ss => cubeData?.solves.reduce((acc, e) => acc + (e.session === ss._id ? 1 : 0), 0));
       
       if ( cubeData.sessions.length === 0 ) {
         cubeData = null;
@@ -42,27 +41,26 @@
   }
 
   function save() {
-    for (let i = 0, maxi = cubeData.sessions.length; i < maxi; i += 1) {
-      let s = cubeData.sessions[i];
-      if ( !s.editing ) continue;
-
-      s.tName = s._id;
-      
-      delete s._id;
-
-      rem += 1;
-      dataService.addSession(s);
+    if ( cubeData ) {
+      for (let i = 0, maxi = cubeData.sessions.length; i < maxi; i += 1) {
+        let s = cubeData.sessions[i];
+        if ( !s.editing ) continue;
+        s.tName = s._id;
+        s._id = "";
+        rem += 1;
+        dataService.addSession(s);
+      }
     }
   }
 
   function selectAll() {
-    cubeData.sessions.forEach(s => s.editing = true);
-    cubeData.sessions = cubeData.sessions;
+    cubeData?.sessions.forEach(s => s.editing = true);
+    cubeData = cubeData;
   }
 
   function selectNone() {
-    cubeData.sessions.forEach(s => s.editing = false);
-    cubeData.sessions = cubeData.sessions;
+    cubeData?.sessions.forEach(s => s.editing = false);
+    cubeData = cubeData;
   }
 
   onMount(() => {
@@ -73,11 +71,13 @@
         case 'add-session': {
           let ss = <Session> e.data;
           rem -= 1;
-          for (let i = 0, maxi = cubeData?.solves?.length; i < maxi; i += 1) {
-            let sv = cubeData.solves[i];
-            if ( ss.tName === sv.session ) {
-              sv.session = ss._id;
-              dataService.addSolve(sv);
+          if ( cubeData ) {
+            for (let i = 0, maxi = cubeData.solves.length; i < maxi; i += 1) {
+              let sv = cubeData.solves[i];
+              if ( ss.tName === sv.session ) {
+                sv.session = ss._id;
+                dataService.addSolve(sv);
+              }
             }
           }
           if ( rem === 0 ) {
@@ -109,10 +109,10 @@
     <section>
       <div class="flex mx-auto items-center gap-2 justify-center">
         <span>From:</span>
-        <Select bind:value={parser} items={ parsers } label={ p => p.name } transform={ (_, pos) => pos  }/>
+        <Select bind:value={parser} items={ Adaptors } label={ p => p.name } transform={ (_, pos) => pos  }/>
         
-        {#if parsers[parser].modes.length > 1}
-          <Select bind:value={mode} items={ parsers[parser].modes } transform={ (_, pos) => pos  }/>
+        {#if Adaptors[parser].modes.length > 1}
+          <Select bind:value={mode} items={ Adaptors[parser].modes } transform={ (_, pos) => pos  }/>
         {/if}
 
         <Button class="bg-purple-800 text-gray-300" file on:files={ e => processFiles(e.detail) }>Select file</Button>
@@ -145,7 +145,7 @@
         {#each fSolves.slice(0, 50) as s, i}
           <li class="grid grid-cols-6 border-none border-b border-gray-500">
             <span>{ i + 1 }</span>
-            <span>{ MODE_MAP.get(s.mode) || "--" }</span>
+            <span>{ MODE_MAP.get(s.mode || "") || "--" }</span>
             <span>{ timer( s.time, true, true ) }</span>
             <span class="overflow-hidden text-ellipsis whitespace-nowrap col-span-3 text-left">{ s.scramble }</span>
           </li>
@@ -158,10 +158,3 @@
     </section>
   {/if}
 </main>
-
-<style>
-  .selected {
-    text-decoration: underline;
-    --tw-bg-opacity: 1;
-  }
-</style>

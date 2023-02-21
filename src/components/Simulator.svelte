@@ -29,10 +29,10 @@
 
   /// GUI
   let puzzles: any[] = [];
-  let selectedPuzzle: PuzzleType = "bicube";
+  let selectedPuzzle: PuzzleType = "rubik";
   // let order = [2, 2, 4];
   let order = 3;
-  let hasOrder = false;
+  let hasOrder = true;
   let GUIExpanded = false;
 
   /// Animation

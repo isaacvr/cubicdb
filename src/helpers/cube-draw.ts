@@ -3,8 +3,8 @@ import { writable, type Writable } from 'svelte/store';
 
 export async function generateCubeBundle(
   cubes: Puzzle[], width ?: number, all ?: boolean, inCube?: boolean, printable?: boolean
-): Promise< Writable< string | string[] > > {
-  let observer = writable<string | string[]>('__initial__');
+): Promise< Writable< string | string[] | null > > {
+  let observer = writable<string | string[] | null>('__initial__');
 
   const SyncWorker = await import('@workers/imageWorker?worker');
   const imageWorker = new SyncWorker.default();
@@ -13,6 +13,7 @@ export async function generateCubeBundle(
 
   imageWorker.onmessage = (e) => {
     if ( !e.data ) {
+      console.log('!e.data terminate');
       observer.update(() => null);
       imageWorker.terminate();
     }
@@ -35,9 +36,12 @@ export async function generateCubeBundle(
           }
         }
       }
+
+      console.log('ALL_INCUBE: ', all, inCube);
       observer.update(() => e.data);
 
       if ( n >= cubes.length || all ) {
+        console.log('ENDING');
         observer.update(() => null);
         imageWorker.terminate();
       }

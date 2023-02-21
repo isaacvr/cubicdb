@@ -9,20 +9,20 @@
   import Tooltip from "./material/Tooltip.svelte";
   import { getSearchParams } from "@helpers/strings";
 
-  export let location;
+  export let location: Location;
   
   const dataService = DataService.getInstance();
 
-  let lastUrl: string = null;
+  let lastUrl: string = '';
   let cards: Card[] = [];
   let cases: Algorithm[] = [];
   let type: number = 0;
-  let selectedCase: Algorithm = null;
+  let selectedCase: Algorithm | null = null;
   let allSolutions = false;
 
   let algSub: Unsubscriber;
 
-  function nameToPuzzle(name: string) {
+  function nameToPuzzle(name: string): any[] {
     const reg1 = /^(\d*)[xX](\d*)$/, reg2 = /^(\d*)[xX](\d*)[xX](\d*)$/, reg3 = /^(\d){3}$/;
 
     let dims;
@@ -87,7 +87,7 @@
     });
     
     let cubes = list.map(e => {
-      let args = nameToPuzzle(e.puzzle);
+      let args = nameToPuzzle(e.puzzle || "");
       let seq = e.scramble + " z2";
       return Puzzle.fromSequence(seq, {
         type: args[0],
@@ -118,7 +118,7 @@
       }
     }
 
-    let arr = type < 2 ? cards.map(e => e.puzzle) : cases.map(e => e._puzzle);
+    let arr: Puzzle[] = type < 2 ? cards.map(e => e.puzzle as Puzzle ) : cases.map(e => e._puzzle as Puzzle);
 
     generateCubeBundle(arr, 250, false, true).then(gen => {
       let subsc = gen.subscribe((c) => {
@@ -137,7 +137,7 @@
     }
   }
 
-  function updateCases(loc) {
+  function updateCases(loc: Location) {
     let paramMap = getSearchParams(loc.search);
 
     let caseName = paramMap.get('case');
@@ -152,7 +152,7 @@
 
     let p1 = loc.pathname.split('/').slice(2).join('/');
 
-    if ( p1 != lastUrl ) {
+    if ( p1 != lastUrl || !p1 ) {
       cards.length = 0;
       cases.length = 0;
       lastUrl = p1;
@@ -177,6 +177,7 @@
     algSub = dataService.algSub.subscribe((algs: Algorithm[]) => {
       handleAlgorithms(algs);
     });
+
   });
 
   onDestroy(() => {
@@ -189,15 +190,15 @@
 <main class="container-mini overflow-hidden text-gray-400">
   {#if allSolutions}
     <div>
-      <h1 class="text-gray-300 text-3xl font-bold text-center">{ selectedCase.name }</h1>
-      <img src={ selectedCase._puzzle.img } class="puzzle-img flex mx-auto" alt="">
+      <h1 class="text-gray-300 text-3xl font-bold text-center">{ selectedCase?.name }</h1>
+      <img src={ selectedCase?._puzzle?.img } class="puzzle-img flex mx-auto" alt="">
       <div class="grid grid-cols-6">
         <h2 class="col-span-1 font-bold text-xl"> </h2>
         <h2 class="col-span-3 font-bold text-xl">Solution</h2>
         <h2 class="col-span-1 font-bold text-xl">Moves</h2>
         <h2 class="col-span-1 font-bold text-xl"> </h2>
   
-        {#each selectedCase.solutions as sol }
+        {#each (selectedCase?.solutions || []) as sol }
           <span class="col-span-1"></span>
           <Tooltip position="left" text="Click to copy" class="col-span-3">
             <span
@@ -219,7 +220,7 @@
             bg-white bg-opacity-10 text-gray-400
 
             hover:rotate-3 hover:shadow-lg">
-              <img class="w-32 h-32" src="{card.puzzle.img}" alt={card.title}>
+              <img class="w-32 h-32" src="{card?.puzzle?.img || ''}" alt={card.title}>
               <h2>{card.title}</h2>
             </li>
           </Link>
@@ -240,9 +241,9 @@
             <span class="font-bold">{ c.name }</span>
             <img on:click={ () => caseHandler(c) }
               class="puzzle-img hover:shadow-lg transition-all duration-200 cursor-pointer"
-              src={c._puzzle.img} alt="">
+              src={c?._puzzle?.img || ''} alt="">
             <ul>
-              {#each c.solutions.slice(0, 4) as solution}
+              {#each (c.solutions || []).slice(0, 4) as solution}
                 <li class="algorithm">{solution.moves}</li>
               {/each}
             </ul>

@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { createEventDispatcher } from "svelte";
+  import { createEventDispatcher, onMount } from "svelte";
 
-  export let checked = false;
+  export let checked: boolean = false;
   export let undef = false;
   export let label = '';
   export let disabled = false;
@@ -16,10 +16,14 @@
     !checked && dispatch('unchecked');
     dispatch('change', { value: checked });
   }
+  
+  onMount(() => {
+    dispatch('change', { value: checked });
+  });
 
 </script>
 
-<div class="wrapper flex items-center" class:disabled>
+<div class="wrapper flex items-center" class:disabled={ disabled }>
   <div class:checked class:undef class="box { _class }" on:click={ toggle }>
     <div class="mark"></div>
   </div>

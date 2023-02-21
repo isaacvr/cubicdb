@@ -1,10 +1,11 @@
 <script lang="ts">
-  import { Puzzle } from "@classes/puzzle/puzzle";
   import { Link } from "svelte-routing";
-  import { CubeMode } from "@constants";
   import { generateCubeBundle } from "@helpers/cube-draw";
-  
-  let cards = [
+  import type { Card } from "@interfaces";
+  import { Puzzle } from "@classes/puzzle/puzzle";
+  import { CubeMode } from "@constants";
+
+  let cards: Card[] = [
     {
       title: "Tutorials",
       route: "/tutorials",
@@ -22,6 +23,11 @@
       route: "/timer",
       timer: true,
       ready: false,
+      cube: '/assets/cube.png',
+    }, {
+      title: "Battle",
+      route: "/battle",
+      ready: true,
       cube: '/assets/cube.png',
     }, {
       title: "PLL Recognition",
@@ -42,29 +48,29 @@
       ready: false,
       cube: '/assets/logo.png',
       puzzle: new Puzzle({ type: 'rubik', mode: CubeMode.GRAY, order: [2] })
-    }, {
+    },  {
       title: 'Import / Export',
       route: '/import-export',
       cube: '/assets/logo.png',
       ready: true,
       timer: false,
-    },
-    {
+    }, {
       title: 'Contest',
       route: '/contest',
       cube: '/assets/logo.png',
+      ready: true,
       puzzle: new Puzzle({ type: 'redi' })
     }
   ];
 
-  let cubes = cards.reduce((ac, e) => {
+  let cubes = cards.reduce((ac: Puzzle[], e) => {
     if ( e.puzzle ) {
       ac.push(e.puzzle);
     }
     return ac;
   }, []);
 
-  generateCubeBundle(cubes, null, false, true).then(gen => {
+  generateCubeBundle(cubes, undefined, false, true).then(gen => {
     let subsc = gen.subscribe((c) => {
       if ( c === null ) {
         subsc();

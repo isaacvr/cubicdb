@@ -74,14 +74,14 @@ export interface PuzzleInterface {
   faceVectors: Vector3D[];
   faceColors: string[];
   getAllStickers: () => Sticker[];
-  move: (any) => any;
+  move: (m: any) => any;
   roundParams: any[];
   isRounded?: boolean;
   dims?: number[];
   raw?: any;
   scramble?: () => any;
-  toMove?: (...args) => any;
-  vectorsFromCamera?: (...args) => any;
+  toMove?: (...args: any) => any;
+  vectorsFromCamera?: (...args: any) => any;
 }
 
 export interface PuzzleOptions {
@@ -114,13 +114,18 @@ export interface Solve {
   prob?: number;
 }
 
-export interface Settings {
+export type TimerInput = 'Keyboard' | 'Manual' | 'StackMat';
+
+export const TIMER_INPUT: TimerInput[] = [ 'Keyboard', 'Manual', 'StackMat' ];
+
+export interface SessionSettings {
   hasInspection: boolean;
   inspection: number;
   showElapsedTime: boolean;
   calcAoX: AverageSetting;
   genImage: boolean;
   scrambleAfterCancel: boolean;
+  input?: TimerInput;
 }
 
 export interface Session {
@@ -128,7 +133,7 @@ export interface Session {
   name: string;
   editing?: boolean;
   tName?: string;
-  settings: Settings;
+  settings: SessionSettings;
 }
 
 export interface TimerPuzzleCategory {
@@ -199,7 +204,9 @@ export interface Statistics {
   P2: Metric;
   DNF: Metric;
   DNS: Metric;
-  __counter: number;
+  counter: Metric;
+
+  [key: string]: Metric;
 }
 
 export interface TimerContext {
@@ -217,17 +224,17 @@ export interface TimerContext {
   mode: Writable<{ 0: string, 1: string, 2: number }>;
   hintDialog: Writable<boolean>;
   hint: Writable<boolean>;
-  cross: Writable<string[]>;
+  cross: Writable<string>;
   xcross: Writable<string>;
   preview: Writable<string>;
   prob: Writable<number>;
   isRunning: Writable<boolean>;
   
-  sortSolves();
-  updateStatistics(inc ?: boolean);
-  initScrambler(scr?: string, _mode ?: string);
-  selectedGroup();
-  setConfigFromSolve(s: Solve);
+  sortSolves: () => any;
+  updateStatistics: (inc ?: boolean) => any;
+  initScrambler: (scr?: string, _mode ?: string) => any;
+  selectedGroup: () => any;
+  setConfigFromSolve: (s: Solve) => any;
 }
 
 export const ROLES = {
@@ -310,42 +317,65 @@ export interface CubeDBAdaptor {
 }
 
 export interface IPC {
-  getAlgorithms?: (args?) => any;
-  handleAlgorithms?: (args?) => any;
+  getAlgorithms?: (args?:any) => any;
+  handleAlgorithms?: (args?:any) => any;
   
-  getCards?: (args?) => any;
-  handleCards?: (args?) => any;
+  getCards?: (args?:any) => any;
+  handleCards?: (args?:any) => any;
   
-  addSolve?: (args?) => any;
-  getSolves?: (args?) => any;
-  updateSolve?: (args?) => any;
-  removeSolves?: (args?) => any;
-  handleSolves?: (args?) => any;
+  addSolve?: (args?:any) => any;
+  getSolves?: (args?:any) => any;
+  updateSolve?: (args?:any) => any;
+  removeSolves?: (args?:any) => any;
+  handleSolves?: (args?:any) => any;
   
-  addContest?: (args?) => any;
-  getContests?: (args?) => any;
-  updateContest?: (args?) => any;
-  removeContests?: (args?) => any;
-  handleContests?: (args?) => any;
+  addContest?: (args?:any) => any;
+  getContests?: (args?:any) => any;
+  updateContest?: (args?:any) => any;
+  removeContests?: (args?:any) => any;
+  handleContests?: (args?:any) => any;
   
-  addSession?: (args?) => any;
-  getSessions?: (args?) => any;
-  removeSession?: (args?) => any;
-  renameSession?: (args?) => any;
-  updateSession?: (args?) => any;
-  handleSessions?: (args?) => any;
+  addSession?: (args?:any) => any;
+  getSessions?: (args?:any) => any;
+  removeSession?: (args?:any) => any;
+  renameSession?: (args?:any) => any;
+  updateSession?: (args?:any) => any;
+  handleSessions?: (args?:any) => any;
 
-  addTutorial?: (args?) => any;
-  getTutorials?: (args?) => any;
-  updateTutorial?: (args?) => any;
-  handleTutorials?: (args?) => any;
+  addTutorial?: (args?:any) => any;
+  getTutorials?: (args?:any) => any;
+  updateTutorial?: (args?:any) => any;
+  handleTutorials?: (args?:any) => any;
 
-  minimize?: (args?) => any;
-  maximize?: (args?) => any;
-  close?: (args?) => any;
-  generatePDF?: (args?) => any;
-  zipPDF?: (args?) => any;
-  openFile?: (args?) => any;
-  revealFile?: (args?) => any;
-  handleAny?: (args?) => any;
+  minimize?: (args?:any) => any;
+  maximize?: (args?:any) => any;
+  close?: (args?:any) => any;
+  generatePDF?: (args?:any) => any;
+  zipPDF?: (args?:any) => any;
+  openFile?: (args?:any) => any;
+  revealFile?: (args?:any) => any;
+  handleAny?: (args?:any) => any;
+}
+
+
+export interface Game {
+  players: { 0: string, 1: { name: string, times: number[] } }[];
+  observers: { 0: string, 1: { name: string } }[];
+  round: number;
+  total: number;
+  started: boolean;
+}
+
+export interface StackmatState {
+  time_milli: number;
+  unit: number;
+  on: boolean;
+  greenLight: boolean;
+  leftHand: boolean;
+  rightHand: boolean;
+  running: boolean;
+  unknownRunning: boolean;
+  signalHeader: 'I' | ' ' | 'S';
+  noise: number;
+  power: number;
 }

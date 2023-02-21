@@ -1,6 +1,6 @@
 <script lang="ts">
   /// Types
-  import { Penalty, TimerState, type Solve, type TimerContext } from '@interfaces';
+  import { Penalty, TimerState, TIMER_INPUT, type Solve, type StackmatState, type TimerContext } from '@interfaces';
 
   /// Icons
   import Close from '@icons/Close.svelte';
@@ -13,6 +13,8 @@
   import Settings from '@icons/Settings.svelte';
   import LightBulb from '@icons/LightbulbOn.svelte';
   import NoteIcon from '@icons/NoteEdit.svelte';
+  import WatchOnIcon from '@icons/Wifi.svelte';
+  import WatchOffIcon from '@icons/WifiOff.svelte';
 
   /// Components
   import Tooltip from '@material/Tooltip.svelte';
@@ -22,20 +24,26 @@
   import Checkbox from '@components/material/Checkbox.svelte';
   import Input from '@components/material/Input.svelte';
   import Toggle from '@components/material/Toggle.svelte';
+  import Select from '@components/material/Select.svelte';
 
   /// Helpers
   import { timer } from '@helpers/timer';
-  import { onMount } from 'svelte';
+  import { createEventDispatcher, onDestroy, onMount } from 'svelte';
   import { DataService } from '@stores/data.service';
-  
+  import { stackmat } from './Stackmat';
+ 
   export let context: TimerContext;
+  export let battle = false;
+  export let enableKeyboard = true;
 
   const {
     state, ready, tab, solves, allSolves, session, Ao5, stats, scramble,
-    group, mode, hintDialog, hint, cross, xcross, preview,isRunning,
+    group, mode, hintDialog, hint, cross, xcross, preview, isRunning,
     sortSolves, initScrambler, updateStatistics, selectedGroup, setConfigFromSolve
   } = context;
-  
+
+  const dispatch = createEventDispatcher();
+
   /// LAYOUT
   const textColor = 'text-gray-400';
   let isValid: boolean = true;
@@ -43,8 +51,8 @@
   let refPrevention: number = 0;
   let itv: any;
   let selected: number = 0;
-  let lastSolve: Solve;
-  let prob: number = null;
+  let lastSolve: Solve | null = null;
+  let prob = -1;
   let prevExpanded: boolean = false;
 
   /// NOTES
@@ -56,10 +64,10 @@
   let noteContent = "";
 
   /// MODAL
-  let modal;
+  let modal: any = null;
   let show = false;
   let type = '';
-  let modalData;
+  let modalData: any = null;
   let closeHandler: Function = () => {};
 
   /// SCRAMBLE
@@ -71,7 +79,7 @@
   let options = [
     { text: "Reload scramble [Ctrl + S]", icon: Refresh, handler: () => initScrambler() },
     { text: "Edit [Ctrl + E]", icon: Pencil, handler: () => {
-      openDialog('edit-scramble', $scramble, (scr) => scr && initScrambler(scr));
+      openDialog('edit-scramble', $scramble, (scr: string) => scr && initScrambler(scr));
     } },
     { text: "Use old scramble [Ctrl + O]", icon: Calendar, handler: () => {
       openDialog('old-scrambles', null, () => {});
@@ -79,9 +87,22 @@
     { text: "Copy scramble [Ctrl + C]", icon: Copy, handler: () => copyToClipboard() },
     { text: "Notes [Ctrl + N]", icon: NoteIcon, handler: () => showNotes = true },
     { text: "Settings", icon: Settings, handler: () => {
-      let initialCalc = $session.settings.calcAoX;
+      let initialCalc = $session?.settings?.calcAoX;
 
-      openDialog('settings', $session, (data) => {
+      if ( !$session.settings.input ) {
+        $session.settings.input = 'Keyboard';
+      }
+
+      if ( $session.settings.input === 'StackMat' ) {
+        connectStackmat();
+      } else {
+        stackmat.stop();
+        if ( sstate ) {
+          sstate.on = false;
+        }
+      }
+
+      openDialog('settings', $session, (data: any) => {
         if ( data ) {
           dataService.updateSession($session);
           initialCalc != $session.settings.calcAoX && updateStatistics(false);
@@ -91,46 +112,126 @@
   ];
 
   /// CLOCK
+  const TIMER_DIGITS = /^\d{1,6}$/;
+  const TIMER_DNF = /^\s*dnf\s*$/i;
   let time: number = 0;
+  let timeStr: string = '';
   // let showTime: boolean = true;
   let decimals: boolean = true;
   let solveControl = [
-    { text: "Delete", icon: Close, highlight: _ => false, handler: () => {
+    { text: "Delete", icon: Close, highlight: () => false, handler: () => {
       dataService.removeSolves([ $solves[0] ]);
       reset();
     }},
-    { text: "DNF", icon: ThumbDown, highlight: (s) => s.penalty === Penalty.DNF, handler: () => {
+    { text: "DNF", icon: ThumbDown, highlight: (s: any) => s.penalty === Penalty.DNF, handler: () => {
       $solves[0].penalty = $solves[0].penalty === Penalty.DNF ? Penalty.NONE : Penalty.DNF;
-      dataService.updateSolve($solves[0]);
+      battle ? dispatch('update', $solves[0]) : dataService.updateSolve($solves[0]);
     } },
-    { text: "+2", icon: Flag, highlight: (s) => s.penalty === Penalty.P2, handler: () => {
+    { text: "+2", icon: Flag, highlight: (s: any) => s.penalty === Penalty.P2, handler: () => {
       $solves[0].penalty = $solves[0].penalty === Penalty.P2 ? Penalty.NONE : Penalty.P2;
-      dataService.updateSolve($solves[0]);
+      $solves[0].penalty === Penalty.P2 ? $solves[0].time += 2000 : $solves[0].time -= 2000;
+
+      if ( battle ) {
+        dispatch('update', $solves[0]);
+      } else {
+        dataService.updateSolve($solves[0]);
+      }
     } },
   ];
 
+  /// STACKMAT
+  let deviceList: string[][] = [];
+  let deviceID = '';
+  let sstate: StackmatState;
+
+  function stackmatCallback(sst: StackmatState) {
+    if ( sstate && sstate.time_milli > sst.time_milli ) {
+      $state = TimerState.CLEAN;
+    }
+
+    sstate = sst;
+
+    if ( sst.on === false ) {
+      if ( $state != TimerState.CLEAN ) {
+        $state = TimerState.CLEAN;
+        time = 0;
+        return;
+      }
+    }
+
+    if ( sst.running ) {
+      if ( $state != TimerState.RUNNING ) { 
+        createNewSolve();
+        $state = TimerState.RUNNING;
+      }
+    } else {
+      if ( $state === TimerState.RUNNING ) {
+        $state = TimerState.STOPPED;
+        addSolve();
+        $ready = false;
+        (lastSolve as Solve).time = time;
+        !battle && initScrambler();
+      }
+      //  else if ( $state != TimerState.STOPPED ) {
+      //   $state = TimerState.CLEAN;
+      // }
+    }
+
+    time = sst.time_milli;
+  }
+
+  function connectStackmat() {
+    stackmat.stop();
+    stackmat.init('', deviceID, true);
+    console.log('CONNECT_STACKMAT');
+  }
+
+  function updateDevices() {
+    stackmat.updateInputDevices().then(dev => {
+      deviceList = dev;
+    })
+  }
+
+  stackmat.setCallBack( stackmatCallback );
+
+  navigator.mediaDevices.addEventListener('devicechange', () => {
+    updateDevices();
+  });
+
+  updateDevices();
+  ///
+
   const dataService = DataService.getInstance();
 
-  function debug(...args) {}
+  function debug(...args: any[]) { void args; }
 
   function selectNone() {
     selected = 0;
     $solves.forEach(s => s.selected = false);
   }
 
-  function addSolve() {
-    lastSolve.date = Date.now();
-    lastSolve.time = time;
-    lastSolve.group = $group;
-    lastSolve.mode = $mode[1];
-    lastSolve.len = $mode[2];
-    lastSolve.prob = prob;
-    lastSolve.session = $session._id;
-    $allSolves.push( lastSolve );
-    $solves.push( lastSolve );
-    dataService.addSolve(lastSolve);
-    sortSolves();
-    updateStatistics(true);
+  function addSolve(t?: number, p?: Penalty) {
+    let ls = lastSolve as Solve;
+    ls.date = Date.now(),
+    ls.time = t || time,
+    ls.group = $group,
+    ls.mode = $mode[1],
+    ls.len = $mode[2],
+    ls.prob = prob,
+    ls.session = $session._id,
+    ls.penalty = p || Penalty.NONE,
+    
+    $allSolves.push( ls );
+    $solves.push( ls );
+
+    if ( battle ) {
+      ls.group = -1;
+      dispatch('solve', lastSolve);
+    } else {
+      dataService.addSolve(ls);
+      sortSolves();
+      updateStatistics(true);
+    }
   }
 
   function reset() {
@@ -145,6 +246,8 @@
 
   function keyDown(event: KeyboardEvent) {
     const { code } = event;
+
+    if ( !enableKeyboard ) return;
     
     switch( $tab ) {
       case 0: {
@@ -160,8 +263,7 @@
             $state = TimerState.PREVENTION;
             time = 0;
             refPrevention = performance.now();
-          }
-          else if ( $state === TimerState.PREVENTION ) {
+          } else if ( $state === TimerState.PREVENTION ) {
             if ( performance.now() - refPrevention > 500 ) {
               debug('READY');
               $ready = true;
@@ -173,10 +275,10 @@
             addSolve();
             $state = TimerState.STOPPED;
             $ready = false;
-            lastSolve.time = time;
-            initScrambler();
+            (lastSolve as Solve).time = time;
+            !battle && initScrambler();
           }
-        } else if ( ['KeyR', 'Escape', 'KeyS'].indexOf(code) > -1 ) {
+        } else if ( ['KeyR', 'Escape', 'KeyS'].indexOf(code) > -1 && !battle ) {
           if ( (code === 'KeyS' && event.ctrlKey && !$isRunning) ||
             (code === 'Escape' && $isRunning && $session.settings.scrambleAfterCancel ) ) {
             reset();
@@ -192,8 +294,8 @@
           addSolve();
           $state = TimerState.STOPPED;
           $ready = false;
-          lastSolve.time = time;
-          initScrambler();
+          (lastSolve as Solve).time = time;
+          !battle && initScrambler();
         }
         break;
       }
@@ -221,11 +323,19 @@
         t = Math.ceil(t / 1000) * 1000;
       }
 
+      if ( t < -2 ) {
+        stopTimer();
+        debug('DNS');
+        $state = TimerState.STOPPED;
+        (lastSolve as Solve).penalty = Penalty.DNS;
+        return;
+      }
+
       if ( t <= 0 ) {
         time = 0;
         stopTimer();
         debug('+2');
-        lastSolve.penalty = Penalty.P2;
+        (lastSolve as Solve).penalty = Penalty.P2;
         return;
       }
 
@@ -235,7 +345,7 @@
 
   function createNewSolve() {
     lastSolve = {
-      date: null,
+      date: Date.now(),
       penalty: Penalty.NONE,
       scramble: $scramble,
       time: time,
@@ -246,12 +356,14 @@
   }
 
   function keyUp(event: KeyboardEvent) {
-    if ( $tab ) {
+    if ( $tab || !enableKeyboard ) {
       return;
     }
 
+    const { code } = event;
+
     isValid = true;
-    if ( event.code === 'Space' ) {
+    if ( code === 'Space' ) {
       if ( $state === TimerState.PREVENTION ) {
         if ( $ready ) {
           createNewSolve();
@@ -272,7 +384,7 @@
             decimals = true;
             stopTimer();
 
-            if ( lastSolve.penalty === Penalty.P2 ) {
+            if ( (lastSolve as Solve).penalty === Penalty.P2 ) {
               ref -= 2000;
             }
 
@@ -289,22 +401,22 @@
         decimals = true;
         stopTimer();
 
-        if ( lastSolve.penalty === Penalty.P2 ) {
+        if ( (lastSolve as Solve).penalty === Penalty.P2 ) {
           ref -= 2000;
         }
 
         runTimer(1);
       }
-    } else if ( !$isRunning ) {
-      if ( event.code === 'KeyE' && event.ctrlKey ) {
+    } else if ( !$isRunning && !battle ) {
+      if ( code === 'KeyE' && event.ctrlKey ) {
         if ( !show || (show && type != 'edit-scramble') ) {
-          openDialog('edit-scramble', $scramble, (scr) => scr && initScrambler(scr));
+          openDialog('edit-scramble', $scramble, (scr: string) => scr && initScrambler(scr));
         }
-      } else if ( event.code === 'KeyO' && event.ctrlKey ) {
+      } else if ( code === 'KeyO' && event.ctrlKey ) {
         openDialog('old-scrambles', null, () => {});
-      } else if ( event.code === 'KeyC' && event.ctrlKey ) {
+      } else if ( code === 'KeyC' && event.ctrlKey ) {
         copyToClipboard();
-      } else if ( event.code === 'KeyN' && event.ctrlKey ) {
+      } else if ( code === 'KeyN' && event.ctrlKey ) {
         showNotes = true;
       }
     }
@@ -316,7 +428,7 @@
     });
   }
 
-  function modalKeyupHandler(e) {
+  function modalKeyupHandler(e: CustomEvent) {
     let kevent: KeyboardEvent = e.detail;
     kevent.stopPropagation();
     show = (kevent.code === 'Escape' ? modal.close() : show);
@@ -353,10 +465,67 @@
     dragging = false;
   }
 
+  function timerToMilli(n: number): number {
+    let p = [];
+    p.push(n % 100); n = ~~(n / 100);
+    p.push(n % 100); n = ~~(n / 100);
+    p.push(n);
+    return p[2] * 60000 + p[1] * 1000 + p[0] * 10;
+  }
+
+  function addTimeString() {
+    if ( !TIMER_DIGITS.test(timeStr) && !TIMER_DNF.test(timeStr) ) {
+      timeStr = '';
+      return;
+    }
+
+    createNewSolve();
+
+    if ( TIMER_DIGITS.test(timeStr) ) {
+      addSolve( timerToMilli(+timeStr) );
+    } else if ( TIMER_DNF.test(timeStr) ) {
+      addSolve( 0, Penalty.DNF );
+    }
+    
+    !battle && initScrambler();
+    timeStr = '';
+  }
+
+  function validTimeStr(t: string): boolean {
+    return TIMER_DIGITS.test(t) || TIMER_DNF.test(t) || t === '';
+  }
+
+  let pointerInterval: NodeJS.Timer | null = null;
+
+  function pointerDown(e?: any) {
+    console.log("pointerDown", e);
+
+    if ( pointerInterval != null ) return;
+
+    pointerInterval = setInterval(() => {
+      keyDown({ code: 'Space' } as KeyboardEvent);
+    }, 4);
+  }
+  
+  function pointerUp(e?: any) {
+    console.log("pointerUp", e);
+
+    if ( pointerInterval != null ) {
+      clearInterval(pointerInterval);
+      pointerInterval = null;
+    }
+
+    keyUp({ code: 'Space' } as KeyboardEvent);
+  }
+
   onMount(() => {
     $group = 0;
     selectedGroup();
     updateStatistics(false);
+  });
+
+  onDestroy(() => {
+    stackmat.stop();
   });
 
   $: $solves.length === 0 && reset();
@@ -366,18 +535,28 @@
   on:keyup={ keyUp }
   on:keydown={ keyDown }
   on:mousemove={ handleMouseMove }
-  on:mouseup={ handleMouseUp }></svelte:window>
-
-<div class="w-full h-full { textColor }">
+  on:mouseup={ handleMouseUp }
+  ></svelte:window>
+  
+  <!-- on:pointerdown|self={ pointerDown }
+  on:pointerup={ pointerUp } -->
+<div
+  class="w-full h-full { textColor }"
+  on:touchstart|self={ pointerDown }
+  on:touchend={ pointerUp }
+  >
   <!-- Scramble and options -->
   <div id="scramble" class="transition-all duration-300">
     {#if !$scramble}
-      <span> {stateMessage}
-      </span>
+      <span> {stateMessage} </span>
     {/if}
-    <span class:isRunning={ $isRunning } contenteditable="false" bind:innerHTML={$scramble}></span>
+    <span
+      class:isRunning={ $isRunning }
+      class:battle={ battle }
+      contenteditable="false" bind:innerHTML={$scramble}></span>
+
     <div class="absolute top-1 right-12" class:isRunning={ $isRunning }>
-      {#each options as option}
+      {#each options.filter((e, p) => !battle ? true : p === 3 || p === 5) as option}
         <Tooltip class="cursor-pointer" position="left" text={ option.text }>
           <div class="my-3 mx-1 w-5 h-5 { textColor }" on:click={ option.handler }>
             <svelte:component this={option.icon} width="100%" height="100%"/>
@@ -388,7 +567,7 @@
   </div>
 
   <!-- Notes -->
-  {#if showNotes}
+  {#if showNotes && !battle}
     <div id="notes" class="fixed z-10 w-56 h-56 bg-violet-400 rounded-md" style="
       --left: { notesL }px;
       --top: { notesT }px;
@@ -405,115 +584,138 @@
   {/if}
 
   <!-- Timer -->
-  <div class="absolute w-full top-1/3 text-center" style="font-size: 130px;">
-    <span
-      class="timer { textColor }"
-      class:prevention={ $state === TimerState.PREVENTION }
-      class:ready={$ready}
-      hidden={$state === TimerState.RUNNING && !$session.settings.showElapsedTime}
-      >{timer(time, decimals, false)}</span>
+  <div id="timer" class="absolute top-1/3 text-9xl h-32 flex flex-col items-center justify-center">
+    {#if $session?.settings?.input === 'Manual'}
+      <div id="manual-inp">
+        <Input
+          bind:value={ timeStr }
+          on:UENTER={ addTimeString }
+          class="w-full h-36 text-center {
+            validTimeStr(timeStr) ? '' :  'border-red-400 border-2' }
+            focus-within:shadow-black"
+          inpClass="text-center"/>
+      </div>
+      <!-- {#if !validTimeStr() }
+        <i class="text-base mt-4"></i>
+      {/if} -->
+    {:else}
+      <span
+        class="timer { textColor }"
+        class:prevention={ $state === TimerState.PREVENTION }
+        class:ready={$ready}
+        hidden={$state === TimerState.RUNNING && !$session.settings.showElapsedTime}
+        >{timer(time, decimals, false)}</span>
+      
+      {#if $session?.settings?.input === 'StackMat' }
+        <span class="text-2xl flex gap-2 items-center">
+          Timer status:
+          
+          <span class={ sstate?.on ? 'text-green-600' : 'text-red-600' }>
+            <svelte:component this={ sstate?.on ? WatchOnIcon : WatchOffIcon }/>
+          </span>
+        </span>
+      {/if}
+    {/if}
     <span
       class="timer"
       hidden={!($state === TimerState.RUNNING && !$session.settings.showElapsedTime)}>----</span>
     {#if $state === TimerState.STOPPED}
       <div class="flex justify-center w-full" class:show={$state === TimerState.STOPPED}>
-        {#each solveControl as control}
+        {#each solveControl.slice(Number(battle), solveControl.length) as control}
           <Tooltip class="cursor-pointer" position="top" text={ control.text }>
             <div class="my-3 mx-1 w-5 h-5 { control.highlight($solves[0] || {}) ? 'text-red-500' : '' }" on:click={ control.handler }>
               <svelte:component this={control.icon} width="100%" height="100%"/>
             </div>
           </Tooltip>
         {/each}
-        <!-- <mat-icon (click)="delete([lastSolve])" matTooltip="Delete" matTooltipHideDelay="100" svgIcon="close"></mat-icon>
-        <mat-icon [class.highlight]="lastSolve.penalty === 2" (click)="dnf()"  matTooltip="DNF" matTooltipHideDelay="100" svgIcon="thumb-down"></mat-icon>
-        <mat-icon [class.highlight]="lastSolve.penalty === 1" (click)="plus2()" matTooltip="+2" matTooltipHideDelay="100" svgIcon="flag-outline"></mat-icon>
-        <mat-icon (click)="editSolve(lastSolve)" matTooltip="Comment" matTooltipHideDelay="100" svgIcon="comment-plus-outline"></mat-icon> -->
       </div>
     {/if}
   </div>
 
-  <!-- Hints -->
-  <div id="hints"
-    class="bg-white bg-opacity-10 w-max p-2 { textColor } rounded-md
-      shadow-md absolute select-none left-0 top-1/4 transition-all duration-1000"
-    class:isVisible={$hintDialog && !$isRunning}>
+  {#if !battle}
+    <!-- Hints -->
+    <div id="hints"
+      class="bg-white bg-opacity-10 w-max p-2 { textColor } rounded-md
+        shadow-md absolute select-none left-0 top-1/4 transition-all duration-1000"
+      class:isVisible={$hintDialog && !$isRunning}>
 
-    <table class="inline-block align-middle transition-all duration-300" class:nshow={!$hint}>
-      <tr><td>Cross</td> <td>{$cross}</td></tr>
-      <tr><td>XCross</td> <td>{$xcross}</td></tr>
-      {#if $Ao5}
-        <tr>
-          <td>Next Ao5</td>
-          <td>Between { timer($Ao5[0], false, true) } and { timer($Ao5[1], false, true) }</td>
-        </tr>
-      {/if}
-    </table>
-
-    <div id="bulb"
-      class="w-8 h-8 inline-block align-middle mx-0 my-2 cursor-pointer"
-      class:nshow={!$hint} on:click={() => $hint = !$hint}>
-      <LightBulb width="100%" height="100%"/>
-    </div>
-  </div>
-
-  <!-- Statistics -->
-  <div id="statistics"
-    class="{ textColor } pointer-events-none transition-all duration-300"
-    class:isRunning={ $isRunning }>
-
-    <div class="left absolute select-none bottom-0 left-0 ">
-      <table class="ml-3">
-        <tr class:better={$stats.best.better && $stats.__counter > 0 && $stats.best.value > -1}>
-          <td>Best:</td>
-          {#if !$stats.best.value} <td>N/A</td> {/if}
-          {#if $stats.best.value} <td>{ timer($stats.best.value, false, true) }</td> {/if}
-        </tr>
-        <tr>
-          <td>Worst:</td>
-          {#if !$stats.worst.value} <td>N/A</td> {/if}
-          {#if $stats.worst.value} <td>{ timer($stats.worst.value, false, true) }</td> {/if}
-        </tr>
-        <tr class:better={$stats.avg.better && $stats.__counter > 0}>
-          <td>Average:</td>
-          {#if !$stats.avg.value} <td>N/A</td> {/if}
-          {#if $stats.avg.value} <td>{ timer($stats.avg.value, false, true) }</td> {/if}
-        </tr>
-        <tr>
-          <td>Deviation:</td>
-          {#if !$stats.dev.value} <td>N/A</td> {/if}
-          {#if $stats.dev.value} <td>{ timer($stats.dev.value, false, true) }</td> {/if}
-        </tr>
-        <tr>
-          <td>Count:</td>
-          <td>{ $stats.count.value }</td>
-        </tr>
-        <tr class:better={$stats.Mo3.better && $stats.__counter > 0 && $stats.Mo3.value > -1}>
-          <td>Mo3:</td>
-          {#if !($stats.Mo3.value > -1)} <td>N/A</td> {/if}
-          {#if ($stats.Mo3.value > -1)} <td>{ timer($stats.Mo3.value, false, true) }</td> {/if}
-        </tr>
-        <tr class:better={$stats.Ao5.better && $stats.__counter > 0 && $stats.Ao5.value > -1}>
-          <td>Ao5:</td>
-          {#if !($stats.Ao5.value > -1)} <td>N/A</td> {/if}
-          {#if ($stats.Ao5.value > -1)} <td>{ timer($stats.Ao5.value, false, true) }</td> {/if}
-        </tr>
-      </table>
-    </div>
-    <div class="right absolute select-none bottom-0 right-0">
-      <table class="mr-3">
-        {#each [ "Ao12", "Ao50", "Ao100", "Ao200", "Ao500", "Ao1k", "Ao2k" ] as stat}
-          <tr class:better={$stats[stat].better && $stats.__counter > 0 && $stats[stat].value > -1}>
-            <td>{stat}:</td>
-            {#if !($stats[stat].value > -1)} <td>N/A</td> {/if}
-            {#if ($stats[stat].value > -1)} <td>{ timer($stats[stat].value, false, true) }</td> {/if}
+      <table class="inline-block align-middle transition-all duration-300" class:nshow={!$hint}>
+        <tr><td>Cross</td> <td>{$cross}</td></tr>
+        <tr><td>XCross</td> <td>{$xcross}</td></tr>
+        {#if $Ao5}
+          <tr>
+            <td>Next Ao5</td>
+            <td>Between { timer($Ao5[0], false, true) } and { timer($Ao5[1], false, true) }</td>
           </tr>
-        {/each}
+        {/if}
       </table>
+
+      <div id="bulb"
+        class="w-8 h-8 inline-block align-middle mx-0 my-2 cursor-pointer"
+        class:nshow={!$hint} on:click={() => $hint = !$hint}>
+        <LightBulb width="100%" height="100%"/>
+      </div>
     </div>
-  </div>
+
+    <!-- Statistics -->
+    <div id="statistics"
+      class="{ textColor } pointer-events-none transition-all duration-300"
+      class:isRunning={ $isRunning }>
+
+      <div class="left absolute select-none bottom-0 left-0 ">
+        <table class="ml-3">
+          <tr class:better={$stats.best.better && $stats.counter.value > 0 && $stats.best.value > -1}>
+            <td>Best:</td>
+            {#if !$stats.best.value} <td>N/A</td> {/if}
+            {#if $stats.best.value} <td>{ timer($stats.best.value, false, true) }</td> {/if}
+          </tr>
+          <tr>
+            <td>Worst:</td>
+            {#if !$stats.worst.value} <td>N/A</td> {/if}
+            {#if $stats.worst.value} <td>{ timer($stats.worst.value, false, true) }</td> {/if}
+          </tr>
+          <tr class:better={$stats.avg.better && $stats.counter.value > 0}>
+            <td>Average:</td>
+            {#if !$stats.avg.value} <td>N/A</td> {/if}
+            {#if $stats.avg.value} <td>{ timer($stats.avg.value, false, true) }</td> {/if}
+          </tr>
+          <tr>
+            <td>Deviation:</td>
+            {#if !$stats.dev.value} <td>N/A</td> {/if}
+            {#if $stats.dev.value} <td>{ timer($stats.dev.value, false, true) }</td> {/if}
+          </tr>
+          <tr>
+            <td>Count:</td>
+            <td>{ $stats.count.value }</td>
+          </tr>
+          <tr class:better={$stats.Mo3.better && $stats.counter.value > 0 && $stats.Mo3.value > -1}>
+            <td>Mo3:</td>
+            {#if !($stats.Mo3.value > -1)} <td>N/A</td> {/if}
+            {#if ($stats.Mo3.value > -1)} <td>{ timer($stats.Mo3.value, false, true) }</td> {/if}
+          </tr>
+          <tr class:better={$stats.Ao5.better && $stats.counter.value > 0 && $stats.Ao5.value > -1}>
+            <td>Ao5:</td>
+            {#if !($stats.Ao5.value > -1)} <td>N/A</td> {/if}
+            {#if ($stats.Ao5.value > -1)} <td>{ timer($stats.Ao5.value, false, true) }</td> {/if}
+          </tr>
+        </table>
+      </div>
+      <div class="right absolute select-none bottom-0 right-0">
+        <table class="mr-3">
+          {#each [ "Ao12", "Ao50", "Ao100", "Ao200", "Ao500", "Ao1k", "Ao2k" ] as stat}
+            <tr class:better={$stats[stat].better && $stats.counter.value > 0 && $stats[stat].value > -1}>
+              <td>{stat}:</td>
+              {#if !($stats[stat].value > -1)} <td>N/A</td> {/if}
+              {#if ($stats[stat].value > -1)} <td>{ timer($stats[stat].value, false, true) }</td> {/if}
+            </tr>
+          {/each}
+        </table>
+      </div>
+    </div>
+  {/if}
 
   <!-- Image -->
-  {#if $session?.settings?.genImage}
+  {#if $session?.settings?.genImage || battle}
     <div
       id="preview-container"
       class="absolute bottom-2 flex items-center justify-center w-full transition-all duration-300
@@ -529,7 +731,7 @@
   {/if}
 
   <Modal bind:this={ modal } bind:show={ show } onClose={ closeHandler }>
-    <div class="max-w-lg max-h-96 overflow-scroll">
+    <div class="max-w-lg max-h-[30rem] overflow-scroll">
       {#if type === 'edit-scramble'}
         <TextArea on:keyup={ modalKeyupHandler }
           class="bg-gray-600 text-gray-200"
@@ -555,6 +757,15 @@
       {/if}
 
       {#if type === 'settings'}
+        <section class="flex gap-4 items-center mb-4">
+          Input method: <Select bind:value={ modalData.settings.input } items={ TIMER_INPUT } transform={ (e) => e }/>
+        </section>
+        {#if modalData.settings.input === 'StackMat'}
+          <section class="mb-4"> Device: <Select class="max-w-full"
+            bind:value={ deviceID } items={ deviceList }
+            label={ e => e[1] } transform={e => e[0]}/>
+          </section>
+        {/if}
         <section>
           <Checkbox
             bind:checked={ modalData.settings.hasInspection }
@@ -574,7 +785,7 @@
         <section>
           <Checkbox bind:checked={ modalData.settings.scrambleAfterCancel } class="w-5 h-5 my-2" label="Refresh scramble after cancel"/>
         </section>
-        <section class="mt-4">
+        <section class="mt-4 flex gap-4">
           AoX calculation:
           <div class="flex gap-2 items-center">
             <Toggle checked={ !!modalData.settings.calcAoX } on:change={ (v) => modalData.settings.calcAoX = ~~v.detail.value }/>
@@ -603,11 +814,31 @@
     }
   }
   
+  #scramble {
+    @apply flex items-center justify-center;
+  }
+
   #scramble span {
     @apply ml-16 mr-10 inline-block text-center;
     font-size: 1.5em;
     width: calc(100% - 240px);
     word-spacing: 10px;
+  }
+
+  #scramble span.battle {
+    width: 100%;
+    max-width: 45rem;
+    margin: 0;
+  }
+
+  #timer {
+    width: max-content;
+    margin-left: 50%;
+    transform: translateX(-50%);
+  }
+
+  #manual-inp {
+    width: 30rem;
   }
 
   #notes {

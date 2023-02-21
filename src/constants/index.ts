@@ -27,7 +27,7 @@ export const CubeModeMap = [
 // export declare type ColorName = 'green' | 'red' | 'blue' | 'orange' | 'yellow' | 'white' | 'gray' | 'black';
 export declare type ColorName = string;
 
-const COLORS = {
+const COLORS: { [key: string]: string } = {
   "green": "rgb(0, 157, 84)",
   "red": "rgb(220,66,47)",
   "blue": "rgb(61, 129, 246)",
@@ -60,20 +60,16 @@ const COLORS = {
 };
 
 export function getColorByName(colorName: ColorName) {
-  if ( COLORS.hasOwnProperty(colorName) ) {
-    return COLORS[colorName];
-  }
-
-  return "rgb(150, 150, 150)";
+  return COLORS[ colorName ] || "rgb(150, 150, 150)";
 }
 
 export function getNameByColor(color: string): ColorName {
-  for (let i in COLORS) {
-    if ( COLORS[i] === color ) {
-      return i;
+  let et = Object.entries(COLORS);
+  for (let i = 0, maxi = et.length; i < maxi; i += 1) {
+    if ( et[i][1] === color ) {
+      return et[i][0];
     }
-   }
-  
+  }
   return "gray";
 }
 
@@ -139,7 +135,7 @@ export const PX_IMAGE = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABC
 
 interface Menu {
   0: string,
-  1: { 0: string, 1: string, 2: number }[]
+  1: { 0: string, 1: string, 2: number, 3?: number, 4?: number[] }[]
 }
 
 const R222 = [ "222so", "222o", "2223", "222eg", "222eg0", "222eg1", "222eg2", "222nb" ];
@@ -339,7 +335,7 @@ export function isNNN(mode: string): boolean {
 }
 
 export const MODE_MAP = new Map<string, string>(
-  MENU.reduce((acc, gp) => [...acc, ...gp[1].map(md =>
+  (MENU as any[]).reduce((acc, gp) => [...acc, ...(gp[1] as any[]).map(md =>
     [md[1], md[0] === 'WCA' ? gp[0] : md[0]]
   )], [])
 );

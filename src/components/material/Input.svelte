@@ -8,11 +8,11 @@
   export let placeholder = '';
   export let value: Date | string | number = '';
   export let type: InputType = "text";
-  export let size = undefined;
+  export let size: number | undefined = undefined;
   export let disabled = false;
   export let focus = false;
-  export let min = null;
-  export let max = null;
+  export let min: number | undefined = undefined;
+  export let max: number | undefined = undefined;
   export let step = 1;
   export let inpClass = '';
   
@@ -35,13 +35,15 @@
     e.code === "Enter" && dispatch("DENTER", e);
     e.code === "Esc" && dispatch("DESCAPE", e);
   }
-  function input(e) { dispatch("input", e); }
-  function change(e) { dispatch("change", e); }
+  function input(e: any) { dispatch("input", e); }
+  function change(e: any) { dispatch("change", e); }
 
 </script>
 
-<div class="w-full px-2 py-2 rounded-md relative transition-all
-  duration-200 border border-solid border-gray-400 wrapper { cl || "bg-gray-600 text-gray-300" }">
+<div class="w-full h-10 px-2 py-2 rounded-md relative transition-all
+  duration-200 border border-solid border-gray-400 wrapper
+  focus-within:shadow focus-within:shadow-blue-200
+  { cl || "bg-gray-600 text-gray-300" }">
   {#if type === 'text'}
   <input class={ inpClass || '' }
     bind:this={ref} bind:value
@@ -63,7 +65,7 @@
 
 <style lang="postcss">
   input {
-    @apply h-6 flex w-full bg-transparent border-none outline-none text-inherit;
+    @apply h-full flex w-full bg-transparent border-none outline-none text-inherit;
   }
 
   input::placeholder {
@@ -73,10 +75,6 @@
   .placeholder {
     @apply absolute top-0 my-2 origin-left transition-all duration-200
     text-neutral-500;
-  }
-
-  .wrapper:focus-within {
-    @apply shadow shadow-blue-200;
   }
 
   input:focus + .placeholder {

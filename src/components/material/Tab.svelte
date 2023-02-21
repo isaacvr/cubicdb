@@ -1,12 +1,19 @@
-<script>
+<script lang="ts">
+  interface Tab {
+    name: string;
+    id: string;
+    index: number;
+    icon: any;
+  }
+
   import { getContext, onMount, onDestroy } from 'svelte';
   import { TABS } from './TabGroup.svelte';
 
-  export let name;
-  export let icon = null;
+  export let name: string;
+  export let icon: any = null;
   const id = Math.random().toString();
-  const { registerTab, unregisterTab, selectedTab } = getContext(TABS);
-  let tab = {};
+  const { registerTab, unregisterTab, selectedTab } = getContext(TABS) as any;
+  let tab: Tab = { name: "", id: "", index: 0, icon: null };
 
   onMount(() => {
     tab = { name, id, index: 0, icon };

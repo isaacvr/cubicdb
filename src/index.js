@@ -1,15 +1,20 @@
 const { app, BrowserWindow, ipcMain, shell } = require('electron');
-const path = require('path');
-const fs = require('fs');
-const os = require('os');
+const { join } = require('path');
+const { existsSync, mkdirSync, writeFileSync, unlinkSync, createWriteStream } = require('fs');
+const { tmpdir } = require('os');
+const { exec } = require('child_process');
+
 const NeDB = require('nedb');
 const electronReload = require('electron-reload');
 const archiver = require('archiver');
-const { exec } = require('child_process');
+const ess = require('electron-squirrel-startup');
+const express = require('express');
+const eApp = express();
+const http = require('http');
 
-let win = null;
-const args = process.argv.slice(1),
-  serve = args.some(val => val === '--serve');
+if ( ess ) app.quit();
+
+const args = process.argv.slice(1), serve = args.some(val => val === '--serve');
 
 let Algorithms = new NeDB({ filename: __dirname + '/database/algs.db', autoload: true });
 let Cards = new NeDB({ filename: __dirname + '/database/cards.db', autoload: true });
@@ -185,19 +190,6 @@ ipcMain.on('remove-contests', (event, arg) => {
   });
 });
 
-/// Other Stuff
-ipcMain.on('minimize', () => {
-  win.minimize();
-});
-
-ipcMain.on('maximize', () => {
-  if ( win.isMaximized ) {
-    win.unmaximize();
-  } else {
-    win.maximize();
-  }
-});
-
 ipcMain.on('close', () => {
   app.exit();
 });
@@ -210,18 +202,17 @@ ipcMain.on('generate-pdf', (event, arg) => {
     show: false,
   });
 
-  const tmpDir = path.join(os.tmpdir(), '/CubeDB/');
+  const tmpDir = join( tmpdir(), '/CubeDB/');
 
-  if ( !fs.existsSync( tmpDir ) ) {
-    fs.mkdirSync( tmpDir, { recursive: true } );
+  if ( !existsSync( tmpDir ) ) {
+    mkdirSync( tmpDir, { recursive: true } );
   }
 
   let date = (new Date).toLocaleDateString().replace(/\//g, '-');
-  let tempFile = path.join(tmpDir, 'Contest-' + (Math.random().toString().split('.')[1]) + '.html');
-  // let pdfFile = path.join(os.tmpdir(), `/CubeDB/Contest (${arg.mode} Round ${arg.round})_${date}.pdf`);
-
+  let tempFile = join(tmpDir, 'Contest-' + (Math.random().toString().split('.')[1]) + '.html');
+  
   try {
-    fs.writeFileSync(tempFile, arg.html);
+    writeFileSync(tempFile, arg.html);
 
     pdfWin.webContents.once('did-finish-load', () => {
       pdfWin.webContents.printToPDF({
@@ -235,7 +226,7 @@ ipcMain.on('generate-pdf', (event, arg) => {
         }]);
 
         try {
-          fs.unlinkSync(tempFile);
+          unlinkSync(tempFile);
         } catch(err) {}
 
       }).catch((err) => {
@@ -250,17 +241,17 @@ ipcMain.on('generate-pdf', (event, arg) => {
 });
 
 ipcMain.on('zip-pdf', (event, data) => {
-  const tmpDir = path.join(os.tmpdir(), '/CubeDB/');
+  const tmpDir = join( tmpdir(), '/CubeDB/');
   const { name, files } = data;
 
-  if ( !fs.existsSync( tmpDir ) ) {
-    fs.mkdirSync( tmpDir, { recursive: true } );
+  if ( !existsSync( tmpDir ) ) {
+    mkdirSync( tmpDir, { recursive: true } );
   }
 
-  const output = fs.createWriteStream( path.join(tmpDir, name + '.zip') );  
+  const output = createWriteStream( join(tmpDir, name + '.zip') );  
 
   output.on('close', () => {
-    event.sender.send('any', ['zip-pdf', path.join(tmpDir, name + '.zip')]);
+    event.sender.send('any', ['zip-pdf', join(tmpDir, name + '.zip')]);
   });
 
   const archive = archiver('zip', {
@@ -290,7 +281,7 @@ ipcMain.on('reveal-file', (_, dir) => {
 
 function createWindow() {
 
-  win = new BrowserWindow({
+  let win = new BrowserWindow({
     x: 0,
     y: 0,
     fullscreen: true,
@@ -299,26 +290,49 @@ function createWindow() {
     webPreferences: {
       contextIsolation: true,
       backgroundThrottling: false,
-      preload: path.join(__dirname, 'preload.js' ),
+      preload: join(__dirname, 'preload.js' )
     },
     icon: __dirname + '/logo.png'
   });
 
-  if (serve) {
+  /// Other Stuff
+  ipcMain.on('minimize', () => {
+    win.minimize();
+  });
+
+  ipcMain.on('maximize', () => {
+    if ( win.isMaximized() ) {
+      win.unmaximize();
+    } else {
+      win.maximize();
+    }
+  });
+
+  if ( serve ) {
     win.webContents.openDevTools();
 
     electronReload(__dirname, {
-      electron: path.join(__dirname, '../node_modules', '.bin', 'electron'),
+      electron: join(__dirname, '../node_modules', '.bin', 'electron'),
       awaitWriteFinish: true
     });
-    win.loadURL('http://localhost:5000');
+
+    win.loadURL( process.env.ELECTRON_APP_URL || "http://localhost:5000/" );
 
   } else {
-    win.loadURL(String(Object.assign(new URL('http://a.com'), {
-      pathname: path.join(__dirname, 'dist/index.html'),
-      protocol: 'file:',
-      slashes: true
-    })));
+    let server = http.createServer(eApp).listen();
+
+    eApp.set('port', server.address().port);
+    eApp.use( express.static( join(__dirname, '../dist') ) );
+
+    eApp.get('*', (req, res) => {
+      res.sendFile( join(__dirname, '../dist', 'index.html') );
+    });
+
+    eApp.listen(0, () => {
+      win.loadURL(`http://localhost:${ eApp.get('port') }/`);
+    });
+
+    // win.loadFile( import.meta.env.ELECTRON_APP_URL );
   }
 
   Sessions.count({}, function(err, count) {

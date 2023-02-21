@@ -14,11 +14,18 @@
   import TutorialParser from '@components/TutorialParser.svelte';
   import Contest from '@components/Contest.svelte';
   import ImportExport from '@components/import-export/ImportExport.svelte';
+  import Battle from '@components/Battle.svelte';
+
+  const path = window.location.pathname;
+  const basepath = /^\/?[a-zA-Z]+:/.test(path)
+    ? path.substr(0, path.indexOf(":") + 1)
+    : "/";
 </script>
 
-<Router>
+<Router { basepath }>
   <Frame />
   <Navbar />
+
   <main class="pt-24">
     <Route path="/" component={ Home }/>
     <Route path="/tutorials" component={ Tutorials }/>
@@ -26,6 +33,7 @@
     <Route path="/tutorials/:puzzle/:tutorial" component={ TutorialParser }/>
     <Route path="/algorithms/*" component={ Algorithms }/>
     <Route path="/timer" component={ Timer }/>
+    <Route path="/battle" component={ Battle }/>
     <Route path="/pll-trainer" component={ PllRecognition }/>
     <Route path="/simulator" component={ Simulator }/>
     <Route path="/contest" component={ Contest }/>

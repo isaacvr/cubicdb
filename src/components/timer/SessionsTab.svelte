@@ -1,6 +1,6 @@
 <script lang="ts">
   import moment from "moment";
-  import { AverageSetting, Penalty, type Solve, type TimerContext } from "@interfaces";
+  import { AverageSetting, Penalty, type PuzzleOptions, type Solve, type TimerContext } from "@interfaces";
   import { DataService } from "@stores/data.service";
   import { infinitePenalty, sTimer, timer } from "@helpers/timer";
   import Modal from "@components/Modal.svelte";
@@ -31,7 +31,7 @@
   import ChevronDoubleLeftIcon from '@icons/ChevronDoubleLeft.svelte';
   import ChevronDoubleRightIcon from '@icons/ChevronDoubleRight.svelte';
   import ShareIcon from '@icons/Share.svelte';
-    import { getAverageS } from "@helpers/statistics";
+  import { getAverageS } from "@helpers/statistics";
 
   const dataService = DataService.getInstance();
 
@@ -43,8 +43,8 @@
   let selected = 0;
   let LAST_CLICK = 0;
 
-  let modal;
-  let deleteAllModal;
+  let modal: any;
+  let deleteAllModal: any;
   let show = false;
   let showDeleteAll = false;
   let sSolve: Solve;
@@ -65,16 +65,21 @@
     gSolve = s;
     sSolve = { ...s };
     
-    let md = options.has(sSolve.mode) ? sSolve.mode : '333';
+    let sMode = sSolve.mode as string;
+    let md = options.has(sMode) ? sMode : '333';
     
-    cube = Puzzle.fromSequence(sSolve.scramble, { ...options.get(md), headless: true });
+    cube = Puzzle.fromSequence(sSolve.scramble, {
+      ...(options.get(md) as PuzzleOptions),
+      rounded: true,
+      headless: true,
+    });
 
     generateCubeBundle([cube], 200).then(g => {
-      let subscr = g.subscribe((img: string) => {
+      let subscr = g.subscribe((img) => {
         if ( img === '__initial__' ) return;
 
         if ( img != null ) {
-          preview = img;
+          preview = img as string;
         } else {
           subscr();
         }
@@ -206,6 +211,10 @@
     }
   }
 
+  function deleteAllHandler(all: boolean) {
+    all && _delete($solves)
+  }
+
   $: updatePaginator($solves);
 
 </script>
@@ -296,12 +305,12 @@
     </div>
     <div class="algorithm-container text-gray-400 m-2">
       <Dice5Icon /> <span>{ sSolve.scramble }</span>
-      <img src={ preview } class="preview col-start-1 col-end-3 mb-2" alt="">
+      <img src={ preview } class="preview col-start-1 col-end-3 mb-2 mx-auto" alt="">
       
       <CommentIcon /> <TextArea bind:value={ sSolve.comments } placeholder="Comment..."/>
     </div>
     <div class="mt-2 flex">
-      <Button flat><DeleteIcon /> Delete</Button>
+      <Button flat on:click={ () => { _delete([ sSolve ]); modal.close()} }><DeleteIcon /> Delete</Button>
       <Button flat on:click={ () => modal.close() }><CloseIcon /> Cancel</Button>
       <Button flat on:click={ () => modal.close(sSolve) } class="mr-2"><SendIcon /> Save</Button>
       <Button flat
@@ -318,7 +327,7 @@
     </div>
   </Modal>
 
-  <Modal bind:this={ deleteAllModal } bind:show={ showDeleteAll } onClose={ (res) => res && _delete($solves) }>
+  <Modal bind:this={ deleteAllModal } bind:show={ showDeleteAll } onClose={ deleteAllHandler }>
     <h1 class="text-gray-400 mb-4 text-lg">Do you want to remove all solves?</h1>
     <div class="flex justify-evenly">
       <Button on:click={ () => deleteAllModal.close() }>Cancel</Button>

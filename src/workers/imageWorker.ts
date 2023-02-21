@@ -1,3 +1,4 @@
+import type { Piece } from "@classes/puzzle/Piece";
 import { Puzzle } from "@classes/puzzle/puzzle";
 import { roundCorners, roundStickerCorners } from "@classes/puzzle/puzzleUtils";
 import { Sticker } from "@classes/puzzle/Sticker";
@@ -23,7 +24,8 @@ declare var FileReaderSync: {
 };
 
 function planView(cube: Puzzle, DIM: number) {
-  if ( [ 'rubik', 'skewb', 'ivy' ].indexOf(cube.type) > -1 ) {
+  // if ( [ 'rubik', 'skewb', 'ivy' ].indexOf(cube.type) > -1 ) {
+  if ( [ 'rubik' ].indexOf(cube.type) > -1 ) {
     let canvas: any = new OffscreenCanvas(DIM, DIM);
     let ctx: any = canvas.getContext('2d');
     const PI_2 = Math.PI / 2;
@@ -33,199 +35,163 @@ function planView(cube: Puzzle, DIM: number) {
     const ALL_PAD = LW + PAD;
     const mSticker = (DIM - ALL_PAD * 2) / (order + 1) / 2 + ALL_PAD;
     
+    roundCorners(cube.p, ...cube.p.roundParams);
+
     let allStickers = cube.getAllStickers();
 
-    let stickers = allStickers.filter(s => {
-      if ( s.color === 'd' ) {
-        return false;
-      }
-      let p = s.points;
-      let u = s.getOrientation();
-      return p[0].y >= 1 - 1e-6 && UP.sub(u).abs2() < 1e-4;
-      // return p.reduce((s, pt) => s && pt.y >= 1 - 1e-6 , true);
-    }).map(s => s.rotate(CENTER, RIGHT, PI_2));
+    // Top face stickers
+    let stickers = allStickers
+      .filter(s => {
+        if ( s.color === 'd' ) {
+          return false;
+        }
+        let p = s.points;
+        let u = s.getOrientation();
+        return p[0].y >= 1 - 1e-6 && UP.sub(u).abs2() < 1e-4;
+      })
+      .map(s => s.rotate(CENTER, RIGHT, PI_2))
+      .sort((a: Sticker, b: Sticker) => {
+        let ca = a._generator.updateMassCenter(), cb = b._generator.updateMassCenter();
+
+        if ( Math.abs( ca.y - cb.y ) < 1e-6 ) {
+          return ca.x - cb.x;
+        }
+
+        return cb.y - ca.y;
+      });
 
     ctx.strokeStyle = '7px solid #000000';
     ctx.lineWidth = LW;
 
-    for (let i = 0, maxi = stickers.length; i < maxi; i += 1) {
-      ctx.fillStyle = cube.getHexStrColor( stickers[i].color );
-      let pts = stickers[i].points;
+    let mapVector = function(x: number, y: number) {
+      return new Vector2D(
+        map(x, -1, 1, mSticker, DIM - mSticker),
+        map(y, -1, 1, mSticker, DIM - mSticker)
+      );
+    };
 
-      ctx.beginPath();
+    let render = function(st: Sticker[]) {
+      for (let i = 0, maxi = st.length; i < maxi; i += 1) {
+        ctx.fillStyle = cube.getHexStrColor( st[i].color );
+        let pts = st[i].points;
+  
+        ctx.beginPath();
+  
+        for (let j = 0, maxj = pts.length; j < maxj; j += 1) {
+          let v = mapVector( pts[j].x, pts[j].y );
 
-      if ( cube.type === 'rubik' ) {
-        let mc = stickers[i].getMassCenter();
-        let pts1 = pts.map(p => p.sub(mc).mul(1 / 0.925).add(mc));
-        let box = pts1.reduce((ac, e) => {
-          return [
-            Math.min(ac[0], e.x), Math.min(ac[1], e.y),
-            Math.max(ac[2], e.x), Math.max(ac[3], e.y),
-          ]
-        }, [Infinity, Infinity, -Infinity, -Infinity]); 
-
-        pts = [
-          new Vector3D(box[0], box[1]), new Vector3D(box[0], box[3]),
-          new Vector3D(box[2], box[3]), new Vector3D(box[2], box[1]),
-        ];
-      }
-
-      for (let j = 0, maxj = pts.length; j < maxj; j += 1) {
-        let x = map(pts[j].x, -1, 1, mSticker, DIM - mSticker);
-        let y = map(pts[j].y, -1, 1, mSticker, DIM - mSticker);
-        if ( j === 0 ) {
-          ctx.moveTo(x, DIM - y);
-        } else {
-          ctx.lineTo(x, DIM - y);
+          if ( j === 0 ) {
+            ctx.moveTo(v.x, DIM - v.y);
+          } else {
+            ctx.lineTo(v.x, DIM - v.y);
+          }
         }
+        ctx.fill();
+        ctx.closePath();
+        ctx.stroke();
       }
-      ctx.fill();
-      ctx.closePath();
-      ctx.stroke();
     }
 
-    if ( cube.type === 'rubik' ) {
+    // Render the top layer
+    render(stickers);
+
+    // if ( cube.type === 'rubik' ) {
       
-      let sideStikers = allStickers.filter(s => {
-        if ( s.color === 'd' ) {
-          return false;
-        }
-  
-        let th = 1 - 2 / cube.order[0];
-        let mc = s.getMassCenter();
-
-        return mc.y > th && ( Math.abs(mc.x) > 1 - 1e-6 || Math.abs(mc.z) > 1 - 1e-6 );
-      })
-      .sort((a, b) => {
-        let dirs = [ BACK, RIGHT, FRONT, LEFT ];
-        let oa = a.getOrientation();
-        let ob = b.getOrientation();
-        let ia;
-        let ib;
-  
-        for (let i = 0; i < 4; i += 1) {
-          if ( oa.sub(dirs[i]).abs() < 1e-6 ) {
-            ia = i;
-          }
-          if ( ob.sub(dirs[i]).abs() < 1e-6 ) {
-            ib = i;
-          }
-        }
-  
-        if ( ia === ib ) {
-          let c1 = a.getMassCenter();
-          let c2 = b.getMassCenter();
-          if ( ia == 0) {
-            return c1.x - c2.x;
-          } else if ( ia == 1 ) {
-            return c1.z - c2.z;
-          } else if ( ia == 2 ) {
-            return c2.x - c1.x;
-          }
-          return c2.z - c1.z;
-        }
-        return ia - ib;
-      });
-
-      let f = 0.04;
-
-      let vecs = [
-        new Vector2D(mSticker, mSticker),
-        new Vector2D(DIM - mSticker, mSticker),
-        new Vector2D(DIM - mSticker, DIM - mSticker),
-        new Vector2D(mSticker, DIM - mSticker),
-        new Vector2D(mSticker, mSticker),
-      ];
-
-      let sideIdx = 0;
-
-      for (let v = 0, maxv = vecs.length - 1; v < maxv; v += 1) {
-        let v1 = vecs[v];
-        let v2 = vecs[v + 1];
-        let vDir = v2.sub(v1).mul(f);
-        let vd1 = v1.add( vDir ).sub( vDir.unit().rot(Math.PI / 2).mul(mSticker - ALL_PAD / 2) );
-        let vd2 = v2.sub( vDir ).sub( vDir.unit().rot(Math.PI / 2).mul(mSticker - ALL_PAD / 2) );
-  
-        for (let i = 0; i < order; i += 1) {
-          let p1 = v1.add(v2.sub(v1).mul(i / order));
-          let p2 = v1.add(v2.sub(v1).mul((i + 1) / order));
-          let p3 = vd1.add(vd2.sub(vd1).mul((i + 1) / order));
-          let p4 = vd1.add(vd2.sub(vd1).mul(i / order));
-  
-          ctx.fillStyle = cube.getHexStrColor( sideStikers[ sideIdx++ ].color );
-          ctx.beginPath();
-          ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.lineTo(p3.x, p3.y);
-          ctx.lineTo(p4.x, p4.y); ctx.lineTo(p1.x, p1.y); ctx.fill(); ctx.stroke();
-        }
+    let sideStikers = allStickers.filter(s => {
+      if ( s.color === 'd' ) {
+        return false;
       }
 
-      let swaps = cube.arrows;
+      let th = 1 - 2 / cube.order[0];
+      let mc = s.getMassCenter();
 
-      const tipLength = 0.06 * DIM;
-      const tipAngle = Math.PI * 0.88;
-      const elems = 5;
+      return mc.y > th && ( Math.abs(mc.x) > 1 - 1e-6 || Math.abs(mc.z) > 1 - 1e-6 );
+    }).map(s => {
+      let o = s.getOrientation();
+      let ac = s._generator;
+      let newS = s.rotate(
+        new Vector3D(ac.points[0].x, 1, ac.points[0].z),
+        o.cross(UP), PI_2
+      );
 
-      for (let i = 0, maxi = (~~(swaps.length / elems) ) * elems; i < maxi; i += elems) {
-        let x1 = swaps[i];
-        let y1 = swaps[i + 1];
-        let x2 = swaps[i + 2];
-        let y2 = swaps[i + 3];
-        let type = swaps[i + 4];
+      const factor = 2 / 3;
+      let mc = s.updateMassCenter();
+      let muls = [mc.x, mc.y, mc.z].map(n => Math.abs(Math.abs(n) - 1) < 1e-2 ? factor : 1);
 
-        if ( x1 < 0 || x1 >= order ||
-            y1 < 0 || y1 >= order ||
-            x2 < 0 || x2 >= order ||
-            x2 < 0 || x2 >= order ) {
-          continue;
-        }
+      let mc1 = newS.updateMassCenter();
+      newS.points.forEach(p => {
+        p.x = (p.x - mc1.x) * muls[0] + mc1.x - o.x / order * (1 - factor);
+        p.y = (p.y - mc1.y) * muls[1] + mc1.y - o.y / order * (1 - factor);
+        p.z = (p.z - mc1.z) * muls[2] + mc1.z - o.z / order * (1 - factor);
+      });
+      return newS.rotate(CENTER, RIGHT, PI_2);
+    });
 
-        ctx.strokeStyle = 'black';
-        ctx.fillStyle = 'black';
+    render(sideStikers);
 
-        let vi = vecs[2].sub(vecs[0]).div(order);
-        let vj = vecs[2].sub(vecs[0]).div(order);
-        let unit = vecs[2].sub(vecs[0]).div(order * 2);
+    // Show arrows
+    let swaps = cube.arrows;
 
-        vi.y = 0;
-        vj.x = 0;
+    const tipLength = 0.06 * DIM;
+    const tipAngle = Math.PI * 0.88;
+    const elems = 5;
 
-        let ini = vecs[0].add( vi.mul(x1) ).add( vj.mul(y1) ).add(unit);
-        let fin = vecs[0].add( vi.mul(x2) ).add( vj.mul(y2) ).add(unit);
-        let tip = fin.sub(ini).unit().mul( tipLength );
-        let tip1 = fin.add( tip.rot( tipAngle ) );
-        let tip2 = fin.add( tip.rot( -tipAngle ) );
-        let tip3 = ini.sub( tip.rot( tipAngle ) );
-        let tip4 = ini.sub( tip.rot( -tipAngle ) );
-        let m1 = tip1.add(tip2).div(2);
-        let m2 = tip3.add(tip4).div(2);
+    for (let i = 0, maxi = (~~(swaps.length / elems) ) * elems; i < maxi; i += elems) {
+      let x1 = swaps[i];
+      let y1 = swaps[i + 1];
+      let x2 = swaps[i + 2];
+      let y2 = swaps[i + 3];
+      let type = swaps[i + 4];
 
-        ctx.lineWidth = 1;
+      if ( x1 < 0 || x1 >= order ||
+          y1 < 0 || y1 >= order ||
+          x2 < 0 || x2 >= order ||
+          x2 < 0 || x2 >= order ) {
+        continue;
+      }
 
+      ctx.strokeStyle = 'black';
+      ctx.fillStyle = 'black';
+
+      let c1 = stickers[ x1 + y1 * order ].getMassCenter();
+      let c2 = stickers[ x2 + y2 * order ].getMassCenter();
+
+      let ini = mapVector(c1.x, -c1.y);
+      let fin = mapVector(c2.x, -c2.y);
+      let tip = fin.sub(ini).unit().mul( tipLength );
+      let tip1 = fin.add( tip.rot( tipAngle ) );
+      let tip2 = fin.add( tip.rot( -tipAngle ) );
+      let tip3 = ini.sub( tip.rot( tipAngle ) );
+      let tip4 = ini.sub( tip.rot( -tipAngle ) );
+      let m1 = tip1.add(tip2).div(2);
+      let m2 = tip3.add(tip4).div(2);
+
+      ctx.lineWidth = 1;
+
+      ctx.beginPath();
+      ctx.lineTo(fin.x, fin.y);
+      ctx.lineTo(tip1.x, tip1.y);
+      ctx.lineTo(tip2.x, tip2.y);
+      ctx.fill();
+      ctx.stroke();
+
+      if ( type != 0 ) {
         ctx.beginPath();
-        ctx.lineTo(fin.x, fin.y);
-        ctx.lineTo(tip1.x, tip1.y);
-        ctx.lineTo(tip2.x, tip2.y);
+        ctx.lineTo(ini.x, ini.y);
+        ctx.lineTo(tip3.x, tip3.y);
+        ctx.lineTo(tip4.x, tip4.y);
         ctx.fill();
         ctx.stroke();
-
-        if ( type != 0 ) {
-          ctx.beginPath();
-          ctx.lineTo(ini.x, ini.y);
-          ctx.lineTo(tip3.x, tip3.y);
-          ctx.lineTo(tip4.x, tip4.y);
-          ctx.fill();
-          ctx.stroke();
-        }
-
-        ctx.lineWidth = 4;
-        ctx.lineCap = 'square';
-
-        ctx.beginPath();
-        ctx.moveTo(m1.x, m1.y);
-        ctx.lineTo(m2.x, m2.y);
-        ctx.stroke();
-
       }
+
+      ctx.lineWidth = 4;
+      ctx.lineCap = 'square';
+
+      ctx.beginPath();
+      ctx.moveTo(m1.x, m1.y);
+      ctx.lineTo(m2.x, m2.y);
+      ctx.stroke();
+
     }
 
     return canvas.convertToBlob();
@@ -416,13 +382,14 @@ function projectedView(cube: Puzzle, DIM: number) {
     let D = SIDE * F * Math.sin(alpha) / Math.sin(beta);
     let r = R - D;
 
-    let ac1 = cube.p.pieces.find(p => {
+    // This type of piece is ensured to be inside the list
+    let ac1 = (cube.p.pieces.find(p => {
       let st = p.stickers.filter(s => s.points.length === 5);
       return st.length === 2 && st[0].getOrientation().sub(DOWN).abs() < 1e-6;
-    }).stickers[0].add(UP).mul(R / r).add(DOWN).points;
+    }) as Piece).stickers[0].add(UP).mul(R / r).add(DOWN).points;
 
-    let pts1 = [];
-    let pts2 = [];
+    let pts1: Vector3D[] = [];
+    let pts2: Vector3D[] = [];
     for (let i = 0; i < 6; i += 1) {
       sideStk[ faceName[i] ] = sideStk[ faceName[i] ].map(s => {
         let newS = s.rotate(CENTER, RIGHT, PI_2);
@@ -527,7 +494,7 @@ function circle(ctx: CanvasRenderingContext2D, x: number, y: number, rad: number
 
 function drawSingleClock(
   ctx: CanvasRenderingContext2D, RAD: number, X: number, Y: number,
-  MAT, PINS, BLACK: string, WHITE: string, GRAY: string) {
+  MAT: any, PINS: any, BLACK: string, WHITE: string, GRAY: string) {
   const W = RAD * 0.582491582491582;
   const RAD_CLOCK = RAD * 0.20202020202020;
   const BORDER = RAD * 0.0909090909090909;
@@ -604,7 +571,7 @@ function clockImage(cube: Puzzle, DIM: number) {
   const ctx: any = canvas.getContext('2d');
  
   const PINS1 = cube.p.raw[0];
-  const PINS2 = cube.p.raw[0].map((e, p) => !PINS1[ ((p >> 1) << 1) + 1 - (p & 1) ]);
+  const PINS2 = cube.p.raw[0].map((e: any, p: number) => !PINS1[ ((p >> 1) << 1) + 1 - (p & 1) ]);
   const MAT = cube.p.raw[1];
   const RAD = DIM / 2;
   
