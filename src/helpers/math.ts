@@ -34,7 +34,7 @@ export function between(n: number, a: number, b: number): number {
   return Math.min(b, Math.max(a, n));
 }
 
-export function planeLineIntersection(p0: Vector3D, n: Vector3D, l0: Vector3D, l: Vector3D): Vector3D {
+export function planeLineIntersection(p0: Vector3D, n: Vector3D, l0: Vector3D, l: Vector3D): Vector3D | null | undefined {
   let num = p0.sub(l0).dot(n);
   let den = l.dot(n);
 

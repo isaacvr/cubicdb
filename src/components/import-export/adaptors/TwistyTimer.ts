@@ -27,7 +27,7 @@ export class TwistyTimer implements CubeDBAdaptor {
       return this.fromTXT(str);
     }
 
-    return null;
+    return { sessions: [], solves: [] };
   }
 
   private fromBackup(str: string): CubeDBData {
@@ -39,24 +39,24 @@ export class TwistyTimer implements CubeDBAdaptor {
     let rows = str.split('\n').slice(1);
 
     for (let i = 0, maxi = rows.length; i < maxi; i += 1) {
-      let parts = rows[i].trim().split(";");
+      let parts: string[] = rows[i].trim().split(";");
 
       if ( parts.length < 7 ) {
         continue;
       }
 
-      let cat = parts.shift().slice(1, -1);
-      let session = parts.shift().slice(1, -1);
-      let time = +parts.shift().slice(1, -1);
-      let date = +parts.shift().slice(1, -1);
-      let scramble = parts.shift().slice(1, -1);
-      let penalty = +parts.shift().slice(1, -1);
+      let cat: string = parts.shift()?.slice(1, -1) || '';
+      let session: string = parts.shift()?.slice(1, -1) || '';
+      let time = +(parts.shift()?.slice(1, -1) || 0);
+      let date = +(parts.shift()?.slice(1, -1) || 0);
+      let scramble: string = parts.shift()?.slice(1, -1) || '';
+      let penalty = +(parts.shift()?.slice(1, -1) || 0);
       let comments = parts.join(";").slice(1, -1);
 
       if ( !sessionMap.has(session) ) {
         sessionMap.set(session, crypto.randomUUID());
         res.sessions.push({
-          _id: sessionMap.get(session),
+          _id: sessionMap.get(session) || '',
           name: session,
           settings: genSettings(),
         });
@@ -67,7 +67,7 @@ export class TwistyTimer implements CubeDBAdaptor {
         penalty: [ Penalty.NONE, Penalty.P2, Penalty.DNF ][penalty],
         scramble,
         selected: false,
-        session: sessionMap.get(session),
+        session: sessionMap.get(session) || '',
         time,
         _id: crypto.randomUUID(),
         comments,
@@ -100,10 +100,10 @@ export class TwistyTimer implements CubeDBAdaptor {
         continue;
       }
 
-      let time = +parts.shift().slice(1, -1) * 1000;
-      let scramble = parts.shift().slice(1, -1);
-      let date = moment(parts.shift().slice(1, -1)).toDate().getDate();
-      let penalty = parts.shift();
+      let time = +(parts.shift()?.slice(1, -1) || 0) * 1000;
+      let scramble: string = parts.shift()?.slice(1, -1) || '';
+      let date = moment(parts.shift()?.slice(1, -1)).toDate().getDate();
+      let penalty: string = parts.shift() || '';
       let pz = identifyPuzzle(scramble);
 
       res.solves.push({

@@ -6,10 +6,10 @@ import { STANDARD_PALETTE } from "@constants";
 import { Sticker } from './Sticker';
 import { assignColors, getAllStickers } from './puzzleUtils';
 
-function its(a: Vector3D, b: Vector3D, axis: string): Vector3D {
+function its(a: Vector3D, b: Vector3D, axis: 'x' | 'y' | 'z'): Vector3D {
   let ini = 0;
   let fin = 1;
-  let mid;
+  let mid: number = 0;
 
   for (let i = 1; i <= 50; i += 1) {
     mid = (ini + fin) / 2;
@@ -27,7 +27,7 @@ export function SQUARE2(): PuzzleInterface {
     rotation: {},
     center: new Vector3D(0, 0, 0),
     faceVectors: [],
-    getAllStickers: null,
+    getAllStickers: () => [],
     faceColors: [ 'w', 'b', 'r', 'y', 'g', 'o' ],
     move: () => true,
     roundParams: [],
@@ -83,7 +83,7 @@ export function SQUARE2(): PuzzleInterface {
     let pc = new Piece([
       new Sticker([ CENTER.add(UP), p1, p2, ]),
       new Sticker([ CENTER.add(UP), p1, p2, ]).add( DOWN.mul(2 / 3), true).reverse(true),
-      new Sticker([ p1, p1.add( DOWN.mul(2 / 3) ), p2.add( DOWN.mul(2 / 3) ), p2 ], null, [
+      new Sticker([ p1, p1.add( DOWN.mul(2 / 3) ), p2.add( DOWN.mul(2 / 3) ), p2 ], '', [
         UP.clone()
       ]),
       new Sticker([ CENTER.add(UP), p2, p2.add( DOWN.mul(2 / 3) ), CENTER.add( UP.div(3) ) ]),

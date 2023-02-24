@@ -60,6 +60,7 @@ export class DataService {
       this.isElectron = true;
       this.setIpc();
     } else {
+      this.ipc = {} as IPC;
       this.isElectron = false;
     }
 

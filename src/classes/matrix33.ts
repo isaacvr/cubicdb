@@ -1,7 +1,7 @@
 import { Vector3D } from './vector3d';
 export class Matrix33 {
 
- data;
+ data: number[][];
   
   constructor() {
     this.data = [];

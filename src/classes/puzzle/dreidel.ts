@@ -30,13 +30,13 @@ function circleInterpolation(a: Vector2D, m: Vector2D, b: Vector2D) {
   const m_a = m.sub(a);
   const ab_m = cmul(a, b_m);
   const bm_a = cmul(b, m_a);
-  return (t) => cdiv(
+  return (t: number) => cdiv(
     clerp(ab_m, bm_a, t),
     clerp(b_m, m_a, t)
   );
 }
 
-function pos(x, y, L): number {
+function pos(x: number, y: number, L: number): number {
   return x * L + y;
 }
 
@@ -47,7 +47,7 @@ export function DREIDEL(): PuzzleInterface {
     rotation: {},
     center: new Vector3D(0, 0, 0),
     faceVectors: [],
-    getAllStickers: null,
+    getAllStickers: () => [],
     dims: [],
     faceColors: [ 'w', 'r', 'g', 'y', 'o', 'b' ],
     move: () => false,
@@ -77,7 +77,7 @@ export function DREIDEL(): PuzzleInterface {
 
   let cornerSticker = new Sticker([
     LUB, LU, BACK.add(UP)
-  ], null, [ ...[LEFT, UP, BACK].map(v => v.rotate(LUB, LUB, PI23 / 2)), LUB.unit() ]);
+  ], '', [ ...[LEFT, UP, BACK].map(v => v.rotate(LUB, LUB, PI23 / 2)), LUB.unit() ]);
 
   let cornerPiece = new Piece([
     cornerSticker,
@@ -140,7 +140,7 @@ export function DREIDEL(): PuzzleInterface {
     }
   }
 
-  let edgeSticker = new Sticker([], null, [ LEFT, UP ]);
+  let edgeSticker = new Sticker([], '', [ LEFT, UP ]);
   let curve1: Vector3D[] = [];
   let curve2: Vector3D[] = [];
 
@@ -244,7 +244,7 @@ export function DREIDEL(): PuzzleInterface {
     
     let cmp = [ dir.x, dir.y, dir.z ].map(e => Math.abs(1 - Math.abs(e)) < 1e-6 ? Math.sign(e) : 0);
     let dir1 = new Vector3D(cmp[0], cmp[1], cmp[2]);
-    let pcs = pieces.reduce((ac, p) => {
+    let pcs = pieces.reduce((ac: Piece[][], p) => {
       let d = p.direction1(dir1.mul(1/3), dir1);
       if ( d >= 0 ) {
         ac[ d ].push( p );

@@ -1,11 +1,11 @@
-export function ripple(node, eProps) {
-  let POSITION;
-  let DURATION;
-  let BACKGROUND;
+export function ripple(node: HTMLElement, eProps: any) {
+  let POSITION: string;
+  let DURATION: number;
+  let BACKGROUND: string;
   const ripple = document.createElement('span');
   node.appendChild(ripple);
 
-  let initialize = (p) => {
+  let initialize = (p: any) => {
     POSITION = (p || {}).position || 'cursor';
     DURATION = Math.abs((p || {}).duration || 400);
     BACKGROUND = (p || {}).background || "#fff";
@@ -18,7 +18,7 @@ export function ripple(node, eProps) {
   let alpha = 0;
   let animating = false;
 
-  let animate = (rpl) => {
+  let animate = (rpl: HTMLElement) => {
     if ( animating ) {
       if ( performance.now() <= to ) {
         alpha = (performance.now() - from) * 1.2 / (to - from);
@@ -28,14 +28,14 @@ export function ripple(node, eProps) {
       } else {
         alpha = 0;
         rpl.style.transform = `translate(-50%, -50%) scale(${alpha})`;
-        rpl.style.opacity = 0;
+        rpl.style.opacity = '0';
         animating = false;
-        node.style.overflow = null;
+        node.style.overflow = 'unset';
       }
     }
   };
 
-  const getProps = (e) => {
+  const getProps = (e: MouseEvent) => {
     let box = node.getBoundingClientRect();
     let w = box.width, h = box.height;
     if ( POSITION === 'center' ) {
@@ -53,7 +53,7 @@ export function ripple(node, eProps) {
     }
   }
 
-  const handleClick = (e) => {
+  const handleClick = (e: MouseEvent) => {
     let p = getProps(e);
    
     ripple.style.left = `${p.x}px`;
@@ -77,7 +77,7 @@ export function ripple(node, eProps) {
   node.addEventListener('click', handleClick);
 
   return {
-    update(p) {
+    update(p: any) {
       initialize(p);
     },
 

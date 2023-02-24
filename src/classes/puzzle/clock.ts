@@ -1,27 +1,28 @@
 // import { STANDARD_PALETTE } from '@constants';
+import { BACK, CENTER, FRONT } from '@classes/vector3d';
 import type { PuzzleInterface } from '@interfaces';
 
 export function CLOCK(): PuzzleInterface {
   
   /// This is for compatibility only!!
   let clock: PuzzleInterface = {
-    center: null,
-    faceColors: null,
-    faceVectors: null,
-    getAllStickers: null,
+    center: CENTER,
+    faceColors: [ 'white', 'black' ],
+    faceVectors: [ FRONT, BACK ],
+    getAllStickers: () => [],
     move: () => true,
     palette: {
       black: '#181818',
       white: '#aaa',
       gray: '#7f7f7f',
     },
-    pieces: null,
+    pieces: [],
     rotation: {
       x: 0,
       y: 0,
       z: 0,
     },
-    dims: null,
+    dims: [],
     roundParams: [],
     isRounded: true,
   };
@@ -40,7 +41,7 @@ export function CLOCK(): PuzzleInterface {
     ],
   ];
 
-  let add = function(i, j, k, val) {
+  let add = function(i: number, j: number, k: number, val: number) {
     clocks[i][j][k] = ((clocks[i][j][k] + val) % 12 + 12) % 12;
   };
 

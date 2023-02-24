@@ -1,4 +1,4 @@
-import { Vector3D } from '../vector3d';
+import { CENTER, Vector3D } from '../vector3d';
 import type { Sticker } from './Sticker';
 
 export class Piece {
@@ -13,10 +13,13 @@ export class Piece {
 
   constructor(stickers?: Sticker[]) {
     this.stickers = (stickers || []).map(e => e.clone());
-    this.updateMassCenter();
     this.hasCallback = false;
-    this.callback = null;
+    this.callback = () => {};
     this.allPointsRef = [];
+    this.boundingBox = [];
+    this.anchor = CENTER;
+    this._cached_mass_center = CENTER;
+    this.updateMassCenter();
     this.computeBoundingBox();
   }
 
@@ -130,7 +133,7 @@ export class Piece {
     return p;
   }
 
-  direction(p1: Vector3D, p2: Vector3D, p3: Vector3D, useMassCenter?: boolean, disc ?): -1 | 0 | 1 {
+  direction(p1: Vector3D, p2: Vector3D, p3: Vector3D, useMassCenter?: boolean, disc?: Function): -1 | 0 | 1 {
     let dirs = [0, 0, 0];
     let st = this.stickers;
     let len = 0;

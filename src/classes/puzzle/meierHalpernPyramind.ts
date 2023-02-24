@@ -12,7 +12,7 @@ export function MEIER_HALPERN_PYRAMIND(): PuzzleInterface {
     pieces: [],
     rotation: {},
     faceVectors: [],
-    getAllStickers: null,
+    getAllStickers: () => [],
     faceColors: [ 'g', 'b', 'y', 'r' ],
     move: () => true,
     dims: [],
@@ -32,8 +32,8 @@ export function MEIER_HALPERN_PYRAMIND(): PuzzleInterface {
   let PB = PR.rotate(CENTER, UP, ANG);
   let PL = PB.rotate(CENTER, UP, ANG);
   
-  let pieces = mhp.pieces = [];
-  let fv = mhp.faceVectors = [];
+  let pieces: Piece[] = mhp.pieces = [];
+  let fv: Vector3D[] = mhp.faceVectors = [];
   let cross = Vector3D.cross;
 
   const FACTOR = 1 / 4;
@@ -50,7 +50,7 @@ export function MEIER_HALPERN_PYRAMIND(): PuzzleInterface {
     PU, PU.add( DUL ),
     PU.add( DUL ).add( DUR ),
     PU.add( DUR ),
-  ], null, [ cross(PU, PL, PR), cross(PU, PR, PB), cross(PU, PB, PL) ]);
+  ], '', [ cross(PU, PL, PR), cross(PU, PR, PB), cross(PU, PB, PL) ]);
 
   let cornerPiece = new Piece([0, 1, 2].map(n => cornerSticker.rotate(CENTER, UP, ANG * n)));
 
@@ -64,7 +64,7 @@ export function MEIER_HALPERN_PYRAMIND(): PuzzleInterface {
     PL.sub( DUL ),
     PL.sub( DUL ).add( DLR ),
     PU.add( DUL ).add( DUR ),
-  ], null, [ cross(PU, PB, PL) ]);
+  ], '', [ cross(PU, PB, PL) ]);
 
   let edgePiece = new Piece([
     edgeST, edgeST.reflect(CENTER, PU, PL, true)

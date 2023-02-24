@@ -6,12 +6,12 @@
   import Plus from 'svelte-material-icons/Plus.svelte';
   import Button from './material/Button.svelte';
 
-  export let location;
+  export let location: any;
 
   let dataService = DataService.getInstance();
 
-  let tutorials = {};
-  let keys = [];
+  let tutorials:{ [key: string]: Tutorial[] } = {};
+  let keys: string[] = [];
   let edition = false;
 
   let tutSub = dataService.tutSub.subscribe((t) => {
@@ -21,7 +21,7 @@
       case 'get-tutorials': {
         let tut = <Tutorial[]> t[1];
 
-        tutorials = tut.reduce((acc, e) => {
+        tutorials = tut.reduce((acc: { [key: string]: Tutorial[] }, e) => {
           !acc[e.puzzle] && (acc[e.puzzle] = []);
           acc[e.puzzle].push(e);
           return acc;

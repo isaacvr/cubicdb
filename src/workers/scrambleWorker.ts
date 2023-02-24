@@ -14,7 +14,7 @@ onmessage = function(e) {
   });
 
   for (let i = 0; i < cant; i += 1) {
-    batch.push( all.pScramble.scramblers.get(mode).apply(null, [
+    batch.push( all.pScramble.scramblers.get(mode)?.apply(null, [
       mode, Math.abs( len )
     ]).replace(/\\n/g, '<br>').trim());
 

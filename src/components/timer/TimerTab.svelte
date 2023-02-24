@@ -93,17 +93,16 @@
         $session.settings.input = 'Keyboard';
       }
 
-      if ( $session.settings.input === 'StackMat' ) {
-        connectStackmat();
-      } else {
-        stackmat.stop();
-        if ( sstate ) {
-          sstate.on = false;
-        }
-      }
-
       openDialog('settings', $session, (data: any) => {
         if ( data ) {
+          if ( $session.settings.input === 'StackMat' ) {
+            connectStackmat();
+          } else {
+            stackmat.stop();
+            if ( sstate ) {
+              sstate.on = false;
+            }
+          }
           dataService.updateSession($session);
           initialCalc != $session.settings.calcAoX && updateStatistics(false);
         }
@@ -555,12 +554,12 @@
       class:battle={ battle }
       contenteditable="false" bind:innerHTML={$scramble}></span>
 
-    <div class="absolute top-1 right-12" class:isRunning={ $isRunning }>
+    <div class="absolute top-1 right-12 flex flex-col" class:isRunning={ $isRunning }>
       {#each options.filter((e, p) => !battle ? true : p === 3 || p === 5) as option}
         <Tooltip class="cursor-pointer" position="left" text={ option.text }>
-          <div class="my-3 mx-1 w-5 h-5 { textColor }" on:click={ option.handler }>
+          <button tabindex="0" class="my-3 mx-1 w-5 h-5 { textColor }" on:click={ option.handler }>
             <svelte:component this={option.icon} width="100%" height="100%"/>
-          </div>
+          </button>
         </Tooltip>
       {/each}
     </div>
@@ -747,10 +746,10 @@
           <h2 class="col-span-3">Scramble</h2>
           <h2 class="col-span-1">Time</h2>
           {#each $solves as s }
-            <span class="
+            <button tabindex="0" class="
               col-span-3 cursor-pointer hover:text-blue-400 my-2 text-left
               text-ellipsis overflow-hidden whitespace-nowrap
-            " on:click={ () => select(s) }>{ s.scramble }</span>
+            " on:click={ () => select(s) }>{ s.scramble }</button>
             <span class="col-span-1 flex items-center justify-center">{ timer(s.time, false, true) }</span>
           {/each}
         </div>

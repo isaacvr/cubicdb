@@ -49,7 +49,7 @@ export function GEAR(): PuzzleInterface {
     rotation: {},
     center: new Vector3D(0, 0, 0),
     faceVectors: [],
-    getAllStickers: null,
+    getAllStickers: () => [],
     faceColors: [ 'y', 'o', 'g', 'w', 'r', 'b' ],
     move: () => true,
     roundParams: [0.2, 0.9, null, (s: Sticker) => s.color != 'x'],
@@ -182,8 +182,8 @@ export function GEAR(): PuzzleInterface {
       return goodStickers.reduce((ac, s) => ac || s.direction1(CENTER, dir) >= 0, false);
     });
 
-    let centralPieces = [];
-    let borderPieces = [];
+    let centralPieces: Piece[] = [];
+    let borderPieces: Piece[] = [];
 
     toMovePieces.forEach(p => {
       let goodStickers = p.stickers.filter(s => s.color != 'd');

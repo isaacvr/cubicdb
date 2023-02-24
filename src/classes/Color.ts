@@ -1,4 +1,4 @@
-function types(arr) {
+function types(arr: any[]) {
   let res = [];
 
   for (let i = 0, maxi = arr.length; i < maxi; i += 1) {
@@ -36,7 +36,7 @@ function adjust(val: number, a ?: number, b ?: number) {
 
 export class Color {
   color: number[];
-  constructor(a?, b?, c?, d?, e?) {
+  constructor(a?: any, b?: any, c?: any, d?: any, e?: any) {
     let tp = types([ a, b, c, d, e ]);
 
     this.color = [0, 1, 2].map(_ => Math.round(Math.random() * 255) );
@@ -91,38 +91,38 @@ export class Color {
 
   }
 
-  set(k, v) {
+  set(k: number, v: number) {
     this.color[k] = v;
   }
 
-  fromCMY(C, M, Y) {
+  fromCMY(C: number, M: number, Y: number) {
     throw new ReferenceError('CMY not supported yet');
   }
 
-  fromCMYK(C, M, Y, K) {
+  fromCMYK(C: number, M: number, Y: number, K: number) {
     throw new ReferenceError('CMYK not supported yet');
   }
 
-  fromRYB(R, Y, B) {
+  fromRYB(R: number, Y: number, B: number) {
     throw new ReferenceError('RYB not supported yet');
   }
 
-  fromHSV(H, S, V) {
+  fromHSV(HL: number, S: number, V: number) {
     throw new ReferenceError('HSV not supported yet');
   }
 
-  fromRGB(r, g, b) {
+  fromRGB(r: number, g: number, b: number) {
     this.color[0] = adjust(r);
     this.color[1] = adjust(g);
     this.color[2] = adjust(b);
   }
 
-  fromRGBA(r, g, b, a) {
+  fromRGBA(r: number, g: number, b: number, a: number) {
     this.fromRGB(r, g, b);
     this.color[3] = adjust(a, 0, 1);
   }
 
-  fromString(s) {
+  fromString(s: string) {
     let rgbaReg = /$rgba\(([0-9]*),([0-9]*),([0-9]*),([0-9]*)\)$/;
     let rgbReg = /^rgb\(([0-9]*),([0-9]*),([0-9]*)\)$/;
     let hexReg = /^\#(\w{2})(\w{2})(\w{2})$/;
@@ -130,13 +130,17 @@ export class Color {
     let str = s.replace(/\s/g, '');
 
     if ( rgbaReg.test(str) ) {
-      this.fromRGBA.apply(this, str.replace(rgbaReg, '$1 $2 $3 $4').split(' '));
+      let [r, g, b, a] = str.replace(rgbaReg, '$1 $2 $3 $4').split(' ').map(Number);
+      this.fromRGBA(r, g, b, a);
     } else if ( rgbReg.test(str) ) {
-      this.fromRGB.apply(this, str.replace(rgbReg, '$1 $2 $3').split(' '));
+      let [r, g, b] = str.replace(rgbReg, '$1 $2 $3').split(' ').map(Number);
+      this.fromRGB(r, g, b);
     } else if ( hexaReg.test(str) ) {
-      this.fromRGBA.apply(this, str.replace(hexaReg, '$1 $2 $3 $4').split(' ').map(e => parseInt(e, 16)));
+      let [r, g, b, a] = str.replace(hexaReg, '$1 $2 $3 $4').split(' ').map(e => parseInt(e, 16));
+      this.fromRGBA(r, g, b, a);
     } else if ( hexReg.test(str) ) {
-      this.fromRGB.apply(this, str.replace(hexReg, '$1 $2 $3').split(' ').map(e => parseInt(e, 16)));
+      let [r, g, b] = str.replace(hexReg, '$1 $2 $3').split(' ').map(e => parseInt(e, 16));
+      this.fromRGB(r, g, b);
     } else {
       throw new TypeError('String format other than rgb() or rgba() not supported yet');
     }

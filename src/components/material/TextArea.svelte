@@ -10,11 +10,11 @@
   let innerText = '<br>';
   let dispatch = createEventDispatcher();
 
-  function keyup(e) {
+  function keyup(e: KeyboardEvent) {
     dispatch('keyup', e);
   }
 
-  function keydown(e) {
+  function keydown(e: KeyboardEvent) {
     dispatch('keydown', e);
   }
 

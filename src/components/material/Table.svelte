@@ -25,7 +25,7 @@
     changeSingle();
   }
 
-  function changeAll(ev) {
+  function changeAll(ev: CustomEvent) {
     let v = ev.detail.value;
     _rows = (new Array(_rows.length).fill(!!v));
   }

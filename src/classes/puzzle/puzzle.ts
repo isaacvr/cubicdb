@@ -30,6 +30,7 @@ export class Puzzle {
     this.view = options.view || 'trans';
     this.headless = !!options.headless;
     this.img = PX_IMAGE;
+    this.arrows = [];
 
     this.options.sequence = '';
 
@@ -76,7 +77,7 @@ export class Puzzle {
 
     a.push(this.headless);
 
-    this.p = puzzleReg.get(this.type).constr.apply(null, a);
+    this.p = puzzleReg.get(this.type)?.constr.apply(null, a);
 
     this.order = a;
     this.rotation = this.p.rotation;
@@ -130,6 +131,7 @@ export class Puzzle {
         )[0].stickers[0];
     }
 
+    // @ts-ignore
     let TOP_COLOR = topCenter.oColor;
     let BOTTOM_COLOR = this.p.faceColors[ (this.p.faceColors.indexOf(TOP_COLOR) + 3) % 6 ];
     
@@ -426,15 +428,15 @@ export class Puzzle {
     return res;
   }
 
-  moveFromMouse(pc: Piece, st: Sticker, pt, v) {
-    return this.p.toMove(pc, st, pt, v);
+  moveFromMouse(pc: Piece, st: Sticker, pt: any, v: any) {
+    return this.p.toMove ? this.p.toMove(pc, st, pt, v) : [];
   }
 
-  getPiece(v): [Piece, Sticker] {
+  getPiece(v: Vector3D[]): [Piece, Sticker] {
     let pc = this.pieces;
     let d = Infinity;
-    let rp = null;
-    let rs = null;
+    let rp: Piece;
+    let rs: Sticker;
     
     for (let i = 0, maxi = pc.length; i < maxi; i += 1) {
       let st = pc[i].stickers;
@@ -453,6 +455,7 @@ export class Puzzle {
       }
     }
 
+    // @ts-ignore
     return [rp, rs];
 
   }

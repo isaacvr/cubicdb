@@ -16,7 +16,7 @@ export function MIXUP(): PuzzleInterface {
     rotation: {},
     center: new Vector3D(0, 0, 0),
     faceVectors: [],
-    getAllStickers: null,
+    getAllStickers: () => [],
     dims: [n, n, n],
     faceColors: [ 'w', 'r', 'g', 'y', 'o', 'b' ],
     move: () => false,
@@ -145,7 +145,7 @@ export function MIXUP(): PuzzleInterface {
   mixup.toMove = function(piece: Piece, sticker: Sticker, dir: Vector3D) {
     let type = piece.stickers.filter(s => !s.color.match(/^[xd]$/)).length;
     let mc = piece.updateMassCenter();
-    let planes = piece.stickers.reduce((ac, s) => {
+    let planes = piece.stickers.reduce((ac: Vector3D[][], s) => {
       if ( s.color === 'x' && s.getOrientation().cross(dir).abs() < 1e-6 ) {
         ac.push ( [ s._generator.points[0], s._generator.getOrientation() ] );
       }

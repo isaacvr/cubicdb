@@ -15,7 +15,7 @@ export function PYRAMINX_CRYSTAL(): PuzzleInterface {
     rotation: {},
     center: CENTER,
     faceVectors: [],
-    getAllStickers: null,
+    getAllStickers: () => [],
     faceColors: [ "white", "yellow", "violet", "green", "red", "blue", "orange", "lblue", "lyellow", "pink", "lgreen", "gray" ],
     move: () => true,
     roundParams: [],
@@ -65,7 +65,7 @@ export function PYRAMINX_CRYSTAL(): PuzzleInterface {
   let cornerSticker = new Sticker([
     getRatio(anchors[0], anchors[4]), anchors[0],
     getRatio(anchors[0], anchors[1]), topCenter
-  ], null, vdir.slice(0, 3));
+  ], '', vdir.slice(0, 3));
 
   let cornerPiece = new Piece([
     ...[0, 1, 2].map(n => cornerSticker.rotate(CENTER, anchors[0], ANG * n))
@@ -82,7 +82,9 @@ export function PYRAMINX_CRYSTAL(): PuzzleInterface {
   pieces.push(...topCorners);
   pieces.push(...topCorners.map(c => c.rotate(CENTER, RIGHT, PI)));
 
-  let midCorners = topCorners.reduce((acc, tc, v) => [...acc, ...[1, 2].map(n => tc.rotate(CENTER, fv[v + 1], INNER_ANG * n))], []);
+  let midCorners = topCorners.reduce((acc: Piece[], tc, v) =>
+    [...acc, ...[1, 2].map(n => tc.rotate(CENTER, fv[v + 1], INNER_ANG * n))],
+  []);
   
   pieces.push(...midCorners);
 
@@ -91,7 +93,7 @@ export function PYRAMINX_CRYSTAL(): PuzzleInterface {
     getRatio(anchors[0], anchors[1]),
     getRatio(anchors[1], anchors[0]),
     topCenter
-  ], null, vdir);
+  ], '', vdir);
 
   let topEdge = new Piece([
     topSticker,
@@ -105,7 +107,9 @@ export function PYRAMINX_CRYSTAL(): PuzzleInterface {
 
   pieces.push( ...topEdges, ...bottomEdges );
 
-  let midTopEdges = topEdges.reduce((acc, te, v) => [...acc, ...[1, 2, 3].map(n => te.rotate(CENTER, fv[v + 1], INNER_ANG * n))], []);
+  let midTopEdges = topEdges.reduce((acc: Piece[], te, v) =>
+    [...acc, ...[1, 2, 3].map(n => te.rotate(CENTER, fv[v + 1], INNER_ANG * n))],
+  []);
 
   pieces.push(...midTopEdges);
   pieces.push(...topEdges.map((e, v) => e

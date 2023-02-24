@@ -12,7 +12,7 @@ export function PYRAMINX(n: number): PuzzleInterface {
     pieces: [],
     rotation: {},
     faceVectors: [],
-    getAllStickers: null,
+    getAllStickers: () => [],
     faceColors: [ 'g', 'b', 'y', 'r' ],
     move: () => true,
     dims: [],

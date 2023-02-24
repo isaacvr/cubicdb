@@ -2,6 +2,7 @@ import { Vector3D } from './../vector3d';
 import { Sticker } from './Sticker';
 import type { PuzzleInterface } from '@interfaces';
 import { FaceSticker } from './FaceSticker';
+import type { Puzzle } from './puzzle';
 
 export function assignColors(p: PuzzleInterface, cols ?: string[]) {
   let colors = cols || [ 'y', 'o', 'g', 'w', 'r', 'b' ];
@@ -70,6 +71,7 @@ export function assignColors(p: PuzzleInterface, cols ?: string[]) {
 export function getAllStickers(): Sticker[] {
   
   let res = [];
+  // @ts-ignore
   let pieces = this.pieces;
 
   for (let i = 0, maxi = pieces.length; i < maxi; i += 1) {
@@ -136,7 +138,7 @@ export function roundCorners(p: PuzzleInterface, rd ?: number, scale ?: number, 
       }
 
       let newSt = (justScale)
-        ? scaleSticker(s[j], scale)
+        ? scaleSticker(s[j], 0)
         : roundStickerCorners(s[j], rd, scale, ppc);
 
       newSt.updateMassCenter();
@@ -163,7 +165,7 @@ export function assignVectors(p: PuzzleInterface) {
 
   for (let i = 0, maxi = pieces.length; i < maxi; i += 1) {
     let stickers = pieces[i].stickers;
-    let vecs = pieces[i].stickers.reduce((ac, s) => {
+    let vecs = pieces[i].stickers.reduce((ac: Vector3D[], s) => {
       if ( s.color != 'x' && s.color != 'd' ) {
         ac.push( s.getOrientation() );
       }
@@ -178,7 +180,7 @@ export function assignVectors(p: PuzzleInterface) {
   }
 }
 
-export function random(a) {
+export function random(a: any) {
   if ( Array.isArray(a) || typeof a === 'string' ) {
     return a[ ~~(Math.random() * a.length) ];
   } else if ( typeof a === 'object' ) {

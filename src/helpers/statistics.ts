@@ -1,5 +1,5 @@
 import { MultiSet } from "@classes/MultiSet";
-import { AverageSetting, Penalty, type Solve } from "@interfaces";
+import { AverageSetting, type Solve } from "@interfaces";
 import { infinitePenalty } from "./timer";
 
 export function mean(values: number[]): number {
@@ -16,8 +16,8 @@ export function median(values: number[]): number {
   return v1[ cant >> 1 ];
 }
 
-export function getAverage(n: number, arr: number[], calc: AverageSetting): number[] {
-  let res = [];
+export function getAverage(n: number, arr: number[], calc: AverageSetting): (number | null)[] {
+  let res: (number | null)[] = [];
   let len = arr.length - 1;
   let elems: number[] = [];
   let disc = (n === 3) ? 0 : Math.ceil(n * 0.05);
@@ -43,12 +43,12 @@ export function getAverage(n: number, arr: number[], calc: AverageSetting): numb
   return res;
 }
 
-export function getAverageS(n: number, arr: Solve[], calc: AverageSetting): number[] {
+export function getAverageS(n: number, arr: Solve[], calc: AverageSetting): (number | null)[] {
   return getAverage(n, arr.map(e => infinitePenalty(e) ? Infinity : e.time), calc);
 }
 
-export function bundleAverageS(N: number[], arr: Solve[], calc: AverageSetting): number[][] {
-  let res: number[][] = new Array(N.length).fill(0).map(_ => []);
+export function bundleAverageS(N: number[], arr: Solve[], calc: AverageSetting): (number | null)[][] {
+  let res: (number | null)[][] = new Array(N.length).fill(0).map(_ => []);
   let sets: MultiSet<number>[] = new Array(N.length).fill(0).map(_ => new MultiSet());
   let disc = N.map(n => (n === 3) ? 0 : Math.ceil(n * 0.05));
   let len = arr.length - 1;

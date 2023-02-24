@@ -14,9 +14,10 @@ export class Paginator {
   constructor(dt?: any[], limit?: number, paginatorWidth?: number) {
     this.data = Array.isArray(dt) ? dt :[];
     this.len = this.data.length;
-    this.limit = Math.abs( ~~limit ) || 10;
+    this.limit = Math.abs( ~~(limit || 0) ) || 10;
     this.offset = 0;
     this._page = 0;
+    this._pages = 0;
     this.width = paginatorWidth || 5;
     
     this.labels = [];

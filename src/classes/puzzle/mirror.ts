@@ -15,7 +15,7 @@ export function MIRROR(n: number): PuzzleInterface {
     rotation: {},
     center: new Vector3D(0, 0, 0),
     faceVectors: [],
-    getAllStickers: null,
+    getAllStickers: () => [],
     dims: [n, n, n],
     faceColors: [ 'w', 'r', 'g', 'y', 'o', 'b' ],
     move: () => false,
@@ -169,7 +169,7 @@ export function MIRROR(n: number): PuzzleInterface {
 
     for (let i = 0; i < MOVES; i += 1) {
       let dir = random(dirs);
-      let mv = mirror.toMove( random(pieces), null, dir );
+      let mv = mirror.toMove ? mirror.toMove( random(pieces), null, dir ) : [];
       let cant = 1 + random(3);
       mv.pieces.forEach((p: Piece) => p.rotate(mirror.center, dir, mv.ang * cant, true));
     }

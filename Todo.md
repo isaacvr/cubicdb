@@ -1,10 +1,11 @@
 # TODO
 ## General
 - [ ] Add notification system for feedback
-- [ ] Improve Select element for better UX
 - [ ] Auto-detect stackmat
 - [ ] Add support for official stackmat
 - [ ] Test stackmat on mobile
+- [ ] Implement dashboard for different data
+- [x] Improve Select element for better UX
 
 ## Contest
 
@@ -14,9 +15,9 @@
 ## Tutorials
 - [ ] Practice for subsets
 - [ ] Tutorial pro parser (AST and more)
+- [ ] Limit width to 50-60 characters
 
 ## Timer
-- [ ] Generate scramble batch in background (scramble pool?)
 - [ ] Add smart cubes sync
 - [ ] Pre-defined settings through URL or props
 - [ ] Add mark to keyboard bindings for better contrast
@@ -26,17 +27,20 @@
 ## PLL-Recognition
 
 ## Simulator
+- [ ] Add scrambler
+- [ ] Refactor functions
 
 ## Settings
+- [ ] Basic migration
 - [ ] Tabs for dedicated settings
 
 ## Battle
 - [ ] Keyboard stops on DNF
 - [ ] Implement reconnections
-- [ ] Disconnect socket on exit
 
 ## Import-Export
 - [ ] Add CubeDB
+- [ ] Same session name in different categories can cause overlap
 
 ## Modelation
 ### Cuboids
@@ -57,5 +61,4 @@
 
 ## Bugs
 - [ ] Fix F2L 8
-- [x] Wrong cube images due to intersection
-- [x] Timer: Error on create session because of undefined variable
+- [ ] New session input does not work

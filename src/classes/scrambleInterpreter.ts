@@ -14,7 +14,7 @@ interface Token {
   value: any;
 }
 
-const Spec = [
+const Spec: [RegExp, string | null][] = [
   // Whitespaces:
   [ /^\s+/, null ],
   [ /^\n/, null ],
@@ -38,10 +38,10 @@ const Spec = [
 ];
 
 class Tokenizer {
-  private _string: string;
-  private _cursor: number;
+  private _string: string = '';
+  private _cursor: number = 0;
 
-  init(string) {
+  init(string: string) {
     this._string = string;
     this._cursor = 0;
   }
@@ -54,7 +54,7 @@ class Tokenizer {
     return this._cursor === this._string.length;
   }
     
-  getNextToken(): Token {
+  getNextToken(): Token | null {
     if ( !this.hasMoreTokens() ) {
       return null;
     }
@@ -73,7 +73,7 @@ class Tokenizer {
     throw new SyntaxError(`Unexpected token: ${string[0]}`);
   }
 
-  _match(regexp, string) {
+  _match(regexp: RegExp, string: string) {
     const matched = regexp.exec(string);
     if ( matched == null ) {
       return null;
@@ -124,17 +124,17 @@ class Solver {
     return s1.filter(p => p[1]).map(p => p[0] + mp.get(p[1]));
   }
 
-  solve(ast: Token) {
+  solve(ast: Token): string | string[] {
     switch(ast.type) {
       case 'Program':
-        return this.simplify( this.solve(ast.value) ).join(" ");
+        return this.simplify( this.solve(ast.value) as string[] ).join(" ");
       case 'Expression':
-        return ast.value.map(e => this.solve(e)).reduce((acc, e) => [...acc, ...e], []);
+        return ast.value.map((e: Token) => this.solve(e)).reduce((acc: string[], e: string) => [...acc, ...e], []);
       case 'Sequence':
-        return ast.value.map(t => t.value);
+        return ast.value.map((t: Token) => t.value);
       case 'ParentesizedExpression':
         let seq = this.solve(ast.value.expr);
-        let res = [];
+        let res: string[] = [];
         for (let i = 1, maxi = ast.value.cant; i <= maxi; i += 1) {
           res = [ ...res, ...seq ];
         }
@@ -142,10 +142,10 @@ class Solver {
       case 'ConmutatorExpression': {
         let s1 = this.solve(ast.value.expr1);
         let s2 = this.solve(ast.value.expr2);
-        let s1i = this.invert(s1);
-        let s2i = this.invert(s2);
+        let s1i = this.invert(s1 as string[]);
+        let s2i = this.invert(s2 as string[]);
         let seq = [...s1, ...s2, ...s1i, ...s2i];
-        let res = [];
+        let res: string[] = [];
         for (let i = 1, maxi = ast.value.cant; i <= maxi; i += 1) {
           res = [ ...res, ...seq ];
         }
@@ -160,7 +160,7 @@ class Solver {
 export class Interpreter {
   private _tokenizer: Tokenizer;
   private _solver: Solver;
-  private _lookahead: Token;
+  private _lookahead: Token | null;
 
   constructor() {
     this._tokenizer = new Tokenizer();

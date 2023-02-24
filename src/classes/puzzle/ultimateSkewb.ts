@@ -14,7 +14,7 @@ export function ULTIMATE_SKEWB(): PuzzleInterface {
     rotation: {},
     center: new Vector3D(0, 0, 0),
     faceVectors: [],
-    getAllStickers: null,
+    getAllStickers: () => [],
     faceColors: [ "white", "yellow", "violet", "green", "red", "blue", "orange", "lblue", "lyellow", "pink", "lgreen", "gray" ],
     move: () => true,
     roundParams: [],
@@ -51,8 +51,8 @@ export function ULTIMATE_SKEWB(): PuzzleInterface {
   ];
 
   let centerPoint = mid(3, 4).add( mid(4, 0) ).sub(anchors[4]);
-  let bigSticker = new Sticker([ mid(0, 1), anchors[1], anchors[2], mid(2, 3), centerPoint ], null, vdir);
-  let midSticker = new Sticker([ anchors[0], mid(0, 1), centerPoint, mid(0, 4) ], null, [
+  let bigSticker = new Sticker([ mid(0, 1), anchors[1], anchors[2], mid(2, 3), centerPoint ], '', vdir);
+  let midSticker = new Sticker([ anchors[0], mid(0, 1), centerPoint, mid(0, 4) ], '', [
     vdir[0], vdir[1].mul(-1), vdir[2].reflect(CENTER, anchors[4], mid(1, 2))
   ]);
   
@@ -65,7 +65,7 @@ export function ULTIMATE_SKEWB(): PuzzleInterface {
     bst[0].points[0].add( bst[1].points[3] ).sub( bst[0].points[1] ),
     bst[1].points[3],
     bst[0].points[1]
-  ], null, vdir);
+  ], '', vdir);
 
   bigPiece.stickers.push(
     smallSticker,

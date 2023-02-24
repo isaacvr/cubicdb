@@ -18,7 +18,7 @@ export function REX(): PuzzleInterface {
     rotation: {},
     center: new Vector3D(0, 0, 0),
     faceVectors: [],
-    getAllStickers: null,
+    getAllStickers: () => [],
     faceColors: [ 'w', 'r', 'g', 'y', 'o', 'b' ],
     move: () => true,
     roundParams: [],
@@ -81,7 +81,7 @@ export function REX(): PuzzleInterface {
   let sticker1 = new Sticker([ LEFT.add(UP), _ref2, ...curve1, ...curve2_inv, _ref1 ]);
   let sticker2 = new Sticker([ ...curve2, ...curve3_inv, ...curve1_inv.map(e => e.rotate(CENTER, DOWN, PI_2)) ]);
   let sticker3 = new Sticker(
-    [0, 1, 2, 3].reduce((ac, i) => {
+    [0, 1, 2, 3].reduce((ac: Vector3D[], i) => {
       ac.push( ...curve3.map(p => p.rotate(CENTER, UP, i * PI_2)) );
       return ac;
     }, [])
@@ -95,7 +95,7 @@ export function REX(): PuzzleInterface {
   piece2.stickers.forEach(s => s.vecs = [ _ref1.unit(), _ref2.unit(), RIGHT.add(BACK).add(UP).unit() ]);
   piece3.stickers.forEach(s => s.vecs = [_ref1.unit(), _ref2.unit(), _ref3.unit(), _ref4.unit()]);
 
-  let groupSmall = [0, 1, 2, 3].reduce((ac, i) => {
+  let groupSmall = [0, 1, 2, 3].reduce((ac: Piece[], i) => {
     ac.push( piece2.rotate(CENTER, UP, PI_2 * i) );
     ac.push( piece2.rotate(_ref1, _ref1, -2 * PI / 3).rotate(CENTER, UP, PI_2 * i) );
     ac.push( piece2.rotate(_ref1, _ref1, 2 * PI / 3).rotate(CENTER, UP, PI_2 * i) );

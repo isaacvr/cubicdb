@@ -63,10 +63,11 @@
     newSv.forEach((e, p) => {
       timeChart.data.datasets[0].data.push({
         x: p * lenFactor,
-        y: infinitePenalty(newSv[len - p]) ? null : newSv[len - p].time
-      });
+        y: infinitePenalty(newSv[len - p]) ? undefined : newSv[len - p].time
+      } as any);
     });
 
+    // @ts-ignore
     timeChart.options.plugins.zoom.limits.x.max = len + 1;
     
     let avgs = [ 5, 12, 50, $AoX ];
@@ -123,7 +124,7 @@
     let minT = $stats.best.value;
     let maxT = $stats.worst.value + 1e-5;
     let splits = between($solves.length, 1, 10);
-    let f = (x) => minT + (maxT - minT) * x / splits;
+    let f = (x: number) => minT + (maxT - minT) * x / splits;
 
     let itvs = new Array(splits).fill(0).map((_, p) => [ f(p), f(p + 1) ]);
     let cants = $solves.reduce((acc, s) => {
@@ -201,7 +202,7 @@
       }
     };
 
-    timeChart = new Chart(ctx, {
+    timeChart = new Chart(ctx as any, {
       data: {
         datasets: [
           { data: [], type: 'line', label: 'Time', ...common, ...fastOptions },
@@ -228,7 +229,7 @@
             position: 'left',
             grid: { color: '#555' },
             ticks: {
-              callback: (value: number) => timer(value, false, true)
+              callback: (value: string | number) => timer(+value, false, true)
             }
           }
         },
@@ -259,7 +260,8 @@
 
     let ctx1 = chartElement1.getContext('2d');
 
-    penaltyChart = new Chart(ctx1, {
+    // @ts-ignore
+    penaltyChart = new Chart(ctx1 as any, {
       type: "doughnut",
       data: { datasets: [{
         data: [3, 4, 5],
@@ -271,7 +273,7 @@
 
     let ctx2 = chartElement2.getContext('2d');
 
-    hourChart = new Chart(ctx2, {
+    hourChart = new Chart(ctx2 as any, {
       data: { datasets: [{ data: [], label: "Solves", type: 'scatter', ...common, tension: .4 }] },
       options: {
         responsive: true,
@@ -286,7 +288,7 @@
 
     let ctx3 = chartElement3.getContext('2d');
 
-    weekChart = new Chart(ctx3, {
+    weekChart = new Chart(ctx3 as any, {
       data: {
         datasets: [{ data: [], label: "Solves", type: 'line', ...common, tension: .4 }],
         labels: DAYS,
@@ -306,7 +308,7 @@
     
     let ctx4 = chartElement4.getContext('2d');
 
-    distChart = new Chart(ctx4, {
+    distChart = new Chart(ctx4 as any, {
       data: {
         datasets: [{ data: [1, 2, 3, 4, 5], label: "Solves", type: 'bar' }],
         labels: ["A", "B", "C", "D", "E"],

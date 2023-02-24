@@ -14,7 +14,7 @@ export function AXIS(): PuzzleInterface {
     palette: STANDARD_PALETTE,
     pieces: [],
     rotation: {},
-    getAllStickers: null,
+    getAllStickers: () => [],
     faceColors: [ 'y', 'o', 'g', 'w', 'r', 'b' ],
     move: () => true,
     roundParams: []

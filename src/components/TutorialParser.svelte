@@ -3,7 +3,7 @@
   import { CubeMode } from "@constants";
   import { generateCubeBundle } from "@helpers/cube-draw";
   import { getSearchParams } from "@helpers/strings";
-  import type { BlockType, CubeType, Tutorial } from "@interfaces";
+  import type { BlockType, CubeType, PuzzleInterface, Tutorial } from "@interfaces";
   import { DataService } from "@stores/data.service";
   import { onDestroy, onMount } from "svelte";
   import type { Unsubscriber } from "svelte/store";
@@ -24,7 +24,7 @@
   import DeleteIcon from '@icons/Delete.svelte';
   import DotsIcon from '@icons/DotsVertical.svelte';
 
-  export let location, puzzle, tutorial;
+  export let location: any, puzzle, tutorial;
 
   void puzzle;
   void tutorial;
@@ -33,13 +33,21 @@
   const ICON_PROPS = { width: "1.5rem", height: "1.5rem" };
 
   let blocks: BlockType[] = [];
-  let tut: Tutorial = null;
-  let block: { tab: number; content: BlockType } = null;
+  let tut: Tutorial | null = null;
+  let block: { tab: number; content: BlockType } = {
+    tab: 0,
+    content: {
+      type: 'cubes',
+      content: '',
+      cubes: []
+    }
+  };
+  
   let edition = false;
 
   // Modal
   let creatingBlock = false;
-  let mpos = null;
+  let mpos = 0;
   let toTop = false;
 
   let sub: Unsubscriber;
@@ -73,7 +81,7 @@
               case '$': {
                 if ( allCubes.length > 0 ) {
                   let lastCube = allCubes[ allCubes.length - 1 ];
-                  let newMode: CubeMode = cnt.mode ? CubeMode[ (<string> cnt.mode) ] : lastCube.mode;
+                  let newMode: CubeMode = cnt.mode ? CubeMode[ cnt.mode ] as any : lastCube.mode;
                   let cp = lastCube.clone(newMode);
                   cp.move(cnt.scramble);
                   cp.p.rotation = cnt.rotation || cp.p.rotation;
@@ -94,7 +102,7 @@
                 let p = Puzzle.fromSequence((cnt.scramble || cnt.s || ""), {
                   type: (cnt.type || cnt.t),
                   order: (Array.isArray(cnt.order)) ? cnt.order : [cnt.order],
-                  mode: ( typeof cnt.mode === 'number' ) ? cnt.mode : CubeMode[ <string> cnt.mode ],
+                  mode: ( typeof cnt.mode === 'number' ) ? cnt.mode : CubeMode[ cnt.mode ],
                   tips: cnt.tips || [],
                   view: cnt.view,
                 });
@@ -115,7 +123,7 @@
     }
 
     generateCubeBundle(allCubes, 150, false, true).then(g => {
-      let subs = g.subscribe((img: string) => {
+      let subs = g.subscribe((img: any) => {
         if ( img === '__initial__' ) return;
         if ( img === null ) {
           blocks = blocks;
@@ -125,13 +133,13 @@
     });
   }
 
-  function modalCloseHandler(data) {
+  function modalCloseHandler(data: any) {
     if ( data ) {
       data.content.type = ['title', 'subtitle', 'text', 'cubes'][ data.tab ];
-      let title = tut.content.find(b => b.type === 'title');
+      let title = tut?.content.find(b => b.type === 'title');
 
       if ( data.content.type === 'cubes' ) {
-        data.content.cubes.forEach(c => {
+        data.content.cubes.forEach((c: CubeType) => {
           if ( c.type != 'arrow' ) {
             c.rotation.x = c.rotation.x * Math.PI / 180;
             c.rotation.y = c.rotation.y * Math.PI / 180;
@@ -141,8 +149,8 @@
       }
 
       if ( !(data.tab === 0 && title) ) {
-        tut.content.splice(mpos, 0, data.content);
-        init(tut.content);
+        tut?.content.splice(mpos, 0, data.content);
+        init(tut?.content);
       }
     }
   }
@@ -176,7 +184,7 @@
     tut && dataService.addTutorial(tut);
   }
 
-  function scrollHandler(e) {
+  function scrollHandler(e: any) {
     toTop = e.target.scrollTop > 100;
   }
 
@@ -267,9 +275,9 @@
         <p class="text-justify" bind:innerHTML={block.content} contenteditable="false"></p>
       {/if}
       {#if block.type === 'cubes'}
-        {#each block.cubes as cb}
+        {#each block.cubes || [] as cb}
           {#if cb.type != 'arrow'}
-            <img class="puzzle-img-mini" src={cb['img'] || ''} alt="">
+            <img class="puzzle-img-mini" src={cb.img || ''} alt="">
           {:else}
           <Tooltip text={ cb.text } class="cursor-help">
             <ArrowRightIcon width="1.5rem" height="1.5rem" />
@@ -280,40 +288,6 @@
     </div>
   {/each}
 </div>
-  
-<!--
-<div class="container">
-    <button *ngIf="blocks.length == 0" mat-stroked-button (click)="beginAdd(0)">
-      <mat-icon svgIcon="plus"></mat-icon> Add block</button>
-  <button mat-stroked-button (click)="saveTutorial()">
-    <mat-icon svgIcon="content-save"></mat-icon> Save tutorial</button>
-</div>
-<ng-container *ngFor="let block of blocks; index as i">
-  <div class="container-mini">
-    <div class="options">
-      <mat-icon
-        *ngIf="i > 0"
-        (click)="swapBlocks(i, i-1)"
-        matTooltipPosition="above" matTooltip="Move up" matTooltipHideDelay="100"
-        matSuffix svgIcon="arrow-up"></mat-icon>
-      <mat-icon
-        *ngIf="i + 1 < blocks.length"
-        (click)="swapBlocks(i, i+1)"
-        matTooltipPosition="above" matTooltip="Move down" matTooltipHideDelay="100"
-        matSuffix svgIcon="arrow-down"></mat-icon>
-      <mat-icon
-        matTooltipPosition="above" matTooltip="Edit" matTooltipHideDelay="100"
-        matSuffix svgIcon="pencil-outline"></mat-icon>
-      <mat-icon
-        (click)="deleteBlock(i)"
-        matTooltipPosition="above" matTooltip="Delete" matTooltipHideDelay="100"
-        matSuffix svgIcon="delete"></mat-icon>  
-    </div>
-  </div>
-  <div class="plus">
-    <mat-icon (click)="beginAdd(i+1)" svgIcon="plus"></mat-icon>
-  </div>
-</ng-container> -->
 
 <Modal show={ creatingBlock } onClose={ modalCloseHandler }>
   <TabGroup>
@@ -330,107 +304,6 @@
       </section>
     </Tab>
   </TabGroup>
-  <!-- <mat-tab-group [(selectedIndex)]="block.tab">
-    <mat-tab label="Title">
-      <mat-form-field>
-        <input matInput type="text" [(ngModel)]="block.content.content" placeholder="Title...">
-      </mat-form-field>
-    </mat-tab>
-    <mat-tab label="Subtitle">
-      <mat-form-field>
-        <input matInput type="text" [(ngModel)]="block.content.content" placeholder="Subtitle...">
-      </mat-form-field>
-    </mat-tab>
-    <mat-tab label="Text">
-      <mat-form-field>
-        <textarea matInput cdkTextareaAutosize [(ngModel)]="block.content.content" placeholder="Text...">
-        </textarea>
-      </mat-form-field>
-    </mat-tab>
-    <mat-tab label="Cubes">
-      <section style="margin-top: 10px;">
-        <button (click)="addCube('cube')" mat-stroked-button>Add cube</button>
-        <button (click)="addCube('arrow')" mat-stroked-button>Add arrow</button>
-      </section>
-      <section>
-        <ng-container *ngFor="let cube of block.content.cubes; index as i">
-          <mat-expansion-panel *ngIf="cube.type == 'arrow'">
-            <mat-expansion-panel-header>
-              <mat-panel-title>{{cube.text}}</mat-panel-title>
-            </mat-expansion-panel-header>
-            <mat-form-field>
-              <input matInput type="text" [(ngModel)]="cube.text" placeholder="Arrow tooltip...">
-              <mat-icon matSuffix
-                [matTooltip]="cube.text" matTooltipHideDelay="100" svgIcon="arrow-right-thick"></mat-icon>
-            </mat-form-field>
-            <button mat-stroked-button (click)="deleteCube(i)"> Delete Arrow </button>
-          </mat-expansion-panel>
-          <mat-expansion-panel
-            (opened)="cube.raw = true" (closed)="cube.raw = false" *ngIf="cube.type != 'arrow'">
-            <mat-expansion-panel-header>
-              <mat-panel-title *ngIf="!cube.raw">
-                <img [attr.src]="cubes[i].img" alt="">
-                <span>{{cube.scramble}}</span>
-              </mat-panel-title>
-            </mat-expansion-panel-header>
-            <mat-form-field>
-              <mat-select [(value)]="cube.type">
-                <mat-option *ngFor="let p of puzzles" [value]="p.value">{{p.name}}</mat-option>
-              </mat-select>
-            </mat-form-field>
-            <mat-form-field>
-              <mat-select [(value)]="cube.mode" [disabled]="cube.type != 'rubik'">
-                <mat-option *ngFor="let mode of modes" [value]="mode[1]">{{mode[0]}}</mat-option>
-              </mat-select>
-            </mat-form-field>
-            <mat-form-field>
-              <mat-select [(value)]="cube.view">
-                <mat-option value="trans">3D</mat-option>
-                <mat-option value="2d">2D</mat-option>
-                <mat-option value="plan">Top view</mat-option>
-              </mat-select>
-            </mat-form-field>
-            <mat-form-field *ngIf="cube.view == 'plan'">
-              <input matInput type="text" [(ngModel)]="cube.tips" placeholder="tips...">
-            </mat-form-field>
-            <section>
-              Order ({{cube.order[0]}} x {{cube.order[1]}} x {{cube.order[2]}}):
-              <mat-slider
-              [(ngModel)]="cube.order[0]" min="1" max="10" step="1" thumbLabel
-              ></mat-slider>
-              <mat-slider *ngIf="cube.type == 'rubik'"
-              [(ngModel)]="cube.order[1]" min="1" max="10" step="1" thumbLabel
-              ></mat-slider>
-              <mat-slider *ngIf="cube.type == 'rubik'"
-              [(ngModel)]="cube.order[2]" min="1" max="10" step="1" thumbLabel
-              ></mat-slider>
-            </section>
-            <mat-form-field>
-              <input matInput type="text" [(ngModel)]="cube.scramble" placeholder="Scramble...">
-            </mat-form-field>
-            <section>
-              Rotation:
-              X: <mat-slider [(ngModel)]="cube.rotation.x"
-                min="-180" max="180" step="5" thumbLabel></mat-slider>
-              Y: <mat-slider [(ngModel)]="cube.rotation.y"
-                min="-180" max="180" step="5" thumbLabel></mat-slider>
-              Z: <mat-slider [(ngModel)]="cube.rotation.z"
-                min="-180" max="180" step="5" thumbLabel></mat-slider>
-            </section>
-            <img [attr.src]="cubes[i].img" alt="">
-            <section>
-              <button mat-stroked-button (click)="refreshCube(i)"> Refresh view </button>
-              <button mat-stroked-button (click)="deleteCube(i)"> Delete Cube </button>
-            </section>
-          </mat-expansion-panel>
-        </ng-container>
-      </section>
-    </mat-tab>
-  </mat-tab-group>
-  <section>
-    <button mat-button (click)="close()">Cancel</button>
-    <button mat-button (click)="close(block)">Add</button>
-  </section> -->
 </Modal>
 
 <style lang="postcss">

@@ -14,7 +14,7 @@ export function PANDORA(): PuzzleInterface {
     rotation: {},
     center: new Vector3D(0, 0, 0),
     faceVectors: [],
-    getAllStickers: null,
+    getAllStickers: () => [],
     faceColors: [ 'w', 'r', 'g', 'y', 'o', 'b' ],
     move: () => true,
     roundParams: [],
@@ -34,7 +34,7 @@ export function PANDORA(): PuzzleInterface {
     RIGHT.add( UP ).add( FRONT ),
     FRONT.add( UP ),
     FRONT.add( RIGHT )
-  ], null, vdir);
+  ], '', vdir);
 
   let corner = new Piece([0, 1, 2].map(n => cornerSticker.rotate(CENTER, RIGHT.add( UP ).add( FRONT ), ANG1 * n)));
 
@@ -45,8 +45,8 @@ export function PANDORA(): PuzzleInterface {
 
   let centerPTT = UP.add(BACK).add( UP.add(LEFT) ).div(2);
   let centerUp = new Piece([
-    new Sticker([0, 1, 2, 3].map(n => centerPTT.rotate(CENTER, UP, PI_2 * n)), null, vdir),
-    new Sticker([0, 1, 2, 3].map(n => centerPTT.rotate(CENTER, UP, PI_2 * n).mul(0.5)), null, vdir),
+    new Sticker([0, 1, 2, 3].map(n => centerPTT.rotate(CENTER, UP, PI_2 * n)), '', vdir),
+    new Sticker([0, 1, 2, 3].map(n => centerPTT.rotate(CENTER, UP, PI_2 * n).mul(0.5)), '', vdir),
   ]);
 
   let centers = [
@@ -59,7 +59,7 @@ export function PANDORA(): PuzzleInterface {
 
   let topEdgeS = new Sticker([
     centerPTT, LEFT.add(UP), centerPTT.rotate(CENTER, UP, PI_2)
-  ], null, [ UP, LEFT, FRONT ]);
+  ], '', [ UP, LEFT, FRONT ]);
 
   let topEdgeB = new Sticker([
     BACK.add(LEFT).div(2).add(UP),

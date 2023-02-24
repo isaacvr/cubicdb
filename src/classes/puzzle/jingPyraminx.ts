@@ -14,7 +14,7 @@ export function JING_PYRAMINX(): PuzzleInterface {
     pieces: [],
     rotation: {},
     faceVectors: [],
-    getAllStickers: null,
+    getAllStickers: () => [],
     faceColors: [ 'g', 'b', 'y', 'r' ],
     move: () => true,
     dims: [],
@@ -51,7 +51,7 @@ export function JING_PYRAMINX(): PuzzleInterface {
 
   jpm.toMove = function(piece: Piece, sticker: Sticker, dir: Vector3D) {
     let mc = sticker.updateMassCenter();
-    let toMovePieces = pieces.filter(p => p.direction1(mc, dir) >= 0);
+    let toMovePieces = pieces.filter((p: Piece) => p.direction1(mc, dir) >= 0);
     return {
       pieces: toMovePieces,
       ang: ANG

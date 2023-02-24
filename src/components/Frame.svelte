@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import moment from 'moment';
   import Minus from 'svelte-material-icons/Minus.svelte';
   import Close from 'svelte-material-icons/Close.svelte';
@@ -7,7 +7,7 @@
 
   const dataService = DataService.getInstance();
 
-  let date, itv;
+  let date: string, itv: NodeJS.Timer;
 
   onMount(() => {
     date = moment().format('hh:mm a');

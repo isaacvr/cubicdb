@@ -14,15 +14,16 @@ export function timer(val: number, dec?: boolean, suff?: boolean, html?: boolean
   p1.push(s);
 
   let sf = [ 's', 'm', 'h' ][ p1.length - 1 ];
+  let _html = ~~(html || 0);
 
   let newP1 = p1.map((e, p) => {
     if ( p > 0 )
-      return ['', '<span class="digit">'][~~html] + ("00" + e).substr(-2, 2) + ['', '</span>'][~~html];
-    return ['', '<span class="digit">'][~~html] + e + ['', '</span>'][~~html];
+      return ['', '<span class="digit">'][_html] + ("00" + e).substr(-2, 2) + ['', '</span>'][_html];
+    return ['', '<span class="digit">'][_html] + e + ['', '</span>'][_html];
   }).join(":");
 
   let time = (( dec || (suff && sf === 's') )
-    ? newP1 + `.${['', '<span class="digit">'][~~html] + ('00' + ms).substr(-2, 2) + ['', '</span>'][~~html]}`
+    ? newP1 + `.${['', '<span class="digit">'][_html] + ('00' + ms).substr(-2, 2) + ['', '</span>'][_html]}`
     : newP1);
 
   return time + ((suff) ? sf : '');

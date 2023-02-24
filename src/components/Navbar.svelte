@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { getContext, onMount } from 'svelte';
+  import { getContext } from 'svelte';
   import { Link, navigate } from 'svelte-routing';
   import { ROUTER } from 'svelte-routing/src/contexts';
 

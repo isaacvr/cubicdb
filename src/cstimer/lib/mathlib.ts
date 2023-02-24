@@ -1,6 +1,6 @@
 import { MersenneTwisterObject } from "./mersennetwister";
 
-export const Cnk = [];
+export const Cnk: number[][] = [];
 export const fact = [1];
 
 for (let i = 0; i < 32; ++i) {
@@ -17,7 +17,7 @@ for (let i = 0; i < 32; ++i) {
   }
 }
 
-export function circleOri(arr, a, b, c, d, ori) {
+export function circleOri(arr: number[], a: number, b: number, c: number, d: number, ori: number) {
   let temp = arr[a];
   arr[a] = arr[d] ^ ori;
   arr[d] = arr[c] ^ ori;
@@ -25,7 +25,7 @@ export function circleOri(arr, a, b, c, d, ori) {
   arr[b] = temp ^ ori;
 }
 
-export function circle(arr, ...args) {
+export function circle(arr: any[], ...args: any[]) {
   let length = args.length - 1;
   let temp = arr[args[length]];
   for (let i = length; i > 0; i -= 1) {
@@ -39,7 +39,7 @@ export function circle(arr, ...args) {
 //pow: 1, 2, 3, ...
 //ori: ori1, ori2, ..., orin, base
 // arr[perm[idx2]] = arr[perm[idx1]] + ori[idx2] - ori[idx1] + base
-export function acycle(arr, perm, pow?, ori?) {
+export function acycle(arr: number[], perm: any[], pow?: number, ori?: number[]) {
   pow = pow || 1;
   let plen = perm.length;
   let tmp = [];
@@ -56,11 +56,11 @@ export function acycle(arr, perm, pow?, ori?) {
   return acycle;
 }
 
-export function getPruning(table, index) {
+export function getPruning(table: number[], index: number) {
   return (table[index >> 3] >> ((index & 7) << 2)) & 15;
 }
 
-export function setNPerm(arr, idx, n) {
+export function setNPerm(arr: number[], idx: number, n: number) {
   let i, j;
   arr[n - 1] = 0;
   for (i = n - 2; i >= 0; --i) {
@@ -72,7 +72,7 @@ export function setNPerm(arr, idx, n) {
   }
 }
 
-export function getNPerm(arr, n) {
+export function getNPerm(arr: number[], n: number) {
   let i, idx, j;
   idx = 0;
   for (i = 0; i < n; ++i) {
@@ -84,7 +84,7 @@ export function getNPerm(arr, n) {
   return idx;
 }
 
-export function getNParity(idx, n) {
+export function getNParity(idx: number, n: number) {
   let i, p;
   p = 0;
   for (i = n - 2; i >= 0; --i) {
@@ -94,7 +94,7 @@ export function getNParity(idx, n) {
   return p & 1;
 }
 
-export function get8Perm(arr, n?, even?) {
+export function get8Perm(arr: number[], n?: number, even?: number) {
   n = n || 8;
   let idx = 0;
   let val = 0x76543210;
@@ -103,10 +103,10 @@ export function get8Perm(arr, n?, even?) {
     idx = (n - i) * idx + ((val >> v) & 7);
     val -= 0x11111110 << v;
   }
-  return even < 0 ? idx >> 1 : idx;
+  return even as any < 0 ? idx >> 1 : idx;
 }
 
-export function set8Perm(arr, idx, n?, even?) {
+export function set8Perm(arr: number[], idx: number, n?: number, even?: number) {
   n = (n || 8) - 1;
   let val = 0x76543210;
   let prt = 0;
@@ -132,7 +132,7 @@ export function set8Perm(arr, idx, n?, even?) {
   return arr;
 }
 
-export function getNOri(arr, n, evenbase) {
+export function getNOri(arr: number[], n: number, evenbase: number) {
   let base = Math.abs(evenbase);
   let idx = evenbase < 0 ? 0 : arr[0] % base;
   for (let i = n - 1; i > 0; i--) {
@@ -141,7 +141,7 @@ export function getNOri(arr, n, evenbase) {
   return idx;
 }
 
-export function setNOri(arr, idx, n, evenbase) {
+export function setNOri(arr: number[], idx: number, n: number, evenbase: number) {
   let base = Math.abs(evenbase);
   let parity = base * n;
   for (let i = 1; i < n; i++) {
@@ -155,28 +155,38 @@ export function setNOri(arr, idx, n, evenbase) {
 
 // type: 'p', 'o'
 // evenbase: base for ori, sign for even parity
-export function coord(type, length, evenbase) {
-  this.length = length;
-  this.evenbase = evenbase;
-  this.get =
+export function coord(type: string, length: number, evenbase: number) {
+  // @ts-ignore
+  let _this: any = this;
+  _this.length = length;
+  _this.evenbase = evenbase;
+  _this.get =
     type == "p"
-      ? function (arr) {
-          return get8Perm(arr, this.length, this.evenbase);
+      ? function (arr: number[]) {
+          // @ts-ignore
+          let _this: any = this;
+          return get8Perm(arr, _this.length, _this.evenbase);
         }
-      : function (arr) {
-          return getNOri(arr, this.length, this.evenbase);
+      : function (arr: number[]) {
+          // @ts-ignore
+          let _this: any = this;  
+          return getNOri(arr, _this.length, _this.evenbase);
         };
-  this.set =
+  _this.set =
     type == "p"
-      ? function (arr, idx) {
-          return set8Perm(arr, idx, this.length, this.evenbase);
+      ? function (arr: number[], idx: number) {
+          // @ts-ignore
+          let _this: any = this;
+          return set8Perm(arr, idx, _this.length, _this.evenbase);
         }
-      : function (arr, idx) {
-          return setNOri(arr, idx, this.length, this.evenbase);
+      : function (arr: number[], idx: number) {
+          // @ts-ignore
+          let _this: any = this;
+          return setNOri(arr, idx, _this.length, _this.evenbase);
         };
 }
 
-export function fillFacelet(facelets, f, perm, ori, divcol) {
+export function fillFacelet(facelets: number[][], f: number[], perm: number[], ori: number[], divcol: number) {
   for (let i = 0; i < facelets.length; i++) {
     for (let j = 0; j < facelets[i].length; j++) {
       f[facelets[i][(j + ori[i]) % facelets[i].length]] = ~~(
@@ -231,48 +241,6 @@ export function edgeMove(arr, m) {
   }
 }
 
-export function CubieCube() {
-  this.ca = [0, 1, 2, 3, 4, 5, 6, 7];
-  this.ea = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22];
-}
-
-CubieCube.EdgeMult = function (a, b, prod) {
-  for (let ed = 0; ed < 12; ed++) {
-    prod.ea[ed] = a.ea[b.ea[ed] >> 1] ^ (b.ea[ed] & 1);
-  }
-};
-
-CubieCube.CornMult = function (a, b, prod) {
-  for (let corn = 0; corn < 8; corn++) {
-    let ori = ((a.ca[b.ca[corn] & 7] >> 3) + (b.ca[corn] >> 3)) % 3;
-    prod.ca[corn] = (a.ca[b.ca[corn] & 7] & 7) | (ori << 3);
-  }
-};
-
-CubieCube.CubeMult = function (a, b, prod) {
-  CubieCube.CornMult(a, b, prod);
-  CubieCube.EdgeMult(a, b, prod);
-};
-
-CubieCube.prototype.init = function (ca, ea) {
-  this.ca = ca.slice();
-  this.ea = ea.slice();
-  return this;
-};
-
-CubieCube.prototype.isEqual = function (c) {
-  for (let i = 0; i < 8; i++) {
-    if (this.ca[i] != c.ca[i]) {
-      return false;
-    }
-  }
-  for (let i = 0; i < 12; i++) {
-    if (this.ea[i] != c.ea[i]) {
-      return false;
-    }
-  }
-  return true;
-};
 
 let cornerFacelet = [
   [8, 9, 20],
@@ -284,6 +252,7 @@ let cornerFacelet = [
   [33, 53, 42],
   [35, 17, 51],
 ];
+
 let edgeFacelet = [
   [5, 10],
   [7, 19],
@@ -299,94 +268,130 @@ let edgeFacelet = [
   [48, 14],
 ];
 
-CubieCube.prototype.toFaceCube = function (cFacelet, eFacelet) {
-  cFacelet = cFacelet || cornerFacelet;
-  eFacelet = eFacelet || edgeFacelet;
-  let ts = "URFDLB";
-  let f = [];
-  for (let i = 0; i < 54; i++) {
-    f[i] = ts[~~(i / 9)];
-  }
-  for (let c = 0; c < 8; c++) {
-    let j = this.ca[c] & 0x7; // cornercubie with index j is at
-    let ori = this.ca[c] >> 3; // Orientation of this cubie
-    for (let n = 0; n < 3; n++)
-      f[cFacelet[c][(n + ori) % 3]] = ts[~~(cFacelet[j][n] / 9)];
-  }
-  for (let e = 0; e < 12; e++) {
-    let j = this.ea[e] >> 1; // edgecubie with index j is at edgeposition
-    let ori = this.ea[e] & 1; // Orientation of this cubie
-    for (let n = 0; n < 2; n++)
-      f[eFacelet[e][(n + ori) % 2]] = ts[~~(eFacelet[j][n] / 9)];
-  }
-  return f.join("");
-};
+export class CubieCube {
+  public ca: number[];
+  public ea: number[];
 
-CubieCube.prototype.invFrom = function (cc) {
-  for (let edge = 0; edge < 12; edge++) {
-    this.ea[cc.ea[edge] >> 1] = (edge << 1) | (cc.ea[edge] & 1);
+  constructor() {
+    this.ca = [0, 1, 2, 3, 4, 5, 6, 7];
+    this.ea = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22];
   }
-  for (let corn = 0; corn < 8; corn++) {
-    this.ca[cc.ca[corn] & 0x7] = corn | ((0x20 >> (cc.ca[corn] >> 3)) & 0x18);
-  }
-  return this;
-};
 
-CubieCube.prototype.fromFacelet = function (facelet, cFacelet, eFacelet) {
-  cFacelet = cFacelet || cornerFacelet;
-  eFacelet = eFacelet || edgeFacelet;
-  let count = 0;
-  let f = [];
-  let centers =
-    facelet[4] +
-    facelet[13] +
-    facelet[22] +
-    facelet[31] +
-    facelet[40] +
-    facelet[49];
-  for (let i = 0; i < 54; ++i) {
-    f[i] = centers.indexOf(facelet[i]);
-    if (f[i] == -1) {
+  static EdgeMult(a: CubieCube, b: CubieCube, prod: CubieCube) {
+    for (let ed = 0; ed < 12; ed++) {
+      prod.ea[ed] = a.ea[b.ea[ed] >> 1] ^ (b.ea[ed] & 1);
+    }
+  }
+
+  static CornMult(a: CubieCube, b: CubieCube, prod: CubieCube) {
+    for (let corn = 0; corn < 8; corn++) {
+      let ori = ((a.ca[b.ca[corn] & 7] >> 3) + (b.ca[corn] >> 3)) % 3;
+      prod.ca[corn] = (a.ca[b.ca[corn] & 7] & 7) | (ori << 3);
+    }
+  }
+
+  static CubeMult(a: CubieCube, b: CubieCube, prod: CubieCube) {
+    CubieCube.CornMult(a, b, prod);
+    CubieCube.EdgeMult(a, b, prod);
+  }
+
+  init(ca: number[], ea: number[]): CubieCube {
+    this.ca = ca.slice();
+    this.ea = ea.slice();
+    return this;
+  }
+
+  isEqual(c: CubieCube): boolean {
+    if ( this.ca.some((e, p) => e != c.ca[p]) || this.ea.some((e, p) => e != c.ea[p]) ) {
+      return false;
+    }
+    return true;
+  }
+
+  toFaceCube(cFacelet: number[][], eFacelet: number[][]): string {
+    cFacelet = cFacelet || cornerFacelet;
+    eFacelet = eFacelet || edgeFacelet;
+    let ts = "URFDLB";
+    let f = [];
+    for (let i = 0; i < 54; i++) {
+      f[i] = ts[~~(i / 9)];
+    }
+    for (let c = 0; c < 8; c++) {
+      let j = this.ca[c] & 0x7; // cornercubie with index j is at
+      let ori = this.ca[c] >> 3; // Orientation of this cubie
+      for (let n = 0; n < 3; n++)
+        f[cFacelet[c][(n + ori) % 3]] = ts[~~(cFacelet[j][n] / 9)];
+    }
+    for (let e = 0; e < 12; e++) {
+      let j = this.ea[e] >> 1; // edgecubie with index j is at edgeposition
+      let ori = this.ea[e] & 1; // Orientation of this cubie
+      for (let n = 0; n < 2; n++)
+        f[eFacelet[e][(n + ori) % 2]] = ts[~~(eFacelet[j][n] / 9)];
+    }
+    return f.join("");
+  }
+
+  invForm(cc: CubieCube) {
+    for (let edge = 0; edge < 12; edge++) {
+      this.ea[cc.ea[edge] >> 1] = (edge << 1) | (cc.ea[edge] & 1);
+    }
+    for (let corn = 0; corn < 8; corn++) {
+      this.ca[cc.ca[corn] & 0x7] = corn | ((0x20 >> (cc.ca[corn] >> 3)) & 0x18);
+    }
+    return this;
+  }
+
+  fromFacelet(facelet: any, cFacelet: any, eFacelet: any) {
+    cFacelet = cFacelet || cornerFacelet;
+    eFacelet = eFacelet || edgeFacelet;
+    let count = 0;
+    let f = [];
+    let centers = facelet[4] + facelet[13] + facelet[22] + facelet[31] + facelet[40] + facelet[49];
+    for (let i = 0; i < 54; ++i) {
+      f[i] = centers.indexOf(facelet[i]);
+      if (f[i] == -1) {
+        return -1;
+      }
+      count += 1 << (f[i] << 2);
+    }
+    if (count != 0x999999) {
       return -1;
     }
-    count += 1 << (f[i] << 2);
-  }
-  if (count != 0x999999) {
-    return -1;
-  }
-  let col1, col2, i, j, ori;
-  for (i = 0; i < 8; ++i) {
-    for (ori = 0; ori < 3; ++ori)
-      if (f[cFacelet[i][ori]] == 0 || f[cFacelet[i][ori]] == 3) break;
-    col1 = f[cFacelet[i][(ori + 1) % 3]];
-    col2 = f[cFacelet[i][(ori + 2) % 3]];
-    for (j = 0; j < 8; ++j) {
-      if (col1 == ~~(cFacelet[j][1] / 9) && col2 == ~~(cFacelet[j][2] / 9)) {
-        this.ca[i] = j | (ori % 3 << 3);
-        break;
+    let col1, col2, i, j, ori;
+    for (i = 0; i < 8; ++i) {
+      for (ori = 0; ori < 3; ++ori)
+        if (f[cFacelet[i][ori]] == 0 || f[cFacelet[i][ori]] == 3) break;
+      col1 = f[cFacelet[i][(ori + 1) % 3]];
+      col2 = f[cFacelet[i][(ori + 2) % 3]];
+      for (j = 0; j < 8; ++j) {
+        if (col1 == ~~(cFacelet[j][1] / 9) && col2 == ~~(cFacelet[j][2] / 9)) {
+          this.ca[i] = j | (ori % 3 << 3);
+          break;
+        }
       }
     }
-  }
-  for (i = 0; i < 12; ++i) {
-    for (j = 0; j < 12; ++j) {
-      if (
-        f[eFacelet[i][0]] == ~~(eFacelet[j][0] / 9) &&
-        f[eFacelet[i][1]] == ~~(eFacelet[j][1] / 9)
-      ) {
-        this.ea[i] = j << 1;
-        break;
-      }
-      if (
-        f[eFacelet[i][0]] == ~~(eFacelet[j][1] / 9) &&
-        f[eFacelet[i][1]] == ~~(eFacelet[j][0] / 9)
-      ) {
-        this.ea[i] = (j << 1) | 1;
-        break;
+    for (i = 0; i < 12; ++i) {
+      for (j = 0; j < 12; ++j) {
+        if (
+          f[eFacelet[i][0]] == ~~(eFacelet[j][0] / 9) &&
+          f[eFacelet[i][1]] == ~~(eFacelet[j][1] / 9)
+        ) {
+          this.ea[i] = j << 1;
+          break;
+        }
+        if (
+          f[eFacelet[i][0]] == ~~(eFacelet[j][1] / 9) &&
+          f[eFacelet[i][1]] == ~~(eFacelet[j][0] / 9)
+        ) {
+          this.ea[i] = (j << 1) | 1;
+          break;
+        }
       }
     }
-  }
-  return this;
-};
+    return this;
+  };
+  
+}
 
 let moveCube = [];
 for (let i = 0; i < 18; i++) {

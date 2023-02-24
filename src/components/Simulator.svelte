@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Piece } from "@classes/puzzle/Piece";
-  import { Vector3D } from "@classes/vector3d";
+  import { CENTER, Vector3D } from "@classes/vector3d";
   import { CubeMode } from "@constants";
   import { Puzzle } from "@classes/puzzle/puzzle";
   import type { PuzzleType } from "@interfaces";
@@ -45,7 +45,7 @@
   let u: Vector3D;
   let angs: number[];
 
-  function vectorsFromCamera(vecs: any[], cam) {
+  function vectorsFromCamera(vecs: any[], cam: PerspectiveCamera) {
     return vecs.map(e => {
       let vp = new Vector3(e.x, e.y, e.z).project(cam);
       return new Vector3D(vp.x, -vp.y, 0);
@@ -76,16 +76,16 @@
     camera.updateMatrixWorld();
     camera.updateProjectionMatrix();
 
-    let pc = [piece.object.parent.userData, piece.object.userData];
-    let u = pc[1].getOrientation();
-    let vecs = pc[1].vecs.filter((v) => v.cross(u).abs() > 1e-6);
+    let pc = [piece.object.parent?.userData, piece.object.userData];
+    let u = pc[1]?.getOrientation();
+    let vecs = pc[1]?.vecs.filter((v: Vector3D) => v.cross(u).abs() > 1e-6);
     let v = fin.clone().sub(ini);
     let vv = new Vector3D(v.x, v.y, 0);
 
     let faceVectors = vectorsFromCamera(vecs, camera);
 
-    let dir: number;
-    let best: Vector3D;
+    let dir: number = 0;
+    let best: Vector3D = CENTER;
 
     faceVectors.reduce((ac, fv, p) => {
       let cr = vv.cross(fv);
@@ -106,7 +106,7 @@
     let angs: number[] = [];
     let animationTimes: number[] = [];
 
-    let toMove = cube.p.toMove(pc[0], pc[1], best);
+    let toMove = cube.p.toMove ? cube.p.toMove(pc[0], pc[1], best) : [];
     let groupToMove = Array.isArray(toMove) ? toMove : [toMove];
 
     let findPiece = (p: Piece, arr: Piece[]): boolean => {
@@ -122,7 +122,7 @@
     groupToMove.forEach((g) => {
       let pieces: Piece[] = g.pieces;
       let subBuffer: Object3D[] = [];
-      let subUserData = [];
+      let subUserData: any[] = [];
 
       group.children.forEach((p) => {
         if (findPiece(<Piece>p.userData, pieces)) {
@@ -230,12 +230,12 @@
   
   resetPuzzle();
 
-  let piece: Intersection = null;
-  let ini = null;
+  let piece: Intersection | null = null;
+  let ini: Vector2 | null = null;
   let iniM = null;
-  let mcx, mcy; // Mouse coordinates
+  let mcx: number = 0, mcy: number = 0; // Mouse coordinates
 
-  let downHandler = (event) => {
+  let downHandler = (event: MouseEvent) => {
     event.preventDefault && event.preventDefault();
 
     if (animating) {
@@ -251,7 +251,7 @@
       -(event.clientY / window.innerHeight) * 2 + 1
     );
 
-    let allStickers = [];
+    let allStickers: Object3D[] = [];
 
     group.children.forEach((c) => {
       allStickers.push(...c.children);
@@ -274,7 +274,7 @@
     controls.enabled = true;
   };
 
-  let moveHandler = (event) => {
+  let moveHandler = (event: MouseEvent) => {
     event.preventDefault && event.preventDefault();
 
     mcx = event.clientX;
@@ -286,16 +286,16 @@
 
     let fin = new Vector2(event.clientX, event.clientY);
 
-    if (piece && fin.clone().sub(ini).length() > 40) {
-      let data = drag(piece, ini, fin, cube, group, camera);
+    if (piece && fin.clone().sub(ini as Vector2).length() > 40) {
+      let data: any = drag(piece, ini as Vector2, fin, cube, group, camera);
 
-      if (data) {
+      if (data != null) {
         animBuffer = data.buffer;
         userData = data.userData;
         u = data.u;
-        angs = data.ang.map((a) => a * data.dir);
+        angs = data.ang.map((a: number) => a * data.dir);
         from = animBuffer.map((g) => g.map((e) => e.matrixWorld.clone()));
-        animationTimes = data.animationTime.map((e) => e || ANIMATION_TIME);
+        animationTimes = data.animationTime.map((e: any) => e || ANIMATION_TIME);
         animating = true;
         timeIni = performance.now();
       }
@@ -308,9 +308,9 @@
   canvas.addEventListener("pointerup", upHandler);
   canvas.addEventListener("pointermove", moveHandler);
 
-  canvas.addEventListener("touchstart", (e) => downHandler(e.touches[0]), { passive: true });
+  canvas.addEventListener("touchstart", (e) => downHandler(e.touches[0] as any), { passive: true });
   canvas.addEventListener("touchend", upHandler);
-  canvas.addEventListener("touchmove", (e) => moveHandler(e.touches[0]), { passive: true });
+  canvas.addEventListener("touchmove", (e) => moveHandler(e.touches[0] as any), { passive: true });
   document.body.appendChild(canvas);
 
   let interpolate = (data: Object3D[], from: Matrix4[], ang: number, userData: Piece[]) => {
@@ -325,11 +325,11 @@
       if (p.hasCallback) {
         p.callback(d, new Vector3(0, 0, 0), u, ang, true, Vector3);
       } else {
-        d.parent.localToWorld(d.position);
+        d.parent?.localToWorld(d.position);
         d.position.sub(c);
         d.position.applyAxisAngle(nu, ang);
         d.position.add(c);
-        d.parent.worldToLocal(d.position);
+        d.parent?.worldToLocal(d.position);
         d.rotateOnWorldAxis(nu, ang);
       }
     });
@@ -390,7 +390,7 @@
   function moveFromKeyboard(vec: Vector2) {
     if ( animating ) return;
 
-    let allStickers = [];
+    let allStickers: Object3D[] = [];
 
     group.children.forEach((c) => {
       allStickers.push(...c.children);
@@ -414,15 +414,15 @@
 
     if ( !piece ) return;
 
-    let data = drag(piece, new Vector2(mcx, mcy), vec, cube, group, camera);
+    let data: any = drag(piece, new Vector2(mcx, mcy), vec, cube, group, camera);
 
     if (data) {
       animBuffer = data.buffer;
       userData = data.userData;
       u = data.u;
-      angs = data.ang.map((a) => a * data.dir);
+      angs = data.ang.map((a: number) => a * data.dir);
       from = animBuffer.map((g) => g.map((e) => e.matrixWorld.clone()));
-      animationTimes = data.animationTime.map((e) => e || ANIMATION_TIME);
+      animationTimes = data.animationTime.map((e: any) => e || ANIMATION_TIME);
       animating = true;
       timeIni = performance.now();
     }

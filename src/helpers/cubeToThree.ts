@@ -34,7 +34,7 @@ export function cubeToThree(cube: Puzzle, F: number = 1) {
 
         let f = sticker.faces;
         for (let i = 0, maxi = f.length; i < maxi; i += 1) {
-          let face = new Face3(f[i][0], f[i][1], f[i][2], null);
+          let face = new Face3(f[i][0], f[i][1], f[i][2]);
           face.color.setHex( color );
           stickerGeometry.faces.push(face);
         }

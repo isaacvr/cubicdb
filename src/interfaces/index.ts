@@ -155,6 +155,7 @@ export interface RawPuzzle {
   rotation: any;
   order: number[];
   view: CubeView;
+  img?: string;
   raw?: any; // Intended for user specific purposes
 }
 
@@ -308,6 +309,14 @@ export interface CubeDBData {
   solves: Solve[];
 }
 
+export interface Tab {
+  name: string;
+  id: string;
+  index: number;
+  icon: any;
+  ariaLabel?: string;
+}
+
 // This is for import/export adaptors to implement
 export interface CubeDBAdaptor {
   name: string;
@@ -317,46 +326,45 @@ export interface CubeDBAdaptor {
 }
 
 export interface IPC {
-  getAlgorithms?: (args?:any) => any;
-  handleAlgorithms?: (args?:any) => any;
+  getAlgorithms: (args?:any) => any;
+  handleAlgorithms: (args?:any) => any;
   
-  getCards?: (args?:any) => any;
-  handleCards?: (args?:any) => any;
+  getCards: (args?:any) => any;
+  handleCards: (args?:any) => any;
   
-  addSolve?: (args?:any) => any;
-  getSolves?: (args?:any) => any;
-  updateSolve?: (args?:any) => any;
-  removeSolves?: (args?:any) => any;
-  handleSolves?: (args?:any) => any;
+  addSolve: (args?:any) => any;
+  getSolves: (args?:any) => any;
+  updateSolve: (args?:any) => any;
+  removeSolves: (args?:any) => any;
+  handleSolves: (args?:any) => any;
   
-  addContest?: (args?:any) => any;
-  getContests?: (args?:any) => any;
-  updateContest?: (args?:any) => any;
-  removeContests?: (args?:any) => any;
-  handleContests?: (args?:any) => any;
+  addContest: (args?:any) => any;
+  getContests: (args?:any) => any;
+  updateContest: (args?:any) => any;
+  removeContests: (args?:any) => any;
+  handleContests: (args?:any) => any;
   
-  addSession?: (args?:any) => any;
-  getSessions?: (args?:any) => any;
-  removeSession?: (args?:any) => any;
-  renameSession?: (args?:any) => any;
-  updateSession?: (args?:any) => any;
-  handleSessions?: (args?:any) => any;
+  addSession: (args?:any) => any;
+  getSessions: (args?:any) => any;
+  removeSession: (args?:any) => any;
+  renameSession: (args?:any) => any;
+  updateSession: (args?:any) => any;
+  handleSessions: (args?:any) => any;
 
-  addTutorial?: (args?:any) => any;
-  getTutorials?: (args?:any) => any;
-  updateTutorial?: (args?:any) => any;
-  handleTutorials?: (args?:any) => any;
+  addTutorial: (args?:any) => any;
+  getTutorials: (args?:any) => any;
+  updateTutorial: (args?:any) => any;
+  handleTutorials: (args?:any) => any;
 
-  minimize?: (args?:any) => any;
-  maximize?: (args?:any) => any;
-  close?: (args?:any) => any;
-  generatePDF?: (args?:any) => any;
-  zipPDF?: (args?:any) => any;
-  openFile?: (args?:any) => any;
-  revealFile?: (args?:any) => any;
-  handleAny?: (args?:any) => any;
+  minimize: (args?:any) => any;
+  maximize: (args?:any) => any;
+  close: (args?:any) => any;
+  generatePDF: (args?:any) => any;
+  zipPDF: (args?:any) => any;
+  openFile: (args?:any) => any;
+  revealFile: (args?:any) => any;
+  handleAny: (args?:any) => any;
 }
-
 
 export interface Game {
   players: { 0: string, 1: { name: string, times: number[] } }[];

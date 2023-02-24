@@ -148,7 +148,7 @@
     
     for (let i = 0, maxi = AON.length; i < maxi; i += 1) {
       let avgs = getAverageS(AON[i], $solves, $session?.settings?.calcAoX);
-      BEST[i] = avgs.reduce((b, e) => (e) ? Math.min(b, e) : b, BEST[i]);
+      BEST[i] = avgs.reduce((b, e) => (e) ? Math.min(b || 0, e) : b, BEST[i]) || 0;
       let lastAvg = avgs.pop();
       AVG[i] = ( lastAvg ) ? lastAvg : -1;
     }
@@ -568,13 +568,13 @@
     </div>
 
     <TabGroup bind:this={ tabs } class="absolute w-full" onChange={ t => $tab = t || 0 }>
-      <Tab name="" icon={ TimerIcon }>
+      <Tab name="" icon={ TimerIcon } ariaLabel="timer tab">
         <TimerTab { context }/>
       </Tab>
-      <Tab name="" icon={ ListIcon }>
+      <Tab name="" icon={ ListIcon } ariaLabel="sessions tab">
         <SessionsTab { context }/>
       </Tab>
-      <Tab name="" icon={ ChartIcon }>
+      <Tab name="" icon={ ChartIcon } ariaLabel="charts tab">
         <StatsTab { context }/>
       </Tab>
     </TabGroup>
@@ -586,7 +586,7 @@
       {#if creatingSession}
         <div class="flex">
           <Input
-            focus={ true }
+            focus={ creatingSession }
             class="bg-gray-600 text-gray-200 flex-1"  
             bind:value={ newSessionName } on:keyup={ (e) => handleInputKeyUp(e) }/>
           <div class="flex mx-2 flex-grow-0 w-10 items-center justify-center">

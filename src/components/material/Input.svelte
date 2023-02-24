@@ -42,7 +42,7 @@
 
 <div class="w-full h-10 px-2 py-2 rounded-md relative transition-all
   duration-200 border border-solid border-gray-400 wrapper
-  focus-within:shadow focus-within:shadow-blue-200
+  focus-within:shadow focus-within:shadow-blue-200 pointer-events-none
   { cl || "bg-gray-600 text-gray-300" }">
   {#if type === 'text'}
   <input class={ inpClass || '' }
@@ -65,7 +65,7 @@
 
 <style lang="postcss">
   input {
-    @apply h-full flex w-full bg-transparent border-none outline-none text-inherit;
+    @apply h-full flex w-full bg-transparent border-none outline-none text-inherit pointer-events-auto;
   }
 
   input::placeholder {

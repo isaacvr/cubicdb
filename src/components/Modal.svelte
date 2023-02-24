@@ -17,7 +17,7 @@
     e.stopPropagation();
   }
 
-  export function close(data) {
+  export function close(data: any) {
     onClose.call(null, data || null);
     show = false;
     return show;

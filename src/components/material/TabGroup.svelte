@@ -3,26 +3,28 @@
 </script>
 
 <script lang="ts">
+  import type { Tab } from '@interfaces';
+
   import { setContext } from 'svelte';
   import { writable } from 'svelte/store';
   import Button from './Button.svelte';
 
   const selectedTab = writable(0);
 
-  let tabs = [];
+  let tabs: Tab[] = [];
   let cl = '';
 
   export { cl as class };
   export let onChange = (tab?: number) => {};
 
   setContext(TABS, {
-    registerTab(tab) {
+    registerTab(tab: Tab) {
       tabs.push(tab);
       tabs.forEach((e, p) => e.index = p);
       tabs = tabs;
     },
 
-    unregisterTab(tab) {
+    unregisterTab(tab: Tab) {
       let pos = tabs.indexOf(tab);
       tabs.splice(pos, 1);
 
@@ -35,7 +37,7 @@
     selectedTab,
   });
 
-  function selectTab(tab) {
+  function selectTab(tab: Tab) {
     $selectedTab = tab.index;
     onChange(tab.index);
   }
@@ -57,7 +59,7 @@
   </section>
   <footer class="flex mt-auto border-t-2 border-t-gray-700">
     {#each tabs as tab}
-      <Button
+      <Button ariaLabel={ tab.ariaLabel }
         class="rounded-none w-full
         { tab.index === $selectedTab ? 'bg-blue-400 text-black hover:bg-blue-500 hover:bg-opacity-100' : '' }"
         on:click={ () => selectTab(tab) }

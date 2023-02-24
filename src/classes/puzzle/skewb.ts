@@ -13,7 +13,7 @@ export function SKEWB(): PuzzleInterface {
     rotation: {},
     center: new Vector3D(0, 0, 0),
     faceVectors: [],
-    getAllStickers: null,
+    getAllStickers: () => [],
     faceColors: [ 'w', 'r', 'g', 'y', 'o', 'b' ],
     move: () => true,
     roundParams: [],

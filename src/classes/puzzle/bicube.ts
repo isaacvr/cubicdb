@@ -6,7 +6,7 @@ import { Piece } from './Piece';
 import { Sticker } from './Sticker';
 import { assignColors, assignVectors, getAllStickers } from './puzzleUtils';
 
-function pc(x, y, z) {
+function pc(x: number, y: number, z: number) {
   return LEFT.add(UP).add(BACK).add(
     RIGHT.mul(2 * x / 3).add( DOWN.mul(2 * y / 3) ).add( FRONT.mul(2 * z / 3) )
   );
@@ -20,7 +20,7 @@ export function BICUBE(): PuzzleInterface {
     rotation: {},
     center: new Vector3D(0, 0, 0),
     faceVectors: [],
-    getAllStickers: null,
+    getAllStickers: () => [],
     faceColors: [ 'y', 'g', 'r', 'w', 'b', 'o' ],
     move: () => true,
     roundParams: [],

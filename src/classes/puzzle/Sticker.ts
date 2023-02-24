@@ -8,13 +8,14 @@ export class Sticker {
   _generated: Sticker;
   vecs: Vector3D[];
   boundingBox: Vector3D[];
-
   _cached_mass_center: Vector3D;
 
   constructor(pts?: Vector3D[], color?: string, vecs ?: Vector3D[]) {
     this.points = (pts || []).map(e => e.clone());
     this.oColor = color || 'w';
     this.color = this.oColor;
+    this.boundingBox = [];
+    this._cached_mass_center = CENTER;
     this.updateMassCenter();
     // this.computeBoundingBox();
     this._generator = this;

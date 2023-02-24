@@ -17,7 +17,7 @@ export function MEGAMINX(_n: number, headless?: false): PuzzleInterface {
     rotation: {},
     center: new Vector3D(0, 0, 0),
     faceVectors: [],
-    getAllStickers: null,
+    getAllStickers: () => [],
     dims: [],
     faceColors: [ "white", "yellow", "violet", "green", "red", "blue", "orange", "lblue", "lyellow", "pink", "lgreen", "gray" ],
     move: () => false,
@@ -65,7 +65,7 @@ export function MEGAMINX(_n: number, headless?: false): PuzzleInterface {
           anchors[0].add( V1.mul(i + 1) ).add( V2.mul(j) ),
           anchors[0].add( V1.mul(i + 1) ).add( V2.mul(j + 1) ),
           anchors[0].add( V1.mul(i) ).add( V2.mul(j + 1) ),
-        ], null, [ UP, n1, n2 ]);
+        ], '', [ UP, n1, n2 ]);
 
         topFace.push( new Piece([
           st,
@@ -78,7 +78,7 @@ export function MEGAMINX(_n: number, headless?: false): PuzzleInterface {
           anchors[1].add( V4.mul(n_2) ).add( V3.mul(j) ),
           anchors[1].add( V4.mul(n_2) ).add( V3.mul(j + 1) ),
           anchors[0].add( V1.mul(n_2) ).add( V2.mul(j + 1) ),
-        ], null, [ UP, n2 ]);
+        ], '', [ UP, n2 ]);
         topFace.push( new Piece([
           st,
           st.sub(st.getMassCenter()).div(2).add(st.getMassCenter().add(V11.proj(DOWN))),

@@ -4,7 +4,7 @@ import { resolve } from 'path';
 import basicSSL from '@vitejs/plugin-basic-ssl';
 
 export default defineConfig((env) => ({
-  plugins: [ svelte(), basicSSL() ],
+  plugins: [ svelte(), /*basicSSL()*/ ],
   publicDir: 'public',
   base: env.mode === 'production' ? './' : '',
   server: {

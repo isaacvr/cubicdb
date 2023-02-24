@@ -36,7 +36,7 @@
   let bundle: any[] = [];
 
   let showAnswer: boolean = false;
-  let lastAnswer: string = null;
+  let lastAnswer: string = '';
 
   let lastTime: number;
   let showModal: boolean = false;
@@ -73,8 +73,8 @@
         }
 
 
-        generateCubeBundle(puzzles, null, true).then(g => {
-          let subscr = g.subscribe((res: string[]) => {
+        generateCubeBundle(puzzles, undefined, true).then(g => {
+          let subscr = g.subscribe((res: any) => {
             if ( (res as unknown) === '__initial__' ) return;
 
             if ( res !== null ) {

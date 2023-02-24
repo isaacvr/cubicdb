@@ -46,6 +46,7 @@
 ### Settings
 
 ### Battle
+- [x] Disconnect socket on exit
 
 ### Import-Export
 - [x] Create selector for sessions to import
@@ -75,3 +76,5 @@
   - [x] DNS's
 
 ### Bugs
+- [x] Wrong cube images due to intersection
+- [x] Timer: Error on create session because of undefined variable

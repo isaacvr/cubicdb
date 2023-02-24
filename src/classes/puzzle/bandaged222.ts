@@ -14,7 +14,7 @@ export function BDG(): PuzzleInterface {
     rotation: {},
     center: new Vector3D(0, 0, 0),
     faceVectors: [],
-    getAllStickers: null,
+    getAllStickers: () => [],
     faceColors: [ 'y', 'o', 'g', 'w', 'r', 'b' ],
     move: () => true,
     roundParams: [],

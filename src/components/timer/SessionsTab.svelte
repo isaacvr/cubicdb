@@ -280,13 +280,28 @@
       </Tooltip>
   </div>
 
-  <div class:isVisible={ selected } class="fixed rounded-md p-2 top-0 opacity-0 pointer-events-none
+  <div class:isVisible={ selected }
+    class="fixed rounded-md p-2 top-0 opacity-0 pointer-events-none
     transition-all duration-300 bg-gray-700 shadow-md flex w-max max-w-full actions z-20">
-    <Button flat on:click={() => selectAll()}> <SelectAllIcon width="1.2rem" height="1.2rem" /> Select All [A] </Button>
-    <Button flat on:click={() => selectInterval()}> <ArrowExpandIcon width="1.2rem" height="1.2rem" /> Select Interval [T] </Button>
-    <Button flat on:click={() => selectInvert()}> <SelectInverseIcon width="1.2rem" height="1.2rem" /> Invert Selection [V] </Button>
-    <Button flat on:click={() => selectNone()}> <SelectOffIcon width="1.2rem" height="1.2rem" /> Cancel [C / Esc] </Button>
-    <Button flat on:click={() => deleteSelected()}> <DeleteIcon width="1.2rem" height="1.2rem" /> Delete [D] </Button>
+    <Button tabindex={ selected ? 0 : -1 } flat on:click={() => selectAll()}>
+      <SelectAllIcon width="1.2rem" height="1.2rem" /> Select All [A]
+    </Button>
+    
+    <Button tabindex={ selected ? 0 : -1 } flat on:click={() => selectInterval()}>
+      <ArrowExpandIcon width="1.2rem" height="1.2rem" /> Select Interval [T]
+    </Button>
+    
+    <Button tabindex={ selected ? 0 : -1 } flat on:click={() => selectInvert()}>
+      <SelectInverseIcon width="1.2rem" height="1.2rem" /> Invert Selection [V]
+    </Button>
+    
+    <Button tabindex={ selected ? 0 : -1 } flat on:click={() => selectNone()}>
+      <SelectOffIcon width="1.2rem" height="1.2rem" /> Cancel [C / Esc]
+    </Button>
+
+    <Button tabindex={ selected ? 0 : -1 } flat on:click={() => deleteSelected()}>
+      <DeleteIcon width="1.2rem" height="1.2rem" /> Delete [D]
+    </Button>
   </div>
 
   <Modal bind:this={ modal } bind:show={ show } onClose={ closeHandler }>

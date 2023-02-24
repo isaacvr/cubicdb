@@ -12,7 +12,7 @@ export function TETRAMINX(): PuzzleInterface {
     pieces: [],
     rotation: {},
     faceVectors: [],
-    getAllStickers: null,
+    getAllStickers: () => [],
     faceColors: [ 'g', 'b', 'y', 'r', 'g', 'b', 'y', 'r' ],
     move: () => true,
     dims: [],
@@ -63,11 +63,11 @@ export function TETRAMINX(): PuzzleInterface {
     ANCHORS[0].add( UNITS[0][0] ),
     ANCHORS[0].add( UNITS[0][0].add(UNITS[0][1]) ),
     ANCHORS[0].add( UNITS[2][1] ),
-  ], null, [ UP, fv[0], fv[1], fv[3] ]);
+  ], '', [ UP, fv[0], fv[1], fv[3] ]);
 
   let centerSticker = new Sticker([
     PU.add(UNITS[0][0]), PU.add(UNITS[0][0].mul(2)).add(UNITS[0][1]), PU.add(UNITS[0][0]).add(UNITS[0][1]),
-  ], null, [UP, fv[1], fv[2]]);
+  ], '', [UP, fv[1], fv[2]]);
 
   let topPC = new Piece([
     topSticker, ...[0, 1, 2].map(n => centerSticker.rotate(CENTER, UP, 2 * PI_3 * n))

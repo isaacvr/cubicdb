@@ -50,8 +50,9 @@ export class ScrambleParser {
   }
 
   static parseMegaminx(scramble: string) {
-    let res = [];
+    let res: number[][] = [];
     
+    // Carrot Notation
     if ( !/R|D/.test(scramble) ) {
       // console.info('Carrot Notation');
       let moves = scramble.match(/[+-]{2}|U'?/g);
@@ -77,8 +78,10 @@ export class ScrambleParser {
             break;
         }
       }
-    } else if ( /(\+\+|\-\-)/.test(scramble) ) {
-      let moves = scramble.match(/[RD](?:\+\+|--)|U'?/g);
+    } else
+    // WCA Notation
+    if ( /(\+\+|\-\-)/.test(scramble) ) {
+      let moves = scramble.match(/[RD](?:\+\+|--)|U'?/g) || [];
       for (let i = 0, maxi = moves.length; i < maxi; i += 1) {
         switch (moves[i]) {
           case "R++":
@@ -101,9 +104,9 @@ export class ScrambleParser {
             break;
         }
       }
-    } else {
-      // console.info('Old style');
-    }
+    } else
+    // Old Style Notation
+    {}
     return res;
   }
 
@@ -208,6 +211,6 @@ export class ScrambleParser {
   }
 
   static parseNNNString(scramble: string): string {
-    return (new Interpreter()).input(scramble);
+    return (new Interpreter()).input(scramble) as string;
   }
 }

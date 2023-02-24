@@ -13,7 +13,7 @@ export function SQUARE1(): PuzzleInterface {
     rotation: {},
     center: new Vector3D(0, 0, 0),
     faceVectors: [],
-    getAllStickers: null,
+    getAllStickers: () => [],
     faceColors: [ 'w', 'b', 'r', 'y', 'g', 'o' ],
     move: () => true,
     roundParams: [null, 0.95],
@@ -168,7 +168,7 @@ export function SQUARE1(): PuzzleInterface {
 
   sq1.toMove = function(piece: Piece, sticker: Sticker, dir: Vector3D) {
     let ang = (sticker.vecs[0].cross( UP ).abs() < 1e-6) ? PI_6 : PI;
-    let toMovePieces = [];
+    let toMovePieces: Piece[] = [];
 
     if ( ang > PI_6 && dir.cross(UP).abs() > 1e-6 ) {
       if ( sq1.move( [ [0, 6] ] ) ) {
