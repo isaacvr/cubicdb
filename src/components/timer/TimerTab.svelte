@@ -883,7 +883,7 @@
   }
 
   .timer {
-    font-family: 'lcd4';
+    font-family: var(--timer-font);
     user-select: none;
   }
 

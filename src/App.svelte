@@ -20,6 +20,7 @@
   import type { INotification } from '@interfaces';
   import type { Unsubscriber } from 'svelte/store';
   import { onDestroy, onMount } from 'svelte';
+    import Settings from '@components/Settings.svelte';
 
   let notService = NotificationService.getInstance();
   let notifications: INotification[] = [];
@@ -57,6 +58,7 @@
     <Route path="/simulator" component={ Simulator }/>
     <Route path="/contest" component={ Contest }/>
     <Route path="/import-export" component={ ImportExport }/>
+    <Route path="/settings" component={ Settings }/>
   </main>
 
   <!-- Notifications -->

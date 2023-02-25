@@ -3,6 +3,7 @@
   import { generateCubeBundle } from "@helpers/cube-draw";
   import type { Card } from "@interfaces";
   import { Puzzle } from "@classes/puzzle/puzzle";
+    import { CubeMode } from "@constants";
 
   let cards: Card[] = [
     {
@@ -40,14 +41,14 @@
       timer: true,
       ready: false,
       cube: '/assets/megaminx.png',
-    }, /*{
+    }, {
       title: "Settings",
       route: "/settings",
       timer: false,
       ready: false,
       cube: '/assets/logo.png',
       puzzle: new Puzzle({ type: 'rubik', mode: CubeMode.GRAY, order: [2] })
-    },*/  {
+    }, {
       title: 'Import / Export',
       route: '/import-export',
       cube: '/assets/logo.png',
