@@ -215,7 +215,7 @@
   });
 </script>
 
-<div class="main-container container-mini text-gray-400 scroll-smooth" on:scroll={ scrollHandler }>
+<div class="main-container container-mini text-gray-400 scroll-smooth mx-auto" on:scroll={ scrollHandler }>
   <span id="TOP" class="opacity-0 pointer-events-none"></span>
   {#if edition}
   <div class="container flex gap-4">
@@ -272,7 +272,7 @@
       {#if block.type === 'title'} <h1 class="text-3xl text-gray-300 text-center font-bold">{block.content}</h1> {/if}
       {#if block.type === 'subtitle'} <h2 class="text-2xl text-gray-300 font-bold text-center">{block.content}</h2> {/if}
       {#if block.type === 'text'}
-        <p class="text-justify" bind:innerHTML={block.content} contenteditable="false"></p>
+        <p class="text-justify text-lg" bind:innerHTML={block.content} contenteditable="false"></p>
       {/if}
       {#if block.type === 'cubes'}
         {#each block.cubes || [] as cb}
@@ -310,6 +310,7 @@
   .main-container {
     height: calc(100vh - 7rem);
     overflow: scroll;
+    max-width: 100ch;
   }
 
   .container-mini.cube {

@@ -1,4 +1,5 @@
 <script lang="ts">
+    import type { map } from '@helpers/math';
   import { getContext } from 'svelte';
   import { Link, navigate } from 'svelte-routing';
   import { ROUTER } from 'svelte-routing/src/contexts';
@@ -17,7 +18,12 @@
       return;
     }
 
-    let arr = ar.route._path.replace("*", ar.params['*'] || "").split('?')[0].split('/').filter((e: string) => e);
+    let arr = ar.route._path.split('?')[0].split('/').map((s: string) => {
+      if ( s === '*' ) return s.replace("*", ar.params['*'] || "");
+      if ( s[0] === ':' ) return ar.params[ s.slice(1) ];
+      return s;
+    }).slice(1);
+
     parts = [
       ...parts,
       ...arr.map((e: string, p: number) => ({
@@ -28,10 +34,6 @@
   }
 
   $: updateParts($activeRoute);
-
-  // onMount(() => {
-    // navigate('/');
-  // });
 
 </script>
 
