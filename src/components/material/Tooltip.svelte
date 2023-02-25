@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { processKey } from '@helpers/strings';
   import { onMount } from 'svelte';
 
   type Direction = 'right' | 'left' | 'top' | 'bottom';
@@ -7,6 +8,7 @@
   export let position: Direction = 'right';
   export let duration = 200;
   export let delay = 200;
+  export let hasKeybinding = false;
   let _class = '';
   export { _class as class };
 
@@ -84,7 +86,13 @@
   <div
   bind:this={tt}
   class:visible={isVisible}
-  class="tooltip">{text}</div>
+  class="tooltip">
+    { hasKeybinding ? processKey(text)[0] : text }
+
+    {#if hasKeybinding}
+      &nbsp; <span class="flex ml-auto text-yellow-400">{ processKey(text)[1] }</span>
+    {/if}
+  </div>
 </div>
 
 <style lang="postcss">
@@ -97,7 +105,7 @@
     @apply fixed bg-neutral-600 px-3 py-2 rounded-sm flex
       transition-all text-neutral-200 items-center justify-center text-center;
     width: max-content;
-    max-width: 14rem;
+    max-width: 35ch;
     transition-duration: var(--duration);
     transition-delay: var(--delay);
     left: var(--x);

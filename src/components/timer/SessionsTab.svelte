@@ -269,7 +269,7 @@
 
   <div class="absolute top-3 right-2 text-gray-400 my-3 mx-1 flex flex-col gap-2">
     {#if $solves.length > 0}
-      <Tooltip position="left" text="Delete all [D]">
+      <Tooltip position="left" text="Delete all [D]" hasKeybinding>
         <span on:click={ deleteAll } class="cursor-pointer grid place-items-center">
           <DeleteAllIcon width="1.2rem" height="1.2rem"/>
         </span>
@@ -291,23 +291,28 @@
     class="fixed rounded-md p-2 top-0 opacity-0 pointer-events-none
     transition-all duration-300 bg-gray-700 shadow-md flex w-max max-w-full actions z-20">
     <Button tabindex={ selected ? 0 : -1 } flat on:click={() => selectAll()}>
-      <SelectAllIcon width="1.2rem" height="1.2rem" /> Select All [A]
+      <!-- <SelectAllIcon width="1.2rem" height="1.2rem" />  -->
+      Select All &nbsp; <span class="flex ml-auto text-yellow-400">[A]</span>
     </Button>
     
     <Button tabindex={ selected ? 0 : -1 } flat on:click={() => selectInterval()}>
-      <ArrowExpandIcon width="1.2rem" height="1.2rem" /> Select Interval [T]
+      <!-- <ArrowExpandIcon width="1.2rem" height="1.2rem" /> -->
+      Select Interval &nbsp; <span class="flex ml-auto text-yellow-400">[T]</span>
     </Button>
     
     <Button tabindex={ selected ? 0 : -1 } flat on:click={() => selectInvert()}>
-      <SelectInverseIcon width="1.2rem" height="1.2rem" /> Invert Selection [V]
+      <!-- <SelectInverseIcon width="1.2rem" height="1.2rem" /> -->
+      Invert Selection &nbsp; <span class="flex ml-auto text-yellow-400">[V]</span>
     </Button>
     
     <Button tabindex={ selected ? 0 : -1 } flat on:click={() => selectNone()}>
-      <SelectOffIcon width="1.2rem" height="1.2rem" /> Cancel [C / Esc]
+      <!-- <SelectOffIcon width="1.2rem" height="1.2rem" /> -->
+      Cancel &nbsp; <span class="flex ml-auto text-yellow-400">[C / Esc]</span>
     </Button>
 
     <Button tabindex={ selected ? 0 : -1 } flat on:click={() => deleteSelected()}>
-      <DeleteIcon width="1.2rem" height="1.2rem" /> Delete [D]
+      <!-- <DeleteIcon width="1.2rem" height="1.2rem" /> -->
+      Delete &nbsp; <span class="flex ml-auto text-yellow-400">[D]</span>
     </Button>
   </div>
 

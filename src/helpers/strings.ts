@@ -5,3 +5,14 @@ export function getSearchParams(loc: string): Map<string, string> {
     return m;
   }, new Map());
 }
+
+// Process Keybindings signature
+// Copy scramble [Ctrl + C]
+export function processKey(str: string) {
+  let m = str.match(/\[.*\]$/);
+
+  if ( m ) {
+    return [ str.slice(0, m.index).trim(), m[0] ];
+  }
+  return [str, ''];
+}
