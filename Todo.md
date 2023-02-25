@@ -1,11 +1,9 @@
 # TODO
 ## General
-- [ ] Add notification system for feedback
 - [ ] Auto-detect stackmat
 - [ ] Add support for official stackmat
 - [ ] Test stackmat on mobile
 - [ ] Implement dashboard for different data
-- [x] Improve Select element for better UX
 
 ## Contest
 
@@ -61,4 +59,3 @@
 
 ## Bugs
 - [ ] Fix F2L 8
-- [ ] New session input does not work

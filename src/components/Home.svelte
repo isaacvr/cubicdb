@@ -3,8 +3,6 @@
   import { generateCubeBundle } from "@helpers/cube-draw";
   import type { Card } from "@interfaces";
   import { Puzzle } from "@classes/puzzle/puzzle";
-  // import { Puzzle } from "@classes/puzzle/puzzle";
-  // import { CubeMode } from "@constants";
 
   let cards: Card[] = [
     {

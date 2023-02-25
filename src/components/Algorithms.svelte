@@ -8,10 +8,12 @@
   import { DataService } from "@stores/data.service";
   import Tooltip from "./material/Tooltip.svelte";
   import { getSearchParams } from "@helpers/strings";
+    import { NotificationService } from "@stores/notification.service";
 
   export let location: Location;
   
   const dataService = DataService.getInstance();
+  const notification = NotificationService.getInstance();
 
   let lastUrl: string = '';
   let cards: Card[] = [];
@@ -166,7 +168,12 @@
 
   function copyToClipboard(s: string) {
     navigator.clipboard.writeText(s).then(() => {
-      console.log("Copied to clipboard");
+      notification.addNotification({
+        key: crypto.randomUUID(),
+        header: "Done!",
+        text: "Algorithm copied to clipboard",
+        timeout: 1000
+      });
     });
   }
 

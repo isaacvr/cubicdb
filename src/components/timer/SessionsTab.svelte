@@ -32,8 +32,10 @@
   import ChevronDoubleRightIcon from '@icons/ChevronDoubleRight.svelte';
   import ShareIcon from '@icons/Share.svelte';
   import { getAverageS } from "@helpers/statistics";
+  import { NotificationService } from "@stores/notification.service";
 
   const dataService = DataService.getInstance();
+  const notification = NotificationService.getInstance();
 
   export let context: TimerContext;
 
@@ -186,7 +188,12 @@
 
   function copyToClipboard(text: string) {
     navigator.clipboard.writeText(text).then(() => {
-      console.log("Copied to clipboard");
+      notification.addNotification({
+        key: crypto.randomUUID(),
+        header: "Done!",
+        text: "Copied to clipboard",
+        timeout: 1000
+      });
     });
   }
 
@@ -205,7 +212,7 @@
     ], [sv[0], sv[0]]);
 
     if ( Ao5.length === n ) {
-      copyToClipboard(`Ao${n}: ${ timer(Ao5[n - 1], true) } = ${ sv.map(s =>
+      copyToClipboard(`Ao${n}: ${ timer(Ao5[n - 1] as any, true) } = ${ sv.map(s =>
         s === minMax[0] || s === minMax[1] ? '(' + sTimer(s, true) + ')' : sTimer(s, true)
       ).join(', ') }`);
     }

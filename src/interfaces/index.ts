@@ -387,3 +387,17 @@ export interface StackmatState {
   noise: number;
   power: number;
 }
+
+export interface NotificationAction {
+  text: string;
+  callback: (e: CustomEvent<any>) => void;
+}
+
+export interface INotification {
+  key: string;
+  header: string;
+  text: string;
+  fixed?: boolean;
+  timeout?: number;
+  actions?: NotificationAction[];
+}

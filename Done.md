@@ -7,6 +7,9 @@
 - [x] Fix plan view
 - [x] Add scramble interpreter
 - [x] Add HTTPS for dev
+- [x] Add notification system for feedback
+- [x] Improve Select element for better UX
+
 
 ### Contest
 - [x] Use grid layout for certain scrambles
@@ -78,3 +81,4 @@
 ### Bugs
 - [x] Wrong cube images due to intersection
 - [x] Timer: Error on create session because of undefined variable
+- [x] New session input does not work

@@ -31,6 +31,7 @@
   import { createEventDispatcher, onDestroy, onMount } from 'svelte';
   import { DataService } from '@stores/data.service';
   import { stackmat } from './Stackmat';
+    import { NotificationService } from '@stores/notification.service';
  
   export let context: TimerContext;
   export let battle = false;
@@ -171,9 +172,6 @@
         (lastSolve as Solve).time = time;
         !battle && initScrambler();
       }
-      //  else if ( $state != TimerState.STOPPED ) {
-      //   $state = TimerState.CLEAN;
-      // }
     }
 
     time = sst.time_milli;
@@ -182,7 +180,6 @@
   function connectStackmat() {
     stackmat.stop();
     stackmat.init('', deviceID, true);
-    console.log('CONNECT_STACKMAT');
   }
 
   function updateDevices() {
@@ -423,7 +420,13 @@
 
   function copyToClipboard() {
     navigator.clipboard.writeText($scramble).then(() => {
-      console.log("Copied to clipboard");
+      let notification = NotificationService.getInstance();
+      notification.addNotification({
+        key: crypto.randomUUID(),
+        header: "Done!",
+        text: "Scramble copied to clipboard",
+        timeout: 1000
+      });
     });
   }
 
@@ -497,8 +500,6 @@
   let pointerInterval: NodeJS.Timer | null = null;
 
   function pointerDown(e?: any) {
-    console.log("pointerDown", e);
-
     if ( pointerInterval != null ) return;
 
     pointerInterval = setInterval(() => {
@@ -507,8 +508,6 @@
   }
   
   function pointerUp(e?: any) {
-    console.log("pointerUp", e);
-
     if ( pointerInterval != null ) {
       clearInterval(pointerInterval);
       pointerInterval = null;
