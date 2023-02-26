@@ -199,7 +199,10 @@
 
   const dataService = DataService.getInstance();
 
-  function debug(...args: any[]) { void args; }
+  function debug(...args: any[]) {
+    // console.log(...args);
+    void args;
+  }
 
   function selectNone() {
     selected = 0;

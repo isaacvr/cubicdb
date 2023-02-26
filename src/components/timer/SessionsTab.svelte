@@ -53,6 +53,8 @@
   let gSolve: Solve;
   let preview = PX_IMAGE;
   let cube;
+  let showContextMenu = false;
+  let contextMenuElement: HTMLUListElement;
   
   function closeHandler(s?: Solve) {
     if ( s ) {
@@ -91,11 +93,15 @@
     show = true;
   }
 
+  function selectSolve(s: Solve) {
+    s.selected = !s.selected;
+    selected += (s.selected) ? 1 : -1;
+    $solves = $solves;
+  }
+
   function handleClick(s: Solve) {
     if ( (performance.now() - LAST_CLICK < 200) || selected ) {
-      s.selected = !s.selected;
-      selected += (s.selected) ? 1 : -1;
-      $solves = $solves;
+      selectSolve(s);
     } else {
       setTimeout(() => performance.now() - LAST_CLICK >= 200 && editSolve(s), 200);
     }
@@ -103,13 +109,17 @@
     LAST_CLICK = performance.now();
   }
 
-  function setPenalty(p: Penalty) {
+  function setPenalty(p: Penalty, update?: boolean) {
     if ( p === Penalty.P2 ) {
       sSolve.penalty != Penalty.P2 && (sSolve.time += 2000);
     } else if ( sSolve.penalty === Penalty.P2 ) {
       sSolve.time -= 2000;
     }
     sSolve.penalty = p;
+
+    if ( update ) {
+      dataService.updateSolve(sSolve);
+    }
   }
 
   function deleteAll() {
@@ -165,7 +175,7 @@
     if ( $tab != 1 ) return;
     switch(e.code) {
       case 'KeyC':
-      case 'Escape': selectNone(); break;
+      case 'Escape': selectNone(); showContextMenu = false; break;
       case 'KeyA': selectAll(); break;
       case 'KeyT': selectInterval(); break;
       case 'KeyV': selectInvert(); break;
@@ -187,7 +197,7 @@
   }
 
   function copyToClipboard(text: string) {
-    navigator.clipboard.writeText(text).then(() => {
+    navigator.clipboard.writeText(text.replaceAll('<br>', '\n')).then(() => {
       notification.addNotification({
         key: crypto.randomUUID(),
         header: "Done!",
@@ -222,11 +232,21 @@
     all && _delete($solves)
   }
 
+  function handleContextMenu(e: MouseEvent, s: Solve) {
+    e.stopPropagation();
+    contextMenuElement.style.left = e.clientX + 'px';
+    contextMenuElement.style.top = e.clientY + 'px';
+    sSolve = s;
+    showContextMenu = true;
+  }
+
   $: updatePaginator($solves);
 
 </script>
 
-<svelte:window on:keyup={ handleKeyUp }></svelte:window>
+<svelte:window
+  on:keyup={ handleKeyUp }
+  on:click={ () => showContextMenu = false }></svelte:window>
 
 <main class="w-full h-full">
   {#if pg.pages > 1}
@@ -255,6 +275,7 @@
         hover:shadow-lg hover:bg-opacity-20
       "
       on:click={ () => handleClick(solve) }
+      on:contextmenu={ (e) => handleContextMenu(e, solve) }
       class:selected={ solve.selected }>
         <div class="font-small absolute top-0 left-2">{ moment(solve.date).format('DD/MM') }</div>
         <span class="time font-bold">{ solve.penalty === Penalty.DNF ? 'DNF' : timer(solve.time, true) }</span>
@@ -316,7 +337,7 @@
     </Button>
   </div>
 
-  <Modal bind:this={ modal } bind:show={ show } onClose={ closeHandler }>
+  <Modal bind:this={ modal } bind:show={ show } onClose={ closeHandler } class="max-w-xl">
     <div class="flex justify-between items-center text-gray-400 m-2">
       <h2 class="m-1 w-max">{ timer(sSolve.time, false, true) }
         {#if sSolve.penalty === Penalty.P2}<span class="font-small text-red-500">+2</span>{/if}
@@ -331,7 +352,7 @@
       </span>
     </div>
     <div class="algorithm-container text-gray-400 m-2">
-      <Dice5Icon /> <span>{ sSolve.scramble }</span>
+      <Dice5Icon /> <span bind:innerHTML={ sSolve.scramble } contenteditable="false" class="text-center"></span>
       <img src={ preview } class="preview col-start-1 col-end-3 mb-2 mx-auto" alt="">
       
       <CommentIcon /> <TextArea bind:value={ sSolve.comments } placeholder="Comment..."/>
@@ -361,6 +382,18 @@
       <Button class="bg-red-800 hover:bg-red-700 text-gray-400" on:click={ () => deleteAllModal.close(true) }>Delete</Button>
     </div>
   </Modal>
+
+  <!-- Context Menu -->
+  <ul
+    class="context-menu"
+    class:active={ showContextMenu }
+    bind:this={ contextMenuElement }
+    on:click={() => showContextMenu = false}>
+    <li on:click={ () => editSolve(sSolve) }>Edit</li>
+    <li on:click={ () => selectSolve(sSolve) }>Select</li>
+    <li on:click={ () => copyToClipboard(sSolve.scramble) }>Copy scramble</li>
+    <li on:click={ () => _delete([sSolve]) }>Delete</li>
+  </ul>
 </main>
 
 <style lang="postcss">
@@ -401,4 +434,19 @@
 .paginator-item.selected {
   @apply bg-violet-500 text-gray-200 bg-opacity-60 hover:bg-opacity-50;
 }
+
+.context-menu {
+  @apply w-max p-2 rounded-md shadow-md fixed top-8 left-28 bg-gray-600
+    border border-blue-800 text-gray-300 grid gap-1;
+}
+
+.context-menu:not(.active) {
+  @apply pointer-events-none opacity-0 invisible;
+}
+
+.context-menu li {
+  @apply p-1 rounded-md transition-all duration-200 cursor-pointer
+    pr-2 hover:pl-2 hover:hover:pr-1 hover:bg-gray-800;
+}
+
 </style>
