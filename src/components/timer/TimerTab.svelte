@@ -1,6 +1,6 @@
 <script lang="ts">
   /// Types
-  import { Penalty, TimerState, TIMER_INPUT, type Solve, type StackmatState, type TimerContext } from '@interfaces';
+  import { Penalty, TimerState, TIMER_INPUT, type InputContext, type Solve, type StackmatState, type TimerContext, type TimerInputHandler } from '@interfaces';
 
   /// Icons
   import Close from '@icons/Close.svelte';
@@ -30,8 +30,11 @@
   import { timer } from '@helpers/timer';
   import { createEventDispatcher, onDestroy, onMount } from 'svelte';
   import { DataService } from '@stores/data.service';
-  import { stackmat } from './Stackmat';
-    import { NotificationService } from '@stores/notification.service';
+  import { NotificationService } from '@stores/notification.service';
+  import { writable, type Writable } from 'svelte/store';
+  import { KeyboardInput } from './input-handlers/Keyboard';
+  import { StackmatInput } from './input-handlers/Stackmat';
+    import { ManualInput } from './input-handlers/Manual';
  
   export let context: TimerContext;
   export let battle = false;
@@ -45,16 +48,50 @@
 
   const dispatch = createEventDispatcher();
 
+  
+  /// CLOCK
+  const TIMER_DIGITS = /^\d{1,6}$/;
+  const TIMER_DNF = /^\s*dnf\s*$/i;
+  let time: Writable<number> = writable(0);
+  let timeStr: string = '';
+  // let showTime: boolean = true;
+  let decimals: boolean = true;
+  let solveControl = [
+    { text: "Delete", icon: Close, highlight: () => false, handler: () => {
+      dataService.removeSolves([ $solves[0] ]);
+      reset();
+    }},
+    { text: "DNF", icon: ThumbDown, highlight: (s: any) => s.penalty === Penalty.DNF, handler: () => {
+      $solves[0].penalty = $solves[0].penalty === Penalty.DNF ? Penalty.NONE : Penalty.DNF;
+      battle ? dispatch('update', $solves[0]) : dataService.updateSolve($solves[0]);
+    } },
+    { text: "+2", icon: Flag, highlight: (s: any) => s.penalty === Penalty.P2, handler: () => {
+      $solves[0].penalty = $solves[0].penalty === Penalty.P2 ? Penalty.NONE : Penalty.P2;
+      $solves[0].penalty === Penalty.P2 ? $solves[0].time += 2000 : $solves[0].time -= 2000;
+
+      if ( battle ) {
+        dispatch('update', $solves[0]);
+      } else {
+        dataService.updateSolve($solves[0]);
+      }
+    } },
+  ];
+
   /// LAYOUT
   const textColor = 'text-gray-400';
-  let isValid: boolean = true;
-  let ref: number = 0;
-  let refPrevention: number = 0;
-  let itv: any;
   let selected: number = 0;
-  let lastSolve: Solve | null = null;
+  let lastSolve: Writable<Solve | null> = writable(null);
   let prob = -1;
   let prevExpanded: boolean = false;
+  let stackmatStatus: Writable<boolean> = writable(false);
+  let inputContext: InputContext = {
+    isRunning, lastSolve, ready, session, state, time, stackmatStatus,
+    addSolve, initScrambler, reset, createNewSolve
+  };
+
+  let inputMethod: TimerInputHandler = new KeyboardInput(inputContext);
+  let deviceID = '';
+  let deviceList: string[][] = [];
 
   /// NOTES
   let showNotes = false;
@@ -96,14 +133,7 @@
 
       openDialog('settings', $session, (data: any) => {
         if ( data ) {
-          if ( $session.settings.input === 'StackMat' ) {
-            connectStackmat();
-          } else {
-            stackmat.stop();
-            if ( sstate ) {
-              sstate.on = false;
-            }
-          }
+          initInputHandler();
           dataService.updateSession($session);
           initialCalc != $session.settings.calcAoX && updateStatistics(false);
         }
@@ -111,98 +141,7 @@
     } },
   ];
 
-  /// CLOCK
-  const TIMER_DIGITS = /^\d{1,6}$/;
-  const TIMER_DNF = /^\s*dnf\s*$/i;
-  let time: number = 0;
-  let timeStr: string = '';
-  // let showTime: boolean = true;
-  let decimals: boolean = true;
-  let solveControl = [
-    { text: "Delete", icon: Close, highlight: () => false, handler: () => {
-      dataService.removeSolves([ $solves[0] ]);
-      reset();
-    }},
-    { text: "DNF", icon: ThumbDown, highlight: (s: any) => s.penalty === Penalty.DNF, handler: () => {
-      $solves[0].penalty = $solves[0].penalty === Penalty.DNF ? Penalty.NONE : Penalty.DNF;
-      battle ? dispatch('update', $solves[0]) : dataService.updateSolve($solves[0]);
-    } },
-    { text: "+2", icon: Flag, highlight: (s: any) => s.penalty === Penalty.P2, handler: () => {
-      $solves[0].penalty = $solves[0].penalty === Penalty.P2 ? Penalty.NONE : Penalty.P2;
-      $solves[0].penalty === Penalty.P2 ? $solves[0].time += 2000 : $solves[0].time -= 2000;
-
-      if ( battle ) {
-        dispatch('update', $solves[0]);
-      } else {
-        dataService.updateSolve($solves[0]);
-      }
-    } },
-  ];
-
-  /// STACKMAT
-  let deviceList: string[][] = [];
-  let deviceID = '';
-  let sstate: StackmatState;
-
-  function stackmatCallback(sst: StackmatState) {
-    if ( sstate && sstate.time_milli > sst.time_milli ) {
-      $state = TimerState.CLEAN;
-    }
-
-    sstate = sst;
-
-    if ( sst.on === false ) {
-      if ( $state != TimerState.CLEAN ) {
-        $state = TimerState.CLEAN;
-        time = 0;
-        return;
-      }
-    }
-
-    if ( sst.running ) {
-      if ( $state != TimerState.RUNNING ) { 
-        createNewSolve();
-        $state = TimerState.RUNNING;
-      }
-    } else {
-      if ( $state === TimerState.RUNNING ) {
-        $state = TimerState.STOPPED;
-        addSolve();
-        $ready = false;
-        (lastSolve as Solve).time = time;
-        !battle && initScrambler();
-      }
-    }
-
-    time = sst.time_milli;
-  }
-
-  function connectStackmat() {
-    stackmat.stop();
-    stackmat.init('', deviceID, true);
-  }
-
-  function updateDevices() {
-    stackmat.updateInputDevices().then(dev => {
-      deviceList = dev;
-    })
-  }
-
-  stackmat.setCallBack( stackmatCallback );
-
-  navigator.mediaDevices.addEventListener('devicechange', () => {
-    updateDevices();
-  });
-
-  updateDevices();
-  ///
-
   const dataService = DataService.getInstance();
-
-  function debug(...args: any[]) {
-    // console.log(...args);
-    void args;
-  }
 
   function selectNone() {
     selected = 0;
@@ -210,9 +149,9 @@
   }
 
   function addSolve(t?: number, p?: Penalty) {
-    let ls = lastSolve as Solve;
+    let ls = $lastSolve as Solve;
     ls.date = Date.now(),
-    ls.time = t || time,
+    ls.time = t || $time,
     ls.group = $group,
     ls.mode = $mode[1],
     ls.len = $mode[2],
@@ -225,22 +164,12 @@
 
     if ( battle ) {
       ls.group = -1;
-      dispatch('solve', lastSolve);
+      dispatch('solve', $lastSolve);
     } else {
       dataService.addSolve(ls);
       sortSolves();
       updateStatistics(true);
     }
-  }
-
-  function reset() {
-    debug("RESET");
-    stopTimer();
-    time = 0;
-    $state = TimerState.CLEAN;
-    $ready = false;
-    decimals = true;
-    lastSolve = null;
   }
 
   function keyDown(event: KeyboardEvent) {
@@ -250,52 +179,7 @@
     
     switch( $tab ) {
       case 0: {
-        debug("KEYDOWN EVENT: ", event);
-        if ( code === 'Space' ) {
-          if ( !isValid && $state === TimerState.RUNNING ) {
-            return;
-          }
-          isValid = false;
-
-          if ( $state === TimerState.STOPPED || $state === TimerState.CLEAN ) {
-            debug('PREVENTION');
-            $state = TimerState.PREVENTION;
-            time = 0;
-            refPrevention = performance.now();
-          } else if ( $state === TimerState.PREVENTION ) {
-            if ( performance.now() - refPrevention > 500 ) {
-              debug('READY');
-              $ready = true;
-            }
-          } else if ( $state === TimerState.RUNNING ) {
-            debug('STOP');
-            stopTimer();
-            time = ~~(performance.now() - ref);
-            addSolve();
-            $state = TimerState.STOPPED;
-            $ready = false;
-            (lastSolve as Solve).time = time;
-            !battle && initScrambler();
-          }
-        } else if ( ['KeyR', 'Escape', 'KeyS'].indexOf(code) > -1 && !battle ) {
-          if ( (code === 'KeyS' && event.ctrlKey && !$isRunning) ||
-            (code === 'Escape' && $isRunning && $session.settings.scrambleAfterCancel ) ) {
-            reset();
-            initScrambler();
-          } else {
-            reset();
-          }
-          prevExpanded = false;
-        } else if ( $state === TimerState.RUNNING ) {
-          debug('STOP');
-          stopTimer();
-          time = ~~(performance.now() - ref);
-          addSolve();
-          $state = TimerState.STOPPED;
-          $ready = false;
-          (lastSolve as Solve).time = time;
-          !battle && initScrambler();
-        }
+        inputMethod.keyDownHandler(event);
         break;
       }
       case 1: {
@@ -307,51 +191,24 @@
     }
   }
 
-  function stopTimer() {
-    if ( time != 0 ) {
-      time = performance.now() - ref;
-    }
-    clearInterval(itv);
-  }
-
-  function runTimer(direction: number, roundUp ?: boolean) {
-    itv = setInterval(() => {
-      let t = (direction < 0) ? ref - performance.now() : performance.now() - ref;
-
-      if ( roundUp ) {
-        t = Math.ceil(t / 1000) * 1000;
-      }
-
-      if ( t < -2 ) {
-        stopTimer();
-        debug('DNS');
-        $state = TimerState.STOPPED;
-        (lastSolve as Solve).penalty = Penalty.DNS;
-        return;
-      }
-
-      if ( t <= 0 ) {
-        time = 0;
-        stopTimer();
-        debug('+2');
-        (lastSolve as Solve).penalty = Penalty.P2;
-        return;
-      }
-
-      time = ~~t;
-    }, 47);
-  }
-
   function createNewSolve() {
-    lastSolve = {
+    $lastSolve = {
       date: Date.now(),
       penalty: Penalty.NONE,
       scramble: $scramble,
-      time: time,
+      time: $time,
       comments: '',
       selected: false,
       session: ""
     };
+  }
+
+  function reset() {
+    inputMethod.stopTimer();
+    $time = 0;
+    $state = TimerState.CLEAN;
+    $ready = false;
+    $lastSolve = null;
   }
 
   function keyUp(event: KeyboardEvent) {
@@ -359,66 +216,23 @@
       return;
     }
 
-    const { code } = event;
+    // const { code } = event;
 
-    isValid = true;
-    if ( code === 'Space' ) {
-      if ( $state === TimerState.PREVENTION ) {
-        if ( $ready ) {
-          createNewSolve();
-          
-          if ( $session.settings.hasInspection ) {
-            debug('INSPECTION');
-            $state = TimerState.INSPECTION;
-            decimals = false;
-            time = 0;
-            $ready = false;
-            ref = performance.now() + $session.settings.inspection * 1000;
-            runTimer(-1, true);
-          } else {
-            debug('RUNNING');
-            $state = TimerState.RUNNING;
-            $ready = false;
-            ref = performance.now();
-            decimals = true;
-            stopTimer();
+    inputMethod.keyUpHandler(event);
 
-            if ( (lastSolve as Solve).penalty === Penalty.P2 ) {
-              ref -= 2000;
-            }
-
-            runTimer(1);
-          }
-        } else {
-          debug("CLEAN");
-          $state = TimerState.CLEAN;
-        }
-      } else if ( $state === TimerState.INSPECTION ) {
-        debug('RUNNING');
-        $state = TimerState.RUNNING;
-        ref = performance.now();
-        decimals = true;
-        stopTimer();
-
-        if ( (lastSolve as Solve).penalty === Penalty.P2 ) {
-          ref -= 2000;
-        }
-
-        runTimer(1);
-      }
-    } else if ( !$isRunning && !battle ) {
-      if ( code === 'KeyE' && event.ctrlKey ) {
-        if ( !show || (show && type != 'edit-scramble') ) {
-          openDialog('edit-scramble', $scramble, (scr: string) => scr && initScrambler(scr));
-        }
-      } else if ( code === 'KeyO' && event.ctrlKey ) {
-        openDialog('old-scrambles', null, () => {});
-      } else if ( code === 'KeyC' && event.ctrlKey ) {
-        copyToClipboard();
-      } else if ( code === 'KeyN' && event.ctrlKey ) {
-        showNotes = true;
-      }
-    }
+    // if ( code != 'Space' && !$isRunning && !battle ) {
+    //   if ( code === 'KeyE' && event.ctrlKey ) {
+    //     if ( !show || (show && type != 'edit-scramble') ) {
+    //       openDialog('edit-scramble', $scramble, (scr: string) => scr && initScrambler(scr));
+    //     }
+    //   } else if ( code === 'KeyO' && event.ctrlKey ) {
+    //     openDialog('old-scrambles', null, () => {});
+    //   } else if ( code === 'KeyC' && event.ctrlKey ) {
+    //     copyToClipboard();
+    //   } else if ( code === 'KeyN' && event.ctrlKey ) {
+    //     showNotes = true;
+    //   }
+    // }
   }
 
   function copyToClipboard() {
@@ -500,36 +314,64 @@
     return TIMER_DIGITS.test(t) || TIMER_DNF.test(t) || t === '';
   }
 
-  let pointerInterval: NodeJS.Timer | null = null;
+  // let pointerInterval: NodeJS.Timer | null = null;
 
-  function pointerDown(e?: any) {
-    if ( pointerInterval != null ) return;
+  // function pointerDown(e?: any) {
+  //   if ( pointerInterval != null ) return;
 
-    pointerInterval = setInterval(() => {
-      keyDown({ code: 'Space' } as KeyboardEvent);
-    }, 4);
-  }
+  //   pointerInterval = setInterval(() => {
+  //     keyDown({ code: 'Space' } as KeyboardEvent);
+  //   }, 4);
+  // }
   
-  function pointerUp(e?: any) {
-    if ( pointerInterval != null ) {
-      clearInterval(pointerInterval);
-      pointerInterval = null;
+  // function pointerUp(e?: any) {
+  //   if ( pointerInterval != null ) {
+  //     clearInterval(pointerInterval);
+  //     pointerInterval = null;
+  //   }
+
+  //   keyUp({ code: 'Space' } as KeyboardEvent);
+  // }
+
+  function initInputHandler() {
+    inputMethod.disconnect();
+
+    if ( $session?.settings?.input === 'Manual' ) {
+      inputMethod = new ManualInput();
+    } else if ( $session?.settings?.input === 'StackMat' ) {
+      inputMethod = new StackmatInput( inputContext );
+      inputMethod.init('', deviceID, true);
+    } else {
+      inputMethod = new KeyboardInput( inputContext );
+      inputMethod.init();
     }
 
-    keyUp({ code: 'Space' } as KeyboardEvent);
+    console.log('Input init');
+  }
+
+  function updateDevices() {
+    StackmatInput.updateInputDevices().then(dev => {
+      deviceList = dev;
+    })
   }
 
   onMount(() => {
+    navigator.mediaDevices.addEventListener('devicechange', updateDevices);
+
+    initInputHandler();
     $group = 0;
     selectedGroup();
     updateStatistics(false);
+    updateDevices();
   });
 
   onDestroy(() => {
-    stackmat.stop();
+    inputMethod.disconnect();
+    navigator.mediaDevices.addEventListener('devicechange', updateDevices);
   });
 
   $: $solves.length === 0 && reset();
+  $: $session && initInputHandler();
 </script>
 
 <svelte:window
@@ -541,10 +383,10 @@
   
   <!-- on:pointerdown|self={ pointerDown }
   on:pointerup={ pointerUp } -->
+  <!-- on:touchstart|self={ pointerDown } -->
+  <!-- on:touchend={ pointerUp } -->
 <div
   class="w-full h-full { textColor }"
-  on:touchstart|self={ pointerDown }
-  on:touchend={ pointerUp }
   >
   <!-- Scramble and options -->
   <div id="scramble" class="transition-all duration-300">
@@ -605,14 +447,14 @@
         class:prevention={ $state === TimerState.PREVENTION }
         class:ready={$ready}
         hidden={$state === TimerState.RUNNING && !$session.settings.showElapsedTime}
-        >{timer(time, decimals, false)}</span>
+        >{timer($time, decimals, false)}</span>
       
       {#if $session?.settings?.input === 'StackMat' }
         <span class="text-2xl flex gap-2 items-center">
           Timer status:
           
-          <span class={ sstate?.on ? 'text-green-600' : 'text-red-600' }>
-            <svelte:component this={ sstate?.on ? WatchOnIcon : WatchOffIcon }/>
+          <span class={ $stackmatStatus ? 'text-green-600' : 'text-red-600' }>
+            <svelte:component this={ $stackmatStatus ? WatchOnIcon : WatchOffIcon }/>
           </span>
         </span>
       {/if}

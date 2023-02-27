@@ -374,6 +374,10 @@ export interface Game {
   started: boolean;
 }
 
+export type StackmatSignalHeader = 'I' | 'S' | 'L' | 'R' | 'A' | 'C' | ' ';
+
+export type StackmatCallback = (e: StackmatState) => void;
+
 export interface StackmatState {
   time_milli: number;
   unit: number;
@@ -383,7 +387,7 @@ export interface StackmatState {
   rightHand: boolean;
   running: boolean;
   unknownRunning: boolean;
-  signalHeader: 'I' | ' ' | 'S';
+  signalHeader: StackmatSignalHeader;
   noise: number;
   power: number;
 }
@@ -400,4 +404,28 @@ export interface INotification {
   fixed?: boolean;
   timeout?: number;
   actions?: NotificationAction[];
+}
+
+export interface InputContext {
+  state: Writable<TimerState>;
+  ready: Writable<boolean>;
+  session: Writable<Session>;
+  time: Writable<number>;
+  lastSolve: Writable<Solve | null>;
+  isRunning: Writable<boolean>;
+  stackmatStatus: Writable<boolean>;
+
+  reset: () => void;
+  initScrambler: () => void;
+  addSolve: () => void;
+  createNewSolve: () => void;
+}
+
+export interface TimerInputHandler {
+  init: (...params: any[]) => void;
+  disconnect: () => void;
+  stopTimer: () => void;
+  keyUpHandler: (e: KeyboardEvent) => void;
+  keyDownHandler: (e: KeyboardEvent) => void;
+  state?: StackmatState;
 }
