@@ -5,7 +5,16 @@ import { genSettings, identifyPuzzle } from "../common";
 
 const PUZZLE_CODE: Map<string, string> = new Map([
   ["333", "333"],
-
+  ["222", "222so"],
+  ["444", "444wca"],
+  ["555", "555wca"],
+  ["666", "666wca"],
+  ["777", "777wca"],
+  ["clock", "clkwca"],
+  ["mega", "mgmp"],
+  ["pyra", "pyrso"],
+  ["skewb", "skbso"],
+  ["sq1", "sqrs"],
 ]);
 
 export class TwistyTimer implements CubeDBAdaptor {
@@ -46,7 +55,7 @@ export class TwistyTimer implements CubeDBAdaptor {
       }
 
       let cat: string = parts.shift()?.slice(1, -1) || '';
-      let session: string = parts.shift()?.slice(1, -1) || '';
+      let session: string = cat + '_' + (parts.shift()?.slice(1, -1) || '');
       let time = +(parts.shift()?.slice(1, -1) || 0);
       let date = +(parts.shift()?.slice(1, -1) || 0);
       let scramble: string = parts.shift()?.slice(1, -1) || '';
