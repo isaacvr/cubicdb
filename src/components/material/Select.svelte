@@ -28,7 +28,7 @@
     let pos = findValuePosition();
 
     if ( pos > -1 ) {
-      optionList.children[pos].scrollIntoView({ inline: 'center', block: 'center' });
+      optionList.children[pos * 2].scrollIntoView({ inline: 'center', block: 'center' });
       tick().then(() => {
         (optionList.firstElementChild as HTMLButtonElement)?.focus();
       });
@@ -57,17 +57,17 @@
 
 <svelte:window on:click|capture={() => showOptions = false}></svelte:window>
 
-<main class={`select-container max-w-[13rem] relative cursor-pointer border border-solid border-gray-400 rounded-md ` + (cl || '')}>
+<main class={`select-container relative cursor-pointer border border-solid border-gray-400 h-max-10 rounded-md ` + (cl || '')}>
   <button tabindex="0"
     on:click|self|stopPropagation={handleClick}
     class="
-      bg-gray-700 text-gray-200 p-2 h-10 rounded-md select-none pr-8
-      whitespace-nowrap text-ellipsis w-full text-left">{
+      bg-gray-700 text-gray-200 p-2 flex items-center rounded-md select-none pr-8
+      whitespace-nowrap text-ellipsis w-full h-full text-left overflow-hidden">{
     items.some((a, p, i) => transform(a, p, i) === value)
       ? label( items.find((e, p, i) => transform(e, p, i) === value) )
       : placeholder
   }</button>
-  <div class="expand w-5 h-5 absolute right-2 top-3 pointer-events-none">
+  <div class="expand w-5 h-full absolute right-2 top-0 flex my-auto pointer-events-none">
     <ExpandIcon width="100%" height="100%"/>
   </div>
   <div class="options
@@ -81,7 +81,7 @@
         <hr class="h-0 w-full border-0 border-t border-gray-500">
       {/if}
       <button
-        class="option text-left transition-all duration-200 hover:bg-gray-800 p-1 rounded-md"
+        class="option text-gray-300 text-left transition-all duration-200 hover:bg-gray-800 p-1 rounded-md"
         class:selected={ transform(item, pos, items) === value }
         on:click={ () => {
           showOptions = false;
@@ -94,7 +94,7 @@
 
 <style lang="postcss">
   .select-container {
-    min-width: 10rem;
+    max-width: 13rem;
   }
 
   .options.visible {

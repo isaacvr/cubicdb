@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { CubeDBData, Session, Solve } from "@interfaces";
+  import type { CubeDBData, Language, Session, Solve } from "@interfaces";
   import Button from "@components/material/Button.svelte";
   import Select from "@components/material/Select.svelte";
   import { onDestroy, onMount } from "svelte";
@@ -7,8 +7,12 @@
   import { MODE_MAP } from "@constants";
   import { timer } from "@helpers/timer";
   import { DataService } from "@stores/data.service";
-  import type { Unsubscriber } from "svelte/store";
+  import { derived, type Readable, type Unsubscriber } from "svelte/store";
   import Checkbox from "@components/material/Checkbox.svelte";
+  import { globalLang } from "@stores/language.service";
+  import { getLanguage } from "@lang/index";
+
+  let localLang: Readable<Language> = derived(globalLang, ($lang) => getLanguage( $lang ));
 
   let dataService = DataService.getInstance();
 
@@ -99,28 +103,28 @@
 </script>
 
 <main class="container-mini mx-auto max-w-4xl bg-white bg-opacity-10 rounded-md text-gray-400 p-4">
-  <h1 class="text-center text-3xl text-gray-300"> Import/Export </h1>
+  <h1 class="text-center text-3xl text-gray-300">{ $localLang.IMPORT_EXPORT.title }</h1>
   <section class="flex items-center gap-2 justify-center my-4">
-    <Button on:click={ () => isImport = true } class="bg-{ isImport ? "green" : "gray"}-800 text-gray-300">Import</Button>
-    <Button on:click={ () => isImport = false } class="bg-{ !isImport ? "green" : "gray"}-800 text-gray-300">Export</Button>
+    <Button on:click={ () => isImport = true } class="bg-{ isImport ? "green" : "gray"}-800 text-gray-300">{ $localLang.IMPORT_EXPORT.import }</Button>
+    <Button on:click={ () => isImport = false } class="bg-{ !isImport ? "green" : "gray"}-800 text-gray-300">{ $localLang.IMPORT_EXPORT.export }</Button>
   </section>
 
   {#if isImport}
     <section>
       <div class="flex mx-auto items-center gap-2 justify-center">
-        <span>From:</span>
+        <span>{ $localLang.IMPORT_EXPORT.from }:</span>
         <Select bind:value={parser} items={ Adaptors } label={ p => p.name } transform={ (_, pos) => pos  }/>
         
         {#if Adaptors[parser].modes.length > 1}
           <Select bind:value={mode} items={ Adaptors[parser].modes } transform={ (_, pos) => pos  }/>
         {/if}
 
-        <Button class="bg-purple-800 text-gray-300" file on:files={ e => processFiles(e.detail) }>Select file</Button>
+        <Button class="bg-purple-800 text-gray-300" file on:files={ e => processFiles(e.detail) }>{ $localLang.IMPORT_EXPORT.selectFile }</Button>
         
         {#if cubeData}
-          <Button on:click={ selectAll } class="bg-orange-800 text-gray-300">Select All</Button>
-          <Button on:click={ selectNone } class="bg-orange-800 text-gray-300">Select None</Button>
-          <Button on:click={ save } class="bg-green-800 text-gray-300">Save</Button>
+          <Button on:click={ selectAll } class="bg-orange-800 text-gray-300">{ $localLang.IMPORT_EXPORT.selectAll }</Button>
+          <Button on:click={ selectNone } class="bg-orange-800 text-gray-300">{ $localLang.IMPORT_EXPORT.selectNone }</Button>
+          <Button on:click={ save } class="bg-green-800 text-gray-300">{ $localLang.IMPORT_EXPORT.save }</Button>
         {/if}
       </div>
     </section>
@@ -130,7 +134,7 @@
         {#each cubeData.sessions as s}
           <li class="flex gap-1 mr-2">
             <Checkbox bind:checked={ s.editing }/>
-            <Button on:click={ () => console.log(sSession = s) }
+            <Button on:click={ () => sSession = s }
               class="p-2 bg-blue-700 bg-opacity-40 text-gray-300 rounded-md font-bold shadow-md cursor-pointer
               { s === sSession ? "bg-opacity-100 underline" : "" }
               "
@@ -140,7 +144,7 @@
       </ul>
       <ul class="text-center mt-4 max-h-96 overflow-scroll">
         {#if sSession}
-          <span class="text-xl text-gray-300">Total: {fSolves.length} {fSolves.length > 50 ? '(showing only 50)' : ''}</span>
+          <span class="text-xl text-gray-300">{ $localLang.IMPORT_EXPORT.total }: {fSolves.length} {fSolves.length > 50 ? '(' + $localLang.IMPORT_EXPORT.showingOnly50  + ')' : ''}</span>
         {/if}
         {#each fSolves.slice(0, 50) as s, i}
           <li class="grid grid-cols-6 border-none border-b border-gray-500">
@@ -154,7 +158,6 @@
     {/if}
   {:else}
     <section>
-
     </section>
   {/if}
 </main>

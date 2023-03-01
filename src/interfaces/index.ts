@@ -379,6 +379,7 @@ export type StackmatSignalHeader = 'I' | 'S' | 'L' | 'R' | 'A' | 'C' | ' ';
 export type StackmatCallback = (e: StackmatState) => void;
 
 export interface StackmatState {
+  device: string;
   time_milli: number;
   unit: number;
   on: boolean;
@@ -428,4 +429,173 @@ export interface TimerInputHandler {
   keyUpHandler: (e: KeyboardEvent) => void;
   keyDownHandler: (e: KeyboardEvent) => void;
   state?: StackmatState;
+}
+
+export interface Language {
+  name: string;
+  code: string;
+  global: {
+    // Notification
+    done: string;
+    scrambleCopied: string;
+    copiedToClipboard: string;
+  }
+  NAVBAR: {
+    home: string;
+    routeMap: (route: string) => string;
+  },
+  HOME: {
+    tutorials: string;
+    algorithms: string;
+    timer: string;
+    battle: string;
+    pll_recognition: string;
+    simulator: string;
+    settings: string;
+    importExport: string;
+    contest: string;
+  },
+  SETTINGS: {
+    title: string;
+    language: string;
+    appFont: string;
+    timerFont: string;
+    save: string;
+    reset: string;
+
+    // Notifications
+    saved: string;
+    settingsSaved: string;
+  },
+  ALGORITHMS: {
+    solution: string;
+    moves: string;
+    case: string;
+    algorithms: string;
+  },
+  TIMER: {
+    // TimerTab
+    stackmatStatus: string;
+    cross: string;
+    nextAo5: string;
+    best: string;
+    worst: string;
+    average: string;
+    deviation: string;
+    count: string;
+
+    cancel: string;
+    save: string;
+
+    scramble: string;
+    time: string;
+
+    inputMethod: string;
+    device: string;
+    inspection: string;
+    showTime: string;
+    genImage: string;
+    canHurtPerformance: string;
+    refreshScramble: string;
+    aoxCalculation: string;
+    sequential: string;
+    groupOfX: string;
+
+    delete: string;
+
+    reloadScramble: string;
+    edit: string;
+    useOldScramble: string;
+    copyScramble: string;
+    notes: string;
+    settings: string;
+
+    // Global Timer settings
+    manageSessions: string;
+    selectSession: string;
+    selectGroup: string;
+    selectMode: string;
+    selectFilter: string;
+    addNewSession: string;
+
+    // Sessions Tab
+    deleteAll: string;
+    shareAo5: string;
+    shareAo12: string;
+
+    selectAll: string;
+    selectInterval: string;
+    invertSelection: string;
+
+    comment: string;
+    noPenalty: string;
+
+    removeAllSolves: string;
+    select: string;
+
+    // Stats Tab
+    totalTime: string;
+    clean: string;
+    solve: string;
+    timeDistribution: string;
+    timeChartLabels: string[];
+    
+    solves: string;
+    hourDistribution: string;
+    weekDistribution: string;
+    histogram: string;
+  },
+  PLL: {
+    title: string;
+    topFace: string;
+    cases: string;
+    next: string;
+    completed: string;
+    tryAgain: string;
+    
+    colorNeutral: string;
+    white: string;
+    yellow: string;
+    red: string;
+    orange: string;
+    blue: string;
+    green: string;
+
+    case: string;
+    expected: string;
+    answer: string;
+    time: string;
+
+    // Modal
+    keyBindings: string;
+    singleLetter: string;
+    singleLetterBlock: string;
+
+    twoVariant: string;
+    twoVariantBlock: string;
+
+    gPerms: string;
+    gPermsBlock: string;
+  },
+  SIMULATOR: {
+    settings: string;
+
+    puzzleSettings: string;
+    puzzle: string;
+    order: string;
+    cancel: string;
+    setPuzzle: string;
+  },
+  IMPORT_EXPORT: {
+    title: string;
+    import: string;
+    export: string;
+    from: string;
+    selectFile: string;
+    selectAll: string;
+    selectNone: string;
+    save: string;
+    total: string;
+    showingOnly50: string;
+  }
 }

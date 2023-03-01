@@ -18,11 +18,11 @@
   let notService = NotificationService.getInstance();
 
   function close () {
-    if ( closed || fixed ) return;
+    if ( closed ) return;
 
     closed = true;
-    clearTimeout(tm);
-    
+    !fixed && clearTimeout(tm);
+
     setTimeout(() => notService.removeNotification(key), 300);
   }
 
@@ -32,7 +32,9 @@
       fixed = false;
     }
 
-    tm = setTimeout(close, timeout);
+    if ( !fixed ) {
+      tm = setTimeout(close, timeout);
+    }
   });
 </script>
 

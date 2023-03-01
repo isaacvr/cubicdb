@@ -16,11 +16,12 @@
   import ImportExport from '@components/import-export/ImportExport.svelte';
   import Battle from '@components/Battle.svelte';
   import Notification from '@components/Notification.svelte';
+  import Settings from '@components/Settings.svelte';
   import { NotificationService } from '@stores/notification.service';
   import type { INotification } from '@interfaces';
   import type { Unsubscriber } from 'svelte/store';
   import { onDestroy, onMount } from 'svelte';
-    import Settings from '@components/Settings.svelte';
+  import { globalLang } from '@stores/language.service';
 
   let notService = NotificationService.getInstance();
   let notifications: INotification[] = [];
@@ -35,6 +36,11 @@
     nSub = notService.notificationSub.subscribe((v) => {
       notifications = v;
     });
+
+    let lang = localStorage.getItem('language') || 'en-EN';
+    localStorage.setItem('language', lang);
+    
+    globalLang.update(() => lang);
   });
 
   onDestroy(() => {

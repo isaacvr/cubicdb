@@ -1,7 +1,7 @@
 <script lang="ts">
   import { createEventDispatcher, onDestroy, onMount } from 'svelte';
   import { generateCubeBundle } from '@helpers/cube-draw';
-  import { writable, type Unsubscriber } from 'svelte/store';
+  import { derived, writable, type Readable, type Unsubscriber } from 'svelte/store';
   
   /// Modules
   import * as all from '@cstimer/scramble';
@@ -35,18 +35,22 @@
   import DeleteIcon from '@icons/Delete.svelte';
   
   /// Types
-  import { TimerState, AverageSetting, type Solve, type Session, Penalty, type Statistics, type TimerContext, type PuzzleOptions } from '@interfaces';
+  import { TimerState, AverageSetting, type Solve, type Session, Penalty, type Statistics, type TimerContext, type PuzzleOptions, type Language } from '@interfaces';
   import { Puzzle } from '@classes/puzzle/puzzle';
   import { PX_IMAGE } from '@constants';
   import { ScrambleParser } from '@classes/scramble-parser';
   import { getAverageS } from '@helpers/statistics';
   import { infinitePenalty } from '@helpers/timer';
+  import { globalLang } from '@stores/language.service';
+  import { getLanguage } from '@lang/index';
   
   export let battle = false;
   export let useScramble = '';
   export let useMode = '';
   export let genScramble = true;
   export let enableKeyboard = true;
+
+  let localLang: Readable<Language> = derived(globalLang, ($lang) => getLanguage( $lang ));
 
   const INITIAL_STATISTICS: Statistics = {
     best: { value: 0, better: false },
@@ -528,33 +532,33 @@
   {:else}
     <div class="fixed w-max -translate-x-1/2 left-1/2 z-10 grid grid-flow-col
       gap-2 top-12 items-center justify-center text-gray-400">
-      <Tooltip text="Manage sessions">
+      <Tooltip text={ $localLang.TIMER.manageSessions }>
         <span on:click={ editSessions } class="cursor-pointer"><TuneIcon width="1.2rem" height="1.2rem"/> </span>
       </Tooltip>
       
-      <Select
-        placeholder="Select session..."
+      <Select class="min-w-[8rem]"
+        placeholder={ $localLang.TIMER.selectSession }
         value={ $session } items={ sessions } label={ (s) => (s || {}).name } transform={ e => e }
         onChange={ (g) => { $session = g; selectedSession(); } }
       />
 
       {#if $tab === 0}
-        <Select
-          placeholder="Select group"
+        <Select class="min-w-[8rem]"
+          placeholder={ $localLang.TIMER.selectGroup }
           value={ groups[$group] } items={ groups } transform={ e => e }
           onChange={ (g, p) => { $group = p || 0; selectedGroup(); } }
         />
 
-        <Select
-          placeholder={['Select mode']}
+        <Select class="min-w-[8rem]"
+          placeholder={[ $localLang.TIMER.selectMode ]}
           value={ $mode } items={ modes } label={ e => e[0] } transform={ e => e }
           onChange={ (g) => { $mode = g; selectedMode(); } }
           />
       {/if}
 
       {#if filters.length > 0 && $tab === 0}
-        <Select
-          placeholder="Select filter"
+        <Select class="min-w-[8rem]"
+          placeholder={ $localLang.TIMER.selectFilter }
           value={ $prob } items={ filters } label={ e => e.toUpperCase() } transform={ (i, p) => p }
           onChange={ (i, p) => { $prob = p || 0; selectedFilter(); } }
         />
@@ -581,7 +585,7 @@
   {/if}
 
   <Modal show={ openEdit } onClose={ handleClose }>
-    <Button on:click={ openAddSession }> <PlusIcon /> Add new Session </Button>
+    <Button on:click={ openAddSession }> <PlusIcon /> { $localLang.TIMER.addNewSession } </Button>
     <div class="grid">
       {#if creatingSession}
         <div class="flex">

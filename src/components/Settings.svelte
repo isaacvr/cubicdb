@@ -1,9 +1,20 @@
 <script lang="ts">
+  import type { Language } from "@interfaces";
+  import { getLanguage, LANGUAGES } from "@lang/index";
+  import { globalLang } from "@stores/language.service";
   import { NotificationService } from "@stores/notification.service";
+    import { onDestroy } from "svelte";
+  import { derived, type Readable } from "svelte/store";
   import Button from "./material/Button.svelte";
   import Select from "./material/Select.svelte";
 
   const notService = NotificationService.getInstance();
+
+  let finalLang = $globalLang;
+
+  let localLang: Readable<Language> = derived(globalLang, ($lang, set) => {
+    set( getLanguage( $lang ) );
+  });
 
   const FONTS = [
     { name: 'Ubuntu', value: 'Ubuntu' },
@@ -18,12 +29,15 @@
   const DEFAULT_APP_FONT = 'Ubuntu';
   const DEFAULT_TIMER_FONT = 'CQMono';
 
+  let language = $globalLang;
   let appFont = localStorage.getItem('app-font') || DEFAULT_APP_FONT;
   let timerFont = localStorage.getItem('timer-font') || DEFAULT_TIMER_FONT;
 
   function save() {
     localStorage.setItem('app-font', appFont);
     localStorage.setItem('timer-font', timerFont);
+    localStorage.setItem('language', language);
+    finalLang = language;
     document.documentElement.style.setProperty('--app-font', appFont);
     document.documentElement.style.setProperty('--timer-font', timerFont);
 
@@ -41,14 +55,32 @@
     timerFont = DEFAULT_TIMER_FONT;
     save();
   }
+
+  function setLanguage() {
+    $globalLang = language;
+  }
+
+  onDestroy(() => {
+    $globalLang = finalLang;
+  });
 </script>
 
 <main class="container-mini text-gray-400 bg-white bg-opacity-10 m-4 p-4 rounded-md">
-  <h1 class="text-center text-gray-300 text-3xl">Settings</h1>
+  <h1 class="text-center text-gray-300 text-3xl">{ $localLang.SETTINGS.title }</h1>
+  <hr/>
+
+  <!-- Language -->
+  <h2 class="text-center text-green-300 text-2xl mb-4 mt-4">{ $localLang.SETTINGS.language }</h2>
+  <div class="flex items-center justify-center gap-4">
+    <Select items={ LANGUAGES } bind:value={ language }
+      label={(e) => e[1].name}
+      transform={(e) => e[1].code}
+      onChange={ setLanguage }/>
+  </div>
   <hr/>
 
   <!-- App font -->
-  <h2 class="text-center text-blue-300 text-2xl mb-4 mt-4">Application font</h2>
+  <h2 class="text-center text-blue-300 text-2xl mb-4 mt-4">{ $localLang.SETTINGS.appFont }</h2>
   <div class="flex items-center justify-center gap-4">
     <Select items={ FONTS } bind:value={ appFont } label={(e) => e.name}/>
     <p
@@ -58,7 +90,7 @@
   <hr/>
 
   <!-- Timer font -->
-  <h2 class="text-center text-green-300 text-2xl mb-4 mt-4">Timer font</h2>
+  <h2 class="text-center text-green-300 text-2xl mb-4 mt-4">{ $localLang.SETTINGS.timerFont }</h2>
   <div class="flex items-center justify-center gap-4">
     <Select items={ FONTS } bind:value={ timerFont } label={(e) => e.name}/>
     <p
@@ -69,8 +101,8 @@
   
   <!-- Actions -->
   <div class="actions flex gap-4 items-center justify-center mt-8">
-    <Button class="text-gray-300 bg-green-700" on:click={ save }>Save</Button>
-    <Button class="text-gray-300 bg-orange-700" on:click={ reset }>Reset</Button>
+    <Button class="text-gray-300 bg-green-700" on:click={ save }>{ $localLang.SETTINGS.save }</Button>
+    <Button class="text-gray-300 bg-orange-700" on:click={ reset }>{ $localLang.SETTINGS.reset }</Button>
   </div>
 </main>
 

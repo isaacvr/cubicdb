@@ -836,7 +836,7 @@ let randGen = (function () {
   };
 })();
 
-export function rndEl(x) {
+export function rndEl(x: any[]) {
   return x[~~(randGen.random() * x.length)];
 }
 

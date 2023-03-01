@@ -3,10 +3,10 @@
   import { CENTER, Vector3D } from "@classes/vector3d";
   import { CubeMode } from "@constants";
   import { Puzzle } from "@classes/puzzle/puzzle";
-  import type { PuzzleType } from "@interfaces";
+  import type { Language, PuzzleType } from "@interfaces";
   import { TrackballControls } from "three/examples/jsm/controls/TrackballControls";
   import { puzzleReg } from "@classes/puzzle/puzzleRegister";
-  import { onDestroy } from "svelte";
+  import { onDestroy, onMount } from "svelte";
   import SettingsIcon from '@icons/Settings.svelte';
   import Tooltip from "@components/material/Tooltip.svelte";
   import Modal from "@components/Modal.svelte";
@@ -18,7 +18,12 @@
     PlaneBufferGeometry, PointLight, Raycaster, Scene, Vector2, Vector3, WebGLRenderer,
     type Intersection
   } from "three";
-    import { cubeToThree } from "@helpers/cubeToThree";
+  import { cubeToThree } from "@helpers/cubeToThree";
+  import { derived, type Readable } from "svelte/store";
+  import { getLanguage } from "@lang/index";
+  import { globalLang } from "@stores/language.service";
+
+  let localLang: Readable<Language> = derived(globalLang, ($lang) => getLanguage( $lang ));
 
   const ANIMATION_TIME = 200; /// Default animation time: 200ms
 
@@ -188,16 +193,12 @@
     let children = scene.children;
     scene.remove(...children);
 
-    cube = Puzzle.fromSequence(scramble, {
+    cube = new Puzzle({
       type: selectedPuzzle,
       view: "trans",
       order: Array.isArray(order) ? order : [order, order, order],
       mode: CubeMode.NORMAL,
     });
-
-    if (sc && cube.p.scramble) {
-      cube.p.scramble();
-    }
 
     let ctt = cubeToThree(cube);
     group = ctt.group;
@@ -453,10 +454,15 @@
 
   let img = '';
 
+  onMount(() => {
+    document.body.style.overflow = 'hidden';
+  });
+
   onDestroy(() => {
     renderer.domElement.remove();
     renderer.dispose();
     controls.dispose();
+    document.body.style.overflow = 'auto';
   });
 
   /// GUI
@@ -477,53 +483,28 @@
 
 <img src={img} alt="">
 
-<Tooltip text="Settings [S]" position="left"
+<Tooltip hasKeybinding text={ $localLang.SIMULATOR.settings } position="left"
   on:click={ showGUI }
   class="absolute right-4 text-gray-400 z-20 hover:text-gray-300 transition-all duration-100 cursor-pointer">
   <SettingsIcon width="1.2rem" height="1.2rem"/>
 </Tooltip>
 
 <Modal bind:show={ GUIExpanded }>
-  <h1 class="text-3xl text-gray-300 text-center m-4">Puzzle settings</h1>
+  <h1 class="text-3xl text-gray-300 text-center m-4">{ $localLang.SIMULATOR.puzzleSettings }</h1>
   <div class="grid grid-cols-2 gap-4 place-items-center text-gray-400">
-    <span>Puzzle</span>
+    <span>{ $localLang.SIMULATOR.puzzle }</span>
     <Select
       items={puzzles} label={e => e.name} bind:value={ selectedPuzzle }
       onChange={ setOrder } class="text-gray-400 w-full max-w-[unset]"/>
       
     {#if hasOrder}
-      <span>Order</span>
+      <span>{ $localLang.SIMULATOR.order }</span>
       <Input type="number" min={1} bind:value={order} class="bg-white bg-opacity-10 text-gray-400"/>
     {/if}
 
-    <Button on:click={ hideGUI }>Cancel</Button>
+    <Button on:click={ hideGUI }>{ $localLang.SIMULATOR.cancel }</Button>
     <Button
       class="bg-green-700 hover:bg-green-600 text-gray-300"
-      on:click={ () => {resetPuzzle(); hideGUI(); }}>Set puzzle</Button>
+      on:click={ () => {resetPuzzle(); hideGUI(); }}>{ $localLang.SIMULATOR.setPuzzle }</Button>
   </div>
 </Modal>
-
-<!-- <table class="cnt" [class.expanded]="GUIExpanded">
-  <tr>
-    <td>Puzzle</td>
-    <td>
-      <mat-select [(value)]="selectedPuzzle" (selectionChange)="setOrder()">
-        <mat-option *ngFor="let p of puzzles" [value]="p.value">{{p.name}}</mat-option>
-      </mat-select>
-    </td>
-  </tr>
-  <tr>
-    <td>Order</td>
-    <td>
-      <mat-form-field>
-        <input [disabled]="!hasOrder" matInput [(ngModel)]="order" type="number" min="1" value="3">
-      </mat-form-field>
-    </td>
-  </tr>
-  <tr>
-    <td><button mat-stroked-button (click)="resetPuzzle()">Set</button></td>
-    <td><button mat-stroked-button (click)="resetPuzzle(true)">Scramble</button></td>
-    <td><button mat-stroked-button (click)="hideGUI()">Done</button></td>
-  </tr>
-  <tr class="tune"><td colspan="2"> <mat-icon (click)="showGUI()" svgIcon="tune"></mat-icon> </td></tr>
-</table> -->

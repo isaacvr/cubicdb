@@ -37,11 +37,9 @@ export async function generateCubeBundle(
         }
       }
 
-      console.log('ALL_INCUBE: ', all, inCube);
       observer.update(() => e.data);
 
       if ( n >= cubes.length || all ) {
-        console.log('ENDING');
         observer.update(() => null);
         imageWorker.terminate();
       }

@@ -1,6 +1,6 @@
 <script lang="ts">
   /// Types
-  import { Penalty, TimerState, TIMER_INPUT, type InputContext, type Solve, type StackmatState, type TimerContext, type TimerInputHandler } from '@interfaces';
+  import { Penalty, TimerState, TIMER_INPUT, type InputContext, type Language, type Solve, type StackmatState, type TimerContext, type TimerInputHandler } from '@interfaces';
 
   /// Icons
   import Close from '@icons/Close.svelte';
@@ -31,14 +31,18 @@
   import { createEventDispatcher, onDestroy, onMount } from 'svelte';
   import { DataService } from '@stores/data.service';
   import { NotificationService } from '@stores/notification.service';
-  import { writable, type Writable } from 'svelte/store';
+  import { derived, writable, type Readable, type Writable } from 'svelte/store';
   import { KeyboardInput } from './input-handlers/Keyboard';
   import { StackmatInput } from './input-handlers/Stackmat';
-    import { ManualInput } from './input-handlers/Manual';
+  import { ManualInput } from './input-handlers/Manual';
+  import { globalLang } from '@stores/language.service';
+  import { getLanguage } from '@lang/index';
  
   export let context: TimerContext;
   export let battle = false;
   export let enableKeyboard = true;
+
+  let localLang: Readable<Language> = derived(globalLang, ($lang) => getLanguage( $lang ));
 
   const {
     state, ready, tab, solves, allSolves, session, Ao5, stats, scramble,
@@ -47,7 +51,7 @@
   } = context;
 
   const dispatch = createEventDispatcher();
-
+  const notification = NotificationService.getInstance();
   
   /// CLOCK
   const TIMER_DIGITS = /^\d{1,6}$/;
@@ -215,33 +219,34 @@
     if ( $tab || !enableKeyboard ) {
       return;
     }
-
-    // const { code } = event;
-
+    
     inputMethod.keyUpHandler(event);
-
-    // if ( code != 'Space' && !$isRunning && !battle ) {
-    //   if ( code === 'KeyE' && event.ctrlKey ) {
-    //     if ( !show || (show && type != 'edit-scramble') ) {
-    //       openDialog('edit-scramble', $scramble, (scr: string) => scr && initScrambler(scr));
-    //     }
-    //   } else if ( code === 'KeyO' && event.ctrlKey ) {
-    //     openDialog('old-scrambles', null, () => {});
-    //   } else if ( code === 'KeyC' && event.ctrlKey ) {
-    //     copyToClipboard();
-    //   } else if ( code === 'KeyN' && event.ctrlKey ) {
-    //     showNotes = true;
-    //   }
-    // }
+    
+    const { code } = event;
+    
+    if ( code != 'Space' && !$isRunning && !battle ) {
+      if ( code === 'KeyE' && event.ctrlKey ) {
+        if ( !show || (show && type != 'edit-scramble') ) {
+          openDialog('edit-scramble', $scramble, (scr: string) => scr && initScrambler(scr));
+        }
+      } else if ( code === 'KeyO' && event.ctrlKey ) {
+        openDialog('old-scrambles', null, () => {});
+      } else if ( code === 'KeyC' && event.ctrlKey ) {
+        copyToClipboard();
+      } else if ( code === 'KeyN' && event.ctrlKey ) {
+        showNotes = true;
+      } else if ( code === 'KeyS' && event.ctrlKey ) {
+        initScrambler();
+      }
+    }
   }
 
   function copyToClipboard() {
     navigator.clipboard.writeText($scramble).then(() => {
-      let notification = NotificationService.getInstance();
       notification.addNotification({
         key: crypto.randomUUID(),
-        header: "Done!",
-        text: "Scramble copied to clipboard",
+        header: $localLang.global.done,
+        text: $localLang.global.scrambleCopied,
         timeout: 1000
       });
     });
@@ -352,7 +357,17 @@
   function updateDevices() {
     StackmatInput.updateInputDevices().then(dev => {
       deviceList = dev;
-    })
+    });
+  }
+
+  function updateTexts() {
+    solveControl[0].text = $localLang.TIMER.delete;
+    options[0].text = `${ $localLang.TIMER.reloadScramble } [Ctrl + S]`;
+    options[1].text = `${ $localLang.TIMER.edit } [Ctrl + E]`;
+    options[2].text = `${ $localLang.TIMER.useOldScramble } [Ctrl + O]`;
+    options[3].text = `${ $localLang.TIMER.copyScramble } [Ctrl + C]`;
+    options[4].text = `${ $localLang.TIMER.notes } [Ctrl + N]`;
+    options[5].text = `${ $localLang.TIMER.settings }`;
   }
 
   onMount(() => {
@@ -372,6 +387,7 @@
 
   $: $solves.length === 0 && reset();
   $: $session && initInputHandler();
+  $: $localLang, updateTexts();
 </script>
 
 <svelte:window
@@ -451,7 +467,7 @@
       
       {#if $session?.settings?.input === 'StackMat' }
         <span class="text-2xl flex gap-2 items-center">
-          Timer status:
+          { $localLang.TIMER.stackmatStatus }:
           
           <span class={ $stackmatStatus ? 'text-green-600' : 'text-red-600' }>
             <svelte:component this={ $stackmatStatus ? WatchOnIcon : WatchOffIcon }/>
@@ -483,12 +499,12 @@
       class:isVisible={$hintDialog && !$isRunning}>
 
       <table class="inline-block align-middle transition-all duration-300" class:nshow={!$hint}>
-        <tr><td>Cross</td> <td>{$cross}</td></tr>
-        <tr><td>XCross</td> <td>{$xcross}</td></tr>
+        <tr><td>{ $localLang.TIMER.cross }</td> <td class="text-yellow-500">{$cross}</td></tr>
+        <tr><td>XCross</td> <td class="text-yellow-500">{$xcross}</td></tr>
         {#if $Ao5}
           <tr>
-            <td>Next Ao5</td>
-            <td>Between { timer($Ao5[0], false, true) } and { timer($Ao5[1], false, true) }</td>
+            <td>{ $localLang.TIMER.nextAo5 }</td>
+            <td class="text-yellow-500">[{ timer($Ao5[0], false, true) }, { timer($Ao5[1], false, true) }]</td>
           </tr>
         {/if}
       </table>
@@ -508,27 +524,27 @@
       <div class="left absolute select-none bottom-0 left-0 ">
         <table class="ml-3">
           <tr class:better={$stats.best.better && $stats.counter.value > 0 && $stats.best.value > -1}>
-            <td>Best:</td>
+            <td>{ $localLang.TIMER.best }:</td>
             {#if !$stats.best.value} <td>N/A</td> {/if}
             {#if $stats.best.value} <td>{ timer($stats.best.value, false, true) }</td> {/if}
           </tr>
           <tr>
-            <td>Worst:</td>
+            <td>{ $localLang.TIMER.worst }:</td>
             {#if !$stats.worst.value} <td>N/A</td> {/if}
             {#if $stats.worst.value} <td>{ timer($stats.worst.value, false, true) }</td> {/if}
           </tr>
           <tr class:better={$stats.avg.better && $stats.counter.value > 0}>
-            <td>Average:</td>
+            <td>{ $localLang.TIMER.average }:</td>
             {#if !$stats.avg.value} <td>N/A</td> {/if}
             {#if $stats.avg.value} <td>{ timer($stats.avg.value, false, true) }</td> {/if}
           </tr>
           <tr>
-            <td>Deviation:</td>
+            <td>{ $localLang.TIMER.deviation }:</td>
             {#if !$stats.dev.value} <td>N/A</td> {/if}
             {#if $stats.dev.value} <td>{ timer($stats.dev.value, false, true) }</td> {/if}
           </tr>
           <tr>
-            <td>Count:</td>
+            <td>{ $localLang.TIMER.count }:</td>
             <td>{ $stats.count.value }</td>
           </tr>
           <tr class:better={$stats.Mo3.better && $stats.counter.value > 0 && $stats.Mo3.value > -1}>
@@ -580,15 +596,15 @@
           class="bg-gray-600 text-gray-200"
           bind:value={ modalData }/>
         <div class="flex w-full justify-center my-2">
-          <Button on:click={() => modal.close()}>Cancel</Button>
-          <Button on:click={() => modal.close( modalData.trim() )}>Save</Button>
+          <Button on:click={() => modal.close()}>{ $localLang.TIMER.cancel }</Button>
+          <Button on:click={() => modal.close( modalData.trim() )}>{ $localLang.TIMER.save }</Button>
         </div>
       {/if}
 
       {#if type === 'old-scrambles'}
         <div class="grid grid-cols-4 w-full text-center">
-          <h2 class="col-span-3">Scramble</h2>
-          <h2 class="col-span-1">Time</h2>
+          <h2 class="col-span-3">{ $localLang.TIMER.scramble }</h2>
+          <h2 class="col-span-1">{ $localLang.TIMER.time }</h2>
           {#each $solves as s }
             <button tabindex="0" class="
               col-span-3 cursor-pointer hover:text-blue-400 my-2 text-left
@@ -601,10 +617,10 @@
 
       {#if type === 'settings'}
         <section class="flex gap-4 items-center mb-4">
-          Input method: <Select bind:value={ modalData.settings.input } items={ TIMER_INPUT } transform={ (e) => e }/>
+          { $localLang.TIMER.inputMethod }: <Select bind:value={ modalData.settings.input } items={ TIMER_INPUT } transform={ (e) => e }/>
         </section>
         {#if modalData.settings.input === 'StackMat'}
-          <section class="mb-4"> Device: <Select class="max-w-full"
+          <section class="mb-4"> { $localLang.TIMER.device }: <Select class="max-w-full"
             bind:value={ deviceID } items={ deviceList }
             label={ e => e[1] } transform={e => e[0]}/>
           </section>
@@ -612,32 +628,33 @@
         <section>
           <Checkbox
             bind:checked={ modalData.settings.hasInspection }
-            class="w-5 h-5" label="Inspection"/>
+            class="w-5 h-5" label={ $localLang.TIMER.inspection }/>
           
           <Input type="number" class="mt-2 bg-gray-700 hidden-markers { modalData.settings.hasInspection ? 'text-gray-200' : '' }"
             disabled={ !modalData.settings.hasInspection } bind:value={ modalData.settings.inspection }
             min={5} max={60} step={5}/>
         </section>
         <section>
-          <Checkbox bind:checked={ modalData.settings.showElapsedTime } class="w-5 h-5 my-2" label="Show time when running"/>
+          <Checkbox bind:checked={ modalData.settings.showElapsedTime } class="w-5 h-5 my-2" label={ $localLang.TIMER.showTime }/>
         </section>
         <section>
-          <Checkbox bind:checked={ modalData.settings.genImage } class="w-5 h-5 my-2" label="Generate image from scramble"/>
-          <i class="text-sm">(This can hurt performance for complex cubes)</i>
+          <Checkbox bind:checked={ modalData.settings.genImage } class="w-5 h-5 my-2" label={ $localLang.TIMER.genImage }/>
+          <i class="text-sm">({ $localLang.TIMER.canHurtPerformance })</i>
         </section>
         <section>
-          <Checkbox bind:checked={ modalData.settings.scrambleAfterCancel } class="w-5 h-5 my-2" label="Refresh scramble after cancel"/>
+          <Checkbox bind:checked={ modalData.settings.scrambleAfterCancel }
+            class="w-5 h-5 my-2" label={ $localLang.TIMER.refreshScramble }/>
         </section>
         <section class="mt-4 flex gap-4">
-          AoX calculation:
+          { $localLang.TIMER.aoxCalculation }:
           <div class="flex gap-2 items-center">
             <Toggle checked={ !!modalData.settings.calcAoX } on:change={ (v) => modalData.settings.calcAoX = ~~v.detail.value }/>
-            <span class="ml-3">{ ['Sequential', 'Group of X'][ ~~modalData.settings.calcAoX ] }</span>
+            <span class="ml-3">{ [$localLang.TIMER.sequential, $localLang.TIMER.groupOfX ][ ~~modalData.settings.calcAoX ] }</span>
           </div>
         </section>
         <section class="flex mt-4">
-          <Button flat on:click={ () => modal.close() }>Cancel</Button>
-          <Button flat on:click={ () => modal.close(true) }>Save</Button>
+          <Button flat on:click={ () => modal.close() }>{ $localLang.TIMER.cancel }</Button>
+          <Button flat on:click={ () => modal.close(true) }>{ $localLang.TIMER.save }</Button>
         </section>
       {/if}
     </div>
@@ -666,6 +683,8 @@
     font-size: 1.5em;
     width: calc(100% - 240px);
     word-spacing: 10px;
+    max-height: 16rem;
+    overflow: scroll;
   }
 
   #scramble span.battle {

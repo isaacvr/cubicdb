@@ -77,8 +77,10 @@ let edges = {
 	'7edge': ["3r r 3b b",["3b' b' 3r' r'","3b' b' 3r' U2 r U2 r U2 r U2 r","3b' b' r' U2 3r U2 3r U2 3r U2 3r","3b' b' r2 U2 3r U2 3r U2 3r U2 3r U2 r"],["u","3u","3d","d"]]
 };
 
-function megascramble(type, length) {
+function megascramble(type: string, length: number) {
+	// @ts-ignore
 	let value = args[type];
+
 	switch (value.length) {
 		case 1: return mega(value[0], [""], length);
 		case 2: return mega(value[0], value[1], length);
@@ -86,12 +88,14 @@ function megascramble(type, length) {
 	}
 }
 
-function edgescramble(type, length) {
+function edgescramble(type: string, length: number) {
+	// @ts-ignore
 	let value = edges[type];
 	return edge(value[0], value[1], value[2], length);
 }
 
-function formatScramble(type, length) {
+function formatScramble(type: string, length: string) {
+	// @ts-ignore
 	let value = args2[type].replace(/%l/g, length).replace(/%c/g, '["","2","\'"]');
 	return fScramble(value);
 }
@@ -99,6 +103,60 @@ function formatScramble(type, length) {
 for (let i in args) {
 	regScrambler(i, megascramble);
 }
+
+// Register other puzzles
+// let scrambleMap = [
+// 	['333', '333'],
+// 	['222', '222so'],
+// 	['444', '444wca'],
+// 	['555', '555wca'],
+// 	['pyra', 'pyrso'],
+// 	['skewb', 'skbso'],
+// 	['mega', 'mgmp'],
+// 	['sq1', 'sqrs'],
+// 	['clock', 'clkwca'],
+// 	['666', '666wca'],
+// 	['777', '777wca'],
+
+// 	['pyram', 'pyrso'],
+// 	['minx', 'mgmp'],
+// 	['333mirror', '333'],
+// 	['222oh', '222so'],
+// 	['333oh', '333oh'],
+// 	['333bl', '333ni'],
+
+// 	['3x3x3', '333'],
+// 	['2x2x2', '222so'],
+// 	['4x4x4', '444wca'],
+// 	['5x5x5', '555wca'],
+// 	['Pyraminx', 'pyrso'],
+// 	['Skewb', 'skbso'],
+// 	['Megaminx', 'mgmp'],
+// 	['Square-1', 'sqrs'],
+// 	['Clock', 'clkwca'],
+// 	['6x6x6', '666wca'],
+// 	['7x7x7', '777wca'],
+// 	['3x3x3 BLD', '333ni'],
+// 	['4x4x4 BLD', '444bld'],
+// 	['5x5x5 BLD', '555bld'],
+
+// 	['Rubik\'s Clock', 'clkwca'],
+// 	['3x3x3 Blindfolded', '333ni'],
+// 	['4x4x4 Blindfolded', '444bld'],
+// 	['5x5x5 Blindfolded', '555bld'],
+// 	['3x3x3 One-Handed', '333oh'],
+// 	['3x3x3 Multi-Blindfolded', 'r3ni'],
+// 	['3x3x3 With Feet', '333ft'],
+// 	['3x3x3 Fewest Moves', '333fm'],
+
+
+// ];
+
+// for (let i = 0, maxi = scrambleMap.length; i < maxi; i += 1) {
+// 	regScrambler(scrambleMap[i][0], function(type: string, length: number) {
+// 		megascramble(scrambleMap[i][1], length)
+// 	});
+// }
 
 for (let i in args2) {
 	regScrambler(i, formatScramble);
@@ -108,12 +166,12 @@ for (let i in edges) {
 	regScrambler(i, edgescramble);
 }
 
-function cubeNNN(type, len) {
+function cubeNNN(type: string, len: number) {
 	let size = len;
 	if (size <= 1) {
 		return "N/A";
 	}
-	let data = [[], [], []];
+	let data: string[][] = [[], [], []];
 	for (let i = 0; i < len - 1; i++) {
 		if (i % 2 == 0) {
 			data[0].push((i < 4 ? '' : ~~(i / 2 + 1)) + (i < 2 ? 'U' : 'u'));
@@ -131,7 +189,7 @@ function cubeNNN(type, len) {
 
 regScrambler('cubennn', cubeNNN);
 
-function edge(start, end, moves, len) {
+function edge(start: string, end: any[], moves: any[], len: number) {
 	let u=0,d=0,movemis=[];
 	let triggers=[["R","R'"],["R'","R"],["L","L'"],["L'","L"],["F'","F"],["F","F'"],["B","B'"],["B'","B"]];
 	let ud=["U","D"];
@@ -144,8 +202,9 @@ function edge(start, end, moves, len) {
 	for (let i=0; i<len; i++) {
 		// apply random moves
 		let done = false;
+		let v = "";
+		
 		while (!done) {
-			var v = "";
 			for (let j=0; j<moves.length; j++) {
 				let x = rn(4);
 				movemis[j] += x;

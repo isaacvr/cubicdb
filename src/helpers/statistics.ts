@@ -103,8 +103,8 @@ export function decimateT<T>(arr: T[], width: number): T[] {
   return new Array(MAXP).fill(0).map((e, p) => arr[Math.round(p * (arr.length - 1) / (MAXP - 1))]);
 }
 
-export function decimateN(arr: number[], width: number): number[] {
-  return decimateT<number>(arr, width);
+export function decimateN(arr: (number | null)[], width: number): (number | null)[] {
+  return decimateT<number | null>(arr, width);
 }
 
 export function decimate(arr: Solve[], width: number): Solve[] {

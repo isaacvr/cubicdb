@@ -66,7 +66,7 @@ export function formatScramble(str) {
       if (p1[0] == '[') {
         args = JSON.parse(p1);
       }
-      return scramblers.get(args[0]).apply(this, args);
+      return scramblers.get( args[0].toString() ).apply(this, args);
     } else if (match[0] == '#') {
       return mega.apply(this, JSON.parse('[' + p1 + ']'));
     } else {

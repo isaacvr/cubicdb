@@ -1,6 +1,6 @@
 <script lang="ts">
   import moment from "moment";
-  import { AverageSetting, Penalty, type PuzzleOptions, type Solve, type TimerContext } from "@interfaces";
+  import { AverageSetting, Penalty, type Language, type PuzzleOptions, type Solve, type TimerContext } from "@interfaces";
   import { DataService } from "@stores/data.service";
   import { infinitePenalty, sTimer, timer } from "@helpers/timer";
   import Modal from "@components/Modal.svelte";
@@ -22,10 +22,6 @@
   import CloseIcon from '@icons/Close.svelte';
   import SendIcon from '@icons/Send.svelte';
   import DeleteAllIcon from '@icons/DeleteSweepOutline.svelte';
-  import SelectAllIcon from '@icons/SelectAll.svelte';
-  import ArrowExpandIcon from '@icons/ArrowExpandHorizontal.svelte';
-  import SelectInverseIcon from '@icons/SelectInverse.svelte';
-  import SelectOffIcon from '@icons/SelectOff.svelte';
   import ChevronLeftIcon from '@icons/ChevronLeft.svelte';
   import ChevronRightIcon from '@icons/ChevronRight.svelte';
   import ChevronDoubleLeftIcon from '@icons/ChevronDoubleLeft.svelte';
@@ -33,6 +29,11 @@
   import ShareIcon from '@icons/Share.svelte';
   import { getAverageS } from "@helpers/statistics";
   import { NotificationService } from "@stores/notification.service";
+  import { derived, type Readable } from "svelte/store";
+  import { globalLang } from "@stores/language.service";
+  import { getLanguage } from "@lang/index";
+
+  let localLang: Readable<Language> = derived(globalLang, ($lang) => getLanguage( $lang ));
 
   const dataService = DataService.getInstance();
   const notification = NotificationService.getInstance();
@@ -200,8 +201,8 @@
     navigator.clipboard.writeText(text.replaceAll('<br>', '\n')).then(() => {
       notification.addNotification({
         key: crypto.randomUUID(),
-        header: "Done!",
-        text: "Copied to clipboard",
+        header: $localLang.global.done,
+        text: $localLang.global.copiedToClipboard,
         timeout: 1000
       });
     });
@@ -290,18 +291,18 @@
 
   <div class="absolute top-3 right-2 text-gray-400 my-3 mx-1 flex flex-col gap-2">
     {#if $solves.length > 0}
-      <Tooltip position="left" text="Delete all [D]" hasKeybinding>
+      <Tooltip position="left" text={ $localLang.TIMER.deleteAll + " [D]"} hasKeybinding>
         <span on:click={ deleteAll } class="cursor-pointer grid place-items-center">
           <DeleteAllIcon width="1.2rem" height="1.2rem"/>
         </span>
       </Tooltip>
       {/if}
-      <Tooltip position="left" text="Share Ao5">
+      <Tooltip position="left" text={ $localLang.TIMER.shareAo5 }>
         <span on:click={ () => shareAoX(5) } class="cursor-pointer grid place-items-center">
           <ShareIcon width="1.2rem" height="1.2rem"/>
         </span>
       </Tooltip>
-      <Tooltip position="left" text="Share Ao12">
+      <Tooltip position="left" text={ $localLang.TIMER.shareAo12 }>
         <span on:click={ () => shareAoX(12) } class="cursor-pointer grid place-items-center">
           <ShareIcon width="1.2rem" height="1.2rem"/>
         </span>
@@ -313,27 +314,27 @@
     transition-all duration-300 bg-gray-700 shadow-md flex w-max max-w-full actions z-20">
     <Button tabindex={ selected ? 0 : -1 } flat on:click={() => selectAll()}>
       <!-- <SelectAllIcon width="1.2rem" height="1.2rem" />  -->
-      Select All &nbsp; <span class="flex ml-auto text-yellow-400">[A]</span>
+      { $localLang.TIMER.selectAll } &nbsp; <span class="flex ml-auto text-yellow-400">[A]</span>
     </Button>
     
     <Button tabindex={ selected ? 0 : -1 } flat on:click={() => selectInterval()}>
       <!-- <ArrowExpandIcon width="1.2rem" height="1.2rem" /> -->
-      Select Interval &nbsp; <span class="flex ml-auto text-yellow-400">[T]</span>
+      { $localLang.TIMER.selectInterval } &nbsp; <span class="flex ml-auto text-yellow-400">[T]</span>
     </Button>
     
     <Button tabindex={ selected ? 0 : -1 } flat on:click={() => selectInvert()}>
       <!-- <SelectInverseIcon width="1.2rem" height="1.2rem" /> -->
-      Invert Selection &nbsp; <span class="flex ml-auto text-yellow-400">[V]</span>
+      { $localLang.TIMER.invertSelection } &nbsp; <span class="flex ml-auto text-yellow-400">[V]</span>
     </Button>
     
     <Button tabindex={ selected ? 0 : -1 } flat on:click={() => selectNone()}>
       <!-- <SelectOffIcon width="1.2rem" height="1.2rem" /> -->
-      Cancel &nbsp; <span class="flex ml-auto text-yellow-400">[C / Esc]</span>
+      { $localLang.TIMER.cancel } &nbsp; <span class="flex ml-auto text-yellow-400">[C / Esc]</span>
     </Button>
 
     <Button tabindex={ selected ? 0 : -1 } flat on:click={() => deleteSelected()}>
       <!-- <DeleteIcon width="1.2rem" height="1.2rem" /> -->
-      Delete &nbsp; <span class="flex ml-auto text-yellow-400">[D]</span>
+      { $localLang.TIMER.delete } &nbsp; <span class="flex ml-auto text-yellow-400">[D]</span>
     </Button>
   </div>
 
@@ -355,12 +356,12 @@
       <Dice5Icon /> <span bind:innerHTML={ sSolve.scramble } contenteditable="false" class="text-center"></span>
       <img src={ preview } class="preview col-start-1 col-end-3 mb-2 mx-auto" alt="">
       
-      <CommentIcon /> <TextArea bind:value={ sSolve.comments } placeholder="Comment..."/>
+      <CommentIcon /> <TextArea bind:value={ sSolve.comments } placeholder={ $localLang.TIMER.comment }/>
     </div>
     <div class="mt-2 flex">
-      <Button flat on:click={ () => { _delete([ sSolve ]); modal.close()} }><DeleteIcon /> Delete</Button>
-      <Button flat on:click={ () => modal.close() }><CloseIcon /> Cancel</Button>
-      <Button flat on:click={ () => modal.close(sSolve) } class="mr-2"><SendIcon /> Save</Button>
+      <Button flat on:click={ () => { _delete([ sSolve ]); modal.close()} }><DeleteIcon /> { $localLang.TIMER.delete }</Button>
+      <Button flat on:click={ () => modal.close() }><CloseIcon /> { $localLang.TIMER.cancel }</Button>
+      <Button flat on:click={ () => modal.close(sSolve) } class="mr-2"><SendIcon /> { $localLang.TIMER.save }</Button>
       <Button flat
         class={ sSolve.penalty === Penalty.P2 ? 'text-red-500' : '' }
         on:click={ () => setPenalty(Penalty.P2) }>+2</Button>
@@ -371,15 +372,15 @@
       
         <Button flat
         class={ sSolve.penalty === Penalty.NONE ? 'text-green-500' : '' }
-        on:click={ () => setPenalty(Penalty.NONE) }>No Penalty</Button>
+        on:click={ () => setPenalty(Penalty.NONE) }>{ $localLang.TIMER.noPenalty }</Button>
     </div>
   </Modal>
 
   <Modal bind:this={ deleteAllModal } bind:show={ showDeleteAll } onClose={ deleteAllHandler }>
-    <h1 class="text-gray-400 mb-4 text-lg">Do you want to remove all solves?</h1>
+    <h1 class="text-gray-400 mb-4 text-lg">{ $localLang.TIMER.removeAllSolves }</h1>
     <div class="flex justify-evenly">
-      <Button on:click={ () => deleteAllModal.close() }>Cancel</Button>
-      <Button class="bg-red-800 hover:bg-red-700 text-gray-400" on:click={ () => deleteAllModal.close(true) }>Delete</Button>
+      <Button on:click={ () => deleteAllModal.close() }>{ $localLang.TIMER.cancel }</Button>
+      <Button class="bg-red-800 hover:bg-red-700 text-gray-400" on:click={ () => deleteAllModal.close(true) }>{ $localLang.TIMER.delete }</Button>
     </div>
   </Modal>
 
@@ -389,10 +390,10 @@
     class:active={ showContextMenu }
     bind:this={ contextMenuElement }
     on:click={() => showContextMenu = false}>
-    <li on:click={ () => editSolve(sSolve) }>Edit</li>
-    <li on:click={ () => selectSolve(sSolve) }>Select</li>
-    <li on:click={ () => copyToClipboard(sSolve.scramble) }>Copy scramble</li>
-    <li on:click={ () => _delete([sSolve]) }>Delete</li>
+    <li on:click={ () => editSolve(sSolve) }>{ $localLang.TIMER.edit }</li>
+    <li on:click={ () => selectSolve(sSolve) }>{ $localLang.TIMER.select }</li>
+    <li on:click={ () => copyToClipboard(sSolve.scramble) }>{ $localLang.TIMER.copyScramble }</li>
+    <li on:click={ () => _delete([sSolve]) }>{ $localLang.TIMER.delete }</li>
   </ul>
 </main>
 

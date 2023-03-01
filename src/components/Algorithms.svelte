@@ -1,17 +1,23 @@
 <script lang="ts">
   import { onDestroy, onMount } from "svelte";
   import { Link, navigate } from "svelte-routing";
-  import type { Unsubscriber } from "svelte/store";
+  import { derived, type Readable, type Unsubscriber } from "svelte/store";
   import { Puzzle } from "@classes/puzzle/puzzle";
   import { generateCubeBundle } from "@helpers/cube-draw";
-  import type { Algorithm, Card } from "@interfaces";
+  import type { Algorithm, Card, Language } from "@interfaces";
   import { DataService } from "@stores/data.service";
   import Tooltip from "./material/Tooltip.svelte";
   import { getSearchParams } from "@helpers/strings";
-    import { NotificationService } from "@stores/notification.service";
+  import { NotificationService } from "@stores/notification.service";
+  import { globalLang } from "@stores/language.service";
+  import { getLanguage } from "@lang/index";
 
   export let location: Location;
   
+  let localLang: Readable<Language> = derived(globalLang, ($lang, set) => {
+    set( getLanguage( $lang ) );
+  });
+
   const dataService = DataService.getInstance();
   const notification = NotificationService.getInstance();
 
@@ -170,8 +176,8 @@
     navigator.clipboard.writeText(s).then(() => {
       notification.addNotification({
         key: crypto.randomUUID(),
-        header: "Done!",
-        text: "Algorithm copied to clipboard",
+        header: $localLang.global.done,
+        text: $localLang.global.scrambleCopied,
         timeout: 1000
       });
     });
@@ -201,8 +207,8 @@
       <img src={ selectedCase?._puzzle?.img } class="puzzle-img flex mx-auto" alt="">
       <div class="grid grid-cols-6">
         <h2 class="col-span-1 font-bold text-xl"> </h2>
-        <h2 class="col-span-3 font-bold text-xl">Solution</h2>
-        <h2 class="col-span-1 font-bold text-xl">Moves</h2>
+        <h2 class="col-span-3 font-bold text-xl text-gray-300">{ $localLang.ALGORITHMS.solution }</h2>
+        <h2 class="col-span-1 font-bold text-xl text-gray-300">{ $localLang.ALGORITHMS.moves }</h2>
         <h2 class="col-span-1 font-bold text-xl"> </h2>
   
         {#each (selectedCase?.solutions || []) as sol }
@@ -238,9 +244,9 @@
     {#if (type === 2 || type >= 4)}
       <div class="grid text-gray-400">
         <div class="row">
-          <span class="text-gray-300 font-bold">Case</span>
+          <span class="text-gray-300 font-bold">{ $localLang.ALGORITHMS.case }</span>
           <span class="text-gray-300 font-bold"></span>
-          <span class="text-gray-300 font-bold">Algorithms</span>
+          <span class="text-gray-300 font-bold">{ $localLang.ALGORITHMS.algorithms }</span>
         </div>
 
         {#each cases as c, i}

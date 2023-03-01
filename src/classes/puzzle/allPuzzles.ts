@@ -25,7 +25,7 @@ import { PYRAMINX_CRYSTAL } from './pyraminxCrystal';
 import { TETRAMINX } from './tetraminx';
 import { MEIER_HALPERN_PYRAMIND } from './meierHalpernPyramind';
 
-registerPuzzle("rubik", "Rubik's Cube", RUBIK, true);
+registerPuzzle("rubik", "Rubik", RUBIK, true);
 registerPuzzle("mirror", "Mirror", MIRROR, true);
 registerPuzzle("pyraminx", "Pyraminx", PYRAMINX, true);
 registerPuzzle("megaminx", "Megaminx", MEGAMINX, true);

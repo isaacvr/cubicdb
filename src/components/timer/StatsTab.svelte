@@ -4,13 +4,18 @@
   import { between, evalLine, map, rotatePoint, rotateSegment, search } from '@helpers/math';
   import { decimate, decimateN, getAverageS, trendLSV } from '@helpers/statistics';
   import { infinitePenalty, timer } from '@helpers/timer';
-  import { AverageSetting, Penalty, type Solve, type TimerContext } from '@interfaces';
+  import { AverageSetting, Penalty, type Language, type Solve, type TimerContext } from '@interfaces';
   import { onMount } from 'svelte';
   import StatsProgress from './StatsProgress.svelte';
   import moment from 'moment';
+  import { derived, type Readable } from 'svelte/store';
+  import { globalLang } from '@stores/language.service';
+  import { getLanguage } from '@lang/index';
 
   export let context: TimerContext;
 
+  let localLang: Readable<Language> = derived(globalLang, ($lang) => getLanguage( $lang ));
+    
   let { solves, AoX, stats, session } = context;
 
   let chartElement: HTMLCanvasElement;
@@ -77,7 +82,7 @@
       let dt = timeChart.data.datasets[i + 1];
       dt.data.length = 0;
       let Ao = getAverageS(e, sv, $session?.settings?.calcAoX || AverageSetting.SEQUENTIAL);
-      decimateN(Ao, WIDTH).map((e, p) => dt.data.push({ x: p * lenFactor, y: e }));
+      decimateN(Ao, WIDTH).map((e, p) => (dt.data as any[]).push({ x: p * lenFactor, y: e }));
       dt.label = 'Ao' + e;
     });
     
@@ -137,6 +142,36 @@
     distChart.data.datasets[0].data = cants;
     distChart.data.labels = itvs.map(a => `${ timer(a[0], true) } - ${ timer(a[1], true) }`);
 
+    distChart.update();
+  }
+
+  function updateChartText() {
+    $localLang.TIMER.timeChartLabels.forEach((l, p) => {
+      timeChart.data.datasets[p].label = l;
+    });
+
+    // @ts-ignore
+    timeChart.options.plugins.title.text = $localLang.TIMER.timeDistribution;
+    
+    // @ts-ignore
+    penaltyChart.data.labels[0] = $localLang.TIMER.clean;
+
+    // @ts-ignore
+    hourChart.options.plugins.title.text = $localLang.TIMER.hourDistribution;
+    hourChart.data.datasets[0].label = $localLang.TIMER.solves;
+
+    // @ts-ignore
+    weekChart.options.plugins.title.text = $localLang.TIMER.weekDistribution;
+    weekChart.data.datasets[0].label = $localLang.TIMER.solves;
+
+    // @ts-ignore
+    distChart.options.plugins.title.text = $localLang.TIMER.histogram;
+    distChart.data.datasets[0].label = $localLang.TIMER.solves;
+
+    timeChart.update();
+    penaltyChart.update();
+    hourChart.update();
+    weekChart.update();
     distChart.update();
   }
 
@@ -244,7 +279,7 @@
                 let yLabel = context.parsed.y;
                 return label + ": " + timer(+yLabel, false, true);
               },
-              title: (items) => `Solve #${Math.round(items[0].parsed.x) + 1}`
+              title: (items) => `${ $localLang.TIMER.solve } #${Math.round(items[0].parsed.x) + 1}`
             }
           },
           zoom: {
@@ -332,6 +367,7 @@
 
   $: $AoX && timeChart && updateChart($solves);
   $: $stats && penaltyChart && updateStats();
+  $: $localLang, timeChart && updateChartText();
 
 </script>
 
@@ -343,37 +379,40 @@
   </div>
   <div class="stats card">
     <StatsProgress
-      title="Best" pColor="bg-green-400"
+      title={ $localLang.TIMER.best } pColor="bg-green-400"
       label={ timer($stats.best.value, true, true) }
       value={ $stats.best.value } total={ $stats.worst.value }/>
 
     <StatsProgress
-      title="Worst" pColor="bg-orange-400"
+      title={ $localLang.TIMER.worst } pColor="bg-orange-400"
       label={ timer($stats.worst.value, true, true) }
       value={ $stats.worst.value } total={ $stats.worst.value }/>
     
     <StatsProgress
-      title="Average"
+      title={ $localLang.TIMER.average }
       label={ timer($stats.avg.value, true, true) }
       value={ $stats.avg.value } total={ $stats.worst.value }/>
     
     <StatsProgress
-      title="Standard Deviation"
+      title={ $localLang.TIMER.deviation }
       label={ timer($stats.dev.value, true, true) }
       value={ $stats.dev.value } total={ $stats.worst.value }/>
     
     <StatsProgress
-      title="Total time" bgColor="hidden"
+      title={ $localLang.TIMER.totalTime } bgColor="hidden"
       label={ timer($stats.time.value, true, true) }/>
+    
+    <StatsProgress title={ $localLang.TIMER.count } label={ $stats.count.value.toString() }
+      value={ $stats.count.value } total={ $stats.count.value }/>
   </div>
 
   <div class="penalties card">
     <div class="w-full"> <canvas bind:this={ chartElement1 }></canvas> </div>
     <div class="w-full">
-      <StatsProgress title="Count" label={ $stats.count.value.toString() }
+      <StatsProgress title={ $localLang.TIMER.count } label={ $stats.count.value.toString() }
         value={ $stats.count.value } total={ $stats.count.value }/>
       
-      <StatsProgress title="Clean" pColor="bg-green-400" label={`${ $stats.NP.value }`}
+      <StatsProgress title={ $localLang.TIMER.clean } pColor="bg-green-400" label={`${ $stats.NP.value }`}
         value={ $stats.NP.value } total={ $stats.count.value }/>
       
       <StatsProgress title="+2" pColor="bg-orange-400" label={ $stats.P2.value.toString() }

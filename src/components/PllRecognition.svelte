@@ -8,8 +8,14 @@
   
   import CheckIcon from '@icons/Check.svelte';
   import { timer } from "@helpers/timer";
+  import { derived, type Readable } from "svelte/store";
+  import type { Language } from "@interfaces";
+  import { globalLang } from "@stores/language.service";
+  import { getLanguage } from "@lang/index";
 
-  const TOP_FACE = [
+  let localLang: Readable<Language> = derived(globalLang, ($lang) => getLanguage( $lang ));
+
+  let TOP_FACE = [
     { value: 'random', label: 'Color neutral' },
     { value: '',       label: 'White' },
     { value: 'x2',     label: 'Yellow' },
@@ -148,6 +154,20 @@
       addAnswer(e.code.slice(-1));
     }
   }
+
+  function updateTexts() {
+    TOP_FACE[0].label = $localLang.PLL.colorNeutral;
+    TOP_FACE[1].label = $localLang.PLL.white;
+    TOP_FACE[2].label = $localLang.PLL.yellow;
+    TOP_FACE[3].label = $localLang.PLL.red;
+    TOP_FACE[4].label = $localLang.PLL.orange;
+    TOP_FACE[5].label = $localLang.PLL.blue;
+    TOP_FACE[6].label = $localLang.PLL.green;
+
+    columns = ['No.', $localLang.PLL.case, $localLang.PLL.expected, $localLang.PLL.answer, $localLang.PLL.time];
+  }
+
+  $: $localLang, updateTexts();
 </script>
 
 <svelte:window on:keyup={ handleKeyUp }></svelte:window>
@@ -156,7 +176,7 @@
   class="text-gray-400 container-mini bg-white bg-opacity-10 w-4/5 mx-auto rounded-md
     flex flex-col items-center px-4 py-8 cnt relative
   ">
-  <h1 class="text-center text-3xl mb-4 text-gray-300 font-bold">PLL Recognition Trainer</h1>
+  <h1 class="text-center text-3xl mb-4 text-gray-300 font-bold">{ $localLang.PLL.title }</h1>
 
   <span class="absolute right-4 top-4 bg-gray-500 text-gray-200 w-6 h-6 flex items-center justify-center
     cursor-pointer rounded-full shadow-md hover:shadow-lg hover:bg-gray-400 font-bold
@@ -165,20 +185,20 @@
   
   {#if stage === 0}
     <div class="grid grid-cols-2 w-max items-center mx-auto gap-4">
-      <span>Top Face</span>
+      <span>{ $localLang.PLL.topFace }</span>
       <Select items={ TOP_FACE } label={ e => e.label  } bind:value={ topFace }/>
       
-      <span>Cases</span>
+      <span>{ $localLang.PLL.cases }</span>
       <Select items={ CASES } transform={ e => e } bind:value={ cases }/>
     </div>
 
     <Button
       on:click={ next }
-      class="bg-green-700 hover:bg-green-600 text-gray-300 mx-auto my-4">Next</Button>
+      class="bg-green-700 hover:bg-green-600 text-gray-300 mx-auto my-4">{ $localLang.PLL.next }</Button>
   {/if}
 
   {#if stage === 1}
-    <h3>Case {idx + 1} / {cases}</h3>
+    <h3>{ $localLang.PLL.case } {idx + 1} / {cases}</h3>
     <img src={ images[ idx ] } class="puzzle-img" alt="">
 
     <div class="answer-container grid gap-2 my-4 max-w-2xl">
@@ -195,9 +215,9 @@
 
   {#if stage === 2}
     <div class="flex items-center text-gray-400 font-bold">
-      <span class="mr-1">Completed: {correct} / {cases}</span>
+      <span class="mr-1">{ $localLang.PLL.completed }: {correct} / {cases}</span>
       {#if correct === cases} <CheckIcon width="1.2rem" height="1.2rem"/> {/if}
-      <Button on:click={ next } class="ml-12 bg-green-700 hover:bg-green-600 text-gray-300">Try again</Button>
+      <Button on:click={ next } class="ml-12 bg-green-700 hover:bg-green-600 text-gray-300">{ $localLang.PLL.tryAgain }</Button>
     </div>
 
     <div class="grid grid-cols-5 mt-8 text-center w-full overflow-scroll place-items-center">
@@ -215,17 +235,17 @@
     </div>
   {/if}
 
-  <Modal bind:show={ showModal }>
-    <h1>Key bindings</h1>
+  <Modal class="max-w-[70ch] text-justify" bind:show={ showModal }>
+    <h1>{ $localLang.PLL.keyBindings }</h1>
 
-    <h2>Single letter PLL</h2>
-    <blockquote>Just tap the letter to answer the quiz.</blockquote>
+    <h2>{ $localLang.PLL.singleLetter }</h2>
+    <blockquote bind:innerHTML={ $localLang.PLL.singleLetterBlock } contenteditable="false"></blockquote>
     
-    <h2>Two variants PLL</h2>
-    <blockquote>For PLL's like <mark>Ja</mark> and <mark>Jb</mark>, lowercase letter is the <mark>a</mark> variant <mark>(j is Ja)</mark> and capital letter is the <mark>b</mark> variant <mark>(J is Jb)</mark></blockquote>
+    <h2>{ $localLang.PLL.twoVariant }</h2>
+    <blockquote bind:innerHTML={ $localLang.PLL.twoVariantBlock } contenteditable="false"></blockquote>
 
-    <h2>G perms</h2>
-    <blockquote>For the G Perms you can use the numbers <mark>1</mark> to <mark>4</mark> (Ga, Gb, Gc and Gd).</blockquote>
+    <h2>{ $localLang.PLL.gPerms }</h2>
+    <blockquote bind:innerHTML={ $localLang.PLL.gPermsBlock } contenteditable="false"></blockquote>
   </Modal>
 </div>
 
