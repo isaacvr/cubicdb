@@ -34,10 +34,10 @@
 
   /// GUI
   let puzzles: any[] = [];
-  let selectedPuzzle: PuzzleType = "rubik";
+  let selectedPuzzle: PuzzleType = "sq1Star";
   // let order = [2, 2, 4];
   let order = 3;
-  let hasOrder = true;
+  let hasOrder = false;
   let GUIExpanded = false;
 
   /// Animation
@@ -82,15 +82,15 @@
     camera.updateProjectionMatrix();
 
     let pc = [piece.object.parent?.userData, piece.object.userData];
-    let u = pc[1]?.getOrientation();
-    let vecs = pc[1]?.vecs.filter((v: Vector3D) => v.cross(u).abs() > 1e-6);
+    let po = pc[1]?.getOrientation();
+    let vecs = pc[1]?.vecs.filter((v: Vector3D) => v.cross(po).abs() > 1e-6);
     let v = fin.clone().sub(ini);
     let vv = new Vector3D(v.x, v.y, 0);
 
     let faceVectors = vectorsFromCamera(vecs, camera);
 
     let dir: number = 0;
-    let best: Vector3D = CENTER;
+    let best: Vector3D | null = null;
 
     faceVectors.reduce((ac, fv, p) => {
       let cr = vv.cross(fv);
@@ -124,7 +124,15 @@
       return false;
     };
 
+    let u: any = best;
+
     groupToMove.forEach((g) => {
+      if ( g.dir ) {
+        let cr = vv.cross( vectorsFromCamera([g.dir], camera)[0] );
+        dir = -Math.sign(cr.z);
+        u = g.dir;
+      }
+
       let pieces: Piece[] = g.pieces;
       let subBuffer: Object3D[] = [];
       let subUserData: any[] = [];
@@ -145,7 +153,7 @@
     return {
       buffer: animationBuffer,
       userData,
-      u: best,
+      u,
       dir,
       ang: angs,
       animationTime: animationTimes,

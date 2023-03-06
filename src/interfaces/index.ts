@@ -5,7 +5,7 @@ import type { Vector3D } from '../classes/vector3d';
 import type { CubeMode } from "../constants";
 import type { Writable } from 'svelte/store';
 
-export declare type PuzzleType = 'rubik' | 'skewb' | 'square1' | 'pyraminx' | 'axis' | 'fisher' | 'ivy' | 'clock' | 'megaminx' | 'mirror' | 'dino' | 'rex' | 'redi' | 'mixup' | 'pyramorphix' | 'gear' | 'dreidel' | 'bandaged222' | 'bicube' | 'square2' | 'pandora' | 'ultimateSkewb' | 'pyraminxCrystal' | 'tetraminx' | 'meierHalpernPyramid';
+export declare type PuzzleType = 'rubik' | 'skewb' | 'square1' | 'pyraminx' | 'axis' | 'fisher' | 'ivy' | 'clock' | 'megaminx' | 'mirror' | 'dino' | 'rex' | 'redi' | 'mixup' | 'pyramorphix' | 'gear' | 'dreidel' | 'bandaged222' | 'bicube' | 'square2' | 'pandora' | 'ultimateSkewb' | 'pyraminxCrystal' | 'tetraminx' | 'meierHalpernPyramid' | 'sq1Star';
 export declare type CubeView = 'plan' | 'trans' | '2d';
 
 export enum TimerState {
@@ -181,6 +181,8 @@ export interface Tutorial {
 export interface Metric {
   value: number;
   better: boolean;
+  id?: string;
+  best?: number;
 }
 
 export interface Statistics {
@@ -230,12 +232,16 @@ export interface TimerContext {
   preview: Writable<string>;
   prob: Writable<number>;
   isRunning: Writable<boolean>;
+  selected: Writable<number>;
+  decimals: Writable<boolean>;
   
   sortSolves: () => any;
   updateStatistics: (inc ?: boolean) => any;
   initScrambler: (scr?: string, _mode ?: string) => any;
   selectedGroup: () => any;
   setConfigFromSolve: (s: Solve) => any;
+  selectSolve: (s: Solve) => any;
+  selectSolveById: (id: string, n: number) => any;
 }
 
 export const ROLES = {
@@ -364,6 +370,8 @@ export interface IPC {
   openFile: (args?:any) => any;
   revealFile: (args?:any) => any;
   handleAny: (args?:any) => any;
+
+  update: (args?:any) => any;
 }
 
 export interface Game {
@@ -415,6 +423,7 @@ export interface InputContext {
   lastSolve: Writable<Solve | null>;
   isRunning: Writable<boolean>;
   stackmatStatus: Writable<boolean>;
+  decimals: Writable<boolean>;
 
   reset: () => void;
   initScrambler: () => void;
@@ -466,6 +475,24 @@ export interface Language {
     // Notifications
     saved: string;
     settingsSaved: string;
+
+    // Updates
+    update: string;
+    version: string;
+    checkUpdate: string;
+    updateAvailable: string;
+    updateAvailableText: string;
+    alreadyUpdated: string;
+    alreadyUpdatedText: string;
+
+    cancelAction: string;
+    updateAction: string;
+
+    updateError: string;
+    updateErrorText: string;
+
+    updateCompleted: string;
+    updateFailed: string;
   },
   ALGORITHMS: {
     solution: string;
@@ -544,6 +571,12 @@ export interface Language {
     hourDistribution: string;
     weekDistribution: string;
     histogram: string;
+
+    // Best section
+    bestMarks: string;
+    go: string;
+    bestList: {title: string, key: string, select: number }[];
+    // ['Ao5', 'Ao12', 'Ao50', 'Ao100', 'Ao200', 'Ao500', 'Ao1k', 'Ao2k' ]
   },
   PLL: {
     title: string;

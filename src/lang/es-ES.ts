@@ -36,7 +36,7 @@ export const Spanish: Language = {
   HOME: {
     tutorials: 'Tutoriales',
     algorithms: 'Algoritmos',
-    timer: 'Timer',
+    timer: 'Temporizador',
     battle: 'Batalla',
     pll_recognition: 'Reconocimiento PLL',
     simulator: 'Simulador',
@@ -55,6 +55,24 @@ export const Spanish: Language = {
     // Notifications
     saved: 'Hecho!',
     settingsSaved: 'Configuración guardada',
+
+    // Update
+    update: 'Actualización',
+    version: 'Versión',
+    checkUpdate: 'Buscar actualización',
+    updateAvailable: 'Actualización disponible',
+    updateAvailableText: 'Hay una nueva versión disponible.',
+    alreadyUpdated: 'Actualizado',
+    alreadyUpdatedText: 'Ya tienes la última versión de CubeDB.',
+
+    cancelAction: 'Cancelar',
+    updateAction: 'Actualizar',
+
+    updateError: 'Error',
+    updateErrorText: 'Hubo un error al intentar actualizar.',
+
+    updateCompleted: 'Actualización completada. Reinicie para aplicar los cambios.',
+    updateFailed: 'Actualización fallida. Por favor, inténtelo más tarde.',
   },
   ALGORITHMS: {
     algorithms: 'Algoritmos',
@@ -131,6 +149,22 @@ export const Spanish: Language = {
     hourDistribution: 'Distribución por horas',
     weekDistribution: 'Distribución semanal',
     histogram: 'Histograma',
+
+    // Best section
+    bestMarks: 'Mejores marcas',
+    go: 'Ir',
+    bestList: [
+      { title: 'Mejor', key: 'best', select: 1 },
+      { title: 'Peor', key: 'worst', select: 1 },
+      { title: 'Mejor Ao5', key: 'Ao5', select: 5 },
+      { title: 'Mejor Ao12', key: 'Ao12', select: 12 },
+      { title: 'Mejor Ao50', key: 'Ao50', select: 1 },
+      { title: 'Mejor Ao100', key: 'Ao100', select: 1 },
+      { title: 'Mejor Ao200', key: 'Ao200', select: 1 },
+      { title: 'Mejor Ao500', key: 'Ao500', select: 1 },
+      { title: 'Mejor Ao1k', key: 'Ao1k', select: 1 },
+      { title: 'Mejor Ao2k', key: 'Ao2k', select: 1 },
+    ]
   },
   PLL: {
     title: 'Reconocimiento de PLL',

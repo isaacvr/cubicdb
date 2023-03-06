@@ -3,7 +3,7 @@ import { between } from "@helpers/math";
 export class Paginator {
   private data: any[];
   private len: number;
-  private limit: number;
+  private _limit: number;
   private offset: number;
   private _page: number;
   private _pages: number;
@@ -14,7 +14,7 @@ export class Paginator {
   constructor(dt?: any[], limit?: number, paginatorWidth?: number) {
     this.data = Array.isArray(dt) ? dt :[];
     this.len = this.data.length;
-    this.limit = Math.abs( ~~(limit || 0) ) || 10;
+    this._limit = Math.abs( ~~(limit || 0) ) || 10;
     this.offset = 0;
     this._page = 0;
     this._pages = 0;
@@ -30,7 +30,7 @@ export class Paginator {
   }
 
   get end(): number {
-    return this.start + this.limit;
+    return this.start + this._limit;
   }
 
   get page(): number {
@@ -41,13 +41,17 @@ export class Paginator {
     return this._pages;
   }
 
+  get limit(): number {
+    return this._limit;
+  }
+
   private update() {
     this.len = this.data.length;
 
-    this._pages = Math.ceil(this.len / this.limit);
+    this._pages = Math.ceil(this.len / this._limit);
 
     this._page = between(this._page, 1, this._pages);
-    this.offset = (this._page - 1) * this.limit;
+    this.offset = (this._page - 1) * this._limit;
 
     let minL = Math.max(1, this._page - (this.width >> 1)); // min label
     let maxL = Math.min(this._pages, minL + this.width - 1); // max label

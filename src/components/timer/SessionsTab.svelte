@@ -32,6 +32,7 @@
   import { derived, type Readable } from "svelte/store";
   import { globalLang } from "@stores/language.service";
   import { getLanguage } from "@lang/index";
+    import { tick } from "svelte";
 
   let localLang: Readable<Language> = derived(globalLang, ($lang) => getLanguage( $lang ));
 
@@ -40,10 +41,9 @@
 
   export let context: TimerContext;
 
-  let { solves, tab } = context;
+  let { solves, tab, selected, selectSolve } = context;
 
   let pg = new Paginator([], 100);
-  let selected = 0;
   let LAST_CLICK = 0;
 
   let modal: any;
@@ -56,6 +56,7 @@
   let cube;
   let showContextMenu = false;
   let contextMenuElement: HTMLUListElement;
+  let solvesElement: HTMLDivElement;
   
   function closeHandler(s?: Solve) {
     if ( s ) {
@@ -94,14 +95,8 @@
     show = true;
   }
 
-  function selectSolve(s: Solve) {
-    s.selected = !s.selected;
-    selected += (s.selected) ? 1 : -1;
-    $solves = $solves;
-  }
-
   function handleClick(s: Solve) {
-    if ( (performance.now() - LAST_CLICK < 200) || selected ) {
+    if ( (performance.now() - LAST_CLICK < 200) || $selected ) {
       selectSolve(s);
     } else {
       setTimeout(() => performance.now() - LAST_CLICK >= 200 && editSolve(s), 200);
@@ -128,14 +123,14 @@
   }
 
   function selectAll() {
-    selected = $solves.length;
-    for (let i = 0, maxi = selected; i < maxi; i += 1) {
+    $selected = $solves.length;
+    for (let i = 0, maxi = $selected; i < maxi; i += 1) {
       $solves[i].selected = true;
     }
   }
 
   function selectInvert() {
-    selected = $solves.length - selected;
+    $selected = $solves.length - $selected;
     for (let i = 0, maxi = $solves.length; i < maxi; i += 1) {
       $solves[i].selected = !$solves[i].selected;
     }
@@ -151,13 +146,13 @@
     for (let i = i1; i <= i2; i += 1) {
       if ( !$solves[i].selected ) {
         $solves[i].selected = true;
-        selected += 1;
+        $selected += 1;
       }
     }
   }
 
   function selectNone() {
-    selected = 0;
+    $selected = 0;
     for(let i = 0, maxi = $solves.length; i < maxi; i += 1) {
       $solves[i].selected = false;
     }
@@ -169,7 +164,7 @@
 
   function deleteSelected() {
     _delete( $solves.filter(s => s.selected) );
-    selected = 0;
+    $selected = 0;
   }
 
   function handleKeyUp(e: KeyboardEvent) {
@@ -180,7 +175,7 @@
       case 'KeyA': selectAll(); break;
       case 'KeyT': selectInterval(); break;
       case 'KeyV': selectInvert(); break;
-      case 'KeyD': selected ? deleteSelected() : deleteAll(); break;
+      case 'KeyD': $selected ? deleteSelected() : deleteAll(); break;
       case 'Enter': showDeleteAll && deleteAllModal.close(true);
     }
   }
@@ -241,7 +236,24 @@
     showContextMenu = true;
   }
 
+  function updatePageFromSelected() {
+    if ( $selected === 1 ) {
+      for (let i = 0, maxi = $solves.length; i < maxi; i += 1) {
+        if ( $solves[i].selected ) {
+          let page = Math.ceil((i + 1) / pg.limit);
+          pg.setPage(page);
+          tick().then(() => {
+            solvesElement.children[i - pg.start].scrollIntoView({ block: 'center', inline: 'center' });
+          });
+          break
+        }
+      }
+    }
+  }
+
   $: updatePaginator($solves);
+  $: $selected, updatePageFromSelected();
+  $: $tab != 1 && $solves.forEach(s => s.selected && selectSolve(s));
 
 </script>
 
@@ -267,7 +279,7 @@
     </ul>
   {/if}
 
-  <div id="grid" class="text-gray-400 ml-8 mr-12 grid h-max-[100%] overflow-scroll">
+  <div id="grid" class="text-gray-400 ml-8 mr-12 grid h-max-[100%] overflow-scroll" bind:this={ solvesElement }>
     {#each $solves.slice(pg.start, pg.end) as solve}
     <div
       class="shadow-md w-24 h-12 rounded-md m-3 p-1 bg-white bg-opacity-10 relative
@@ -309,30 +321,30 @@
       </Tooltip>
   </div>
 
-  <div class:isVisible={ selected }
+  <div class:isVisible={ $selected }
     class="fixed rounded-md p-2 top-0 opacity-0 pointer-events-none
     transition-all duration-300 bg-gray-700 shadow-md flex w-max max-w-full actions z-20">
-    <Button tabindex={ selected ? 0 : -1 } flat on:click={() => selectAll()}>
+    <Button tabindex={ $selected ? 0 : -1 } flat on:click={() => selectAll()}>
       <!-- <SelectAllIcon width="1.2rem" height="1.2rem" />  -->
       { $localLang.TIMER.selectAll } &nbsp; <span class="flex ml-auto text-yellow-400">[A]</span>
     </Button>
     
-    <Button tabindex={ selected ? 0 : -1 } flat on:click={() => selectInterval()}>
+    <Button tabindex={ $selected ? 0 : -1 } flat on:click={() => selectInterval()}>
       <!-- <ArrowExpandIcon width="1.2rem" height="1.2rem" /> -->
       { $localLang.TIMER.selectInterval } &nbsp; <span class="flex ml-auto text-yellow-400">[T]</span>
     </Button>
     
-    <Button tabindex={ selected ? 0 : -1 } flat on:click={() => selectInvert()}>
+    <Button tabindex={ $selected ? 0 : -1 } flat on:click={() => selectInvert()}>
       <!-- <SelectInverseIcon width="1.2rem" height="1.2rem" /> -->
       { $localLang.TIMER.invertSelection } &nbsp; <span class="flex ml-auto text-yellow-400">[V]</span>
     </Button>
     
-    <Button tabindex={ selected ? 0 : -1 } flat on:click={() => selectNone()}>
+    <Button tabindex={ $selected ? 0 : -1 } flat on:click={() => selectNone()}>
       <!-- <SelectOffIcon width="1.2rem" height="1.2rem" /> -->
       { $localLang.TIMER.cancel } &nbsp; <span class="flex ml-auto text-yellow-400">[C / Esc]</span>
     </Button>
 
-    <Button tabindex={ selected ? 0 : -1 } flat on:click={() => deleteSelected()}>
+    <Button tabindex={ $selected ? 0 : -1 } flat on:click={() => deleteSelected()}>
       <!-- <DeleteIcon width="1.2rem" height="1.2rem" /> -->
       { $localLang.TIMER.delete } &nbsp; <span class="flex ml-auto text-yellow-400">[D]</span>
     </Button>

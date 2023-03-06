@@ -113,8 +113,31 @@
   let preview = writable<string>(PX_IMAGE);
   let prob = writable<number>();
   let isRunning = writable<boolean>(false);
+  let selected = writable<number>(0);
+  let decimals = writable<boolean>(true);
   
   $: $isRunning = $state === TimerState.INSPECTION || $state === TimerState.RUNNING;
+
+  function selectSolve(s: Solve) {
+    s.selected = !s.selected;
+    $selected += (s.selected) ? 1 : -1;
+    $solves = $solves;
+  }
+
+  function selectSolveById(id: string, n: number) {
+    for (let i = 0, maxi = $solves.length; i < maxi; i += 1) {
+      if ( $solves[i]._id === id ) {
+        for (let j = 0; j < n && i + j < maxi; j += 1) {
+          $solves[i + j].selected = !$solves[i + j].selected;
+          $selected += ($solves[i + j].selected) ? 1 : -1;
+        }
+
+        $tab === 0 && tabs.nextTab();
+        $tab === 2 && tabs.prevTab();
+        break;
+      }
+    }
+  }
 
   function setConfigFromSolve(s: Solve) {
     $group = s.group || 0;
@@ -130,6 +153,7 @@
     let AON = [ 3, 5, 12, 50, 100, 200, 500, 1000, 2000 ];
     let AVG = [ 0, 0, 0, 0, 0, 0, 0, 0, 0 ];
     let BEST: number[] = [];
+    let BEST_IDS: string[] = [];
     let len = $solves.length;
     let sum = 0, avg = 0, dev = 0;
     let pMap: Map<Penalty, number> = new Map();
@@ -139,10 +163,20 @@
 
       if ( infinitePenalty(e) ) {
         len -= 1;
-      } else {
-        sum += e.time;
+        return ac;
       }
-      return infinitePenalty(e) ? ac : [ Math.min(ac[0], e.time), Math.max(ac[1], e.time) ];
+      
+      sum += e.time;
+      
+      if ( e.time < ac[0] ) {
+        BEST_IDS[9] = e._id;
+      }
+      
+      if ( e.time > ac[1] ) {
+        BEST_IDS[10] = e._id;
+      }
+
+      return [ Math.min(ac[0], e.time), Math.max(ac[1], e.time) ];
     }, [Infinity, 0]);
 
     avg = (len > 0) ? sum / len : 0;
@@ -151,10 +185,19 @@
     }, 0) ) : 0;
     
     for (let i = 0, maxi = AON.length; i < maxi; i += 1) {
-      let avgs = getAverageS(AON[i], $solves, $session?.settings?.calcAoX);
-      BEST[i] = avgs.reduce((b, e) => (e) ? Math.min(b || 0, e) : b, BEST[i]) || 0;
-      let lastAvg = avgs.pop();
-      AVG[i] = ( lastAvg ) ? lastAvg : -1;
+      let avgs = getAverageS(AON[i], $solves, $session?.settings?.calcAoX || AverageSetting.SEQUENTIAL);
+
+      BEST[i] = Infinity;
+      BEST_IDS[i] = '';
+
+      for (let j = 0, maxj = avgs.length; j < maxj; j += 1) {
+        if ( avgs[j] && (avgs[j] as number) < BEST[i] ) {
+          BEST[i] = avgs[j] as number;
+          BEST_IDS[i] = $solves[maxj - j - 1]._id;
+        }
+      }
+      // BEST[i] = avgs.reduce((b, e) => (e) ? Math.min(b || 0, e) : b, BEST[i]) || 0;
+      AVG[i] = avgs.pop() || -1;
     }
 
     // let bundle = bundleAverageS(AON, $solves, $session?.settings?.calcAoX || AverageSetting.SEQUENTIAL);
@@ -164,21 +207,21 @@
     let ps = Object.assign({}, $stats);
 
     $stats = {
-      best:  { value: bw[0], better: ps.best.value > bw[0] },
-      worst: { value: bw[1], better: false },
+      best:  { value: bw[0], better: ps.best.value > bw[0], id: BEST_IDS[9] },
+      worst: { value: bw[1], better: false, id: BEST_IDS[10] },
       avg:   { value: avg, better: false },
       dev:   { value: dev, better: false },
       count: { value: $solves.length, better: false },
       time:  { value: sum, better: false },
-      Mo3:   { value: AVG[0], better: AVG[0] <= BEST[0] },
-      Ao5:   { value: AVG[1], better: AVG[1] <= BEST[1] },
-      Ao12:  { value: AVG[2], better: AVG[2] <= BEST[2] },
-      Ao50:  { value: AVG[3], better: AVG[3] <= BEST[3] },
-      Ao100: { value: AVG[4], better: AVG[4] <= BEST[4] },
-      Ao200: { value: AVG[5], better: AVG[5] <= BEST[5] },
-      Ao500: { value: AVG[6], better: AVG[6] <= BEST[6] },
-      Ao1k:  { value: AVG[7], better: AVG[7] <= BEST[7] },
-      Ao2k:  { value: AVG[8], better: AVG[8] <= BEST[8] },
+      Mo3:   { value: AVG[0], better: AVG[0] <= BEST[0], best: BEST[0], id: BEST_IDS[0] },
+      Ao5:   { value: AVG[1], better: AVG[1] <= BEST[1], best: BEST[1], id: BEST_IDS[1] },
+      Ao12:  { value: AVG[2], better: AVG[2] <= BEST[2], best: BEST[2], id: BEST_IDS[2] },
+      Ao50:  { value: AVG[3], better: AVG[3] <= BEST[3], best: BEST[3], id: BEST_IDS[3] },
+      Ao100: { value: AVG[4], better: AVG[4] <= BEST[4], best: BEST[4], id: BEST_IDS[4] },
+      Ao200: { value: AVG[5], better: AVG[5] <= BEST[5], best: BEST[5], id: BEST_IDS[5] },
+      Ao500: { value: AVG[6], better: AVG[6] <= BEST[6], best: BEST[6], id: BEST_IDS[6] },
+      Ao1k:  { value: AVG[7], better: AVG[7] <= BEST[7], best: BEST[7], id: BEST_IDS[7] },
+      Ao2k:  { value: AVG[8], better: AVG[8] <= BEST[8], best: BEST[8], id: BEST_IDS[8] },
       
       // Penalties
       NP:    { value: pMap.get(Penalty.NONE) || 0, better: false },
@@ -511,9 +554,10 @@
   });
 
   let context: TimerContext = {
-    state, ready, tab, solves, allSolves, session, Ao5, AoX, stats, scramble,
-    group, mode, hintDialog, hint, cross, xcross, preview, prob, isRunning,
-    sortSolves, updateStatistics, initScrambler, selectedGroup, setConfigFromSolve
+    state, ready, tab, solves, allSolves, session, Ao5, AoX, stats, scramble, decimals,
+    group, mode, hintDialog, hint, cross, xcross, preview, prob, isRunning, selected,
+    sortSolves, updateStatistics, initScrambler, selectedGroup,
+    setConfigFromSolve, selectSolve, selectSolveById,
   };
 
   $: (useScramble || useMode) ? initScrambler(useScramble, useMode) : initScrambler();

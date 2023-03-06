@@ -2,7 +2,6 @@ import { Vector3D } from './../vector3d';
 import { Sticker } from './Sticker';
 import type { PuzzleInterface } from '@interfaces';
 import { FaceSticker } from './FaceSticker';
-import type { Puzzle } from './puzzle';
 
 export function assignColors(p: PuzzleInterface, cols ?: string[]) {
   let colors = cols || [ 'y', 'o', 'g', 'w', 'r', 'b' ];

@@ -1,6 +1,6 @@
 <script lang="ts">
   /// Types
-  import { Penalty, TimerState, TIMER_INPUT, type InputContext, type Language, type Solve, type StackmatState, type TimerContext, type TimerInputHandler } from '@interfaces';
+  import { Penalty, TimerState, TIMER_INPUT, type InputContext, type Language, type Solve, type TimerContext, type TimerInputHandler } from '@interfaces';
 
   /// Icons
   import Close from '@icons/Close.svelte';
@@ -46,7 +46,7 @@
 
   const {
     state, ready, tab, solves, allSolves, session, Ao5, stats, scramble,
-    group, mode, hintDialog, hint, cross, xcross, preview, isRunning,
+    group, mode, hintDialog, hint, cross, xcross, preview, isRunning, decimals,
     sortSolves, initScrambler, updateStatistics, selectedGroup, setConfigFromSolve
   } = context;
 
@@ -58,8 +58,6 @@
   const TIMER_DNF = /^\s*dnf\s*$/i;
   let time: Writable<number> = writable(0);
   let timeStr: string = '';
-  // let showTime: boolean = true;
-  let decimals: boolean = true;
   let solveControl = [
     { text: "Delete", icon: Close, highlight: () => false, handler: () => {
       dataService.removeSolves([ $solves[0] ]);
@@ -89,7 +87,7 @@
   let prevExpanded: boolean = false;
   let stackmatStatus: Writable<boolean> = writable(false);
   let inputContext: InputContext = {
-    isRunning, lastSolve, ready, session, state, time, stackmatStatus,
+    isRunning, lastSolve, ready, session, state, time, stackmatStatus, decimals,
     addSolve, initScrambler, reset, createNewSolve
   };
 
@@ -130,7 +128,7 @@
     { text: "Notes [Ctrl + N]", icon: NoteIcon, handler: () => showNotes = true },
     { text: "Settings", icon: Settings, handler: () => {
       let initialCalc = $session?.settings?.calcAoX;
-
+    
       if ( !$session.settings.input ) {
         $session.settings.input = 'Keyboard';
       }
@@ -463,7 +461,7 @@
         class:prevention={ $state === TimerState.PREVENTION }
         class:ready={$ready}
         hidden={$state === TimerState.RUNNING && !$session.settings.showElapsedTime}
-        >{timer($time, decimals, false)}</span>
+        >{timer($time, $decimals, false)}</span>
       
       {#if $session?.settings?.input === 'StackMat' }
         <span class="text-2xl flex gap-2 items-center">

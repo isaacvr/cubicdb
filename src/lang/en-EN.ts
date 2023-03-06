@@ -47,6 +47,24 @@ export const English: Language = {
     // Notifications
     saved: 'Saved',
     settingsSaved: 'Settings saved',
+
+    // Update
+    update: 'Update',
+    version: 'Version',
+    checkUpdate: 'Check for update',
+    updateAvailable: 'Update available',
+    updateAvailableText: 'There\'s a new version available.',
+    alreadyUpdated: 'Already updated',
+    alreadyUpdatedText: 'You have the last version of CubeDB.',
+
+    cancelAction: 'Cancel',
+    updateAction: 'Update',
+
+    updateError: 'Update error',
+    updateErrorText: 'There was an error when trying to update.',
+
+    updateCompleted: 'Update completed. Please restart to apply it.',
+    updateFailed: 'Update failed. Please try later.',
   },
   ALGORITHMS: {
     algorithms: 'Algorithms',
@@ -123,6 +141,22 @@ export const English: Language = {
     hourDistribution: 'Hour distribution',
     weekDistribution: 'Week distribution',
     histogram: 'Histogram',
+
+    // Best section
+    bestMarks: 'Best marks',
+    go: 'Go',
+    bestList: [
+      { title: 'Best', key: 'best', select: 1 },
+      { title: 'Worst', key: 'worst', select: 1 },
+      { title: 'Best Ao5', key: 'Ao5', select: 5 },
+      { title: 'Best Ao12', key: 'Ao12', select: 12 },
+      { title: 'Best Ao50', key: 'Ao50', select: 1 },
+      { title: 'Best Ao100', key: 'Ao100', select: 1 },
+      { title: 'Best Ao200', key: 'Ao200', select: 1 },
+      { title: 'Best Ao500', key: 'Ao500', select: 1 },
+      { title: 'Best Ao1k', key: 'Ao1k', select: 1 },
+      { title: 'Best Ao2k', key: 'Ao2k', select: 1 },
+    ]
   },
   PLL: {
     title: 'PLL Recognition Trainer',

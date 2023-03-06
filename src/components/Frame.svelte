@@ -7,10 +7,25 @@
   import Select from './material/Select.svelte';
   import { LANGUAGES } from '@lang/index';
   import { globalLang } from '@stores/language.service';
+  import type { Unsubscriber } from 'svelte/store';
 
   const dataService = DataService.getInstance();
 
   let date: string, itv: NodeJS.Timer;
+  let anySub: Unsubscriber;
+  let progress = 0;
+
+  function convertProgress(pr: number) {
+    let suff = [ 'B', 'KB', 'MB', 'GB' ];
+    let i = 0;
+
+    while ( pr >= 1000 ) {
+      pr /= 1024;
+      i += 1;
+    }
+
+    return pr.toFixed(2) + suff[i];
+  }
 
   onMount(() => {
     date = moment().format('hh:mm a');
@@ -18,10 +33,23 @@
     itv = setInterval(() => {
       date = moment().format('hh:mm a');
     }, 1000);
+
+    anySub = dataService.anySub.subscribe((s) => {
+      if ( !s ) return;
+
+      if ( s.type === 'update-progress' ) {
+        if ( s.data != 'end' ) {
+          progress = s.data;
+        } else {
+          progress = 0;
+        }
+      }
+    })
   });
 
   onDestroy(() => {
     clearInterval(itv);
+    anySub();
   });
 
   function minimize() {
@@ -44,6 +72,7 @@
   <h4 class="ml-1">CubeDB</h4>
 
   <div class="absolute right-0 top-0 flex h-8 items-center">
+    {#if progress} <span class="mr-2"> { convertProgress(progress) } </span> {/if}
     <Select class="w-20 h-[2rem] mr-4"
       items={ LANGUAGES } label={e => e[1].code} bind:value={ $globalLang } transform={e => e[1].code} onChange={ updateLang }/>
     <span>{date}</span>

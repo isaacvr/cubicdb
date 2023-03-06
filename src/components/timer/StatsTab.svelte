@@ -11,20 +11,21 @@
   import { derived, type Readable } from 'svelte/store';
   import { globalLang } from '@stores/language.service';
   import { getLanguage } from '@lang/index';
+  import Button from '@components/material/Button.svelte';
 
   export let context: TimerContext;
 
   let localLang: Readable<Language> = derived(globalLang, ($lang) => getLanguage( $lang ));
     
-  let { solves, AoX, stats, session } = context;
+  let { solves, AoX, stats, session, selectSolveById } = context;
 
   let chartElement: HTMLCanvasElement;
-  let chartElement1: HTMLCanvasElement;
+  // let chartElement1: HTMLCanvasElement;
   let chartElement2: HTMLCanvasElement;
   let chartElement3: HTMLCanvasElement;
   let chartElement4: HTMLCanvasElement;
   let timeChart: Chart;
-  let penaltyChart: Chart;
+  // let penaltyChart: Chart;
   let hourChart: Chart;
   let weekChart: Chart;
   let distChart: Chart;
@@ -118,13 +119,6 @@
   }
 
   function updateStats() {
-    // PENALTY CHART
-    penaltyChart.data.datasets[0].data = [
-      $stats.NP.value, $stats.P2.value, $stats.DNF.value
-    ];
-
-    penaltyChart.update();
-
     // HISTOGRAM
     let minT = $stats.best.value;
     let maxT = $stats.worst.value + 1e-5;
@@ -146,15 +140,20 @@
   }
 
   function updateChartText() {
+    const appFont = localStorage.getItem('app-font') || 'Ubuntu';
+
     $localLang.TIMER.timeChartLabels.forEach((l, p) => {
       timeChart.data.datasets[p].label = l;
     });
 
-    // @ts-ignore
-    timeChart.options.plugins.title.text = $localLang.TIMER.timeDistribution;
+    if ( timeChart.options.plugins?.title ) {
+      timeChart.options.plugins.title.text = $localLang.TIMER.timeDistribution;
+      // @ts-ignore
+      timeChart.options.plugins.title.font.family = appFont;
+    }
     
     // @ts-ignore
-    penaltyChart.data.labels[0] = $localLang.TIMER.clean;
+    // penaltyChart.data.labels[0] = $localLang.TIMER.clean;
 
     // @ts-ignore
     hourChart.options.plugins.title.text = $localLang.TIMER.hourDistribution;
@@ -169,7 +168,7 @@
     distChart.data.datasets[0].label = $localLang.TIMER.solves;
 
     timeChart.update();
-    penaltyChart.update();
+    // penaltyChart.update();
     hourChart.update();
     weekChart.update();
     distChart.update();
@@ -293,18 +292,18 @@
       plugins: [ shadingArea ],
     });
 
-    let ctx1 = chartElement1.getContext('2d');
+    // let ctx1 = chartElement1.getContext('2d');
 
-    // @ts-ignore
-    penaltyChart = new Chart(ctx1 as any, {
-      type: "doughnut",
-      data: { datasets: [{
-        data: [3, 4, 5],
-        backgroundColor: [ "rgb(74, 222, 128)", "rgb(251, 146, 60)", "rgb(248, 113, 113)" ],
-        borderColor: 'transparent'
-      }], labels: ["Clean", "+2", "DNF"] },
-      options: { plugins: { legend: { display: false } } }
-    });
+    // // @ts-ignore
+    // penaltyChart = new Chart(ctx1 as any, {
+    //   type: "doughnut",
+    //   data: { datasets: [{
+    //     data: [3, 4, 5],
+    //     backgroundColor: [ "rgb(74, 222, 128)", "rgb(251, 146, 60)", "rgb(248, 113, 113)" ],
+    //     borderColor: 'transparent'
+    //   }], labels: ["Clean", "+2", "DNF"] },
+    //   options: { plugins: { legend: { display: false } } }
+    // });
 
     let ctx2 = chartElement2.getContext('2d');
 
@@ -366,12 +365,12 @@
   });
 
   $: $AoX && timeChart && updateChart($solves);
-  $: $stats && penaltyChart && updateStats();
+  $: $stats && distChart && updateStats();
   $: $localLang, timeChart && updateChartText();
 
 </script>
 
-<svelte:window on:resize={ () => [timeChart, penaltyChart, hourChart, weekChart].forEach(c => c.resize()) } />
+<svelte:window on:resize={ () => [timeChart, /*penaltyChart,*/ hourChart, weekChart].forEach(c => c.resize()) } />
 
 <main>
   <div class="canvas card grid place-items-center bg-white bg-opacity-10 rounded-md">
@@ -406,20 +405,24 @@
       value={ $stats.count.value } total={ $stats.count.value }/>
   </div>
 
-  <div class="penalties card">
-    <div class="w-full"> <canvas bind:this={ chartElement1 }></canvas> </div>
-    <div class="w-full">
-      <StatsProgress title={ $localLang.TIMER.count } label={ $stats.count.value.toString() }
-        value={ $stats.count.value } total={ $stats.count.value }/>
-      
-      <StatsProgress title={ $localLang.TIMER.clean } pColor="bg-green-400" label={`${ $stats.NP.value }`}
-        value={ $stats.NP.value } total={ $stats.count.value }/>
-      
-      <StatsProgress title="+2" pColor="bg-orange-400" label={ $stats.P2.value.toString() }
-        value={ $stats.P2.value } total={ $stats.count.value }/>
-      
-      <StatsProgress title="DNF" pColor="bg-red-400" label={ $stats.DNF.value.toString() }
-        value={ $stats.DNF.value } total={ $stats.count.value }/>
+  <div class="card">
+    <h2 class="text-3xl text-gray-200 text-center">{ $localLang.TIMER.bestMarks }</h2>
+    <div id="best-marks">
+      {#each $localLang.TIMER.bestList as ao}  
+        <span>{ ao.title }</span>
+        <span>{
+          $stats[ ao.key ].id
+            ? timer( $stats[ ao.key ][ /^(best|worst)$/.test(ao.key) ? 'value' : 'best'] || 0, true, true )
+            : ':('
+          }</span>
+        <span>
+          {#if $stats[ ao.key ].id}
+            <Button class="h-6 bg-green-700 text-gray-300" on:click={
+              () => selectSolveById($stats[ ao.key ].id || '', ao.select )
+            }>{ $localLang.TIMER.go }</Button>
+          {/if}
+        </span>
+      {/each}
     </div>
   </div>
 
@@ -443,14 +446,14 @@
 main {
   @apply w-full overflow-scroll p-4 grid gap-4 grid-rows-5 grid-cols-2 lg:grid-cols-3 lg:grid-rows-3;
   max-height: calc(100vh - 8rem);
-  grid-template-rows: repeat(4, minmax(20rem, 1fr));
+  grid-template-rows: repeat(4, minmax(22rem, 1fr));
 }
 
 .card {
   @apply text-gray-300 p-6 bg-white bg-opacity-10 rounded-md;
 }
 
-.stats, .penalties {
+.stats {
   @apply flex flex-col items-center justify-between row-span-1;
 }
 
@@ -458,8 +461,10 @@ main {
   @apply col-span-2 row-span-2;
 }
 
-.penalties {
-  @apply grid grid-cols-2 place-items-center gap-6;
+#best-marks {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  row-gap: .25rem;
 }
 
 .hour-distribution {

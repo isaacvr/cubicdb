@@ -5,7 +5,6 @@ export class KeyboardInput implements TimerInputHandler {
   private _type: TimerInput;
   private _description: string;
   private active: boolean;
-  private decimals: boolean;
   private isRunning: boolean;
   private time: number;
   private ref: number;
@@ -25,7 +24,6 @@ export class KeyboardInput implements TimerInputHandler {
     this._type = 'Keyboard';
     this._description = 'Keyboard handler';
     this.active = false;
-    this.decimals = false;
     this.isRunning = false;
     this.time = 0;
     this.ref = 0;
@@ -67,7 +65,7 @@ export class KeyboardInput implements TimerInputHandler {
     if ( !this.active ) return;
 
     const { code } = e;
-    const { state, ready, time, createNewSolve } = this.context;
+    const { state, ready, time, decimals, createNewSolve } = this.context;
 
     this.isValid = true;
 
@@ -78,7 +76,7 @@ export class KeyboardInput implements TimerInputHandler {
           
           if ( this._session?.settings.hasInspection ) {
             state.update(() => TimerState.INSPECTION);
-            this.decimals = false;
+            decimals.update(() => false);
             time.update(() => 0);
             ready.update(() => false);
             this.ref = performance.now() + (this._session?.settings.inspection || 15) * 1000;
@@ -87,7 +85,7 @@ export class KeyboardInput implements TimerInputHandler {
             state.update(() => TimerState.RUNNING);
             ready.update(() => false);
             this.ref = performance.now();
-            this.decimals = true;
+            decimals.update(() => true);
             this.stopTimer();
 
             if ( (this._lastSolve as Solve).penalty === Penalty.P2 ) {
@@ -102,7 +100,7 @@ export class KeyboardInput implements TimerInputHandler {
       } else if ( this._state === TimerState.INSPECTION ) {
         state.update(() => TimerState.RUNNING);
         this.ref = performance.now();
-        this.decimals = true;
+        decimals.update(() => true);
         this.stopTimer();
 
         if ( (this._lastSolve as Solve).penalty === Penalty.P2 ) {

@@ -23,6 +23,11 @@ interface SessionSub {
   data: Session[];
 }
 
+interface AnySub {
+  type: string;
+  data: any;
+}
+
 interface PDFOptions {
   width: number;
   height: number;
@@ -33,14 +38,14 @@ interface PDFOptions {
 
 export class DataService {
   ipc: IPC;
-  window: BrowserWindow;
+  // window: BrowserWindow;
   algSub: Writable< Algorithm[] >;
   cardSub: Writable< RawCard[] >;
   tutSub: Writable< TutorialData >;
   solveSub: Writable<SolveSub>;
   contestSub: Writable<ContestSub>;
   sessSub: Writable< { type: string, data: Session | Session[] } >;
-  anySub: Writable<any>;
+  anySub: Writable<AnySub>;
   isElectron: boolean;
 
   private static _instance: DataService;
@@ -53,7 +58,7 @@ export class DataService {
     this.tutSub = writable< TutorialData >();
     this.sessSub = writable< SessionSub >();
     this.contestSub = writable< ContestSub >();
-    this.anySub = writable<any>();
+    this.anySub = writable<AnySub>();
 
     if ( navigator.userAgent.indexOf('Electron') > -1 ) {
       this.ipc = (<any> window).electronAPI;
@@ -74,40 +79,40 @@ export class DataService {
   }
 
   setIpc() {
-    this.ipc.handleTutorials((_, tuts) => {
+    this.ipc.handleTutorials((_: any, tuts: any) => {
       this.tutSub.set(tuts);
     })
 
-    this.ipc.handleAlgorithms((_, algs) => {
+    this.ipc.handleAlgorithms((_: any, algs: any) => {
       this.algSub.set(algs);
     });
 
-    this.ipc.handleCards((_, cards) => {
+    this.ipc.handleCards((_: any, cards: any) => {
       this.cardSub.set(cards);
     });
 
-    this.ipc.handleSolves((_, slv) => {
+    this.ipc.handleSolves((_: any, slv: any) => {
       this.solveSub.set({
         type: slv[0],
         data: slv[1]
       });
     });
     
-    this.ipc.handleContests((_, cnt) => {
+    this.ipc.handleContests((_: any, cnt: any) => {
       this.contestSub.set({
         type: cnt[0],
         data: cnt[1]
       });
     });
 
-    this.ipc.handleSessions((_, sess) => {
+    this.ipc.handleSessions((_: any, sess: any) => {
       this.sessSub.set({
         type: sess[0],
         data: sess[1]
       });
     });
 
-    this.ipc.handleAny((_, ev) => {
+    this.ipc.handleAny((_: any, ev: any) => {
       this.anySub.set({
         type: ev[0],
         data: ev[1],
@@ -213,5 +218,9 @@ export class DataService {
 
   revealFile(f: string) {
     this.isElectron && this.ipc.revealFile(f);
+  }
+
+  update() {
+    this.isElectron && this.ipc.update();
   }
 }

@@ -3,6 +3,8 @@ const { join } = require('path');
 const { existsSync, mkdirSync, writeFileSync, unlinkSync, createWriteStream } = require('fs');
 const { tmpdir } = require('os');
 const { exec } = require('child_process');
+const axios = require('axios').default;
+const unzipper = require('unzipper');
 
 const NeDB = require('nedb');
 const electronReload = require('electron-reload');
@@ -277,6 +279,35 @@ ipcMain.on('open-file', (_, dir) => {
 
 ipcMain.on('reveal-file', (_, dir) => {
   exec('explorer /select,' + dir);
+});
+
+ipcMain.on('update', (ev) => {
+  axios({
+    method: 'get',
+    url: 'https://github.com/isaacvr/cubedb-svelte/archive/refs/heads/dist.zip',
+    responseType: 'stream'
+  }).then((res) => {
+    let length = 0;
+
+    // @ts-ignore
+    res.data.on('data', (chunk) => {
+      length += chunk.length;
+      ev.sender.send('any', ['update-progress', length]);
+    });
+
+    // res.data.pipe( unzipper.Extract({ path: join(__dirname, '../dist') }) )
+    let str = res.data.pipe( unzipper.Extract({ path: join(__dirname, '../../test') }) )
+    
+    str.on('close', () => {
+      console.log('CLOSE');
+      ev.sender.send('any', ['update', true]);
+      ev.sender.send('any', ['update-progress', 'end']);
+    });
+
+  }).catch((err) => {
+    console.log("ERROR: ", err);
+    ev.sender.send('any', ['update-error', false]);
+  });
 });
 
 function createWindow() {

@@ -27,6 +27,7 @@
       "@interfaces": ["src/interfaces/index.ts"],
       "@stores/*": ["src/stores/*"],
       "@workers/*": ["src/workers/*"],
+      "@lang/*": ["src/lang/*"],
     }
   },
   "include": ["src/**/*.d.ts", "src/**/*.ts", "src/**/*.js", "src/**/*.svelte"],

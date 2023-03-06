@@ -1,7 +1,10 @@
 import { defineConfig } from 'vite';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { resolve } from 'path';
-import basicSSL from '@vitejs/plugin-basic-ssl';
+
+let VERSION = require('./package.json').version;
+
+// import basicSSL from '@vitejs/plugin-basic-ssl';
 
 export default defineConfig((env) => ({
   plugins: [ svelte(), /*basicSSL()*/ ],
@@ -27,7 +30,11 @@ export default defineConfig((env) => ({
       "@interfaces": resolve(__dirname, './src/interfaces/index.ts'),
       "@stores": resolve(__dirname, './src/stores'),
       "@workers": resolve(__dirname, './src/workers'),
+      "@lang": resolve(__dirname, './src/lang'),
     },
     dedupe: ["three"]
+  },
+  define: {
+    VERSION: JSON.stringify(VERSION),
   }
 }));

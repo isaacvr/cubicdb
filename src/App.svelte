@@ -1,6 +1,6 @@
 <script lang="ts">
   /// Svelte Stuff
-  import { Route, Router } from 'svelte-routing';
+  import { navigate, Route, Router } from 'svelte-routing';
 
   /// Components
   import Frame from '@components/Frame.svelte';
