@@ -11,7 +11,7 @@
   let tab: Tab = { name: "", id: "", index: 0, icon: null, ariaLabel };
 
   onMount(() => {
-    tab = { name, id, index: 0, icon };
+    tab = { name, id, index: 0, icon, ariaLabel };
     registerTab(tab);
   });
 

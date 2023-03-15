@@ -1,0 +1,46 @@
+{
+  "name": "CubeDB",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#212121",
+  "description": "The definitive app for Speedcubing",
+  "theme_color": "#212121",
+  "categories": [
+    "education",
+    "entertainment",
+    "games",
+    "sports"
+  ],
+  "icons": [
+    {
+      "src": "logo-100.png",
+      "sizes": "100x100",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "logo-200.png",
+      "sizes": "200x200",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "logo-500.png",
+      "sizes": "500x500",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "logo-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "logo-1000.png",
+      "sizes": "1000x1000",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

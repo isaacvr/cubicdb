@@ -116,6 +116,12 @@ export const Spanish: Language = {
     notes: 'Notas',
     settings: 'Configuración',
 
+    // Tab accesibility
+    timerTab: 'Temporizador',
+    sessionsTab: 'Sesiones',
+    chartsTab: 'Gráficos',
+
+    // Global Timer settings
     manageSessions: 'Administrar sesiones',
     selectSession: 'Elegir sesión',
     selectGroup: 'Elegir grupo',

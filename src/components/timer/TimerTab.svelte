@@ -415,7 +415,7 @@
     <div class="absolute top-1 right-12 flex flex-col" class:isRunning={ $isRunning }>
       {#each options.filter((e, p) => !battle ? true : p === 3 || p === 5) as option}
         <Tooltip class="cursor-pointer" position="left" text={ option.text } hasKeybinding>
-          <button tabindex="0" class="my-3 mx-1 w-5 h-5 { textColor }" on:click={ option.handler }>
+          <button aria-label={ option.text } tabindex="0" class="my-3 mx-1 w-5 h-5 { textColor }" on:click={ option.handler }>
             <svelte:component this={option.icon} width="100%" height="100%"/>
           </button>
         </Tooltip>
@@ -594,8 +594,12 @@
           class="bg-gray-600 text-gray-200"
           bind:value={ modalData }/>
         <div class="flex w-full justify-center my-2">
-          <Button on:click={() => modal.close()}>{ $localLang.TIMER.cancel }</Button>
-          <Button on:click={() => modal.close( modalData.trim() )}>{ $localLang.TIMER.save }</Button>
+          <Button ariaLabel={ $localLang.TIMER.cancel } on:click={() => modal.close()}>
+            { $localLang.TIMER.cancel }
+          </Button>
+          <Button ariaLabel={ $localLang.TIMER.save } on:click={() => modal.close( modalData.trim() )}>
+            { $localLang.TIMER.save }
+          </Button>
         </div>
       {/if}
 
@@ -604,7 +608,7 @@
           <h2 class="col-span-3">{ $localLang.TIMER.scramble }</h2>
           <h2 class="col-span-1">{ $localLang.TIMER.time }</h2>
           {#each $solves as s }
-            <button tabindex="0" class="
+            <button aria-label={ $localLang.TIMER.scramble } tabindex="0" class="
               col-span-3 cursor-pointer hover:text-blue-400 my-2 text-left
               text-ellipsis overflow-hidden whitespace-nowrap
             " on:click={ () => select(s) }>{ s.scramble }</button>
@@ -651,8 +655,12 @@
           </div>
         </section>
         <section class="flex mt-4">
-          <Button flat on:click={ () => modal.close() }>{ $localLang.TIMER.cancel }</Button>
-          <Button flat on:click={ () => modal.close(true) }>{ $localLang.TIMER.save }</Button>
+          <Button ariaLabel={ $localLang.TIMER.cancel } flat on:click={ () => modal.close() }>
+            { $localLang.TIMER.cancel }
+          </Button>
+          <Button ariaLabel={ $localLang.TIMER.save } flat on:click={ () => modal.close(true) }>
+            { $localLang.TIMER.save }
+          </Button>
         </section>
       {/if}
     </div>

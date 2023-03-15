@@ -1,5 +1,4 @@
 import type { Algorithm, RawCard, Solve, Session, Tutorial, Sheet, CubeEvent, IPC } from '@interfaces';
-import type { BrowserWindow } from 'electron';
 import type { Writable } from 'svelte/store';
 import { writable } from 'svelte/store';
 
@@ -38,7 +37,6 @@ interface PDFOptions {
 
 export class DataService {
   ipc: IPC;
-  // window: BrowserWindow;
   algSub: Writable< Algorithm[] >;
   cardSub: Writable< RawCard[] >;
   tutSub: Writable< TutorialData >;

@@ -5,31 +5,37 @@
 @font-face {
   font-family: 'Ubuntu';
   src: url('/assets/fonts/UbuntuMono-Regular.ttf');
+  font-display: swap;
 }
 
 @font-face {
   font-family: 'RopaSans';
   src: url('/assets/fonts/RopaSans-Regular.ttf');
+  font-display: swap;
 }
 
 @font-face {
   font-family: 'BreeSerif';
   src: url('/assets/fonts/BreeSerif-Regular.ttf');
+  font-display: swap;
 }
 
 @font-face {
   font-family: 'CQMono';
   src: url('/assets/fonts/CQMono.otf');
+  font-display: swap;
 }
 
 @font-face {
   font-family: 'Raleway';
   src: url('/assets/fonts/Raleway-Regular.ttf');
+  font-display: swap;
 }
 
 @font-face {
   font-family: 'Roboto';
   src: url('/assets/fonts/Roboto-Medium.ttf');
+  font-display: swap;
 }
 
 @font-face {

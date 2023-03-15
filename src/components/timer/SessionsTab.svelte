@@ -324,27 +324,32 @@
   <div class:isVisible={ $selected }
     class="fixed rounded-md p-2 top-0 opacity-0 pointer-events-none
     transition-all duration-300 bg-gray-700 shadow-md flex w-max max-w-full actions z-20">
-    <Button tabindex={ $selected ? 0 : -1 } flat on:click={() => selectAll()}>
+    <Button ariaLabel={ $localLang.TIMER.selectAll }
+      tabindex={ $selected ? 0 : -1 } flat on:click={() => selectAll()}>
       <!-- <SelectAllIcon width="1.2rem" height="1.2rem" />  -->
       { $localLang.TIMER.selectAll } &nbsp; <span class="flex ml-auto text-yellow-400">[A]</span>
     </Button>
     
-    <Button tabindex={ $selected ? 0 : -1 } flat on:click={() => selectInterval()}>
+    <Button ariaLabel={ $localLang.TIMER.selectInterval }
+      tabindex={ $selected ? 0 : -1 } flat on:click={() => selectInterval()}>
       <!-- <ArrowExpandIcon width="1.2rem" height="1.2rem" /> -->
       { $localLang.TIMER.selectInterval } &nbsp; <span class="flex ml-auto text-yellow-400">[T]</span>
     </Button>
     
-    <Button tabindex={ $selected ? 0 : -1 } flat on:click={() => selectInvert()}>
+    <Button ariaLabel={ $localLang.TIMER.invertSelection }
+      tabindex={ $selected ? 0 : -1 } flat on:click={() => selectInvert()}>
       <!-- <SelectInverseIcon width="1.2rem" height="1.2rem" /> -->
       { $localLang.TIMER.invertSelection } &nbsp; <span class="flex ml-auto text-yellow-400">[V]</span>
     </Button>
     
-    <Button tabindex={ $selected ? 0 : -1 } flat on:click={() => selectNone()}>
+    <Button ariaLabel={ $localLang.TIMER.cancel }
+      tabindex={ $selected ? 0 : -1 } flat on:click={() => selectNone()}>
       <!-- <SelectOffIcon width="1.2rem" height="1.2rem" /> -->
       { $localLang.TIMER.cancel } &nbsp; <span class="flex ml-auto text-yellow-400">[C / Esc]</span>
     </Button>
 
-    <Button tabindex={ $selected ? 0 : -1 } flat on:click={() => deleteSelected()}>
+    <Button ariaLabel={ $localLang.TIMER.delete }
+      tabindex={ $selected ? 0 : -1 } flat on:click={() => deleteSelected()}>
       <!-- <DeleteIcon width="1.2rem" height="1.2rem" /> -->
       { $localLang.TIMER.delete } &nbsp; <span class="flex ml-auto text-yellow-400">[D]</span>
     </Button>
@@ -371,18 +376,30 @@
       <CommentIcon /> <TextArea bind:value={ sSolve.comments } placeholder={ $localLang.TIMER.comment }/>
     </div>
     <div class="mt-2 flex">
-      <Button flat on:click={ () => { _delete([ sSolve ]); modal.close()} }><DeleteIcon /> { $localLang.TIMER.delete }</Button>
-      <Button flat on:click={ () => modal.close() }><CloseIcon /> { $localLang.TIMER.cancel }</Button>
-      <Button flat on:click={ () => modal.close(sSolve) } class="mr-2"><SendIcon /> { $localLang.TIMER.save }</Button>
-      <Button flat
+      <Button ariaLabel={ $localLang.TIMER.delete } flat
+        on:click={ () => { _delete([ sSolve ]); modal.close()} }>
+        <DeleteIcon /> { $localLang.TIMER.delete }
+      </Button>
+      
+      <Button ariaLabel={ $localLang.TIMER.cancel } flat
+        on:click={ () => modal.close() }>
+        <CloseIcon /> { $localLang.TIMER.cancel }
+      </Button>
+      
+      <Button ariaLabel={ $localLang.TIMER.save } flat
+        on:click={ () => modal.close(sSolve) } class="mr-2">
+        <SendIcon /> { $localLang.TIMER.save }
+      </Button>
+
+      <Button ariaLabel="+2" flat
         class={ sSolve.penalty === Penalty.P2 ? 'text-red-500' : '' }
         on:click={ () => setPenalty(Penalty.P2) }>+2</Button>
 
-      <Button flat
+      <Button ariaLabel="DNF" flat
         class={ sSolve.penalty === Penalty.DNF ? 'text-red-500' : '' }
         on:click={ () => setPenalty(Penalty.DNF) }>DNF</Button>
       
-        <Button flat
+        <Button ariaLabel={ $localLang.TIMER.noPenalty } flat
         class={ sSolve.penalty === Penalty.NONE ? 'text-green-500' : '' }
         on:click={ () => setPenalty(Penalty.NONE) }>{ $localLang.TIMER.noPenalty }</Button>
     </div>
@@ -391,8 +408,16 @@
   <Modal bind:this={ deleteAllModal } bind:show={ showDeleteAll } onClose={ deleteAllHandler }>
     <h1 class="text-gray-400 mb-4 text-lg">{ $localLang.TIMER.removeAllSolves }</h1>
     <div class="flex justify-evenly">
-      <Button on:click={ () => deleteAllModal.close() }>{ $localLang.TIMER.cancel }</Button>
-      <Button class="bg-red-800 hover:bg-red-700 text-gray-400" on:click={ () => deleteAllModal.close(true) }>{ $localLang.TIMER.delete }</Button>
+      <Button ariaLabel={ $localLang.TIMER.cancel }
+        on:click={ () => deleteAllModal.close() }>
+        { $localLang.TIMER.cancel }
+      </Button>
+      
+      <Button ariaLabel={ $localLang.TIMER.delete }
+        class="bg-red-800 hover:bg-red-700 text-gray-400"
+        on:click={ () => deleteAllModal.close(true) }>
+        { $localLang.TIMER.delete }
+      </Button>
     </div>
   </Modal>
 

@@ -1,29 +1,31 @@
 const { app, BrowserWindow, ipcMain, shell } = require('electron');
-const { join } = require('path');
+const { autoUpdater } = require('electron-updater');
+const { join, resolve } = require('path');
 const { existsSync, mkdirSync, writeFileSync, unlinkSync, createWriteStream } = require('fs');
 const { tmpdir } = require('os');
 const { exec } = require('child_process');
-const axios = require('axios').default;
-const unzipper = require('unzipper');
 
 const NeDB = require('nedb');
 const electronReload = require('electron-reload');
 const archiver = require('archiver');
-const ess = require('electron-squirrel-startup');
 const express = require('express');
 const eApp = express();
 const http = require('http');
 
-if ( ess ) app.quit();
-
 const args = process.argv.slice(1), serve = args.some(val => val === '--serve');
 
-let Algorithms = new NeDB({ filename: __dirname + '/database/algs.db', autoload: true });
-let Cards = new NeDB({ filename: __dirname + '/database/cards.db', autoload: true });
-let Tutorials = new NeDB({ filename: __dirname + '/database/tutorials.db', autoload: true });
-let Sessions = new NeDB({ filename: __dirname + '/database/sessions.db', autoload: true });
-let Solves = new NeDB({ filename: __dirname + '/database/solves.db', autoload: true });
-let Contests = new NeDB({ filename: __dirname + '/database/contests.db', autoload: true });
+let appPath = app.getAppPath();
+let prod = app.isPackaged;
+let params = [ prod ? appPath.replace(/app\.asar$/, '') : appPath, 'src', 'database' ];
+let dbPath = join.apply(null, params);
+
+console.log("DBPATH: ", dbPath);
+
+let Algorithms = new NeDB({ filename: resolve(dbPath, 'algs.db'), autoload: true });
+let Tutorials = new NeDB({ filename: resolve(dbPath, 'tutorials.db'), autoload: true });
+let Sessions = new NeDB({ filename: resolve(dbPath, 'sessions.db'), autoload: true });
+let Solves = new NeDB({ filename: resolve(dbPath, 'solves.db'), autoload: true });
+let Contests = new NeDB({ filename: resolve(dbPath, 'contests.db'), autoload: true });
 
 /// Algorithms handler
 ipcMain.on('algorithms', (event, arg) => {
@@ -37,19 +39,6 @@ ipcMain.on('algorithms', (event, arg) => {
     }
 
     event.sender.send('algorithms', algs);
-  });
-
-});
-
-/// Cards handler
-ipcMain.on('cards', (event) => {
-  Cards.find({}, (err, algs) => {
-    if ( err ) {
-      event.sender.send('cards', []);
-      return;
-    }
-
-    event.sender.send('cards', algs);
   });
 
 });
@@ -282,32 +271,7 @@ ipcMain.on('reveal-file', (_, dir) => {
 });
 
 ipcMain.on('update', (ev) => {
-  axios({
-    method: 'get',
-    url: 'https://github.com/isaacvr/cubedb-svelte/archive/refs/heads/dist.zip',
-    responseType: 'stream'
-  }).then((res) => {
-    let length = 0;
-
-    // @ts-ignore
-    res.data.on('data', (chunk) => {
-      length += chunk.length;
-      ev.sender.send('any', ['update-progress', length]);
-    });
-
-    // res.data.pipe( unzipper.Extract({ path: join(__dirname, '../dist') }) )
-    let str = res.data.pipe( unzipper.Extract({ path: join(__dirname, '../../test') }) )
-    
-    str.on('close', () => {
-      console.log('CLOSE');
-      ev.sender.send('any', ['update', true]);
-      ev.sender.send('any', ['update-progress', 'end']);
-    });
-
-  }).catch((err) => {
-    console.log("ERROR: ", err);
-    ev.sender.send('any', ['update-error', false]);
-  });
+  autoUpdater.checkForUpdatesAndNotify();
 });
 
 function createWindow() {

@@ -3,7 +3,11 @@
   "productName": "CubeDB",
   "version": "1.0.0",
   "description": "The definitive speedcubing app",
-  "homepage": "https://github.com/isaacvr/cube-db",
+  "homepage": "https://github.com/isaacvr/cubedb-svelte",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/isaacvr/cubedb-svelte.git"
+  },
   "private": true,
   "author": {
     "name": "Isaac Vega Rodriguez",
@@ -23,12 +27,6 @@
     "windows"
   ],
   "main": "src/index.js",
-  "build": {
-    "files": [
-      "./dist/**/*"
-    ],
-    "asar": true
-  },
   "scripts": {
     "start": "concurrently \"yarn dev\" \"electron-forge start -- --serve\"",
     "package": "electron-forge package",
@@ -37,25 +35,15 @@
     "lint": "echo \"No linting configured\"",
     "build": "vite build",
     "dev": "vite",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "builder": "electron-builder build"
   },
   "license": "MIT",
   "config": {
     "forge": {
       "electronRebuildConfig": {
         "forceABI": 113
-      },
-      "packagerConfig": {},
-      "makers": [
-        {
-          "name": "@electron-forge/maker-squirrel",
-          "config": {
-            "noMsi": false,
-            "setupMsi": "CubeDB",
-            "name": "CubeDB"
-          }
-        }
-      ]
+      }
     }
   },
   "dependencies": {
@@ -65,7 +53,7 @@
     "chart.js": "4.0.1",
     "chartjs-plugin-zoom": "2.0.0",
     "electron-reload": "1.5.0",
-    "electron-squirrel-startup": "1.0.0",
+    "electron-updater": "^5.3.0",
     "express": "4.18.2",
     "jszip": "3.10.1",
     "moment": "2.29.4",

@@ -616,20 +616,24 @@
     </div>
 
     <TabGroup bind:this={ tabs } class="absolute w-full" onChange={ t => $tab = t || 0 }>
-      <Tab name="" icon={ TimerIcon } ariaLabel="timer tab">
+      <Tab name="" icon={ TimerIcon } ariaLabel={ $localLang.TIMER.timerTab }>
         <TimerTab { context }/>
       </Tab>
-      <Tab name="" icon={ ListIcon } ariaLabel="sessions tab">
+      <Tab name="" icon={ ListIcon } ariaLabel={ $localLang.TIMER.sessionsTab }>
         <SessionsTab { context }/>
       </Tab>
-      <Tab name="" icon={ ChartIcon } ariaLabel="charts tab">
+      <Tab name="" icon={ ChartIcon } ariaLabel={ $localLang.TIMER.chartsTab }>
         <StatsTab { context }/>
       </Tab>
     </TabGroup>
   {/if}
 
   <Modal show={ openEdit } onClose={ handleClose }>
-    <Button on:click={ openAddSession }> <PlusIcon /> { $localLang.TIMER.addNewSession } </Button>
+    <Button ariaLabel={ $localLang.TIMER.addNewSession }
+      on:click={ openAddSession }>
+      <PlusIcon /> { $localLang.TIMER.addNewSession }
+    </Button>
+    
     <div class="grid">
       {#if creatingSession}
         <div class="flex">

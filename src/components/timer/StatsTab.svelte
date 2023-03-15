@@ -417,7 +417,7 @@
           }</span>
         <span>
           {#if $stats[ ao.key ].id}
-            <Button class="h-6 bg-green-700 text-gray-300" on:click={
+            <Button ariaLabel={ $localLang.TIMER.go } class="h-6 bg-green-700 text-gray-300" on:click={
               () => selectSolveById($stats[ ao.key ].id || '', ao.select )
             }>{ $localLang.TIMER.go }</Button>
           {/if}

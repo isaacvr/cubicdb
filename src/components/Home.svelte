@@ -1,10 +1,9 @@
 <script lang="ts">
   import { Link } from "svelte-routing";
   import { generateCubeBundle } from "@helpers/cube-draw";
-  import type { Card, Language } from "@interfaces";
+  import type { Card } from "@interfaces";
   import { Puzzle } from "@classes/puzzle/puzzle";
   import { CubeMode } from "@constants";
-  import { derived, type Readable, type Writable } from "svelte/store";
   import { globalLang } from "@stores/language.service";
   import { getLanguage } from "@lang/index";
 
@@ -19,7 +18,7 @@
         route: "/tutorials",
         ready: false,
         timer: false,
-        cube: '/assets/cube.png',
+        cube: '/assets/logo-500.png',
       }, {
         title: HOME.algorithms,
         route: "/algorithms",
@@ -54,18 +53,18 @@
         route: "/settings",
         timer: false,
         ready: false,
-        cube: '/assets/logo.png',
+        cube: '/assets/logo-500.png',
         puzzle: new Puzzle({ type: 'rubik', mode: CubeMode.GRAY, order: [2] })
       }, {
         title: HOME.importExport,
         route: '/import-export',
-        cube: '/assets/logo.png',
+        cube: '/assets/logo-500.png',
         ready: true,
         timer: false,
       }, {
         title: HOME.contest,
         route: '/contest',
-        cube: '/assets/logo.png',
+        cube: '/assets/logo-500.png',
         ready: true,
         puzzle: new Puzzle({ type: 'redi' })
       }
@@ -78,7 +77,7 @@
       return ac;
     }, []);
   
-    generateCubeBundle(cubes, undefined, false, true).then(gen => {
+    generateCubeBundle(cubes, 1024, false, true).then(gen => {
       let subsc = gen.subscribe((c) => {
         if ( c === null ) {
           subsc();
@@ -95,16 +94,16 @@
 <main class="container-mini">
   <ul class="w-full grid gap-4 place-items-center">
     {#each cards as card (card.route)}
-      <Link to={ card.route }>
-        <li class="w-40 h-48 text-center shadow-md rounded-md select-none cursor-pointer
-        transition-all duration-200 flex flex-col items-center justify-between py-3
-        bg-white bg-opacity-10 text-gray-400
+      <li class="w-40 h-48 text-center shadow-md rounded-md select-none cursor-pointer
+      transition-all duration-200 flex flex-col items-center justify-between py-3
+      bg-white bg-opacity-10 text-gray-400
 
-        hover:rotate-3 hover:shadow-lg">
-          <img class="w-32 h-32" src={card.puzzle ? card.puzzle.img : card.cube} alt={ card.title }>
+      hover:rotate-3 hover:shadow-lg">
+        <Link to={ card.route }>
+          <img class="w-32 h-32 mx-auto" src={card.puzzle ? card.puzzle.img : card.cube} alt={ card.title }>
           <h2>{card.title}</h2>
-        </li>
-      </Link>
+        </Link>
+      </li>
     {/each}
   </ul>
 </main>

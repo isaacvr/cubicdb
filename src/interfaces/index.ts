@@ -537,6 +537,11 @@ export interface Language {
     notes: string;
     settings: string;
 
+    // Tab accesibility
+    timerTab: string;
+    sessionsTab: string;
+    chartsTab: string;
+
     // Global Timer settings
     manageSessions: string;
     selectSession: string;

@@ -108,6 +108,12 @@ export const English: Language = {
     notes: 'Notes',
     settings: 'Settings',
 
+    // Tab accesibility
+    timerTab: 'Timer tab',
+    sessionsTab: 'Sessions tab',
+    chartsTab: 'Charts tab',
+
+    // Global Timer settings
     manageSessions: 'Manage sessions',
     selectSession: 'Select session',
     selectGroup: 'Select group',

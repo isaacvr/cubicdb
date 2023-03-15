@@ -5,6 +5,8 @@
 /src/database/contests.db
 /src/components/Contest.svelte
 /dist
+/cache
+/release
 
 # Logs
 logs

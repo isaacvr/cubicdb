@@ -1,0 +1,51 @@
+{
+  "productName": "CubeDB",
+  "appId": "com.isaacvr.cubedb",
+  "compression": "maximum",
+  "electronDownload": {
+    "cache": "cache",
+    "isVerifyChecksum": false,
+    "platform": "win32",
+    "arch": "x64"
+  },
+  "asar": true,
+  "directories": {
+    "output": "release/"
+  },
+  "files": [
+    "**/*",
+    "!**/*.ts",
+    "!*.code-workspace",
+    "!LICENSE.md",
+    "!package-lock.json",
+    "!src/",
+    "!pnpm-lock.yaml",
+    "!yarn.lock",
+    "!postcss.config.cjs",
+    "!svelte.config.js",
+    "!tailwind.config.cjs",
+    "!Todo.md",
+    "!tsconfig.json",
+    "!tsconfig.node.json",
+    "!vite.config.ts",
+    "package.json",
+    "dist/**/*",
+    "src/index.js",
+    "src/preload.js"
+  ],
+  "extraResources": [
+    "src/database/algs.db",
+    "src/database/tutorials.db"
+  ],
+  "win": {
+    "target": [
+      {
+        "target": "nsis",
+        "arch": [
+          "x64"
+        ]
+      }
+    ],
+    "publish": [ "github" ]
+  }
+}
