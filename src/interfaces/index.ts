@@ -437,7 +437,6 @@ export interface TimerInputHandler {
   stopTimer: () => void;
   keyUpHandler: (e: KeyboardEvent) => void;
   keyDownHandler: (e: KeyboardEvent) => void;
-  state?: StackmatState;
 }
 
 export interface Language {

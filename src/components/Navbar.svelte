@@ -26,13 +26,12 @@
       return s;
     })
       .join('/').split('/')
-      .filter(s => s)
-      .map(s => $localLang.NAVBAR.routeMap(s));
+      .filter(s => s);
 
     parts = [
       ...arr.map((e: string, p: number) => ({
         link: "/" + arr.slice(0, p + 1).join('/'),
-        name: e
+        name: $localLang.NAVBAR.routeMap(e)
       })),
     ];
   }

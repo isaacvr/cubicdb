@@ -317,25 +317,6 @@
     return TIMER_DIGITS.test(t) || TIMER_DNF.test(t) || t === '';
   }
 
-  // let pointerInterval: NodeJS.Timer | null = null;
-
-  // function pointerDown(e?: any) {
-  //   if ( pointerInterval != null ) return;
-
-  //   pointerInterval = setInterval(() => {
-  //     keyDown({ code: 'Space' } as KeyboardEvent);
-  //   }, 4);
-  // }
-  
-  // function pointerUp(e?: any) {
-  //   if ( pointerInterval != null ) {
-  //     clearInterval(pointerInterval);
-  //     pointerInterval = null;
-  //   }
-
-  //   keyUp({ code: 'Space' } as KeyboardEvent);
-  // }
-
   function initInputHandler() {
     inputMethod.disconnect();
 
@@ -343,7 +324,7 @@
       inputMethod = new ManualInput();
     } else if ( $session?.settings?.input === 'StackMat' ) {
       inputMethod = new StackmatInput( inputContext );
-      inputMethod.init('', deviceID, true);
+      inputMethod.init(deviceID, true);
     } else {
       inputMethod = new KeyboardInput( inputContext );
       inputMethod.init();

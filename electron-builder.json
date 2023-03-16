@@ -10,6 +10,7 @@
   },
   "asar": true,
   "directories": {
+    "buildResources": "public/assets",
     "output": "release/"
   },
   "files": [
@@ -30,6 +31,7 @@
     "!vite.config.ts",
     "package.json",
     "dist/**/*",
+    "public/assets/**/*",
     "src/index.js",
     "src/preload.js"
   ],

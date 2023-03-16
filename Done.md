@@ -21,6 +21,8 @@
 
 ### Tutorials
 - [x] Basic migration
+- [x] Limit width to 50-60 characters
+
 
 ### Timer
 - [x] Check DELETE action in SessionTab
@@ -37,6 +39,9 @@
 - [x] Add key bindings to delete all
 - [x] Correct calculation of standard deviation in chart
 - [x] Add key binding labels (Reload scramble \[S\])
+- [x] Add mark to keyboard bindings for better contrast
+- [x] Add contextual menu to solves
+- [x] Check the timer state for every input method
 
 ### PLL-Recognition
 - [x] Add key bindings
@@ -61,6 +66,7 @@
   * Every adaptor should have modes of input and output, depending on the modes of the app.
   * Adaptor input should get a string, validate it and parse according to a mode of input. The result should be CubeDB related data.
   * Adaptor output should get a CubeDB related data, validate it and parse according to a mode of output.
+- [x] Same session name in different categories can cause overlap
 
 ### Statistics
 - [x] AoX

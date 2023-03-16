@@ -15,7 +15,7 @@ export const Spanish: Language = {
       let mp: [RegExp, string][] = [
         [/tutorials/i, 'Tutoriales'],
         [/algorithms/i, 'Algoritmos'],
-        [/timer/i, 'Timer'],
+        [/timer/i, 'Temporizador'],
         [/battle/i, 'Batalla'],
         [/pll-trainer/i, 'Reconocimiento PLL'],
         [/simulator/i, 'Simulador'],

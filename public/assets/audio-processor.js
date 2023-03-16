@@ -1,43 +1,41 @@
-import type { StackmatSignalHeader, StackmatState } from "@interfaces";
-
 class AudioProcessor extends AudioWorkletProcessor {
-  private sample_rate = 41000;
-  private last_power = 1;
-  private agc_factor = 0.0001;
-  private bitAnalyzer: (b: number) => void;
-  private state: StackmatState = {
-    device: '',
-    time_milli: 0,
-    unit: 10,
-    on: false,
-    greenLight: false,
-    leftHand: false,
-    rightHand: false,
-    running: false,
-    unknownRunning: true,
-    signalHeader: 'I',
-    noise: 1,
-    power: 1
-  };
-
-  //========== Audio2Bits Part ==========
-  private lastVal: number[] = [];
-  private lastSgn = 0;
-  private readonly THRESHOLD_SCHM = 0.2;
-  private readonly THRESHOLD_EDGE = 0.7;
-  private lenVoltageKeep = 0;
-  private distortionStat = 0;
-
-  //========== Bits Analyzer ==========
-  private bitBuffer: number[] = [];
-  private byteBuffer: string[] = [];
-  private idle_val = 0;
-  private last_bit = 0;
-  private last_bit_length = 0;
-  private no_state_length = 0;
-  
-  constructor(params: AudioWorkletNodeOptions | undefined) {
+  constructor(params) {
     super();
+
+    this.sample_rate = 41000;
+    this.last_power = 1;
+    this.agc_factor = 0.0001;
+    this.bitAnalyzer = null;
+    this.state = {
+      device: '',
+      time_milli: 0,
+      unit: 10,
+      on: false,
+      greenLight: false,
+      leftHand: false,
+      rightHand: false,
+      running: false,
+      unknownRunning: true,
+      signalHeader: 'I',
+      noise: 1,
+      power: 1
+    };
+
+    //========== Audio2Bits Part ==========
+    this.lastVal = [];
+    this.lastSgn = 0;
+    this.THRESHOLD_SCHM = 0.2;
+    this.THRESHOLD_EDGE = 0.7;
+    this.lenVoltageKeep = 0;
+    this.distortionStat = 0;
+
+    //========== Bits Analyzer ==========
+    this.bitBuffer = [];
+    this.byteBuffer = [];
+    this.idle_val = 0;
+    this.last_bit = 0;
+    this.last_bit_length = 0;
+    this.no_state_length = 0;
 
     if ( params?.parameterData?.curTimer ) {
       this.sample_rate = (params.parameterData?.sampleRate || 44100) / 8000;
@@ -51,7 +49,7 @@ class AudioProcessor extends AudioWorkletProcessor {
     this.lastVal.length = Math.ceil(this.sample_rate / 6);
   }
 
-  process(inputs: Float32Array[][], outputs: Float32Array[][]): boolean {
+  process(inputs) {
     let input = inputs[0] || [];
     
     //AGC
@@ -66,7 +64,7 @@ class AudioProcessor extends AudioWorkletProcessor {
     return true;
   }
 
-  procSignal(signal: number) {
+  procSignal(signal) {
     this.lastVal.unshift(signal);
   
     let isEdge = ((this.lastVal.pop() || 0) - signal) * (this.lastSgn ? 1 : -1) > this.THRESHOLD_EDGE &&
@@ -97,7 +95,7 @@ class AudioProcessor extends AudioWorkletProcessor {
     }
   }
 
-  appendBit(bit: number) {
+  appendBit(bit) {
     this.bitBuffer.push(bit);
     
     if (bit != this.last_bit) {
@@ -144,7 +142,7 @@ class AudioProcessor extends AudioWorkletProcessor {
     }
   }
  
-  appendBitMoyu(bit: number) {
+  appendBitMoyu(bit) {
     if ( this.last_bit != this.idle_val && this.last_bit_length == 1 ) {
       this.bitBuffer.push( bit );
       
@@ -190,7 +188,7 @@ class AudioProcessor extends AudioWorkletProcessor {
     }
   }
 
-  decode(byteBuffer: string[]) {
+  decode(byteBuffer) {
   
     if ( byteBuffer.length != 9 && byteBuffer.length != 10 ) {
       return;
@@ -198,7 +196,7 @@ class AudioProcessor extends AudioWorkletProcessor {
     
     let re_head = /[ SILRCA]/;
     let re_number = /[0-9]/;
-    let head: StackmatSignalHeader = byteBuffer[0] as StackmatSignalHeader;
+    let head = byteBuffer[0];
 
     if ( !re_head.exec(head) ) {
       return;
@@ -226,12 +224,12 @@ class AudioProcessor extends AudioWorkletProcessor {
 
   }
 
-  pushNewState(head: StackmatSignalHeader, time_milli: number, unit: number) {
+  pushNewState(head, time_milli, unit) {
     let is_time_inc = unit == this.state.unit ?
       time_milli > this.state.time_milli :
       Math.floor(time_milli / 10) > Math.floor(this.state.time_milli / 10);
 
-    let new_state: StackmatState = {
+    let new_state = {
       device: '',
       time_milli,
       unit,

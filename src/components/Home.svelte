@@ -61,13 +61,13 @@
         cube: '/assets/logo-500.png',
         ready: true,
         timer: false,
-      }, {
+      }, /*{
         title: HOME.contest,
         route: '/contest',
         cube: '/assets/logo-500.png',
         ready: true,
         puzzle: new Puzzle({ type: 'redi' })
-      }
+      }//*/
     ];
 
     let cubes = cards.reduce((ac: Puzzle[], e) => {
@@ -77,7 +77,7 @@
       return ac;
     }, []);
   
-    generateCubeBundle(cubes, 1024, false, true).then(gen => {
+    generateCubeBundle(cubes, undefined, false, true).then(gen => {
       let subsc = gen.subscribe((c) => {
         if ( c === null ) {
           subsc();

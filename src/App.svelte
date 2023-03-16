@@ -1,6 +1,6 @@
 <script lang="ts">
   /// Svelte Stuff
-  import { navigate, Route, Router } from 'svelte-routing';
+  import { Route, Router } from 'svelte-routing';
 
   /// Components
   import Frame from '@components/Frame.svelte';
@@ -27,10 +27,12 @@
   let notifications: INotification[] = [];
   let nSub: Unsubscriber;
 
-  const path = window.location.pathname;
-  const basepath = /^\/?[a-zA-Z]+:/.test(path)
-    ? path.substr(0, path.indexOf(":") + 1)
-    : "/";
+  // const path = window.location.pathname;
+  // const basepath = /^\/?[a-zA-Z]+:/.test(path)
+  //   ? path.split('/').slice(0, -1).join('/')
+  //   : "/";
+
+  // console.log("BASEPATH", path, basepath);
 
   onMount(() => {
     nSub = notService.notificationSub.subscribe((v) => {
@@ -48,7 +50,7 @@
   });
 </script>
 
-<Router { basepath }>
+<Router>
   <Frame />
   <Navbar />
 

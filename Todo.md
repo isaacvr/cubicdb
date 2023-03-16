@@ -13,14 +13,10 @@
 ## Tutorials
 - [ ] Practice for subsets
 - [ ] Tutorial pro parser (AST and more)
-- [ ] Limit width to 50-60 characters
 
 ## Timer
 - [ ] Add smart cubes sync
 - [ ] Pre-defined settings through URL or props
-- [ ] Add mark to keyboard bindings for better contrast
-- [ ] Add contextual menu to solves
-- [ ] Check the timer state for every input method
 
 ## PLL-Recognition
 
@@ -38,7 +34,6 @@
 
 ## Import-Export
 - [ ] Add CubeDB
-- [ ] Same session name in different categories can cause overlap
 
 ## Modelation
 ### Cuboids

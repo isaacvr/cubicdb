@@ -31,6 +31,7 @@ export default defineConfig((env) => ({
       "@stores": resolve(__dirname, './src/stores'),
       "@workers": resolve(__dirname, './src/workers'),
       "@lang": resolve(__dirname, './src/lang'),
+      "@public": resolve(__dirname, './public'),
     },
     dedupe: ["three"]
   },

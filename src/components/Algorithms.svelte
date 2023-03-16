@@ -128,7 +128,7 @@
 
     let arr: Puzzle[] = type < 2 ? cards.map(e => e.puzzle as Puzzle ) : cases.map(e => e._puzzle as Puzzle);
 
-    generateCubeBundle(arr, 250, false, true).then(gen => {
+    generateCubeBundle(arr, 200, false, true).then(gen => {
       let subsc = gen.subscribe((c) => {
         if ( c === null ) {
           cards = cards;

@@ -28,16 +28,15 @@
   const ANIMATION_TIME = 200; /// Default animation time: 200ms
 
   let cube: Puzzle;
-  let scramble = "";
+  // let scramble = "";
   let dragging = false;
   let group: Object3D;
 
   /// GUI
   let puzzles: any[] = [];
-  let selectedPuzzle: PuzzleType = "sq1Star";
-  // let order = [2, 2, 4];
+  let selectedPuzzle: PuzzleType = "rubik";
   let order = 3;
-  let hasOrder = false;
+  let hasOrder = true;
   let GUIExpanded = false;
 
   /// Animation

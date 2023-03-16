@@ -287,7 +287,7 @@ function createWindow() {
       backgroundThrottling: false,
       preload: join(__dirname, 'preload.js' )
     },
-    icon: __dirname + '/logo.png'
+    icon: join(__dirname, '../public/assets', 'icon-big.png')
   });
 
   /// Other Stuff

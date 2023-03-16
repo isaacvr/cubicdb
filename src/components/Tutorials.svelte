@@ -52,25 +52,28 @@
 
 </script>
 
-{#if edition}
-<section class="container-mini">
-  <Button><Plus />Add Tutorial</Button>
-</section>
-{/if}
-
-{#each keys as k}
-  <section class="container-mini grid grid-cols-1">
-    <h2 class="text-gray-400 font-bold">{k}</h2>
-    <div class="flex">
-      {#each tutorials[k] as t}
-        <Link to="{ location.pathname + '/' + t.puzzle + '/' + t.titleLower + '?id=' + t._id }"
-          class="m-1.5 text-gray-400 p-2.5 shadow-md bg-purple-900 rounded-md"
-        >{t.title}
-        </Link>
-      {/each}
-    </div>
+<main>
+  <h1 class="text-2xl text-yellow-300 italic text-center">(experimental)</h1>
+  {#if edition}
+  <section class="container-mini">
+    <Button><Plus />Add Tutorial</Button>
   </section>
-{/each}
+  {/if}
+  
+  {#each keys as k}
+    <section class="container-mini grid grid-cols-1">
+      <h2 class="text-gray-400 font-bold">{k}</h2>
+      <div class="flex">
+        {#each tutorials[k] as t}
+          <Link to="{ location.pathname + '/' + t.puzzle + '/' + t.titleLower + '?id=' + t._id }"
+            class="m-1.5 text-gray-400 p-2.5 shadow-md bg-purple-900 rounded-md"
+          >{t.title}
+          </Link>
+        {/each}
+      </div>
+    </section>
+  {/each}
+</main>
 
 <style>
   h2 {
