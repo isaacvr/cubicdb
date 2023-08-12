@@ -67,7 +67,7 @@
         cube: '/assets/logo-500.png',
         ready: true,
         timer: false,
-      }, {
+      }, /*{
         title: HOME.contest,
         route: '/contest',
         cube: '/assets/logo-500.png',

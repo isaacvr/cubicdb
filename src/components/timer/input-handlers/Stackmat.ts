@@ -213,7 +213,7 @@ export class StackmatInput implements TimerInputHandler {
     }
 
     // Cleaned
-    if ( st.time_milli < (this.lastState?.time_milli || 0) ) {
+    if ( this.lastState && st.time_milli < this.lastState.time_milli ) {
       this.CLEAN();
       return;
     }
@@ -253,10 +253,9 @@ export class StackmatInput implements TimerInputHandler {
   }
   
   private STOPPED() {
-    const { addSolve, initScrambler } = this.context;
+    const { addSolve } = this.context;
 
     addSolve();
-    initScrambler();
   }
   
   private clean() {
@@ -269,7 +268,6 @@ export class StackmatInput implements TimerInputHandler {
 
   private CLEAN() {
     this.clean();
-    this.context.initScrambler();
     this.state = 'ON';
   }
 }

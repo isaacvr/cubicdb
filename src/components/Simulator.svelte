@@ -33,7 +33,7 @@
 
   /// GUI
   let puzzles: any[] = [];
-  let selectedPuzzle: PuzzleType = "square1";
+  let selectedPuzzle: PuzzleType = "rubik";
   let order = 3;
   let hasOrder = true;
   let GUIExpanded = false;

@@ -12,7 +12,7 @@
   import Algorithms from '@components/Algorithms.svelte';
   import Simulator from '@components/Simulator.svelte';
   import TutorialParser from '@components/TutorialParser.svelte';
-  import Contest from '@components/Contest.svelte';
+  // import Contest from '@components/Contest.svelte';
   import ImportExport from '@components/import-export/ImportExport.svelte';
   import Battle from '@components/Battle.svelte';
   import Notification from '@components/Notification.svelte';
@@ -64,7 +64,7 @@
     <Route path="/battle" component={ Battle }/>
     <Route path="/pll-trainer" component={ PllRecognition }/>
     <Route path="/simulator" component={ Simulator }/>
-    <Route path="/contest" component={ Contest }/>
+    <!-- <Route path="/contest" component={ Contest }/> -->
     <Route path="/import-export" component={ ImportExport }/>
     <Route path="/settings" component={ Settings }/>
   </main>

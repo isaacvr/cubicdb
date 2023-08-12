@@ -225,7 +225,7 @@
     </div>
   {:else}
     {#if type < 2}
-      <ul class="w-full grid">
+      <ul class="w-full grid py-4">
         {#each cards as card }
           <Link to={ card.route }>
             <li class="w-40 h-48 text-center shadow-md rounded-md select-none cursor-pointer
