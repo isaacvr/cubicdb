@@ -183,7 +183,6 @@ export class StackmatInput implements TimerInputHandler {
     // Default detection
     if ( st.on && !this.lastState?.on ) {
       this.context.stackmatStatus.update(() => true);
-      console.log('OFF => ON');
       return this.state = 'ON';
     }
 
@@ -191,7 +190,6 @@ export class StackmatInput implements TimerInputHandler {
     if ( st.time_milli > (this.lastState?.time_milli || 0) ) {
       createNewSolve();
       state.update(() => TimerState.RUNNING);
-      console.log('ON => RUNNING');
       return this.state = 'RUNNING';
     }
   }
@@ -204,7 +202,6 @@ export class StackmatInput implements TimerInputHandler {
     // Turned off
     if ( this.lastState?.on && !st.on ) {
       stackmatStatus.update(() => false);
-      console.log('ON => OFF');
       return this.state = 'OFF';
     }
 
@@ -212,13 +209,11 @@ export class StackmatInput implements TimerInputHandler {
     if ( st.time_milli > (this.lastState?.time_milli || 0) ) {
       createNewSolve();
       state.update(() => TimerState.RUNNING);
-      console.log('ON => RUNNING');
       return this.state = 'RUNNING';
     }
 
     // Cleaned
     if ( st.time_milli < (this.lastState?.time_milli || 0) ) {
-      console.log('ON => CLEAN');
       this.CLEAN();
       return;
     }
@@ -233,23 +228,26 @@ export class StackmatInput implements TimerInputHandler {
     if ( this.lastState?.on && !st.on ) {
       stackmatStatus.update(() => false);
       this.clean();
-      console.log('RUNNING => OFF');
       return this.state = 'OFF';
     }
 
     // Stopped
     if ( this.lastState?.running && !st.running ) {
-      state.update(() => TimerState.STOPPED);
-      console.log('RUNNING => STOPPED');
-      this.STOPPED();
-      return this.state = 'ON';
+      if ( st.time_milli ) {
+        state.update(() => TimerState.STOPPED);
+        this.STOPPED();
+        return this.state = 'ON';
+      } else {
+        state.update(() => TimerState.CLEAN);
+        this.clean();
+        return this.state = 'ON';
+      }
     }
 
     // Timer port was unplugged
     if ( st.time_milli <= (this.lastState?.time_milli || 0) ) {
       stackmatStatus.update(() => false);
       this.clean();
-      console.log('RUNNING => CLEAN => OFF');
       return this.state = 'OFF';
     }
   }
@@ -257,22 +255,21 @@ export class StackmatInput implements TimerInputHandler {
   private STOPPED() {
     const { addSolve, initScrambler } = this.context;
 
-    console.log('STOPPED => ON');
     addSolve();
     initScrambler();
   }
   
   private clean() {
-    const { state, time } = this.context;
+    const { state, time, initScrambler } = this.context;
 
     state.update(() => TimerState.CLEAN);
     time.update(() => 0);
+    initScrambler();
   }
 
   private CLEAN() {
     this.clean();
     this.context.initScrambler();
-    console.log('CLEAN => ON');
     this.state = 'ON';
   }
 }

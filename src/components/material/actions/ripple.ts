@@ -1,77 +1,55 @@
+import { Color } from "@classes/Color";
+import { getStackingContext } from "@helpers/DOM";
+
 export function ripple(node: HTMLElement, eProps: any) {
   let POSITION: string;
   let DURATION: number;
-  let BACKGROUND: string;
-  const ripple = document.createElement('span');
-  node.appendChild(ripple);
+  let BACKGROUND = new Color();
+  // const ripple = document.createElement('span');
+  // node.appendChild(ripple);
 
   let initialize = (p: any) => {
     POSITION = (p || {}).position || 'cursor';
     DURATION = Math.abs((p || {}).duration || 400);
-    BACKGROUND = (p || {}).background || "#fff";
+    BACKGROUND.fromString( (p || {}).background || "#fff" );
   };
 
   initialize(eProps);
 
-  let from = 0;
-  let to = 0;
-  let alpha = 0;
-  let animating = false;
-
-  let animate = (rpl: HTMLElement) => {
-    if ( animating ) {
-      if ( performance.now() <= to ) {
-        alpha = (performance.now() - from) * 1.2 / (to - from);
-        rpl.style.transform = `translate(-50%, -50%) scale(${alpha})`;
-        rpl.style.opacity = "" + (0.5 - 0.5 * alpha / 1.2);
-        window.requestAnimationFrame(() => animate(rpl));
-      } else {
-        alpha = 0;
-        rpl.style.transform = `translate(-50%, -50%) scale(${alpha})`;
-        rpl.style.opacity = '0';
-        animating = false;
-        node.style.overflow = 'unset';
-      }
-    }
-  };
+  // node.classList.add('ripple');
 
   const getProps = (e: MouseEvent) => {
     let box = node.getBoundingClientRect();
     let w = box.width, h = box.height;
     if ( POSITION === 'center' ) {
-      return {
-        x: w / 2,
-        y: h / 2,
-        rad: ((w / 2) ** 2 + (h / 2) ** 2) ** .5 
-      }
+      return { x: w / 2, y: h / 2 };
     }
 
+    let p = node.getBoundingClientRect();
+
     return {
-      x: e.clientX - node.offsetLeft,
-      y: e.clientY - node.offsetTop,
-      rad: 2 * (w ** 2 + h ** 2) ** .5
+      x: e.clientX - p.x,
+      y: e.clientY - p.y
     }
   }
 
   const handleClick = (e: MouseEvent) => {
-    let p = getProps(e);
-   
-    ripple.style.left = `${p.x}px`;
-    ripple.style.top = `${p.y}px`;
-    ripple.style.position = "absolute";
-    ripple.style.background = BACKGROUND;
-    ripple.style.pointerEvents = "none";
-    ripple.style.width = p.rad + "px";
-    ripple.style.height = p.rad + "px";
-    ripple.style.borderRadius = "50%";
-    ripple.style.opacity = "0.5";
-    ripple.style.borderRadius = '50%';
+    initialize(eProps);
 
-    node.style.overflow = 'hidden';
-    from = performance.now();
-    to = from + DURATION;
+    BACKGROUND.set(3, 0.5);
 
-    !animating && (animating = true) && animate(ripple);
+    let { x, y } = getProps(e);
+
+    node.classList.remove('ripple');
+    void node.offsetWidth;
+
+    node.style.setProperty('--x', x + 'px');
+    node.style.setProperty('--y', y + 'px');
+    node.style.setProperty('--color1', BACKGROUND.toHex());
+    node.style.setProperty('--color2', 'transparent');
+    node.style.setProperty('--duration', DURATION + 'ms');
+    
+    node.classList.add('ripple');
   };
 
   node.addEventListener('click', handleClick);
@@ -83,7 +61,6 @@ export function ripple(node: HTMLElement, eProps: any) {
 
     destroy() {
       node.removeEventListener('click', handleClick);
-      ripple.remove();
     }
   }
 }

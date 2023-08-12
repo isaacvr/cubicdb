@@ -173,9 +173,13 @@ export class Sticker {
 
     for (let i = 0, maxi = pts.length; i < maxi; i += 1) {
       dirs[ Vector3D.direction(p1, p2, p3, pts[i]) + 1 ] += 1;
+
+      if ( dirs[0] > 0 && dirs[2] > 0 ) {
+        return 0;
+      }
     }
 
-    if ( (dirs[0] > 0 && dirs[2] > 0) || (dirs[1] === pts.length) ) {
+    if ( dirs[1] === pts.length ) {
       return 0;
     } else if ( dirs[0] > 0 ) {
       return -1;

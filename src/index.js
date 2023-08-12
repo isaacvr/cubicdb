@@ -19,8 +19,6 @@ let prod = app.isPackaged;
 let params = [ prod ? appPath.replace(/app\.asar$/, '') : appPath, 'src', 'database' ];
 let dbPath = join.apply(null, params);
 
-console.log("DBPATH: ", dbPath);
-
 let Algorithms = new NeDB({ filename: resolve(dbPath, 'algs.db'), autoload: true });
 let Tutorials = new NeDB({ filename: resolve(dbPath, 'tutorials.db'), autoload: true });
 let Sessions = new NeDB({ filename: resolve(dbPath, 'sessions.db'), autoload: true });

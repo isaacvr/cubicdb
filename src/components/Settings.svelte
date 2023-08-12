@@ -69,6 +69,8 @@
       .then(res => {
         canCheckUpdate = true;
 
+        console.log("RES = ", res);
+
         if ( res ) {
           notService.addNotification({
             header: $localLang.SETTINGS.updateAvailable,
@@ -89,7 +91,8 @@
           });
         }
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error(err);
         canCheckUpdate = true;
         notService.addNotification({
           header: $localLang.SETTINGS.updateError,
@@ -166,7 +169,7 @@
   <div class="flex items-center justify-center gap-4">
     <div class="flex items-center justify-center gap-2">
       { $localLang.SETTINGS.version }: <mark>{ VERSION }</mark>
-      <Button class="bg-blue-700 text-gray-300" on:click={ () => canCheckUpdate && checkUpdate() }>
+      <Button class="bg-blue-700 text-gray-300" on:click={ () => canCheckUpdate && updateNow() }>
         { $localLang.SETTINGS.checkUpdate }
       </Button>
     </div>

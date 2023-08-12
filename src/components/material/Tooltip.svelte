@@ -1,5 +1,6 @@
 <script lang="ts">
-    import { processKey } from '@helpers/strings';
+    import { getStackingContext } from '@helpers/DOM';
+  import { processKey } from '@helpers/strings';
   import { onMount } from 'svelte';
 
   type Direction = 'right' | 'left' | 'top' | 'bottom';
@@ -20,10 +21,6 @@
   function mouseenter() { resize(); isVisible = true; }
   function mouseleave() { isVisible = false; }
 
-  function hasTransform(e: any): boolean {
-    return e.computedStyleMap().get('transform').constructor.name === 'CSSTransformValue';
-  }
-
   function resize() {
     let ce = elem.getBoundingClientRect();
     let ct = tt.getBoundingClientRect();
@@ -31,17 +28,10 @@
     let _x = ce.x;
     let _y = ce.y;
 
-    let e1: HTMLElement | null | undefined = elem;
-
-    do {
-      e1 = e1?.parentElement;
-      if ( hasTransform(e1) ) {
-        let cp = e1?.getBoundingClientRect();
-        _x -= (cp?.x || 0);
-        _y -= (cp?.y || 0);
-        break;
-      }
-    } while ( e1?.parentElement );
+    let e1: HTMLElement | null | undefined = getStackingContext(elem);
+    let cp = e1.getBoundingClientRect();
+    _x -= cp.x;
+    _y -= cp.y;
 
     if ( position === 'right' || position === 'left' ) {
       x = position === 'left' ? `calc(${_x - ct.width}px - 0.5rem)` : `calc(${_x + ce.width}px + 0.5rem)`;

@@ -14,8 +14,7 @@
   import Button from "@components/material/Button.svelte";
   import Input from "@components/material/Input.svelte";
   import {
-    DoubleSide, Matrix4, Mesh, MeshBasicMaterial, Object3D, PerspectiveCamera,
-    PlaneBufferGeometry, PointLight, Raycaster, Scene, Vector2, Vector3, WebGLRenderer,
+    Matrix4, Object3D, PerspectiveCamera, PointLight, Raycaster, Scene, Vector2, Vector3, WebGLRenderer,
     type Intersection
   } from "three";
   import { cubeToThree } from "@helpers/cubeToThree";
@@ -30,11 +29,11 @@
   let cube: Puzzle;
   // let scramble = "";
   let dragging = false;
-  let group: Object3D;
+  let group: Object3D = new Object3D();
 
   /// GUI
   let puzzles: any[] = [];
-  let selectedPuzzle: PuzzleType = "rubik";
+  let selectedPuzzle: PuzzleType = "square1";
   let order = 3;
   let hasOrder = true;
   let GUIExpanded = false;
@@ -89,7 +88,7 @@
     let faceVectors = vectorsFromCamera(vecs, camera);
 
     let dir: number = 0;
-    let best: Vector3D | null = null;
+    let best: Vector3D = new Vector3D(0, 0, 0);
 
     faceVectors.reduce((ac, fv, p) => {
       let cr = vv.cross(fv);
@@ -101,7 +100,7 @@
       return ac;
     }, -Infinity);
     
-    if (!best) {
+    if ( best.x === 0 && best.y === 0 && best.z === 0 ) {
       return null;
     }
 
@@ -169,12 +168,6 @@
   renderer.setPixelRatio(window.devicePixelRatio);
 
   let scene = new Scene();
-  let geo = new PlaneBufferGeometry(4, 4, 3, 3);
-  let mat = new MeshBasicMaterial({ color: '0xffffff', side: DoubleSide });
-  let plane = new Mesh(geo, mat);
-  
-  scene.add(plane);
-
   let canvas = renderer.domElement;
 
   canvas.style.position = "absolute";
@@ -212,16 +205,15 @@
     cube = ctt.nc;
 
     scene.add(group);
+    group.rotation.x = 0;
+    group.rotation.y = 0;
+    group.rotation.z = 0;
 
     // let light = new HemisphereLight('#ffffff', '#000000', 0.5);
     let light = new PointLight("#ffffff", 1, 2, 3);
     light.position.set(2, 2, 2);
 
     scene.add(light);
-
-    group.rotation.x = 0;
-    group.rotation.y = 0;
-    group.rotation.z = 0;
 
     resetCamera();
   }
@@ -235,8 +227,6 @@
       });
     }
   }
-  
-  resetPuzzle();
 
   let piece: Intersection | null = null;
   let ini: Vector2 | null = null;
@@ -463,6 +453,7 @@
 
   onMount(() => {
     document.body.style.overflow = 'hidden';
+    resetPuzzle();
   });
 
   onDestroy(() => {

@@ -87,6 +87,7 @@
   let subs: Unsubscriber[] = [];
   let tabs: TabGroup;
   let dispatch = createEventDispatcher();
+  let sessionsTab: SessionsTab;
   
   /// MODAL
   let openEdit = false;
@@ -119,17 +120,24 @@
   $: $isRunning = $state === TimerState.INSPECTION || $state === TimerState.RUNNING;
 
   function selectSolve(s: Solve) {
+    // console.log("SelectSolve", s);
     s.selected = !s.selected;
     $selected += (s.selected) ? 1 : -1;
     $solves = $solves;
+    // throw new Error('SelectSolve');
   }
 
   function selectSolveById(id: string, n: number) {
+    $solves.forEach(s => s.selected = false);
+    $selected = 0;
+
     for (let i = 0, maxi = $solves.length; i < maxi; i += 1) {
       if ( $solves[i]._id === id ) {
         for (let j = 0; j < n && i + j < maxi; j += 1) {
-          $solves[i + j].selected = !$solves[i + j].selected;
-          $selected += ($solves[i + j].selected) ? 1 : -1;
+          if ( $solves[i + j].selected ) continue;
+
+          $solves[i + j].selected = true;
+          $selected += 1;
         }
 
         $tab === 0 && tabs.nextTab();
@@ -423,6 +431,12 @@
     dataService.updateSession({ _id: s._id, name: s.tName?.trim() || "Session -", settings: s.settings });
   }
 
+  function editSolve(s: Solve) {
+    $tab === 0 && tabs.nextTab();
+    $tab === 2 && tabs.prevTab();
+    sessionsTab.editSolve(s);
+  }
+
   onMount(() => {
     if ( battle ) {
       $session = {
@@ -557,7 +571,7 @@
     state, ready, tab, solves, allSolves, session, Ao5, AoX, stats, scramble, decimals,
     group, mode, hintDialog, hint, cross, xcross, preview, prob, isRunning, selected,
     sortSolves, updateStatistics, initScrambler, selectedGroup,
-    setConfigFromSolve, selectSolve, selectSolveById,
+    setConfigFromSolve, selectSolve, selectSolveById, editSolve
   };
 
   $: (useScramble || useMode) ? initScrambler(useScramble, useMode) : initScrambler();
@@ -615,12 +629,12 @@
       {/if}
     </div>
 
-    <TabGroup bind:this={ tabs } class="absolute w-full" onChange={ t => $tab = t || 0 }>
+    <TabGroup bind:this={ tabs } class="h-full" onChange={ t => $tab = (t || 0) }>
       <Tab name="" icon={ TimerIcon } ariaLabel={ $localLang.TIMER.timerTab }>
         <TimerTab { context }/>
       </Tab>
       <Tab name="" icon={ ListIcon } ariaLabel={ $localLang.TIMER.sessionsTab }>
-        <SessionsTab { context }/>
+        <SessionsTab bind:this={ sessionsTab } { context }/>
       </Tab>
       <Tab name="" icon={ ChartIcon } ariaLabel={ $localLang.TIMER.chartsTab }>
         <StatsTab { context }/>

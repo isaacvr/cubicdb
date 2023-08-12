@@ -22,8 +22,6 @@ export function MIRROR(n: number): PuzzleInterface {
     roundParams: [],
   };
 
-  let fc = mirror.faceColors;
-
   mirror.getAllStickers = getAllStickers.bind(mirror);
 
   const PI = Math.PI;
@@ -96,7 +94,6 @@ export function MIRROR(n: number): PuzzleInterface {
         p.stickers.push(sLeft);
         p.stickers.push(sBack);
 
-        // if ( p.stickers.length ) {
         if ( p.stickers.length === 1 ) {
           if ( ( z == 0 || z == n - 1 ) && n > 1 ) {
             p.stickers.push( p.stickers[0].rotate(center, RIGHT, PI) );
@@ -108,7 +105,6 @@ export function MIRROR(n: number): PuzzleInterface {
         }
         p.updateMassCenter();
         mirror.pieces.push(p);
-        // }
       }
     }
   }
@@ -155,7 +151,7 @@ export function MIRROR(n: number): PuzzleInterface {
 
     st = st._generator;
     
-    let ac = st.updateMassCenter().add( st.normal().mul(-0.01) );
+    let ac = st.updateMassCenter().add( st.normal().mul(-0.03) );
     let toMovePieces = pieces.filter(p => p.direction1(ac, dir) === 0);
     return {
       pieces: toMovePieces,

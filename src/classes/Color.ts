@@ -126,7 +126,9 @@ export class Color {
     let rgbaReg = /$rgba\(([0-9]*),([0-9]*),([0-9]*),([0-9]*)\)$/;
     let rgbReg = /^rgb\(([0-9]*),([0-9]*),([0-9]*)\)$/;
     let hexReg = /^\#(\w{2})(\w{2})(\w{2})$/;
+    let hex1Reg = /^\#(\w{1})(\w{1})(\w{1})$/;
     let hexaReg = /^\#(\w{2})(\w{2})(\w{2})(\w{2})$/;
+    let hexa1Reg = /^\#(\w{1})(\w{1})(\w{1})(\w{1})$/;
     let str = s.replace(/\s/g, '');
 
     if ( rgbaReg.test(str) ) {
@@ -140,6 +142,12 @@ export class Color {
       this.fromRGBA(r, g, b, a);
     } else if ( hexReg.test(str) ) {
       let [r, g, b] = str.replace(hexReg, '$1 $2 $3').split(' ').map(e => parseInt(e, 16));
+      this.fromRGB(r, g, b);
+    } else if ( hexa1Reg.test(str) ) {
+      let [r, g, b, a] = str.replace(hexa1Reg, '$1$1 $2$2 $3$3 $4$4').split(' ').map(e => parseInt(e, 16));
+      this.fromRGBA(r, g, b, a);
+    } else if ( hex1Reg.test(str) ) {
+      let [r, g, b] = str.replace(hex1Reg, '$1$1 $2$2 $3$3').split(' ').map(e => parseInt(e, 16));
       this.fromRGB(r, g, b);
     } else {
       throw new TypeError('String format other than rgb() or rgba() not supported yet');
@@ -160,7 +168,7 @@ export class Color {
 
   toHex(alpha: boolean = true): string {
     let t = this.color.map(e => e);
-    t[3] = adjust(t[3] * 255);
+    t[3] = ~~adjust(t[3] * 255);
     !alpha && t.pop();
     return '#' + t.map(e => ('00' + e.toString(16)).substr(-2, 2)).join('');
   }

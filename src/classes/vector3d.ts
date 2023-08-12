@@ -4,10 +4,13 @@ export class Vector3D {
   x: number;
   y: number;
   z: number;
-  constructor(x ?: number, y ?: number, z ?: number) {
+  private isConstant: boolean;
+
+  constructor(x ?: number, y ?: number, z ?: number, isConstant = false) {
     this.x = x || 0;
     this.y = y || 0;
     this.z = z || 0;
+    this.isConstant = isConstant;
   }
 
   static cross(a: Vector3D, b: Vector3D, c: Vector3D): Vector3D {
@@ -53,10 +56,17 @@ export class Vector3D {
   }
 
   reflect(a: Vector3D, b: Vector3D, c: Vector3D, self?: boolean): Vector3D {
+    if ( self && this.isConstant ) {
+      throw new TypeError('Constant vector does not allow modification');
+    }
     return this.reflect1(a, Vector3D.cross(a, b, c).unit(), self);
   }
 
   reflect1(a: Vector3D, u: Vector3D, self?: boolean): Vector3D {
+    if ( self && this.isConstant ) {
+      throw new TypeError('Constant vector does not allow modification');
+    }
+
     return this.add( u.mul( -2 * this.sub(a).dot(u) ), self );
   }
 
@@ -73,6 +83,10 @@ export class Vector3D {
   }
 
   add(v: Vector3D, self ?: boolean): Vector3D {
+    if ( self && this.isConstant ) {
+      throw new TypeError('Constant vector does not allow modification');
+    }
+
     if ( self ) {
       this.x += v.x; this.y += v.y; this.z += v.z;
       return this;
@@ -81,6 +95,10 @@ export class Vector3D {
   }
 
   sub(v: Vector3D, self ?: boolean): Vector3D {
+    if ( self && this.isConstant ) {
+      throw new TypeError('Constant vector does not allow modification');
+    }
+
     if ( self ) {
       this.x -= v.x; this.y -= v.y; this.z -= v.z;
       return this;
@@ -89,6 +107,10 @@ export class Vector3D {
   }
 
   mul(f: number, self ?: boolean): Vector3D {
+    if ( self && this.isConstant ) {
+      throw new TypeError('Constant vector does not allow modification');
+    }
+
     if ( self ) {
       this.x *= f; this.y *= f; this.z *= f;
       return this;
@@ -97,6 +119,10 @@ export class Vector3D {
   }
 
   div(f: number, self ?: boolean): Vector3D {
+    if ( self && this.isConstant ) {
+      throw new TypeError('Constant vector does not allow modification');
+    }
+
     if ( self ) {
       this.x /= f; this.y /= f; this.z /= f;
       return this;
@@ -105,6 +131,10 @@ export class Vector3D {
   }
 
   rotate(O: Vector3D, u: Vector3D, ang: number, self ?: boolean): Vector3D {
+    if ( self && this.isConstant ) {
+      throw new TypeError('Constant vector does not allow modification');
+    }
+
     const CA = Math.cos(ang / 2);
     const SA = Math.sin(ang / 2);
     let U = u.unit();
@@ -176,13 +206,13 @@ export class Vector3D {
 
 }
 
-export const CENTER = new Vector3D(0, 0, 0);
+export const CENTER = new Vector3D(0, 0, 0, true);
 
-export const RIGHT = new Vector3D(1, 0, 0);
-export const LEFT = new Vector3D(-1, 0, 0);
+export const RIGHT = new Vector3D(1, 0, 0, true);
+export const LEFT = new Vector3D(-1, 0, 0, true);
 
-export const FRONT = new Vector3D(0, 0, 1);
-export const BACK = new Vector3D(0, 0, -1);
+export const FRONT = new Vector3D(0, 0, 1, true);
+export const BACK = new Vector3D(0, 0, -1, true);
 
-export const UP = new Vector3D(0, 1, 0);
-export const DOWN = new Vector3D(0, -1, 0);
+export const UP = new Vector3D(0, 1, 0, true);
+export const DOWN = new Vector3D(0, -1, 0, true);

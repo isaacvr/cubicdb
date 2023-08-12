@@ -242,6 +242,7 @@ export interface TimerContext {
   setConfigFromSolve: (s: Solve) => any;
   selectSolve: (s: Solve) => any;
   selectSolveById: (id: string, n: number) => any;
+  editSolve: (s: Solve) => any;
 }
 
 export const ROLES = {
@@ -527,7 +528,9 @@ export interface Language {
     sequential: string;
     groupOfX: string;
 
+    // Last solve tooltip
     delete: string;
+    comments: string;
 
     reloadScramble: string;
     edit: string;

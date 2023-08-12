@@ -5,9 +5,12 @@ let notService = NotificationService.getInstance();
 
 export class UpdateService {
   static checkForUpdates() {
-    return fetch('https://raw.githubusercontent.com/isaacvr/cubedb-svelte/dist/package.json')
+    return fetch('https://api.github.com/repos/isaacvr/cubedb-svelte/releases/latest')
       .then(res => res.json())
-      .then(res => VERSION == res.version);
+      .then(res => {
+        console.log('TAG: ', res.tag_name);
+        return VERSION == res.tag_name.slice(1);
+      });
   }
 
   static update(): Promise<boolean> {

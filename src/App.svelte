@@ -54,7 +54,7 @@
   <Frame />
   <Navbar />
 
-  <main class="pt-24">
+  <main class="pt-24 absolute w-full h-full">
     <Route path="/" component={ Home }/>
     <Route path="/tutorials" component={ Tutorials }/>
     <Route path="/tutorials/:something" component={ Tutorials }/>

@@ -5,7 +5,7 @@
   const dispatch = createEventDispatcher();
 
   export let flat = false;
-  export let rp = {};
+  export let rp = true;
   export let file: boolean = false;
   export let tabindex = 0;
   export let ariaLabel = '';

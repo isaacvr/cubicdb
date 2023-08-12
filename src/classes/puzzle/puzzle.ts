@@ -32,7 +32,7 @@ export class Puzzle {
     this.img = PX_IMAGE;
     this.arrows = [];
 
-    this.options.sequence = '';
+    this.options.sequence = this.options.sequence || '';
 
     if ( this.view === 'plan' ) {
       switch(this.type) {

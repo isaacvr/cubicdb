@@ -17,8 +17,8 @@ export class Piece {
     this.callback = () => {};
     this.allPointsRef = [];
     this.boundingBox = [];
-    this.anchor = CENTER;
-    this._cached_mass_center = CENTER;
+    this.anchor = CENTER.clone();
+    this._cached_mass_center = CENTER.clone();
     this.updateMassCenter();
     this.computeBoundingBox();
   }

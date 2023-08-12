@@ -107,7 +107,9 @@ export const Spanish: Language = {
     sequential: 'Secuencial',
     groupOfX: 'En grupos de X solves',
 
+    // Last solve tooltip
     delete: 'Eliminar',
+    comments: 'Comentarios',
 
     reloadScramble: 'Nueva mezcla',
     edit: 'Editar',

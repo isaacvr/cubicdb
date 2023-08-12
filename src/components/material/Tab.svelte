@@ -21,14 +21,14 @@
 </script>
 
 <section
-  class="absolute w-full h-full inset-0 flex"
+  class="absolute w-full h-full inset-0 flex { tab.index != $selectedTab ? 'invisible' : '' }"
   style="--index: {tab.index}; --selected-tab: {$selectedTab};">
   <slot/>
 </section>
 
 <style>
   section {
-    transition: left 200ms;
+    /* transition: left 200ms; */
     left: calc((var(--index, 0) - var(--selected-tab, 0)) * 100%);
   }
 </style>

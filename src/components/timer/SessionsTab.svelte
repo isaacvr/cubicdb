@@ -32,7 +32,7 @@
   import { derived, type Readable } from "svelte/store";
   import { globalLang } from "@stores/language.service";
   import { getLanguage } from "@lang/index";
-    import { tick } from "svelte";
+  import { tick } from "svelte";
 
   let localLang: Readable<Language> = derived(globalLang, ($lang) => getLanguage( $lang ));
 
@@ -41,7 +41,7 @@
 
   export let context: TimerContext;
 
-  let { solves, tab, selected, selectSolve } = context;
+  let { solves, tab, selected } = context;
 
   let pg = new Paginator([], 100);
   let LAST_CLICK = 0;
@@ -67,7 +67,7 @@
     show = false;
   }
 
-  function editSolve(s: Solve) {
+  export function editSolve(s: Solve) {
     gSolve = s;
     sSolve = { ...s };
     
@@ -93,6 +93,12 @@
     })
     
     show = true;
+  }
+
+  function selectSolve(s: Solve) {
+    s.selected = !s.selected;
+    $selected += (s.selected) ? 1 : -1;
+    solves.update(() => $solves);
   }
 
   function handleClick(s: Solve) {
@@ -169,13 +175,13 @@
 
   function handleKeyUp(e: KeyboardEvent) {
     if ( $tab != 1 ) return;
+    
     switch(e.code) {
-      case 'KeyC':
       case 'Escape': selectNone(); showContextMenu = false; break;
-      case 'KeyA': selectAll(); break;
-      case 'KeyT': selectInterval(); break;
-      case 'KeyV': selectInvert(); break;
-      case 'KeyD': $selected ? deleteSelected() : deleteAll(); break;
+      case 'KeyA': !show && selectAll(); break;
+      case 'KeyT': !show && selectInterval(); break;
+      case 'KeyV': !show && selectInvert(); break;
+      case 'KeyD': !show && ($selected ? deleteSelected() : deleteAll()); break;
       case 'Enter': showDeleteAll && deleteAllModal.close(true);
     }
   }
@@ -243,7 +249,7 @@
           let page = Math.ceil((i + 1) / pg.limit);
           pg.setPage(page);
           tick().then(() => {
-            solvesElement.children[i - pg.start].scrollIntoView({ block: 'center', inline: 'center' });
+            solvesElement.children[i - pg.start].scrollIntoView({ block: 'center' });
           });
           break
         }
@@ -253,7 +259,6 @@
 
   $: updatePaginator($solves);
   $: $selected, updatePageFromSelected();
-  $: $tab != 1 && $solves.forEach(s => s.selected && selectSolve(s));
 
 </script>
 
@@ -326,31 +331,26 @@
     transition-all duration-300 bg-gray-700 shadow-md flex w-max max-w-full actions z-20">
     <Button ariaLabel={ $localLang.TIMER.selectAll }
       tabindex={ $selected ? 0 : -1 } flat on:click={() => selectAll()}>
-      <!-- <SelectAllIcon width="1.2rem" height="1.2rem" />  -->
       { $localLang.TIMER.selectAll } &nbsp; <span class="flex ml-auto text-yellow-400">[A]</span>
     </Button>
     
     <Button ariaLabel={ $localLang.TIMER.selectInterval }
       tabindex={ $selected ? 0 : -1 } flat on:click={() => selectInterval()}>
-      <!-- <ArrowExpandIcon width="1.2rem" height="1.2rem" /> -->
       { $localLang.TIMER.selectInterval } &nbsp; <span class="flex ml-auto text-yellow-400">[T]</span>
     </Button>
     
     <Button ariaLabel={ $localLang.TIMER.invertSelection }
       tabindex={ $selected ? 0 : -1 } flat on:click={() => selectInvert()}>
-      <!-- <SelectInverseIcon width="1.2rem" height="1.2rem" /> -->
       { $localLang.TIMER.invertSelection } &nbsp; <span class="flex ml-auto text-yellow-400">[V]</span>
     </Button>
     
     <Button ariaLabel={ $localLang.TIMER.cancel }
       tabindex={ $selected ? 0 : -1 } flat on:click={() => selectNone()}>
-      <!-- <SelectOffIcon width="1.2rem" height="1.2rem" /> -->
-      { $localLang.TIMER.cancel } &nbsp; <span class="flex ml-auto text-yellow-400">[C / Esc]</span>
+      { $localLang.TIMER.cancel } &nbsp; <span class="flex ml-auto text-yellow-400">[Esc]</span>
     </Button>
 
     <Button ariaLabel={ $localLang.TIMER.delete }
       tabindex={ $selected ? 0 : -1 } flat on:click={() => deleteSelected()}>
-      <!-- <DeleteIcon width="1.2rem" height="1.2rem" /> -->
       { $localLang.TIMER.delete } &nbsp; <span class="flex ml-auto text-yellow-400">[D]</span>
     </Button>
   </div>
@@ -382,7 +382,7 @@
       </Button>
       
       <Button ariaLabel={ $localLang.TIMER.cancel } flat
-        on:click={ () => modal.close() }>
+        on:click={ () => modal.close() } class="">
         <CloseIcon /> { $localLang.TIMER.cancel }
       </Button>
       
@@ -391,15 +391,15 @@
         <SendIcon /> { $localLang.TIMER.save }
       </Button>
 
-      <Button ariaLabel="+2" flat
+      <Button ariaLabel="+2" flat rp={ false }
         class={ sSolve.penalty === Penalty.P2 ? 'text-red-500' : '' }
         on:click={ () => setPenalty(Penalty.P2) }>+2</Button>
 
-      <Button ariaLabel="DNF" flat
+      <Button ariaLabel="DNF" flat rp={ false }
         class={ sSolve.penalty === Penalty.DNF ? 'text-red-500' : '' }
         on:click={ () => setPenalty(Penalty.DNF) }>DNF</Button>
       
-        <Button ariaLabel={ $localLang.TIMER.noPenalty } flat
+        <Button ariaLabel={ $localLang.TIMER.noPenalty } flat rp={ false }
         class={ sSolve.penalty === Penalty.NONE ? 'text-green-500' : '' }
         on:click={ () => setPenalty(Penalty.NONE) }>{ $localLang.TIMER.noPenalty }</Button>
     </div>

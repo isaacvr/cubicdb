@@ -45,6 +45,8 @@ export function RUBIK(_a: number, _b:number, _c:number): PuzzleInterface {
   ];
   // const shapeShifts = turns.some(t => t[1] < 3) && turns.some(t => t[1] > 3);
 
+  let pieces = rubik.pieces;
+
   for (let z = 0; z < c; z += 1) {
     for (let y = 0; y < b; y += 1) {
       for (let x = 0; x < a; x += 1) {
@@ -83,14 +85,12 @@ export function RUBIK(_a: number, _b:number, _c:number): PuzzleInterface {
             }
           }
           p.updateMassCenter();
-          rubik.pieces.push(p);
+          pieces.push(p);
         }
       }
     }
   }
 
-  let pieces = rubik.pieces;
-  
   const MOVE_MAP = "URFDLB";
 
   let ref1 = ref.add( RIGHT.mul(a * len) ).add( FRONT.mul(b * len) ).add( DOWN.mul(c * len) );

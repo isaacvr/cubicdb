@@ -61,6 +61,43 @@ body {
   min-height: 100dvh;
 }
 
+@property --percent {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 0%;
+}
+
+@property --color {
+  syntax: '<color>';
+  inherits: false;
+  initial-value: white;
+}
+
+@keyframes ripple-effect {
+  0% {
+    --percent: 0%;
+    --color: var(--color1);
+  }
+  
+  100% {
+    --percent: 200%;
+    --color: var(--color2);
+  }
+}
+
+.ripple {
+  --percent: 0%;
+  --color: white;
+  --color1: white;
+  --color2: transparent;
+
+  background-image: radial-gradient(
+      circle at var(--x, 50%) var(--y, 50%),
+      var(--color, white), var(--color, white) var(--percent, 0%), transparent 0%);
+
+  animation: ripple-effect var(--duration) linear 0s 1;
+}
+
 .container-mini {
   @apply mt-4 px-5;
 }

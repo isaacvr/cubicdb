@@ -15,6 +15,7 @@
   import NoteIcon from '@icons/NoteEdit.svelte';
   import WatchOnIcon from '@icons/Wifi.svelte';
   import WatchOffIcon from '@icons/WifiOff.svelte';
+  import CommentIcon from '@icons/CommentPlusOutline.svelte';
 
   /// Components
   import Tooltip from '@material/Tooltip.svelte';
@@ -47,12 +48,12 @@
   const {
     state, ready, tab, solves, allSolves, session, Ao5, stats, scramble,
     group, mode, hintDialog, hint, cross, xcross, preview, isRunning, decimals,
-    sortSolves, initScrambler, updateStatistics, selectedGroup, setConfigFromSolve
+    sortSolves, initScrambler, updateStatistics, selectedGroup, setConfigFromSolve, editSolve
   } = context;
 
   const dispatch = createEventDispatcher();
   const notification = NotificationService.getInstance();
-  
+
   /// CLOCK
   const TIMER_DIGITS = /^\d{1,6}$/;
   const TIMER_DNF = /^\s*dnf\s*$/i;
@@ -77,6 +78,10 @@
         dataService.updateSolve($solves[0]);
       }
     } },
+    { text: "Comments", icon: CommentIcon, highlight: () => false, handler: () => {
+      
+      editSolve( $solves[0] );
+    } }
   ];
 
   /// LAYOUT
@@ -329,8 +334,6 @@
       inputMethod = new KeyboardInput( inputContext );
       inputMethod.init();
     }
-
-    console.log('Input init');
   }
 
   function updateDevices() {
@@ -341,6 +344,7 @@
 
   function updateTexts() {
     solveControl[0].text = $localLang.TIMER.delete;
+    solveControl[3].text = $localLang.TIMER.comments;
     options[0].text = `${ $localLang.TIMER.reloadScramble } [Ctrl + S]`;
     options[1].text = `${ $localLang.TIMER.edit } [Ctrl + E]`;
     options[2].text = `${ $localLang.TIMER.useOldScramble } [Ctrl + O]`;

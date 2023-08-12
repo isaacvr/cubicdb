@@ -77,7 +77,6 @@
   main {
     display: grid;
     grid-template-rows: 1fr auto;
-    height: calc(100% - 6rem);
     overflow: hidden;
   }
 </style>

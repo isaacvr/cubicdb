@@ -189,12 +189,6 @@ export function SQUARE1(): PuzzleInterface {
     };
   };
 
-  sq1.rotation = {
-    x: PI_6,
-    y: -PI_6,
-    z: 0,
-  };
-
   sq1.faceVectors = [
     UP, RIGHT, FRONT, DOWN, LEFT, BACK
   ];

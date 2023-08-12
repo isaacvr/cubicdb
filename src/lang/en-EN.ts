@@ -99,7 +99,9 @@ export const English: Language = {
     sequential: 'Sequential',
     groupOfX: 'Group of X solves',
 
+    // Last solve tooltip
     delete: 'Delete',
+    comments: 'Comments',
 
     reloadScramble: 'Reload scramble',
     edit: 'Edit',

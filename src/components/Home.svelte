@@ -1,11 +1,10 @@
 <script lang="ts">
   import { Link } from "svelte-routing";
   import { generateCubeBundle } from "@helpers/cube-draw";
-  import type { Card } from "@interfaces";
-  import { Puzzle } from "@classes/puzzle/puzzle";
-  import { CubeMode } from "@constants";
   import { globalLang } from "@stores/language.service";
   import { getLanguage } from "@lang/index";
+  import type { Card } from "@interfaces";
+  import type { Puzzle } from "@classes/puzzle/puzzle";
 
   let cards: Card[] = [];
 
@@ -18,19 +17,27 @@
         route: "/tutorials",
         ready: false,
         timer: false,
-        cube: '/assets/logo-500.png',
+        cube: '/assets/tutorials.png',
+        // puzzle: new Puzzle({
+        //   type: 'rubik',
+        //   order: [3, 3, 3],
+        //   view: 'plan',
+        //   sequence: "z2 B2 R2 U B2 U' R2 B2 R2 U' R2 U R2",
+        //   mode: CubeMode.PLL,
+        //   tips: [ 0, 1, 1, 0, 1, 1, 2, 2, 1, 1 ]
+        // })
       }, {
         title: HOME.algorithms,
         route: "/algorithms",
         timer: false,
         ready: false,
-        cube: '/assets/pll.png',
+        cube: '/assets/algorithms.png',
       }, {
         title: HOME.timer,
         route: "/timer",
         timer: true,
         ready: false,
-        cube: '/assets/cube.png',
+        cube: '/assets/timer.png',
       }, /*{
         title: HOME.battle,
         route: "/battle",
@@ -53,20 +60,19 @@
         route: "/settings",
         timer: false,
         ready: false,
-        cube: '/assets/logo-500.png',
-        puzzle: new Puzzle({ type: 'rubik', mode: CubeMode.GRAY, order: [2] })
+        cube: '/assets/settings.png'
       }, {
         title: HOME.importExport,
         route: '/import-export',
         cube: '/assets/logo-500.png',
         ready: true,
         timer: false,
-      }, /*{
+      }, {
         title: HOME.contest,
         route: '/contest',
         cube: '/assets/logo-500.png',
         ready: true,
-        puzzle: new Puzzle({ type: 'redi' })
+        // puzzle: new Puzzle({ type: 'redi' })
       }//*/
     ];
 
