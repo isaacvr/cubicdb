@@ -10,6 +10,8 @@
   import Pencil from '@icons/PencilOutline.svelte';
   import Calendar from '@icons/CalendarTextOutline.svelte';
   import Copy from '@icons/ContentCopy.svelte';
+
+  // @ts-ignore
   import Settings from '@icons/Settings.svelte';
   import LightBulb from '@icons/LightbulbOn.svelte';
   import NoteIcon from '@icons/NoteEdit.svelte';
@@ -62,16 +64,18 @@
   let solveControl = [
     { text: "Delete", icon: Close, highlight: () => false, handler: () => {
       dataService.removeSolves([ $solves[0] ]);
+      $time = 0;
       reset();
     }},
     { text: "DNF", icon: ThumbDown, highlight: (s: any) => s.penalty === Penalty.DNF, handler: () => {
       $solves[0].penalty = $solves[0].penalty === Penalty.DNF ? Penalty.NONE : Penalty.DNF;
+      $time = $solves[0].penalty === Penalty.DNF ? Infinity : $solves[0].time;
       battle ? dispatch('update', $solves[0]) : dataService.updateSolve($solves[0]);
     } },
     { text: "+2", icon: Flag, highlight: (s: any) => s.penalty === Penalty.P2, handler: () => {
       $solves[0].penalty = $solves[0].penalty === Penalty.P2 ? Penalty.NONE : Penalty.P2;
       $solves[0].penalty === Penalty.P2 ? $solves[0].time += 2000 : $solves[0].time -= 2000;
-
+      $time = $solves[0].time;
       if ( battle ) {
         dispatch('update', $solves[0]);
       } else {
@@ -79,7 +83,6 @@
       }
     } },
     { text: "Comments", icon: CommentIcon, highlight: () => false, handler: () => {
-      
       editSolve( $solves[0] );
     } }
   ];
@@ -97,8 +100,9 @@
   };
 
   let inputMethod: TimerInputHandler = new KeyboardInput(inputContext);
-  let deviceID = '';
+  let deviceID = 'default';
   let deviceList: string[][] = [];
+  let autoConnectId: string[] = [];
 
   /// NOTES
   let showNotes = false;
@@ -116,7 +120,7 @@
   let closeHandler: Function = () => {};
 
   /// SCRAMBLE
-  let stateMessage: string = 'Scrambling...';
+  let stateMessage: string = '...';
   let openDialog = (ev: string, dt: any, fn: Function) => {
     type = ev; modalData = dt; closeHandler = fn; show = true;
   };
@@ -323,23 +327,58 @@
   }
 
   function initInputHandler() {
+    dataService.sleep(false);
     inputMethod.disconnect();
 
-    if ( $session?.settings?.input === 'Manual' ) {
+    if ( $session?.settings?.input === 'Manual' && !(inputMethod instanceof ManualInput) ) {
       inputMethod = new ManualInput();
-    } else if ( $session?.settings?.input === 'StackMat' ) {
+    } else if ( $session?.settings?.input === 'StackMat' && !(inputMethod instanceof StackmatInput) ) {
       inputMethod = new StackmatInput( inputContext );
-      inputMethod.init(deviceID, true);
+      dataService.sleep(true);
     } else {
       inputMethod = new KeyboardInput( inputContext );
-      inputMethod.init();
     }
+
+    inputMethod.init(deviceID, true);
   }
 
   function updateDevices() {
     StackmatInput.updateInputDevices().then(dev => {
       deviceList = dev;
     });
+
+    autoConnectId.forEach(id => {
+      notification.removeNotification(id);
+    });
+
+    autoConnectId.length = 0;
+
+    // Auto detect
+    StackmatInput.autoDetect().then((res) => {
+      if ( inputMethod instanceof StackmatInput && inputMethod.getDevice() === res.device ) {
+        return;
+      }
+
+      let key = res.id;
+      autoConnectId.push(key);
+      
+      notification.addNotification({
+        header: $localLang.TIMER.stackmatAvailableHeader,
+        text: $localLang.TIMER.stackmatAvailableText,
+        fixed: true,
+        actions: [
+          { text: $localLang.TIMER.cancel, callback: () => {} },
+          { text: $localLang.TIMER.connect, callback: () => {
+            deviceID = res.device;
+            $session.settings.input = 'StackMat';
+            initInputHandler();
+            dataService.updateSession($session);
+          } },
+        ],
+        key,
+      });
+    })
+    .catch(() => {});
   }
 
   function updateTexts() {
@@ -365,7 +404,7 @@
 
   onDestroy(() => {
     inputMethod.disconnect();
-    navigator.mediaDevices.addEventListener('devicechange', updateDevices);
+    navigator.mediaDevices.removeEventListener('devicechange', updateDevices);
   });
 
   $: $solves.length === 0 && reset();

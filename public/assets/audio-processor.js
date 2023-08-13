@@ -51,6 +51,8 @@ class AudioProcessor extends AudioWorkletProcessor {
 
   process(inputs) {
     let input = inputs[0] || [];
+
+    if ( !input || !input[0] ) return true;
     
     //AGC
     for (let i = 0, maxi = input[0].length; i < maxi; i++) {

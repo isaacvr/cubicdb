@@ -1,23 +1,44 @@
 <script lang="ts">
+  import { onMount } from "svelte";
+
   export let show = false;
   export let cancel = true;
   export let onClose: Function = () => {};
+  export let closeOnClickOutside = true;
   
   let _cl = '';
   export {_cl as class};
+
+  let modal: HTMLDialogElement;
   
   function keyUpHandler(e: KeyboardEvent) {
     if ( !show ) return;
-
-    if ( e.key === 'Escape' && cancel ) {
-      e.stopPropagation();
-      close(null);
-    }
+    e.stopPropagation();
   }
 
   function keyDownHandler(e: KeyboardEvent) {
     if ( !show ) return;
     e.stopPropagation();
+  }
+
+  function handleShow(s: boolean) {
+    if ( !modal ) return;
+
+    s && modal.showModal();
+    !s && modal.close();
+  }
+
+  function handleClick(ev: MouseEvent) {
+    if ( !cancel ) return;
+
+    let bb = modal.getBoundingClientRect();
+    let x1 = bb.x, y1 = bb.y;
+    let x2 = x1 + bb.width, y2 = y1 + bb.height;
+    let cx = ev.x, cy = ev.y;
+
+    if ( closeOnClickOutside && ((cx - x1) * (cx - x2) > 0 || (cy - y1) * (cy - y2) > 0) ) {
+      close(null);
+    }
   }
 
   export function close(data: any) {
@@ -26,34 +47,31 @@
     return show;
   }
 
+  onMount(() => {
+    handleShow(show);
+
+    modal.addEventListener('cancel', (e) => {
+      if ( !cancel ) {
+        e.preventDefault();
+      }
+    });
+  });
+
+  $: handleShow(show);
+
 </script>
 
-<svelte:window on:keyup={ keyUpHandler } on:keydown={ keyDownHandler }></svelte:window>
-
-{#if show}
-  <div id="wrapper"
-    on:mousedown|self|stopPropagation={ () => cancel && close(null) }
-    class="fixed bg-black bg-opacity-80 top-0 left-0 w-full h-full
-      flex items-center justify-center transition-all z-50">
-    <div class="bg-gray-800 rounded-md show p-4 pt-3 { _cl || '' }">
-      <slot />
-    </div>
-  </div>
-{/if}
+<dialog bind:this={ modal } on:click={ handleClick } on:keyup={ keyUpHandler } on:keydown={ keyDownHandler }
+  class="bg-gray-800 rounded-md show p-4 pt-3 overflow-hidden { _cl || '' }">
+  {#if show}
+    <slot />
+  {/if}
+</dialog>
 
 <style lang="postcss">
-  @keyframes enter {
-    0%   { margin-top: -5rem; }
-    100% { margin-top: 0; }
-  }
-
-  @keyframes fadeIn {
-    0%   { opacity: 0; }
-    100% { opacity: 1; }
-  }
-
-  #wrapper {
-    animation: fadeIn 200ms ease-in 1;
+  dialog::backdrop {
+    background-color: #0008;
+    z-index: -1;
   }
 
   .show {

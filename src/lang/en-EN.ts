@@ -85,6 +85,11 @@ export const English: Language = {
     cancel: 'Cancel',
     save: 'Save',
 
+    // Stackmat
+    stackmatAvailableHeader: 'Stackmat available',
+    stackmatAvailableText: 'Do you want to connect?',
+    connect: 'Connect',
+
     scramble: 'Scramble',
     time: 'Time',
 

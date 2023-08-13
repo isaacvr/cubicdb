@@ -373,6 +373,8 @@ export interface IPC {
   handleAny: (args?:any) => any;
 
   update: (args?:any) => any;
+
+  sleep: (args?: any) => any;
 }
 
 export interface Game {
@@ -400,6 +402,7 @@ export interface StackmatState {
   signalHeader: StackmatSignalHeader;
   noise: number;
   power: number;
+  stackmatId: string;
 }
 
 export interface NotificationAction {
@@ -513,6 +516,11 @@ export interface Language {
 
     cancel: string;
     save: string;
+
+    // Stackmat
+    stackmatAvailableHeader: string;
+    stackmatAvailableText: string;
+    connect: string;
 
     scramble: string;
     time: string;

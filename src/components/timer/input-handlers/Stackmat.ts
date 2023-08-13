@@ -3,6 +3,13 @@ import type { Unsubscriber } from "svelte/store";
 
 type StackmatInternalState = 'OFF' | 'ON' | 'RUNNING' | 'STOPPED' | 'CLEAN';
 
+let stackmats: StackmatInput[] = [];
+
+async function disposeStackmats(n: number) {
+  await Promise.all(stackmats.map(s => s.disconnect()));
+  stackmats.length = 0;
+}
+
 export class StackmatInput implements TimerInputHandler {
   private context: InputContext;
   private device: string;
@@ -14,20 +21,18 @@ export class StackmatInput implements TimerInputHandler {
   private state: StackmatInternalState;
 
   // UI handlers
-  private _state: TimerState;
-  private _lastSolve: Solve | null;
-  private _time: number = 0;
   private subs: Unsubscriber[];
+
+  id: string;
 
   constructor(context: InputContext) {
     this.context = context;
     this.device = '';
     this.audio_context = new AudioContext();
     this.lastState = null;
-    this._state = TimerState.CLEAN;
-    this._lastSolve = null;
     this.subs = [];
     this.state = 'OFF';
+    this.id = crypto.randomUUID();
   }
 
   static updateInputDevices(): Promise<string[][]> {
@@ -47,39 +52,49 @@ export class StackmatInput implements TimerInputHandler {
     });
   }
 
-  // static autoDetect(): Promise<string> {
-  //   return new Promise(async (res, rej) => {
-  //     let devices = await StackmatInput.updateInputDevices();
-  //     let resolved = false;
-  //     let cb: StackmatCallback = (st) => {
-  //       if ( st.on ) {
-  //         stackmats.forEach(s => s.disconnect());
-  //         resolved = true;
-  //         res(st.device);
-  //       }
-  //     };
+  static autoDetect(): Promise<{ device: string, id: string}> {
+    return new Promise(async (res, rej) => {
+      disposeStackmats(1);
 
-  //     let stackmats = devices.map((device: string[]) => {
-  //       let sm = new StackmatInput(null as any);
-  //       sm.setCallback( cb );
-  //       sm.init(device[0], true);
-  //       return sm;
-  //     });
+      let devices = await StackmatInput.updateInputDevices();
+      let tmo: NodeJS.Timeout;
 
-  //     setTimeout(() => {
-  //       stackmats.forEach(s => s.disconnect());
-  //       if ( !resolved ) rej();
-  //     }, 20000);
-  //   });
-  // }
+      let cb: StackmatCallback = (st) => {
+        if ( st.on ) {
+          clearTimeout(tmo);
+          disposeStackmats(2);
+          res({
+            device: st.device,
+            id: st.stackmatId
+          });
+        }
+      };
+
+      stackmats.push(...devices.map((device: string[]) => {
+        let sm = new StackmatInput(null as any);
+        sm.setCallback( cb );
+        sm.init(device[0], true);
+        return sm;
+      }));
+
+      tmo = setTimeout(() => {
+        disposeStackmats(3);
+        rej();
+      }, 20000);
+    });
+  }
+
+  getDevice(): string {
+    return this.device;
+  }
 
   init(deviceId: string, force: boolean) {
     if ( this.context ) {
       const { state, lastSolve, time } = this.context;
   
-      this.subs.push( state.subscribe((st) => this._state = st) );
-      this.subs.push( lastSolve.subscribe((sv) => this._lastSolve = sv) );
-      this.subs.push( time.subscribe((t) => this._time = t) );
+      this.subs.push( state.subscribe((st) => st) );
+      this.subs.push( lastSolve.subscribe((sv) => sv) );
+      this.subs.push( time.subscribe((t) => t) );
     }
   
     let selectObj: any = {
@@ -136,25 +151,26 @@ export class StackmatInput implements TimerInputHandler {
     });
     
     this.node.port.onmessage = (ev) => {
-      this.callback(ev.data);
+      let { data }: { data: StackmatState} = ev;
+      data.device = this.device;
+      data.stackmatId = this.id;
+      this.callback(data);
     };
 
     this.source.connect(this.node);
     this.node.connect( this.audio_context.destination );
   }
  
-  disconnect() {
+  async disconnect() {
     this.subs.forEach(s => s());
     this.state = 'OFF';
     this.lastState = null;
 
     if ( this.audio_stream != undefined ) {
-      try {
-        this.source?.disconnect( this.node as AudioWorkletNode );
-        this.node?.disconnect( this.audio_context.destination );
-        this.audio_context.close();
-        this.audio_stream = undefined;
-      } catch(e) {}
+      await this.audio_context.close();
+      this.audio_stream = undefined;
+      this.source?.disconnect( this.node as AudioWorkletNode );
+      this.node?.disconnect( this.audio_context.destination );
     }
   }
 

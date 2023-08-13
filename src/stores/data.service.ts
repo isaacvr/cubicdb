@@ -221,4 +221,8 @@ export class DataService {
   update() {
     this.isElectron && this.ipc.update();
   }
+
+  sleep(s: boolean) {
+    this.isElectron && this.ipc.sleep(s);
+  }
 }

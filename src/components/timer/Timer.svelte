@@ -107,7 +107,7 @@
   let scramble = writable<string>();
   let group = writable<number>();
   let mode = writable<{ 0: string, 1: string, 2: number }>();
-  let hintDialog = writable<boolean>();
+  let hintDialog = writable<boolean>(true);
   let hint = writable<boolean>();
   let cross = writable<string>();
   let xcross = writable<string>();
@@ -341,7 +341,7 @@
   }
 
   function initScrambler(scr?: string, _mode ?: string) {
-    $hintDialog = false;
+    // $hintDialog = false;
     
     if ( !$mode ) {
       $mode = MENU[ $group || 0 ][1][0];
@@ -367,10 +367,12 @@
     if ( dialogModes.indexOf(md) > -1 ) {
       $cross = solve_cross($scramble).map(e => e.map(e1 => e1.trim()).join(' '))[0];
       $xcross = solve_xcross($scramble, 0).map(e => e.trim()).join(' ');
-      $hintDialog = true;
+      // $hintDialog = true;
     } else {
+      $cross = "";
+      $xcross = "";
       $hint = false;
-      $hintDialog = false;
+      // $hintDialog = false;
     }
 
     if ( all.pScramble.options.has(md) && $session?.settings?.genImage ) {
@@ -656,10 +658,10 @@
             class="bg-gray-600 text-gray-200 flex-1"  
             bind:value={ newSessionName } on:keyup={ (e) => handleInputKeyUp(e) }/>
           <div class="flex mx-2 flex-grow-0 w-10 items-center justify-center">
-            <span class="text-gray-400 w-8 h-8 cursor-pointer" on:click={ newSession }>
+            <span tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer" on:click={ newSession }>
               <CheckIcon width="100%" height="100%"/>
             </span>
-            <span class="text-gray-400 w-8 h-8 cursor-pointer" on:click={ closeAddSession }>
+            <span tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer" on:click={ closeAddSession }>
               <CloseIcon width="100%" height="100%"/>
             </span>
           </div>
@@ -687,22 +689,22 @@
             }}/>
           <div class="flex mx-2 flex-grow-0 w-10 items-center justify-center">
             {#if !s.editing && !creatingSession}
-              <span class="text-gray-400 w-8 h-8 cursor-pointer" on:click={() => {
+              <span tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer" on:click={() => {
                 sessions.forEach(s1 => s1.editing = false);
                 s.editing = true;
               }}>
                 <PencilIcon width="100%" height="100%"/>
               </span>
-              <span class="text-gray-400 w-8 h-8 cursor-pointer" on:click={() => deleteSession(s)}>
+              <span tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer" on:click={() => deleteSession(s)}>
                 <DeleteIcon width="100%" height="100%"/>
               </span>
             {/if}
 
             {#if s.editing && !creatingSession}
-              <span class="text-gray-400 w-8 h-8 cursor-pointer" on:click={ () => renameSession(s) }>
+              <span tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer" on:click={ () => renameSession(s) }>
                 <CheckIcon width="100%" height="100%"/>
               </span>
-              <span class="text-gray-400 w-8 h-8 cursor-pointer" on:click={() => s.editing = false}>
+              <span tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer" on:click={() => s.editing = false}>
                 <CloseIcon width="100%" height="100%"/>
               </span>
             {/if}

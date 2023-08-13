@@ -92,6 +92,11 @@ export const Spanish: Language = {
 
     cancel: 'Cancelar',
     save: 'Guardar',
+    
+    // Stackmat
+    stackmatAvailableHeader: 'Stackmat disponible',
+    stackmatAvailableText: '¿Desea conectarlo?',
+    connect: 'Conectar',
 
     scramble: 'Mezcla',
     time: 'Tiempo',

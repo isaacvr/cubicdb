@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, shell, powerSaveBlocker } = require('electron');
 const { autoUpdater } = require('electron-updater');
 const { join, resolve } = require('path');
 const { existsSync, mkdirSync, writeFileSync, unlinkSync, createWriteStream } = require('fs');
@@ -270,6 +270,17 @@ ipcMain.on('reveal-file', (_, dir) => {
 
 ipcMain.on('update', (ev) => {
   autoUpdater.checkForUpdatesAndNotify();
+});
+
+// Power Management to prevent sleep
+let sleepId = -1;
+
+ipcMain.on('sleep', (_, sleep) => {
+  if ( sleep ) {
+    !powerSaveBlocker.isStarted(sleepId) && (sleepId = powerSaveBlocker.start('prevent-display-sleep'));
+  } else {
+    powerSaveBlocker.isStarted(sleepId) && powerSaveBlocker.stop(sleepId);
+  } 
 });
 
 function createWindow() {

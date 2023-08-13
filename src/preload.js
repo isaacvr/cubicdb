@@ -42,5 +42,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   revealFile: (f) => ipc.send('reveal-file', f),
   handleAny: (cb) => ipc.on('any', cb),
 
-  update: () => ipc.send('update')
+  update: () => ipc.send('update'),
+
+  sleep: (s) => ipc.send('sleep', s),
 });
