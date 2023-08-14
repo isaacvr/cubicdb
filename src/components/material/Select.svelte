@@ -83,7 +83,7 @@
       <button
         class="option text-gray-300 text-left transition-all duration-200 hover:bg-gray-800 p-1 rounded-md"
         class:selected={ transform(item, pos, items) === value }
-        on:click={ () => {
+        on:click|stopPropagation={ () => {
           showOptions = false;
           value = transform(item, pos, items);
           onChange(item, pos, items);

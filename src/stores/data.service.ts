@@ -1,4 +1,6 @@
-import type { Algorithm, RawCard, Solve, Session, Tutorial, Sheet, CubeEvent, IPC } from '@interfaces';
+import type { Algorithm, RawCard, Solve, Session, Tutorial, Sheet, CubeEvent, IPC, PDFOptions, UpdateCommand } from '@interfaces';
+import { ElectronAdaptor } from '../storage/electron';
+import { NoopAdaptor } from '../storage/noop';
 import type { Writable } from 'svelte/store';
 import { writable } from 'svelte/store';
 
@@ -27,14 +29,6 @@ interface AnySub {
   data: any;
 }
 
-interface PDFOptions {
-  width: number;
-  height: number;
-  html: string;
-  mode: string;
-  round: number;
-}
-
 export class DataService {
   ipc: IPC;
   algSub: Writable< Algorithm[] >;
@@ -44,7 +38,7 @@ export class DataService {
   contestSub: Writable<ContestSub>;
   sessSub: Writable< { type: string, data: Session | Session[] } >;
   anySub: Writable<AnySub>;
-  isElectron: boolean;
+  updateSub: Writable<AnySub>;
 
   private static _instance: DataService;
 
@@ -57,15 +51,15 @@ export class DataService {
     this.sessSub = writable< SessionSub >();
     this.contestSub = writable< ContestSub >();
     this.anySub = writable<AnySub>();
+    this.updateSub = writable<AnySub>();
 
     if ( navigator.userAgent.indexOf('Electron') > -1 ) {
-      this.ipc = (<any> window).electronAPI;
-      this.isElectron = true;
-      this.setIpc();
+      this.ipc = new ElectronAdaptor();
     } else {
-      this.ipc = {} as IPC;
-      this.isElectron = false;
+      this.ipc = new NoopAdaptor();
     }
+
+    this.setIpc();
 
   }
 
@@ -116,113 +110,120 @@ export class DataService {
         data: ev[1],
       });
     });
+
+    this.ipc.handleUpdate((_: any, ev: any) => {
+      this.updateSub.set({
+        type: ev[0],
+        data: ev.slice(1),
+      });
+    });
   }
 
   getAlgorithms(dir: string): void {
-    this.isElectron && this.ipc.getAlgorithms(dir);
+    this.ipc.getAlgorithms(dir);
   }
 
   getCards(): void {
-    this.isElectron && this.ipc.getCards();
+    this.ipc.getCards();
   }
 
   getTutorials() {
-    this.isElectron && this.ipc.getTutorials();
+    this.ipc.getTutorials();
   }
 
   addTutorial(t: Tutorial) {
-    this.isElectron && this.ipc.addTutorial(t);
+    this.ipc.addTutorial(t);
   }
 
   updateTutorial(t: Tutorial) {
-    this.isElectron && this.ipc.updateTutorial(t);
+    this.ipc.updateTutorial(t);
   }
 
   getSolves() {
-    this.isElectron && this.ipc.getSolves();
+    this.ipc.getSolves();
   }
 
   addSolve(s: Solve) {
-    this.isElectron && this.ipc.addSolve(s);
+    this.ipc.addSolve(s);
   }
 
   updateSolve(s: Solve) {
-    this.isElectron && this.ipc.updateSolve(s);
+    this.ipc.updateSolve(s);
   }
 
   removeSolves(s: Solve[]) {
-    this.isElectron && this.ipc.removeSolves(s.map(e => e._id));
+    this.ipc.removeSolves(s.map(e => e._id));
   }
 
   getSessions() {
-    this.isElectron && this.ipc.getSessions();
+    this.ipc.getSessions();
   }
 
   addSession(s: Session) {
-    this.isElectron && this.ipc.addSession(s);
+    this.ipc.addSession(s);
   }
 
   removeSession(s: Session) {
-    this.isElectron && this.ipc.removeSession(s);
+    this.ipc.removeSession(s);
   }
 
   renameSession(s: Session) {
-    this.isElectron && this.ipc.renameSession(s);
+    this.ipc.renameSession(s);
   }
 
   updateSession(s: Session) {
-    this.isElectron && this.ipc.updateSession(s);
+    this.ipc.updateSession(s);
   }
 
   addContest(c: CubeEvent) {
-    this.isElectron && this.ipc.addContest(c);
+    this.ipc.addContest(c);
   }
 
   getContests() {
-    this.isElectron && this.ipc.getContests();
+    this.ipc.getContests();
   }
 
   updateContest(c: CubeEvent) {
-    this.isElectron && this.ipc.updateContest(c);
+    this.ipc.updateContest(c);
   }
 
   removeContests(c: CubeEvent[]) {
-    this.isElectron && this.ipc.removeContests(c);
+    this.ipc.removeContests(c);
   }
 
   minimize() {
-    this.isElectron && this.ipc.minimize();
+    this.ipc.minimize();
   }
 
   maximize() {
-    this.isElectron && this.ipc.maximize();
+    this.ipc.maximize();
   }
 
   close() {
-    this.isElectron && this.ipc.close();
+    this.ipc.close();
   }
 
   generatePDF(args: PDFOptions) {
-    this.isElectron && this.ipc.generatePDF(args);
+    this.ipc.generatePDF(args);
   }
 
   zipPDF(s: { name: string, files: Sheet[]}) {
-    this.isElectron && this.ipc.zipPDF(s);
+    this.ipc.zipPDF(s);
   }
 
   openFile(f: string) {
-    this.isElectron && this.ipc.openFile(f);
+    this.ipc.openFile(f);
   }
 
   revealFile(f: string) {
-    this.isElectron && this.ipc.revealFile(f);
+    this.ipc.revealFile(f);
   }
 
-  update() {
-    this.isElectron && this.ipc.update();
+  update(cmd: UpdateCommand) {
+    this.ipc.update(cmd);
   }
 
   sleep(s: boolean) {
-    this.isElectron && this.ipc.sleep(s);
+    this.ipc.sleep(s);
   }
 }

@@ -333,48 +333,58 @@ export interface CubeDBAdaptor {
 }
 
 export interface IPC {
-  getAlgorithms: (args?:any) => any;
-  handleAlgorithms: (args?:any) => any;
+  handleAlgorithms: (fn: Function) => any;
+  handleAny: (fn: Function) => any;
+  handleCards: (fn: Function) => any;
+  handleContests: (fn: Function) => any;
+  handleSessions: (fn: Function) => any;
+  handleSolves: (fn: Function) => any;
+  handleTutorials: (fn: Function) => any;
+  handleUpdate: (fn: Function) => any;
   
-  getCards: (args?:any) => any;
-  handleCards: (args?:any) => any;
+  getAlgorithms: (dir: string) => any;
+  getCards: () => any;
   
-  addSolve: (args?:any) => any;
-  getSolves: (args?:any) => any;
-  updateSolve: (args?:any) => any;
-  removeSolves: (args?:any) => any;
-  handleSolves: (args?:any) => any;
+  getTutorials: () => any;
+  addTutorial: (t: Tutorial) => any;
+  updateTutorial: (t: Tutorial) => any;
   
-  addContest: (args?:any) => any;
-  getContests: (args?:any) => any;
-  updateContest: (args?:any) => any;
-  removeContests: (args?:any) => any;
-  handleContests: (args?:any) => any;
+  getSolves: () => any;
+  addSolve: (s: Solve) => any;
+  updateSolve: (s: Solve) => any;
+  removeSolves: (s: Solve[]) => any;
   
-  addSession: (args?:any) => any;
-  getSessions: (args?:any) => any;
-  removeSession: (args?:any) => any;
-  renameSession: (args?:any) => any;
-  updateSession: (args?:any) => any;
-  handleSessions: (args?:any) => any;
+  getSessions: () => any;
+  addSession: (s: Session) => any;
+  removeSession: (s: Session) => any;
+  renameSession: (s: Session) => any;
+  updateSession: (s: Session) => any;
+  
+  addContest: (c: CubeEvent) => any;
+  getContests: () => any;
+  updateContest: (c: CubeEvent) => any;
+  removeContests: (c: CubeEvent[]) => any;
+  
+  minimize: () => any;
+  maximize: () => any;
+  close: () => any;
+  
+  generatePDF: (args: PDFOptions) => any;
+  zipPDF: (s: { name: string, files: Sheet[]}) => any;
+  openFile: (f: string) => any;
+  revealFile: (f: string) => any;
+  
+  update: (cmd: UpdateCommand) => any;
+  
+  sleep: (s: boolean) => any;
+}
 
-  addTutorial: (args?:any) => any;
-  getTutorials: (args?:any) => any;
-  updateTutorial: (args?:any) => any;
-  handleTutorials: (args?:any) => any;
-
-  minimize: (args?:any) => any;
-  maximize: (args?:any) => any;
-  close: (args?:any) => any;
-  generatePDF: (args?:any) => any;
-  zipPDF: (args?:any) => any;
-  openFile: (args?:any) => any;
-  revealFile: (args?:any) => any;
-  handleAny: (args?:any) => any;
-
-  update: (args?:any) => any;
-
-  sleep: (args?: any) => any;
+export interface PDFOptions {
+  width: number;
+  height: number;
+  html: string;
+  mode: string;
+  round: number;
 }
 
 export interface Game {
@@ -647,3 +657,5 @@ export interface Language {
     showingOnly50: string;
   }
 }
+
+export type UpdateCommand = 'check' | 'download';

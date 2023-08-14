@@ -268,8 +268,36 @@ ipcMain.on('reveal-file', (_, dir) => {
   exec('explorer /select,' + dir);
 });
 
-ipcMain.on('update', (ev) => {
-  autoUpdater.checkForUpdatesAndNotify();
+// AutoUpdater
+autoUpdater.disableWebInstaller = true;
+
+if ( !prod ) {
+  autoUpdater.updateConfigPath = join(__dirname, '../', 'dev-app-update.yml');
+  autoUpdater.forceDevUpdateConfig = true;
+}
+
+ipcMain.on('update', (ev, cmd) => {
+  autoUpdater.autoDownload = cmd === 'download';
+
+  console.log("CMD: ", cmd);
+
+  if ( cmd === 'check' ) {
+    autoUpdater.checkForUpdatesAndNotify()
+      .then((res) => {
+        console.log("RES: ", res);
+
+        if ( res ) {
+          ev.sender.send('update', [ 'check', true, res.updateInfo.version ]);
+        } else {
+          ev.sender.send('update', ['check', false]);
+        }
+      })
+      .catch(_ => ev.sender.send('update', [ 'check', 'error' ]));
+  } else if ( cmd === 'download' ) {
+    let progressSender = (dp) => ev.sender.send('update', [ 'progress', dp.percent ]);
+    autoUpdater.on('download-progress', progressSender);
+    autoUpdater.checkForUpdates();
+  }
 });
 
 // Power Management to prevent sleep
@@ -347,7 +375,10 @@ function createWindow() {
           hasInspection: true,
           inspection: 15,
           showElapsedTime: true,
-          calcAoX: 0
+          calcAoX: 0,
+          genImage: true,
+          scrambleAfterCancel: false,
+          input: 'Keyboard'
         }
       });
     }

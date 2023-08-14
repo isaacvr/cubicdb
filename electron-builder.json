@@ -17,9 +17,11 @@
     "**/*",
     "!**/*.ts",
     "!*.code-workspace",
+    "!src/",
+    "!cache/",
+    "!out/",
     "!LICENSE.md",
     "!package-lock.json",
-    "!src/",
     "!pnpm-lock.yaml",
     "!yarn.lock",
     "!postcss.config.cjs",
@@ -38,16 +40,5 @@
   "extraResources": [
     "src/database/algs.db",
     "src/database/tutorials.db"
-  ],
-  "win": {
-    "target": [
-      {
-        "target": "nsis",
-        "arch": [
-          "x64"
-        ]
-      }
-    ],
-    "publish": [ "github" ]
-  }
+  ]
 }

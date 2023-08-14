@@ -665,9 +665,9 @@
         </section>
         <section>
           <Checkbox bind:checked={ modalData.settings.genImage } class="w-5 h-5 my-2" label={ $localLang.TIMER.genImage }/>
-          <i class="text-sm">({ $localLang.TIMER.canHurtPerformance })</i>
+          <i class="text-sm text-yellow-500">({ $localLang.TIMER.canHurtPerformance })</i>
         </section>
-        <section>
+        <section class="mt-4">
           <Checkbox bind:checked={ modalData.settings.scrambleAfterCancel }
             class="w-5 h-5 my-2" label={ $localLang.TIMER.refreshScramble }/>
         </section>

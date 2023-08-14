@@ -5,6 +5,7 @@
   export let undef = false;
   export let label = '';
   export let disabled = false;
+  export let tabindex = 0;
   let _class = '';
   export { _class as class };
   
@@ -17,17 +18,29 @@
     dispatch('change', { value: checked });
   }
   
+  function handleKeydown(ev: KeyboardEvent) {
+    if ( ev.code === 'Space' ) {
+      toggle();
+    }
+  }
+
   onMount(() => {
     dispatch('change', { value: checked });
   });
 
 </script>
 
-<div class="wrapper flex items-center" class:disabled={ disabled }>
-  <div class:checked class:undef class="box { _class }" on:click={ toggle }>
+<div class="wrapper flex items-center" class:disabled={ disabled }
+  aria-disabled={ disabled } aria-label={ label } aria-checked={ checked }>
+  <div class:checked class:undef class="box { _class }"
+    on:click={ toggle } on:keydown={ handleKeydown } tabindex={ disabled ? -1 : tabindex }>
     <div class="mark"></div>
   </div>
-  {#if label} <span class="label ml-1 cursor-pointer" on:click={ toggle }> {label} </span> {/if}
+  {#if label}
+    <span class="label ml-1 cursor-pointer" on:click={ toggle } on:keydown={ handleKeydown }>
+      {label}
+    </span>
+  {/if}
 </div>
 
 <style lang="postcss">
@@ -37,10 +50,11 @@
     hover:cursor-pointer transition-all duration-100;
   }
 
-  .wapper.disabled .box {
-    @apply border-gray-400;
+  .wrapper.disabled .box {
+    @apply border-gray-400 pointer-events-none;
   }
-  .wapper:not(.disabled) .box {
+  
+  .wrapper:not(.disabled) .box {
     @apply hover:border-blue-500;
   }
 

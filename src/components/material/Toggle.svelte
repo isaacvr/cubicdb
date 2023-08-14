@@ -2,6 +2,7 @@
   import { createEventDispatcher } from "svelte";
 
   export let checked = false;
+  export let tabindex = 0;
 
   const dispatch = createEventDispatcher();
   
@@ -11,9 +12,16 @@
     !checked && dispatch('unchecked');
     dispatch('change', { value: checked });
   }
+
+  function handleKeydown(ev: KeyboardEvent) {
+    if ( ev.code === 'Space' ) {
+      toggle();
+    }
+  }
 </script>
 
-<div class:checked class="wrapper" on:click={ toggle }>
+<div class:checked class="wrapper" on:click={ toggle } on:keydown={ handleKeydown }
+  { tabindex } aria-disabled={ false } aria-checked={ checked }>
   <div class="mark"></div>
 </div>
 

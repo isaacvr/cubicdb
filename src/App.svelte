@@ -70,9 +70,17 @@
   </main>
 
   <!-- Notifications -->
-  <section class="fixed top-0 right-0 h-full w-72 pr-2 flex flex-col gap-4 justify-center text-gray-400 pointer-events-none">
+  <section class="notification-container fixed top-0 right-0 h-full pr-2
+    flex flex-col gap-4 justify-center text-gray-400 pointer-events-none">
     {#each notifications as nt (nt.key)}
       <Notification {...nt} fixed={ nt.fixed }/>
     {/each}
   </section>
 </Router>
+
+<style>
+  .notification-container {
+    width: max-content;
+    max-width: 25rem;
+  }
+</style>

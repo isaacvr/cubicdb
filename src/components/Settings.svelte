@@ -3,15 +3,19 @@
   import { getLanguage, LANGUAGES } from "@lang/index";
   import { globalLang } from "@stores/language.service";
   import { NotificationService } from "@stores/notification.service";
-    import { UpdateService } from "@stores/update.service";
-    import { onDestroy } from "svelte";
-  import { derived, type Readable } from "svelte/store";
+  import { onDestroy, onMount } from "svelte";
+  import { derived, type Readable, type Unsubscriber } from "svelte/store";
   import Button from "./material/Button.svelte";
   import Select from "./material/Select.svelte";
+  import { DataService } from "@stores/data.service";
+
+  import LoadingIcon from '@icons/Loading.svelte';
 
   const notService = NotificationService.getInstance();
 
   let finalLang = $globalLang;
+  let dataService = DataService.getInstance();
+  let uSub: Unsubscriber;
 
   let localLang: Readable<Language> = derived(globalLang, ($lang, set) => {
     set( getLanguage( $lang ) );
@@ -64,66 +68,57 @@
 
   function checkUpdate() {
     canCheckUpdate = false;
-
-    UpdateService.checkForUpdates()
-      .then(res => {
-        canCheckUpdate = true;
-
-        console.log("RES = ", res);
-
-        if ( res ) {
-          notService.addNotification({
-            header: $localLang.SETTINGS.updateAvailable,
-            text: $localLang.SETTINGS.updateAvailableText,
-            fixed: true,
-            actions: [
-              { text: $localLang.SETTINGS.cancelAction, callback: () => {} },
-              { text: $localLang.SETTINGS.updateAction, callback: updateNow },
-            ],
-            key: crypto.randomUUID(),
-          });
-        } else {
-          notService.addNotification({
-            header: $localLang.SETTINGS.alreadyUpdated,
-            text: $localLang.SETTINGS.alreadyUpdatedText,
-            timeout: 2000,
-            key: crypto.randomUUID(),
-          });
-        }
-      })
-      .catch((err) => {
-        console.error(err);
-        canCheckUpdate = true;
-        notService.addNotification({
-          header: $localLang.SETTINGS.updateError,
-          text: $localLang.SETTINGS.updateErrorText,
-          timeout: 2000,
-          key: crypto.randomUUID(),
-        });
-      });
+    dataService.update('check');
   }
 
   function updateNow() {
-    UpdateService.update().then(v => {
-      notService.addNotification({
-        key: crypto.randomUUID(),
-        header: $localLang.SETTINGS.update,
-        text: v ? $localLang.SETTINGS.updateCompleted : $localLang.SETTINGS.updateFailed,
-        timeout: 2000,
-      });
-
-      console.log("UPDATE: ", v);
-    })
-    .catch(() => {
-      canCheckUpdate = true;
-      notService.addNotification({
-        header: $localLang.SETTINGS.updateError,
-        text: $localLang.SETTINGS.updateErrorText,
-        timeout: 2000,
-        key: crypto.randomUUID(),
-      });
-    });
+    dataService.update('download');
   }
+
+  onMount(() => {
+    uSub = dataService.updateSub.subscribe((ev) => {
+      if ( !ev ) return;
+
+      console.log("UPDATE: ", ev);
+
+      switch( ev.type ) {
+        case 'check': {
+          canCheckUpdate = true;
+
+          let res = ev.data[0];
+
+          if ( res === 'error' ) {
+            notService.addNotification({
+              header: $localLang.SETTINGS.updateError,
+              text: $localLang.SETTINGS.updateErrorText,
+              timeout: 2000,
+              key: crypto.randomUUID(),
+            });
+          } else if ( res ) {
+            notService.addNotification({
+              header: `${ $localLang.SETTINGS.updateAvailable } (${ ev.data[1] })`,
+              text: $localLang.SETTINGS.updateAvailableText,
+              fixed: true,
+              actions: [
+                { text: $localLang.SETTINGS.cancelAction, callback: () => {} },
+                { text: $localLang.SETTINGS.updateAction, callback: updateNow },
+              ],
+              key: crypto.randomUUID(),
+            });
+          } else {
+            notService.addNotification({
+              header: $localLang.SETTINGS.alreadyUpdated,
+              text: $localLang.SETTINGS.alreadyUpdatedText,
+              timeout: 2000,
+              key: crypto.randomUUID(),
+            });
+          }
+
+          break;
+        }
+      }
+    });
+  });    
 
   onDestroy(() => {
     $globalLang = finalLang;
@@ -169,8 +164,14 @@
   <div class="flex items-center justify-center gap-4">
     <div class="flex items-center justify-center gap-2">
       { $localLang.SETTINGS.version }: <mark>{ VERSION }</mark>
-      <Button class="bg-blue-700 text-gray-300" on:click={ () => canCheckUpdate && updateNow() }>
-        { $localLang.SETTINGS.checkUpdate }
+      <Button class="bg-blue-700 text-gray-300 grid justify-center relative" on:click={ () => canCheckUpdate && checkUpdate() }>
+        <span class="check-text" class:show={ canCheckUpdate }> { $localLang.SETTINGS.checkUpdate } </span>
+       
+        {#if !canCheckUpdate}
+          <div class="loading">
+            <LoadingIcon size="1.2rem"/>
+          </div>
+        {/if}
       </Button>
     </div>
   </div>
@@ -186,5 +187,21 @@
 <style lang="postcss">
   hr {
     @apply w-full h-px bg-gray-400 border-none mt-6;
+  }
+
+  .check-text:not(.show) {
+    color: transparent;
+  }
+
+  @keyframes circle {
+    0% { rotate: 0deg; }
+    100% { rotate: 360deg; }
+  }
+
+  .loading {
+    position: absolute;
+    left: 50%;
+    translate: -50% 0%;
+    animation: circle 1s linear infinite;
   }
 </style>

@@ -12,20 +12,8 @@
   const dataService = DataService.getInstance();
 
   let date: string, itv: NodeJS.Timer;
-  let anySub: Unsubscriber;
+  let uSub: Unsubscriber;
   let progress = 0;
-
-  function convertProgress(pr: number) {
-    let suff = [ 'B', 'KB', 'MB', 'GB' ];
-    let i = 0;
-
-    while ( pr >= 1000 ) {
-      pr /= 1024;
-      i += 1;
-    }
-
-    return pr.toFixed(2) + suff[i];
-  }
 
   onMount(() => {
     date = moment().format('hh:mm a');
@@ -34,22 +22,18 @@
       date = moment().format('hh:mm a');
     }, 1000);
 
-    anySub = dataService.anySub.subscribe((s) => {
+    uSub = dataService.updateSub.subscribe((s) => {
       if ( !s ) return;
 
-      if ( s.type === 'update-progress' ) {
-        if ( s.data != 'end' ) {
-          progress = s.data;
-        } else {
-          progress = 0;
-        }
+      if ( s.type === 'progress' ) {
+        progress = Math.round(s.data[0] * 100) / 100;
       }
     })
   });
 
   onDestroy(() => {
     clearInterval(itv);
-    anySub();
+    uSub();
   });
 
   function minimize() {
@@ -72,7 +56,7 @@
   <h4 class="ml-1">CubeDB</h4>
 
   <div class="absolute right-0 top-0 flex h-8 items-center">
-    {#if progress} <span class="mr-2"> { convertProgress(progress) } </span> {/if}
+    {#if progress} <span class="mr-2 text-yellow-500"> { progress + "%" } </span> {/if}
     <Select class="w-20 h-[2rem] mr-4"
       items={ LANGUAGES } label={e => e[1].code} bind:value={ $globalLang } transform={e => e[1].code} onChange={ updateLang }/>
     <span>{date}</span>
