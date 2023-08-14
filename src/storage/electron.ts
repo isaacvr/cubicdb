@@ -140,7 +140,6 @@ export class ElectronAdaptor implements IPC {
 
   update(cmd: UpdateCommand) {
     this.ipc.update(cmd);
-    console.log("ELECTRON CMD: ", cmd);
   }
 
   sleep(s: boolean) {

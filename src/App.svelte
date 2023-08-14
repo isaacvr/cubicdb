@@ -27,13 +27,6 @@
   let notifications: INotification[] = [];
   let nSub: Unsubscriber;
 
-  // const path = window.location.pathname;
-  // const basepath = /^\/?[a-zA-Z]+:/.test(path)
-  //   ? path.split('/').slice(0, -1).join('/')
-  //   : "/";
-
-  // console.log("BASEPATH", path, basepath);
-
   onMount(() => {
     nSub = notService.notificationSub.subscribe((v) => {
       notifications = v;

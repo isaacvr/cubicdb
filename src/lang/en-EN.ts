@@ -55,7 +55,8 @@ export const English: Language = {
     updateAvailable: 'Update available',
     updateAvailableText: 'There\'s a new version available.',
     alreadyUpdated: 'Already updated',
-    alreadyUpdatedText: 'You have the last version of CubeDB.',
+    alreadyUpdatedText: 'You have the latest version of CubeDB.',
+    accept: "Accept",
 
     cancelAction: 'Cancel',
     updateAction: 'Update',

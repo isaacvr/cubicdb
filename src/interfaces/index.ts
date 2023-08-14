@@ -497,6 +497,7 @@ export interface Language {
     updateAvailableText: string;
     alreadyUpdated: string;
     alreadyUpdatedText: string;
+    accept: string;
 
     cancelAction: string;
     updateAction: string;

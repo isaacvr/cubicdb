@@ -10,6 +10,7 @@
   import { DataService } from "@stores/data.service";
 
   import LoadingIcon from '@icons/Loading.svelte';
+    import { version } from "@stores/version.store";
 
   const notService = NotificationService.getInstance();
 
@@ -86,6 +87,7 @@
           canCheckUpdate = true;
 
           let res = ev.data[0];
+          let vs = ev.data[1];
 
           if ( res === 'error' ) {
             notService.addNotification({
@@ -95,16 +97,28 @@
               key: crypto.randomUUID(),
             });
           } else if ( res ) {
-            notService.addNotification({
-              header: `${ $localLang.SETTINGS.updateAvailable } (${ ev.data[1] })`,
-              text: $localLang.SETTINGS.updateAvailableText,
-              fixed: true,
-              actions: [
-                { text: $localLang.SETTINGS.cancelAction, callback: () => {} },
-                { text: $localLang.SETTINGS.updateAction, callback: updateNow },
-              ],
-              key: crypto.randomUUID(),
-            });
+            if ( $version === vs ) {
+              notService.addNotification({
+                header: $localLang.SETTINGS.alreadyUpdated,
+                text: $localLang.SETTINGS.alreadyUpdatedText,
+                fixed: true,
+                actions: [
+                  { text: $localLang.SETTINGS.accept, callback: () => {} }
+                ],
+                key: crypto.randomUUID(),
+              });
+            } else {
+              notService.addNotification({
+                header: `${ $localLang.SETTINGS.updateAvailable } (${ vs })`,
+                text: $localLang.SETTINGS.updateAvailableText,
+                fixed: true,
+                actions: [
+                  { text: $localLang.SETTINGS.cancelAction, callback: () => {} },
+                  { text: $localLang.SETTINGS.updateAction, callback: updateNow },
+                ],
+                key: crypto.randomUUID(),
+              });
+            }
           } else {
             notService.addNotification({
               header: $localLang.SETTINGS.alreadyUpdated,
@@ -163,7 +177,7 @@
   <h2 class="text-center text-violet-300 text-2xl mb-4 mt-4">{ $localLang.SETTINGS.update }</h2>
   <div class="flex items-center justify-center gap-4">
     <div class="flex items-center justify-center gap-2">
-      { $localLang.SETTINGS.version }: <mark>{ VERSION }</mark>
+      { $localLang.SETTINGS.version }: <mark>{ $version }</mark>
       <Button class="bg-blue-700 text-gray-300 grid justify-center relative" on:click={ () => canCheckUpdate && checkUpdate() }>
         <span class="check-text" class:show={ canCheckUpdate }> { $localLang.SETTINGS.checkUpdate } </span>
        
