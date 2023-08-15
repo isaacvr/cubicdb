@@ -29,6 +29,7 @@ export default defineConfig((env) => ({
       "@cstimer": resolve(__dirname, './src/cstimer'),
       "@interfaces": resolve(__dirname, './src/interfaces/index.ts'),
       "@stores": resolve(__dirname, './src/stores'),
+      "@storage": resolve(__dirname, './src/storage'),
       "@workers": resolve(__dirname, './src/workers'),
       "@lang": resolve(__dirname, './src/lang'),
       "@public": resolve(__dirname, './public'),

@@ -439,7 +439,8 @@
     <div class="absolute top-1 right-12 flex flex-col" class:isRunning={ $isRunning }>
       {#each options.filter((e, p) => !battle ? true : p === 3 || p === 5) as option}
         <Tooltip class="cursor-pointer" position="left" text={ option.text } hasKeybinding>
-          <button aria-label={ option.text } tabindex="0" class="my-3 mx-1 w-5 h-5 { textColor }" on:click={ option.handler }>
+          <button aria-label={ option.text } tabindex="0" class="my-3 mx-1 w-5 h-5 { textColor }"
+            on:click={ option.handler } on:keydown={ (e) => e.code === 'Space' ? e.preventDefault() : null }>
             <svelte:component this={option.icon} width="100%" height="100%"/>
           </button>
         </Tooltip>

@@ -53,7 +53,10 @@
     modal.addEventListener('cancel', (e) => {
       if ( !cancel ) {
         e.preventDefault();
+        return;
       }
+
+      close(null);
     });
   });
 

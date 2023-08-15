@@ -26,6 +26,7 @@
       "@cstimer/*": ["src/cstimer/*"],
       "@interfaces": ["src/interfaces/index.ts"],
       "@stores/*": ["src/stores/*"],
+      "@storage/*": ["src/storage/*"],
       "@workers/*": ["src/workers/*"],
       "@lang/*": ["src/lang/*"],
       "@public/*": ["public/*"],

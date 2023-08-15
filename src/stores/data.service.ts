@@ -1,6 +1,5 @@
 import type { Algorithm, RawCard, Solve, Session, Tutorial, Sheet, CubeEvent, IPC, PDFOptions, UpdateCommand } from '@interfaces';
-import { ElectronAdaptor } from '../storage/electron';
-import { NoopAdaptor } from '../storage/noop';
+import { ElectronAdaptor, BrowserAdaptor, NoopAdaptor } from '@storage/index';
 import type { Writable } from 'svelte/store';
 import { writable } from 'svelte/store';
 
@@ -56,7 +55,8 @@ export class DataService {
     if ( navigator.userAgent.indexOf('Electron') > -1 ) {
       this.ipc = new ElectronAdaptor();
     } else {
-      this.ipc = new NoopAdaptor();
+      // this.ipc = new NoopAdaptor();
+      this.ipc = new BrowserAdaptor();
     }
 
     this.setIpc();
