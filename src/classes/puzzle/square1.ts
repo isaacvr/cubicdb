@@ -131,7 +131,8 @@ export function SQUARE1(): PuzzleInterface {
   let planes = [
     mid.stickers[2].clone().points,
     pieceBig.stickers[2].clone().points.reverse(),
-    mid.stickers[5].clone().points
+    mid.stickers[5].clone().points,
+    mid.stickers[2].clone().points.map(p => p.rotate(CENTER, UP, PI_2, true)), // For simulator only
   ];
 
   sq1.move = function(moves: any[]) {
@@ -167,12 +168,15 @@ export function SQUARE1(): PuzzleInterface {
   };
 
   sq1.toMove = function(piece: Piece, sticker: Sticker, dir: Vector3D) {
-    let ang = (sticker.vecs[0].cross( UP ).abs() < 1e-6) ? PI_6 : PI;
+    let ang = dir.cross( UP ).abs() < 1e-6 ? sticker.vecs.length > 1 ? PI / 2 : PI_6 : PI;
     let toMovePieces: Piece[] = [];
 
     if ( ang > PI_6 && dir.cross(UP).abs() > 1e-6 ) {
       if ( sq1.move( [ [0, 6] ] ) ) {
         sq1.move( [ [0, 6] ] );
+        toMovePieces = pieces.filter(p => p.direction1(dir.mul(0.06), dir) === 0);
+      } else if ( sq1.move( [ [3, 6] ] ) ) {
+        sq1.move( [ [3, 6] ] );
         toMovePieces = pieces.filter(p => p.direction1(dir.mul(0.06), dir) === 0);
       }
     } else {
