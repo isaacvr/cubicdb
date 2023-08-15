@@ -378,7 +378,8 @@ function createWindow() {
           calcAoX: 0,
           genImage: true,
           scrambleAfterCancel: false,
-          input: 'Keyboard'
+          input: 'Keyboard',
+          withoutPrevention: false
         }
       });
     }

@@ -112,6 +112,8 @@ export const Spanish: Language = {
     aoxCalculation: 'Cálculo del AoX',
     sequential: 'Secuencial',
     groupOfX: 'En grupos de X solves',
+    withoutPrevention: 'Sin tiempo de prevención',
+    withoutPreventionDescription: 'Tiempo que debe mantener la tecla Espacio presionada',
 
     // Last solve tooltip
     delete: 'Eliminar',

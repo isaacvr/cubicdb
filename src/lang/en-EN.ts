@@ -104,6 +104,8 @@ export const English: Language = {
     aoxCalculation: 'AoX calculation',
     sequential: 'Sequential',
     groupOfX: 'Group of X solves',
+    withoutPrevention: 'Without prevention time',
+    withoutPreventionDescription: 'How long Spacebar needs to be pressed',
 
     // Last solve tooltip
     delete: 'Delete',

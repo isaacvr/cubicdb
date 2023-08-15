@@ -126,6 +126,7 @@ export interface SessionSettings {
   genImage: boolean;
   scrambleAfterCancel: boolean;
   input?: TimerInput;
+  withoutPrevention: boolean;
 }
 
 export interface Session {
@@ -546,6 +547,8 @@ export interface Language {
     aoxCalculation: string;
     sequential: string;
     groupOfX: string;
+    withoutPrevention: string;
+    withoutPreventionDescription: string;
 
     // Last solve tooltip
     delete: string;

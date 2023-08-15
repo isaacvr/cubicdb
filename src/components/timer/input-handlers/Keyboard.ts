@@ -125,11 +125,15 @@ export class KeyboardInput implements TimerInputHandler {
       this.isValid = false;
 
       if ( this._state === TimerState.STOPPED || this._state === TimerState.CLEAN ) {
+        if ( this._session?.settings.withoutPrevention ) {
+          ready.update(() => true);
+        } else {
+          this.refPrevention = performance.now();
+        }
         state.update(() => TimerState.PREVENTION);
         time.update(() => 0);
-        this.refPrevention = performance.now();
       } else if ( this._state === TimerState.PREVENTION ) {
-        if ( performance.now() - this.refPrevention > 500 ) {
+        if (performance.now() - this.refPrevention > 500 ) {
           ready.update(() => true);
         }
       } else if ( this._state === TimerState.RUNNING ) {

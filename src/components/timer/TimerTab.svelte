@@ -652,7 +652,7 @@
             label={ e => e[1] } transform={e => e[0]}/>
           </section>
         {/if}
-        <section>
+        <section class="flex gap-4 items-center">
           <Checkbox
             bind:checked={ modalData.settings.hasInspection }
             class="w-5 h-5" label={ $localLang.TIMER.inspection }/>
@@ -661,6 +661,17 @@
             disabled={ !modalData.settings.hasInspection } bind:value={ modalData.settings.inspection }
             min={5} max={60} step={5}/>
         </section>
+        
+        {#if modalData.settings.input === 'Keyboard'}
+          <section class="my-2">
+            <Checkbox
+              bind:checked={ modalData.settings.withoutPrevention }
+              class="w-5 h-5" label={ $localLang.TIMER.withoutPrevention }/>
+
+              <i class="text-sm text-yellow-500">({ $localLang.TIMER.withoutPreventionDescription })</i>
+          </section>
+        {/if}
+        
         <section>
           <Checkbox bind:checked={ modalData.settings.showElapsedTime } class="w-5 h-5 my-2" label={ $localLang.TIMER.showTime }/>
         </section>
