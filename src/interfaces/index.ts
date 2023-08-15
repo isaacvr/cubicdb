@@ -441,8 +441,8 @@ export interface InputContext {
   decimals: Writable<boolean>;
 
   reset: () => void;
-  initScrambler: () => void;
-  addSolve: () => void;
+  initScrambler: (scr?: string, _mode ?: string) => void;
+  addSolve: (time?: number, penalty?: Penalty) => void;
   createNewSolve: () => void;
 }
 

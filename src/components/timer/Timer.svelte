@@ -147,14 +147,14 @@
     }
   }
 
-  function setConfigFromSolve(s: Solve) {
+  function setConfigFromSolve(s: Solve, rescramble: boolean = true) {
     $group = s.group || 0;
     let menu = MENU[ $group ];
     modes = menu[1];
     let fModes = modes.filter(m => m[1] === s.mode);
     $mode = fModes.length ? fModes[0] : modes[0];
     $prob = s.prob || -1;
-    selectedFilter();
+    rescramble && selectedFilter();
   }
 
   function updateStatistics(inc ?: boolean) {
@@ -272,10 +272,10 @@
     updateSolves();
   }
 
-  function setSolves() {
+  function setSolves(rescramble: boolean = true) {
     sortSolves();
     updateStatistics(true);
-    $solves.length > 0 && setConfigFromSolve($solves[0]);
+    $solves.length > 0 && setConfigFromSolve($solves[0], rescramble);
   }
 
   function editSessions() {
@@ -341,8 +341,6 @@
   }
 
   function initScrambler(scr?: string, _mode ?: string) {
-    // $hintDialog = false;
-    
     if ( !$mode ) {
       $mode = MENU[ $group || 0 ][1][0];
     }
@@ -499,7 +497,7 @@
                     break;
                   }
                 }
-                setSolves();
+                setSolves(false);
               }
               break;
             }

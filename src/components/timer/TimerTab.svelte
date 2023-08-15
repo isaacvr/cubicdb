@@ -30,7 +30,7 @@
   import Select from '@components/material/Select.svelte';
 
   /// Helpers
-  import { timer } from '@helpers/timer';
+  import { sTimer, timer } from '@helpers/timer';
   import { createEventDispatcher, onDestroy, onMount } from 'svelte';
   import { DataService } from '@stores/data.service';
   import { NotificationService } from '@stores/notification.service';
@@ -63,27 +63,36 @@
   let timeStr: string = '';
   let solveControl = [
     { text: "Delete", icon: Close, highlight: () => false, handler: () => {
-      dataService.removeSolves([ $solves[0] ]);
-      $time = 0;
-      reset();
+      if ( $lastSolve ) {
+        dataService.removeSolves([ $lastSolve ]);
+        $time = 0;
+        reset();
+      }
     }},
     { text: "DNF", icon: ThumbDown, highlight: (s: any) => s.penalty === Penalty.DNF, handler: () => {
-      $solves[0].penalty = $solves[0].penalty === Penalty.DNF ? Penalty.NONE : Penalty.DNF;
-      $time = $solves[0].penalty === Penalty.DNF ? Infinity : $solves[0].time;
-      battle ? dispatch('update', $solves[0]) : dataService.updateSolve($solves[0]);
+      if ( $lastSolve ) {
+        $lastSolve.penalty = $lastSolve.penalty === Penalty.DNF ? Penalty.NONE : Penalty.DNF;
+        $time = $lastSolve.penalty === Penalty.DNF ? Infinity : $lastSolve.time;
+        battle ? dispatch('update', $lastSolve) : dataService.updateSolve($lastSolve);
+      }
     } },
     { text: "+2", icon: Flag, highlight: (s: any) => s.penalty === Penalty.P2, handler: () => {
-      $solves[0].penalty = $solves[0].penalty === Penalty.P2 ? Penalty.NONE : Penalty.P2;
-      $solves[0].penalty === Penalty.P2 ? $solves[0].time += 2000 : $solves[0].time -= 2000;
-      $time = $solves[0].time;
-      if ( battle ) {
-        dispatch('update', $solves[0]);
-      } else {
-        dataService.updateSolve($solves[0]);
+      if ( $lastSolve ) {
+        $lastSolve.penalty = $lastSolve.penalty === Penalty.P2 ? Penalty.NONE : Penalty.P2;
+        $lastSolve.penalty === Penalty.P2 ? $lastSolve.time += 2000 : $lastSolve.time -= 2000;
+        $time = $lastSolve.time;
+
+        if ( battle ) {
+          dispatch('update', $lastSolve);
+        } else {
+          dataService.updateSolve($lastSolve);
+        }
       }
     } },
     { text: "Comments", icon: CommentIcon, highlight: () => false, handler: () => {
-      editSolve( $solves[0] );
+      if ( $lastSolve ) {
+        editSolve( $lastSolve );
+      }
     } }
   ];
 
@@ -161,15 +170,17 @@
 
   function addSolve(t?: number, p?: Penalty) {
     let ls = $lastSolve as Solve;
-    ls.date = Date.now(),
-    ls.time = t || $time,
-    ls.group = $group,
-    ls.mode = $mode[1],
-    ls.len = $mode[2],
-    ls.prob = prob,
-    ls.session = $session._id,
-    ls.penalty = p || Penalty.NONE,
     
+    ls.date = Date.now();
+    ls.group = $group;
+    ls.mode = $mode[1];
+    ls.len = $mode[2];
+    ls.prob = prob;
+    ls.session = $session._id;
+    ls.penalty = p || Penalty.NONE;
+    ls.time = t || $time;
+    
+    $lastSolve = ls;
     $allSolves.push( ls );
     $solves.push( ls );
 
@@ -477,16 +488,14 @@
             focus-within:shadow-black"
           inpClass="text-center"/>
       </div>
-      <!-- {#if !validTimeStr() }
-        <i class="text-base mt-4"></i>
-      {/if} -->
     {:else}
       <span
         class="timer { textColor }"
         class:prevention={ $state === TimerState.PREVENTION }
         class:ready={$ready}
-        hidden={$state === TimerState.RUNNING && !$session.settings.showElapsedTime}
-        >{timer($time, $decimals, false)}</span>
+        hidden={$state === TimerState.RUNNING && !$session.settings.showElapsedTime}>
+          { $state === TimerState.STOPPED ? sTimer($lastSolve, $decimals, false) : timer($time, $decimals, false)}
+        </span>
       
       {#if $session?.settings?.input === 'StackMat' }
         <span class="text-2xl flex gap-2 items-center">

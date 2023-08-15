@@ -71,34 +71,36 @@ export class KeyboardInput implements TimerInputHandler {
 
     if ( code === 'Space' ) {
       if ( this._state === TimerState.PREVENTION ) {
-        if ( this._ready ) {
-          createNewSolve();
-          
-          if ( this._session?.settings.hasInspection ) {
-            state.update(() => TimerState.INSPECTION);
-            decimals.update(() => false);
-            time.update(() => 0);
-            ready.update(() => false);
-            this.ref = performance.now() + (this._session?.settings.inspection || 15) * 1000;
-            this.runTimer(-1, true);
-          } else {
-            state.update(() => TimerState.RUNNING);
-            ready.update(() => false);
-            this.ref = performance.now();
-            decimals.update(() => true);
-            this.stopTimer();
-
-            if ( (this._lastSolve as Solve).penalty === Penalty.P2 ) {
-              this.ref -= 2000;
-            }
-
-            this.runTimer(1);
-          }
-        } else {
+        if ( !this._ready ) {
           state.update(() => TimerState.CLEAN);
+          return;
+        }
+
+        createNewSolve();
+
+        if ( this._session?.settings.hasInspection ) {
+          state.update(() => TimerState.INSPECTION);
+          decimals.update(() => false);
+          time.update(() => 0);
+          ready.update(() => false);
+          this.ref = performance.now() + (this._session?.settings.inspection || 15) * 1000;
+          this.runTimer(-1, true);
+        } else {
+          state.update(() => TimerState.RUNNING);
+          ready.update(() => false);
+          this.ref = performance.now();
+          decimals.update(() => true);
+          this.stopTimer();
+
+          if ( (this._lastSolve as Solve).penalty === Penalty.P2 ) {
+            this.ref -= 2000;
+          }
+
+          this.runTimer(1);
         }
       } else if ( this._state === TimerState.INSPECTION ) {
         state.update(() => TimerState.RUNNING);
+        ready.update(() => false);
         this.ref = performance.now();
         decimals.update(() => true);
         this.stopTimer();
@@ -138,11 +140,12 @@ export class KeyboardInput implements TimerInputHandler {
         }
       } else if ( this._state === TimerState.RUNNING ) {
         this.stopTimer();
-        time.update(() => ~~(performance.now() - this.ref) );
-        addSolve();
+        time.update(() => ~~(performance.now() - this.ref));
+        
+        addSolve(~~(performance.now() - this.ref), (this._lastSolve as Solve).penalty);
+
         state.update(() => TimerState.STOPPED);
         ready.update(() => false);
-        (this._lastSolve as Solve).time = this.time;
         // !battle &&
         initScrambler();
       }
@@ -158,10 +161,11 @@ export class KeyboardInput implements TimerInputHandler {
     } else if ( this._state === TimerState.RUNNING ) {
       this.stopTimer();
       time.update(() => ~~(performance.now() - this.ref));
-      addSolve();
+      
+      addSolve(~~(performance.now() - this.ref), (this._lastSolve as Solve).penalty);
+
       state.update(() => TimerState.STOPPED);
       ready.update(() => false);
-      (this._lastSolve as Solve).time = this.time;
       // !battle &&
       initScrambler();
     }
@@ -170,7 +174,7 @@ export class KeyboardInput implements TimerInputHandler {
   runTimer(direction: number, roundUp ?: boolean) {
     if ( !this.active ) return;
 
-    const { state, time } = this.context;
+    const { state, time, ready, lastSolve, initScrambler, addSolve } = this.context;
 
     this.itv = setInterval(() => {
       let t = (direction < 0) ? this.ref - performance.now() : performance.now() - this.ref;
@@ -179,18 +183,19 @@ export class KeyboardInput implements TimerInputHandler {
         t = Math.ceil(t / 1000) * 1000;
       }
 
-      if ( t < -2 ) {
+      if ( t < -2000 ) {
         this.stopTimer();
         state.update(() => TimerState.STOPPED);
-        (this._lastSolve as Solve).penalty = Penalty.DNS;
+        ready.update(() => false);
+        time.update(() => Infinity);
+        addSolve(Infinity, Penalty.DNS);
+        initScrambler();
         return;
       }
 
-      if ( t <= 0 ) {
-        time.update(() => 0);
-        this.stopTimer();
-        (this._lastSolve as Solve).penalty = Penalty.P2;
-        return;
+      if ( t <= 0 && this._lastSolve?.penalty === Penalty.NONE ) {
+        this._lastSolve.penalty = Penalty.P2;
+        lastSolve.set(this._lastSolve);
       }
 
       time.update(() => ~~t);

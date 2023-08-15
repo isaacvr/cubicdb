@@ -29,7 +29,8 @@ export function timer(val: number, dec?: boolean, suff?: boolean, html?: boolean
   return time + ((suff) ? sf : '');
 }
 
-export function sTimer(s: Solve, dec?: boolean, suff?: boolean, html?: boolean): string {
+export function sTimer(s: Solve | null, dec?: boolean, suff?: boolean, html?: boolean): string {
+  if ( !s ) return '0';
   if ( s.penalty === Penalty.DNS ) return 'DNS';
   if ( s.penalty === Penalty.DNF ) return 'DNF';
   return timer(s.time, dec, suff, html);
