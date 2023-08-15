@@ -1,7 +1,7 @@
 const { app, BrowserWindow, ipcMain, shell, powerSaveBlocker } = require('electron');
 const { autoUpdater } = require('electron-updater');
 const { join, resolve } = require('path');
-const { existsSync, mkdirSync, writeFileSync, unlinkSync, createWriteStream } = require('fs');
+const { existsSync, mkdirSync, writeFileSync, unlinkSync, createWriteStream, copyFileSync } = require('fs');
 const { tmpdir } = require('os');
 const { exec } = require('child_process');
 
@@ -17,7 +17,18 @@ const args = process.argv.slice(1), serve = args.some(val => val === '--serve');
 let appPath = app.getAppPath();
 let prod = app.isPackaged;
 let params = [ prod ? appPath.replace(/app\.asar$/, '') : appPath, 'src', 'database' ];
-let dbPath = join.apply(null, params);
+let dbFixedPath = join.apply(null, params);
+let dbPath = app.getPath('userData');
+
+const fixedResources = [ 'algs.db', 'tutorials.db' ];
+
+fixedResources.forEach((res) => {
+  if ( !existsSync( join(dbPath, res) ) ) {
+    console.log('Copying files from:\n', join(dbFixedPath, res), "to:\n", join(dbPath, res));
+    copyFileSync( join(dbFixedPath, res), join(dbPath, res) );
+  }
+});
+
 
 let Algorithms = new NeDB({ filename: resolve(dbPath, 'algs.db'), autoload: true });
 let Tutorials = new NeDB({ filename: resolve(dbPath, 'tutorials.db'), autoload: true });
@@ -279,8 +290,6 @@ if ( !prod ) {
 ipcMain.on('update', (ev, cmd) => {
   autoUpdater.autoDownload = cmd === 'download';
 
-  console.log("CMD: ", cmd);
-
   if ( cmd === 'check' ) {
     autoUpdater.checkForUpdatesAndNotify()
       .then((res) => {
@@ -294,9 +303,14 @@ ipcMain.on('update', (ev, cmd) => {
       })
       .catch(_ => ev.sender.send('update', [ 'check', 'error' ]));
   } else if ( cmd === 'download' ) {
-    let progressSender = (dp) => ev.sender.send('update', [ 'progress', dp.percent ]);
-    autoUpdater.on('download-progress', progressSender);
-    autoUpdater.checkForUpdates();
+    autoUpdater.on('download-progress', (dp) => ev.sender.send('update', [ 'progress', dp.percent ]));
+    autoUpdater.on('update-downloaded', () => ev.sender.send('update', [ 'completed' ]))
+    
+    autoUpdater.checkForUpdates()
+      .then((res) => {
+        console.log("RES1: ", res);
+      })
+      .catch(_ => ev.sender.send('update', [ 'check', 'error' ]));;
   }
 });
 

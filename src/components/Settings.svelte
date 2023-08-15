@@ -10,7 +10,7 @@
   import { DataService } from "@stores/data.service";
 
   import LoadingIcon from '@icons/Loading.svelte';
-    import { version } from "@stores/version.store";
+  import { version } from "@stores/version.store";
 
   const notService = NotificationService.getInstance();
 
@@ -136,6 +136,7 @@
 
   onDestroy(() => {
     $globalLang = finalLang;
+    uSub();
   }); 
 </script>
 

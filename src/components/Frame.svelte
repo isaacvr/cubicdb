@@ -5,11 +5,18 @@
   import { onDestroy, onMount } from 'svelte';
   import { DataService } from '@stores/data.service';
   import Select from './material/Select.svelte';
-  import { LANGUAGES } from '@lang/index';
+  import { LANGUAGES, getLanguage } from '@lang/index';
   import { globalLang } from '@stores/language.service';
-  import type { Unsubscriber } from 'svelte/store';
+  import { derived, type Readable, type Unsubscriber } from 'svelte/store';
+  import { NotificationService } from '@stores/notification.service';
+  import type { Language } from '@interfaces';
+
+  let localLang: Readable<Language> = derived(globalLang, ($lang, set) => {
+    set( getLanguage( $lang ) );
+  });
 
   const dataService = DataService.getInstance();
+  const notService = NotificationService.getInstance();
 
   let date: string, itv: NodeJS.Timer;
   let uSub: Unsubscriber;
@@ -25,8 +32,23 @@
     uSub = dataService.updateSub.subscribe((s) => {
       if ( !s ) return;
 
-      if ( s.type === 'progress' ) {
-        progress = Math.round(s.data[0] * 100) / 100;
+      switch( s.type ) {
+        case 'progress': {
+          progress = Math.round(s.data[0] * 100) / 100;
+          break;
+        }
+        case 'completed': {
+          notService.addNotification({
+            header: $localLang.SETTINGS.update,
+            text: $localLang.SETTINGS.updateCompleted,
+            actions: [
+              { text: $localLang.SETTINGS.accept, callback: () => {} }
+            ],
+            timeout: 5000,
+            key: crypto.randomUUID(),
+          });
+          break;
+        }
       }
     })
   });
