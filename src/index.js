@@ -137,7 +137,7 @@ ipcMain.on('update-solve', (event, arg) => {
 });
 
 ipcMain.on('remove-solves', (event, arg) => {
-  Solves.remove({ _id: { $in: arg } }, { multi: true }, function(err, solves) {
+  Solves.remove({ _id: { $in: arg } }, { multi: true }, function(err) {
     return event.sender.send('solves', ['remove-solves', err ? null : arg ]);
   });
 });

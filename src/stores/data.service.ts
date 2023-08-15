@@ -152,7 +152,7 @@ export class DataService {
   }
 
   removeSolves(s: Solve[]) {
-    this.ipc.removeSolves(s.map(e => e._id));
+    this.ipc.removeSolves(s);
   }
 
   getSessions() {

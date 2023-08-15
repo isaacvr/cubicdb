@@ -412,6 +412,8 @@
         calcAoX: AverageSetting.SEQUENTIAL,
         genImage: true,
         scrambleAfterCancel: false,
+        input: 'Keyboard',
+        withoutPrevention: false
       } });
       closeAddSession();
     }
@@ -452,6 +454,7 @@
           scrambleAfterCancel: false,
           showElapsedTime: true,
           input: 'Keyboard',
+          withoutPrevention: false,
         },
         editing: false,
         tName: '',
@@ -462,7 +465,6 @@
           if ( !data || !data.data ) {
             return;
           }
-          
           switch(data.type) {
             case 'get-solves': {
               $allSolves = <Solve[]> data.data;
