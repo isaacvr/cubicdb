@@ -1,5 +1,5 @@
 import { Penalty, type CubeDBAdaptor, type CubeDBData } from "@interfaces";
-import { genSettings, identifyPuzzle } from "../common";
+import { genSettings } from "../common";
 
 interface CubeDeskSession {
   id: string;

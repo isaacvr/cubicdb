@@ -40,6 +40,8 @@ export function genSettings(): SessionSettings {
     hasInspection: true,
     inspection: 15,
     scrambleAfterCancel: true,
-    showElapsedTime: true
+    showElapsedTime: true,
+    input: 'Keyboard',
+    withoutPrevention: false
   }
 }
