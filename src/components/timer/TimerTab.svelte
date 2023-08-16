@@ -30,7 +30,7 @@
   import Select from '@components/material/Select.svelte';
 
   /// Helpers
-  import { sTimer, timer } from '@helpers/timer';
+  import { sTimer, timer, timerToMilli } from '@helpers/timer';
   import { createEventDispatcher, onDestroy, onMount } from 'svelte';
   import { DataService } from '@stores/data.service';
   import { NotificationService } from '@stores/notification.service';
@@ -40,6 +40,7 @@
   import { ManualInput } from './input-handlers/Manual';
   import { globalLang } from '@stores/language.service';
   import { getLanguage } from '@lang/index';
+    import { stopPropagation } from '@helpers/DOM';
  
   export let context: TimerContext;
   export let battle = false;
@@ -57,7 +58,7 @@
   const notification = NotificationService.getInstance();
 
   /// CLOCK
-  const TIMER_DIGITS = /^\d{1,6}$/;
+  const TIMER_DIGITS = /^\d+$/;
   const TIMER_DNF = /^\s*dnf\s*$/i;
   let time: Writable<number> = writable(0);
   let timeStr: string = '';
@@ -307,14 +308,6 @@
     dragging = false;
   }
 
-  function timerToMilli(n: number): number {
-    let p = [];
-    p.push(n % 100); n = ~~(n / 100);
-    p.push(n % 100); n = ~~(n / 100);
-    p.push(n);
-    return p[2] * 60000 + p[1] * 1000 + p[0] * 10;
-  }
-
   function addTimeString() {
     if ( !TIMER_DIGITS.test(timeStr) && !TIMER_DNF.test(timeStr) ) {
       timeStr = '';
@@ -481,7 +474,7 @@
     {#if $session?.settings?.input === 'Manual'}
       <div id="manual-inp">
         <Input
-          bind:value={ timeStr }
+          bind:value={ timeStr } stopKeyupPropagation
           on:UENTER={ addTimeString }
           class="w-full h-36 text-center {
             validTimeStr(timeStr) ? '' :  'border-red-400 border-2' }

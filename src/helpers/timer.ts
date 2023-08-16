@@ -1,6 +1,6 @@
 import { Penalty, type Solve } from "@interfaces";
 
-export function timer(val: number, dec?: boolean, suff?: boolean, html?: boolean): string {
+export function timer(val: number, dec?: boolean, suff?: boolean, log?: boolean): string {
   if ( val === Infinity ) return "DNF";
   if ( isNaN(val) ) return ( dec ) ? "0.00" : "0";
 
@@ -8,34 +8,49 @@ export function timer(val: number, dec?: boolean, suff?: boolean, html?: boolean
   let ms = v % 100; v = ~~(v / 100);
   let s = v % 60;   v = ~~(v / 60);
   let m = v % 60;   v = ~~(v / 60);
-  let h = v % 60;   v = ~~(v / 60);
-  let p1 = [h, m].filter(e => e != 0);
-  
-  p1.push(s);
+  let h = v;
 
-  let sf = [ 's', 'm', 'h' ][ p1.length - 1 ];
-  let _html = ~~(html || 0);
+  const l2 = (s: number) => ("00" + s).slice(-2);
 
-  let newP1 = p1.map((e, p) => {
-    if ( p > 0 )
-      return ['', '<span class="digit">'][_html] + ("00" + e).substr(-2, 2) + ['', '</span>'][_html];
-    return ['', '<span class="digit">'][_html] + e + ['', '</span>'][_html];
-  }).join(":");
+  let res = '';
+  let sf = '';
+  let sec = false;
 
-  let time = (( dec || (suff && sf === 's') )
-    ? newP1 + `.${['', '<span class="digit">'][_html] + ('00' + ms).substr(-2, 2) + ['', '</span>'][_html]}`
-    : newP1);
+  if ( h ) {
+    res = `${ h }h ${ m }:${ l2(s) }`;
+  } else if ( m ) {
+    res = `${ m }:${ l2(s) }`;
+    sf = dec ? '' : 'm';
+  } else {
+    res = `${ s }`;
+    sf = dec ? '' : 's';
+    sec = true;
+  }
 
-  return time + ((suff) ? sf : '');
+  return res + (( (sec && !s) || dec ) ? `.${ l2(ms) }` : '') + (suff ? sf : '');
 }
 
-export function sTimer(s: Solve | null, dec?: boolean, suff?: boolean, html?: boolean): string {
+export function sTimer(s: Solve | null, dec?: boolean, suff?: boolean): string {
   if ( !s ) return '0';
   if ( s.penalty === Penalty.DNS ) return 'DNS';
   if ( s.penalty === Penalty.DNF ) return 'DNF';
-  return timer(s.time, dec, suff, html);
+  return timer(s.time, dec, suff);
 }
 
 export function infinitePenalty(s: Solve): boolean {
   return s.penalty === Penalty.DNF || s.penalty === Penalty.DNS;
+}
+
+export function timerToMilli(n: number): number {
+  let mtp = [ 10, 1_000, 60_000, 3_600_000 ]; // Multiplier up to hours
+  let res = 0;
+
+  for (let i = 0, maxi = mtp.length; i < maxi && n; i += 1) {
+    let d = n % 100;
+    res += d * mtp[i];
+
+    n = ~~(n / 100);
+  }
+  
+  return res + n * 86_400_000; // Add days
 }

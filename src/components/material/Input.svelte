@@ -15,6 +15,8 @@
   export let max: number | undefined = undefined;
   export let step = 1;
   export let inpClass = '';
+  export let stopKeyupPropagation = false;
+  export let stopKeydownPropagation = false;
   
   let cl = '';
   export {cl as class};
@@ -22,20 +24,24 @@
   let ref: HTMLInputElement;
 
   $: type = ['text', 'number', 'date'].indexOf(type) === -1 ? 'text' : type;
-  $: focus ? ref && tick().then(() => ref.focus()) : ref && tick().then(() => ref.blur());
+  $: focus ? ref && tick().then(() => ref?.focus()) : ref && tick().then(() => ref?.blur());
   
   function keyup(e: KeyboardEvent) {
+    stopKeyupPropagation && e.stopPropagation();
     dispatch("keyup", e);
-
-    e.code === "Enter" && dispatch("UENTER", e);
+    (e.code === "Enter" || e.code === 'NumpadEnter') && dispatch("UENTER", e);
     e.code === "Esc" && dispatch("UESCAPE", e);
   }
+
   function keydown(e: KeyboardEvent) {
+    stopKeydownPropagation && e.stopPropagation();
     dispatch("keydown", e);
-    e.code === "Enter" && dispatch("DENTER", e);
+    (e.code === "Enter" || e.code === 'NumpadEnter') && dispatch("DENTER", e);
     e.code === "Esc" && dispatch("DESCAPE", e);
   }
+  
   function input(e: any) { dispatch("input", e); }
+  
   function change(e: any) { dispatch("change", e); }
 
 </script>

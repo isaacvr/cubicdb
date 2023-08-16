@@ -38,3 +38,7 @@ export function getStackingContext(e: HTMLElement): HTMLElement {
 
   }
 }
+
+export function stopPropagation(e: Event) {
+  e.stopPropagation();
+}

@@ -296,7 +296,7 @@
       on:contextmenu={ (e) => handleContextMenu(e, solve) }
       class:selected={ solve.selected }>
         <div class="font-small absolute top-0 left-2">{ moment(solve.date).format('DD/MM') }</div>
-        <span class="time font-bold">{ solve.penalty === Penalty.DNF ? 'DNF' : timer(solve.time, true) }</span>
+        <span class="time font-bold">{ sTimer(solve) }</span>
 
         <div class="absolute right-1 top-0 h-full flex flex-col items-center justify-evenly">
           {#if solve.penalty === 1} <span class="font-small">+2</span> {/if}
