@@ -1,8 +1,8 @@
 import { Penalty, type Solve } from "@interfaces";
 
-export function timer(val: number, dec?: boolean, suff?: boolean, log?: boolean): string {
+export function timer(val: number, dec?: boolean, suff?: boolean): string {
   if ( val === Infinity ) return "DNF";
-  if ( isNaN(val) ) return ( dec ) ? "0.00" : "0";
+  if ( isNaN(val) ) return (dec ? "0.00" : "0") + (suff ? 's' : '');
 
   let v = ~~(val / 10);
   let ms = v % 100; v = ~~(v / 100);
@@ -23,7 +23,7 @@ export function timer(val: number, dec?: boolean, suff?: boolean, log?: boolean)
     sf = dec ? '' : 'm';
   } else {
     res = `${ s }`;
-    sf = dec ? '' : 's';
+    sf = 's';
     sec = true;
   }
 
@@ -31,7 +31,7 @@ export function timer(val: number, dec?: boolean, suff?: boolean, log?: boolean)
 }
 
 export function sTimer(s: Solve | null, dec?: boolean, suff?: boolean): string {
-  if ( !s ) return '0';
+  if ( !s ) return (dec ? '0.00' : '0') + (suff ? 's' : '');
   if ( s.penalty === Penalty.DNS ) return 'DNS';
   if ( s.penalty === Penalty.DNF ) return 'DNF';
   return timer(s.time, dec, suff);
@@ -53,4 +53,8 @@ export function timerToMilli(n: number): number {
   }
   
   return res + n * 86_400_000; // Add days
+}
+
+export function adjustMillis(n: number): number {
+  return Math.floor(n / 10) * 10;
 }

@@ -33,6 +33,7 @@
   import { globalLang } from "@stores/language.service";
   import { getLanguage } from "@lang/index";
   import { tick } from "svelte";
+  import Select from "@components/material/Select.svelte";
 
   let localLang: Readable<Language> = derived(globalLang, ($lang) => getLanguage( $lang ));
 
@@ -296,7 +297,7 @@
       on:contextmenu={ (e) => handleContextMenu(e, solve) }
       class:selected={ solve.selected }>
         <div class="font-small absolute top-0 left-2">{ moment(solve.date).format('DD/MM') }</div>
-        <span class="time font-bold">{ sTimer(solve) }</span>
+        <span class="text-center font-bold">{ sTimer(solve, true) }</span>
 
         <div class="absolute right-1 top-0 h-full flex flex-col items-center justify-evenly">
           {#if solve.penalty === 1} <span class="font-small">+2</span> {/if}
@@ -357,9 +358,19 @@
 
   <Modal bind:this={ modal } bind:show={ show } onClose={ closeHandler } class="max-w-xl">
     <div class="flex justify-between items-center text-gray-400 m-2">
-      <h2 class="m-1 w-max">{ timer(sSolve.time, false, true) }
-        {#if sSolve.penalty === Penalty.P2}<span class="font-small text-red-500">+2</span>{/if}
-        {#if sSolve.penalty === Penalty.DNF}<span class="font-small text-red-500">DNF</span>{/if}
+      <h2 class="m-1 w-max">
+        {#if sSolve.penalty === Penalty.NONE || sSolve.penalty === Penalty.P2}
+          { sTimer(sSolve, true, true) }
+        {/if}
+        {#if sSolve.penalty === Penalty.P2}
+          <span class="font-small text-red-500">+2</span>
+        {/if}
+        {#if sSolve.penalty === Penalty.DNF}
+          <span class="font-small text-red-500">DNF</span>
+        {/if}
+        {#if sSolve.penalty === Penalty.DNS}
+          <span class="font-small text-red-500">DNS</span>
+        {/if}
       </h2>
       <span class="flex items-center font-small">
         <CalendarIcon width="1.2rem" height="1.2rem"/>
@@ -376,7 +387,7 @@
       <CommentIcon /> <TextArea bind:value={ sSolve.comments } placeholder={ $localLang.TIMER.comment }/>
     </div>
     <div class="mt-2 flex">
-      <Button ariaLabel={ $localLang.TIMER.delete } flat
+      <Button ariaLabel={ $localLang.TIMER.delete } flat class="text-red-500"
         on:click={ () => { _delete([ sSolve ]); modal.close()} }>
         <DeleteIcon /> { $localLang.TIMER.delete }
       </Button>
@@ -391,17 +402,13 @@
         <SendIcon /> { $localLang.TIMER.save }
       </Button>
 
-      <Button ariaLabel="+2" flat rp={ false }
-        class={ sSolve.penalty === Penalty.P2 ? 'text-red-500' : '' }
-        on:click={ () => setPenalty(Penalty.P2) }>+2</Button>
-
-      <Button ariaLabel="DNF" flat rp={ false }
-        class={ sSolve.penalty === Penalty.DNF ? 'text-red-500' : '' }
-        on:click={ () => setPenalty(Penalty.DNF) }>DNF</Button>
-      
-        <Button ariaLabel={ $localLang.TIMER.noPenalty } flat rp={ false }
-        class={ sSolve.penalty === Penalty.NONE ? 'text-green-500' : '' }
-        on:click={ () => setPenalty(Penalty.NONE) }>{ $localLang.TIMER.noPenalty }</Button>
+      <Select items={[
+          { label: $localLang.TIMER.noPenalty, penalty: Penalty.NONE },
+          { label: '+2', penalty: Penalty.P2 },
+          { label: 'DNF', penalty: Penalty.DNF },
+          { label: 'DNS', penalty: Penalty.DNS },
+        ]} onChange={ (p) => setPenalty(p.penalty) }
+        label={ (v) => v.label } transform={ (v) => v.penalty } value={ sSolve.penalty }/>
     </div>
   </Modal>
 

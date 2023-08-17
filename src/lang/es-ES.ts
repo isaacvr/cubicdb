@@ -93,6 +93,9 @@ export const Spanish: Language = {
 
     cancel: 'Cancelar',
     save: 'Guardar',
+
+    congrats: 'Felicitaciones',
+    from: 'desde',
     
     // Stackmat
     stackmatAvailableHeader: 'Stackmat disponible',
@@ -114,6 +117,7 @@ export const Spanish: Language = {
     groupOfX: 'En grupos de X solves',
     withoutPrevention: 'Sin tiempo de prevención',
     withoutPreventionDescription: 'Tiempo que debe mantener la tecla Espacio presionada',
+    recordCelebration: 'Celebrar cuando se rompe un record',
 
     // Last solve tooltip
     delete: 'Eliminar',
@@ -149,7 +153,7 @@ export const Spanish: Language = {
     invertSelection: 'Invertir selección',
 
     comment: 'Comentarios...',
-    noPenalty: 'Sin penalización',
+    noPenalty: 'Limpio',
 
     removeAllSolves: 'Deseas eliminar todos los tiempos?',
     select: 'Seleccionar',

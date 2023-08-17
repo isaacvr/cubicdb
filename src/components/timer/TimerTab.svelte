@@ -551,22 +551,22 @@
           <tr class:better={$stats.best.better && $stats.counter.value > 0 && $stats.best.value > -1}>
             <td>{ $localLang.TIMER.best }:</td>
             {#if !$stats.best.value} <td>N/A</td> {/if}
-            {#if $stats.best.value} <td>{ timer($stats.best.value, false, true) }</td> {/if}
+            {#if $stats.best.value} <td>{ timer($stats.best.value, true, true) }</td> {/if}
           </tr>
           <tr>
             <td>{ $localLang.TIMER.worst }:</td>
             {#if !$stats.worst.value} <td>N/A</td> {/if}
-            {#if $stats.worst.value} <td>{ timer($stats.worst.value, false, true) }</td> {/if}
+            {#if $stats.worst.value} <td>{ timer($stats.worst.value, true, true) }</td> {/if}
           </tr>
           <tr class:better={$stats.avg.better && $stats.counter.value > 0}>
             <td>{ $localLang.TIMER.average }:</td>
             {#if !$stats.avg.value} <td>N/A</td> {/if}
-            {#if $stats.avg.value} <td>{ timer($stats.avg.value, false, true) }</td> {/if}
+            {#if $stats.avg.value} <td>{ timer($stats.avg.value, true, true) }</td> {/if}
           </tr>
           <tr>
             <td>{ $localLang.TIMER.deviation }:</td>
             {#if !$stats.dev.value} <td>N/A</td> {/if}
-            {#if $stats.dev.value} <td>{ timer($stats.dev.value, false, true) }</td> {/if}
+            {#if $stats.dev.value} <td>{ timer($stats.dev.value, true, true) }</td> {/if}
           </tr>
           <tr>
             <td>{ $localLang.TIMER.count }:</td>
@@ -575,12 +575,12 @@
           <tr class:better={$stats.Mo3.better && $stats.counter.value > 0 && $stats.Mo3.value > -1}>
             <td>Mo3:</td>
             {#if !($stats.Mo3.value > -1)} <td>N/A</td> {/if}
-            {#if ($stats.Mo3.value > -1)} <td>{ timer($stats.Mo3.value, false, true) }</td> {/if}
+            {#if ($stats.Mo3.value > -1)} <td>{ timer($stats.Mo3.value, true, true) }</td> {/if}
           </tr>
           <tr class:better={$stats.Ao5.better && $stats.counter.value > 0 && $stats.Ao5.value > -1}>
             <td>Ao5:</td>
             {#if !($stats.Ao5.value > -1)} <td>N/A</td> {/if}
-            {#if ($stats.Ao5.value > -1)} <td>{ timer($stats.Ao5.value, false, true) }</td> {/if}
+            {#if ($stats.Ao5.value > -1)} <td>{ timer($stats.Ao5.value, true, true) }</td> {/if}
           </tr>
         </table>
       </div>
@@ -590,7 +590,7 @@
             <tr class:better={$stats[stat].better && $stats.counter.value > 0 && $stats[stat].value > -1}>
               <td>{stat}:</td>
               {#if !($stats[stat].value > -1)} <td>N/A</td> {/if}
-              {#if ($stats[stat].value > -1)} <td>{ timer($stats[stat].value, false, true) }</td> {/if}
+              {#if ($stats[stat].value > -1)} <td>{ timer($stats[stat].value, true, true) }</td> {/if}
             </tr>
           {/each}
         </table>
@@ -654,36 +654,46 @@
             label={ e => e[1] } transform={e => e[0]}/>
           </section>
         {/if}
-        <section class="flex gap-4 items-center">
-          <Checkbox
+
+        {#if modalData.settings.input === 'Keyboard'}
+          <section class="flex gap-4 items-center">
+            <Checkbox
             bind:checked={ modalData.settings.hasInspection }
             class="w-5 h-5" label={ $localLang.TIMER.inspection }/>
-          
-          <Input type="number" class="mt-2 bg-gray-700 hidden-markers { modalData.settings.hasInspection ? 'text-gray-200' : '' }"
+            
+            <Input type="number" class="mt-2 bg-gray-700 hidden-markers { modalData.settings.hasInspection ? 'text-gray-200' : '' }"
             disabled={ !modalData.settings.hasInspection } bind:value={ modalData.settings.inspection }
             min={5} max={60} step={5}/>
-        </section>
-        
-        {#if modalData.settings.input === 'Keyboard'}
+          </section>
+
           <section class="my-2">
             <Checkbox
               bind:checked={ modalData.settings.withoutPrevention }
               class="w-5 h-5" label={ $localLang.TIMER.withoutPrevention }/>
 
-              <i class="text-sm text-yellow-500">({ $localLang.TIMER.withoutPreventionDescription })</i>
+            <i class="text-sm text-yellow-500">({ $localLang.TIMER.withoutPreventionDescription })</i>
+          </section>
+          
+          <section>
+            <Checkbox bind:checked={ modalData.settings.showElapsedTime } class="w-5 h-5 my-2" label={ $localLang.TIMER.showTime }/>
           </section>
         {/if}
         
         <section>
-          <Checkbox bind:checked={ modalData.settings.showElapsedTime } class="w-5 h-5 my-2" label={ $localLang.TIMER.showTime }/>
-        </section>
-        <section>
           <Checkbox bind:checked={ modalData.settings.genImage } class="w-5 h-5 my-2" label={ $localLang.TIMER.genImage }/>
           <i class="text-sm text-yellow-500">({ $localLang.TIMER.canHurtPerformance })</i>
         </section>
-        <section class="mt-4">
-          <Checkbox bind:checked={ modalData.settings.scrambleAfterCancel }
+        
+        {#if modalData.settings.input != 'Manual'}
+          <section class="mt-2">
+            <Checkbox bind:checked={ modalData.settings.scrambleAfterCancel }
             class="w-5 h-5 my-2" label={ $localLang.TIMER.refreshScramble }/>
+          </section>
+        {/if}
+
+        <section>
+          <Checkbox bind:checked={ modalData.settings.recordCelebration }
+            class="w-5 h-5 my-2" label={ $localLang.TIMER.recordCelebration }/>
         </section>
         <section class="mt-4 flex gap-4">
           { $localLang.TIMER.aoxCalculation }:

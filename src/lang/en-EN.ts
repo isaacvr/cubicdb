@@ -86,6 +86,9 @@ export const English: Language = {
     cancel: 'Cancel',
     save: 'Save',
 
+    congrats: 'Congratulations',
+    from: 'from',
+
     // Stackmat
     stackmatAvailableHeader: 'Stackmat available',
     stackmatAvailableText: 'Do you want to connect?',
@@ -106,6 +109,7 @@ export const English: Language = {
     groupOfX: 'Group of X solves',
     withoutPrevention: 'Without prevention time',
     withoutPreventionDescription: 'How long Spacebar needs to be pressed',
+    recordCelebration: 'Celebrate when a record is broken',
 
     // Last solve tooltip
     delete: 'Delete',
@@ -141,7 +145,7 @@ export const English: Language = {
     invertSelection: 'Invert selection',
 
     comment: 'Comments...',
-    noPenalty: 'No penalty',
+    noPenalty: 'Clean',
 
     removeAllSolves: 'Do you want to remove all the solves?',
     select: 'Select',

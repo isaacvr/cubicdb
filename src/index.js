@@ -393,7 +393,8 @@ function createWindow() {
           genImage: true,
           scrambleAfterCancel: false,
           input: 'Keyboard',
-          withoutPrevention: false
+          withoutPrevention: false,
+          recordCelebration: true,
         }
       });
     }

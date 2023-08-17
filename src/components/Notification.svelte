@@ -2,6 +2,7 @@
   import Button from '@material/Button.svelte';
   import { onMount } from 'svelte';
   import type { NotificationAction } from '@interfaces';
+  // @ts-ignore
   import SettingsIcon from '@icons/Settings.svelte';
   import CloseIcon from '@icons/Close.svelte';
   import { NotificationService } from '@stores/notification.service';
@@ -10,6 +11,7 @@
   export let timeout = 5000;
   export let header = 'Header';
   export let text = 'Text';
+  export let html = '';
   export let fixed = false;
   export let actions: NotificationAction[] = [];
   
@@ -53,7 +55,8 @@
 
   <div id="content">
     <div id="header">{ header }</div>
-    <div id="text">{ text }</div>
+    <div id="text"> { text } </div>
+    <div id="html" bind:innerHTML={ html } contenteditable="false"></div>
     <div id="actions">
       {#each actions || [] as action}
         <Button flat on:click={ (e) => { action.callback(e); close(); }}>{ action.text }</Button>

@@ -127,6 +127,7 @@ export interface SessionSettings {
   scrambleAfterCancel: boolean;
   input?: TimerInput;
   withoutPrevention: boolean;
+  recordCelebration?: boolean;
 }
 
 export interface Session {
@@ -184,6 +185,7 @@ export interface Metric {
   better: boolean;
   id?: string;
   best?: number;
+  prev?: number;
 }
 
 export interface Statistics {
@@ -425,6 +427,7 @@ export interface INotification {
   key: string;
   header: string;
   text: string;
+  html?: string;
   fixed?: boolean;
   timeout?: number;
   actions?: NotificationAction[];
@@ -529,6 +532,9 @@ export interface Language {
     cancel: string;
     save: string;
 
+    congrats: string;
+    from: string;
+
     // Stackmat
     stackmatAvailableHeader: string;
     stackmatAvailableText: string;
@@ -549,6 +555,7 @@ export interface Language {
     groupOfX: string;
     withoutPrevention: string;
     withoutPreventionDescription: string;
+    recordCelebration: string;
 
     // Last solve tooltip
     delete: string;

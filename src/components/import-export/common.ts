@@ -42,6 +42,7 @@ export function genSettings(): SessionSettings {
     scrambleAfterCancel: true,
     showElapsedTime: true,
     input: 'Keyboard',
-    withoutPrevention: false
+    withoutPrevention: false,
+    recordCelebration: true,
   }
 }

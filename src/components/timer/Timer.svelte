@@ -6,6 +6,7 @@
   /// Modules
   import * as all from '@cstimer/scramble';
   import { solve_cross, solve_xcross } from '@cstimer/tools/cross';
+  import JSConfetti from 'js-confetti';
   
   /// Data
   import { isNNN, MENU } from '@constants';
@@ -40,9 +41,10 @@
   import { PX_IMAGE } from '@constants';
   import { ScrambleParser } from '@classes/scramble-parser';
   import { getAverageS } from '@helpers/statistics';
-  import { infinitePenalty } from '@helpers/timer';
+  import { adjustMillis, infinitePenalty, timer } from '@helpers/timer';
   import { globalLang } from '@stores/language.service';
   import { getLanguage } from '@lang/index';
+  import { NotificationService } from '@stores/notification.service';
   
   export let battle = false;
   export let useScramble = '';
@@ -78,6 +80,7 @@
 
   /// SERVICES
   const dataService = DataService.getInstance();
+  const notService = NotificationService.getInstance();
 
   /// GENERAL
   const groups = MENU.map((e, p) => e[0]);
@@ -116,6 +119,8 @@
   let isRunning = writable<boolean>(false);
   let selected = writable<number>(0);
   let decimals = writable<boolean>(true);
+
+  let confetti = new JSConfetti();
   
   $: $isRunning = $state === TimerState.INSPECTION || $state === TimerState.RUNNING;
 
@@ -160,8 +165,36 @@
   function updateStatistics(inc ?: boolean) {
     let AON = [ 3, 5, 12, 50, 100, 200, 500, 1000, 2000 ];
     let AVG = [ 0, 0, 0, 0, 0, 0, 0, 0, 0 ];
-    let BEST: number[] = [];
-    let BEST_IDS: string[] = [];
+    let BEST: number[] = [
+      $stats.Mo3.best ?? Infinity,
+      $stats.Ao5.best ?? Infinity,
+      $stats.Ao12.best ?? Infinity,
+      $stats.Ao50.best ?? Infinity,
+      $stats.Ao100.best ?? Infinity,
+      $stats.Ao200.best ?? Infinity,
+      $stats.Ao500.best ?? Infinity,
+      $stats.Ao1k.best ?? Infinity,
+      $stats.Ao2k.best ?? Infinity,
+      $stats.best.best ?? Infinity,
+    ];
+
+    let PREV_BEST = BEST.slice();
+
+    let BEST_IDS: string[] = [
+      $stats.Mo3.id || '',
+      $stats.Ao5.id || '',
+      $stats.Ao12.id || '',
+      $stats.Ao50.id || '',
+      $stats.Ao100.id || '',
+      $stats.Ao200.id || '',
+      $stats.Ao500.id || '',
+      $stats.Ao1k.id || '',
+      $stats.Ao2k.id || '',
+      $stats.best.id || '',
+    ];
+
+    let IS_BEST = BEST.map(() => false);
+
     let len = $solves.length;
     let sum = 0, avg = 0, dev = 0;
     let pMap: Map<Penalty, number> = new Map();
@@ -195,41 +228,37 @@
     for (let i = 0, maxi = AON.length; i < maxi; i += 1) {
       let avgs = getAverageS(AON[i], $solves, $session?.settings?.calcAoX || AverageSetting.SEQUENTIAL);
 
-      BEST[i] = Infinity;
-      BEST_IDS[i] = '';
-
       for (let j = 0, maxj = avgs.length; j < maxj; j += 1) {
-        if ( avgs[j] && (avgs[j] as number) < BEST[i] ) {
-          BEST[i] = avgs[j] as number;
+        let av = avgs[j];
+
+        if ( av && av < BEST[i] ) {
+          BEST[i] = adjustMillis(av);
           BEST_IDS[i] = $solves[maxj - j - 1]._id;
+          IS_BEST[i] = PREV_BEST[i] != Infinity;
         }
       }
       // BEST[i] = avgs.reduce((b, e) => (e) ? Math.min(b || 0, e) : b, BEST[i]) || 0;
       AVG[i] = avgs.pop() || -1;
     }
 
-    // let bundle = bundleAverageS(AON, $solves, $session?.settings?.calcAoX || AverageSetting.SEQUENTIAL);
-    // BEST = bundle.map(arr => arr.reduce((a, b) => b ? Math.min(a, b) : a, Infinity) );
-    // AVG = bundle.map(arr => arr[arr.length - 1] || -1);
-
     let ps = Object.assign({}, $stats);
 
     $stats = {
-      best:  { value: bw[0], better: ps.best.value > bw[0], id: BEST_IDS[9] },
+      best:  { value: bw[0], better: IS_BEST[9], prev: PREV_BEST[9], id: BEST_IDS[9] },
       worst: { value: bw[1], better: false, id: BEST_IDS[10] },
       avg:   { value: avg, better: false },
       dev:   { value: dev, better: false },
       count: { value: $solves.length, better: false },
       time:  { value: sum, better: false },
-      Mo3:   { value: AVG[0], better: AVG[0] <= BEST[0], best: BEST[0], id: BEST_IDS[0] },
-      Ao5:   { value: AVG[1], better: AVG[1] <= BEST[1], best: BEST[1], id: BEST_IDS[1] },
-      Ao12:  { value: AVG[2], better: AVG[2] <= BEST[2], best: BEST[2], id: BEST_IDS[2] },
-      Ao50:  { value: AVG[3], better: AVG[3] <= BEST[3], best: BEST[3], id: BEST_IDS[3] },
-      Ao100: { value: AVG[4], better: AVG[4] <= BEST[4], best: BEST[4], id: BEST_IDS[4] },
-      Ao200: { value: AVG[5], better: AVG[5] <= BEST[5], best: BEST[5], id: BEST_IDS[5] },
-      Ao500: { value: AVG[6], better: AVG[6] <= BEST[6], best: BEST[6], id: BEST_IDS[6] },
-      Ao1k:  { value: AVG[7], better: AVG[7] <= BEST[7], best: BEST[7], id: BEST_IDS[7] },
-      Ao2k:  { value: AVG[8], better: AVG[8] <= BEST[8], best: BEST[8], id: BEST_IDS[8] },
+      Mo3:   { value: AVG[0], better: IS_BEST[0], best: BEST[0], prev: PREV_BEST[0], id: BEST_IDS[0] },
+      Ao5:   { value: AVG[1], better: IS_BEST[1], best: BEST[1], prev: PREV_BEST[1], id: BEST_IDS[1] },
+      Ao12:  { value: AVG[2], better: IS_BEST[2], best: BEST[2], prev: PREV_BEST[2], id: BEST_IDS[2] },
+      Ao50:  { value: AVG[3], better: IS_BEST[3], best: BEST[3], prev: PREV_BEST[3], id: BEST_IDS[3] },
+      Ao100: { value: AVG[4], better: IS_BEST[4], best: BEST[4], prev: PREV_BEST[4], id: BEST_IDS[4] },
+      Ao200: { value: AVG[5], better: IS_BEST[5], best: BEST[5], prev: PREV_BEST[5], id: BEST_IDS[5] },
+      Ao500: { value: AVG[6], better: IS_BEST[6], best: BEST[6], prev: PREV_BEST[6], id: BEST_IDS[6] },
+      Ao1k:  { value: AVG[7], better: IS_BEST[7], best: BEST[7], prev: PREV_BEST[7], id: BEST_IDS[7] },
+      Ao2k:  { value: AVG[8], better: IS_BEST[8], best: BEST[8], prev: PREV_BEST[8], id: BEST_IDS[8] },
       
       // Penalties
       NP:    { value: pMap.get(Penalty.NONE) || 0, better: false },
@@ -239,12 +268,33 @@
       counter: { value: (inc) ? ps.counter.value + 1 : ps.counter.value, better: false },
     };
 
-    if ( $stats.best.better && ps.best.value != Infinity ) {
-      // ripple.launch({
-      //   centered: true,
-      //   color: '#00ff0099'
-      // });
+    let bestList = [];
+
+    for (let e of Object.entries($stats)) {
+      if ( e[1].better ) {
+        bestList.push({
+          name: e[0],
+          prev: e[1].prev || 0,
+          now: e[1].best || 0,
+        })
+      }
     }
+
+    if ( bestList.length && $session.settings.recordCelebration ) {
+      notService.addNotification({
+        header: $localLang.TIMER.congrats,
+        text: '',
+        html: bestList.map(o => `${o.name}: ${ timer(o.now, true) } (${ $localLang.TIMER.from } ${ timer(o.prev, true) })`).join('<br>'),
+        timeout: 5000,
+        key: crypto.randomUUID(),
+      });
+
+      confetti.addConfetti({
+        confettiNumber: 100,
+        confettiColors: [ '#009d54', '#3d81f6', '#ffeb3b' ]
+      });
+    }
+
   }
 
   function updateSolves() {
@@ -411,7 +461,8 @@
         genImage: true,
         scrambleAfterCancel: false,
         input: 'Keyboard',
-        withoutPrevention: false
+        withoutPrevention: false,
+        recordCelebration: true,
       } });
       closeAddSession();
     }
@@ -453,6 +504,7 @@
           showElapsedTime: true,
           input: 'Keyboard',
           withoutPrevention: false,
+          recordCelebration: false,
         },
         editing: false,
         tName: '',
