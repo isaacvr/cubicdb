@@ -70,7 +70,7 @@
       }, {
         title: HOME.importExport,
         route: '/import-export',
-        cube: '/assets/logo-500.png',
+        cube: '/assets/import-export.png',
         ready: true,
         timer: false,
       }, /*{
@@ -79,7 +79,13 @@
         cube: '/assets/logo-500.png',
         ready: true,
         // puzzle: new Puzzle({ type: 'redi' })
-      }//*/
+      }//*/ {
+        title: 'CubeDB',
+        route: '/cubedb',
+        cube: '/assets/logo-500.png',
+        ready: true,
+        timer: false,
+      }
     ];
 
     let cubes = cards.reduce((ac: Puzzle[], e) => {

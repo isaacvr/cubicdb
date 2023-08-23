@@ -238,5 +238,11 @@ export const Spanish: Language = {
     save: 'Guardar',
     total: 'Total',
     showingOnly50: 'mostrando solo 50',
+  },
+  CUBEDB: {
+    name: 'Nombre',
+    version: 'Versión',
+    creator: 'Creador',
+    donations: 'Donaciones',
   }
 }

@@ -7,7 +7,7 @@
   import { nameToPuzzle, type Algorithm, type Card, type Language } from "@interfaces";
   import { DataService } from "@stores/data.service";
   import Tooltip from "./material/Tooltip.svelte";
-  import { getSearchParams } from "@helpers/strings";
+  import { copyToClipboard, getSearchParams } from "@helpers/strings";
   import { NotificationService } from "@stores/notification.service";
   import { globalLang } from "@stores/language.service";
   import { getLanguage } from "@lang/index";
@@ -148,8 +148,9 @@
     navigate(c.parentPath + '?case=' + c.shortName);
   }
 
-  function copyToClipboard(s: string) {
-    navigator.clipboard.writeText(s).then(() => {
+  function toClipboard(s: string) {
+
+    copyToClipboard(s).then(() => {
       notification.addNotification({
         key: crypto.randomUUID(),
         header: $localLang.global.done,
@@ -157,6 +158,7 @@
         timeout: 1000
       });
     });
+
   }
 
   $: updateCases(location);
@@ -199,7 +201,7 @@
           <span class="col-span-1"></span>
           <Tooltip position="left" text="Click to copy" class="col-span-3">
             <span
-              on:click={ () => copyToClipboard(sol.moves) }
+              on:click={ () => toClipboard(sol.moves) }
               class="mt-2 cursor-pointer hover:text-gray-300 transition-all duration-200">{ sol.moves }</span>
           </Tooltip>
           <span class="col-span-1 mt-2">{ sol.moves.split(" ").length }</span>

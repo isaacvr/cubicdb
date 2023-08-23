@@ -41,6 +41,7 @@
   import { globalLang } from '@stores/language.service';
   import { getLanguage } from '@lang/index';
     import { stopPropagation } from '@helpers/DOM';
+    import { copyToClipboard } from '@helpers/strings';
  
   export let context: TimerContext;
   export let battle = false;
@@ -143,7 +144,7 @@
     { text: "Use old scramble [Ctrl + O]", icon: Calendar, handler: () => {
       openDialog('old-scrambles', null, () => {});
     } },
-    { text: "Copy scramble [Ctrl + C]", icon: Copy, handler: () => copyToClipboard() },
+    { text: "Copy scramble [Ctrl + C]", icon: Copy, handler: () => toClipboard() },
     { text: "Notes [Ctrl + N]", icon: NoteIcon, handler: () => showNotes = true },
     { text: "Settings", icon: Settings, handler: () => {
       let initialCalc = $session?.settings?.calcAoX;
@@ -251,7 +252,7 @@
       } else if ( code === 'KeyO' && event.ctrlKey ) {
         openDialog('old-scrambles', null, () => {});
       } else if ( code === 'KeyC' && event.ctrlKey ) {
-        copyToClipboard();
+        toClipboard();
       } else if ( code === 'KeyN' && event.ctrlKey ) {
         showNotes = true;
       } else if ( code === 'KeyS' && event.ctrlKey ) {
@@ -260,8 +261,8 @@
     }
   }
 
-  function copyToClipboard() {
-    navigator.clipboard.writeText($scramble).then(() => {
+  function toClipboard() {
+    copyToClipboard($scramble).then(() => {
       notification.addNotification({
         key: crypto.randomUUID(),
         header: $localLang.global.done,

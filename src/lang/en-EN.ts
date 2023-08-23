@@ -230,5 +230,11 @@ export const English: Language = {
     save: 'Save',
     total: 'Total',
     showingOnly50: 'showing only 50',
+  },
+  CUBEDB: {
+    name: 'Name',
+    version: 'Version',
+    creator: 'Author',
+    donations: 'Donate',
   }
 }

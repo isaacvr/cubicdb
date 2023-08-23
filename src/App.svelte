@@ -23,6 +23,7 @@
   import { onDestroy, onMount } from 'svelte';
   import { globalLang } from '@stores/language.service';
   import AlgorithmsAdmin from '@components/AlgorithmsAdmin.svelte';
+    import CubeDb from '@components/CubeDB.svelte';
 
   let notService = NotificationService.getInstance();
   let notifications: INotification[] = [];
@@ -48,7 +49,7 @@
   <Frame />
   <Navbar />
 
-  <main class="pt-24 absolute w-full h-full">
+  <main class="pt-24 absolute w-full h-full overflow-x-hidden">
     <Route path="/" component={ Home }/>
     <Route path="/tutorials" component={ Tutorials }/>
     <Route path="/tutorials/:something" component={ Tutorials }/>
@@ -62,6 +63,7 @@
     <!-- <Route path="/contest" component={ Contest }/> -->
     <Route path="/import-export" component={ ImportExport }/>
     <Route path="/settings" component={ Settings }/>
+    <Route path="/cubedb" component={ CubeDb }/>
   </main>
 
   <!-- Notifications -->

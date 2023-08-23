@@ -224,7 +224,11 @@ export class DataService {
   }
 
   openFile(f: string) {
-    this.ipc.openFile(f);
+    this.ipc.openFile("file://" + f);
+  }
+
+  openURL(url: string) {
+    this.ipc.openFile(url);
   }
 
   revealFile(f: string) {

@@ -299,7 +299,7 @@ ipcMain.on('zip-pdf', (event, data) => {
 });
 
 ipcMain.on('open-file', (_, dir) => {
-  shell.openExternal("file://" + dir);
+  shell.openExternal(dir);
 });
 
 ipcMain.on('reveal-file', (_, dir) => {

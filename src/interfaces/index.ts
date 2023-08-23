@@ -721,6 +721,12 @@ export interface Language {
     save: string;
     total: string;
     showingOnly50: string;
+  },
+  CUBEDB: {
+    name: string;
+    version: string;
+    creator: string;
+    donations: string;
   }
 }
 

@@ -34,6 +34,7 @@
   import { getLanguage } from "@lang/index";
   import { tick } from "svelte";
   import Select from "@components/material/Select.svelte";
+    import { copyToClipboard } from "@helpers/strings";
 
   let localLang: Readable<Language> = derived(globalLang, ($lang) => getLanguage( $lang ));
 
@@ -199,8 +200,8 @@
     pg = pg;
   }
 
-  function copyToClipboard(text: string) {
-    navigator.clipboard.writeText(text.replaceAll('<br>', '\n')).then(() => {
+  function toClipboard(text: string) {
+    copyToClipboard(text.replaceAll('<br>', '\n')).then(() => {
       notification.addNotification({
         key: crypto.randomUUID(),
         header: $localLang.global.done,
@@ -225,7 +226,7 @@
     ], [sv[0], sv[0]]);
 
     if ( Ao5.length === n ) {
-      copyToClipboard(`Ao${n}: ${ timer(Ao5[n - 1] as any, true) } = ${ sv.map(s =>
+      toClipboard(`Ao${n}: ${ timer(Ao5[n - 1] as any, true) } = ${ sv.map(s =>
         s === minMax[0] || s === minMax[1] ? '(' + sTimer(s, true) + ')' : sTimer(s, true)
       ).join(', ') }`);
     }
@@ -436,7 +437,7 @@
     on:click={() => showContextMenu = false}>
     <li on:click={ () => editSolve(sSolve) }>{ $localLang.TIMER.edit }</li>
     <li on:click={ () => selectSolve(sSolve) }>{ $localLang.TIMER.select }</li>
-    <li on:click={ () => copyToClipboard(sSolve.scramble) }>{ $localLang.TIMER.copyScramble }</li>
+    <li on:click={ () => toClipboard(sSolve.scramble) }>{ $localLang.TIMER.copyScramble }</li>
     <li on:click={ () => _delete([sSolve]) }>{ $localLang.TIMER.delete }</li>
   </ul>
 </main>

@@ -16,3 +16,7 @@ export function processKey(str: string) {
   }
   return [str, ''];
 }
+
+export function copyToClipboard(s: string) {
+  return navigator.clipboard.writeText(s);
+}
