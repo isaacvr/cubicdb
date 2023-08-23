@@ -8,6 +8,11 @@ interface TutorialData {
   1: Tutorial | Tutorial[];
 }
 
+interface AlgSub {
+  type: string;
+  data: Algorithm | Algorithm[];
+}
+
 interface SolveSub {
   type: string;
   data: Solve | Solve[];
@@ -30,7 +35,7 @@ interface AnySub {
 
 export class DataService {
   ipc: IPC;
-  algSub: Writable< Algorithm[] >;
+  algSub: Writable< AlgSub >;
   cardSub: Writable< RawCard[] >;
   tutSub: Writable< TutorialData >;
   solveSub: Writable<SolveSub>;
@@ -43,7 +48,7 @@ export class DataService {
 
   private constructor() {
 
-    this.algSub = writable< Algorithm[] >([]);
+    this.algSub = writable< AlgSub >();
     this.cardSub = writable< RawCard[] >([]);
     this.solveSub = writable< SolveSub >();
     this.tutSub = writable< TutorialData >();
@@ -76,7 +81,10 @@ export class DataService {
     })
 
     this.ipc.handleAlgorithms((_: any, algs: any) => {
-      this.algSub.set(algs);
+      this.algSub.set({
+        type: algs[0],
+        data: algs[1]
+      });
     });
 
     this.ipc.handleCards((_: any, cards: any) => {
@@ -119,8 +127,12 @@ export class DataService {
     });
   }
 
-  getAlgorithms(dir: string): void {
-    this.ipc.getAlgorithms(dir);
+  getAlgorithms(path: string, all?: boolean): void {
+    this.ipc.getAlgorithms({ all, path });
+  }
+
+  updateAlgorithm(alg: Algorithm) {
+    this.ipc.updateAlgorithm(alg);
   }
 
   getCards(): void {

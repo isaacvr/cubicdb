@@ -1,4 +1,4 @@
-import type { CubeEvent, IPC, PDFOptions, Session, Sheet, Solve, Tutorial, UpdateCommand } from "@interfaces";
+import type { Algorithm, AlgorithmOptions, CubeEvent, IPC, PDFOptions, Session, Sheet, Solve, Tutorial, UpdateCommand } from "@interfaces";
 
 export class ElectronAdaptor implements IPC {
   private ipc: IPC;
@@ -38,8 +38,16 @@ export class ElectronAdaptor implements IPC {
     this.ipc.handleUpdate(fn);
   }
 
-  getAlgorithms(dir: string): void {
-    this.ipc.getAlgorithms(dir);
+  getAlgorithms(options: AlgorithmOptions): void {
+    this.ipc.getAlgorithms(options);
+  }
+
+  updateAlgorithm(alg: Algorithm) {
+    let cp = { ...alg };
+
+    delete cp._puzzle;
+
+    this.ipc.updateAlgorithm(cp);
   }
 
   getCards(): void {

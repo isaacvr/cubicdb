@@ -1,4 +1,4 @@
-import type { CubeEvent, IPC, PDFOptions, Session, Sheet, Solve, Tutorial, UpdateCommand } from "@interfaces";
+import type { Algorithm, AlgorithmOptions, CubeEvent, IPC, PDFOptions, Session, Sheet, Solve, Tutorial, UpdateCommand } from "@interfaces";
 import type Nedb from "nedb";
 // @ts-ignore
 import NeDB from 'nedb/browser-version/out/nedb.min';
@@ -27,7 +27,8 @@ export class BrowserAdaptor implements IPC {
   handleUpdate(fn: Function) {}
   
   // Algorithms
-  getAlgorithms(dir: string): void {}
+  getAlgorithms(options: AlgorithmOptions): void {}
+  updateAlgorithm(alg: Algorithm): void {}
   
   // Cards
   getCards(): void {}

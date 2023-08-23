@@ -5,8 +5,44 @@ import type { Vector3D } from '../classes/vector3d';
 import type { CubeMode } from "../constants";
 import type { Writable } from 'svelte/store';
 
-export declare type PuzzleType = 'rubik' | 'skewb' | 'square1' | 'pyraminx' | 'axis' | 'fisher' | 'ivy' | 'clock' | 'megaminx' | 'mirror' | 'dino' | 'rex' | 'redi' | 'mixup' | 'pyramorphix' | 'gear' | 'dreidel' | 'bandaged222' | 'bicube' | 'square2' | 'pandora' | 'ultimateSkewb' | 'pyraminxCrystal' | 'tetraminx' | 'meierHalpernPyramid' | 'sq1Star';
+export declare type PuzzleType = 'rubik' | 'skewb' | 'square1' | 'pyraminx' | 'axis' | 'fisher' | 'ivy'
+  | 'clock' | 'megaminx' | 'mirror' | 'dino' | 'rex' | 'redi' | 'mixup' | 'pyramorphix' | 'gear' | 'dreidel'
+  | 'bandaged222' | 'bicube' | 'square2' | 'pandora' | 'ultimateSkewb' | 'pyraminxCrystal' | 'tetraminx'
+  | 'meierHalpernPyramid' | 'sq1Star';
+
 export declare type CubeView = 'plan' | 'trans' | '2d';
+export const CubeViewMap: [ CubeView, string ][] = [
+  [ '2d', '2D' ],
+  [ 'plan', 'Plain' ],
+  [ 'trans', '3D' ],
+];
+
+export function nameToPuzzle(name: string): any[] {
+  const reg1 = /^(\d*)[xX](\d*)$/, reg2 = /^(\d*)[xX](\d*)[xX](\d*)$/, reg3 = /^(\d){3}$/;
+
+  let dims;
+
+  if ( reg1.test(name) ) {
+    return [ 'rubik', +name.replace(reg1, "$1") ];
+  } else if ( reg2.test(name) ) {
+    dims = name.replace(reg2, "$1 $2 $3").split(" ").map(Number);
+    return [ 'rubik', ...dims ];
+  } else if ( reg3.test(name) ) {
+    dims = name.split('').map(Number);
+    return ['rubik', ...dims];
+  }
+
+  switch(name) {
+    case 'sq1':
+    case 'Square-1': return [ 'square1' ];
+    case 'Skewb': return [ 'skewb' ];
+    case 'Pyraminx': return [ 'pyraminx' ];
+    case 'Axis': return [ 'axis' ];
+    case 'Fisher': return [ 'fisher' ];
+    case 'Ivy': return [ 'ivy' ];
+    default: return [ 'rubik', 3 ];
+  }
+}
 
 export enum TimerState {
   CLEAN = 0, STOPPED = 1, PREVENTION = 2, INSPECTION = 3, RUNNING = 4
@@ -45,6 +81,7 @@ export interface Solution {
 }
 
 export interface Algorithm {
+  _id?: string;
   name: string;
   shortName: string;
   group?: string;
@@ -61,6 +98,14 @@ export interface Algorithm {
   _puzzle?: Puzzle;
 }
 
+export interface AlgorithmTree {
+  route: string;
+  name: string;
+  alg: Algorithm;
+  children: AlgorithmTree[];
+  expanded?: boolean;
+}
+
 export interface NavigationRoute {
   link: string;
   name: string;
@@ -69,7 +114,11 @@ export interface NavigationRoute {
 export interface PuzzleInterface {
   pieces: Piece[];
   palette: any;
-  rotation: any;
+  rotation: {
+    x?: number;
+    y?: number;
+    z?: number;
+  };
   center: Vector3D;
   faceVectors: Vector3D[];
   faceColors: string[];
@@ -335,6 +384,11 @@ export interface CubeDBAdaptor {
   fromCubeDB: (data: CubeDBData, mode?: number) => string;
 }
 
+export interface AlgorithmOptions {
+  all?: boolean;
+  path: string;
+}
+
 export interface IPC {
   handleAlgorithms: (fn: Function) => any;
   handleAny: (fn: Function) => any;
@@ -345,7 +399,8 @@ export interface IPC {
   handleTutorials: (fn: Function) => any;
   handleUpdate: (fn: Function) => any;
   
-  getAlgorithms: (dir: string) => any;
+  getAlgorithms: (options: AlgorithmOptions) => any;
+  updateAlgorithm: (alg: Algorithm) => any;
   getCards: () => any;
   
   getTutorials: () => any;

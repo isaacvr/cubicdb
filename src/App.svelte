@@ -22,6 +22,7 @@
   import type { Unsubscriber } from 'svelte/store';
   import { onDestroy, onMount } from 'svelte';
   import { globalLang } from '@stores/language.service';
+  import AlgorithmsAdmin from '@components/AlgorithmsAdmin.svelte';
 
   let notService = NotificationService.getInstance();
   let notifications: INotification[] = [];
@@ -53,6 +54,7 @@
     <Route path="/tutorials/:something" component={ Tutorials }/>
     <Route path="/tutorials/:puzzle/:tutorial" component={ TutorialParser }/>
     <Route path="/algorithms/*" component={ Algorithms }/>
+    <Route path="/algorithms-admin" component={ AlgorithmsAdmin }/>
     <Route path="/timer" component={ Timer }/>
     <Route path="/battle" component={ Battle }/>
     <Route path="/pll-trainer" component={ PllRecognition }/>

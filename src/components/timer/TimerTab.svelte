@@ -615,7 +615,7 @@
   {/if}
 
   <Modal bind:this={ modal } bind:show={ show } onClose={ closeHandler }>
-    <div class="max-w-lg max-h-[30rem] overflow-scroll">
+    <div class="max-w-lg max-h-[30rem]">
       {#if type === 'edit-scramble'}
         <TextArea on:keyup={ modalKeyupHandler }
           class="bg-gray-600 text-gray-200"

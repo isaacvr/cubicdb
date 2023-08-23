@@ -37,23 +37,42 @@ let Solves = new NeDB({ filename: resolve(dbPath, 'solves.db'), autoload: true }
 let Contests = new NeDB({ filename: resolve(dbPath, 'contests.db'), autoload: true });
 
 /// Algorithms handler
-ipcMain.on('algorithms', (event, arg) => {
+ipcMain.on('get-algorithms', (event, arg) => {
+  let filter = arg.all ? {} : { parentPath: arg.path };
 
-  Algorithms.find({
-    parentPath: arg
-  }, (err, algs) => {
+  // @ts-ignore
+  Algorithms.find(filter, (err, algs) => {
     if ( err ) {
-      event.sender.send('algorithms', []);
+      event.sender.send('algorithms', ['get-algorithms', []]);
       return;
     }
 
-    event.sender.send('algorithms', algs);
+    event.sender.send('algorithms', ['get-algorithms', algs]);
   });
 
 });
 
+ipcMain.on('update-algorithm', (event, arg) => {
+  Algorithms.update({ _id: arg._id }, {
+    $set: {
+      name: arg.name,
+      order: arg.order,
+      scramble: arg.scramble,
+      puzzle: arg.puzzle,
+      mode: arg.mode,
+      view: arg.view,
+      tips: arg.tips,
+      solutions: arg.solutions,
+    }
+    // @ts-ignore
+  }, function(err) {
+    return event.sender.send('algorithms', [ 'update-algorithm', err ? null : arg ]);
+  });
+});
+
 /// Tutorials handler
 ipcMain.on('get-tutorials', (event) => {
+  // @ts-ignore
   Tutorials.find({}, (err, tutorials) => {
     return event.sender.send('tutorial', ['get-tutorials', err ? null : tutorials]);
   });
@@ -81,6 +100,7 @@ ipcMain.on('update-tutorial', (event, arg) => {
       content: arg.content,
       level: arg.level || 0
     }
+    // @ts-ignore
   }, function(err) {
     return event.sender.send('tutorial', [ 'update-tutorial', err ? null : arg ]);
   });
@@ -88,6 +108,7 @@ ipcMain.on('update-tutorial', (event, arg) => {
 
 /// Sessions handler
 ipcMain.on('get-sessions', (event) => {
+  // @ts-ignore
   Sessions.find({}, function(err, sessions) {
     return event.sender.send('session', ['get-sessions', err ? null : sessions]);
   });
@@ -112,19 +133,22 @@ ipcMain.on('remove-session', (event, arg) => {
 });
 
 ipcMain.on('rename-session', (event, arg) => {
-  Sessions.update({ _id: arg._id }, { $set: { name: arg.name } }, function(err, session) {
+  // @ts-ignore
+  Sessions.update({ _id: arg._id }, { $set: { name: arg.name } }, function(err) {
     return event.sender.send('session', [ 'rename-session', err ? null : arg ]);
   });
 });
 
 ipcMain.on('update-session', (event, arg) => {
-  Sessions.update({ _id: arg._id }, { $set: { name: arg.name, settings: arg.settings } }, function(err, session) {
+  // @ts-ignore
+  Sessions.update({ _id: arg._id }, { $set: { name: arg.name, settings: arg.settings } }, function(err) {
     return event.sender.send('session', [ 'update-session', err ? null : arg ]);
   });
 });
 
 /// Solves handler
 ipcMain.on('get-solves', (event) => {
+  // @ts-ignore
   Solves.find({}, (err, solves) => {
     return event.sender.send('solves', ['get-solves', err ? null : solves ]);
   });
@@ -140,8 +164,10 @@ ipcMain.on('update-solve', (event, arg) => {
   Solves.update({ _id: arg._id }, {
     $set: {
       comments: arg.comments,
-      penalty: arg.penalty
+      penalty: arg.penalty,
+      time: arg.time,
     }
+  // @ts-ignore
   }, (err, n, solve) => {
     return event.sender.send('solves', ['update-solve', err ? null : arg ]);
   });
@@ -155,6 +181,7 @@ ipcMain.on('remove-solves', (event, arg) => {
 
 /// Contests handler
 ipcMain.on('get-contests', (event) => {
+  // @ts-ignore
   Contests.find({}, (err, contests) => {
     return event.sender.send('contests', ['get-contests', err ? null : contests ]);
   });
@@ -179,7 +206,7 @@ ipcMain.on('update-contest', (event, arg) => {
       inscriptionCost: arg.inscriptionCost,
       rounds: arg.rounds,
     }
-  }, (err) => {
+  }, {}, (err) => {
     return event.sender.send('contests', ['update-contest', err ? null : arg ]);
   });
 });
@@ -315,7 +342,8 @@ ipcMain.on('update', (ev, cmd) => {
 });
 
 // Power Management to prevent sleep
-let sleepId = -1;
+// @ts-ignore
+let sleepId = -1, win;
 
 ipcMain.on('sleep', (_, sleep) => {
   if ( sleep ) {
@@ -327,7 +355,7 @@ ipcMain.on('sleep', (_, sleep) => {
 
 function createWindow() {
 
-  let win = new BrowserWindow({
+  win = new BrowserWindow({
     x: 0,
     y: 0,
     fullscreen: true,
@@ -343,10 +371,14 @@ function createWindow() {
 
   /// Other Stuff
   ipcMain.on('minimize', () => {
+    // @ts-ignore
     win.minimize();
   });
 
   ipcMain.on('maximize', () => {
+    // @ts-ignore
+    if ( !win ) return;
+
     if ( win.isMaximized() ) {
       win.unmaximize();
     } else {
@@ -366,15 +398,18 @@ function createWindow() {
 
   } else {
     let server = http.createServer(eApp).listen();
+    let port = server.address() || '';
 
-    eApp.set('port', server.address().port);
+    eApp.set('port', port);
     eApp.use( express.static( join(__dirname, '../dist') ) );
 
-    eApp.get('*', (req, res) => {
+    // @ts-ignore
+    eApp.get('*', (_, res) => {
       res.sendFile( join(__dirname, '../dist', 'index.html') );
     });
-
+    
     eApp.listen(0, () => {
+      // @ts-ignore
       win.loadURL(`http://localhost:${ eApp.get('port') }/`);
     });
 
@@ -400,6 +435,7 @@ function createWindow() {
     }
   });
 
+  // @ts-ignore
   win.on('closed', () => win = null);
 
   return win;
@@ -415,6 +451,7 @@ try {
   });
 
   app.on('activate', () => {
+    // @ts-ignore
     if (win === null) {
       createWindow();
     }

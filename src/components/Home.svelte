@@ -32,6 +32,12 @@
         timer: false,
         ready: false,
         cube: '/assets/algorithms.png',
+      // }, {
+      //   title: 'Algorithm Handler',
+      //   route: "/algorithms-admin",
+      //   timer: false,
+      //   ready: false,
+      //   cube: '/assets/algorithms.png',
       }, {
         title: HOME.timer,
         route: "/timer",

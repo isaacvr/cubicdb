@@ -91,6 +91,10 @@
     @apply absolute top-0 -my-5 scale-75;
   }
 
+  input[disabled] {
+    cursor: not-allowed;
+  }
+
   .hidden-markers input::-webkit-outer-spin-button,
   .hidden-markers input::-webkit-inner-spin-button {
     -webkit-appearance: none;

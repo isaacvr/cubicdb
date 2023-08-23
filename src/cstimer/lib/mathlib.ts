@@ -110,7 +110,7 @@ export function set8Perm(arr: number[], idx: number, n?: number, even?: number) 
   n = (n || 8) - 1;
   let val = 0x76543210;
   let prt = 0;
-  if (even < 0) {
+  if (even && even < 0) {
     idx <<= 1;
   }
   for (let i = 0; i < n; ++i) {
@@ -123,7 +123,7 @@ export function set8Perm(arr: number[], idx: number, n?: number, even?: number) 
     let m = (1 << v) - 1;
     val = (val & m) + ((val >> 4) & ~m);
   }
-  if (even < 0 && (prt & 1) != 0) {
+  if (even && even < 0 && (prt & 1) != 0) {
     arr[n] = arr[n - 1];
     arr[n - 1] = val & 7;
   } else {
@@ -219,7 +219,7 @@ export function createMove(moveTable, size, doMove, N_MOVES?) {
   }
 }
 
-export function edgeMove(arr, m) {
+export function edgeMove(arr: number[], m: number) {
   if (m == 0) {
     //F
     circleOri(arr, 0, 7, 8, 4, 1);
@@ -428,8 +428,10 @@ for (let a = 0; a < 18; a += 3) {
   }
 }
 
+// @ts-ignore
 CubieCube.moveCube = moveCube;
 
+// @ts-ignore
 CubieCube.prototype.edgeCycles = function () {
   let visited = [];
   let small_cycles = [0, 0, 0];
@@ -475,14 +477,14 @@ CubieCube.prototype.edgeCycles = function () {
 };
 
 export function createPrun(
-  prun,
-  init,
-  size,
-  maxd,
-  doMove,
-  N_MOVES?,
-  N_POWER?,
-  N_INV?
+  prun: number[],
+  init: number,
+  size: number,
+  maxd: number,
+  doMove: any,
+  N_MOVES?: number,
+  N_POWER?: number,
+  N_INV?: number
 ) {
   let isMoveTable = Array.isArray(doMove);
   N_MOVES = N_MOVES || 6;

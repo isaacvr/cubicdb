@@ -197,6 +197,12 @@ export function SQUARE1(): PuzzleInterface {
     UP, RIGHT, FRONT, DOWN, LEFT, BACK
   ];
 
+  sq1.rotation = {
+    x: PI_6,
+    y: -PI_6,
+    z: 0,
+  };
+
   assignColors(sq1, sq1.faceColors);
 
   return sq1;

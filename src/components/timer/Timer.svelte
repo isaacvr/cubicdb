@@ -55,7 +55,7 @@
   let localLang: Readable<Language> = derived(globalLang, ($lang) => getLanguage( $lang ));
 
   const INITIAL_STATISTICS: Statistics = {
-    best: { value: 0, better: false },
+    best: { value: 0, better: false, prev: Infinity },
     worst: { value: 0, better: false },
     count: { value: 0, better: false },
     time: { value: 0, better: false },
@@ -124,12 +124,14 @@
   
   $: $isRunning = $state === TimerState.INSPECTION || $state === TimerState.RUNNING;
 
+  function restartStats() {
+    $stats = INITIAL_STATISTICS;
+  }
+
   function selectSolve(s: Solve) {
-    // console.log("SelectSolve", s);
     s.selected = !s.selected;
     $selected += (s.selected) ? 1 : -1;
     $solves = $solves;
-    // throw new Error('SelectSolve');
   }
 
   function selectSolveById(id: string, n: number) {
@@ -209,8 +211,10 @@
       
       sum += e.time;
       
-      if ( e.time < ac[0] ) {
+      if ( e.time < BEST[9] ) {
         BEST_IDS[9] = e._id;
+        BEST[9] = e.time;
+        IS_BEST[9] = PREV_BEST[9] != Infinity;
       }
       
       if ( e.time > ac[1] ) {
@@ -237,14 +241,13 @@
           IS_BEST[i] = PREV_BEST[i] != Infinity;
         }
       }
-      // BEST[i] = avgs.reduce((b, e) => (e) ? Math.min(b || 0, e) : b, BEST[i]) || 0;
       AVG[i] = avgs.pop() || -1;
     }
 
     let ps = Object.assign({}, $stats);
 
     $stats = {
-      best:  { value: bw[0], better: IS_BEST[9], prev: PREV_BEST[9], id: BEST_IDS[9] },
+      best:  { value: bw[0], better: IS_BEST[9], best: bw[0], prev: PREV_BEST[9], id: BEST_IDS[9] },
       worst: { value: bw[1], better: false, id: BEST_IDS[10] },
       avg:   { value: avg, better: false },
       dev:   { value: dev, better: false },
@@ -446,6 +449,7 @@
 
   function selectedSession() {
     localStorage.setItem('session', $session._id);
+    restartStats();
     setSolves();
   }
 
@@ -546,6 +550,7 @@
                   if ( $allSolves[i]._id === updatedSolve._id ) {
                     $allSolves[i].comments = updatedSolve.comments;
                     $allSolves[i].penalty = updatedSolve.penalty;
+                    $allSolves[i].time = updatedSolve.time;
                     break;
                   }
                 }

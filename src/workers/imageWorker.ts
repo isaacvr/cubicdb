@@ -4,7 +4,7 @@ import { roundCorners, roundStickerCorners } from "@classes/puzzle/puzzleUtils";
 import { Sticker } from "@classes/puzzle/Sticker";
 import { Vector2D } from "@classes/vector2-d";
 import { BACK, CENTER, DOWN, FRONT, LEFT, RIGHT, UP, Vector3D } from "@classes/vector3d";
-import { PRINTABLE_PALETTE } from "@constants";
+import { CubeMode, PRINTABLE_PALETTE } from "@constants";
 import { cubeToThree } from "@helpers/cubeToThree";
 import { map } from "@helpers/math";
 import type { PuzzleOptions } from "@interfaces";
@@ -30,8 +30,8 @@ function planView(cube: Puzzle, DIM: number) {
     let ctx: any = canvas.getContext('2d');
     const PI_2 = Math.PI / 2;
     const order = cube.order[0];
-    const LW = 2;
-    const PAD = 20;
+    const LW = Math.max(2, DIM / 100);
+    const PAD = DIM / 10;
     const ALL_PAD = LW + PAD;
     const mSticker = (DIM - ALL_PAD * 2) / (order + 1) / 2 + ALL_PAD;
     
@@ -230,7 +230,11 @@ function projectedView(cube: Puzzle, DIM: number) {
   canvas.height = H;
   ctx.lineWidth = LW;
 
-  let colorFilter = [ 'x', 'd' ];
+  let colorFilter = [ 'd' ];
+
+  if ( cube.type === 'square1' || cube.mode === CubeMode.NORMAL ) {
+    colorFilter.push('x');
+  }
 
   let stickers = cube.getAllStickers().filter(s => colorFilter.indexOf(s.color) === -1);
 

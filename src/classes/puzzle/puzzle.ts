@@ -93,8 +93,7 @@ export class Puzzle {
     }
     
     let pieces = this.p.pieces;
-    let topCenter: Sticker;
-
+    
     if( this.mode === CubeMode.NORMAL || this.mode === CubeMode.ELL ||
       this.mode === CubeMode.ZBLL || this.mode === CubeMode.PLL ) {
       for (let i = 0, maxi = pieces.length; i < maxi; i += 1) {
@@ -105,34 +104,36 @@ export class Puzzle {
       }
       return;
     }
+    
+    // let topCenter: Sticker;
+    // if ( this.order[0] === 1 ) {
+    //   topCenter = pieces[0].stickers.filter(s => s.getOrientation().sub(UP).abs() < 1e-6)[0];
+    // } else if ( this.order[0] === 2 ) {
+    //   for (let i = 0, maxi = pieces.length; i < maxi; i += 1) {
+    //     if ( pieces[i].getMassCenter(false).y > 0 ) {
+    //       topCenter = pieces[i].stickers.filter(s => s.getOrientation().sub(UP).abs() < 1e-6)[0];
+    //       break;
+    //     }
+    //   }
+    // } else if ( this.order[0] % 2 == 1 ) {
+    //   topCenter = pieces.filter(p => {
+    //     let st = p.stickers.filter(s => s.oColor != 'x' && s.oColor != 'd');
+    //     let len = st.length;
+    //     if ( len != 1 ) return false;
+    //     let cm = st[0].getMassCenter();
+    //     return st[0].getOrientation().sub(UP).abs() < 1e-6 &&
+    //       Math.abs(cm.x) < 1e-6 && Math.abs(cm.z) < 1e-6;
+    //   })[0].stickers.filter(s => s.oColor != 'x' && s.oColor != 'd')[0];
+    // } else {
+    //   topCenter = pieces.filter(
+    //     p => p.length === 2 && p.stickers[0].getOrientation().sub(UP).abs() < 1e-6
 
-    if ( this.order[0] === 1 ) {
-      topCenter = pieces[0].stickers.filter(s => s.getOrientation().sub(UP).abs() < 1e-6)[0];
-    } else if ( this.order[0] === 2 ) {
-      for (let i = 0, maxi = pieces.length; i < maxi; i += 1) {
-        if ( pieces[i].getMassCenter(false).y > 0 ) {
-          topCenter = pieces[i].stickers.filter(s => s.getOrientation().sub(UP).abs() < 1e-6)[0];
-          break;
-        }
-      }
-    } else if ( this.order[0] % 2 == 1 ) {
-      topCenter = pieces.filter(p => {
-        let st = p.stickers.filter(s => s.oColor != 'x' && s.oColor != 'd');
-        let len = st.length;
-        if ( len != 1 ) return false;
-        let cm = st[0].getMassCenter();
-        return st[0].getOrientation().sub(UP).abs() < 1e-6 &&
-          Math.abs(cm.x) < 1e-6 && Math.abs(cm.z) < 1e-6;
-      })[0].stickers.filter(s => s.oColor != 'x' && s.oColor != 'd')[0];
-    } else {
-      topCenter = pieces.filter(
-        p => p.length === 2 && p.stickers[0].getOrientation().sub(UP).abs() < 1e-6
-
-        )[0].stickers[0];
-    }
+    //     )[0].stickers[0];
+    // }
 
     // @ts-ignore
-    let TOP_COLOR = topCenter.oColor;
+    // let TOP_COLOR = topCenter.oColor;
+    let TOP_COLOR = this.p.faceColors[3];
     let BOTTOM_COLOR = this.p.faceColors[ (this.p.faceColors.indexOf(TOP_COLOR) + 3) % 6 ];
     
     for (let i = 0, maxi = pieces.length; i < maxi; i += 1) {

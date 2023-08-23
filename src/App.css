@@ -103,12 +103,33 @@ body {
 }
 
 .puzzle-img {
-  @apply w-40 h-40;
+  @apply w-40 h-40 transition-all duration-200;
 }
 
 mark {
   @apply bg-purple-600 p-1 text-slate-200 inline-flex items-center justify-center;
   border-radius: .25rem;
+}
+
+/* Tables */
+.table-wrapper table {
+  @apply text-center shadow-md rounded-md border-collapse;
+}
+
+.table-wrapper th, .table-wrapper td {
+  @apply p-2;
+}
+
+.table-wrapper table thead tr {
+  @apply bg-gray-800 text-gray-300;
+}
+
+.table-wrapper table.stripped tbody tr:nth-child(odd) {
+  @apply bg-gray-400 text-gray-700 hover:bg-gray-300;
+}
+
+.table-wrapper table.stripped tbody tr:nth-child(even) {
+  @apply bg-gray-700 hover:bg-gray-300 hover:text-gray-700;
 }
 
 /* Custom scrollbar */

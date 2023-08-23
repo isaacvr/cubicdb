@@ -4,7 +4,7 @@
   import { derived, type Readable, type Unsubscriber } from "svelte/store";
   import { Puzzle } from "@classes/puzzle/puzzle";
   import { generateCubeBundle } from "@helpers/cube-draw";
-  import type { Algorithm, Card, Language } from "@interfaces";
+  import { nameToPuzzle, type Algorithm, type Card, type Language } from "@interfaces";
   import { DataService } from "@stores/data.service";
   import Tooltip from "./material/Tooltip.svelte";
   import { getSearchParams } from "@helpers/strings";
@@ -27,35 +27,9 @@
   let type: number = 0;
   let selectedCase: Algorithm | null = null;
   let allSolutions = false;
+  let imgExpanded = false;
 
   let algSub: Unsubscriber;
-
-  function nameToPuzzle(name: string): any[] {
-    const reg1 = /^(\d*)[xX](\d*)$/, reg2 = /^(\d*)[xX](\d*)[xX](\d*)$/, reg3 = /^(\d){3}$/;
-
-    let dims;
-
-    if ( reg1.test(name) ) {
-      return [ 'rubik', +name.replace(reg1, "$1") ];
-    } else if ( reg2.test(name) ) {
-      dims = name.replace(reg2, "$1 $2 $3").split(" ").map(Number);
-      return [ 'rubik', ...dims ];
-    } else if ( reg3.test(name) ) {
-      dims = name.split('').map(Number);
-      return ['rubik', ...dims];
-    }
-
-    switch(name) {
-      case 'sq1':
-      case 'Square-1': return [ 'square1' ];
-      case 'Skewb': return [ 'skewb' ];
-      case 'Pyraminx': return [ 'pyraminx' ];
-      case 'Axis': return [ 'axis' ];
-      case 'Fisher': return [ 'fisher' ];
-      case 'Ivy': return [ 'ivy' ];
-      default: return [ 'rubik', 3 ];
-    }
-  }
 
   function handleAlgorithms(list: Algorithm[]) {
     type = 0;
@@ -63,7 +37,7 @@
     cases.length = 0;
 
     if ( list.length > 0 ) {
-      let hasSolutions = list.find(l => l.hasOwnProperty('solutions'));
+      let hasSolutions = list.find(l => l.hasOwnProperty('solutions') && Array.isArray(l.solutions));
       if ( hasSolutions ) {
         for (let i = 0, maxi = list.length; i < maxi; i += 1) {
           if ( !list[i].hasOwnProperty('solutions') ) {
@@ -128,7 +102,7 @@
 
     let arr: Puzzle[] = type < 2 ? cards.map(e => e.puzzle as Puzzle ) : cases.map(e => e._puzzle as Puzzle);
 
-    generateCubeBundle(arr, 200, false, true).then(gen => {
+    generateCubeBundle(arr, 500, false, true).then(gen => {
       let subsc = gen.subscribe((c) => {
         if ( c === null ) {
           cards = cards;
@@ -157,6 +131,8 @@
     } else {
       allSolutions = false;
     }
+
+    imgExpanded = allSolutions;
 
     let p1 = loc.pathname.split('/').slice(2).join('/');
 
@@ -187,8 +163,15 @@
   
   onMount(() => {
 
-    algSub = dataService.algSub.subscribe((algs: Algorithm[]) => {
-      handleAlgorithms(algs);
+    algSub = dataService.algSub.subscribe((e) => {
+      if ( !e ) return;
+
+      switch(e.type) {
+        case 'get-algorithms': {
+          handleAlgorithms(e.data as Algorithm[]);
+          break;
+        }
+      }
     });
 
   });
@@ -204,7 +187,8 @@
   {#if allSolutions}
     <div>
       <h1 class="text-gray-300 text-3xl font-bold text-center">{ selectedCase?.name }</h1>
-      <img src={ selectedCase?._puzzle?.img } class="puzzle-img flex mx-auto" alt="">
+      <img src={ selectedCase?._puzzle?.img } class="puzzle-img flex mx-auto"
+        class:expanded={ imgExpanded } on:click={ () => imgExpanded = !imgExpanded } alt="">
       <div class="grid grid-cols-6">
         <h2 class="col-span-1 font-bold text-xl"> </h2>
         <h2 class="col-span-3 font-bold text-xl text-gray-300">{ $localLang.ALGORITHMS.solution }</h2>
@@ -279,7 +263,6 @@
   }
 
   .container-mini > * {
-    width: 100%;
     max-height: 100%;
     overflow: scroll;
   }
@@ -296,5 +279,14 @@
 
   .row .puzzle-img:hover {
     filter: drop-shadow(0 0 1rem #8a527c);
+  }
+  
+  .puzzle-img {
+    cursor: pointer;
+  }
+
+  .puzzle-img.expanded {
+    width: min(20rem, 100%);
+    height: min(20rem, 100%);
   }
 </style>

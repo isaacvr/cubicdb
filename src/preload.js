@@ -3,7 +3,8 @@ const { contextBridge, ipcRenderer } = require('electron');
 const ipc = ipcRenderer;
 
 contextBridge.exposeInMainWorld('electronAPI', {
-  getAlgorithms: (dir) => ipc.send('algorithms', dir),
+  getAlgorithms: (dir) => ipc.send('get-algorithms', dir),
+  updateAlgorithm: (dir) => ipc.send('update-algorithm', dir),
   handleAlgorithms: (dir) => ipc.on('algorithms', dir),
   
   getCards: () => ipc.send('cards'),
