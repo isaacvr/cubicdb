@@ -1,19 +1,21 @@
-import type { Algorithm, AlgorithmOptions, CubeEvent, IPC, PDFOptions, Session, Sheet, Solve, Tutorial, UpdateCommand } from "@interfaces";
-import type Nedb from "nedb";
+import { AverageSetting, type Algorithm, type AlgorithmOptions, type CubeEvent, type IPC, type PDFOptions, type Session, type Sheet, type Solve, type Tutorial, type UpdateCommand } from "@interfaces";
+// import type Nedb from "nedb";
 // @ts-ignore
-import NeDB from 'nedb/browser-version/out/nedb.min';
+// import NeDB from 'nedb/browser-version/out/nedb.min';
 
 export class BrowserAdaptor implements IPC {
-  private algorithms: Nedb<Algorithm>;
-  private tutorials: Nedb<Tutorial>;
-  private sessions: Nedb<Session>;
-  private solves: Nedb<Solve>;
+  // private algorithms: Nedb<Algorithm>;
+  // private tutorials: Nedb<Tutorial>;
+  // private sessions: Nedb<Session>;
+  // private solves: Nedb<Solve>;
+
+  private session_handler?: Function;
 
   constructor() {
-    this.algorithms = new NeDB({ filename: 'algorithms.db', autoload: true });
-    this.tutorials = new NeDB({ filename: 'tutorials.db', autoload: true });
-    this.sessions = new NeDB({ filename: 'sessions.db', autoload: true });
-    this.solves = new NeDB({ filename: 'solves.db', autoload: true });
+    // this.algorithms = new NeDB({ filename: 'algorithms.db', autoload: true });
+    // this.tutorials = new NeDB({ filename: 'tutorials.db', autoload: true });
+    // this.sessions = new NeDB({ filename: 'sessions.db', autoload: true });
+    // this.solves = new NeDB({ filename: 'solves.db', autoload: true });
   }
 
   // Handlers
@@ -21,7 +23,12 @@ export class BrowserAdaptor implements IPC {
   handleAny(fn: Function) {}
   handleCards(fn: Function) {}
   handleContests(fn: Function) {}
-  handleSessions(fn: Function) {}
+
+  handleSessions(fn: Function) {
+    this.session_handler = fn;
+    console.log('Add session handler');
+  }
+  
   handleSolves(fn: Function) {}
   handleTutorials(fn: Function) {}
   handleUpdate(fn: Function) {}
@@ -46,15 +53,38 @@ export class BrowserAdaptor implements IPC {
   
   // Sessions
   getSessions() {
-    this.sessions.find({}, (res: any) => {
-      console.log("SESSIONS: ", res);
-    });
+    // this.sessions.find({}, (res: any) => {
+    //   console.log("SESSIONS: ", res);
+    // });
+
+    console.log('get-sessions');
+
+    this.session_handler && this.session_handler(null, ['get-sessions', [{
+      _id: '',
+      name: 'Default',
+      settings: {
+        calcAoX: AverageSetting.SEQUENTIAL,
+        genImage: true,
+        hasInspection: true,
+        inspection: 15,
+        scrambleAfterCancel: false,
+        showElapsedTime: true,
+        withoutPrevention: false,
+        input: 'Keyboard',
+        recordCelebration: true
+      }
+    }]]);
   }
 
-  addSession(s: Session) {}
-  removeSession(s: Session) {}
-  renameSession(s: Session) {}
-  updateSession(s: Session) {}
+  addSession(s: Session) {
+    console.log('add-session');
+
+    this.session_handler && this.session_handler(null, ['add-session', s]);
+  }
+
+  removeSession(s: Session) { console.log('remove-session !'); }
+  renameSession(s: Session) { console.log('rename-session !'); }
+  updateSession(s: Session) { console.log('update-session !'); }
   
   // Contests
   addContest(c: CubeEvent) {}
@@ -78,4 +108,9 @@ export class BrowserAdaptor implements IPC {
 
   // Power saving options
   sleep(s: boolean) {}
+
+  connectBluetoothDevice() {}
+  cancelBluetoothRequest() {}
+  pairingBluetoothResponse() {}
+  handleBluetooth() {}
 }

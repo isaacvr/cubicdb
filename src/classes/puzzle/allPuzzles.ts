@@ -3,6 +3,7 @@ import { SKEWB } from './skewb';
 import { SQUARE1 } from './square1';
 import { PYRAMINX } from './pyraminx';
 import { AXIS } from './axis';
+import { WINDMILL } from './windmill';
 import { FISHER } from './fisher';
 import { IVY } from './ivy';
 import { CLOCK } from './clock';
@@ -28,6 +29,7 @@ import { SQUARE1_STAR } from './square1Star';
 
 registerPuzzle("rubik", "Rubik", RUBIK, true);
 registerPuzzle("mirror", "Mirror", MIRROR, true);
+registerPuzzle("windmill", "Windmill", WINDMILL, false);
 registerPuzzle("pyraminx", "Pyraminx", PYRAMINX, true);
 registerPuzzle("megaminx", "Megaminx", MEGAMINX, true);
 registerPuzzle("skewb", "Skewb", SKEWB, false);

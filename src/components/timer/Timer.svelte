@@ -36,7 +36,7 @@
   import DeleteIcon from '@icons/Delete.svelte';
   
   /// Types
-  import { TimerState, AverageSetting, type Solve, type Session, Penalty, type Statistics, type TimerContext, type PuzzleOptions, type Language } from '@interfaces';
+  import { TimerState, AverageSetting, type Solve, type Session, Penalty, type Statistics, type TimerContext, type PuzzleOptions, type Language, type BluetoothDeviceData } from '@interfaces';
   import { Puzzle } from '@classes/puzzle/puzzle';
   import { PX_IMAGE } from '@constants';
   import { ScrambleParser } from '@classes/scramble-parser';
@@ -119,6 +119,7 @@
   let isRunning = writable<boolean>(false);
   let selected = writable<number>(0);
   let decimals = writable<boolean>(true);
+  let bluetoothList = writable<BluetoothDeviceData[]>([]);
 
   let confetti = new JSConfetti();
   
@@ -615,6 +616,21 @@
             }
           }
         }),
+        dataService.bluetoothSub.subscribe((data) => {
+          if ( !data ) return;
+
+          switch(data.type) {
+            case 'device-list': {
+              let list = data.data as BluetoothDeviceData[];
+              $bluetoothList = list.map(dv => ({
+                deviceId: dv.deviceId,
+                deviceName: ( dv.deviceName.endsWith(`(${dv.deviceId})`) ) ? dv.deviceId : dv.deviceName,
+                connected: false
+              }));
+              break;
+            }
+          }
+        }),
       ];
 
       dataService.getSessions();
@@ -629,6 +645,7 @@
   let context: TimerContext = {
     state, ready, tab, solves, allSolves, session, Ao5, AoX, stats, scramble, decimals,
     group, mode, hintDialog, hint, cross, xcross, preview, prob, isRunning, selected,
+    bluetoothList,
     sortSolves, updateStatistics, initScrambler, selectedGroup,
     setConfigFromSolve, selectSolve, selectSolveById, editSolve
   };

@@ -163,27 +163,27 @@ export function coord(type: string, length: number, evenbase: number) {
   _this.get =
     type == "p"
       ? function (arr: number[]) {
-          // @ts-ignore
-          let _this: any = this;
-          return get8Perm(arr, _this.length, _this.evenbase);
-        }
+        // @ts-ignore
+        let _this: any = this;
+        return get8Perm(arr, _this.length, _this.evenbase);
+      }
       : function (arr: number[]) {
-          // @ts-ignore
-          let _this: any = this;  
-          return getNOri(arr, _this.length, _this.evenbase);
-        };
+        // @ts-ignore
+        let _this: any = this;
+        return getNOri(arr, _this.length, _this.evenbase);
+      };
   _this.set =
     type == "p"
       ? function (arr: number[], idx: number) {
-          // @ts-ignore
-          let _this: any = this;
-          return set8Perm(arr, idx, _this.length, _this.evenbase);
-        }
+        // @ts-ignore
+        let _this: any = this;
+        return set8Perm(arr, idx, _this.length, _this.evenbase);
+      }
       : function (arr: number[], idx: number) {
-          // @ts-ignore
-          let _this: any = this;
-          return setNOri(arr, idx, _this.length, _this.evenbase);
-        };
+        // @ts-ignore
+        let _this: any = this;
+        return setNOri(arr, idx, _this.length, _this.evenbase);
+      };
 }
 
 export function fillFacelet(facelets: number[][], f: number[], perm: number[], ori: number[], divcol: number) {
@@ -268,9 +268,24 @@ let edgeFacelet = [
   [48, 14],
 ];
 
+let rotMult: number[][] = [];
+let rotMulI: number[][] = [];
+let rotMulM: number[][] = [];
+let rot2str = [
+  "", "y'", "y2", "y",
+  "z2", "y' z2", "y2 z2", "y z2",
+  "y' x'", "y2 x'", "y x'", "x'",
+  "y' x", "y2 x", "y x", "x",
+  "y z", "z", "y' z", "y2 z",
+  "y' z'", "y2 z'", "y z'", "z'"
+];
+let CubeMoveRE = /^\s*([URFDLB]w?|[EMSyxz]|2-2[URFDLB]w)(['2]?)(@\d+)?\s*$/;
+
 export class CubieCube {
-  public ca: number[];
-  public ea: number[];
+  ca: number[];
+  ea: number[];
+  ori: number = 0;
+  tstamp: number = 0;
 
   constructor() {
     this.ca = [0, 1, 2, 3, 4, 5, 6, 7];
@@ -295,22 +310,146 @@ export class CubieCube {
     CubieCube.EdgeMult(a, b, prod);
   }
 
+  static moveCube = (function () {
+    let moveCube = [];
+
+    for (let i = 0; i < 18; i++) {
+      moveCube[i] = new CubieCube();
+    }
+
+    moveCube[0].init([3, 0, 1, 2, 4, 5, 6, 7], [6, 0, 2, 4, 8, 10, 12, 14, 16, 18, 20, 22]);
+    moveCube[3].init([20, 1, 2, 8, 15, 5, 6, 19], [16, 2, 4, 6, 22, 10, 12, 14, 8, 18, 20, 0]);
+    moveCube[6].init([9, 21, 2, 3, 16, 12, 6, 7], [0, 19, 4, 6, 8, 17, 12, 14, 3, 11, 20, 22]);
+    moveCube[9].init([0, 1, 2, 3, 5, 6, 7, 4], [0, 2, 4, 6, 10, 12, 14, 8, 16, 18, 20, 22]);
+    moveCube[12].init([0, 10, 22, 3, 4, 17, 13, 7], [0, 2, 20, 6, 8, 10, 18, 14, 16, 4, 12, 22]);
+    moveCube[15].init([0, 1, 11, 23, 4, 5, 18, 14], [0, 2, 4, 23, 8, 10, 12, 21, 16, 18, 7, 15]);
+
+    for (let a = 0; a < 18; a += 3) {
+      for (let p = 0; p < 2; p++) {
+        CubieCube.EdgeMult(moveCube[a + p], moveCube[a], moveCube[a + p + 1]);
+        CubieCube.CornMult(moveCube[a + p], moveCube[a], moveCube[a + p + 1]);
+      }
+    }
+
+    return moveCube;
+
+  })();
+
+  static rotCube = (function () {
+    let u4 = new CubieCube().init([3, 0, 1, 2, 7, 4, 5, 6], [6, 0, 2, 4, 14, 8, 10, 12, 23, 17, 19, 21]);
+    let f2 = new CubieCube().init([5, 4, 7, 6, 1, 0, 3, 2], [12, 10, 8, 14, 4, 2, 0, 6, 18, 16, 22, 20]);
+    let urf = new CubieCube().init([8, 20, 13, 17, 19, 15, 22, 10], [3, 16, 11, 18, 7, 22, 15, 20, 1, 9, 13, 5]);
+    let c = new CubieCube();
+    let d = new CubieCube();
+
+    let rotCube = [];
+
+    for (let i = 0; i < 24; i++) {
+      rotCube[i] = new CubieCube().init(c.ca, c.ea);
+      CubieCube.CornMult(c, u4, d);
+      CubieCube.EdgeMult(c, u4, d);
+      c.init(d.ca, d.ea);
+      if (i % 4 == 3) {
+        CubieCube.CornMult(c, f2, d);
+        CubieCube.EdgeMult(c, f2, d);
+        c.init(d.ca, d.ea);
+      }
+      if (i % 8 == 7) {
+        CubieCube.CornMult(c, urf, d);
+        CubieCube.EdgeMult(c, urf, d);
+        c.init(d.ca, d.ea);
+      }
+    }
+
+    let movHash = [];
+    let rotHash = [];
+
+    for (let i = 0; i < 24; i++) {
+      rotHash[i] = rotCube[i].hashCode();
+      rotMult[i] = [];
+      rotMulI[i] = [];
+      rotMulM[i] = [];
+    }
+
+    for (let i = 0; i < 18; i++) {
+      movHash[i] = CubieCube.moveCube[i].hashCode();
+    }
+
+    for (let i = 0; i < 24; i++) {
+      for (let j = 0; j < 24; j++) {
+        CubieCube.CornMult(rotCube[i], rotCube[j], c);
+        CubieCube.EdgeMult(rotCube[i], rotCube[j], c);
+        let k = rotHash.indexOf(c.hashCode());
+        rotMult[i][j] = k;
+        rotMulI[k][j] = i;
+      }
+    }
+    for (let i = 0; i < 24; i++) {
+      for (let j = 0; j < 18; j++) {
+        CubieCube.CornMult(rotCube[rotMulI[0][i]], CubieCube.moveCube[j], c);
+        CubieCube.EdgeMult(rotCube[rotMulI[0][i]], CubieCube.moveCube[j], c);
+        CubieCube.CornMult(c, rotCube[i], d);
+        CubieCube.EdgeMult(c, rotCube[i], d);
+        let k = movHash.indexOf(d.hashCode());
+        rotMulM[i][j] = k;
+      }
+    }
+
+    return rotCube;
+  })();
+
+  static get rotMult() {
+    return rotMult;
+  }
+
+  static get rotMulI() {
+    return rotMulI;
+  }
+
+  static get rotMulM() {
+    return rotMulM;
+  }
+
+  static get rot2str() {
+    return rot2str;
+  }
+
+  static SOLVED = new CubieCube();
+
   init(ca: number[], ea: number[]): CubieCube {
     this.ca = ca.slice();
     this.ea = ea.slice();
     return this;
   }
 
+  hashCode() {
+    let ret = 0;
+
+    for (let i = 0; i < 20; i += 1) {
+      ret = 0 | (ret * 31 + (i < 12 ? this.ea[i] : this.ca[i - 12]));
+    }
+
+    return ret;
+  }
+
   isEqual(c: CubieCube): boolean {
-    if ( this.ca.some((e, p) => e != c.ca[p]) || this.ea.some((e, p) => e != c.ea[p]) ) {
-      return false;
+    c = c || CubieCube.SOLVED;
+
+    for (let i = 0; i < 8; i++) {
+      if (this.ca[i] != c.ca[i]) {
+        return false;
+      }
+    }
+
+    for (let i = 0; i < 12; i++) {
+      if (this.ea[i] != c.ea[i]) {
+        return false;
+      }
     }
     return true;
   }
 
-  toFaceCube(cFacelet: number[][], eFacelet: number[][]): string {
-    cFacelet = cFacelet || cornerFacelet;
-    eFacelet = eFacelet || edgeFacelet;
+  toFaceCube(cFacelet: number[][] = cornerFacelet, eFacelet: number[][] = edgeFacelet): string {
     let ts = "URFDLB";
     let f = [];
     for (let i = 0; i < 54; i++) {
@@ -341,9 +480,7 @@ export class CubieCube {
     return this;
   }
 
-  fromFacelet(facelet: any, cFacelet: any, eFacelet: any) {
-    cFacelet = cFacelet || cornerFacelet;
-    eFacelet = eFacelet || edgeFacelet;
+  fromFacelet(facelet: string, cFacelet: number[][] = cornerFacelet, eFacelet: number[][] = edgeFacelet) {
     let count = 0;
     let f = [];
     let centers = facelet[4] + facelet[13] + facelet[22] + facelet[31] + facelet[40] + facelet[49];
@@ -390,91 +527,164 @@ export class CubieCube {
     }
     return this;
   };
-  
-}
 
-let moveCube = [];
-for (let i = 0; i < 18; i++) {
-  moveCube[i] = new CubieCube();
-}
-moveCube[0].init(
-  [3, 0, 1, 2, 4, 5, 6, 7],
-  [6, 0, 2, 4, 8, 10, 12, 14, 16, 18, 20, 22]
-);
-moveCube[3].init(
-  [20, 1, 2, 8, 15, 5, 6, 19],
-  [16, 2, 4, 6, 22, 10, 12, 14, 8, 18, 20, 0]
-);
-moveCube[6].init(
-  [9, 21, 2, 3, 16, 12, 6, 7],
-  [0, 19, 4, 6, 8, 17, 12, 14, 3, 11, 20, 22]
-);
-moveCube[9].init(
-  [0, 1, 2, 3, 5, 6, 7, 4],
-  [0, 2, 4, 6, 10, 12, 14, 8, 16, 18, 20, 22]
-);
-moveCube[12].init(
-  [0, 10, 22, 3, 4, 17, 13, 7],
-  [0, 2, 20, 6, 8, 10, 18, 14, 16, 4, 12, 22]
-);
-moveCube[15].init(
-  [0, 1, 11, 23, 4, 5, 18, 14],
-  [0, 2, 4, 23, 8, 10, 12, 21, 16, 18, 7, 15]
-);
-for (let a = 0; a < 18; a += 3) {
-  for (let p = 0; p < 2; p++) {
-    CubieCube.EdgeMult(moveCube[a + p], moveCube[a], moveCube[a + p + 1]);
-    CubieCube.CornMult(moveCube[a + p], moveCube[a], moveCube[a + p + 1]);
+  verify() {
+    let mask = 0;
+    let sum = 0;
+
+    for (let e = 0; e < 12; e++) {
+      mask |= 1 << 8 << (this.ea[e] >> 1);
+      sum ^= this.ea[e] & 1;
+    }
+
+    let cp = [];
+
+    for (let c = 0; c < 8; c++) {
+      mask |= 1 << (this.ca[c] & 7);
+      sum += this.ca[c] >> 3 << 1;
+      cp.push(this.ca[c] & 0x7);
+    }
+
+    if (mask != 0xfffff || sum % 6 != 0
+      || getNParity(getNPerm(this.ea, 12), 12) != getNParity(getNPerm(cp, 8), 8)) {
+      return -1;
+    }
+
+    return 0;
   }
-}
 
-// @ts-ignore
-CubieCube.moveCube = moveCube;
-
-// @ts-ignore
-CubieCube.prototype.edgeCycles = function () {
-  let visited = [];
-  let small_cycles = [0, 0, 0];
-  let cycles = 0;
-  let parity = false;
-  for (let x = 0; x < 12; ++x) {
-    if (visited[x]) {
-      continue;
-    }
-    let length = -1;
-    let flip = 0;
-    let y = x;
-    do {
-      visited[y] = true;
-      ++length;
-      flip ^= this.ea[y] & 1;
-      y = this.ea[y] >> 1;
-    } while (y != x);
-    cycles += length >> 1;
-    if (length & 1) {
-      parity = !parity;
-      ++cycles;
-    }
-    if (flip) {
-      if (length == 0) {
-        ++small_cycles[0];
-      } else if (length & 1) {
-        small_cycles[2] ^= 1;
-      } else {
-        ++small_cycles[1];
+  edgeCycles() {
+    let visited = [];
+    let small_cycles = [0, 0, 0];
+    let cycles = 0;
+    let parity = false;
+    for (let x = 0; x < 12; ++x) {
+      if (visited[x]) {
+        continue;
+      }
+      let length = -1;
+      let flip = 0;
+      let y = x;
+      do {
+        visited[y] = true;
+        ++length;
+        flip ^= this.ea[y] & 1;
+        y = this.ea[y] >> 1;
+      } while (y != x);
+      cycles += length >> 1;
+      if (length & 1) {
+        parity = !parity;
+        ++cycles;
+      }
+      if (flip) {
+        if (length == 0) {
+          ++small_cycles[0];
+        } else if (length & 1) {
+          small_cycles[2] ^= 1;
+        } else {
+          ++small_cycles[1];
+        }
       }
     }
+    small_cycles[1] += small_cycles[2];
+    if (small_cycles[0] < small_cycles[1]) {
+      cycles += (small_cycles[0] + small_cycles[1]) >> 1;
+    } else {
+      let flip_cycles = [0, 2, 3, 5, 6, 8, 9];
+      cycles +=
+        small_cycles[1] + flip_cycles[(small_cycles[0] - small_cycles[1]) >> 1];
+    }
+    return cycles - ~~parity;
+  };
+
+  selfMoveStr(moveStr: string, isInv: boolean) {
+    let m = CubeMoveRE.exec(moveStr);
+    if (!m) {
+      return;
+    }
+    let face = m[1];
+    let pow = "2'".indexOf(m[2] || '-') + 2;
+    if (isInv) {
+      pow = 4 - pow;
+    }
+    if (m[3]) {
+      this.tstamp = ~~m[3].slice(1);
+    }
+    this.ori = this.ori || 0;
+    let axis = 'URFDLB'.indexOf(face);
+    if (axis != -1) {
+      let _m = axis * 3 + pow % 4 - 1
+      _m = CubieCube.rotMulM[this.ori][_m];
+
+      CubieCube.EdgeMult(this, CubieCube.moveCube[_m], tmpCubie);
+      CubieCube.CornMult(this, CubieCube.moveCube[_m], tmpCubie);
+      
+      this.init(tmpCubie.ca, tmpCubie.ea);
+      
+      return _m;
+    }
+    axis = 'UwRwFwDwLwBw'.indexOf(face);
+    if (axis != -1) {
+      axis >>= 1;
+      let _m = (axis + 3) % 6 * 3 + pow % 4 - 1
+      _m = CubieCube.rotMulM[this.ori][_m];
+      CubieCube.EdgeMult(this, CubieCube.moveCube[_m], tmpCubie);
+      CubieCube.CornMult(this, CubieCube.moveCube[_m], tmpCubie);
+      this.init(tmpCubie.ca, tmpCubie.ea);
+      let rot = [3, 15, 17, 1, 11, 23][axis];
+      for (let i = 0; i < pow; i++) {
+        this.ori = CubieCube.rotMult[rot][this.ori];
+      }
+      return _m;
+    }
+    axis = ['2-2Uw', '2-2Rw', '2-2Fw', '2-2Dw', '2-2Lw', '2-2Bw'].indexOf(face);
+    if (axis == -1) {
+      axis = [null, null, 'S', 'E', 'M', null].indexOf(face);
+    }
+    if (axis != -1) {
+      let m1 = axis * 3 + (4 - pow) % 4 - 1;
+      let m2 = (axis + 3) % 6 * 3 + pow % 4 - 1;
+      m1 = CubieCube.rotMulM[this.ori][m1];
+      CubieCube.EdgeMult(this, CubieCube.moveCube[m1], tmpCubie);
+      CubieCube.CornMult(this, CubieCube.moveCube[m1], tmpCubie);
+      this.init(tmpCubie.ca, tmpCubie.ea);
+      m2 = CubieCube.rotMulM[this.ori][m2];
+      CubieCube.EdgeMult(this, CubieCube.moveCube[m2], tmpCubie);
+      CubieCube.CornMult(this, CubieCube.moveCube[m2], tmpCubie);
+      this.init(tmpCubie.ca, tmpCubie.ea);
+      let rot = [3, 15, 17, 1, 11, 23][axis];
+      for (let i = 0; i < pow; i++) {
+        this.ori = CubieCube.rotMult[rot][this.ori];
+      }
+      return m1 + 18;
+    }
+    axis = 'yxz'.indexOf(face);
+    if (axis != -1) {
+      let rot = [3, 15, 17][axis];
+      for (let i = 0; i < pow; i++) {
+        this.ori = CubieCube.rotMult[rot][this.ori];
+      }
+      return;
+    }
   }
-  small_cycles[1] += small_cycles[2];
-  if (small_cycles[0] < small_cycles[1]) {
-    cycles += (small_cycles[0] + small_cycles[1]) >> 1;
-  } else {
-    let flip_cycles = [0, 2, 3, 5, 6, 8, 9];
-    cycles +=
-      small_cycles[1] + flip_cycles[(small_cycles[0] - small_cycles[1]) >> 1];
-  }
-  return cycles - ~~parity;
-};
+
+  selfConj(conj?: number) {
+		if (conj === undefined) {
+			conj = this.ori;
+		}
+
+		if (conj != 0) {
+			CubieCube.CornMult(CubieCube.rotCube[conj], this, tmpCubie);
+			CubieCube.EdgeMult(CubieCube.rotCube[conj], this, tmpCubie);
+			CubieCube.CornMult(tmpCubie, CubieCube.rotCube[CubieCube.rotMulI[0][conj]], this);
+			CubieCube.EdgeMult(tmpCubie, CubieCube.rotCube[CubieCube.rotMulI[0][conj]], this);
+			this.ori = CubieCube.rotMulI[this.ori][conj] || 0;
+		}
+	}
+
+}
+
+let tmpCubie = new CubieCube();
 
 export function createPrun(
   prun: number[],

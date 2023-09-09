@@ -1,4 +1,4 @@
-import type { CubeEvent, IPC, PDFOptions, Session, Sheet, Solve, Tutorial, UpdateCommand } from "@interfaces";
+import type { AlgorithmOptions, CubeEvent, IPC, PDFOptions, Session, Sheet, Solve, Tutorial, UpdateCommand } from "@interfaces";
 
 export class NoopAdaptor implements IPC {
   handleAlgorithms(fn: Function) {}
@@ -10,7 +10,8 @@ export class NoopAdaptor implements IPC {
   handleTutorials(fn: Function) {}
   handleUpdate(fn: Function) {}
   
-  getAlgorithms(dir: string): void {}
+  getAlgorithms(options: AlgorithmOptions): void {}
+  updateAlgorithm(alg: Algorithm) {}
   getCards(): void {}
   
   getTutorials() {}
@@ -45,4 +46,9 @@ export class NoopAdaptor implements IPC {
   update(cmd: UpdateCommand) {}
 
   sleep(s: boolean) {}
+
+  connectBluetoothDevice() {}
+  cancelBluetoothRequest() {}
+  pairingBluetoothResponse() {}
+  handleBluetooth() {}
 }

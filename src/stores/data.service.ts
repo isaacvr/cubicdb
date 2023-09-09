@@ -1,5 +1,8 @@
+/// <reference types="web-bluetooth" />
+
+import type { GANInput } from '@components/timer/input-handlers/GAN';
 import type { Algorithm, RawCard, Solve, Session, Tutorial, Sheet, CubeEvent, IPC, PDFOptions, UpdateCommand } from '@interfaces';
-import { ElectronAdaptor, BrowserAdaptor, NoopAdaptor } from '@storage/index';
+import { ElectronAdaptor, BrowserAdaptor } from '@storage/index';
 import type { Writable } from 'svelte/store';
 import { writable } from 'svelte/store';
 
@@ -43,6 +46,7 @@ export class DataService {
   sessSub: Writable< { type: string, data: Session | Session[] } >;
   anySub: Writable<AnySub>;
   updateSub: Writable<AnySub>;
+  bluetoothSub: Writable<AnySub>;
 
   private static _instance: DataService;
 
@@ -56,6 +60,7 @@ export class DataService {
     this.contestSub = writable< ContestSub >();
     this.anySub = writable<AnySub>();
     this.updateSub = writable<AnySub>();
+    this.bluetoothSub = writable<AnySub>();
 
     if ( navigator.userAgent.indexOf('Electron') > -1 ) {
       this.ipc = new ElectronAdaptor();
@@ -123,6 +128,13 @@ export class DataService {
       this.updateSub.set({
         type: ev[0],
         data: ev.slice(1),
+      });
+    });
+
+    this.ipc.handleBluetooth((_: any, ev: any) => {
+      this.bluetoothSub.set({
+        type: ev[0],
+        data: ev[1],
       });
     });
   }
@@ -241,5 +253,38 @@ export class DataService {
 
   sleep(s: boolean) {
     this.ipc.sleep(s);
+  }
+
+  connectBluetoothDevice(id: string) {
+    localStorage.setItem('bluetooth-mac', id);
+    this.ipc.connectBluetoothDevice(id);
+  }
+
+  cancelBluetoothRequest() {
+    localStorage.removeItem('bluetooth-mac');
+    this.ipc.cancelBluetoothRequest();
+  }
+
+  pairingBluetoothResponse() {
+    this.ipc.pairingBluetoothResponse();
+  }
+
+  searchBluetooth(gn: GANInput): Promise<string> {
+    return new Promise((res, rej) => {
+      navigator.bluetooth.requestDevice({
+        filters: [{
+          namePrefix: 'GAN'
+        }],
+        // optionalServices: GANInput.opServices(),
+        optionalServices: [
+          '00001800-0000-1000-8000-00805f9b34fb',
+          '00001801-0000-1000-8000-00805f9b34fb',
+          '6e400001-b5a3-f393-e0a9-e50e24dc4179',
+          'f95a48e6-a721-11e9-a2a3-022ae2dbcce4'
+        ],
+      }).then(async(device) => {
+        gn.fromDevice( device ).then(res).catch(rej);
+      }).catch(rej);
+    });
   }
 }

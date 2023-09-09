@@ -3,7 +3,7 @@
 /src/database/solves.db
 /src/database/sessions.db
 /src/database/contests.db
-/src/components/Contest.svelte
+/src/cubedb-premium
 /dist
 /cache
 /release

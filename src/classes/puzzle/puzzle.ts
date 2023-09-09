@@ -84,6 +84,60 @@ export class Puzzle {
 
     this.adjustColors();
 
+    if ( this.options.facelet && this.type === 'rubik' ) {
+      this.applyFacelet( this.options.facelet );
+    }
+
+  }
+
+  private applyFacelet(facelet: string) {
+    let colors = "URFDLB";
+    let fColors = facelet.split("");
+    let vecs = this.p.faceVectors;
+    let cols = this.p.faceColors;
+    let allStickers = this.p.getAllStickers();
+    let stickers: Sticker[][] = vecs.map(_ => []);
+    let getSort = (k1: keyof Vector3D, k2: keyof Vector3D, d1: number, d2: number) => {
+      return (s1: Sticker, s2: Sticker) => {
+        let m1 = s1.getMassCenter();
+        let m2 = s2.getMassCenter();
+
+        if ( m1[k1] != m2[k1] ) {
+          return m1[k1] < m2[k1] ? d1 : -d1;
+        }
+        return m1[k2] < m2[k2] ? d2 : -d2;
+      };
+    };
+
+    for (let i = 0, maxi = allStickers.length; i < maxi; i += 1) {
+      if ( cols.indexOf( allStickers[i].color ) < 0 ) {
+        continue;
+      }
+
+      let u = allStickers[i].getOrientation();
+
+      for (let j = 0, maxj = vecs.length; j < maxj; j += 1) {
+        if ( vecs[j].sub( u ).abs() < 1e-6 ) {
+          stickers[j].push( allStickers[i] );
+          break;
+        }
+      }
+    }
+
+    stickers[0].sort( getSort('z', 'x', -1, -1) );
+    stickers[1].sort( getSort('y', 'z', 1, 1) );
+    stickers[2].sort( getSort('y', 'x', 1, -1) );
+    stickers[3].sort( getSort('z', 'x', 1, -1) );
+    stickers[4].sort( getSort('y', 'z', 1, -1) );
+    stickers[5].sort( getSort('y', 'x', 1, 1) );
+
+    let sortedStickers = stickers.reduce((acc, e) => {
+      return acc.concat(e);
+    }, []);
+
+    for (let i = 0, maxi = fColors.length; i < maxi; i += 1) {
+      sortedStickers[i].color = cols[ colors.indexOf( fColors[i] ) ];
+    }
   }
 
   private adjustColors() {
@@ -105,34 +159,6 @@ export class Puzzle {
       return;
     }
     
-    // let topCenter: Sticker;
-    // if ( this.order[0] === 1 ) {
-    //   topCenter = pieces[0].stickers.filter(s => s.getOrientation().sub(UP).abs() < 1e-6)[0];
-    // } else if ( this.order[0] === 2 ) {
-    //   for (let i = 0, maxi = pieces.length; i < maxi; i += 1) {
-    //     if ( pieces[i].getMassCenter(false).y > 0 ) {
-    //       topCenter = pieces[i].stickers.filter(s => s.getOrientation().sub(UP).abs() < 1e-6)[0];
-    //       break;
-    //     }
-    //   }
-    // } else if ( this.order[0] % 2 == 1 ) {
-    //   topCenter = pieces.filter(p => {
-    //     let st = p.stickers.filter(s => s.oColor != 'x' && s.oColor != 'd');
-    //     let len = st.length;
-    //     if ( len != 1 ) return false;
-    //     let cm = st[0].getMassCenter();
-    //     return st[0].getOrientation().sub(UP).abs() < 1e-6 &&
-    //       Math.abs(cm.x) < 1e-6 && Math.abs(cm.z) < 1e-6;
-    //   })[0].stickers.filter(s => s.oColor != 'x' && s.oColor != 'd')[0];
-    // } else {
-    //   topCenter = pieces.filter(
-    //     p => p.length === 2 && p.stickers[0].getOrientation().sub(UP).abs() < 1e-6
-
-    //     )[0].stickers[0];
-    // }
-
-    // @ts-ignore
-    // let TOP_COLOR = topCenter.oColor;
     let TOP_COLOR = this.p.faceColors[3];
     let BOTTOM_COLOR = this.p.faceColors[ (this.p.faceColors.indexOf(TOP_COLOR) + 3) % 6 ];
     
@@ -308,6 +334,23 @@ export class Puzzle {
     p.move(s);
     p.options.sequence = s;
     return p;
+  }
+
+  static fromFacelet(facelet: string): Puzzle {
+    if ( !/^[UDLRFB]+$/.test(facelet) || facelet.length % 6 != 0 ) {
+      return Puzzle.fromSequence('', { type: 'rubik' });
+    }
+
+    let order = ~~Math.sqrt( facelet.length / 6);
+
+    let cube = new Puzzle({
+      type: 'rubik',
+      order: [ order, order, order ],
+      view: 'trans',
+      facelet
+    });
+
+    return cube;
   }
 
   setTips(tips: number[]) {

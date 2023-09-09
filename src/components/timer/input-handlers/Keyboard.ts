@@ -50,6 +50,8 @@ export class KeyboardInput implements TimerInputHandler {
   init() {
     if ( this.active ) return;
     this.active = true;
+
+    console.log('INIT KEYBOARD');
   
     const { state, ready, session, time, lastSolve, isRunning } = this.context;
 

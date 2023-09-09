@@ -1,25 +1,23 @@
 import { FaceSticker } from "@classes/puzzle/FaceSticker";
+import type { Sticker } from "@classes/puzzle/Sticker";
 import type { Puzzle } from "@classes/puzzle/puzzle";
 import { roundCorners } from "@classes/puzzle/puzzleUtils";
 import { DoubleSide, Face3, Geometry, Material, Mesh, MeshBasicMaterial, Object3D, Vector3 } from "three";
 
-export function cubeToThree(cube: Puzzle, F: number = 1) {
-  let nc = cube;
-  roundCorners(nc.p, ...nc.p.roundParams);
-  
+export function piecesToTree(cube: Puzzle, F: number = 1, sTrans: Function = (s: Sticker[]) => s, side = DoubleSide) {
   let group = new Object3D();
-  let pieces = nc.pieces;
+  let pieces = cube.pieces;
   let meshes: Mesh[] = [];
 
   for (let p = 0, maxp = pieces.length; p < maxp; p += 1) {
-    let stickers = pieces[p].stickers;
+    let stickers: Sticker[] = sTrans( pieces[p].stickers );
     let piece = new Object3D();
 
     piece.userData = pieces[p];
 
     for (let s = 0, maxs = stickers.length; s < maxs; s += 1) {
       let sticker = stickers[s].mul(F); 
-      let color = nc.getHexColor( sticker.color );
+      let color = cube.getHexColor( sticker.color );
       let stickerGeometry = new Geometry(); 
       let stickerMaterial: Material;
 
@@ -28,7 +26,7 @@ export function cubeToThree(cube: Puzzle, F: number = 1) {
       if ( sticker instanceof FaceSticker ) {
         stickerMaterial = new MeshBasicMaterial({
           color: 0xffffff,
-          side: DoubleSide,
+          side,
           vertexColors: true
         });
 
@@ -42,7 +40,7 @@ export function cubeToThree(cube: Puzzle, F: number = 1) {
       } else {
         stickerMaterial = new MeshBasicMaterial({
           color,
-          side: DoubleSide
+          side
         });
 
         for (let i = 2, maxi = sticker.points.length; i < maxi; i += 1) {
@@ -58,9 +56,18 @@ export function cubeToThree(cube: Puzzle, F: number = 1) {
 
     }
 
-    group.add(piece);
-    
+    group.add(piece); 
   }
+
+  return { group, meshes };
+}
+
+export function cubeToThree(cube: Puzzle, F: number = 1) {
+  let nc = cube;
+  
+  roundCorners(nc.p, ...nc.p.roundParams);
+  
+  let { group, meshes } = piecesToTree(nc, F);
 
   group.rotation.x = nc.rotation.x;
   group.rotation.y = nc.rotation.y;

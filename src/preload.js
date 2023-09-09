@@ -47,4 +47,18 @@ contextBridge.exposeInMainWorld('electronAPI', {
   handleUpdate: (cb) => ipc.on('update', cb),
 
   sleep: (s) => ipc.send('sleep', s),
+
+  // Bluetooth
+  connectBluetoothDevice: (id) => ipc.send('connect-bluetooth-device', id),
+  cancelBluetoothRequest: () => ipc.send('cancel-bluetooth-request'),
+  pairingBluetoothResponse: (id) => ipc.send('connect-bluetooth-device', id),
+  handleBluetooth: (cb) => ipc.on('bluetooth', cb),
+
+  /*
+
+  cancelBluetoothRequest: (callback) => ipcRenderer.send('cancel-bluetooth-request', callback),
+  bluetoothPairingRequest: (callback) => ipcRenderer.on('bluetooth-pairing-request', callback),
+  bluetoothPairingResponse: (response) => ipcRenderer.send('bluetooth-pairing-response', response)
+  
+  */
 });

@@ -8,7 +8,7 @@ import type { Writable } from 'svelte/store';
 export declare type PuzzleType = 'rubik' | 'skewb' | 'square1' | 'pyraminx' | 'axis' | 'fisher' | 'ivy'
   | 'clock' | 'megaminx' | 'mirror' | 'dino' | 'rex' | 'redi' | 'mixup' | 'pyramorphix' | 'gear' | 'dreidel'
   | 'bandaged222' | 'bicube' | 'square2' | 'pandora' | 'ultimateSkewb' | 'pyraminxCrystal' | 'tetraminx'
-  | 'meierHalpernPyramid' | 'sq1Star';
+  | 'meierHalpernPyramid' | 'sq1Star' | 'windmill';
 
 export declare type CubeView = 'plan' | 'trans' | '2d';
 export const CubeViewMap: [ CubeView, string ][] = [
@@ -142,6 +142,7 @@ export interface PuzzleOptions {
   headless?: boolean;
   sequence?: string; // This field has no effects in the constructor
   rounded?: boolean;
+  facelet?: string;
 }
 
 export enum Penalty {
@@ -163,9 +164,9 @@ export interface Solve {
   prob?: number;
 }
 
-export type TimerInput = 'Keyboard' | 'Manual' | 'StackMat';
+export type TimerInput = 'Keyboard' | 'Manual' | 'StackMat' | 'GAN Cube';
 
-export const TIMER_INPUT: TimerInput[] = [ 'Keyboard', 'Manual', 'StackMat' ];
+export const TIMER_INPUT: TimerInput[] = [ 'Keyboard', 'Manual', 'StackMat'/*, 'GAN Cube'*/ ];
 
 export interface SessionSettings {
   hasInspection: boolean;
@@ -177,6 +178,7 @@ export interface SessionSettings {
   input?: TimerInput;
   withoutPrevention: boolean;
   recordCelebration?: boolean;
+  showBackFace?: boolean;
 }
 
 export interface Session {
@@ -286,6 +288,7 @@ export interface TimerContext {
   isRunning: Writable<boolean>;
   selected: Writable<number>;
   decimals: Writable<boolean>;
+  bluetoothList: Writable<BluetoothDeviceData[]>;
   
   sortSolves: () => any;
   updateStatistics: (inc ?: boolean) => any;
@@ -435,6 +438,11 @@ export interface IPC {
   update: (cmd: UpdateCommand) => any;
   
   sleep: (s: boolean) => any;
+
+  connectBluetoothDevice: (id: string) => any; 
+  cancelBluetoothRequest: () => any; 
+  pairingBluetoothResponse: () => any; 
+  handleBluetooth: (fn: Function) => any;
 }
 
 export interface PDFOptions {
@@ -728,6 +736,12 @@ export interface Language {
     creator: string;
     donations: string;
   }
+}
+
+export interface BluetoothDeviceData {
+  deviceName: string;
+  deviceId: string;
+  connected: boolean;
 }
 
 export type UpdateCommand = 'check' | 'download';

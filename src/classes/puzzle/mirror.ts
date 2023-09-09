@@ -17,7 +17,7 @@ export function MIRROR(n: number): PuzzleInterface {
     faceVectors: [],
     getAllStickers: () => [],
     dims: [n, n, n],
-    faceColors: [ 'w', 'r', 'g', 'y', 'o', 'b' ],
+    faceColors: [],
     move: () => false,
     roundParams: [],
   };
@@ -181,11 +181,13 @@ export function MIRROR(n: number): PuzzleInterface {
     UP, RIGHT, FRONT, DOWN, LEFT, BACK
   ];
 
+  mirror.faceColors = mirror.faceVectors.map(() => 'lightGray');
+
   assignColors(mirror, mirror.faceColors);
   // roundCorners(mirror, null, null, null, null, (s: Sticker) => s.color != 'x');
   // roundCorners(mirror);
 
-  pieces.forEach(p => p.stickers.forEach(s => s.color = (!s.color.match(/^[xd]$/)) ? 'lightGray' : s.color));
+  // pieces.forEach(p => p.stickers.forEach(s => s.color = (!s.color.match(/^[xd]$/)) ? 'lightGray' : s.color));
 
   return mirror;
 

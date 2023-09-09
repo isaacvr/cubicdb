@@ -9,7 +9,6 @@
   import Select from "./material/Select.svelte";
   import { DataService } from "@stores/data.service";
 
-  import LoadingIcon from '@icons/Loading.svelte';
   import { version } from "@stores/version.store";
 
   const notService = NotificationService.getInstance();
@@ -179,14 +178,9 @@
   <div class="flex items-center justify-center gap-4">
     <div class="flex items-center justify-center gap-2">
       { $localLang.SETTINGS.version }: <mark>{ $version }</mark>
-      <Button class="bg-blue-700 text-gray-300 grid justify-center relative" on:click={ () => canCheckUpdate && checkUpdate() }>
-        <span class="check-text" class:show={ canCheckUpdate }> { $localLang.SETTINGS.checkUpdate } </span>
-       
-        {#if !canCheckUpdate}
-          <div class="loading">
-            <LoadingIcon size="1.2rem"/>
-          </div>
-        {/if}
+      <Button class="bg-blue-700 text-gray-300 grid justify-center relative"
+        on:click={ () => canCheckUpdate && checkUpdate() } loading={ !canCheckUpdate }>
+        { $localLang.SETTINGS.checkUpdate }
       </Button>
     </div>
   </div>
@@ -202,21 +196,5 @@
 <style lang="postcss">
   hr {
     @apply w-full h-px bg-gray-400 border-none mt-6;
-  }
-
-  .check-text:not(.show) {
-    color: transparent;
-  }
-
-  @keyframes circle {
-    0% { rotate: 0deg; }
-    100% { rotate: 360deg; }
-  }
-
-  .loading {
-    position: absolute;
-    left: 50%;
-    translate: -50% 0%;
-    animation: circle 1s linear infinite;
   }
 </style>

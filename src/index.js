@@ -355,7 +355,7 @@ ipcMain.on('sleep', (_, sleep) => {
 
 function createWindow() {
 
-  win = new BrowserWindow({
+  let win = new BrowserWindow({
     x: 0,
     y: 0,
     fullscreen: true,
@@ -367,6 +367,40 @@ function createWindow() {
       preload: join(__dirname, 'preload.js' )
     },
     icon: join(__dirname, '../public/assets', 'icon-big.png')
+  });
+
+  // @ts-ignore
+  const defaultCallback = (_) => {};
+  let selectBluetoothCallback = defaultCallback;
+  let bluetoothPinCallback = defaultCallback;
+
+  // Bluetooth handler
+  win.webContents.on('select-bluetooth-device', (event, deviceList, callback) => {
+    event.preventDefault();
+    selectBluetoothCallback = callback;
+    win.webContents.send('bluetooth', ['device-list', deviceList]);
+  });
+
+  ipcMain.on('connect-bluetooth-device', (event, deviceID) => {
+    selectBluetoothCallback(deviceID);
+    selectBluetoothCallback = defaultCallback
+  });
+
+  ipcMain.on('cancel-bluetooth-request', (event) => {
+    selectBluetoothCallback('');
+    selectBluetoothCallback = defaultCallback
+  });
+
+  ipcMain.on('bluetooth-pairing-response', (event, response) => {
+    bluetoothPinCallback(response);
+    bluetoothPinCallback = defaultCallback;
+  });
+
+  win.webContents.session.setBluetoothPairingHandler((details, callback) => {
+    bluetoothPinCallback = callback;
+
+    // Send a message to the renderer to prompt the user to confirm the pairing.
+    win.webContents.send('bluetooth', ['pairing-request', details]);
   });
 
   /// Other Stuff
@@ -428,8 +462,9 @@ function createWindow() {
           genImage: true,
           scrambleAfterCancel: false,
           input: 'Keyboard',
-          withoutPrevention: false,
+          withoutPrevention: true,
           recordCelebration: true,
+          showBackFace: false,
         }
       });
     }

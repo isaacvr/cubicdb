@@ -84,17 +84,23 @@ export class StackmatInput implements TimerInputHandler {
     });
   }
 
+  private static stackmatProcessor = '';
+
   getDevice(): string {
     return this.device;
   }
 
   init(deviceId: string, force: boolean) {
+    console.log("INIT STACKMAT: ", deviceId, force);
+
     if ( this.context ) {
-      const { state, lastSolve, time } = this.context;
+      const { state, lastSolve, time, decimals } = this.context;
   
       this.subs.push( state.subscribe((st) => st) );
       this.subs.push( lastSolve.subscribe((sv) => sv) );
       this.subs.push( time.subscribe((t) => t) );
+
+      decimals.set(true);
     }
   
     let selectObj: any = {
@@ -139,7 +145,11 @@ export class StackmatInput implements TimerInputHandler {
     this.audio_stream = stream;
     this.source = this.audio_context.createMediaStreamSource( stream );
 
-    let stackmatProcessor = await this.getAudioProcessor();
+    if ( !StackmatInput.stackmatProcessor ) {
+      StackmatInput.stackmatProcessor = await this.getAudioProcessor();
+    }
+
+    let stackmatProcessor = StackmatInput.stackmatProcessor;
     
     await this.audio_context.audioWorklet.addModule( stackmatProcessor );
 
@@ -167,10 +177,14 @@ export class StackmatInput implements TimerInputHandler {
     this.lastState = null;
 
     if ( this.audio_stream != undefined ) {
-      await this.audio_context.close();
-      this.audio_stream = undefined;
-      this.source?.disconnect( this.node as AudioWorkletNode );
-      this.node?.disconnect( this.audio_context.destination );
+      try {
+        await this.audio_context.close();
+        this.audio_stream = undefined;
+        this.source?.disconnect( this.node as AudioWorkletNode );
+        this.node?.disconnect( this.audio_context.destination );
+      } catch(err) {
+        console.log("AUDIO_PROCESSOR_ERROR: ", err);
+      }
     }
   }
 

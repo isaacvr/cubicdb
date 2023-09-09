@@ -11,61 +11,55 @@
   function updateTexts() {
     const HOME = getLanguage( $globalLang ).HOME;
 
+    const showPrivate = false;
+
     cards = [
       {
         title: HOME.tutorials,
         route: "/tutorials",
-        ready: false,
+        ready: true,
         timer: false,
         cube: '/assets/tutorials.png',
-        // puzzle: new Puzzle({
-        //   type: 'rubik',
-        //   order: [3, 3, 3],
-        //   view: 'plan',
-        //   sequence: "z2 B2 R2 U B2 U' R2 B2 R2 U' R2 U R2",
-        //   mode: CubeMode.PLL,
-        //   tips: [ 0, 1, 1, 0, 1, 1, 2, 2, 1, 1 ]
-        // })
       }, {
         title: HOME.algorithms,
         route: "/algorithms",
         timer: false,
-        ready: false,
+        ready: true,
         cube: '/assets/algorithms.png',
-      // }, {
-      //   title: 'Algorithm Handler',
-      //   route: "/algorithms-admin",
-      //   timer: false,
-      //   ready: false,
-      //   cube: '/assets/algorithms.png',
+      }, {
+        title: 'Algorithm Handler',
+        route: "/algorithms-admin",
+        timer: false,
+        ready: showPrivate,
+        cube: '/assets/algorithms-admin.png',
       }, {
         title: HOME.timer,
         route: "/timer",
         timer: true,
-        ready: false,
+        ready: true,
         cube: '/assets/timer.png',
-      }, /*{
+      }, {
         title: HOME.battle,
         route: "/battle",
-        ready: true,
-        cube: '/assets/cube.png',
-      },*/ {
+        ready: showPrivate,
+        cube: '/assets/battle.png',
+      }, {
         title: HOME.pll_recognition,
         route: "/pll-trainer",
         timer: true,
-        ready: false,
+        ready: true,
         cube: '/assets/pll.png',
       }, {
         title: HOME.simulator,
         route: "/simulator",
         timer: true,
-        ready: false,
+        ready: true,
         cube: '/assets/megaminx.png',
       }, {
         title: HOME.settings,
         route: "/settings",
         timer: false,
-        ready: false,
+        ready: true,
         cube: '/assets/settings.png'
       }, {
         title: HOME.importExport,
@@ -73,20 +67,20 @@
         cube: '/assets/import-export.png',
         ready: true,
         timer: false,
-      }, /*{
+      }, {
         title: HOME.contest,
         route: '/contest',
         cube: '/assets/logo-500.png',
-        ready: true,
+        ready: showPrivate,
         // puzzle: new Puzzle({ type: 'redi' })
-      }//*/ {
+      }, {
         title: 'CubeDB',
         route: '/cubedb',
         cube: '/assets/logo-500.png',
         ready: true,
         timer: false,
       }
-    ];
+    ].filter(c => c.ready);
 
     let cubes = cards.reduce((ac: Puzzle[], e) => {
       if ( e.puzzle ) {

@@ -255,4 +255,29 @@ export class Sticker {
 
     return true;
   }
+
+  cutPlane(p0: Vector3D, n: Vector3D): { intersection: boolean, points: Vector3D[] } {
+    let p = this.points;
+    let inters: Vector3D[] = [];
+
+    for (let i = 0, maxi = p.length; i < maxi; i += 1) {
+      let l0 = p[i];
+      let l = p[ (i + 1) % maxi ].sub(l0);
+      
+      let num = p0.sub(l0).dot(n);
+      let den = l.dot(n);
+
+      if ( Math.abs(num) < 1e-6 || Math.abs(den) < 1e-6 ) {
+        continue;
+      }
+
+      let d = num / den;
+      inters.push( l0.add( l.mul(d) ) );
+    }
+
+    return {
+      intersection: true,
+      points: inters,
+    }
+  }
 }

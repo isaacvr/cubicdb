@@ -153,4 +153,20 @@ export class ElectronAdaptor implements IPC {
   sleep(s: boolean) {
     this.ipc.sleep(s);
   }
+
+  connectBluetoothDevice(id: string) {
+    this.ipc.connectBluetoothDevice(id);
+  }
+
+  cancelBluetoothRequest() {
+    this.ipc.cancelBluetoothRequest();
+  }
+
+  pairingBluetoothResponse() {
+    this.ipc.pairingBluetoothResponse();
+  }
+
+  handleBluetooth(fn: Function) {
+    this.ipc.handleBluetooth(fn);
+  }
 }

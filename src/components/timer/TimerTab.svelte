@@ -1,6 +1,7 @@
 <script lang="ts">
   /// Types
-  import { Penalty, TimerState, TIMER_INPUT, type InputContext, type Language, type Solve, type TimerContext, type TimerInputHandler } from '@interfaces';
+  import { Penalty, TimerState, TIMER_INPUT, type InputContext, type Language,
+    type Solve, type TimerContext, type TimerInputHandler } from '@interfaces';
 
   /// Icons
   import Close from '@icons/Close.svelte';
@@ -18,6 +19,8 @@
   import WatchOnIcon from '@icons/Wifi.svelte';
   import WatchOffIcon from '@icons/WifiOff.svelte';
   import CommentIcon from '@icons/CommentPlusOutline.svelte';
+  import BluetoothOnIcon from '@icons/Bluetooth.svelte';
+  import BluetoothOffIcon from '@icons/BluetoothOff.svelte';
 
   /// Components
   import Tooltip from '@material/Tooltip.svelte';
@@ -32,6 +35,7 @@
   /// Helpers
   import { sTimer, timer, timerToMilli } from '@helpers/timer';
   import { createEventDispatcher, onDestroy, onMount } from 'svelte';
+  import type { Unsubscriber } from 'svelte/store';
   import { DataService } from '@stores/data.service';
   import { NotificationService } from '@stores/notification.service';
   import { derived, writable, type Readable, type Writable } from 'svelte/store';
@@ -40,9 +44,12 @@
   import { ManualInput } from './input-handlers/Manual';
   import { globalLang } from '@stores/language.service';
   import { getLanguage } from '@lang/index';
-    import { stopPropagation } from '@helpers/DOM';
-    import { copyToClipboard } from '@helpers/strings';
- 
+  import { copyToClipboard } from '@helpers/strings';
+  import { GANInput } from './input-handlers/GAN';
+  import Simulator from '@components/Simulator.svelte';
+  import { Search } from '@cstimer/lib/min2phase';
+  // import { clone } from '@helpers/object';
+  
   export let context: TimerContext;
   export let battle = false;
   export let enableKeyboard = true;
@@ -51,7 +58,7 @@
 
   const {
     state, ready, tab, solves, allSolves, session, Ao5, stats, scramble,
-    group, mode, hintDialog, hint, cross, xcross, preview, isRunning, decimals,
+    group, mode, hintDialog, hint, cross, xcross, preview, isRunning, decimals, bluetoothList,
     sortSolves, initScrambler, updateStatistics, selectedGroup, setConfigFromSolve, editSolve
   } = context;
 
@@ -105,6 +112,13 @@
   let prob = -1;
   let prevExpanded: boolean = false;
   let stackmatStatus: Writable<boolean> = writable(false);
+
+  // BLUETOOTH
+  let bluetoothStatus: Writable<boolean> = writable(false);
+  let bluetoothHardware: any = null;
+  let bluetoothBattery: number = 0;
+
+  // ---------------------------------------------------
   let inputContext: InputContext = {
     isRunning, lastSolve, ready, session, state, time, stackmatStatus, decimals,
     addSolve, initScrambler, reset, createNewSolve
@@ -114,6 +128,7 @@
   let deviceID = 'default';
   let deviceList: string[][] = [];
   let autoConnectId: string[] = [];
+  let subs: Unsubscriber[] = [];
 
   /// NOTES
   let showNotes = false;
@@ -135,6 +150,11 @@
   let openDialog = (ev: string, dt: any, fn: Function) => {
     type = ev; modalData = dt; closeHandler = fn; show = true;
   };
+
+  // OTHER
+  let simulator: Simulator;
+  let isSearching = false;
+  let isConnecting = false;
   
   let options = [
     { text: "Reload scramble [Ctrl + S]", icon: Refresh, handler: () => initScrambler() },
@@ -155,6 +175,7 @@
 
       openDialog('settings', $session, (data: any) => {
         if ( data ) {
+          $session = $session;
           initInputHandler();
           dataService.updateSession($session);
           initialCalc != $session.settings.calcAoX && updateStatistics(false);
@@ -333,18 +354,29 @@
 
   function initInputHandler() {
     dataService.sleep(false);
-    inputMethod.disconnect();
 
-    if ( $session?.settings?.input === 'Manual' && !(inputMethod instanceof ManualInput) ) {
-      inputMethod = new ManualInput();
-    } else if ( $session?.settings?.input === 'StackMat' && !(inputMethod instanceof StackmatInput) ) {
-      inputMethod = new StackmatInput( inputContext );
-      dataService.sleep(true);
+    if ( $session?.settings?.input === 'Manual' ) {
+      if ( !(inputMethod instanceof ManualInput) ) {
+        inputMethod.disconnect();
+        inputMethod = new ManualInput();
+      }
+    } else if ( $session?.settings?.input === 'StackMat' ) {
+      if ( !(inputMethod instanceof StackmatInput) ) {
+        inputMethod.disconnect();
+        inputMethod = new StackmatInput( inputContext );
+        inputMethod.init(deviceID, true);
+        dataService.sleep(true);
+      }
+    } else if ( $session?.settings?.input === 'GAN Cube' ) {
+      if ( !(inputMethod instanceof GANInput) ) {
+        inputMethod.disconnect();
+        inputMethod = new GANInput( inputContext );
+      }
     } else {
+      inputMethod.disconnect();
       inputMethod = new KeyboardInput( inputContext );
+      inputMethod.init();
     }
-
-    inputMethod.init(deviceID, true);
   }
 
   function updateDevices() {
@@ -359,31 +391,31 @@
     autoConnectId.length = 0;
 
     // Auto detect
-    StackmatInput.autoDetect().then((res) => {
-      if ( inputMethod instanceof StackmatInput && inputMethod.getDevice() === res.device ) {
-        return;
-      }
+    // StackmatInput.autoDetect().then((res) => {
+    //   if ( inputMethod instanceof StackmatInput && inputMethod.getDevice() === res.device ) {
+    //     return;
+    //   }
 
-      let key = res.id;
-      autoConnectId.push(key);
+    //   let key = res.id;
+    //   autoConnectId.push(key);
       
-      notification.addNotification({
-        header: $localLang.TIMER.stackmatAvailableHeader,
-        text: $localLang.TIMER.stackmatAvailableText,
-        fixed: true,
-        actions: [
-          { text: $localLang.TIMER.cancel, callback: () => {} },
-          { text: $localLang.TIMER.connect, callback: () => {
-            deviceID = res.device;
-            $session.settings.input = 'StackMat';
-            initInputHandler();
-            dataService.updateSession($session);
-          } },
-        ],
-        key,
-      });
-    })
-    .catch(() => {});
+    //   notification.addNotification({
+    //     header: $localLang.TIMER.stackmatAvailableHeader,
+    //     text: $localLang.TIMER.stackmatAvailableText,
+    //     fixed: true,
+    //     actions: [
+    //       { text: $localLang.TIMER.cancel, callback: () => {} },
+    //       { text: $localLang.TIMER.connect, callback: () => {
+    //         deviceID = res.device;
+    //         $session.settings.input = 'StackMat';
+    //         initInputHandler();
+    //         dataService.updateSession($session);
+    //       } },
+    //     ],
+    //     key,
+    //   });
+    // })
+    // .catch(() => {});
   }
 
   function updateTexts() {
@@ -397,6 +429,54 @@
     options[5].text = `${ $localLang.TIMER.settings }`;
   }
 
+  function searchBluetooth() {
+    let gn = new GANInput( inputContext );
+
+    isSearching = true;
+    $bluetoothList.length = 0;
+
+    dataService.searchBluetooth(gn).then(mac => {
+      deviceID = mac;
+      inputMethod.disconnect();
+      inputMethod = gn;
+    }).catch(() => notification.addNotification({
+      key: crypto.randomUUID(),
+      header: 'Search error',
+      text: 'Bluetooth error.',
+    })).finally(() => {
+      isConnecting = false;
+    });
+  }
+
+  function connectBluetooth(id: string) {
+    if ( id != deviceID ) {
+      isSearching = false;
+      isConnecting = true;
+      dataService.connectBluetoothDevice(id);
+    } else {
+      inputMethod.disconnect();
+    }
+  }
+
+  function showBluetoothData() {
+    notification.addNotification({
+      key: crypto.randomUUID(),
+      header: 'GAN Cube info',
+      text: '',
+      html: $bluetoothStatus ? `
+        <ul>
+          <li>Name: ${ bluetoothHardware?.deviceName || '--' }</li>
+          <li>Hardware Version: ${ bluetoothHardware?.hardwareVersion || '--' }</li>
+          <li>Software Version: ${ bluetoothHardware?.softwareVersion || '--' }</li>
+          <li>Gyroscope: ${ bluetoothHardware?.gyro ?? "--" }</li>
+          <li>MAC: ${ deviceID != 'default' ? deviceID : '--' }</li>
+          <li>Battery: ${ bluetoothBattery || '--' }%</li>
+        </ul>` : `Disconnected`,
+      fixed: true,
+      actions: [ { text: 'Ok', callback: () => {} } ]
+    });
+  }
+
   onMount(() => {
     navigator.mediaDevices.addEventListener('devicechange', updateDevices);
 
@@ -405,11 +485,60 @@
     selectedGroup();
     updateStatistics(false);
     updateDevices();
+
+    subs = [
+      dataService.bluetoothSub.subscribe((data) => {
+        if ( !data ) return;
+
+        console.log("Bluetooth data: ", data);
+
+        switch(data.type) {
+          case 'move': {
+            simulator.applyMove( data.data[0], data.data[1] );
+            break;
+          }
+
+          case 'facelet': {
+            simulator.fromFacelet( data.data );
+            
+            // @ts-ignore
+            let solver = new Search();
+
+            console.log("SOLUTION1: ", solver.solution(data.data, 21, 1e9, 50, 0));
+            console.log("SOLUTION2: ", solver.next(1e9, 50, 0));
+            console.log("SOLUTION3: ", solver.next(1e9, 50, 0));
+            break;
+          }
+
+          case 'hardware': {
+            bluetoothHardware = data.data;
+            break;
+          }
+
+          case 'battery': {
+            bluetoothBattery = data.data;
+            break;
+          }
+
+          case 'connect': {
+            $bluetoothStatus = true;
+            break;
+          }
+
+          case 'disconnect': {
+            $bluetoothStatus = false;
+            deviceID = '';
+            break;
+          }
+        }
+      })
+    ];
   });
 
   onDestroy(() => {
     inputMethod.disconnect();
     navigator.mediaDevices.removeEventListener('devicechange', updateDevices);
+    subs.forEach(s => s());
   });
 
   $: $solves.length === 0 && reset();
@@ -437,11 +566,11 @@
       <span> {stateMessage} </span>
     {/if}
     <span
-      class:isRunning={ $isRunning }
+      class:hide={ $isRunning }
       class:battle={ battle }
       contenteditable="false" bind:innerHTML={$scramble}></span>
 
-    <div class="absolute top-1 right-12 flex flex-col" class:isRunning={ $isRunning }>
+    <div class="absolute top-1 right-12 flex flex-col" class:hide={ $isRunning }>
       {#each options.filter((e, p) => !battle ? true : p === 3 || p === 5) as option}
         <Tooltip class="cursor-pointer" position="left" text={ option.text } hasKeybinding>
           <button aria-label={ option.text } tabindex="0" class="my-3 mx-1 w-5 h-5 { textColor }"
@@ -450,6 +579,15 @@
           </button>
         </Tooltip>
       {/each}
+
+      {#if $session?.settings?.input === 'GAN Cube'}
+        <Tooltip class="cursor-pointer" position="left" text={ 'GAN Cube' } hasKeybinding>
+          <button aria-label={ 'GAN Cube' } tabindex="0" class="my-3 mx-1 w-5 h-5 { $bluetoothStatus ? 'text-blue-600' : textColor }"
+            on:click={ showBluetoothData } on:keydown={ (e) => e.code === 'Space' ? e.preventDefault() : null }>
+            <svelte:component this={ $bluetoothStatus ? BluetoothOnIcon : BluetoothOffIcon } width="100%" height="100%"/>
+          </button>
+        </Tooltip>
+      {/if}
     </div>
   </div>
 
@@ -471,7 +609,23 @@
   {/if}
 
   <!-- Timer -->
-  <div id="timer" class="absolute top-1/3 text-9xl h-32 flex flex-col items-center justify-center">
+  <div id="timer" class={ "absolute text-9xl flex flex-col items-center justify-center " + 
+    ($session?.settings?.input === 'GAN Cube' ? 'bottom-8 h-auto' : 'top-1/3 h-32') }>
+
+    <!-- Cube3D -->
+    {#if $session?.settings?.input === 'GAN Cube'}
+      <section class="relative cube-3d">
+        <Simulator
+          enableDrag={ false }
+          enableKeyboard={ false }
+          gui={ false }
+          contained={ true }
+          showBackFace={ $session?.settings?.showBackFace }
+          bind:this={ simulator }
+        />
+      </section>
+    {/if}
+
     {#if $session?.settings?.input === 'Manual'}
       <div id="manual-inp">
         <Input
@@ -501,9 +655,10 @@
         </span>
       {/if}
     {/if}
+
     <span
       class="timer"
-      hidden={!($state === TimerState.RUNNING && !$session.settings.showElapsedTime)}>----</span>
+      hidden={!($state === TimerState.RUNNING && !$session.settings.showElapsedTime)}>----</span> 
     {#if $state === TimerState.STOPPED}
       <div class="flex justify-center w-full" class:show={$state === TimerState.STOPPED}>
         {#each solveControl.slice(Number(battle), solveControl.length) as control}
@@ -545,7 +700,7 @@
     <!-- Statistics -->
     <div id="statistics"
       class="{ textColor } pointer-events-none transition-all duration-300"
-      class:isRunning={ $isRunning }>
+      class:hide={ $isRunning }>
 
       <div class="left absolute select-none bottom-0 left-0 ">
         <table class="ml-3">
@@ -604,9 +759,9 @@
     <div
       id="preview-container"
       class="absolute bottom-2 flex items-center justify-center w-full transition-all duration-300
-        select-none bg-transparent h"
+        select-none bg-transparent"
       class:expanded={ prevExpanded }
-      class:isRunning={ $isRunning }
+      class:hide={ $isRunning || $session.settings.input === 'GAN Cube' }
       on:click={() => prevExpanded = !prevExpanded }>
       <img
         on:dragstart|preventDefault
@@ -649,6 +804,7 @@
         <section class="flex gap-4 items-center mb-4">
           { $localLang.TIMER.inputMethod }: <Select bind:value={ modalData.settings.input } items={ TIMER_INPUT } transform={ (e) => e }/>
         </section>
+
         {#if modalData.settings.input === 'StackMat'}
           <section class="mb-4"> { $localLang.TIMER.device }: <Select class="max-w-full"
             bind:value={ deviceID } items={ deviceList }
@@ -679,11 +835,34 @@
             <Checkbox bind:checked={ modalData.settings.showElapsedTime } class="w-5 h-5 my-2" label={ $localLang.TIMER.showTime }/>
           </section>
         {/if}
-        
-        <section>
-          <Checkbox bind:checked={ modalData.settings.genImage } class="w-5 h-5 my-2" label={ $localLang.TIMER.genImage }/>
-          <i class="text-sm text-yellow-500">({ $localLang.TIMER.canHurtPerformance })</i>
-        </section>
+
+        {#if modalData.settings.input === 'GAN Cube'}
+          <section class="bg-white bg-opacity-10 p-2 shadow-md rounded-md">
+            <div class="flex justify-center mb-4">
+              <Button class="bg-purple-600 text-gray-300" on:click={ searchBluetooth } loading={ isSearching }>
+                Search
+              </Button>
+            </div>
+
+            <ul>
+              {#each $bluetoothList as { deviceId, deviceName } (deviceId)}
+                <li class="flex items-center justify-between mb-2 pl-4 bg-white bg-opacity-10 rounded-md">
+                  { deviceName }
+                  <Button class={"text-gray-300 " + ( deviceId === deviceID ? 'bg-red-600' : 'bg-green-600' )}
+                    loading={ isConnecting } on:click={ () => connectBluetooth(deviceId)}>
+                    { deviceId === deviceID ? 'Disconnect' : 'Connect'}
+                  </Button>
+                </li>
+              {/each}
+            </ul>
+          </section>
+
+          <section>
+            <Checkbox
+              bind:checked={ modalData.settings.showBackFace } on:change={ (e) => $session = $session }
+              class="w-5 h-5" label={ 'Show back face' }/>
+          </section>
+        {/if}
         
         {#if modalData.settings.input != 'Manual'}
           <section class="mt-2">
@@ -693,6 +872,11 @@
         {/if}
 
         <section>
+          <Checkbox bind:checked={ modalData.settings.genImage } class="w-5 h-5 my-2" label={ $localLang.TIMER.genImage }/>
+          <i class="text-sm text-yellow-500">({ $localLang.TIMER.canHurtPerformance })</i>
+        </section>
+
+        <section>
           <Checkbox bind:checked={ modalData.settings.recordCelebration }
             class="w-5 h-5 my-2" label={ $localLang.TIMER.recordCelebration }/>
         </section>
@@ -700,7 +884,7 @@
           { $localLang.TIMER.aoxCalculation }:
           <div class="flex gap-2 items-center">
             <Toggle checked={ !!modalData.settings.calcAoX } on:change={ (v) => modalData.settings.calcAoX = ~~v.detail.value }/>
-            <span class="ml-3">{ [$localLang.TIMER.sequential, $localLang.TIMER.groupOfX ][ ~~modalData.settings.calcAoX ] }</span>
+            <span class="ml-3">{ [$localLang.TIMER.sequential, $localLang.TIMER.groupOfX ][ ~~modalData?.settings?.calcAoX ] }</span>
           </div>
         </section>
         <section class="flex mt-4">
@@ -826,7 +1010,13 @@
     background-color: rgba(0, 0, 0, 0.4);
   }
 
-  .isRunning {
+  .hide {
     @apply transition-all duration-200 pointer-events-none opacity-0;
+  }
+
+  .cube-3d {
+    @apply bg-white bg-opacity-20 overflow-hidden shadow-md rounded-md;
+    width: calc(100vw - 20rem);
+    height: calc(100vh - 25rem);
   }
 </style>

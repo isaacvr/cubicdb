@@ -1,6 +1,7 @@
 <script lang="ts">
   /// Svelte Stuff
   import { Route, Router } from 'svelte-routing';
+  import { AlgorithmSequence } from '@classes/AlgorithmSequence';
 
   /// Components
   import Frame from '@components/Frame.svelte';
@@ -23,7 +24,7 @@
   import { onDestroy, onMount } from 'svelte';
   import { globalLang } from '@stores/language.service';
   import AlgorithmsAdmin from '@components/AlgorithmsAdmin.svelte';
-    import CubeDb from '@components/CubeDB.svelte';
+  import CubeDb from '@components/CubeDB.svelte';
 
   let notService = NotificationService.getInstance();
   let notifications: INotification[] = [];
@@ -38,6 +39,9 @@
     localStorage.setItem('language', lang);
     
     globalLang.update(() => lang);
+
+    // @ts-ignore
+    window.algSequence = new AlgorithmSequence("L' U L2 U2 B2 D B2 U L2 U B2 R2 U2 F U F2 U L2 F U L'");
   });
 
   onDestroy(() => {
