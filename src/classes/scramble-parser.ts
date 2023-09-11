@@ -1,6 +1,6 @@
 import { Interpreter } from "./scrambleInterpreter";
 
-const scrambleReg = /^([\d]+)?([FRUBLDfrubldzxySME])(?:([w])|&sup([\d]);)?([2'])?$/;
+export const scrambleReg = /^([\d]+)?([FRUBLDfrubldzxySME])(?:([w])|&sup([\d]);)?([2'])?$/;
 
 export class ScrambleParser {
   constructor() {}  
@@ -39,6 +39,7 @@ export class ScrambleParser {
     const MOVE_MAP = "URFDLB";
     let moves = ScrambleParser.parseScramble(scr, MOVE_MAP);
     let res = [];
+    
     for (let i = 0, maxi = moves.length; i < maxi; i += 1) {
       if (moves[i][1] > 0) {
         res.push([moves[i][1], MOVE_MAP.charAt(moves[i][0]), [1, 2, -1][moves[i][2] - 1]]);
@@ -46,6 +47,7 @@ export class ScrambleParser {
         res.push([order, MOVE_MAP.charAt(moves[i][0]), [1, 2, -1][-moves[i][2] - 1]]);
       }
     }
+
     return res;
   }
 

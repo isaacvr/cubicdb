@@ -1,4 +1,4 @@
-import type { PuzzleOptions } from '@interfaces';
+import { AverageSetting, type PuzzleOptions, type SessionSettings } from '@interfaces';
 import { options } from '@cstimer/scramble/scramble';
 
 export enum CubeMode {
@@ -149,15 +149,17 @@ const SKWB = [ "skbso", "skbo", "skb", "skbnb" ];
 const SQR1 = [ "sqrs", "sqrcsp", "sq1h", "sq1t" ];
 const CLCK = [ "clkwca", "clk", "clkwca", "clko", "clkc", "clke" ];
 const MEGA = [ "mgmp", "mgmc", "mgmo" ];
+const KILO = [ "kilo" ];
+const GIGA = [ "giga" ];
 
 const OPTS: PuzzleOptions[] = [
   { type: 'rubik', order: [2] }, { type: 'rubik', order: [3] }, { type: 'rubik', order: [4] },
   { type: 'rubik', order: [5] }, { type: 'rubik', order: [6] }, { type: 'rubik', order: [7] },
   { type: 'pyraminx', order: [3] }, { type: 'skewb' }, { type: 'square1' }, { type: 'clock' },
-  { type: 'megaminx' }
+  { type: 'megaminx', order: [3] }, { type: 'megaminx', order: [2] }, { type: 'megaminx', order: [4] }
 ];
 
-const MODES = [ R222, R333, R444, R555, R666, R777, PYRA, SKWB, SQR1, CLCK, MEGA ];
+const MODES = [ R222, R333, R444, R555, R666, R777, PYRA, SKWB, SQR1, CLCK, MEGA, KILO, GIGA ];
 
 for (let i = 0, maxi = MODES.length; i < maxi; i += 1) {
   OPTS[i].view = '2d';
@@ -292,11 +294,23 @@ export const MENU: Menu[] = [
     ]
   ],
 	[
+    'Kilominx',
+    [
+      ['Pochmann', "kilo", 25],
+    ]
+  ],
+	[
     'Megaminx',
     [
       ["WCA", "mgmp", 70],
       ['Carrot', "mgmc", 70],
       ['Old Style', "mgmo", 70]
+    ]
+  ],
+  [
+    'Gigaminx',
+    [
+      ['Pochmann', "giga", 300]
     ]
   ],
 	[
@@ -351,12 +365,6 @@ export const MENU: Menu[] = [
       ['Random State', "gearso", 0],
       ['Optimal', "gearo", 0],
       ['Random Move', "gear", 10]
-    ]
-  ],
-  [
-    'Gigaminx',
-    [
-      ['Pochmann', "giga", 300]
     ]
   ],
   [
@@ -472,3 +480,15 @@ export const MODE_MAP = new Map<string, string>(
     [md[1], md[0] === 'WCA' ? gp[0] : md[0]]
   )], [])
 );
+
+export const SessionDefaultSettings: SessionSettings = {
+  hasInspection: true,
+  showElapsedTime: true,
+  inspection: 15,
+  calcAoX: AverageSetting.SEQUENTIAL,
+  genImage: true,
+  scrambleAfterCancel: false,
+  input: 'Keyboard',
+  withoutPrevention: true,
+  recordCelebration: true,
+};

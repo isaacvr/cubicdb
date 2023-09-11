@@ -367,8 +367,10 @@ function addPyrTips(scramble, moveLen) {
 	return scramble.substr(0, scramble.length - moveLen * cnt) + " " + rnd.join("");
 }
 
-function utilscramble(type, len) {
+function utilscramble(type: string, len: number) {
+
 	let ret = "";
+	
 	switch (type) {
 		case "15p": // 15 puzzle
 			return do15puzzle(false, len);
@@ -401,6 +403,8 @@ function utilscramble(type, len) {
 			return pochscramble(10, Math.ceil(len / 10));
 		case "mgmc": // Megaminx (Carrot)
 			return carrotscramble(10, Math.ceil(len / 10));
+		case "kilo": // Kilominx (Pochmann)
+			return pochscramble(5, Math.ceil(len / 5));
 		case "heli":
 			return adjScramble(["UF", "UR", "UB", "UL", "FR", "BR", "BL", "FL", "DF", "DR", "DB", "DL"], [0x09a, 0x035, 0x06a, 0x0c5, 0x303, 0x606, 0xc0c, 0x909, 0xa90, 0x530, 0xa60, 0x5c0], len);
 		case "redi":
@@ -475,6 +479,6 @@ function utilscramble(type, len) {
 
 regScrambler([
 	'15p', '15pm', '15pat', 'clkwca', 'clk', 'clkc', 'clke', 'giga', 'mgmo',
-	'mgmp', 'mgmc', 'heli', 'redi', 'redim', 'pyrm', 'prcp', 'mpyr', 'r3',
+	'mgmp', 'mgmc', 'kilo', 'heli', 'redi', 'redim', 'pyrm', 'prcp', 'mpyr', 'r3',
 	'r3ni', 'sq1h', 'sq1t', 'sq2', 'ssq1t', 'bsq', '-1', '333noob', 'lol'
 	], utilscramble);

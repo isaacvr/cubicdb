@@ -1,4 +1,5 @@
-import { AverageSetting, type SessionSettings } from "@interfaces";
+import { SessionDefaultSettings } from "@constants";
+import type { SessionSettings } from "@interfaces";
 
 let lens = [ 0, 0, 70, 0, 0, 10, 0, 40, 60, 80, 100 ];
 let modes = [ "sqrs", "clkwca", "mgmp", "222so", "skbso", "pyrso", "333", "444wca", "555wca", "666wca", "777wca" ];
@@ -34,15 +35,5 @@ export function identifyPuzzle(scramble: string): { mode: string, len: number } 
 }
 
 export function genSettings(): SessionSettings {
-  return {
-    calcAoX: AverageSetting.SEQUENTIAL,
-    genImage: true,
-    hasInspection: true,
-    inspection: 15,
-    scrambleAfterCancel: true,
-    showElapsedTime: true,
-    input: 'Keyboard',
-    withoutPrevention: false,
-    recordCelebration: true,
-  }
+  return Object.assign({}, SessionDefaultSettings);
 }

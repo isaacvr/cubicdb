@@ -1,4 +1,5 @@
-import { AverageSetting, type Algorithm, type AlgorithmOptions, type CubeEvent, type IPC, type PDFOptions, type Session, type Sheet, type Solve, type Tutorial, type UpdateCommand } from "@interfaces";
+import { SessionDefaultSettings } from "@constants";
+import type { Algorithm, AlgorithmOptions, CubeEvent, IPC, PDFOptions, Session, Sheet, Solve, Tutorial, UpdateCommand } from "@interfaces";
 // import type Nedb from "nedb";
 // @ts-ignore
 // import NeDB from 'nedb/browser-version/out/nedb.min';
@@ -62,17 +63,7 @@ export class BrowserAdaptor implements IPC {
     this.session_handler && this.session_handler(null, ['get-sessions', [{
       _id: '',
       name: 'Default',
-      settings: {
-        calcAoX: AverageSetting.SEQUENTIAL,
-        genImage: true,
-        hasInspection: true,
-        inspection: 15,
-        scrambleAfterCancel: false,
-        showElapsedTime: true,
-        withoutPrevention: false,
-        input: 'Keyboard',
-        recordCelebration: true
-      }
+      settings: Object.assign({}, SessionDefaultSettings)
     }]]);
   }
 

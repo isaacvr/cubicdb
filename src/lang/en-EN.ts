@@ -8,6 +8,15 @@ export const English: Language = {
     done: 'Done!',
     scrambleCopied: 'Scramble copied to clipboard',
     copiedToClipboard: 'Copied to clipboard',
+    accept: 'Accept',
+    cancel: 'Cancel',
+    refresh: 'Refresh',
+    delete: 'Delete',
+    add: 'Add',
+    update: 'Update',
+    save: 'Save',
+    clear: 'Clear',
+    reset: 'Reset',
   },
   NAVBAR: {
     home: 'Home',
@@ -35,14 +44,13 @@ export const English: Language = {
     settings: 'Settings',
     importExport: 'Import / Export',
     contest: 'Contest',
+    tools: 'Tools',
   },
   SETTINGS: {
     title: 'Settings',
     language: 'Language',
     appFont: 'Application font',
     timerFont: 'Timer font',
-    save: 'Save',
-    reset: 'Reset',
 
     // Notifications
     saved: 'Saved',
@@ -56,10 +64,6 @@ export const English: Language = {
     updateAvailableText: 'There\'s a new version available.',
     alreadyUpdated: 'Already updated',
     alreadyUpdatedText: 'You have the latest version of CubeDB.',
-    accept: "Accept",
-
-    cancelAction: 'Cancel',
-    updateAction: 'Update',
 
     updateError: 'Update error',
     updateErrorText: 'There was an error when trying to update.',
@@ -82,9 +86,6 @@ export const English: Language = {
     average: 'Average',
     deviation: 'Deviation',
     count: 'Count',
-
-    cancel: 'Cancel',
-    save: 'Save',
 
     congrats: 'Congratulations',
     from: 'from',
@@ -112,7 +113,6 @@ export const English: Language = {
     recordCelebration: 'Celebrate when a record is broken',
 
     // Last solve tooltip
-    delete: 'Delete',
     comments: 'Comments',
 
     reloadScramble: 'Reload scramble',
@@ -216,7 +216,6 @@ export const English: Language = {
     puzzleSettings: 'Puzzle settings',
     puzzle: 'Puzzle',
     order: 'Order',
-    cancel: 'Cancel',
     setPuzzle: 'Set puzzle',
   },
   IMPORT_EXPORT: {
@@ -227,7 +226,6 @@ export const English: Language = {
     selectFile: 'Select file',
     selectAll: 'Select all',
     selectNone: 'Select none',
-    save: 'Save',
     total: 'Total',
     showingOnly50: 'showing only 50',
   },
@@ -236,5 +234,43 @@ export const English: Language = {
     version: 'Version',
     creator: 'Author',
     donations: 'Donate',
+  },
+  TOOLS: {
+    cubedbBatch: 'CubeDB Scrambles',
+    timerOnly: 'Timer Only',
+    scrambleOnly: 'Scramble Only',
+    batchScramble: 'Scramble Batch',
+    statistics: 'Statistics',
+    metrics: 'Metrics',
+    solver: 'Solver 3x3',
+
+    // Statistics
+    writeYourTime: 'Write your time here',
+    clickToDelete: 'Click to delete',
+
+    // Metrics
+    writeYourScramble: 'Write your scramble here',
+
+    // Descriptions
+    ETM: 'ETM (Execution Turn Metric): In this metric, every movement of the outer layers, blocks or rotations, counts as 1 move.',
+    QTM: 'QTM (Quarter Turn Metric): In this metric, every 90deg move of the outer layers, counts as 1 move. Double moves counts as 2.',
+    HTM: 'HTM (Half Turn Metric): Every rotation of the outer layers by any angle, counts as 1 move. Middle layers counts as 2 moves.',
+    OBTM: 'OBTM (Outer Block Turn Metric): Every rotation of the outer layers or blocks, counts as 1 move. Middle layers counts as 2 moves.',
+    STM: 'STM (Slice Turn Metric): Every slice counts as 1 move.',
+
+    // Solver
+    colors: 'Colors',
+    solve: 'Solve',
+    stickers: 'Stickers',
+    error: 'Error',
+    invalidCube: 'Invalid cube.',
+    missingEdges: 'There are some missing edges.',
+    flippedEdge: 'There is a flipped edge.',
+    missingCorners: 'There are some missing corners.',
+    twistedCornerClockwise: 'There is a twisted corner clockwise.',
+    twistedCornerCounterclockwise: 'There is a twisted corner counterclockwise.',
+    parity: 'There is parity (two corners or edges swapped).',
+    solutionFound: 'Solution found',
+    solutionInstruction: 'With green center on the front and white center on top:',
   }
 }

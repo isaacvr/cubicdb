@@ -1,7 +1,7 @@
 <script lang="ts">
   import Chart, { type Plugin } from 'chart.js/auto';
   import zoomPlugin from 'chartjs-plugin-zoom';
-  import { between, evalLine, map, rotatePoint, rotateSegment, search } from '@helpers/math';
+  import { between, evalLine, rotatePoint } from '@helpers/math';
   import { decimate, decimateN, getAverageS, trendLSV } from '@helpers/statistics';
   import { infinitePenalty, timer } from '@helpers/timer';
   import { AverageSetting, Penalty, type Language, type Solve, type TimerContext } from '@interfaces';
@@ -14,18 +14,17 @@
   import Button from '@components/material/Button.svelte';
 
   export let context: TimerContext;
+  export let headless = false;
 
   let localLang: Readable<Language> = derived(globalLang, ($lang) => getLanguage( $lang ));
     
   let { solves, AoX, stats, session, selectSolveById } = context;
 
   let chartElement: HTMLCanvasElement;
-  // let chartElement1: HTMLCanvasElement;
   let chartElement2: HTMLCanvasElement;
   let chartElement3: HTMLCanvasElement;
   let chartElement4: HTMLCanvasElement;
   let timeChart: Chart;
-  // let penaltyChart: Chart;
   let hourChart: Chart;
   let weekChart: Chart;
   let distChart: Chart;
@@ -69,7 +68,7 @@
     newSv.forEach((e, p) => {
       timeChart.data.datasets[0].data.push({
         x: p * lenFactor,
-        y: infinitePenalty(newSv[len - p]) ? undefined : newSv[len - p].time
+        y: infinitePenalty(newSv[len - p]) ? null : newSv[len - p].time
       } as any);
     });
 
@@ -99,6 +98,8 @@
     timeChart.update();
     timeChart.resetZoom();
 
+    if ( headless ) return;
+
     // HOUR CHART
     let HData = sv.reduce((acc, s) => {
       acc[ moment(s.date).hour() ] += 1;
@@ -119,6 +120,8 @@
   }
 
   function updateStats() {
+    if ( headless ) return;
+
     // HISTOGRAM
     let minT = $stats.best.value;
     let maxT = $stats.worst.value + 1e-5;
@@ -151,26 +154,24 @@
       // @ts-ignore
       timeChart.options.plugins.title.font.family = appFont;
     }
-    
-    // @ts-ignore
-    // penaltyChart.data.labels[0] = $localLang.TIMER.clean;
 
+    timeChart.update();
+   
+    if ( headless ) return;
+   
     // @ts-ignore
     hourChart.options.plugins.title.text = $localLang.TIMER.hourDistribution;
     hourChart.data.datasets[0].label = $localLang.TIMER.solves;
+    hourChart.update();
 
     // @ts-ignore
     weekChart.options.plugins.title.text = $localLang.TIMER.weekDistribution;
     weekChart.data.datasets[0].label = $localLang.TIMER.solves;
+    weekChart.update();
 
     // @ts-ignore
     distChart.options.plugins.title.text = $localLang.TIMER.histogram;
     distChart.data.datasets[0].label = $localLang.TIMER.solves;
-
-    timeChart.update();
-    // penaltyChart.update();
-    hourChart.update();
-    weekChart.update();
     distChart.update();
   }
 
@@ -191,6 +192,7 @@
     
     Chart.register(zoomPlugin);
     Chart.defaults.color = '#bbbbbb';
+    Chart.overrides.line.spanGaps = true;
 
     const shadingArea: Plugin = {
       id: 'shadingArea',
@@ -276,7 +278,7 @@
               label: (context) => {
                 let label = context.dataset.label;
                 let yLabel = context.parsed.y;
-                return label + ": " + timer(+yLabel, false, true);
+                return label + ": " + timer(+yLabel, true, true);
               },
               title: (items) => `${ $localLang.TIMER.solve } #${Math.round(items[0].parsed.x) + 1}`
             }
@@ -286,24 +288,13 @@
             pan: { enabled: true, mode: "x", },
             limits: { x: { min: 1, max: 40 } },
           },
-          title: { text: "Time distribution", display: true, font: { size: 30, family: "Raleway" }, color: '#ddd' }
+          title: { text: "Time distribution", display: !headless, font: { size: 30, family: "Raleway" }, color: '#ddd' }
         }
       },
-      plugins: [ shadingArea ],
+      plugins: [ shadingArea ]
     });
 
-    // let ctx1 = chartElement1.getContext('2d');
-
-    // // @ts-ignore
-    // penaltyChart = new Chart(ctx1 as any, {
-    //   type: "doughnut",
-    //   data: { datasets: [{
-    //     data: [3, 4, 5],
-    //     backgroundColor: [ "rgb(74, 222, 128)", "rgb(251, 146, 60)", "rgb(248, 113, 113)" ],
-    //     borderColor: 'transparent'
-    //   }], labels: ["Clean", "+2", "DNF"] },
-    //   options: { plugins: { legend: { display: false } } }
-    // });
+    if ( headless ) return;
 
     let ctx2 = chartElement2.getContext('2d');
 
@@ -370,9 +361,9 @@
 
 </script>
 
-<svelte:window on:resize={ () => [timeChart, /*penaltyChart,*/ hourChart, weekChart].forEach(c => c.resize()) } />
+<svelte:window on:resize={ () => [timeChart, hourChart, weekChart].forEach(c => c?.resize()) } />
 
-<main>
+<main class:headless>
   <div class="canvas card grid place-items-center bg-white bg-opacity-10 rounded-md">
     <canvas bind:this={ chartElement }></canvas>
   </div>
@@ -405,48 +396,56 @@
       value={ $stats.count.value } total={ $stats.count.value }/>
   </div>
 
-  <div class="card">
-    <h2 class="text-3xl text-gray-200 text-center">{ $localLang.TIMER.bestMarks }</h2>
-    <div id="best-marks">
-      {#each $localLang.TIMER.bestList as ao}  
-        <span>{ ao.title }</span>
-        <span>{
-          $stats[ ao.key ].id
-            ? timer( $stats[ ao.key ][ /^(best|worst)$/.test(ao.key) ? 'value' : 'best'] || 0, true, true )
-            : ':('
-          }</span>
-        <span>
-          {#if $stats[ ao.key ].id}
-            <Button ariaLabel={ $localLang.TIMER.go } class="h-6 bg-green-700 text-gray-300" on:click={
-              () => selectSolveById($stats[ ao.key ].id || '', ao.select )
-            }>{ $localLang.TIMER.go }</Button>
-          {/if}
-        </span>
-      {/each}
+  {#if !headless}
+    <div class="card">
+      <h2 class="text-3xl text-gray-200 text-center">{ $localLang.TIMER.bestMarks }</h2>
+      <div id="best-marks">
+        {#each $localLang.TIMER.bestList as ao}  
+          <span>{ ao.title }</span>
+          <span>{
+            $stats[ ao.key ].id
+              ? timer( $stats[ ao.key ][ /^(best|worst)$/.test(ao.key) ? 'value' : 'best'] || 0, true, true )
+              : ':('
+            }</span>
+          <span>
+            {#if $stats[ ao.key ].id}
+              <Button ariaLabel={ $localLang.TIMER.go } class="h-6 bg-green-700 text-gray-300" on:click={
+                () => selectSolveById($stats[ ao.key ].id || '', ao.select )
+              }>{ $localLang.TIMER.go }</Button>
+            {/if}
+          </span>
+        {/each}
+      </div>
     </div>
-  </div>
 
-  <div class="hour-distribution card">
-    <!-- <h2 class="text-2xl text-center font-bold text-gray-300">Hour distribution</h2> -->
-    <canvas bind:this={ chartElement2 }></canvas>
-  </div>
+    <div class="hour-distribution card">
+      <!-- <h2 class="text-2xl text-center font-bold text-gray-300">Hour distribution</h2> -->
+      <canvas bind:this={ chartElement2 }></canvas>
+    </div>
 
-  <div class="week-distribution card">
-    <!-- <h2 class="text-2xl text-center font-bold text-gray-300">Week distribution</h2> -->
-    <canvas bind:this={ chartElement3 }></canvas>
-  </div>
+    <div class="week-distribution card">
+      <!-- <h2 class="text-2xl text-center font-bold text-gray-300">Week distribution</h2> -->
+      <canvas bind:this={ chartElement3 }></canvas>
+    </div>
 
-  <div class="histogram card">
-    <!-- <h2 class="text-2xl text-center font-bold text-gray-300">Week distribution</h2> -->
-    <canvas bind:this={ chartElement4 }></canvas>
-  </div>
+    <div class="histogram card">
+      <!-- <h2 class="text-2xl text-center font-bold text-gray-300">Week distribution</h2> -->
+      <canvas bind:this={ chartElement4 }></canvas>
+    </div>
+  {/if}
 </main>
 
 <style lang="postcss">
-main {
+main:not(.headless) {
   @apply w-full overflow-scroll p-4 grid gap-4 grid-rows-5 grid-cols-2 lg:grid-cols-3 lg:grid-rows-3;
   max-height: calc(100vh - 8rem);
   grid-template-rows: repeat(4, minmax(22rem, 1fr));
+}
+
+main.headless {
+  @apply grid grid-cols-3 mx-4 gap-4;
+  max-height: calc(40vh);
+  grid-template-rows: 1fr 1fr;
 }
 
 .card {
@@ -454,7 +453,15 @@ main {
 }
 
 .stats {
-  @apply flex flex-col items-center justify-between row-span-1;
+  @apply flex flex-col items-center justify-between;
+}
+
+main:not(.headless) .stats {
+  @apply row-span-1;
+}
+
+main.headless .stats {
+  @apply row-span-2;
 }
 
 .canvas {

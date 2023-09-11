@@ -50,8 +50,6 @@ export class KeyboardInput implements TimerInputHandler {
   init() {
     if ( this.active ) return;
     this.active = true;
-
-    console.log('INIT KEYBOARD');
   
     const { state, ready, session, time, lastSolve, isRunning } = this.context;
 
@@ -88,6 +86,7 @@ export class KeyboardInput implements TimerInputHandler {
           this.ref = performance.now() + (this._session?.settings.inspection || 15) * 1000;
           this.runTimer(-1, true);
         } else {
+          console.log("RUNNING 1");
           state.update(() => TimerState.RUNNING);
           ready.update(() => false);
           this.ref = performance.now();
@@ -101,6 +100,7 @@ export class KeyboardInput implements TimerInputHandler {
           this.runTimer(1);
         }
       } else if ( this._state === TimerState.INSPECTION ) {
+        console.log('RUNNING 2');
         state.update(() => TimerState.RUNNING);
         ready.update(() => false);
         this.ref = performance.now();

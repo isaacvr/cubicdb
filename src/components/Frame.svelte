@@ -42,7 +42,7 @@
             header: $localLang.SETTINGS.update,
             text: $localLang.SETTINGS.updateCompleted,
             actions: [
-              { text: $localLang.SETTINGS.accept, callback: () => {} }
+              { text: $localLang.global.accept, callback: () => {} }
             ],
             timeout: 5000,
             key: crypto.randomUUID(),

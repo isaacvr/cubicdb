@@ -5,10 +5,14 @@ import type { Vector3D } from '../classes/vector3d';
 import type { CubeMode } from "../constants";
 import type { Writable } from 'svelte/store';
 
-export declare type PuzzleType = 'rubik' | 'skewb' | 'square1' | 'pyraminx' | 'axis' | 'fisher' | 'ivy'
-  | 'clock' | 'megaminx' | 'mirror' | 'dino' | 'rex' | 'redi' | 'mixup' | 'pyramorphix' | 'gear' | 'dreidel'
-  | 'bandaged222' | 'bicube' | 'square2' | 'pandora' | 'ultimateSkewb' | 'pyraminxCrystal' | 'tetraminx'
-  | 'meierHalpernPyramid' | 'sq1Star' | 'windmill';
+export const PuzzleTypeName = [
+  'rubik', 'skewb', 'square1', 'pyraminx', 'axis', 'fisher', 'ivy'
+ , 'clock', 'megaminx', 'mirror', 'dino', 'rex', 'redi', 'mixup', 'pyramorphix', 'gear', 'dreidel'
+ , 'bandaged222', 'bicube', 'square2', 'pandora', 'ultimateSkewb', 'pyraminxCrystal', 'tetraminx'
+ , 'meierHalpernPyramid', 'sq1Star', 'windmill'
+];
+
+export declare type PuzzleType = typeof PuzzleTypeName[number];
 
 export declare type CubeView = 'plan' | 'trans' | '2d';
 export const CubeViewMap: [ CubeView, string ][] = [
@@ -31,6 +35,8 @@ export function nameToPuzzle(name: string): any[] {
     dims = name.split('').map(Number);
     return ['rubik', ...dims];
   }
+
+  if ( PuzzleTypeName.indexOf(name) > -1 ) return [ name ];
 
   switch(name) {
     case 'sq1':
@@ -528,6 +534,15 @@ export interface Language {
     done: string;
     scrambleCopied: string;
     copiedToClipboard: string;
+    accept: string;
+    cancel: string;
+    refresh: string;
+    delete: string;
+    add: string;
+    update: string;
+    save: string;
+    clear: string;
+    reset: string;
   }
   NAVBAR: {
     home: string;
@@ -543,14 +558,13 @@ export interface Language {
     settings: string;
     importExport: string;
     contest: string;
+    tools: string;
   },
   SETTINGS: {
     title: string;
     language: string;
     appFont: string;
     timerFont: string;
-    save: string;
-    reset: string;
 
     // Notifications
     saved: string;
@@ -564,10 +578,6 @@ export interface Language {
     updateAvailableText: string;
     alreadyUpdated: string;
     alreadyUpdatedText: string;
-    accept: string;
-
-    cancelAction: string;
-    updateAction: string;
 
     updateError: string;
     updateErrorText: string;
@@ -591,9 +601,6 @@ export interface Language {
     average: string;
     deviation: string;
     count: string;
-
-    cancel: string;
-    save: string;
 
     congrats: string;
     from: string;
@@ -621,7 +628,6 @@ export interface Language {
     recordCelebration: string;
 
     // Last solve tooltip
-    delete: string;
     comments: string;
 
     reloadScramble: string;
@@ -715,7 +721,6 @@ export interface Language {
     puzzleSettings: string;
     puzzle: string;
     order: string;
-    cancel: string;
     setPuzzle: string;
   },
   IMPORT_EXPORT: {
@@ -726,7 +731,6 @@ export interface Language {
     selectFile: string;
     selectAll: string;
     selectNone: string;
-    save: string;
     total: string;
     showingOnly50: string;
   },
@@ -735,6 +739,44 @@ export interface Language {
     version: string;
     creator: string;
     donations: string;
+  },
+  TOOLS: {
+    cubedbBatch: string;
+    timerOnly: string;
+    scrambleOnly: string;
+    batchScramble: string;
+    statistics: string;
+    metrics: string;
+    solver: string;
+
+    // Statistics
+    writeYourTime: string;
+    clickToDelete: string;
+
+    // Metrics
+    writeYourScramble: string;
+
+    // Descriptions
+    ETM: string;
+    QTM: string;
+    HTM: string;
+    OBTM: string;
+    STM: string;
+
+    // Solver
+    colors: string;
+    solve: string;
+    stickers: string;
+    error: string;
+    invalidCube: string;
+    missingEdges: string;
+    flippedEdge: string;
+    missingCorners: string;
+    twistedCornerClockwise: string;
+    twistedCornerCounterclockwise: string;
+    parity: string;
+    solutionFound: string;
+    solutionInstruction: string;
   }
 }
 
@@ -745,3 +787,12 @@ export interface BluetoothDeviceData {
 }
 
 export type UpdateCommand = 'check' | 'download';
+export type TurnMetric = 'QTM' | 'HTM' | 'OBTM' | 'ETM' | 'STM';
+
+export const MetricList: { 0: string, 1: TurnMetric }[] = [
+  [ 'ETM', 'ETM' ],
+  [ 'QTM', 'QTM' ],
+  [ 'HTM', 'HTM' ],
+  [ 'OBTM', 'OBTM' ],
+  [ 'STM', 'STM' ],
+];

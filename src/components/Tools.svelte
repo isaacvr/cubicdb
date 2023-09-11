@@ -1,0 +1,649 @@
+<script lang="ts">
+  import { onMount } from "svelte";
+  import { derived, writable, type Readable } from "svelte/store";
+  import Select from "@material/Select.svelte";
+  import Timer from "./timer/Timer.svelte";
+  import { Penalty, type Language, type Solve, type TimerContext, type Session, type Statistics, MetricList, type TurnMetric } from "@interfaces";
+  import { globalLang } from "@stores/language.service";
+  import { getLanguage } from "@lang/index";
+  import { MENU, STANDARD_PALETTE, SessionDefaultSettings } from "@constants";
+  import * as all from "@cstimer/scramble";
+  import Button from "@material/Button.svelte";
+  import Input from "@material/Input.svelte";
+  import Tooltip from "@material/Tooltip.svelte";
+  import CopyIcon from "@icons/ContentCopy.svelte";
+  import DownArrowIcon from "@icons/ArrowDown.svelte";
+  import { copyToClipboard } from "@helpers/strings";
+  import { NotificationService } from "@stores/notification.service";
+  import { sTimer, timerToMilli } from "@helpers/timer";
+  import StatsTab from "./timer/StatsTab.svelte";
+  import { computeMoves, getUpdatedStatistics } from "@helpers/statistics";
+    import TextArea from "./material/TextArea.svelte";
+    import { assignColors } from "@classes/puzzle/puzzleUtils";
+    import { solvFacelet } from "@cstimer/scramble/scramble_333";
+
+  let localLang: Readable<Language> = derived(globalLang, ($lang) =>
+    getLanguage($lang)
+  );
+
+  let notification = NotificationService.getInstance();
+
+  // Context
+  const INITIAL_STATISTICS: Statistics = {
+    best: { value: 0, better: false, prev: Infinity },
+    worst: { value: 0, better: false },
+    count: { value: 0, better: false },
+    time: { value: 0, better: false },
+    avg: { value: 0, better: false },
+    dev: { value: 0, better: false },
+    Mo3: { value: -1, better: false },
+    Ao5: { value: -1, better: false },
+    Ao12: { value: -1, better: false },
+    Ao50: { value: -1, better: false },
+    Ao100: { value: -1, better: false },
+    Ao200: { value: -1, better: false },
+    Ao500: { value: -1, better: false },
+    Ao1k: { value: -1, better: false },
+    Ao2k: { value: -1, better: false },
+
+    NP:    { value: 0, better: false },
+    P2:    { value: 0, better: false },
+    DNS:   { value: 0, better: false },
+    DNF:   { value: 0, better: false },
+    counter: { value: 0, better: false },
+  };
+  let solves = writable<Solve[]>([]);
+  let session = writable<Session>({
+    _id: '',
+    name: 'Default',
+    settings: Object.assign({}, SessionDefaultSettings),
+    editing: false,
+    tName: '',
+  });
+  let AoX = writable<number>(100);
+  let stats = writable<Statistics>(INITIAL_STATISTICS);
+  let group = writable<number>(0);
+  let mode = writable<{ 0: string, 1: string, 2: number }>( MENU[0][1][0] );
+  let prob = writable<number>();
+
+  // Timer and Scramble Only
+  const groups = MENU.map((e) => e[0]);
+  let modes: { 0: string; 1: string; 2: number }[] = [];
+  let filters: string[] = [];
+  let selectedOption = "timer-only";
+  let timer: Timer;
+
+  // Batch
+  let batch = 5;
+  let scrambleBatch: string[] = [];
+
+  // Statistics
+  let timeStr = "";
+  let metricString = "";
+  let selectedMetric: TurnMetric = 'ETM';
+  let moves = 0;
+  let metricDetails: any[][];
+
+  const TIMER_DIGITS = /^\d+$/;
+  const TIMER_DNF = /^\s*dnf\s*$/i;
+  const TIMER_DNS = /^\s*dns\s*$/i;
+
+  // Solver
+  // UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB
+  const fMap = "URFDLB";
+  let colors = STANDARD_PALETTE;
+  const DEFAULT_COLOR = colors.gray;
+  let fColors = [ colors.w, colors.r, colors.g, colors.y, colors.o, colors.b ];
+  let facelets: string[][] = [
+    ...[0, 1, 2, 3, 4, 5].map(n => [ '-', '-', '-', '-', fColors[n], '-', '-', '-', '-' ])
+  ];
+  let fSelected = facelets.map(s => s.map(() => false));
+  let keys = [ "[W]", "[R]", "[G]", "[Y]", "[O]", "[B]" ];
+
+  function selectedGroup() {
+    modes = MENU[ $group ][1];
+    $mode = modes[0];
+    selectedMode();
+  }
+
+  function selectedMode() {
+    filters = all.pScramble.filters.get( $mode[1] ) || [];
+    $prob = -1;
+    initScrambler();
+  }
+
+  function initScrambler() {
+    timer?.initScrambler();
+  }
+
+  function checkMode(s: string, list: string[]) {
+    return list.some((l) => l === s);
+  }
+
+  function generateBatch() {
+    scrambleBatch.length = 0;
+
+    for (let i = 0; i < batch; i += 1) {
+      scrambleBatch.push(
+        (all.pScramble.scramblers.get( $mode[1] ) as any)
+          .apply(null, [
+            $mode[1],
+            Math.abs( $mode[2] ),
+            $prob < 0 ? undefined : prob,
+          ])
+          .replace(/\\n/g, "<br>")
+          .trim()
+      );
+    }
+  }
+
+  function toClipboard() {
+    let str =
+      `${ $localLang.TOOLS.cubedbBatch } (${batch})\n\n` +
+      scrambleBatch.map((s, p) => `${p + 1}- ${s}`).join("\n\n");
+
+    copyToClipboard(str).then(() => {
+      notification.addNotification({
+        key: crypto.randomUUID(),
+        header: $localLang.global.done,
+        text: $localLang.global.scrambleCopied,
+        timeout: 1000,
+      });
+    });
+  }
+
+  function addTimeString() {
+    if ( [TIMER_DIGITS, TIMER_DNF, TIMER_DNS ].every(r => !r.test(timeStr)) ) {
+      timeStr = "";
+      return;
+    }
+
+    let time = 0;
+    let penalty = Penalty.NONE;
+
+    if (TIMER_DIGITS.test(timeStr)) {
+      time = timerToMilli(+timeStr);
+    } else if (TIMER_DNF.test(timeStr)) {
+      penalty = Penalty.DNF;
+    } else if (TIMER_DNS.test(timeStr)) {
+      penalty = Penalty.DNS;
+    }
+
+    $solves = [
+      {
+        date: Date.now(),
+        penalty,
+        scramble: "",
+        selected: false,
+        session: "",
+        time,
+        _id: crypto.randomUUID(),
+      },
+      ...$solves,
+    ];
+
+    $stats = getUpdatedStatistics($stats, $solves, $session);
+
+    timeStr = "";
+  }
+
+  function clear() {
+    $solves.length = 0;
+    $stats = getUpdatedStatistics($stats, $solves, $session);
+  }
+
+  function validTimeStr(t: string): boolean {
+    return [TIMER_DIGITS, TIMER_DNS, TIMER_DNF].some(r => r.test(t)) || t === "";
+  }
+  
+  function updateMetrics(ms: string, sm: TurnMetric) {
+    let res = computeMoves(ms, sm);
+
+    moves = res.moves;
+    metricDetails = res.values;
+  }
+
+  function getDescription(toolsMap: any, mt: string) {
+    return toolsMap[ mt ];
+  }
+
+  function toggleSelect(i: number, j: number) {
+    j != 4 && (fSelected[i][j] = !fSelected[i][j]);
+  }
+
+  function cancelSelection() {
+    fSelected = facelets.map(s => s.map(() => false));
+  }
+
+  function assignColor(c: string) {
+    for (let i = 0, maxi = facelets.length; i < maxi; i += 1) {
+      let f = facelets[i];
+
+      for (let j = 0, maxj = f.length; j < maxj; j += 1) {
+        if ( fSelected[i][j] ) {
+          facelets[i][j] = c;
+        }
+      }
+    }
+
+    cancelSelection();
+  }
+
+  function getFacelets() {
+    return facelets.map( face => face.map( fc => fc === '-' ? '-' : fMap[ fColors.indexOf(fc) ]).join('') ).join('');
+  }
+
+  function solve() {
+    let fc = getFacelets();
+    let res = solvFacelet( fc );
+    let header = $localLang.TOOLS.error;
+    let text = '';
+
+    switch(res) {
+      case 'Error 1': {
+        text = $localLang.TOOLS.invalidCube;
+        break;
+      }
+      case 'Error 2': {
+        text = $localLang.TOOLS.missingEdges;
+        break;
+      }
+      case 'Error 3': {
+        text = $localLang.TOOLS.flippedEdge;
+        break;
+      }
+      case 'Error 4': {
+        text = $localLang.TOOLS.missingCorners;
+        break;
+      }
+      case 'Error 5': {
+        text = $localLang.TOOLS.twistedCornerClockwise;
+        break;
+      }
+      case 'Error 6': {
+        text = $localLang.TOOLS.twistedCornerCounterclockwise;
+        break;
+      }
+      case 'Error 7': {
+        text = $localLang.TOOLS.parity;
+        break;
+      }
+      default: {
+        header = $localLang.TOOLS.solutionFound;
+        text = res;
+      }
+    }
+
+    notification.addNotification({
+      key: crypto.randomUUID(),
+      header,
+      html: `
+        ${ header != $localLang.TOOLS.error
+            ? `<br><i style="color: #e5c700;">${ $localLang.TOOLS.solutionInstruction }</i><br><br>` : '' }
+        ${ text }
+      `,
+      text: '',
+      fixed: true,
+      actions: [{ text: $localLang.global.done, callback: () => {} }]
+    });
+  }
+
+  function fromFacelet(f: string) {
+    for (let i = 0; i < 6; i += 1) {
+      for (let j = 0; j < 9; j += 1) {
+        facelets[i][j] = fColors[ fMap.indexOf( f[ i * 9 + j ] ) ];
+      }
+    }
+  }
+
+  function clearCube() {
+    facelets = [
+      ...[0, 1, 2, 3, 4, 5].map(n => [ '-', '-', '-', '-', fColors[n], '-', '-', '-', '-' ])
+    ];
+    fSelected = facelets.map(s => s.map(() => false)); 
+  }
+
+  function handleKeyup(e: KeyboardEvent) {
+    if ( selectedOption === 'solver' ) {
+      e.code === 'Escape' && cancelSelection();
+      e.key === 'w' && assignColor( fColors[0] );
+      e.key === 'r' && assignColor( fColors[1] );
+      e.key === 'g' && assignColor( fColors[2] );
+      e.key === 'y' && assignColor( fColors[3] );
+      e.key === 'o' && assignColor( fColors[4] );
+      e.key === 'b' && assignColor( fColors[5] );
+
+      // console.log("E: ", e);
+    }
+  }
+
+  onMount(() => {
+    selectedGroup();
+    // fromFacelet('UBBLURBBRFDUURDDDLDUURFFFULRRBFDFLLDLURDLFFLDRRBLBBFBU');
+  });
+
+  let context: TimerContext = {
+    solves, AoX, stats, session
+  } as TimerContext;
+
+  $: updateMetrics(metricString, selectedMetric);
+</script>
+
+<svelte:window on:keyup={ handleKeyup }/>
+
+<!-- Selection -->
+<div class="flex items-center justify-center gap-2">
+  <Select
+    items={[
+      [$localLang.TOOLS.timerOnly, "timer-only"],
+      [$localLang.TOOLS.scrambleOnly, "scramble-only"],
+      [$localLang.TOOLS.batchScramble, "scramble-batch"],
+      [$localLang.TOOLS.statistics, "statistics"],
+      [$localLang.TOOLS.metrics, "metrics"],
+      [$localLang.TOOLS.solver, "solver"],
+    ]}
+    label={(e) => e[0]}
+    transform={(e) => e[1]}
+    bind:value={selectedOption}
+  />
+
+  {#if checkMode(selectedOption, ["scramble-only", "scramble-batch"])}
+    <Select
+      class="min-w-[8rem]"
+      placeholder={$localLang.TIMER.selectGroup}
+      value={groups[$group]}
+      items={groups}
+      transform={(e) => e}
+      onChange={(g, p) => {
+        $group = p || 0;
+        selectedGroup();
+      }}
+    />
+
+    <Select
+      class="min-w-[8rem]"
+      placeholder={[$localLang.TIMER.selectMode]}
+      value={ $mode }
+      items={ modes }
+      label={(e) => e[0]}
+      transform={(e) => e}
+      onChange={(g) => {
+        $mode = g;
+        selectedMode();
+      }}
+    />
+
+    {#if filters.length > 0}
+      <Select
+        class="min-w-[8rem]"
+        placeholder={$localLang.TIMER.selectFilter}
+        value={prob}
+        items={filters}
+        label={(e) => e.toUpperCase()}
+        transform={(i, p) => p}
+        onChange={(i, p) => {
+          $prob = p || 0;
+          initScrambler();
+        }}
+      />
+    {/if}
+  {/if}
+
+  {#if checkMode(selectedOption, ['metrics'])}
+    <Select items={ MetricList } label={ e => e[0] } transform={ e => e[1] } bind:value={ selectedMetric }/>
+  {/if}
+</div>
+
+{#if checkMode(selectedOption, ["timer-only", "scramble-only"])}
+  <Timer
+    bind:this={timer}
+    timerOnly={selectedOption === "timer-only"}
+    scrambleOnly={selectedOption === "scramble-only"}
+    useMode={ $mode[1] }
+    useProb={ $prob }
+  />
+{:else if checkMode(selectedOption, ["scramble-batch"])}
+  {#if scrambleBatch.length}
+    <div
+      class="container-mini bg-white bg-opacity-10 mx-auto mt-4 w-max mb-0 p-4 rounded-md shadow-md text-center"
+    >
+      <ul class="text-gray-400 grid gap-2 max-h-[55vh] overflow-scroll">
+        {#each scrambleBatch as scr, pos}
+          <li>{pos + 1}- {scr}</li>
+        {/each}
+      </ul>
+
+      <div class="flex gap-2 items-center justify-center">
+        <Tooltip
+          class="cursor-pointer transition-all duration-200
+        hover:text-purple-300 text-gray-400"
+          position="bottom"
+          text="Copy"
+          on:click={toClipboard}
+        >
+          <CopyIcon size="1.2rem" />
+        </Tooltip>
+      </div>
+    </div>
+  {/if}
+
+  <div class="flex items-center justify-center gap-2 mt-8">
+    <Input
+      type="number"
+      class="w-20"
+      bind:value={batch}
+      min={1}
+      on:UENTER={generateBatch}
+    />
+    <Button class="bg-purple-700 text-gray-300" on:click={generateBatch}
+      >Generate</Button
+    >
+  </div>
+{:else if checkMode(selectedOption, ["statistics"])}
+
+  <div class="mt-4">
+    <StatsTab { context } headless/>
+  </div>
+
+  <hr class="border-gray-200 w-full mt-2"/>
+
+  <div id="grid" class="text-gray-400 mx-8 mt-4 grid h-max-[100%] overflow-scroll">
+    {#each $solves as _, p}
+      <Tooltip text={ $localLang.TOOLS.clickToDelete } position="top">
+        <div
+          class="shadow-md w-24 h-12 rounded-md m-3 p-1 bg-white bg-opacity-10 relative
+            flex items-center justify-center transition-all duration-200 select-none cursor-pointer
+    
+            hover:shadow-lg hover:bg-opacity-20
+          "
+          on:click={ () => $solves = $solves.filter(s => s != $solves[$solves.length - p - 1]) }
+        >
+          <span class="text-center font-bold">{sTimer($solves[$solves.length - p - 1], true)}</span>
+        </div>
+      </Tooltip>
+    {/each}
+  </div>
+
+  <hr class="border-gray-200 w-full mb-2"/>
+
+  <div class="w-[30rem] grid grid-cols-1 gap-2 mx-auto">
+    <i class="text-yellow-500 flex items-center gap-2 justify-start">{ $localLang.TOOLS.writeYourTime }<DownArrowIcon size="1.2rem"/> </i>
+    <div class="flex items-center gap-2">
+      <Input focus={ true }
+        bind:value={timeStr}
+        stopKeyupPropagation
+        on:UENTER={ addTimeString }
+        class="w-full text-8xl !h-24 text-center {validTimeStr(timeStr)
+          ? ''
+          : '!border-red-400 !border-2'}
+          focus-within:shadow-black"
+        inpClass="text-center"
+      />
+  
+      <Button class="h-min bg-purple-700 text-gray-300" on:click={ addTimeString }>{ $localLang.global.add }</Button>
+      <Button class="h-min bg-red-700 text-gray-300" on:click={ clear }>{ $localLang.global.clear }</Button>
+    </div>
+  </div>
+{:else if checkMode(selectedOption, ['metrics'])}
+  <div class="mt-8 grid text-center max-w-[50rem] mx-auto">
+    <p class="note mb-8">{ getDescription($localLang.TOOLS, selectedMetric) }</p>
+
+    <span>Moves: { moves }</span>
+
+    <ul class="flex gap-2 py-8">
+      {#each metricDetails as md}
+        <li class="bg-green-800 rounded-md p-2">{ md[0] }: { md[1] }</li>
+      {/each}
+    </ul>
+
+    <i class="text-yellow-500 flex items-center gap-2 justify-center">
+      { $localLang.TOOLS.writeYourScramble }<DownArrowIcon size="1.2rem"/>
+    </i>
+
+    <TextArea bind:value={ metricString } class="bg-white bg-opacity-10 w-full" />
+  </div>
+{:else if checkMode(selectedOption, ['solver'])}
+  <h2 class="text-2xl text-center mt-4">{ $localLang.TOOLS.colors }</h2>
+  <div class="colors">
+    {#each fColors as f, p}
+      <Tooltip position="bottom" text={ keys[p] } hasKeybinding>
+        <div class="color" on:click={ () => assignColor(f) } style={ `background-color: ${f}` }></div>
+      </Tooltip>
+    {/each}
+
+    <Button on:click={ solve } class="ml-4 bg-purple-700 text-gray-300">{ $localLang.TOOLS.solve }</Button>
+    <Button on:click={ clearCube } class="bg-red-700 text-gray-300">{ $localLang.global.clear }</Button>
+  </div>  
+  
+  <h2 class="text-2xl text-center mt-4">{ $localLang.TOOLS.stickers }</h2>
+
+  <div class="cube-grid">
+    <div class="cube-u">
+      {#each facelets[0] as f, p}
+        <div class="facelet" class:selected={ fSelected[0][p] }
+          style={ `background-color: ${(f === '-' ? DEFAULT_COLOR : f)}` }
+          on:click={ () => toggleSelect(0, p) }
+        ></div>
+      {/each}
+    </div>
+
+    <div class="cube-l">
+      {#each facelets[4] as f, p}
+        <div class="facelet" class:selected={ fSelected[4][p] }
+          style={ `background-color: ${(f === '-' ? DEFAULT_COLOR : f)}` }
+          on:click={ () => toggleSelect(4, p) }
+        ></div>
+      {/each}
+    </div>
+
+    <div class="cube-f">
+      {#each facelets[2] as f, p}
+        <div class="facelet" class:selected={ fSelected[2][p] }
+          style={ `background-color: ${(f === '-' ? DEFAULT_COLOR : f)}` }
+          on:click={ () => toggleSelect(2, p) }
+        ></div>
+      {/each}
+    </div>
+    <div class="cube-r">
+      {#each facelets[1] as f, p}
+        <div class="facelet" class:selected={ fSelected[1][p] }
+          style={ `background-color: ${(f === '-' ? DEFAULT_COLOR : f)}` }
+          on:click={ () => toggleSelect(1, p) }
+        ></div>
+      {/each}
+    </div>
+
+    <div class="cube-b">
+      {#each facelets[5] as f, p}
+        <div class="facelet" class:selected={ fSelected[5][p] }
+          style={ `background-color: ${(f === '-' ? DEFAULT_COLOR : f)}` }
+          on:click={ () => toggleSelect(5, p) }
+        ></div>
+      {/each}
+    </div>
+
+    <div class="cube-d">
+      {#each facelets[3] as f, p}
+        <div class="facelet" class:selected={ fSelected[3][p] }
+          style={ `background-color: ${(f === '-' ? DEFAULT_COLOR : f)}` }
+          on:click={ () => toggleSelect(3, p) }
+        ></div>
+      {/each}
+    </div>
+  </div>
+{/if}
+
+<style>
+  #grid {
+    grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr));
+    max-height: calc(100vh - 8rem);
+  }
+
+  .colors {
+    display: flex;
+    margin: 1rem auto;
+    gap: .5rem;
+    justify-content: center;
+    cursor: pointer;
+  }
+
+  .colors .color {
+    width: 3rem;
+    height: 3rem;
+    border-radius: .3rem;
+    border: .15rem solid black;
+  }
+
+  .cube-grid {
+    display: grid;
+    grid-template-areas:
+      ". u . ."
+      "l f r b"
+      ". d . .";
+    max-width: 40rem;
+    margin: 1rem auto;
+    gap: 1rem;
+  }
+
+  .cube-grid [class*=cube-] {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: .2rem;
+  }
+
+  .cube-grid .cube-u {
+    grid-area: u;
+  }
+
+  .cube-grid .cube-l {
+    grid-area: l;
+  }
+
+  .cube-grid .cube-f {
+    grid-area: f;
+  }
+
+  .cube-grid .cube-r {
+    grid-area: r;
+  }
+
+  .cube-grid .cube-b {
+    grid-area: b;
+  }
+
+  .cube-grid .cube-d {
+    grid-area: d;
+  }
+
+  .cube-grid .facelet {
+    aspect-ratio: 1 / 1;
+    border-radius: .3rem;
+    border: .15rem solid black;
+    cursor: pointer;
+  }
+  
+  .cube-grid .facelet.selected {
+    box-shadow: 0px 0px .5rem rgb(250, 222, 152);
+  }
+</style>

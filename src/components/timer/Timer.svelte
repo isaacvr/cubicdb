@@ -9,7 +9,7 @@
   import JSConfetti from 'js-confetti';
   
   /// Data
-  import { isNNN, MENU } from '@constants';
+  import { isNNN, MENU, SessionDefaultSettings } from '@constants';
   import { DataService } from '@stores/data.service';
   
   /// Components
@@ -40,7 +40,7 @@
   import { Puzzle } from '@classes/puzzle/puzzle';
   import { PX_IMAGE } from '@constants';
   import { ScrambleParser } from '@classes/scramble-parser';
-  import { getAverageS } from '@helpers/statistics';
+  import { getAverageS, getUpdatedStatistics } from '@helpers/statistics';
   import { adjustMillis, infinitePenalty, timer } from '@helpers/timer';
   import { globalLang } from '@stores/language.service';
   import { getLanguage } from '@lang/index';
@@ -49,8 +49,11 @@
   export let battle = false;
   export let useScramble = '';
   export let useMode = '';
+  export let useProb: number = -1;
   export let genScramble = true;
   export let enableKeyboard = true;
+  export let timerOnly = false;
+  export let scrambleOnly = false;
 
   let localLang: Readable<Language> = derived(globalLang, ($lang) => getLanguage( $lang ));
 
@@ -103,7 +106,13 @@
   let tab = writable<number>(0);
   let solves = writable<Solve[]>([]);
   let allSolves = writable<Solve[]>([]);
-  let session = writable<Session>();
+  let session = writable<Session>({
+    _id: '',
+    name: 'Default',
+    settings: Object.assign({}, SessionDefaultSettings),
+    editing: false,
+    tName: '',
+  });
   let Ao5 = writable<number[]>();
   let AoX = writable<number>(100);
   let stats = writable<Statistics>(INITIAL_STATISTICS);
@@ -166,111 +175,7 @@
   }
 
   function updateStatistics(inc ?: boolean) {
-    let AON = [ 3, 5, 12, 50, 100, 200, 500, 1000, 2000 ];
-    let AVG = [ 0, 0, 0, 0, 0, 0, 0, 0, 0 ];
-    let BEST: number[] = [
-      $stats.Mo3.best ?? Infinity,
-      $stats.Ao5.best ?? Infinity,
-      $stats.Ao12.best ?? Infinity,
-      $stats.Ao50.best ?? Infinity,
-      $stats.Ao100.best ?? Infinity,
-      $stats.Ao200.best ?? Infinity,
-      $stats.Ao500.best ?? Infinity,
-      $stats.Ao1k.best ?? Infinity,
-      $stats.Ao2k.best ?? Infinity,
-      $stats.best.best ?? Infinity,
-    ];
-
-    let PREV_BEST = BEST.slice();
-
-    let BEST_IDS: string[] = [
-      $stats.Mo3.id || '',
-      $stats.Ao5.id || '',
-      $stats.Ao12.id || '',
-      $stats.Ao50.id || '',
-      $stats.Ao100.id || '',
-      $stats.Ao200.id || '',
-      $stats.Ao500.id || '',
-      $stats.Ao1k.id || '',
-      $stats.Ao2k.id || '',
-      $stats.best.id || '',
-    ];
-
-    let IS_BEST = BEST.map(() => false);
-
-    let len = $solves.length;
-    let sum = 0, avg = 0, dev = 0;
-    let pMap: Map<Penalty, number> = new Map();
-
-    let bw = $solves.reduce((ac: number[], e) => {
-      pMap.set( e.penalty, (pMap.get(e.penalty) || 0) + 1 );
-
-      if ( infinitePenalty(e) ) {
-        len -= 1;
-        return ac;
-      }
-      
-      sum += e.time;
-      
-      if ( e.time < BEST[9] ) {
-        BEST_IDS[9] = e._id;
-        BEST[9] = e.time;
-        IS_BEST[9] = PREV_BEST[9] != Infinity;
-      }
-      
-      if ( e.time > ac[1] ) {
-        BEST_IDS[10] = e._id;
-      }
-
-      return [ Math.min(ac[0], e.time), Math.max(ac[1], e.time) ];
-    }, [Infinity, 0]);
-
-    avg = (len > 0) ? sum / len : 0;
-    dev = (len > 0) ? Math.sqrt( $solves.reduce((acc, e) => {
-      return infinitePenalty(e) ? acc : (acc + (e.time - avg)**2 / len);
-    }, 0) ) : 0;
-    
-    for (let i = 0, maxi = AON.length; i < maxi; i += 1) {
-      let avgs = getAverageS(AON[i], $solves, $session?.settings?.calcAoX || AverageSetting.SEQUENTIAL);
-
-      for (let j = 0, maxj = avgs.length; j < maxj; j += 1) {
-        let av = avgs[j];
-
-        if ( av && av < BEST[i] ) {
-          BEST[i] = adjustMillis(av);
-          BEST_IDS[i] = $solves[maxj - j - 1]._id;
-          IS_BEST[i] = PREV_BEST[i] != Infinity;
-        }
-      }
-      AVG[i] = avgs.pop() || -1;
-    }
-
-    let ps = Object.assign({}, $stats);
-
-    $stats = {
-      best:  { value: bw[0], better: IS_BEST[9], best: bw[0], prev: PREV_BEST[9], id: BEST_IDS[9] },
-      worst: { value: bw[1], better: false, id: BEST_IDS[10] },
-      avg:   { value: avg, better: false },
-      dev:   { value: dev, better: false },
-      count: { value: $solves.length, better: false },
-      time:  { value: sum, better: false },
-      Mo3:   { value: AVG[0], better: IS_BEST[0], best: BEST[0], prev: PREV_BEST[0], id: BEST_IDS[0] },
-      Ao5:   { value: AVG[1], better: IS_BEST[1], best: BEST[1], prev: PREV_BEST[1], id: BEST_IDS[1] },
-      Ao12:  { value: AVG[2], better: IS_BEST[2], best: BEST[2], prev: PREV_BEST[2], id: BEST_IDS[2] },
-      Ao50:  { value: AVG[3], better: IS_BEST[3], best: BEST[3], prev: PREV_BEST[3], id: BEST_IDS[3] },
-      Ao100: { value: AVG[4], better: IS_BEST[4], best: BEST[4], prev: PREV_BEST[4], id: BEST_IDS[4] },
-      Ao200: { value: AVG[5], better: IS_BEST[5], best: BEST[5], prev: PREV_BEST[5], id: BEST_IDS[5] },
-      Ao500: { value: AVG[6], better: IS_BEST[6], best: BEST[6], prev: PREV_BEST[6], id: BEST_IDS[6] },
-      Ao1k:  { value: AVG[7], better: IS_BEST[7], best: BEST[7], prev: PREV_BEST[7], id: BEST_IDS[7] },
-      Ao2k:  { value: AVG[8], better: IS_BEST[8], best: BEST[8], prev: PREV_BEST[8], id: BEST_IDS[8] },
-      
-      // Penalties
-      NP:    { value: pMap.get(Penalty.NONE) || 0, better: false },
-      P2:    { value: pMap.get(Penalty.P2) || 0, better: false },
-      DNS:   { value: pMap.get(Penalty.DNS) || 0, better: false },
-      DNF:   { value: pMap.get(Penalty.DNF) || 0, better: false },
-      counter: { value: (inc) ? ps.counter.value + 1 : ps.counter.value, better: false },
-    };
+    $stats = getUpdatedStatistics($stats, $solves, $session, inc);
 
     let bestList = [];
 
@@ -394,19 +299,20 @@
     });
   }
 
-  function initScrambler(scr?: string, _mode ?: string) {
+  export function initScrambler(scr?: string, _mode ?: string, _prob ?: number) {
     if ( !$mode ) {
       $mode = MENU[ $group || 0 ][1][0];
     }
 
     let md = useMode || _mode || $mode[1];
     let s = useScramble || scr;
+    let pb = useProb || _prob || $prob;
     
     if ( !genScramble ) {
       $scramble = scr || useScramble;
     } else {
       $scramble = (s) ? s : (all.pScramble.scramblers.get(md) as any).apply(null, [
-        md, Math.abs($mode[2]), $prob < 0 ? undefined : $prob
+        md, Math.abs($mode[2]), pb < 0 ? undefined : pb
       ]).replace(/\\n/g, '<br>').trim();
     }
 
@@ -458,17 +364,7 @@
     let name = newSessionName.trim();
 
     if ( name != '' ) {
-      dataService.addSession({ _id: '', name, settings: {
-        hasInspection: true,
-        showElapsedTime: true,
-        inspection: 15,
-        calcAoX: AverageSetting.SEQUENTIAL,
-        genImage: true,
-        scrambleAfterCancel: false,
-        input: 'Keyboard',
-        withoutPrevention: false,
-        recordCelebration: true,
-      } });
+      dataService.addSession({ _id: '', name, settings: Object.assign({}, SessionDefaultSettings) });
       closeAddSession();
     }
   }
@@ -496,25 +392,11 @@
   }
 
   onMount(() => {
-    if ( battle ) {
-      $session = {
-        _id: '',
-        name: 'Battle',
-        settings: {
-          calcAoX: AverageSetting.SEQUENTIAL,
-          genImage: true,
-          hasInspection: true,
-          inspection: 15,
-          scrambleAfterCancel: false,
-          showElapsedTime: true,
-          input: 'Keyboard',
-          withoutPrevention: false,
-          recordCelebration: false,
-        },
-        editing: false,
-        tName: '',
-      };
-    } else {
+    if ( timerOnly && scrambleOnly ) {
+      timerOnly = scrambleOnly = false;
+    }
+
+    if ( !(battle || timerOnly || scrambleOnly) ) {
       subs = [
         dataService.solveSub.subscribe((data) => {
           if ( !data || !data.data ) {
@@ -651,13 +533,16 @@
   };
 
   $: (useScramble || useMode) ? initScrambler(useScramble, useMode) : initScrambler();
+  $: enableKeyboard = !scrambleOnly;
 
 </script>
 
 <svelte:window on:keyup={ handleKeyUp }></svelte:window>
 
-<main class="w-full h-full">
-  {#if battle}
+<main class={"w-full " + (scrambleOnly || timerOnly ? 'h-auto' : 'h-full')}>
+  {#if timerOnly || scrambleOnly }
+    <TimerTab { timerOnly } { scrambleOnly } { context } { battle } { enableKeyboard } />
+  {:else if battle}
     <TimerTab
       { context } { battle } { enableKeyboard }
       on:solve={ (s) => dispatch("solve", s.detail) }
@@ -718,73 +603,75 @@
     </TabGroup>
   {/if}
 
-  <Modal show={ openEdit } onClose={ handleClose }>
-    <Button ariaLabel={ $localLang.TIMER.addNewSession }
-      on:click={ openAddSession }>
-      <PlusIcon /> { $localLang.TIMER.addNewSession }
-    </Button>
-    
-    <div class="grid">
-      {#if creatingSession}
-        <div class="flex">
-          <Input
-            focus={ creatingSession }
-            class="bg-gray-600 text-gray-200 flex-1"  
-            bind:value={ newSessionName } on:keyup={ (e) => handleInputKeyUp(e) }/>
-          <div class="flex mx-2 flex-grow-0 w-10 items-center justify-center">
-            <span tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer" on:click={ newSession }>
-              <CheckIcon width="100%" height="100%"/>
-            </span>
-            <span tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer" on:click={ closeAddSession }>
-              <CloseIcon width="100%" height="100%"/>
-            </span>
-          </div>
-        </div>
-      {/if}
-
-      {#each sessions as s}
-        <div class="flex">
-          <Input
-            disabled={ !s.editing }
-            class="bg-transparent text-gray-400 flex-1 { !s.editing ? 'border-transparent' : '' }"  
-            bind:value={ s.tName } focus={ s.editing } on:keyup={ (e) => {
-              switch ( e.detail.code ) {
-                case 'Enter': {
-                  s.editing = false;
-                  renameSession(s);
-                  break;
-                }
-                case 'Escape': {
-                  e.detail.stopPropagation();
-                  s.editing = false;
-                  break;
-                }
-              }
-            }}/>
-          <div class="flex mx-2 flex-grow-0 w-10 items-center justify-center">
-            {#if !s.editing && !creatingSession}
-              <span tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer" on:click={() => {
-                sessions.forEach(s1 => s1.editing = false);
-                s.editing = true;
-              }}>
-                <PencilIcon width="100%" height="100%"/>
-              </span>
-              <span tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer" on:click={() => deleteSession(s)}>
-                <DeleteIcon width="100%" height="100%"/>
-              </span>
-            {/if}
-
-            {#if s.editing && !creatingSession}
-              <span tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer" on:click={ () => renameSession(s) }>
+  {#if !timerOnly}
+    <Modal show={ openEdit } onClose={ handleClose }>
+      <Button ariaLabel={ $localLang.TIMER.addNewSession }
+        on:click={ openAddSession }>
+        <PlusIcon /> { $localLang.TIMER.addNewSession }
+      </Button>
+      
+      <div class="grid">
+        {#if creatingSession}
+          <div class="flex">
+            <Input
+              focus={ creatingSession }
+              class="bg-gray-600 text-gray-200 flex-1"  
+              bind:value={ newSessionName } on:keyup={ (e) => handleInputKeyUp(e) }/>
+            <div class="flex mx-2 flex-grow-0 w-10 items-center justify-center">
+              <span tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer" on:click={ newSession }>
                 <CheckIcon width="100%" height="100%"/>
               </span>
-              <span tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer" on:click={() => s.editing = false}>
+              <span tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer" on:click={ closeAddSession }>
                 <CloseIcon width="100%" height="100%"/>
               </span>
-            {/if}
+            </div>
           </div>
-        </div>
-      {/each}
-    </div>
-  </Modal>
+        {/if}
+
+        {#each sessions as s}
+          <div class="flex">
+            <Input
+              disabled={ !s.editing }
+              class="bg-transparent text-gray-400 flex-1 { !s.editing ? 'border-transparent' : '' }"  
+              bind:value={ s.tName } focus={ s.editing } on:keyup={ (e) => {
+                switch ( e.detail.code ) {
+                  case 'Enter': {
+                    s.editing = false;
+                    renameSession(s);
+                    break;
+                  }
+                  case 'Escape': {
+                    e.detail.stopPropagation();
+                    s.editing = false;
+                    break;
+                  }
+                }
+              }}/>
+            <div class="flex mx-2 flex-grow-0 w-10 items-center justify-center">
+              {#if !s.editing && !creatingSession}
+                <span tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer" on:click={() => {
+                  sessions.forEach(s1 => s1.editing = false);
+                  s.editing = true;
+                }}>
+                  <PencilIcon width="100%" height="100%"/>
+                </span>
+                <span tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer" on:click={() => deleteSession(s)}>
+                  <DeleteIcon width="100%" height="100%"/>
+                </span>
+              {/if}
+
+              {#if s.editing && !creatingSession}
+                <span tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer" on:click={ () => renameSession(s) }>
+                  <CheckIcon width="100%" height="100%"/>
+                </span>
+                <span tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer" on:click={() => s.editing = false}>
+                  <CloseIcon width="100%" height="100%"/>
+                </span>
+              {/if}
+            </div>
+          </div>
+        {/each}
+      </div>
+    </Modal>
+  {/if}
 </main>

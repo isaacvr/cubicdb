@@ -25,6 +25,7 @@
   import { globalLang } from '@stores/language.service';
   import AlgorithmsAdmin from '@components/AlgorithmsAdmin.svelte';
   import CubeDb from '@components/CubeDB.svelte';
+  import Tools from '@components/Tools.svelte';
 
   let notService = NotificationService.getInstance();
   let notifications: INotification[] = [];
@@ -68,6 +69,7 @@
     <Route path="/import-export" component={ ImportExport }/>
     <Route path="/settings" component={ Settings }/>
     <Route path="/cubedb" component={ CubeDb }/>
+    <Route path="/tools" component={ Tools }/>
   </main>
 
   <!-- Notifications -->

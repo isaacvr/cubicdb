@@ -132,6 +132,10 @@ mark {
   @apply bg-gray-700 hover:bg-gray-300 hover:text-gray-700;
 }
 
+.note {
+  @apply bg-white bg-opacity-10 p-4 text-left border-l-8 border-l-blue-500 shadow-md rounded-sm;
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: .7rem;

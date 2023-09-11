@@ -667,10 +667,10 @@ Search.prototype.verify = function(facelets) {
     return -4; // missing corners
   }
   if (sum % 3 != 0) {
-    return -5; // twisted corner
+    return -4 - (sum % 3); // twisted corner
   }
   if ((getNParity(getNPermFull(this.cc.ea, 12, true), 12) ^ getNParity(this.cc.getCPerm(), 8)) != 0) {
-    return -6; // parity error
+    return -7; // parity error
   }
   return 0; // cube ok
 }

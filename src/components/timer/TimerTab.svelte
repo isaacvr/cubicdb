@@ -48,11 +48,12 @@
   import { GANInput } from './input-handlers/GAN';
   import Simulator from '@components/Simulator.svelte';
   import { Search } from '@cstimer/lib/min2phase';
-  // import { clone } from '@helpers/object';
-  
+
   export let context: TimerContext;
   export let battle = false;
   export let enableKeyboard = true;
+  export let timerOnly = false;
+  export let scrambleOnly = false;
 
   let localLang: Readable<Language> = derived(globalLang, ($lang) => getLanguage( $lang ));
 
@@ -147,7 +148,17 @@
 
   /// SCRAMBLE
   let stateMessage: string = '...';
+  let canOpenDialog = (ev: string): boolean => {
+    if ( timerOnly ) {
+      return [ 'settings' ].indexOf(ev) > -1;
+    }
+
+    return true;
+  };
+
   let openDialog = (ev: string, dt: any, fn: Function) => {
+    if ( !canOpenDialog(ev) ) return;
+
     type = ev; modalData = dt; closeHandler = fn; show = true;
   };
 
@@ -176,6 +187,9 @@
       openDialog('settings', $session, (data: any) => {
         if ( data ) {
           $session = $session;
+          
+          if ( timerOnly ) return;
+
           initInputHandler();
           dataService.updateSession($session);
           initialCalc != $session.settings.calcAoX && updateStatistics(false);
@@ -206,6 +220,8 @@
     $lastSolve = ls;
     $allSolves.push( ls );
     $solves.push( ls );
+
+    if ( timerOnly || scrambleOnly ) return;
 
     if ( battle ) {
       ls.group = -1;
@@ -419,7 +435,7 @@
   }
 
   function updateTexts() {
-    solveControl[0].text = $localLang.TIMER.delete;
+    solveControl[0].text = $localLang.global.delete;
     solveControl[3].text = $localLang.TIMER.comments;
     options[0].text = `${ $localLang.TIMER.reloadScramble } [Ctrl + S]`;
     options[1].text = `${ $localLang.TIMER.edit } [Ctrl + E]`;
@@ -477,7 +493,15 @@
     });
   }
 
+  function refreshScramble() {
+    initScrambler();
+  }
+
   onMount(() => {
+    if ( timerOnly || scrambleOnly ) {
+      return;
+    }
+
     navigator.mediaDevices.addEventListener('devicechange', updateDevices);
 
     initInputHandler();
@@ -551,27 +575,64 @@
   on:keydown={ keyDown }
   on:mousemove={ handleMouseMove }
   on:mouseup={ handleMouseUp }
-  ></svelte:window>
-  
-  <!-- on:pointerdown|self={ pointerDown }
-  on:pointerup={ pointerUp } -->
-  <!-- on:touchstart|self={ pointerDown } -->
-  <!-- on:touchend={ pointerUp } -->
-<div
-  class="w-full h-full { textColor }"
-  >
-  <!-- Scramble and options -->
-  <div id="scramble" class="transition-all duration-300">
-    {#if !$scramble}
-      <span> {stateMessage} </span>
-    {/if}
-    <span
-      class:hide={ $isRunning }
-      class:battle={ battle }
-      contenteditable="false" bind:innerHTML={$scramble}></span>
+></svelte:window>
 
-    <div class="absolute top-1 right-12 flex flex-col" class:hide={ $isRunning }>
-      {#each options.filter((e, p) => !battle ? true : p === 3 || p === 5) as option}
+<div
+  class="w-full h-full { textColor } { (timerOnly || scrambleOnly) ? 'mt-8' : '' }"
+  >
+  {#if !timerOnly }
+    <!-- Scramble and options -->
+    <div id="scramble" class="transition-all duration-300">
+      {#if !$scramble}
+        <span> {stateMessage} </span>
+      {/if}
+      <span
+        class:hide={ $isRunning }
+        class:battle={ battle }
+        contenteditable="false" bind:innerHTML={$scramble}></span>
+
+      {#if !scrambleOnly }
+        <div class="absolute top-1 right-12 flex flex-col" class:hide={ $isRunning }>
+          {#each options.filter((e, p) => !battle ? true : p === 3 || p === 5) as option}
+            <Tooltip class="cursor-pointer" position="left" text={ option.text } hasKeybinding>
+              <button aria-label={ option.text } tabindex="0" class="my-3 mx-1 w-5 h-5 { textColor }"
+                on:click={ option.handler } on:keydown={ (e) => e.code === 'Space' ? e.preventDefault() : null }>
+                <svelte:component this={option.icon} width="100%" height="100%"/>
+              </button>
+            </Tooltip>
+          {/each}
+
+          {#if $session?.settings?.input === 'GAN Cube'}
+            <Tooltip class="cursor-pointer" position="left" text={ 'GAN Cube' } hasKeybinding>
+              <button aria-label={ 'GAN Cube' } tabindex="0" class="my-3 mx-1 w-5 h-5 { $bluetoothStatus ? 'text-blue-600' : textColor }"
+                on:click={ showBluetoothData } on:keydown={ (e) => e.code === 'Space' ? e.preventDefault() : null }>
+                <svelte:component this={ $bluetoothStatus ? BluetoothOnIcon : BluetoothOffIcon } width="100%" height="100%"/>
+              </button>
+            </Tooltip>
+          {/if}
+        </div>
+      {/if}
+    </div>
+
+    <!-- Notes -->
+    {#if showNotes && !battle}
+      <div id="notes" class="fixed z-10 w-56 h-56 bg-violet-400 rounded-md" style="
+        --left: { notesL }px;
+        --top: { notesT }px;
+        --width: { notesW }px;
+        --height: calc({ notesH }px + 1.5rem);
+      ">
+        <div class="relative w-full h-6 cursor-move flex items-center" on:mousedown={ handleMouseDown }>
+          <span class="ml-auto mr-2 cursor-pointer text-gray-700" on:click={ () => showNotes = false }>
+            <Close width="1.2rem" height="1.2rem"/>
+          </span>
+        </div>
+        <TextArea bind:value={ noteContent } cClass="w-full h-full" class="bg-gray-600 text-gray-300 p-4"></TextArea>
+      </div>
+    {/if}
+  {:else}
+    <div class="absolute top-1/3 right-12 flex flex-col" class:hide={ $isRunning }>
+      {#each options.filter((e, p) => p === 5) as option}
         <Tooltip class="cursor-pointer" position="left" text={ option.text } hasKeybinding>
           <button aria-label={ option.text } tabindex="0" class="my-3 mx-1 w-5 h-5 { textColor }"
             on:click={ option.handler } on:keydown={ (e) => e.code === 'Space' ? e.preventDefault() : null }>
@@ -579,101 +640,84 @@
           </button>
         </Tooltip>
       {/each}
-
-      {#if $session?.settings?.input === 'GAN Cube'}
-        <Tooltip class="cursor-pointer" position="left" text={ 'GAN Cube' } hasKeybinding>
-          <button aria-label={ 'GAN Cube' } tabindex="0" class="my-3 mx-1 w-5 h-5 { $bluetoothStatus ? 'text-blue-600' : textColor }"
-            on:click={ showBluetoothData } on:keydown={ (e) => e.code === 'Space' ? e.preventDefault() : null }>
-            <svelte:component this={ $bluetoothStatus ? BluetoothOnIcon : BluetoothOffIcon } width="100%" height="100%"/>
-          </button>
-        </Tooltip>
-      {/if}
-    </div>
-  </div>
-
-  <!-- Notes -->
-  {#if showNotes && !battle}
-    <div id="notes" class="fixed z-10 w-56 h-56 bg-violet-400 rounded-md" style="
-      --left: { notesL }px;
-      --top: { notesT }px;
-      --width: { notesW }px;
-      --height: calc({ notesH }px + 1.5rem);
-    ">
-      <div class="relative w-full h-6 cursor-move flex items-center" on:mousedown={ handleMouseDown }>
-        <span class="ml-auto mr-2 cursor-pointer text-gray-700" on:click={ () => showNotes = false }>
-          <Close width="1.2rem" height="1.2rem"/>
-        </span>
-      </div>
-      <TextArea bind:value={ noteContent } cClass="w-full h-full" class="bg-gray-600 text-gray-300 p-4"></TextArea>
     </div>
   {/if}
 
   <!-- Timer -->
-  <div id="timer" class={ "absolute text-9xl flex flex-col items-center justify-center " + 
-    ($session?.settings?.input === 'GAN Cube' ? 'bottom-8 h-auto' : 'top-1/3 h-32') }>
+  {#if !scrambleOnly}
+    <div id="timer" class={ "absolute text-9xl flex flex-col items-center justify-center " + 
+      ($session?.settings?.input === 'GAN Cube' ? 'bottom-8 h-auto' : 'top-1/3 h-32') }>
 
-    <!-- Cube3D -->
-    {#if $session?.settings?.input === 'GAN Cube'}
-      <section class="relative cube-3d">
-        <Simulator
-          enableDrag={ false }
-          enableKeyboard={ false }
-          gui={ false }
-          contained={ true }
-          showBackFace={ $session?.settings?.showBackFace }
-          bind:this={ simulator }
-        />
-      </section>
-    {/if}
-
-    {#if $session?.settings?.input === 'Manual'}
-      <div id="manual-inp">
-        <Input
-          bind:value={ timeStr } stopKeyupPropagation
-          on:UENTER={ addTimeString }
-          class="w-full h-36 text-center {
-            validTimeStr(timeStr) ? '' :  'border-red-400 border-2' }
-            focus-within:shadow-black"
-          inpClass="text-center"/>
-      </div>
-    {:else}
-      <span
-        class="timer { textColor }"
-        class:prevention={ $state === TimerState.PREVENTION }
-        class:ready={$ready}
-        hidden={$state === TimerState.RUNNING && !$session.settings.showElapsedTime}>
-          { $state === TimerState.STOPPED ? sTimer($lastSolve, $decimals, false) : timer($time, $decimals, false)}
-        </span>
-      
-      {#if $session?.settings?.input === 'StackMat' }
-        <span class="text-2xl flex gap-2 items-center">
-          { $localLang.TIMER.stackmatStatus }:
-          
-          <span class={ $stackmatStatus ? 'text-green-600' : 'text-red-600' }>
-            <svelte:component this={ $stackmatStatus ? WatchOnIcon : WatchOffIcon }/>
-          </span>
-        </span>
+      <!-- Cube3D -->
+      {#if $session?.settings?.input === 'GAN Cube'}
+        <section class="relative cube-3d">
+          <Simulator
+            enableDrag={ false }
+            enableKeyboard={ false }
+            gui={ false }
+            contained={ true }
+            showBackFace={ $session?.settings?.showBackFace }
+            bind:this={ simulator }
+          />
+        </section>
       {/if}
-    {/if}
 
-    <span
-      class="timer"
-      hidden={!($state === TimerState.RUNNING && !$session.settings.showElapsedTime)}>----</span> 
-    {#if $state === TimerState.STOPPED}
-      <div class="flex justify-center w-full" class:show={$state === TimerState.STOPPED}>
-        {#each solveControl.slice(Number(battle), solveControl.length) as control}
-          <Tooltip class="cursor-pointer" position="top" text={ control.text }>
-            <div class="my-3 mx-1 w-5 h-5 { control.highlight($solves[0] || {}) ? 'text-red-500' : '' }" on:click={ control.handler }>
-              <svelte:component this={control.icon} width="100%" height="100%"/>
-            </div>
-          </Tooltip>
-        {/each}
-      </div>
-    {/if}
-  </div>
+      {#if $session?.settings?.input === 'Manual'}
+        <div id="manual-inp">
+          <Input
+            bind:value={ timeStr } stopKeyupPropagation
+            on:UENTER={ addTimeString }
+            class="w-full h-36 text-center {
+              validTimeStr(timeStr) ? '' :  'border-red-400 border-2' }
+              focus-within:shadow-black"
+            inpClass="text-center"/>
+        </div>
+      {:else}
+        <span
+          class="timer { textColor }"
+          class:prevention={ $state === TimerState.PREVENTION }
+          class:ready={$ready}
+          hidden={$state === TimerState.RUNNING && !$session.settings.showElapsedTime}>
+            { $state === TimerState.STOPPED ? sTimer($lastSolve, $decimals, false) : timer($time, $decimals, false)}
+          </span>
+        
+        {#if $session?.settings?.input === 'StackMat' }
+          <span class="text-2xl flex gap-2 items-center">
+            { $localLang.TIMER.stackmatStatus }:
+            
+            <span class={ $stackmatStatus ? 'text-green-600' : 'text-red-600' }>
+              <svelte:component this={ $stackmatStatus ? WatchOnIcon : WatchOffIcon }/>
+            </span>
+          </span>
+        {/if}
+      {/if}
 
-  {#if !battle}
-    <!-- Hints -->
+      <span
+        class="timer"
+        hidden={!($state === TimerState.RUNNING && !$session.settings.showElapsedTime)}>----</span> 
+      {#if !timerOnly && $state === TimerState.STOPPED}
+        <div class="flex justify-center w-full" class:show={$state === TimerState.STOPPED}>
+          {#each solveControl.slice(Number(battle), solveControl.length) as control}
+            <Tooltip class="cursor-pointer" position="top" text={ control.text }>
+              <div class="my-3 mx-1 w-5 h-5 { control.highlight($solves[0] || {}) ? 'text-red-500' : '' }" on:click={ control.handler }>
+                <svelte:component this={control.icon} width="100%" height="100%"/>
+              </div>
+            </Tooltip>
+          {/each}
+        </div>
+      {/if}
+    </div>
+  {/if}
+
+  <!-- Refresh scramble -->
+  {#if scrambleOnly}
+    <Button class="mx-auto mt-[8rem] bg-purple-700 text-gray-300" on:click={ refreshScramble }>
+      { $localLang.global.refresh }
+    </Button>
+  {/if}
+
+  <!-- Hints -->
+  {#if !(battle || timerOnly || scrambleOnly) }
     <div id="hints"
       class="bg-white bg-opacity-10 w-max p-2 { textColor } rounded-md
         shadow-md absolute select-none left-0 top-1/4 transition-all duration-1000"
@@ -755,13 +799,13 @@
   {/if}
 
   <!-- Image -->
-  {#if $session?.settings?.genImage || battle}
+  {#if $session?.settings?.genImage || battle }
     <div
       id="preview-container"
       class="absolute bottom-2 flex items-center justify-center w-full transition-all duration-300
         select-none bg-transparent"
       class:expanded={ prevExpanded }
-      class:hide={ $isRunning || $session.settings.input === 'GAN Cube' }
+      class:hide={ $isRunning || $session.settings.input === 'GAN Cube' || timerOnly }
       on:click={() => prevExpanded = !prevExpanded }>
       <img
         on:dragstart|preventDefault
@@ -770,134 +814,142 @@
     </div>
   {/if}
 
-  <Modal bind:this={ modal } bind:show={ show } onClose={ closeHandler }>
-    <div class="max-w-lg max-h-[30rem]">
-      {#if type === 'edit-scramble'}
-        <TextArea on:keyup={ modalKeyupHandler }
-          class="bg-gray-600 text-gray-200"
-          bind:value={ modalData }/>
-        <div class="flex w-full justify-center my-2">
-          <Button ariaLabel={ $localLang.TIMER.cancel } on:click={() => modal.close()}>
-            { $localLang.TIMER.cancel }
-          </Button>
-          <Button ariaLabel={ $localLang.TIMER.save } on:click={() => modal.close( modalData.trim() )}>
-            { $localLang.TIMER.save }
-          </Button>
-        </div>
-      {/if}
-
-      {#if type === 'old-scrambles'}
-        <div class="grid grid-cols-4 w-full text-center">
-          <h2 class="col-span-3">{ $localLang.TIMER.scramble }</h2>
-          <h2 class="col-span-1">{ $localLang.TIMER.time }</h2>
-          {#each $solves as s }
-            <button aria-label={ $localLang.TIMER.scramble } tabindex="0" class="
-              col-span-3 cursor-pointer hover:text-blue-400 my-2 text-left
-              text-ellipsis overflow-hidden whitespace-nowrap
-            " on:click={ () => select(s) }>{ s.scramble }</button>
-            <span class="col-span-1 flex items-center justify-center">{ timer(s.time, false, true) }</span>
-          {/each}
-        </div>
-      {/if}
-
-      {#if type === 'settings'}
-        <section class="flex gap-4 items-center mb-4">
-          { $localLang.TIMER.inputMethod }: <Select bind:value={ modalData.settings.input } items={ TIMER_INPUT } transform={ (e) => e }/>
-        </section>
-
-        {#if modalData.settings.input === 'StackMat'}
-          <section class="mb-4"> { $localLang.TIMER.device }: <Select class="max-w-full"
-            bind:value={ deviceID } items={ deviceList }
-            label={ e => e[1] } transform={e => e[0]}/>
-          </section>
-        {/if}
-
-        {#if modalData.settings.input === 'Keyboard'}
-          <section class="flex gap-4 items-center">
-            <Checkbox
-            bind:checked={ modalData.settings.hasInspection }
-            class="w-5 h-5" label={ $localLang.TIMER.inspection }/>
-            
-            <Input type="number" class="mt-2 bg-gray-700 hidden-markers { modalData.settings.hasInspection ? 'text-gray-200' : '' }"
-            disabled={ !modalData.settings.hasInspection } bind:value={ modalData.settings.inspection }
-            min={5} max={60} step={5}/>
-          </section>
-
-          <section class="my-2">
-            <Checkbox
-              bind:checked={ modalData.settings.withoutPrevention }
-              class="w-5 h-5" label={ $localLang.TIMER.withoutPrevention }/>
-
-            <i class="text-sm text-yellow-500">({ $localLang.TIMER.withoutPreventionDescription })</i>
-          </section>
-          
-          <section>
-            <Checkbox bind:checked={ modalData.settings.showElapsedTime } class="w-5 h-5 my-2" label={ $localLang.TIMER.showTime }/>
-          </section>
-        {/if}
-
-        {#if modalData.settings.input === 'GAN Cube'}
-          <section class="bg-white bg-opacity-10 p-2 shadow-md rounded-md">
-            <div class="flex justify-center mb-4">
-              <Button class="bg-purple-600 text-gray-300" on:click={ searchBluetooth } loading={ isSearching }>
-                Search
-              </Button>
-            </div>
-
-            <ul>
-              {#each $bluetoothList as { deviceId, deviceName } (deviceId)}
-                <li class="flex items-center justify-between mb-2 pl-4 bg-white bg-opacity-10 rounded-md">
-                  { deviceName }
-                  <Button class={"text-gray-300 " + ( deviceId === deviceID ? 'bg-red-600' : 'bg-green-600' )}
-                    loading={ isConnecting } on:click={ () => connectBluetooth(deviceId)}>
-                    { deviceId === deviceID ? 'Disconnect' : 'Connect'}
-                  </Button>
-                </li>
-              {/each}
-            </ul>
-          </section>
-
-          <section>
-            <Checkbox
-              bind:checked={ modalData.settings.showBackFace } on:change={ (e) => $session = $session }
-              class="w-5 h-5" label={ 'Show back face' }/>
-          </section>
-        {/if}
-        
-        {#if modalData.settings.input != 'Manual'}
-          <section class="mt-2">
-            <Checkbox bind:checked={ modalData.settings.scrambleAfterCancel }
-            class="w-5 h-5 my-2" label={ $localLang.TIMER.refreshScramble }/>
-          </section>
-        {/if}
-
-        <section>
-          <Checkbox bind:checked={ modalData.settings.genImage } class="w-5 h-5 my-2" label={ $localLang.TIMER.genImage }/>
-          <i class="text-sm text-yellow-500">({ $localLang.TIMER.canHurtPerformance })</i>
-        </section>
-
-        <section>
-          <Checkbox bind:checked={ modalData.settings.recordCelebration }
-            class="w-5 h-5 my-2" label={ $localLang.TIMER.recordCelebration }/>
-        </section>
-        <section class="mt-4 flex gap-4">
-          { $localLang.TIMER.aoxCalculation }:
-          <div class="flex gap-2 items-center">
-            <Toggle checked={ !!modalData.settings.calcAoX } on:change={ (v) => modalData.settings.calcAoX = ~~v.detail.value }/>
-            <span class="ml-3">{ [$localLang.TIMER.sequential, $localLang.TIMER.groupOfX ][ ~~modalData?.settings?.calcAoX ] }</span>
+  <!-- Modal -->
+  <!-- {#if !timerOnly} -->
+    <Modal bind:this={ modal } bind:show={ show } onClose={ closeHandler }>
+      <div class="max-w-lg max-h-[30rem]">
+        {#if type === 'edit-scramble'}
+          <TextArea on:keyup={ modalKeyupHandler }
+            class="bg-gray-600 text-gray-200"
+            bind:value={ modalData }/>
+          <div class="flex w-full justify-center my-2">
+            <Button ariaLabel={ $localLang.global.cancel } on:click={() => modal.close()}>
+              { $localLang.global.cancel }
+            </Button>
+            <Button ariaLabel={ $localLang.global.save } on:click={() => modal.close( modalData.trim() )}>
+              { $localLang.global.save }
+            </Button>
           </div>
-        </section>
-        <section class="flex mt-4">
-          <Button ariaLabel={ $localLang.TIMER.cancel } flat on:click={ () => modal.close() }>
-            { $localLang.TIMER.cancel }
-          </Button>
-          <Button ariaLabel={ $localLang.TIMER.save } flat on:click={ () => modal.close(true) }>
-            { $localLang.TIMER.save }
-          </Button>
-        </section>
-      {/if}
-    </div>
-  </Modal>
+        {/if}
+
+        {#if type === 'old-scrambles'}
+          <div class="grid grid-cols-4 w-full text-center">
+            <h2 class="col-span-3">{ $localLang.TIMER.scramble }</h2>
+            <h2 class="col-span-1">{ $localLang.TIMER.time }</h2>
+            {#each $solves as s }
+              <button aria-label={ $localLang.TIMER.scramble } tabindex="0" class="
+                col-span-3 cursor-pointer hover:text-blue-400 my-2 text-left
+                text-ellipsis overflow-hidden whitespace-nowrap
+              " on:click={ () => select(s) }>{ s.scramble }</button>
+              <span class="col-span-1 flex items-center justify-center">{ timer(s.time, false, true) }</span>
+            {/each}
+          </div>
+        {/if}
+
+        {#if type === 'settings'}
+          {#if !timerOnly}
+            <section class="flex gap-4 items-center mb-4">
+              { $localLang.TIMER.inputMethod }: <Select bind:value={ modalData.settings.input } items={ TIMER_INPUT } transform={ (e) => e }/>
+            </section>
+          {/if}
+
+          {#if modalData.settings.input === 'StackMat'}
+            <section class="mb-4"> { $localLang.TIMER.device }: <Select class="max-w-full"
+              bind:value={ deviceID } items={ deviceList }
+              label={ e => e[1] } transform={e => e[0]}/>
+            </section>
+          {/if}
+
+          {#if modalData.settings.input === 'Keyboard'}
+            <section class="flex gap-4 items-center">
+              <Checkbox
+              bind:checked={ modalData.settings.hasInspection }
+              class="w-5 h-5" label={ $localLang.TIMER.inspection }/>
+              
+              <Input type="number" class="mt-2 bg-gray-700 hidden-markers { modalData.settings.hasInspection ? 'text-gray-200' : '' }"
+              disabled={ !modalData.settings.hasInspection } bind:value={ modalData.settings.inspection }
+              min={5} max={60} step={5}/>
+            </section>
+
+            <section class="my-2">
+              <Checkbox
+                bind:checked={ modalData.settings.withoutPrevention }
+                class="w-5 h-5" label={ $localLang.TIMER.withoutPrevention }/>
+
+              <i class="text-sm text-yellow-500">({ $localLang.TIMER.withoutPreventionDescription })</i>
+            </section>
+            
+            <section>
+              <Checkbox bind:checked={ modalData.settings.showElapsedTime } class="w-5 h-5 my-2" label={ $localLang.TIMER.showTime }/>
+            </section>
+          {/if}
+
+          {#if modalData.settings.input === 'GAN Cube'}
+            <section class="bg-white bg-opacity-10 p-2 shadow-md rounded-md">
+              <div class="flex justify-center mb-4">
+                <Button class="bg-purple-600 text-gray-300" on:click={ searchBluetooth } loading={ isSearching }>
+                  Search
+                </Button>
+              </div>
+
+              <ul>
+                {#each $bluetoothList as { deviceId, deviceName } (deviceId)}
+                  <li class="flex items-center justify-between mb-2 pl-4 bg-white bg-opacity-10 rounded-md">
+                    { deviceName }
+                    <Button class={"text-gray-300 " + ( deviceId === deviceID ? 'bg-red-600' : 'bg-green-600' )}
+                      loading={ isConnecting } on:click={ () => connectBluetooth(deviceId)}>
+                      { deviceId === deviceID ? 'Disconnect' : 'Connect'}
+                    </Button>
+                  </li>
+                {/each}
+              </ul>
+            </section>
+
+            <section>
+              <Checkbox
+                bind:checked={ modalData.settings.showBackFace } on:change={ (e) => $session = $session }
+                class="w-5 h-5" label={ 'Show back face' }/>
+            </section>
+          {/if}
+          
+          {#if modalData.settings.input != 'Manual' && !timerOnly}
+            <section class="mt-2">
+              <Checkbox bind:checked={ modalData.settings.scrambleAfterCancel }
+              class="w-5 h-5 my-2" label={ $localLang.TIMER.refreshScramble }/>
+            </section>
+          {/if}
+
+          {#if !timerOnly}
+            <section>
+              <Checkbox bind:checked={ modalData.settings.genImage } class="w-5 h-5 my-2" label={ $localLang.TIMER.genImage }/>
+              <i class="text-sm text-yellow-500">({ $localLang.TIMER.canHurtPerformance })</i>
+            </section>
+
+            <section>
+              <Checkbox bind:checked={ modalData.settings.recordCelebration }
+                class="w-5 h-5 my-2" label={ $localLang.TIMER.recordCelebration }/>
+            </section>
+            <section class="mt-4 flex gap-4">
+              { $localLang.TIMER.aoxCalculation }:
+              <div class="flex gap-2 items-center">
+                <Toggle checked={ !!modalData.settings.calcAoX } on:change={ (v) => modalData.settings.calcAoX = ~~v.detail.value }/>
+                <span class="ml-3">{ [$localLang.TIMER.sequential, $localLang.TIMER.groupOfX ][ ~~modalData?.settings?.calcAoX ] }</span>
+              </div>
+            </section>
+          {/if}
+
+          <section class="flex mt-4">
+            <Button ariaLabel={ $localLang.global.cancel } flat on:click={ () => modal.close() }>
+              { $localLang.global.cancel }
+            </Button>
+            <Button ariaLabel={ $localLang.global.save } flat on:click={ () => modal.close(true) }>
+              { $localLang.global.save }
+            </Button>
+          </section>
+        {/if}
+      </div>
+    </Modal>
+  <!-- {/if} -->
 </div>
 
 <style lang="postcss">

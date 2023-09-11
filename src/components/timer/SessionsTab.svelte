@@ -301,7 +301,7 @@
         <span class="text-center font-bold">{ sTimer(solve, true) }</span>
 
         <div class="absolute right-1 top-0 h-full flex flex-col items-center justify-evenly">
-          {#if solve.penalty === 1} <span class="font-small">+2</span> {/if}
+          {#if solve.penalty === Penalty.P2} <span class="font-small">+2</span> {/if}
           {#if solve.comments} <CommentPlusIcon width=".8rem"/> {/if}
         </div>
       </div>
@@ -346,14 +346,14 @@
       { $localLang.TIMER.invertSelection } &nbsp; <span class="flex ml-auto text-yellow-400">[V]</span>
     </Button>
     
-    <Button ariaLabel={ $localLang.TIMER.cancel }
+    <Button ariaLabel={ $localLang.global.cancel }
       tabindex={ $selected ? 0 : -1 } flat on:click={() => selectNone()}>
-      { $localLang.TIMER.cancel } &nbsp; <span class="flex ml-auto text-yellow-400">[Esc]</span>
+      { $localLang.global.cancel } &nbsp; <span class="flex ml-auto text-yellow-400">[Esc]</span>
     </Button>
 
-    <Button ariaLabel={ $localLang.TIMER.delete }
+    <Button ariaLabel={ $localLang.global.delete }
       tabindex={ $selected ? 0 : -1 } flat on:click={() => deleteSelected()}>
-      { $localLang.TIMER.delete } &nbsp; <span class="flex ml-auto text-yellow-400">[D]</span>
+      { $localLang.global.delete } &nbsp; <span class="flex ml-auto text-yellow-400">[D]</span>
     </Button>
   </div>
 
@@ -388,19 +388,19 @@
       <CommentIcon /> <TextArea bind:value={ sSolve.comments } placeholder={ $localLang.TIMER.comment }/>
     </div>
     <div class="mt-2 flex">
-      <Button ariaLabel={ $localLang.TIMER.delete } flat class="text-red-500"
+      <Button ariaLabel={ $localLang.global.delete } flat class="text-red-500"
         on:click={ () => { _delete([ sSolve ]); modal.close()} }>
-        <DeleteIcon /> { $localLang.TIMER.delete }
+        <DeleteIcon /> { $localLang.global.delete }
       </Button>
       
-      <Button ariaLabel={ $localLang.TIMER.cancel } flat
+      <Button ariaLabel={ $localLang.global.cancel } flat
         on:click={ () => modal.close() } class="">
-        <CloseIcon /> { $localLang.TIMER.cancel }
+        <CloseIcon /> { $localLang.global.cancel }
       </Button>
       
-      <Button ariaLabel={ $localLang.TIMER.save } flat
+      <Button ariaLabel={ $localLang.global.save } flat
         on:click={ () => modal.close(sSolve) } class="mr-2">
-        <SendIcon /> { $localLang.TIMER.save }
+        <SendIcon /> { $localLang.global.save }
       </Button>
 
       <Select items={[
@@ -416,15 +416,15 @@
   <Modal bind:this={ deleteAllModal } bind:show={ showDeleteAll } onClose={ deleteAllHandler }>
     <h1 class="text-gray-400 mb-4 text-lg">{ $localLang.TIMER.removeAllSolves }</h1>
     <div class="flex justify-evenly">
-      <Button ariaLabel={ $localLang.TIMER.cancel }
+      <Button ariaLabel={ $localLang.global.cancel }
         on:click={ () => deleteAllModal.close() }>
-        { $localLang.TIMER.cancel }
+        { $localLang.global.cancel }
       </Button>
       
-      <Button ariaLabel={ $localLang.TIMER.delete }
+      <Button ariaLabel={ $localLang.global.delete }
         class="bg-red-800 hover:bg-red-700 text-gray-400"
         on:click={ () => deleteAllModal.close(true) }>
-        { $localLang.TIMER.delete }
+        { $localLang.global.delete }
       </Button>
     </div>
   </Modal>
@@ -438,7 +438,7 @@
     <li on:click={ () => editSolve(sSolve) }>{ $localLang.TIMER.edit }</li>
     <li on:click={ () => selectSolve(sSolve) }>{ $localLang.TIMER.select }</li>
     <li on:click={ () => toClipboard(sSolve.scramble) }>{ $localLang.TIMER.copyScramble }</li>
-    <li on:click={ () => _delete([sSolve]) }>{ $localLang.TIMER.delete }</li>
+    <li on:click={ () => _delete([sSolve]) }>{ $localLang.global.delete }</li>
   </ul>
 </main>
 

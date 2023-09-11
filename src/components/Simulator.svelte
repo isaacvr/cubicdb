@@ -629,7 +629,7 @@
         <Checkbox bind:checked={ showBackFace } label={ 'Show back face' }/> 
       </span>
 
-      <Button on:click={ hideGUI }>{ $localLang.SIMULATOR.cancel }</Button>
+      <Button on:click={ hideGUI }>{ $localLang.global.cancel }</Button>
       <Button
         class="bg-green-700 hover:bg-green-600 text-gray-300"
         on:click={ () => {resetPuzzle(); hideGUI(); }}>{ $localLang.SIMULATOR.setPuzzle }</Button>

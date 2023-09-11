@@ -56,11 +56,17 @@
         ready: true,
         cube: '/assets/megaminx.png',
       }, {
-        title: HOME.settings,
-        route: "/settings",
-        timer: false,
+        title: HOME.contest,
+        route: '/contest',
+        cube: '/assets/logo-500.png',
+        ready: showPrivate,
+        // puzzle: new Puzzle({ type: 'redi' })
+      }, {
+        title: HOME.tools,
+        route: '/tools',
+        cube: '/assets/tools.png',
         ready: true,
-        cube: '/assets/settings.png'
+        timer: false,
       }, {
         title: HOME.importExport,
         route: '/import-export',
@@ -68,11 +74,11 @@
         ready: true,
         timer: false,
       }, {
-        title: HOME.contest,
-        route: '/contest',
-        cube: '/assets/logo-500.png',
-        ready: showPrivate,
-        // puzzle: new Puzzle({ type: 'redi' })
+        title: HOME.settings,
+        route: "/settings",
+        timer: false,
+        ready: true,
+        cube: '/assets/settings.png'
       }, {
         title: 'CubeDB',
         route: '/cubedb',

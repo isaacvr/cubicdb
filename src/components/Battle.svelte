@@ -113,7 +113,7 @@
     for (let i = 0, maxi = pl.length; i < maxi; i += 1) {
       let times = pl[i][1].times.map(t => t === null ? Infinity : t);
 
-      pl[i][1].times[5] = getAverage(5, times, AverageSetting.SEQUENTIAL)[4];
+      pl[i][1].times[5] = getAverage(5, times, AverageSetting.SEQUENTIAL)[4] || Infinity;
       pl[i][1].times[6] = Math.min( ...times.slice(0, 5) );
       pl[i][1].times[7] = Math.max( ...times.slice(0, 5) );
     }

@@ -16,8 +16,10 @@
   let finalLang = $globalLang;
   let dataService = DataService.getInstance();
   let uSub: Unsubscriber;
+  let language = $globalLang;
 
   let localLang: Readable<Language> = derived(globalLang, ($lang, set) => {
+    language = $lang;
     set( getLanguage( $lang ) );
   });
 
@@ -34,7 +36,6 @@
   const DEFAULT_APP_FONT = 'Ubuntu';
   const DEFAULT_TIMER_FONT = 'CQMono';
 
-  let language = $globalLang;
   let appFont = localStorage.getItem('app-font') || DEFAULT_APP_FONT;
   let timerFont = localStorage.getItem('timer-font') || DEFAULT_TIMER_FONT;
   let canCheckUpdate = true;
@@ -102,7 +103,7 @@
                 text: $localLang.SETTINGS.alreadyUpdatedText,
                 fixed: true,
                 actions: [
-                  { text: $localLang.SETTINGS.accept, callback: () => {} }
+                  { text: $localLang.global.accept, callback: () => {} }
                 ],
                 key: crypto.randomUUID(),
               });
@@ -112,8 +113,8 @@
                 text: $localLang.SETTINGS.updateAvailableText,
                 fixed: true,
                 actions: [
-                  { text: $localLang.SETTINGS.cancelAction, callback: () => {} },
-                  { text: $localLang.SETTINGS.updateAction, callback: updateNow },
+                  { text: $localLang.global.cancel, callback: () => {} },
+                  { text: $localLang.global.update, callback: updateNow },
                 ],
                 key: crypto.randomUUID(),
               });
@@ -188,8 +189,8 @@
   
   <!-- Actions -->
   <div class="actions flex gap-4 items-center justify-center mt-8">
-    <Button class="text-gray-300 bg-green-700" on:click={ save }>{ $localLang.SETTINGS.save }</Button>
-    <Button class="text-gray-300 bg-orange-700" on:click={ reset }>{ $localLang.SETTINGS.reset }</Button>
+    <Button class="text-gray-300 bg-green-700" on:click={ save }>{ $localLang.global.save }</Button>
+    <Button class="text-gray-300 bg-orange-700" on:click={ reset }>{ $localLang.global.reset }</Button>
   </div>
 </main>
 

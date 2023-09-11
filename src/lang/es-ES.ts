@@ -8,6 +8,15 @@ export const Spanish: Language = {
     done: 'Hecho!',
     scrambleCopied: 'Mezcla copiada al portapapeles',
     copiedToClipboard: 'Copiado al portapapeles',
+    accept: 'Aceptar',
+    cancel: 'Cancelar',
+    refresh: 'Refrescar',
+    delete: 'Eliminar',
+    add: 'Añadir',
+    update: 'Actualizar',
+    save: 'Guardar',
+    clear: 'Limpiar',
+    reset: 'Reiniciar',
   },
   NAVBAR: {
     home: 'Inicio',
@@ -22,6 +31,7 @@ export const Spanish: Language = {
         [/contest/i, 'Concursos'],
         [/import-export/i, 'Importar-Exportar'],
         [/settings/i, 'Configuración'],
+        [/tools/i, 'Herramientas'],
       ];
 
       for (let i = 0, maxi = mp.length; i < maxi; i += 1) {
@@ -43,14 +53,13 @@ export const Spanish: Language = {
     settings: 'Configuración',
     importExport: 'Importar / Exportar',
     contest: 'Concursos',
+    tools: 'Herramientas',
   },
   SETTINGS: {
     title: 'Configuración',
     language: 'Idioma',
     appFont: 'Fuente',
     timerFont: 'Fuente del timer',
-    save: 'Guardar',
-    reset: 'Reiniciar',
 
     // Notifications
     saved: 'Hecho!',
@@ -64,10 +73,6 @@ export const Spanish: Language = {
     updateAvailableText: 'Hay una nueva versión disponible.',
     alreadyUpdated: 'Actualizado',
     alreadyUpdatedText: 'Ya tienes la última versión de CubeDB.',
-    accept: 'Aceptar',
-
-    cancelAction: 'Cancelar',
-    updateAction: 'Actualizar',
 
     updateError: 'Error',
     updateErrorText: 'Hubo un error al intentar actualizar.',
@@ -90,9 +95,6 @@ export const Spanish: Language = {
     average: 'Promedio',
     deviation: 'Desviación',
     count: 'Total',
-
-    cancel: 'Cancelar',
-    save: 'Guardar',
 
     congrats: 'Felicitaciones',
     from: 'desde',
@@ -120,7 +122,6 @@ export const Spanish: Language = {
     recordCelebration: 'Celebrar cuando se rompe un record',
 
     // Last solve tooltip
-    delete: 'Eliminar',
     comments: 'Comentarios',
 
     reloadScramble: 'Nueva mezcla',
@@ -224,7 +225,6 @@ export const Spanish: Language = {
     puzzleSettings: 'Configurar puzzle',
     puzzle: 'Puzzle',
     order: 'Orden',
-    cancel: 'Cancelar',
     setPuzzle: 'Establecer',
   },
   IMPORT_EXPORT: {
@@ -235,7 +235,6 @@ export const Spanish: Language = {
     selectFile: 'Abrir',
     selectAll: 'Elegir todas',
     selectNone: 'Elegir ninguna',
-    save: 'Guardar',
     total: 'Total',
     showingOnly50: 'mostrando solo 50',
   },
@@ -244,5 +243,43 @@ export const Spanish: Language = {
     version: 'Versión',
     creator: 'Creador',
     donations: 'Donaciones',
+  },
+  TOOLS: {
+    cubedbBatch: 'CubeDB Scrambles',
+    timerOnly: 'Solo Temporizador',
+    scrambleOnly: 'Solo Scrambles',
+    batchScramble: 'Grupos de Scrambles',
+    statistics: 'Estadísticas',
+    metrics: 'Métricas',
+    solver: 'Solucionador 3x3',
+
+    // Statistics
+    writeYourTime: 'Escribe tu tiempo aquí',
+    clickToDelete: 'Click para eliminar',
+    
+    // Metrics
+    writeYourScramble: 'Escribe la mezcla aquí',
+
+    // Descriptions
+    ETM: 'ETM (Execution Turn Metric): En esta métrica, cada movimiento de las capas externas, bloques o rotaciones, cuentan como 1 movimiento.',
+    QTM: 'QTM (Quarter Turn Metric): En esta métrica, cada movimiento de 90 grados de las capas externas, cuentan como 1 movimiento. Los movimientos dobles cuentan como 2.',
+    HTM: 'HTM (Half Turn Metric): Cada rotación de las capas externas en cualquier ángulo, cuenta como 1 movimiento. Los movimientos de las capas internas cuentan como 2.',
+    OBTM: 'OBTM (Outer Block Turn Metric): Cada rotación de las capas externas o bloques, cuentan como 1 movimiento. Las capas internas cuentan como 2 movimientos.',
+    STM: 'STM (Slice Turn Metric): Cada capa, interna o externa, cuenta como 1 movimiento.',
+
+    // Solver
+    colors: 'Colores',
+    solve: 'Resolver',
+    stickers: 'Pegatinas',
+    error: 'Error',
+    invalidCube: 'Cubo no válido.',
+    missingEdges: 'Faltan algunas aristas.',
+    flippedEdge: 'Hay una arista girada.',
+    missingCorners: 'Faltan algunas esquinas.',
+    twistedCornerClockwise: 'Hay una esquina girada en sentido horario.',
+    twistedCornerCounterclockwise: 'Hay una esquina girada en sentido antihorario.',
+    parity: 'Hay paridad (Dos esquinas o dos aristsa intercambiadas).',
+    solutionFound: 'Solución encontrada',
+    solutionInstruction: 'Con el centro verde al frente y el blanco arriba:',
   }
 }

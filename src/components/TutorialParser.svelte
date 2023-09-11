@@ -139,7 +139,7 @@
       let title = tut?.content.find(b => b.type === 'title');
 
       if ( data.content.type === 'cubes' ) {
-        data.content.cubes.forEach((c: CubeType) => {
+        data.content.cubes.forEach((c: CubeType & { rotation: any }) => {
           if ( c.type != 'arrow' ) {
             c.rotation.x = c.rotation.x * Math.PI / 180;
             c.rotation.y = c.rotation.y * Math.PI / 180;
@@ -186,6 +186,10 @@
 
   function scrollHandler(e: any) {
     toTop = e.target.scrollTop > 100;
+  }
+
+  function getProperty(obj: any, prop: string) {
+    return obj[prop];
   }
 
   onMount(() => {
@@ -277,9 +281,9 @@
       {#if block.type === 'cubes'}
         {#each block.cubes || [] as cb}
           {#if cb.type != 'arrow'}
-            <img class="puzzle-img-mini" src={cb.img || ''} alt="">
+            <img class="puzzle-img-mini" src={ getProperty(cb, 'img') || ''} alt="">
           {:else}
-          <Tooltip text={ cb.text } class="cursor-help">
+          <Tooltip text={ getProperty(cb, 'text') } class="cursor-help">
             <ArrowRightIcon width="1.5rem" height="1.5rem" />
           </Tooltip>
           {/if}

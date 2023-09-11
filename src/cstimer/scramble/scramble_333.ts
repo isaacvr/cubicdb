@@ -642,11 +642,11 @@ export function getEasyCrossScramble(type, length) {
   return getAnyScramble(cases[0], cases[1], 0xffffffff, 0xffffffff);
 }
 
-export function genFacelet(facelet) {
+export function genFacelet(facelet: string) {
   return search.solution(facelet, 21, 1e9, 50, 2);
 }
 
-export function solvFacelet(facelet) {
+export function solvFacelet(facelet: string) {
   return search.solution(facelet, 21, 1e9, 50, 0);
 }
 
