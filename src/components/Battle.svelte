@@ -1,7 +1,6 @@
 <script lang="ts">
   import { io, Socket } from 'socket.io-client';
-  import { MENU } from "@constants";
-  import { AverageSetting, type Game, type Solve } from "@interfaces";
+  import { AverageSetting, type Game, type Language, type Solve } from "@interfaces";
   import Button from "@material/Button.svelte";
   import Input from "@material/Input.svelte";
   import Select from "@material/Select.svelte";
@@ -14,6 +13,20 @@
   import CloseIcon from '@icons/Close.svelte';
   import Checkbox from './material/Checkbox.svelte';
   import { getAverage } from '@helpers/statistics';
+  import { derived, type Readable } from 'svelte/store';
+  import type { SCRAMBLE_MENU } from '@constants';
+  import { globalLang } from '@stores/language.service';
+  import { getLanguage } from '@lang/index';
+
+  let MENU: SCRAMBLE_MENU[] = [];
+  let groups: string[] = [];
+  
+  let localLang: Readable<Language> = derived(globalLang, ($lang) => {
+    let l = getLanguage( $lang );
+    MENU = l.MENU;
+    groups = MENU.map(e => e[0]);
+    return l;
+  });
 
   type STATE = 'idle' | 'create' | 'join' | 'waiting' | 'play' | 'error' | 'gameover';
   const TITLE: Map<STATE, string> = new Map([

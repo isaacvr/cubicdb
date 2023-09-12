@@ -2,7 +2,7 @@ import type { Puzzle } from './../classes/puzzle/puzzle';
 import type { Sticker } from './../classes/puzzle/Sticker';
 import type { Piece } from './../classes/puzzle/Piece';
 import type { Vector3D } from '../classes/vector3d';
-import type { CubeMode } from "../constants";
+import type { CubeMode, SCRAMBLE_MENU } from "../constants";
 import type { Writable } from 'svelte/store';
 
 export const PuzzleTypeName = [
@@ -777,7 +777,8 @@ export interface Language {
     parity: string;
     solutionFound: string;
     solutionInstruction: string;
-  }
+  },
+  MENU: SCRAMBLE_MENU[]
 }
 
 export interface BluetoothDeviceData {

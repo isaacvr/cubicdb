@@ -4,7 +4,7 @@
   import Select from "@components/material/Select.svelte";
   import { onDestroy, onMount } from "svelte";
   import Adaptors from "./adaptors";
-  import { MODE_MAP } from "@constants";
+  import { getModeMap } from "@constants";
   import { timer } from "@helpers/timer";
   import { DataService } from "@stores/data.service";
   import { derived, type Readable, type Unsubscriber } from "svelte/store";
@@ -12,7 +12,13 @@
   import { globalLang } from "@stores/language.service";
   import { getLanguage } from "@lang/index";
 
-  let localLang: Readable<Language> = derived(globalLang, ($lang) => getLanguage( $lang ));
+  let MODE_MAP: Map<string, string>;
+
+  let localLang: Readable<Language> = derived(globalLang, ($lang) => {
+    let l = getLanguage( $lang );
+    MODE_MAP = getModeMap( l.MENU );
+    return l;
+  });
 
   let dataService = DataService.getInstance();
 
@@ -162,7 +168,7 @@
     <Button on:click={ () => isImport = true } class="bg-{ isImport ? "green" : "gray"}-800 text-gray-300">{ $localLang.IMPORT_EXPORT.import }</Button>
     <Button on:click={ () => isImport = false } class="bg-{ !isImport ? "green" : "gray"}-800 text-gray-300">{ $localLang.IMPORT_EXPORT.export }</Button>
     {#if !isImport}
-      <Button on:click={ exportData } class="bg-purple-800 text-gray-300">{ $localLang.IMPORT_EXPORT.save }</Button>
+      <Button on:click={ exportData } class="bg-purple-800 text-gray-300">{ $localLang.global.save }</Button>
     {/if}
   </section>
 
@@ -181,7 +187,7 @@
         {#if cubeData}
           <Button on:click={ selectAll } class="bg-orange-800 text-gray-300">{ $localLang.IMPORT_EXPORT.selectAll }</Button>
           <Button on:click={ selectNone } class="bg-orange-800 text-gray-300">{ $localLang.IMPORT_EXPORT.selectNone }</Button>
-          <Button on:click={ save } class="bg-green-800 text-gray-300">{ $localLang.IMPORT_EXPORT.save }</Button>
+          <Button on:click={ save } class="bg-green-800 text-gray-300">{ $localLang.global.save }</Button>
         {/if}
       </div>
     </section>

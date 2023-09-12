@@ -9,7 +9,7 @@
   import JSConfetti from 'js-confetti';
   
   /// Data
-  import { isNNN, MENU, SessionDefaultSettings } from '@constants';
+  import { isNNN, SessionDefaultSettings, type SCRAMBLE_MENU } from '@constants';
   import { DataService } from '@stores/data.service';
   
   /// Components
@@ -36,15 +36,16 @@
   import DeleteIcon from '@icons/Delete.svelte';
   
   /// Types
-  import { TimerState, AverageSetting, type Solve, type Session, Penalty, type Statistics, type TimerContext, type PuzzleOptions, type Language, type BluetoothDeviceData } from '@interfaces';
+  import { TimerState, type Solve, type Session, Penalty, type Statistics, type TimerContext, type PuzzleOptions, type Language, type BluetoothDeviceData } from '@interfaces';
   import { Puzzle } from '@classes/puzzle/puzzle';
   import { PX_IMAGE } from '@constants';
   import { ScrambleParser } from '@classes/scramble-parser';
-  import { getAverageS, getUpdatedStatistics } from '@helpers/statistics';
-  import { adjustMillis, infinitePenalty, timer } from '@helpers/timer';
+  import { getUpdatedStatistics } from '@helpers/statistics';
+  import { timer } from '@helpers/timer';
   import { globalLang } from '@stores/language.service';
   import { getLanguage } from '@lang/index';
   import { NotificationService } from '@stores/notification.service';
+    import type { LessStencilFunc } from 'three';
   
   export let battle = false;
   export let useScramble = '';
@@ -55,7 +56,16 @@
   export let timerOnly = false;
   export let scrambleOnly = false;
 
-  let localLang: Readable<Language> = derived(globalLang, ($lang) => getLanguage( $lang ));
+  let MENU: SCRAMBLE_MENU[] = [];
+  let groups: string[] = [];
+  
+  let localLang: Readable<Language> = derived(globalLang, ($lang) => {
+    let l = getLanguage( $lang );
+    MENU = l.MENU;
+    groups = MENU.map(e => e[0]);
+    selectedGroup(false);
+    return l;
+  });
 
   const INITIAL_STATISTICS: Statistics = {
     best: { value: 0, better: false, prev: Infinity },
@@ -86,7 +96,6 @@
   const notService = NotificationService.getInstance();
 
   /// GENERAL
-  const groups = MENU.map((e, p) => e[0]);
   let modes: { 0: string, 1: string, 2: number }[] = [];
   let filters: string[] = [];
   let sessions: Session[] = [];  
@@ -338,20 +347,22 @@
     }
   }
 
-  function selectedFilter() {
-    initScrambler();
+  function selectedFilter(rescramble = true) {
+    rescramble && initScrambler();
   }
 
-  function selectedMode() {
+  function selectedMode(rescramble = true) {
     filters = all.pScramble.filters.get($mode[1]) || [];
     $prob = -1;
-    selectedFilter();
+    selectedFilter(rescramble);
   }
 
-  function selectedGroup() {
+  function selectedGroup(rescramble = true) {
+    if ( !MENU.length || !$group ) return;
+
     modes = MENU[ $group ][1];
     $mode = modes[0];
-    selectedMode();
+    selectedMode(rescramble);
   }
 
   function selectedSession() {

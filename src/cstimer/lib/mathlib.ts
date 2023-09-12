@@ -618,9 +618,9 @@ export class CubieCube {
 
       CubieCube.EdgeMult(this, CubieCube.moveCube[_m], tmpCubie);
       CubieCube.CornMult(this, CubieCube.moveCube[_m], tmpCubie);
-      
+
       this.init(tmpCubie.ca, tmpCubie.ea);
-      
+
       return _m;
     }
     axis = 'UwRwFwDwLwBw'.indexOf(face);
@@ -669,18 +669,18 @@ export class CubieCube {
   }
 
   selfConj(conj?: number) {
-		if (conj === undefined) {
-			conj = this.ori;
-		}
+    if (conj === undefined) {
+      conj = this.ori;
+    }
 
-		if (conj != 0) {
-			CubieCube.CornMult(CubieCube.rotCube[conj], this, tmpCubie);
-			CubieCube.EdgeMult(CubieCube.rotCube[conj], this, tmpCubie);
-			CubieCube.CornMult(tmpCubie, CubieCube.rotCube[CubieCube.rotMulI[0][conj]], this);
-			CubieCube.EdgeMult(tmpCubie, CubieCube.rotCube[CubieCube.rotMulI[0][conj]], this);
-			this.ori = CubieCube.rotMulI[this.ori][conj] || 0;
-		}
-	}
+    if (conj != 0) {
+      CubieCube.CornMult(CubieCube.rotCube[conj], this, tmpCubie);
+      CubieCube.EdgeMult(CubieCube.rotCube[conj], this, tmpCubie);
+      CubieCube.CornMult(tmpCubie, CubieCube.rotCube[CubieCube.rotMulI[0][conj]], this);
+      CubieCube.EdgeMult(tmpCubie, CubieCube.rotCube[CubieCube.rotMulI[0][conj]], this);
+      this.ori = CubieCube.rotMulI[this.ori][conj] || 0;
+    }
+  }
 
 }
 
@@ -748,93 +748,195 @@ export function createPrun(
 }
 
 //state_params: [[init, doMove, size, [maxd], [N_INV]], [...]...]
-export function Solver(N_MOVES, N_POWER, state_params) {
-  this.N_STATES = state_params.length;
-  this.N_MOVES = N_MOVES;
-  this.N_POWER = N_POWER;
-  this.state_params = state_params;
-  this.inited = false;
-}
+// export function Solver(N_MOVES, N_POWER, state_params) {
+//   this.N_STATES = state_params.length;
+//   this.N_MOVES = N_MOVES;
+//   this.N_POWER = N_POWER;
+//   this.state_params = state_params;
+//   this.inited = false;
+// }
 
-let _ = Solver.prototype;
+// let _ = Solver.prototype;
 
-_.search = function (state, minl, MAXL) {
-  MAXL = (MAXL || 99) + 1;
-  if (!this.inited) {
-    this.move = [];
+// _.search = function (state, minl, MAXL) {
+//   MAXL = (MAXL || 99) + 1;
+//   if (!this.inited) {
+//     this.move = [];
+//     this.prun = [];
+//     for (let i = 0; i < this.N_STATES; i++) {
+//       let state_param = this.state_params[i];
+//       let init = state_param[0];
+//       let doMove = state_param[1];
+//       let size = state_param[2];
+//       let maxd = state_param[3];
+//       let N_INV = state_param[4];
+//       this.move[i] = [];
+//       this.prun[i] = [];
+//       createMove(this.move[i], size, doMove, this.N_MOVES);
+//       createPrun(
+//         this.prun[i],
+//         init,
+//         size,
+//         maxd,
+//         this.move[i],
+//         this.N_MOVES,
+//         this.N_POWER,
+//         N_INV
+//       );
+//     }
+//     this.inited = true;
+//   }
+//   this.sol = [];
+
+//   let maxl;
+
+//   for (maxl = minl; maxl < MAXL; maxl++) {
+//     if (this.idaSearch(state, maxl, -1)) {
+//       break;
+//     }
+//   }
+//   return maxl == MAXL ? null : this.sol.reverse();
+// };
+
+// _.toStr = function (sol, move_map, power_map) {
+//   let ret = [];
+//   for (let i = 0; i < sol.length; i++) {
+//     ret.push(move_map[sol[i][0]] + power_map[sol[i][1]]);
+//   }
+//   return ret.join(" ").replace(/ +/g, " ");
+// };
+
+// _.idaSearch = function (state, maxl, lm) {
+//   let N_STATES = this.N_STATES;
+//   for (let i = 0; i < N_STATES; i++) {
+//     if (getPruning(this.prun[i], state[i]) > maxl) {
+//       return false;
+//     }
+//   }
+//   if (maxl == 0) {
+//     return true;
+//   }
+//   let offset = state[0] + maxl + lm + 1;
+//   for (let move0 = 0; move0 < this.N_MOVES; move0++) {
+//     let move = (move0 + offset) % this.N_MOVES;
+//     if (move == lm) {
+//       continue;
+//     }
+//     let cur_state = state.slice();
+//     for (let power = 0; power < this.N_POWER; power++) {
+//       for (let i = 0; i < N_STATES; i++) {
+//         cur_state[i] = this.move[i][move][cur_state[i]];
+//       }
+//       if (this.idaSearch(cur_state, maxl - 1, move)) {
+//         this.sol.push([move, power]);
+//         return true;
+//       }
+//     }
+//   }
+//   return false;
+// };
+
+declare type SolverState = number[];
+
+export class Solver {
+  N_STATES: number;
+  N_MOVES: number;
+  N_POWER: number;
+  state_params: any;
+  inited: boolean;
+  prun: number[][];
+  move: any;
+  sol: number[][];
+
+  constructor(N_MOVES: number, N_POWER: number, state_params: any) {
+    this.N_STATES = state_params.length;
+    this.N_MOVES = N_MOVES;
+    this.N_POWER = N_POWER;
+    this.state_params = state_params;
+    this.inited = false;
     this.prun = [];
-    for (let i = 0; i < this.N_STATES; i++) {
-      let state_param = this.state_params[i];
-      let init = state_param[0];
-      let doMove = state_param[1];
-      let size = state_param[2];
-      let maxd = state_param[3];
-      let N_INV = state_param[4];
-      this.move[i] = [];
-      this.prun[i] = [];
-      createMove(this.move[i], size, doMove, this.N_MOVES);
-      createPrun(
-        this.prun[i],
-        init,
-        size,
-        maxd,
-        this.move[i],
-        this.N_MOVES,
-        this.N_POWER,
-        N_INV
-      );
-    }
-    this.inited = true;
+    this.sol = [];
   }
-  this.sol = [];
 
-  let maxl;
-
-  for (maxl = minl; maxl < MAXL; maxl++) {
-    if (this.idaSearch(state, maxl, -1)) {
-      break;
-    }
-  }
-  return maxl == MAXL ? null : this.sol.reverse();
-};
-
-_.toStr = function (sol, move_map, power_map) {
-  let ret = [];
-  for (let i = 0; i < sol.length; i++) {
-    ret.push(move_map[sol[i][0]] + power_map[sol[i][1]]);
-  }
-  return ret.join(" ").replace(/ +/g, " ");
-};
-
-_.idaSearch = function (state, maxl, lm) {
-  let N_STATES = this.N_STATES;
-  for (let i = 0; i < N_STATES; i++) {
-    if (getPruning(this.prun[i], state[i]) > maxl) {
-      return false;
-    }
-  }
-  if (maxl == 0) {
-    return true;
-  }
-  let offset = state[0] + maxl + lm + 1;
-  for (let move0 = 0; move0 < this.N_MOVES; move0++) {
-    let move = (move0 + offset) % this.N_MOVES;
-    if (move == lm) {
-      continue;
-    }
-    let cur_state = state.slice();
-    for (let power = 0; power < this.N_POWER; power++) {
-      for (let i = 0; i < N_STATES; i++) {
-        cur_state[i] = this.move[i][move][cur_state[i]];
+  search(state: SolverState, minl: number, MAXL?: number) {
+    MAXL = (MAXL || 99) + 1;
+    if (!this.inited) {
+      this.move = [];
+      this.prun = [];
+      for (let i = 0; i < this.N_STATES; i++) {
+        let state_param = this.state_params[i];
+        let init = state_param[0];
+        let doMove = state_param[1];
+        let size = state_param[2];
+        let maxd = state_param[3];
+        let N_INV = state_param[4];
+        this.move[i] = [];
+        this.prun[i] = [];
+        createMove(this.move[i], size, doMove, this.N_MOVES);
+        createPrun(
+          this.prun[i],
+          init,
+          size,
+          maxd,
+          this.move[i],
+          this.N_MOVES,
+          this.N_POWER,
+          N_INV
+        );
       }
-      if (this.idaSearch(cur_state, maxl - 1, move)) {
-        this.sol.push([move, power]);
-        return true;
+      this.inited = true;
+    }
+    this.sol = [];
+
+    let maxl;
+
+    for (maxl = minl; maxl < MAXL; maxl++) {
+      if (this.idaSearch(state, maxl, -1)) {
+        break;
       }
     }
-  }
-  return false;
-};
+    return maxl == MAXL ? null : this.sol.reverse();
+  };
+
+  idaSearch(state: SolverState, maxl: number, lm: number) {
+    let N_STATES = this.N_STATES;
+    for (let i = 0; i < N_STATES; i++) {
+      if (getPruning(this.prun[i], state[i]) > maxl) {
+        return false;
+      }
+    }
+    if (maxl == 0) {
+      return true;
+    }
+    let offset = state[0] + maxl + lm + 1;
+    for (let move0 = 0; move0 < this.N_MOVES; move0++) {
+      let move = (move0 + offset) % this.N_MOVES;
+      if (move == lm) {
+        continue;
+      }
+      let cur_state = state.slice();
+      for (let power = 0; power < this.N_POWER; power++) {
+        for (let i = 0; i < N_STATES; i++) {
+          cur_state[i] = this.move[i][move][cur_state[i]];
+        }
+        if (this.idaSearch(cur_state, maxl - 1, move)) {
+          this.sol.push([move, power]);
+          return true;
+        }
+      }
+    }
+    return false;
+  };
+
+  toStr(sol: number[][], move_map: string, power_map: string) {
+    let ret = [];
+    for (let i = 0; i < sol.length; i++) {
+      ret.push(move_map[sol[i][0]] + power_map[sol[i][1]]);
+    }
+    return ret.join(" ").replace(/ +/g, " ");
+  };
+
+}
 
 function identity(state) {
   return state;
@@ -859,7 +961,7 @@ export function gSolver(solvedStates, doMove, moves, prunHash) {
   this.cost = 0;
 }
 
-_ = gSolver.prototype;
+let _ = gSolver.prototype;
 
 _.updatePrun = function (targetDepth) {
   targetDepth = targetDepth === undefined ? this.prunDepth + 1 : targetDepth;
@@ -1132,6 +1234,14 @@ export function valuedArray(len, val) {
   let ret = [];
   for (let i = 0; i < len; i++) {
     ret[i] = val;
+  }
+  return ret;
+}
+
+export function idxArray(arr: any[], idx: number) {
+  var ret = [];
+  for (var i = 0; i < arr.length; i++) {
+    ret.push(arr[i][idx]);
   }
   return ret;
 }

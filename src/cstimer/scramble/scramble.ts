@@ -1,7 +1,7 @@
 import type { PuzzleOptions } from '@interfaces';
 import { rn, rndEl, rndProb } from '../lib/mathlib';
 
-export function mega(turns, suffixes, length) {
+export function mega(turns: any, suffixes: any, length: number) {
   turns = turns || [[""]];
   suffixes = suffixes || [""];
   length = length || 0;
@@ -36,7 +36,7 @@ export let probs: Map<string, number[]> = new Map<string, number[]>();
 
 export let options: Map<string, PuzzleOptions> = new Map<string, PuzzleOptions> ();
 
-export function regScrambler(mode: string | string[], callback: Function, filter_and_probs?) {
+export function regScrambler(mode: string | string[], callback: Function, filter_and_probs?: any) {
   if ( Array.isArray(mode) ) {
     for (let i = 0; i < mode.length; i++) {
       scramblers.set(mode[i], callback);
@@ -59,14 +59,14 @@ export function regScrambler(mode: string | string[], callback: Function, filter
   *		${args} => scramblers[scrType](scrType, scrArg)
   *		#{args} => mega(args)
   */
-export function formatScramble(str) {
-  var repfunc = function(match, p1) {
+export function formatScramble(str: string) {
+  var repfunc = function(match: string, p1: any) {
     if (match[0] == '$') {
       var args = [p1];
       if (p1[0] == '[') {
         args = JSON.parse(p1);
       }
-      return scramblers.get( args[0].toString() ).apply(this, args);
+      return scramblers.get( args[0].toString() )?.apply(this, args);
     } else if (match[0] == '#') {
       return mega.apply(this, JSON.parse('[' + p1 + ']'));
     } else {

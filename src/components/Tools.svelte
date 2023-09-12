@@ -6,7 +6,7 @@
   import { Penalty, type Language, type Solve, type TimerContext, type Session, type Statistics, MetricList, type TurnMetric } from "@interfaces";
   import { globalLang } from "@stores/language.service";
   import { getLanguage } from "@lang/index";
-  import { MENU, STANDARD_PALETTE, SessionDefaultSettings } from "@constants";
+  import { STANDARD_PALETTE, SessionDefaultSettings, type SCRAMBLE_MENU } from "@constants";
   import * as all from "@cstimer/scramble";
   import Button from "@material/Button.svelte";
   import Input from "@material/Input.svelte";
@@ -18,13 +18,18 @@
   import { sTimer, timerToMilli } from "@helpers/timer";
   import StatsTab from "./timer/StatsTab.svelte";
   import { computeMoves, getUpdatedStatistics } from "@helpers/statistics";
-    import TextArea from "./material/TextArea.svelte";
-    import { assignColors } from "@classes/puzzle/puzzleUtils";
-    import { solvFacelet } from "@cstimer/scramble/scramble_333";
+  import TextArea from "./material/TextArea.svelte";
+  import { solvFacelet } from "@cstimer/scramble/scramble_333";
 
-  let localLang: Readable<Language> = derived(globalLang, ($lang) =>
-    getLanguage($lang)
-  );
+  let MENU: SCRAMBLE_MENU[] = [];
+  let groups: string[] = [];
+  
+  let localLang: Readable<Language> = derived(globalLang, ($lang) => {
+    let l = getLanguage( $lang );
+    MENU = l.MENU;
+    groups = MENU.map(e => e[0]);
+    return l;
+  });
 
   let notification = NotificationService.getInstance();
 
@@ -67,7 +72,6 @@
   let prob = writable<number>();
 
   // Timer and Scramble Only
-  const groups = MENU.map((e) => e[0]);
   let modes: { 0: string; 1: string; 2: number }[] = [];
   let filters: string[] = [];
   let selectedOption = "timer-only";
