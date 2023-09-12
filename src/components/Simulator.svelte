@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Piece } from "@classes/puzzle/Piece";
-  import { CENTER, Vector3D } from "@classes/vector3d";
+  import { Vector3D } from "@classes/vector3d";
   import { CubeMode } from "@constants";
   import { Puzzle } from "@classes/puzzle/puzzle";
   import type { Language, PuzzleType } from "@interfaces";
@@ -17,10 +17,10 @@
   import {
     Matrix4, Object3D, PerspectiveCamera, PointLight, Raycaster, Scene, Vector2, Vector3, WebGLRenderer,
     type Intersection,
-
     FrontSide
-
   } from "three";
+
+  // } from "three";
   import { cubeToThree, piecesToTree } from "@helpers/cubeToThree";
   import { derived, type Readable } from "svelte/store";
   import { getLanguage } from "@lang/index";
@@ -117,7 +117,7 @@
       let subUserData: any[] = [];
       let backV = showBackFace;
 
-      group.children.forEach((p, pos) => {
+      group.children.forEach((p: Object3D, pos: number) => {
         if (findPiece(<Piece>p.userData, pieces)) {
           subUserData.push(p.userData);
           subBuffer.push(p);
@@ -283,7 +283,7 @@
 
     let allStickers: Object3D[] = [];
 
-    group.children.forEach((c) => {
+    group.children.forEach((c: Object3D) => {
       allStickers.push(...c.children);
     });
 
@@ -485,7 +485,7 @@
 
     let allStickers: Object3D[] = [];
 
-    group.children.forEach((c) => {
+    group.children.forEach((c: Object3D) => {
       allStickers.push(...c.children);
     });
 

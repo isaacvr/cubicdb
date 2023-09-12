@@ -34,7 +34,7 @@ export default defineConfig((env) => ({
       "@lang": resolve(__dirname, './src/lang'),
       "@public": resolve(__dirname, './public'),
     },
-    dedupe: ["three"]
+    // dedupe: ["three"]
   },
   define: {
     VERSION: JSON.stringify(VERSION),
