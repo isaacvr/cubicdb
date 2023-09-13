@@ -313,7 +313,7 @@ export const Spanish: Language = {
         ['3x3 para nuevos', "333noob", 25],
         ['Solo aristas', "edges", 0],
         ['Solo Esquinas', "corners", 0],
-        ['Asistente BLD', "nocache_333bldspec", 0], // new
+        // ['Asistente BLD', "nocache_333bldspec", 0], // new
         ['3x3 FT', "333ft", 0],
         ['Personalizado', "333custom", 0],
         ['2-gen R,U', "2gen", 25],

@@ -1,78 +1,70 @@
-import { ScrambleParser } from '@classes/scramble-parser';
-import { createMove, createPrun, getNPerm, setNPerm, Cnk, edgeMove, getPruning, rn, rndPerm, valuedArray } from './../lib/mathlib';
+// "use strict";
 
-let permPrun: number[], flipPrun: number[], ecPrun: number[][], fullPrun: number[];
-let cmv: number[][] = [];
-let pmul: number[][] = [];
-let fmul: number[][] = [];
+import { Cnk, createMove, createPrun, edgeMove, getNPerm, getPruning, rn, rndPerm, setNPerm, valuedArray } from "./mathlib";
 
-let e1mv: number[][] = [];
-let c1mv: number[][] = [];
-let xxPrun01: number[] = [];
-let xxPrun02: number[] = [];
+// var cross = (function(createMove, edgeMove, createPrun, setNPerm, getNPerm, Cnk, getPruning) {
+var permPrun, flipPrun, ecPrun, fullPrun;
+var cmv = [];
+var pmul = [];
+var fmul = [];
 
-function pmv(a: number, c: number) {
-  let b = cmv[c][~~(a / 24)];
+var e1mv = [];
+var c1mv = [];
+var xxPrun01 = [];
+var xxPrun02 = [];
+
+function pmv(a, c) {
+  var b = cmv[c][~~(a / 24)];
   return 24 * ~~(b / 384) + pmul[a % 24][(b >> 4) % 24]
 }
 
-function fmv(b: number, c: number) {
-  let a = cmv[c][b >> 4];
+function fmv(b, c) {
+  var a = cmv[c][b >> 4];
   return ~~(a / 384) << 4 | fmul[b & 15][(a >> 4) % 24] ^ a & 15
 }
 
-function i2f(a: number, c: number[]) {
-  for (let b = 3; 0 <= b; b--) c[b] = a & 1, a >>= 1
+function i2f(a, c) {
+  for (var b = 3; 0 <= b; b--) c[b] = a & 1, a >>= 1
 }
 
-function f2i(c: number[]) {
-  let a, b;
-  for (a = 0, b = 0; 4 > b; b++) a <<= 1, a |= c[b];
-  return a;
+function f2i(c) {
+  for (var a = 0, b = 0; 4 > b; b++) a <<= 1, a |= c[b];
+  return a
 }
 
-function fullmv(idx: number, move: number) {
-  let slice = cmv[move][~~(idx / 384)];
-  let flip = fmul[idx & 15][(slice >> 4) % 24] ^ slice & 15;
-  let perm = pmul[(idx >> 4) % 24][(slice >> 4) % 24];
+function fullmv(idx, move) {
+  var slice = cmv[move][~~(idx / 384)];
+  var flip = fmul[idx & 15][(slice >> 4) % 24] ^ slice & 15;
+  var perm = pmul[(idx >> 4) % 24][(slice >> 4) % 24];
   return (~~(slice / 384)) * 384 + 16 * perm + flip;
 }
 
-let initRet = false;
+let isInit = false;
 
 function init() {
-  if (initRet) {
-    return;
-  }
+  if ( isInit ) return;
+  isInit = true;
 
-  initRet = true;
-
-  for (let i = 0; i < 24; i++) {
+  for (var i = 0; i < 24; i++) {
     pmul[i] = [];
   }
-
-  for (let i = 0; i < 16; i++) {
+  for (var i = 0; i < 16; i++) {
     fmul[i] = [];
   }
-
-  let pm1: number[] = [];
-  let pm2: number[] = [];
-  let pm3: number[] = [];
-
-  for (let i = 0; i < 24; i++) {
-    for (let j = 0; j < 24; j++) {
+  var pm1 = [];
+  var pm2 = [];
+  var pm3 = [];
+  for (var i = 0; i < 24; i++) {
+    for (var j = 0; j < 24; j++) {
       setNPerm(pm1, i, 4);
       setNPerm(pm2, j, 4);
-
-      for (let k = 0; k < 4; k++) {
+      for (var k = 0; k < 4; k++) {
         pm3[k] = pm1[pm2[k]];
       }
-
       pmul[i][j] = getNPerm(pm3, 4);
-
       if (i < 16) {
         i2f(i, pm1);
-        for (let k = 0; k < 4; k++) {
+        for (var k = 0; k < 4; k++) {
           pm3[k] = pm1[pm2[k]];
         }
         fmul[i][j] = f2i(pm3);
@@ -83,15 +75,15 @@ function init() {
 
   permPrun = [];
   flipPrun = [];
-
   createPrun(permPrun, 0, 11880, 5, pmv);
   createPrun(flipPrun, 0, 7920, 6, fmv);
 
-  function getmv(comb: number, m: number) {
-    let arr = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-    let r = 4;
-
-    for (let i = 0; i < 12; i++) {
+  //combMove[comb][m] = comb*, flip*, perm*
+  //newcomb = comb*, newperm = perm x perm*, newflip = flip x perm* ^ flip*
+  function getmv(comb, m) {
+    var arr = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    var r = 4;
+    for (var i = 0; i < 12; i++) {
       if (comb >= Cnk[11 - i][r]) {
         comb -= Cnk[11 - i][r--];
         arr[i] = r << 1;
@@ -99,68 +91,59 @@ function init() {
         arr[i] = -1;
       }
     }
-
     edgeMove(arr, m);
-
     comb = 0, r = 4;
-    let t = 0;
-    let pm = [];
-
-    for (let i = 0; i < 12; i++) {
+    var t = 0;
+    var pm = [];
+    for (var i = 0; i < 12; i++) {
       if (arr[i] >= 0) {
         comb += Cnk[11 - i][r--];
         pm[r] = arr[i] >> 1;
         t |= (arr[i] & 1) << (3 - r);
       }
     }
-
     return (comb * 24 + getNPerm(pm, 4)) << 4 | t;
   }
 }
 
-let xxinitRet = false;
+let isxxInit = false;
 
 function xxinit() {
-  if (xxinitRet) return;
-
-  xxinitRet = true;
+  if( isxxInit ) return;
+  isxxInit = true;
 
   xinit();
-  let obj1 = 4;
-  let obj2 = 5;
-  createPrun(xxPrun01, obj1 * 3 * 24 + obj1 * 2 + 576 * (obj2 * 3 * 24 + obj2 * 2), 576 * 576, 7, function (q: any, m: any) {
-    let ec1 = q % 576;
-    let ec2 = ~~(q / 576);
+  var obj1 = 4;
+  var obj2 = 5;
+  createPrun(xxPrun01, obj1 * 3 * 24 + obj1 * 2 + 576 * (obj2 * 3 * 24 + obj2 * 2), 576 * 576, 7, function (q, m) {
+    var ec1 = q % 576;
+    var ec2 = ~~(q / 576);
     return c1mv[~~(ec1 / 24)][m] * 24 + e1mv[ec1 % 24][m] + 576 * (c1mv[~~(ec2 / 24)][m] * 24 + e1mv[ec2 % 24][m])
   });
   obj2 = 6;
-  createPrun(xxPrun02, obj1 * 3 * 24 + obj1 * 2 + 576 * (obj2 * 3 * 24 + obj2 * 2), 576 * 576, 7, function (q: any, m: any) {
-    let ec1 = q % 576;
-    let ec2 = ~~(q / 576);
+  createPrun(xxPrun02, obj1 * 3 * 24 + obj1 * 2 + 576 * (obj2 * 3 * 24 + obj2 * 2), 576 * 576, 7, function (q, m) {
+    var ec1 = q % 576;
+    var ec2 = ~~(q / 576);
     return c1mv[~~(ec1 / 24)][m] * 24 + e1mv[ec1 % 24][m] + 576 * (c1mv[~~(ec2 / 24)][m] * 24 + e1mv[ec2 % 24][m])
   });
 }
 
-let xinitRet = false;
+let isxInit = false;
 
 function xinit() {
-  if (xinitRet) {
-    return;
-  }
-
-  xinitRet = true;
+  if ( isxInit ) return;
+  isxInit = true;
 
   init();
-
-  for (let i = 0; i < 24; i++) {
+  for (var i = 0; i < 24; i++) {
     c1mv[i] = [];
     e1mv[i] = [];
-    for (let m = 0; m < 6; m++) {
+    for (var m = 0; m < 6; m++) {
       c1mv[i][m] = cornMove(i, m);
-      let edge = [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1];
+      var edge = [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1];
       edge[i >> 1] = i & 1;
       edgeMove(edge, m);
-      for (let e = 0; e < 12; e++) {
+      for (var e = 0; e < 12; e++) {
         if (edge[e] >= 0) {
           e1mv[i][m] = e << 1 | edge[e];
           break;
@@ -168,23 +151,19 @@ function xinit() {
       }
     }
   }
-
   ecPrun = [];
-
-  for (let obj = 0; obj < 4; obj++) {
-    let prun: number[] = [];
-
-    createPrun(prun, (obj + 4) * 3 * 24 + (obj + 4) * 2, 576, 5, function (q: number, m: number) {
+  for (var obj = 0; obj < 4; obj++) {
+    var prun = [];
+    createPrun(prun, (obj + 4) * 3 * 24 + (obj + 4) * 2, 576, 5, function (q, m) {
       return c1mv[~~(q / 24)][m] * 24 + e1mv[q % 24][m]
     });
-
     ecPrun[obj] = prun;
   }
 
-  function cornMove(corn: number, m: number) {
-    let idx = ~~(corn / 3);
-    let twst = corn % 3;
-    let idxt = [
+  function cornMove(corn, m) {
+    var idx = ~~(corn / 3);
+    var twst = corn % 3;
+    var idxt = [
       [3, 1, 2, 7, 0, 5, 6, 4],
       [0, 1, 6, 2, 4, 5, 7, 3],
       [1, 2, 3, 0, 4, 5, 6, 7],
@@ -192,7 +171,7 @@ function xinit() {
       [4, 0, 2, 3, 5, 1, 6, 7],
       [0, 1, 2, 3, 7, 4, 5, 6]
     ];
-    let twstt = [
+    var twstt = [
       [2, 0, 0, 1, 1, 0, 0, 2],
       [0, 0, 1, 2, 0, 0, 2, 1],
       [0, 0, 0, 0, 0, 0, 0, 0],
@@ -208,7 +187,7 @@ function xinit() {
 //e4perm, e4flip, e1, c1
 //obj: -1:only cross.
 //	i-4: end when e==i*2, c==i*3
-function idaxxcross(q: number, t: number, e: number[], c: number[], xxPrun: any, l: number, lm: number, sol: string[]) {
+function idaxxcross(q, t, e, c, xxPrun, l, lm, sol) {
   if (l == 0) {
     return q == 0 && t == 0
       && e[0] == 4 * 2 && c[0] == 4 * 3
@@ -216,7 +195,7 @@ function idaxxcross(q: number, t: number, e: number[], c: number[], xxPrun: any,
   } else {
     if (getPruning(permPrun, q) > l || getPruning(flipPrun, t) > l
       || getPruning(xxPrun, c[0] * 24 + e[0] + 576 * (c[1] * 24 + e[1])) > l) return false;
-    let p, s, ex, cx, a, m;
+    var p, s, ex, cx, a, m;
     for (m = 0; m < 6; m++) {
       if (m != lm && m != lm - 3) {
         p = q;
@@ -242,12 +221,12 @@ function idaxxcross(q: number, t: number, e: number[], c: number[], xxPrun: any,
 //e4perm, e4flip, e1, c1
 //obj: -1:only cross.
 //	i-4: end when e==i*2, c==i*3
-function idaxcross(q: number, t: number, e: number, c: number, obj: number, l: number, lm: number, sol: string[]) {
+function idaxcross(q, t, e, c, obj, l, lm, sol) {
   if (l == 0) {
     return q == 0 && t == 0 && e == (obj + 4) * 2 && c == (obj + 4) * 3;
   } else {
     if (getPruning(permPrun, q) > l || getPruning(flipPrun, t) > l || getPruning(ecPrun[obj], c * 24 + e) > l) return false;
-    let p, s, ex, cx, a, m;
+    var p, s, ex, cx, a, m;
     for (m = 0; m < 6; m++) {
       if (m != lm && m != lm - 3) {
         p = q;
@@ -271,12 +250,12 @@ function idaxcross(q: number, t: number, e: number, c: number, obj: number, l: n
 }
 
 //e4perm, e4flip
-function idacross(q: number, t: number, l: number, lm: number, sol: string[]) {
+function idacross(q, t, l, lm, sol) {
   if (l == 0) {
     return q == 0 && t == 0;
   } else {
     if (getPruning(permPrun, q) > l || getPruning(flipPrun, t) > l) return false;
-    let p, s, a, m;
+    var p, s, a, m;
     for (m = 0; m < 6; m++) {
       if (m != lm && m != lm - 3) {
         p = q;
@@ -295,59 +274,52 @@ function idacross(q: number, t: number, l: number, lm: number, sol: string[]) {
   return false;
 }
 
-let faceStr = ["D", "U", "L", "R", "F", "B"];
-let moveIdx = ["FRUBLD", "FLDBRU", "FDRBUL", "FULBDR", "URBDLF", "DRFULB"]
-let rotIdx = ["&nbsp;&nbsp;", "z2", "z'", "z&nbsp;", "x'", "x&nbsp;"];
-let yrotIdx = ["FRUBLD", "RBULFD", "BLUFRD", "LFURBD"];
+var faceStr = ["D", "U", "L", "R", "F", "B"];
+var moveIdx = ["FRUBLD", "FLDBRU", "FDRBUL", "FULBDR", "URBDLF", "DRFULB"]
+var rotIdx = ["&nbsp;&nbsp;", "z2", "z'", "z&nbsp;", "x'", "x&nbsp;"];
+var yrotIdx = ["FRUBLD", "RBULFD", "BLUFRD", "LFURBD"];
+
+var curScramble;
 
 export function solve_cross(moves: string) {
   init();
-
-  let seq = ScrambleParser.parseScramble(moves, "FRUBLD");
-  let ret = [];
-
-  for (let face = 0; face < 6; face++) {
-    let flip = 0;
-    let perm = 0;
-
-    for (let i = 0; i < seq.length; i++) {
-      let m = moveIdx[face].indexOf("FRUBLD".charAt(seq[i][0]));
-      let p = seq[i][2];
-      for (let j = 0; j < p; j++) {
+  var ret = [];
+  for (var face = 0; face < 6; face++) {
+    var flip = 0;
+    var perm = 0;
+    for (var i = 0; i < moves.length; i++) {
+      var m = moveIdx[face].indexOf("FRUBLD".charAt(moves[i][0]));
+      var p = moves[i][2];
+      for (var j = 0; j < p; j++) {
         flip = fmv(flip, m);
         perm = pmv(perm, m);
       }
     }
-
-    let sol: string[] = [];
-
-    for (let len = 0; len < 100; len++) {
+    var sol = [];
+    for (var len = 0; len < 100; len++) {
       if (idacross(perm, flip, len, -1, sol)) {
         break;
       }
     }
-
     sol.reverse();
     ret.push(sol);
-
   }
-
   return ret;
 }
 
-export function solve_xxcross(moves: any, face: number) {
+function solve_xxcross(moves, face) {
   xxinit();
-  let states: any[] = [];
-  let yrot = 0;
+  var states = [];
+  var yrot = 0;
   for (yrot = 0; yrot < 4; yrot++) {
-    let flip = 0;
-    let perm = 0;
-    let e1 = [8, 10, 12];
-    let c1 = [12, 15, 18];
-    for (let i = 0; i < moves.length; i++) {
-      let m = yrotIdx[yrot].indexOf("FRUBLD".charAt(moveIdx[face].indexOf("FRUBLD".charAt(moves[i][0]))));
-      let p = moves[i][2];
-      for (let j = 0; j < p; j++) {
+    var flip = 0;
+    var perm = 0;
+    var e1 = [8, 10, 12];
+    var c1 = [12, 15, 18];
+    for (var i = 0; i < moves.length; i++) {
+      var m = yrotIdx[yrot].indexOf("FRUBLD".charAt(moveIdx[face].indexOf("FRUBLD".charAt(moves[i][0]))));
+      var p = moves[i][2];
+      for (var j = 0; j < p; j++) {
         flip = fmv(flip, m);
         perm = pmv(perm, m);
         e1 = [e1mv[e1[0]][m], e1mv[e1[1]][m], e1mv[e1[2]][m]];
@@ -356,12 +328,12 @@ export function solve_xxcross(moves: any, face: number) {
     }
     states.push([perm, flip, e1, c1]);
   }
-  let sol: string[] = [];
-  let found = false;
-  let len = 0;
+  var sol = [];
+  var found = false;
+  var len = 0;
   while (!found) {
     for (yrot = 0; yrot < 4; yrot++) {
-      let state = states[yrot];
+      var state = states[yrot];
       if (idaxxcross(state[0], state[1],
         [state[2][0], state[2][1]], [state[3][0], state[3][1]],
         xxPrun01, len, -1, sol)) {
@@ -378,36 +350,35 @@ export function solve_xxcross(moves: any, face: number) {
     len++;
   }
   sol.reverse();
-  for (let i = 0; i < sol.length; i++) {
+  for (var i = 0; i < sol.length; i++) {
     sol[i] = yrotIdx[yrot]["FRUBLD".indexOf(sol[i][0])] + sol[i][1];
   }
   return sol;
 }
 
-export function solve_xcross(moves: string, face: number) {
+function solve_xcross(moves, face) {
   xinit();
-  let flip = 0;
-  let perm = 0;
-  let e1 = [8, 10, 12, 14];
-  let c1 = [12, 15, 18, 21];
-  let seq = ScrambleParser.parseScramble(moves, "FRUBLD");
-  for (let i = 0; i < seq.length; i++) {
-    let m = moveIdx[face].indexOf("FRUBLD".charAt(seq[i][0]));
-    let p = seq[i][2];
-    for (let j = 0; j < p; j++) {
+  var flip = 0;
+  var perm = 0;
+  var e1 = [8, 10, 12, 14];
+  var c1 = [12, 15, 18, 21];
+  for (var i = 0; i < moves.length; i++) {
+    var m = moveIdx[face].indexOf("FRUBLD".charAt(moves[i][0]));
+    var p = moves[i][2];
+    for (var j = 0; j < p; j++) {
       flip = fmv(flip, m);
       perm = pmv(perm, m);
-      for (let obj = 0; obj < 4; obj++) {
+      for (var obj = 0; obj < 4; obj++) {
         e1[obj] = e1mv[e1[obj]][m];
         c1[obj] = c1mv[c1[obj]][m];
       }
     }
   }
-  let sol: string[] = [];
-  let found = false;
-  let len = 0;
+  var sol = [];
+  var found = false;
+  var len = 0;
   while (!found) {
-    for (let obj = 0; obj < 4; obj++) {
+    for (var obj = 0; obj < 4; obj++) {
       if (idaxcross(perm, flip, e1[obj], c1[obj], obj, len, -1, sol)) {
         found = true;
         break;
@@ -416,36 +387,34 @@ export function solve_xcross(moves: string, face: number) {
     len++;
   }
   sol.reverse();
-
   return sol;
 }
 
-let fullInitRet = false;
+let isFullInit = false;
 
 function fullInit() {
-  if (fullInitRet) {
-    return;
-  }
-  fullInitRet = true;
+  if ( isFullInit ) return;
+  isFullInit = true;
+
   init();
   fullPrun = [];
   createPrun(fullPrun, 0, 190080, 7, fullmv, 6, 3, 6);
 }
 
-function mapCross(idx: number) {
-  let comb = ~~(idx / 384);
-  let perm = (idx >> 4) % 24;
-  let flip = idx & 15;
+function mapCross(idx) {
+  var comb = ~~(idx / 384);
+  var perm = (idx >> 4) % 24;
+  var flip = idx & 15;
 
-  let arrp = [];
-  let arrf = [];
-  let pm: number[] = [];
-  let fl: number[] = [];
+  var arrp = [];
+  var arrf = [];
+  var pm = [];
+  var fl = [];
   i2f(flip, fl);
   setNPerm(pm, perm, 4);
-  let r = 4;
-  let map = [7, 6, 5, 4, 10, 9, 8, 11, 3, 2, 1, 0];
-  for (let i = 0; i < 12; i++) {
+  var r = 4;
+  var map = [7, 6, 5, 4, 10, 9, 8, 11, 3, 2, 1, 0];
+  for (var i = 0; i < 12; i++) {
     if (comb >= Cnk[11 - i][r]) {
       comb -= Cnk[11 - i][r--];
       arrp[map[i]] = pm[r];
@@ -459,15 +428,15 @@ function mapCross(idx: number) {
 
 export function getEasyCross(length: number) {
   fullInit();
-  let lenA = Math.min(length % 10, 8);
-  let lenB = Math.min(~~(length / 10), 8);
-  let minLen = Math.min(lenA, lenB);
-  let maxLen = Math.max(lenA, lenB);
-  let ncase = [0, 1, 16, 174, 1568, 11377, 57758, 155012, 189978, 190080];
-  let cases = rn(ncase[maxLen + 1] - ncase[minLen]) + 1;
-  let i;
+  var lenA = Math.min(length % 10, 8);
+  var lenB = Math.min(~~(length / 10), 8);
+  var minLen = Math.min(lenA, lenB);
+  var maxLen = Math.max(lenA, lenB);
+  var ncase = [0, 1, 16, 174, 1568, 11377, 57758, 155012, 189978, 190080];
+  var cases = rn(ncase[maxLen + 1] - ncase[minLen]) + 1;
+  var i;
   for (i = 0; i < 190080; i++) {
-    let prun = getPruning(fullPrun, i);
+    var prun = getPruning(fullPrun, i);
     if (prun <= maxLen && prun >= minLen && --cases == 0) {
       break;
     }
@@ -478,22 +447,22 @@ export function getEasyCross(length: number) {
 export function getEasyXCross(length: number) {
   fullInit();
   xinit();
-  let ncase = [1, 16, 174, 1568, 11377, 57758, 155012, 189978, 190080];
+  var ncase = [1, 16, 174, 1568, 11377, 57758, 155012, 189978, 190080];
   length = Math.max(0, Math.min(length, 8));
-  let remain = ncase[length];
-  let isFound = false;
-  
+  var remain = ncase[length];
+  var isFound = false;
+  var testCnt = 0;
   while (!isFound) {
-    let rndIdx = [];
-    let sample = 500;
-    for (let i = 0; i < sample; i++) {
-      rndIdx.push( rn(remain) );
+    var rndIdx = [];
+    var sample = 500;
+    for (var i = 0; i < sample; i++) {
+      rndIdx.push(rn(remain));
     }
     rndIdx.sort(function (a, b) { return b - a; });
-    let rndCases = [];
-    let cnt = 0;
-    for (let i = 0; i < 190080; i++) {
-      let prun = getPruning(fullPrun, i);
+    var rndCases = [];
+    var cnt = 0;
+    for (var i = 0; i < 190080; i++) {
+      var prun = getPruning(fullPrun, i);
       if (prun > length) {
         continue;
       }
@@ -507,33 +476,34 @@ export function getEasyXCross(length: number) {
       cnt++;
     }
     rndIdx = rndPerm(sample);
-    for (let i = 0; i < sample; i++) {
-      let caze = rndCases[rndIdx[i]];
-      let comb = ~~(caze / 384);
-      let perm = comb * 24 + (caze >> 4) % 24;
-      let flip = comb << 4 | caze & 15;
-      let sol: string[] = [];
-      let corns = rndPerm(8).slice(4);
-      let edges = rndPerm(8);
+    for (var i = 0; i < sample; i++) {
+      var caze = rndCases[rndIdx[i]];
+      var comb = ~~(caze / 384);
+      var perm = comb * 24 + (caze >> 4) % 24;
+      var flip = comb << 4 | caze & 15;
+      var sol = [];
+      var ret = idacross(perm, flip, length, -1, sol);
+      var corns = rndPerm(8).slice(4);
+      var edges = rndPerm(8);
 
-      let arr = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-      let r = 4;
-      for (let j = 0; j < 12; j++) {
+      var arr = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+      var r = 4;
+      for (var j = 0; j < 12; j++) {
         if (comb >= Cnk[11 - j][r]) {
           comb -= Cnk[11 - j][r--];
           arr[j] = -1;
         } else {
-          arr[j] = edges.pop() as number;
+          arr[j] = edges.pop();
         }
       }
-      for (let j = 0; j < 4; j++) {
+      for (var j = 0; j < 4; j++) {
         corns[j] = corns[j] * 3 + rn(3);
         edges[j] = arr.indexOf(j) * 2 + rn(2);
         if (isFound || getPruning(ecPrun[j], corns[j] * 24 + edges[j]) > length) {
           continue;
         }
-        let sol: string[] = [];
-        for (let depth = 0; depth <= length; depth++) {
+        var sol = [];
+        for (var depth = 0; depth <= length; depth++) {
           if (idaxcross(perm, flip, edges[j], corns[j], j, depth, -1, sol)) {
             isFound = true;
             break;
@@ -543,12 +513,12 @@ export function getEasyXCross(length: number) {
       if (!isFound) {
         continue;
       }
-      let crossArr = mapCross(caze);
+      var crossArr = mapCross(caze);
       crossArr[2] = valuedArray(8, -1);
       crossArr[3] = valuedArray(8, -1);
-      let map = [7, 6, 5, 4, 10, 9, 8, 11, 3, 2, 1, 0];
-      let map2 = [6, 5, 4, 7, 2, 1, 0, 3];
-      for (let i = 0; i < 4; i++) {
+      var map = [7, 6, 5, 4, 10, 9, 8, 11, 3, 2, 1, 0];
+      var map2 = [6, 5, 4, 7, 2, 1, 0, 3];
+      for (var i = 0; i < 4; i++) {
         crossArr[0][map[edges[i] >> 1]] = map[i + 4];
         crossArr[1][map[edges[i] >> 1]] = edges[i] % 2;
         crossArr[2][map2[~~(corns[i] / 3)]] = map2[i + 4];

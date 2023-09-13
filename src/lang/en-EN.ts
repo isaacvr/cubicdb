@@ -304,7 +304,7 @@ export const English: Language = {
         ['3x3 for noobs', "333noob", 25],
         ['Edges only', "edges", 0],
         ['Corners only', "corners", 0],
-        ['BLD Helper', "nocache_333bldspec", 0], // new
+        // ['BLD Helper', "nocache_333bldspec", 0], // new
         ['3x3 FT', "333ft", 0],
         ['Custom', "333custom", 0],
         ['2-generator R,U', "2gen", 25],

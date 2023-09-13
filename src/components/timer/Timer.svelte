@@ -45,7 +45,6 @@
   import { globalLang } from '@stores/language.service';
   import { getLanguage } from '@lang/index';
   import { NotificationService } from '@stores/notification.service';
-    import type { LessStencilFunc } from 'three';
   
   export let battle = false;
   export let useScramble = '';
@@ -64,6 +63,11 @@
     MENU = l.MENU;
     groups = MENU.map(e => e[0]);
     selectedGroup(false);
+
+    let allModes = MENU.reduce((acc: string[], e) => [ ...acc, ...e[1].map(e1 => e1[1]) ], []);
+
+    // console.log("Empty modes: ", allModes.filter( m => !all.pScramble.scramblers.has(m) ));
+
     return l;
   });
 

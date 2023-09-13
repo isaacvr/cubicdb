@@ -104,60 +104,6 @@ for (let i in args) {
 	regScrambler(i, megascramble);
 }
 
-// Register other puzzles
-// let scrambleMap = [
-// 	['333', '333'],
-// 	['222', '222so'],
-// 	['444', '444wca'],
-// 	['555', '555wca'],
-// 	['pyra', 'pyrso'],
-// 	['skewb', 'skbso'],
-// 	['mega', 'mgmp'],
-// 	['sq1', 'sqrs'],
-// 	['clock', 'clkwca'],
-// 	['666', '666wca'],
-// 	['777', '777wca'],
-
-// 	['pyram', 'pyrso'],
-// 	['minx', 'mgmp'],
-// 	['333mirror', '333'],
-// 	['222oh', '222so'],
-// 	['333oh', '333oh'],
-// 	['333bl', '333ni'],
-
-// 	['3x3x3', '333'],
-// 	['2x2x2', '222so'],
-// 	['4x4x4', '444wca'],
-// 	['5x5x5', '555wca'],
-// 	['Pyraminx', 'pyrso'],
-// 	['Skewb', 'skbso'],
-// 	['Megaminx', 'mgmp'],
-// 	['Square-1', 'sqrs'],
-// 	['Clock', 'clkwca'],
-// 	['6x6x6', '666wca'],
-// 	['7x7x7', '777wca'],
-// 	['3x3x3 BLD', '333ni'],
-// 	['4x4x4 BLD', '444bld'],
-// 	['5x5x5 BLD', '555bld'],
-
-// 	['Rubik\'s Clock', 'clkwca'],
-// 	['3x3x3 Blindfolded', '333ni'],
-// 	['4x4x4 Blindfolded', '444bld'],
-// 	['5x5x5 Blindfolded', '555bld'],
-// 	['3x3x3 One-Handed', '333oh'],
-// 	['3x3x3 Multi-Blindfolded', 'r3ni'],
-// 	['3x3x3 With Feet', '333ft'],
-// 	['3x3x3 Fewest Moves', '333fm'],
-
-
-// ];
-
-// for (let i = 0, maxi = scrambleMap.length; i < maxi; i += 1) {
-// 	regScrambler(scrambleMap[i][0], function(type: string, length: number) {
-// 		megascramble(scrambleMap[i][1], length)
-// 	});
-// }
-
 for (let i in args2) {
 	regScrambler(i, formatScramble);
 }
