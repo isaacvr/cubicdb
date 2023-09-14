@@ -39,7 +39,7 @@
   import { DataService } from '@stores/data.service';
   import { NotificationService } from '@stores/notification.service';
   import { derived, writable, type Readable, type Writable } from 'svelte/store';
-  import { KeyboardInput } from './input-handlers/Keyboard';
+
   import { StackmatInput } from './input-handlers/Stackmat';
   import { ManualInput } from './input-handlers/Manual';
   import { globalLang } from '@stores/language.service';
@@ -47,7 +47,7 @@
   import { copyToClipboard } from '@helpers/strings';
   import { GANInput } from './input-handlers/GAN';
   import Simulator from '@components/Simulator.svelte';
-  import { Search } from '@cstimer/lib/min2phase';
+  import { KeyboardInput } from './input-handlers/Keyboard';
 
   export let context: TimerContext;
   export let battle = false;
@@ -524,13 +524,6 @@
 
           case 'facelet': {
             simulator.fromFacelet( data.data );
-            
-            // @ts-ignore
-            let solver = new Search();
-
-            console.log("SOLUTION1: ", solver.solution(data.data, 21, 1e9, 50, 0));
-            console.log("SOLUTION2: ", solver.next(1e9, 50, 0));
-            console.log("SOLUTION3: ", solver.next(1e9, 50, 0));
             break;
           }
 

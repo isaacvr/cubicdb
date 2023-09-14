@@ -27,7 +27,7 @@ export function timer(val: number, dec?: boolean, suff?: boolean): string {
     sec = true;
   }
 
-  return res + (( (sec && !s) || dec ) ? `.${ l2(ms) }` : '') + (suff ? sf : '');
+  return res + (dec ? `.${ l2(ms) }` : '') + (suff ? sf : '');
 }
 
 export function sTimer(s: Solve | null, dec?: boolean, suff?: boolean): string {
