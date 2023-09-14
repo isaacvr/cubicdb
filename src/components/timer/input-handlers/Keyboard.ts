@@ -72,7 +72,7 @@ const KeyboardMachine = createMachine<InputContext, any>({
   initial: 'CLEAR',
   states: {
     CLEAR: {
-      entry: ['clear'],
+      entry: 'clear',
       on: {
         keydown: {
           target: 'PREVENTION',
