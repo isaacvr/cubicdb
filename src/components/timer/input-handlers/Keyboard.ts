@@ -177,11 +177,7 @@ export class KeyboardInput implements TimerInputHandler {
 
   constructor(context: InputContext) {
     this.interpreter = interpret(KeyboardMachine.withContext(context));
-
-    this.interpreter.onTransition((st) => {
-      console.log("STATE: ", st.value);
-    });
-
+    // this.interpreter.onTransition((st) => console.log("STATE: ", st.value) );
     this.isActive = false;
   }
 

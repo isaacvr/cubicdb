@@ -125,7 +125,7 @@
     addSolve, initScrambler, reset, createNewSolve
   };
 
-  let inputMethod: TimerInputHandler = new KeyboardInput(inputContext);
+  let inputMethod: TimerInputHandler = new ManualInput();
   let deviceID = 'default';
   let deviceList: string[][] = [];
   let autoConnectId: string[] = [];
@@ -810,7 +810,7 @@
   <!-- Modal -->
   <!-- {#if !timerOnly} -->
     <Modal bind:this={ modal } bind:show={ show } onClose={ closeHandler }>
-      <div class="max-w-lg max-h-[30rem]">
+      <div class={"max-w-lg max-h-[30rem] " + (type === 'old-scrambles' ? 'overflow-scroll' : '')}>
         {#if type === 'edit-scramble'}
           <TextArea on:keyup={ modalKeyupHandler }
             class="bg-gray-600 text-gray-200"

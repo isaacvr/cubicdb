@@ -155,7 +155,7 @@ mark {
 }
 
 ::-webkit-scrollbar-button {
-  background: transparent;
+  display: none;
 }
 
 ::-webkit-scrollbar-corner {

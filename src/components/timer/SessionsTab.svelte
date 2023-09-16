@@ -385,7 +385,7 @@
       <Dice5Icon /> <span bind:innerHTML={ sSolve.scramble } contenteditable="false" class="text-center"></span>
       <img src={ preview } class="preview col-start-1 col-end-3 mb-2 mx-auto" alt="">
       
-      <CommentIcon /> <TextArea bind:value={ sSolve.comments } placeholder={ $localLang.TIMER.comment }/>
+      <CommentIcon /> <TextArea cClass="max-h-[35ch]" bind:value={ sSolve.comments } placeholder={ $localLang.TIMER.comment }/>
     </div>
     <div class="mt-2 flex">
       <Button ariaLabel={ $localLang.global.delete } flat class="text-red-500"
