@@ -1,13 +1,18 @@
 import { TimerState, type InputContext, type StackmatCallback, type StackmatState, type TimerInputHandler } from '@interfaces';
 import { get } from 'svelte/store';
-import { createMachine, interpret, send } from 'xstate';
+import { createMachine, interpret } from 'xstate';
+
+interface SMState {
+  state: StackmatState;
+  lastState: StackmatState;
+}
 
 const enterDisconnect = ({ state, stackmatStatus }: InputContext) => {
   stackmatStatus.set(false);
   state.set( TimerState.CLEAN );
 }
 
-const enterClean = ({ state }: InputContext) => {
+const enterClean = ({ state }: InputContext, st: SMState) => {
   state.set( TimerState.CLEAN );
 }
 
@@ -24,8 +29,10 @@ const enterStopped = ({ state, addSolve, time }: InputContext) => {
   addSolve( get(time) );
 }
 
-const isTurnedOn = ({ stackmatStatus }: InputContext, { state }: { state: StackmatState }) => {
-  if ( !get(stackmatStatus) && state.on ) {
+const isTurnedOn = ({ stackmatStatus }: InputContext, { state, lastState }: SMState) => {
+  // console.log('[isTurnedOn]: ', state);
+
+  if ( !lastState?.on && state.on ) {
     stackmatStatus.set(true);
     return true;
   }
@@ -33,7 +40,7 @@ const isTurnedOn = ({ stackmatStatus }: InputContext, { state }: { state: Stackm
   return false;
 }
 
-const isTurnedOff = ({ stackmatStatus }: InputContext, { state }: { state: StackmatState }) => {
+const isTurnedOff = ({ stackmatStatus }: InputContext, { state }: SMState) => {
   if ( get(stackmatStatus) && !state.on ) {
     stackmatStatus.set(false);
     return true;
@@ -42,27 +49,18 @@ const isTurnedOff = ({ stackmatStatus }: InputContext, { state }: { state: Stack
   return false;
 }
 
-const wasRunning = ({ time, stackmatStatus, createNewSolve }: InputContext, { state }: { state: StackmatState }) => {
-  if ( get(stackmatStatus) && state.time_milli > get(time) ) {
+const isRunning = ({ stackmatStatus, createNewSolve }: InputContext, { state, lastState }: SMState, a: any) => {
+  if ( state.on && state.time_milli > ( lastState?.time_milli || 0 ) ) {
     createNewSolve();
-    return true;
-  }
-
-  return false;
-}
-
-const isRunning = ({ time, state, createNewSolve }: InputContext, st: { state: StackmatState }) => {
-  if ( st.state.time_milli > get(time) ) {
-    createNewSolve();
-    state.set( TimerState.RUNNING );
+    stackmatStatus.set(true);
     return true;
   }
   
   return false;
 };
 
-const wasCleaned = ({ time, initScrambler }: InputContext, { state }: { state: StackmatState }) => {
-  if (state.time_milli < get(time)) {
+const wasCleaned = ({ initScrambler }: InputContext, { state, lastState }: SMState) => {
+  if ( lastState && state.time_milli < lastState.time_milli) {
     initScrambler();
     return true;
   }
@@ -70,8 +68,8 @@ const wasCleaned = ({ time, initScrambler }: InputContext, { state }: { state: S
   return false;
 };
 
-const wasStopped = ({ state }: InputContext, st: { state: StackmatState }) => {
-  return get(state) === TimerState.RUNNING && !st.state.running;
+const wasStopped = ({}: InputContext, { state, lastState }: SMState) => {
+  return lastState?.running && !state.running && !!state.time_milli;
 };
 
 const StackmatMachine = createMachine<InputContext, any>({
@@ -82,8 +80,8 @@ const StackmatMachine = createMachine<InputContext, any>({
       entry: enterDisconnect,
       on: {
         state: [
+          { target: 'RUNNING', cond: isRunning },
           { target: 'CLEAN', cond: isTurnedOn },
-          { target: 'RUNNING', cond: wasRunning },
         ]
       }
     },
@@ -94,8 +92,8 @@ const StackmatMachine = createMachine<InputContext, any>({
         state: [
           { target: 'RUNNING', cond: isRunning },
           { target: 'CLEAN', cond: wasCleaned },
-        ]
-      }
+        ],
+      },
     },
     
     INSPECTION: {
@@ -106,8 +104,8 @@ const StackmatMachine = createMachine<InputContext, any>({
       entry: enterRunning,
       on: {
         state: [
+          { target: 'STOPPED', cond: wasStopped },
           { target: 'CLEAN', cond: wasCleaned },
-          { target: 'STOPPED', cond: wasStopped }
         ],
       }
     },
@@ -134,6 +132,7 @@ export class StackmatInput implements TimerInputHandler {
   private node: AudioWorkletNode | null = null;
   private interpreter;
   private isActive: boolean;
+  private lastState: StackmatState | null;
 
   id: string;
 
@@ -143,6 +142,7 @@ export class StackmatInput implements TimerInputHandler {
     this.id = crypto.randomUUID();
     this.isActive = false;
     // this.interpreter.onTransition((st) => console.log('STATE: ', st.value));
+    this.lastState = null;
   }
 
   static updateInputDevices(): Promise<string[][]> {
@@ -201,7 +201,7 @@ export class StackmatInput implements TimerInputHandler {
   // }
 
   init(deviceId: string, force: boolean) {
-    console.log("INIT STACKMAT: ", deviceId, force);
+    // console.log("INIT STACKMAT: ", deviceId, force);
 
     this.interpreter.start();
     this.isActive = true;
@@ -275,6 +275,7 @@ export class StackmatInput implements TimerInputHandler {
   async disconnect() {
     this.interpreter.stop();
     this.isActive = false;
+    this.lastState = null;
 
     if ( this.audio_stream != undefined ) {
       try {
@@ -291,8 +292,9 @@ export class StackmatInput implements TimerInputHandler {
   callback(sst: StackmatState) {
     if ( !this.isActive ) return;
 
-    this.interpreter.send({ type: 'state', state: sst });
     this.interpreter.machine.context.time.set( sst.time_milli );
+    this.interpreter.send({ type: 'state', state: sst, lastState: this.lastState });
+    this.lastState = sst;
   }
 
   keyUpHandler() {}
