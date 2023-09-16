@@ -57,8 +57,9 @@ const setTimerRunner = ({ decimals, time, lastSolve, state }: InputContext) => {
   return () => clearInterval(itv);
 }
 
-const saveSolve = ({ time, state, lastSolve, addSolve }: InputContext) => {
+const saveSolve = ({ time, state, lastSolve, addSolve, initScrambler }: InputContext) => {
   state.set(TimerState.STOPPED);
+  initScrambler();
   
   let t = get(time);
   let ls = get(lastSolve);

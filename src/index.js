@@ -432,7 +432,8 @@ function createWindow() {
 
   } else {
     let server = http.createServer(eApp).listen();
-    let port = server.address() || '';
+    let _port = server.address();
+    let port = typeof _port === 'string' ? _port : _port ? _port.port : '';
 
     eApp.set('port', port);
     eApp.use( express.static( join(__dirname, '../dist') ) );
@@ -443,8 +444,8 @@ function createWindow() {
     });
     
     eApp.listen(0, () => {
-      // @ts-ignore
       win.loadURL(`http://localhost:${ eApp.get('port') }/`);
+      // console.log("URL PORT: ", eApp.get('port'));
     });
 
     // win.loadFile( import.meta.env.ELECTRON_APP_URL );
