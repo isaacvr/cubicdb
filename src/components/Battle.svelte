@@ -17,16 +17,20 @@
   import type { SCRAMBLE_MENU } from '@constants';
   import { globalLang } from '@stores/language.service';
   import { getLanguage } from '@lang/index';
+  import { randomUUID } from '@helpers/strings';
+  import { NotificationService } from '@stores/notification.service';
 
-  let MENU: SCRAMBLE_MENU[] = [];
-  let groups: string[] = [];
+  const notification = NotificationService.getInstance();
+
+  let MODES: SCRAMBLE_MENU[1] = [];
   
   let localLang: Readable<Language> = derived(globalLang, ($lang) => {
     let l = getLanguage( $lang );
-    MENU = l.MENU;
-    groups = MENU.map(e => e[0]);
+    MODES = l.MENU[0][1];
     return l;
   });
+
+  $localLang;
 
   type STATE = 'idle' | 'create' | 'join' | 'waiting' | 'play' | 'error' | 'gameover';
   const TITLE: Map<STATE, string> = new Map([
@@ -40,34 +44,37 @@
   ]);
 
   let state: STATE = 'idle';
-  let MODES = MENU[0][1];
   let socket: Socket;
   let checked = false;
   let ending = false;
-  let socketServer = 'ws://192.168.17.93:8080/';
+  let socketServer = 'ws://192.168.67.93:3000/';
+  // let socketServer = 'ws://localhost:3000/';
 
-  let username = '';
+  let username = 'Isaac';
+  let userID = '';
   let gameID = '';
   let scramble = '';
   let game: Game = { players: [], observers: [], round: 0, started: false, total: 0 };
-  let mode = '';
+  let mode = '333';
   let isCreator = false;
   let isObserver = false;
-  let errorMsg = '';
+  let nextRoundAvailable = false;
+  let timeToNextRound = 0;
   let round = -1;
   let locked = false;
   let eventList: string[] = [];
+  let disconnectedKey = '';
 
   function log(...args: any[]) {
     eventList.push( args.map(e => JSON.stringify(e, null, 2)).join(" ") );
     eventList = eventList;
   }
 
-  function toState(s: STATE) {
+  function toState(s: STATE, keepData?: boolean) {
     state = s;
 
-    if ( s === 'idle' ) {
-      setCO(false, false),
+    if ( s === 'idle' && !keepData ) {
+      setCO(false, false);
       gameID = '';
       mode = '333';
       round = -1;
@@ -81,7 +88,7 @@
     log('tryCreate', username, mode, socket.connected);
 
     if ( username && mode && socket.connected ) {
-      socket.emit('CREATE', username);
+      socket.emit('CREATE', username, userID);
       return true;
     }
 
@@ -94,7 +101,7 @@
     log(checked ? 'Trying to observe' : 'Trying to join')
 
     if ( username && /^[0-9a-f]{8}$/.test(gameID) && socket.connected ) {
-      socket.emit(checked ? 'LOOK' : 'JOIN', gameID, username);
+      socket.emit(checked ? 'LOOK' : 'JOIN', gameID, username, userID);
       return true;
     }
 
@@ -110,14 +117,14 @@
     locked = true;
     let s = ev.detail as Solve;
     
-    log("SOLVE: ", s, infinitePenalty(s) ? Infinity : s.time, round);
+    log("SOLVE: ", gameID, infinitePenalty(s) ? Infinity : s.time, round);
     
     // Group field will be used to store the round
     if ( s.group === -1 ) {
       s.group = round;
     }
 
-    socket.emit('TIME', infinitePenalty(s) ? Infinity : s.time, s.group);
+    socket.emit('TIME', gameID, infinitePenalty(s) ? Infinity : s.time, s.group);
   }
 
   function computeStats() {
@@ -136,8 +143,18 @@
 
   function exit() {
     if ( socket.connected ) {
-      socket.emit('EXIT');
+      socket.emit('EXIT', gameID);
     }
+
+    toState('idle');
+  }
+
+  function rematch() {
+    socket.emit('REMATCH', gameID);
+  }
+
+  function start() {
+    socket.emit('START');
   }
 
   function connect() {
@@ -148,8 +165,44 @@
     socket = io(socketServer);
   }
 
+  function disconnect() {
+    log('DISCONNECTED');
+
+    if ( state != 'play' ) {
+      toState('idle', true);
+    } else {
+      disconnectedKey = randomUUID();
+
+      notification.addNotification({
+        header: 'Disconnected',
+        text: 'Reconnecting...',
+        fixed: true,
+        key: disconnectedKey,
+        actions: [{ text: $localLang.global.accept, callback: () => {} }]
+      });
+    }
+
+  }
+
+  function setTimer(cb: Function) {
+    timeToNextRound = 5;
+
+    let itv = setInterval(() => {
+      timeToNextRound -= 1;
+
+      if ( timeToNextRound < 0 ) {
+        nextRoundAvailable = false;
+        clearInterval(itv);
+        cb && cb();
+      }
+    }, 1000);
+  }
+
   onMount(() => {
     connect();
+
+    userID = randomUUID();
+
     console['error'] = function(...args: any) {
       log(...args);
     }
@@ -157,6 +210,12 @@
     // Socket.IO config
     socket.on('connect', () => {
       log("CONNECTED");
+
+      notification.removeNotification(disconnectedKey);
+
+      if ( state === 'play' ) {
+        socket.emit('RECONNECT', gameID, userID, round);
+      }
     });
 
     socket.on('CREATED', (id) => {
@@ -169,9 +228,14 @@
     socket.on('LOOKING',    () => { log('LOOKING');   toState('play'); setCO(false, true); });
     socket.on('GAME_OVER',  () => { log('GAME_OVER'); toState('gameover'); computeStats(); ending = false; });
     socket.on('EXIT',       () => { log('EXIT');      toState('idle'); });
-    socket.on('GAME_DATA',  (g: Game) => { log('GAME_DATA', g); game = g; });
+    socket.on('GAME_DATA',  (g: Game) => { log('GAME_DATA', g); game = g; setCO(g.players[0][0] === userID, isObserver) });
     socket.on('SCRAMBLE',   (scr: string) => { log('SCRAMBLE', scr); scramble = scr; });
-    socket.on('TIMEOUT',    () => { log('TIMEOUT'); ending = true; });
+    
+    socket.on('TIMEOUT',    () => {
+      log('TIMEOUT'); ending = true;
+      setTimer(() => isCreator && socket.emit('GAME_OVER', gameID));
+    });
+
     socket.on('NEXT_ROUND', () => {
       try {
         log('NEXT_ROUND');
@@ -180,9 +244,7 @@
         
         if ( isCreator ) {
           let sMode = MODES.find(m => m[1] === mode) as any;
-
           log('gen: ', mode, sMode);
-
           socket.emit('SCRAMBLE', (all.pScramble.scramblers.get(mode) as any).apply(null, [
             mode, Math.abs(sMode[2]), undefined]).replace(/\\n/g, '<br>').trim());
         }
@@ -190,32 +252,84 @@
         log('ERROR: ', e);
       }
     });
-    socket.on('REMATCH',    (g: Game) => { log('REMATCH'); toState('play')});
+    
+    socket.on('NEXT_ROUND_AVAILABLE', () => {
+      log('NEXT_ROUND_AVAILABLE');
+      nextRoundAvailable = true;
+      setTimer(() => isCreator && socket.emit('NEXT_ROUND', gameID));
+    });
+
+    socket.on('REMATCH',    (g: Game) => {
+      log('REMATCH');
+
+      if ( state === 'gameover' ) {
+        toState('play');
+        round = -1;
+      }
+    });
 
     // ERRORS
-    socket.on('JOIN_ERROR', (err) => { log('JOIN_ERROR', err); errorMsg = err; toState('error') });
-    socket.on('LOOK_ERROR', (err) => { log('LOOK_ERROR', err); errorMsg = err; toState('error') });
-    socket.on('TIME_ERROR', (err) => { log('TIME_ERROR', err); errorMsg = err; toState('error') });
+    let errorMap = {
+      "no-exists": "Game does not exists.",
+      "max-observers": "Game reached the limit of observers.",
+      "max-players": "Game reached the limit of players.",
+      "invalid-time": "Invalid time.",
+      "invalid-round": "Invalid round.",
+      "invalid-user": "Invalid user.",
+    } as const;
 
-    socket.on('disconnect', () => { log('DISCONNECTED'); toState('idle') });
+    socket.on('ERROR', (err: keyof typeof errorMap) => {
+      log('ERROR', err);
+      let text = '';
+
+      switch( state ) {
+        case 'waiting': {
+          text = errorMap[ err ] || 'Unknown error';
+          toState('join');
+          break;
+        }
+        case 'play': {
+          exit();
+          break;
+        }
+      }
+
+      text && notification.addNotification({
+        header: 'Error',
+        text,
+        key: randomUUID(),
+        fixed: false,
+        timeout: 3000
+      });
+    });
+
+    socket.on('disconnect', disconnect);
+    socket.on('connect_error', () => {});
+    socket.on('connect_failed', () => {});
   });
 
   onDestroy(() => {
+    socket.emit('EXIT');
     socket.disconnect();
   });
 
 </script>
 
+<svelte:body on:keydown={(ev) => ev.code === 'Space' && ev.preventDefault()} />
+
 <div class="container-mini bg-white bg-opacity-10 m-4 p-4 rounded-md pb-6 text-gray-400 relative">
   <h1 class="text-gray-300 text-3xl text-center mb-6">{ TITLE.get( state ) }</h1>
 
+  <!-- IDLE -->
   {#if state === 'idle'}
     <div class="flex items-center justify-center gap-4">
       <Button on:click={ () => toState('create') } class="bg-green-700 text-gray-300"> Create </Button>
       <Button on:click={ () => toState('join') } class="bg-blue-700 text-gray-300"> Join </Button>
+      <Button on:click={ () => eventList.length = 0 } class="bg-purple-700 text-gray-300"> Clear </Button>
     </div>
   {/if}
 
+  <!-- CREATE -->
   {#if state === 'create'}
     <div class="max-w-xs justify-center mx-auto grid gap-4 grid-cols-3 mb-6">
       <span class="col-span-1 flex justify-end items-center">Name:</span>
@@ -233,16 +347,17 @@
     </div>
   {/if}
 
+  <!-- JOIN -->
   {#if state === 'join'}
     <div class="max-w-xs justify-center mx-auto grid gap-4 grid-cols-3 mb-6">
       <span class="col-span-1 flex justify-end items-center">Name:</span>
       <div class="col-span-2"><Input bind:value={ username } size={50} focus={ true }/></div>
 
       <span class="col-span-1 flex justify-end items-center">Game ID:</span>
-      <div class="col-span-2"><Input bind:value={ gameID } size={50}/></div>
+      <div class="col-span-2"><Input type="number" on:input={ (e) => gameID = e.detail.target.value.toString() } size={50}/></div>
 
       <span class="col-span-3 flex justify-center gap-2">
-        <Checkbox { checked } on:change={ (e) => checked = e.detail.value }/> Join as observer
+        <Checkbox { checked } on:change={ (e) => checked = e.detail.value } label="Join as observer"/>
       </span>
     </div>
     <div class="flex items-center justify-center gap-4 my-6">
@@ -251,6 +366,7 @@
     </div>
   {/if}
 
+  <!-- WAITING -->
   {#if state === 'waiting'}
     <h2 class="text-gray-300 text-2xl text-center mb-6">Waiting...</h2>
 
@@ -259,12 +375,20 @@
     </div>
   {/if}
 
+  <!-- PLAY -->
   {#if state === 'play'}
     <h2 class="text-gray-300 text-xl text-center mb-6">Game ID:
       <span class="bg-violet-700 text-gray-300 px-2 py-1 rounded-md">{ gameID }</span>
     </h2>
 
     <ul id="actions" class="absolute top-2 right-2 flex items-center gap-2">
+      <li class="bg-gray-500 text-gray-300">
+        <button on:click={ () => {
+          socket.disconnect();
+
+          setTimeout(() => socket.connect(), 10000);
+        }}>D</button>
+      </li>
       <li class="bg-gray-500 text-gray-300">
         <Tooltip position="top" text="Observers">
           <div class="flex items-center gap-1"><EyeIcon size="1.2rem" /> { game.observers.length }</div>
@@ -280,7 +404,7 @@
     {#if isCreator}
       {#if !game.started && game.players.length > 1}
         <Button
-          on:click={ () => socket.emit('START') }
+          on:click={ start }
           class="bg-violet-700 text-gray-300 my-8 mx-auto"> Start! </Button>
       {:else}
         <span class="flex justify-center text-yellow-300">Share the game ID with your friends!</span>
@@ -288,21 +412,29 @@
     {/if}
 
     {#if game.started}
-      <div class="h-96 rounded-md relative">
+      {#if nextRoundAvailable}
+        <span class="flex justify-center text-green-300 text-2xl">
+          Next round in { timeToNextRound }
+        </span>
+      {/if}
+
+      {#if ending}
+        <span class="flex justify-center text-yellow-300 text-2xl">Ending game in { timeToNextRound }</span>
+      {/if}
+
+      <div class="h-96 rounded-md relative" class:disconnected={ !socket.connected }>
         <Timer
           on:solve={ updateSolve }
           battle={true}
           useScramble={ scramble }
           useMode={ mode }
           genScramble={ false }
-          enableKeyboard={ !(locked || isObserver || ending) }
+          cleanOnScramble={ true }
+          enableKeyboard={ !(locked || isObserver || ending || !socket?.connected) }
         />
       </div>
     {/if}
 
-    {#if ending}
-      <span class="flex justify-center text-yellow-300">Ending game...</span>
-    {/if}
     <ul id="players">
       <li class="header"></li>
       <li class="header">Player</li>
@@ -314,7 +446,7 @@
 
       {#each game.players as p, i}
         <li class="text-gray-300">{i + 1}</li>
-        <li>{ p[1].name }</li>
+        <li class={ p[1].connected ? '' : 'line-through' }>{ p[1].name }</li>
         {#each [0, 1, 2, 3, 4] as t}
           <li>{ p[1].times[t] === null ? 'DNF' : p[1].times[t] ? timer(p[1].times[t], true) : '-' }</li>
         {/each}
@@ -322,6 +454,7 @@
     </ul>
   {/if}
 
+  <!-- GAMEOVER -->
   {#if state === 'gameover'}
     <ul id="players-gameover">
       <li class="header"></li>
@@ -350,16 +483,17 @@
     <div class="flex items-center justify-center gap-4 w-full">
       {#if isCreator}
         <Button
-          on:click={ () => socket.emit('REMATCH') }
+          on:click={ rematch }
           class="bg-violet-700 text-gray-300 my-8"> Rematch </Button>
       {/if}
 
       <Button
-        on:click={ () => socket.emit('EXIT') }
+        on:click={ exit }
         class="bg-red-700 text-gray-300 my-8"> Exit </Button>
     </div>
   {/if}
 
+  <!-- ERROR -->
   {#if state === 'error'}
     <h2 class="text-gray-300 text-2xl text-center mb-6">Error</h2>
 
@@ -368,6 +502,7 @@
     </div>
   {/if}
 
+  <!-- EVENT_LIST -->
   <ul class="w-full text-white grid mt-8 items-center justify-center">
     <li class="text-xl text-violet-400 font-bold">Event list</li>
     {#each eventList as ev}
@@ -395,5 +530,9 @@
 
   #actions li {
     @apply w-14 h-8 flex items-center justify-center cursor-pointer rounded-md shadow-md;
+  }
+
+  .disconnected {
+    @apply opacity-40 pointer-events-none;
   }
 </style>

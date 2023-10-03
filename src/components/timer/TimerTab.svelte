@@ -44,22 +44,24 @@
   import { ManualInput } from './input-handlers/Manual';
   import { globalLang } from '@stores/language.service';
   import { getLanguage } from '@lang/index';
-  import { copyToClipboard } from '@helpers/strings';
+  import { copyToClipboard, randomUUID } from '@helpers/strings';
   import { GANInput } from './input-handlers/GAN';
   import Simulator from '@components/Simulator.svelte';
   import { KeyboardInput } from './input-handlers/Keyboard';
+  import { QiYiSmartTimerInput } from './input-handlers/QY-Timer';
 
   export let context: TimerContext;
   export let battle = false;
   export let enableKeyboard = true;
   export let timerOnly = false;
   export let scrambleOnly = false;
+  export let cleanOnScramble = false;
 
   let localLang: Readable<Language> = derived(globalLang, ($lang) => getLanguage( $lang ));
 
   const {
-    state, ready, tab, solves, allSolves, session, Ao5, stats, scramble,
-    group, mode, hintDialog, hint, cross, xcross, preview, isRunning, decimals, bluetoothList,
+    state, ready, tab, solves, allSolves, session, Ao5, stats, scramble, group, mode, hintDialog,
+    hint, cross, xcross, preview, isRunning, decimals, bluetoothList,
     sortSolves, initScrambler, updateStatistics, selectedGroup, setConfigFromSolve, editSolve
   } = context;
 
@@ -112,17 +114,17 @@
   let lastSolve: Writable<Solve | null> = writable(null);
   let prob = -1;
   let prevExpanded: boolean = false;
-  let stackmatStatus: Writable<boolean> = writable(false);
+  let stackmatStatus = writable(false);
 
   // BLUETOOTH
-  let bluetoothStatus: Writable<boolean> = writable(false);
+  let bluetoothStatus = writable(false);
   let bluetoothHardware: any = null;
   let bluetoothBattery: number = 0;
 
   // ---------------------------------------------------
   let inputContext: InputContext = {
-    isRunning, lastSolve, ready, session, state, time, stackmatStatus, decimals,
-    addSolve, initScrambler, reset, createNewSolve
+    isRunning, lastSolve, ready, session, state, time, stackmatStatus, decimals, scramble,
+    bluetoothStatus, addSolve, initScrambler, reset, createNewSolve
   };
 
   let inputMethod: TimerInputHandler = new ManualInput();
@@ -216,6 +218,7 @@
     ls.session = $session._id;
     ls.penalty = p || Penalty.NONE;
     ls.time = t || $time;
+    ls._id = randomUUID();
     
     $lastSolve = ls;
     $allSolves.push( ls );
@@ -301,7 +304,7 @@
   function toClipboard() {
     copyToClipboard($scramble).then(() => {
       notification.addNotification({
-        key: crypto.randomUUID(),
+        key: randomUUID(),
         header: $localLang.global.done,
         text: $localLang.global.scrambleCopied,
         timeout: 1000
@@ -369,34 +372,43 @@
   }
 
   function initInputHandler() {
-    dataService.sleep(false);
+    const methodMap = {
+      "Manual": ManualInput,
+      "StackMat": StackmatInput,
+      "GAN Cube": GANInput,
+      "QY-Timer": QiYiSmartTimerInput,
+      "Keyboard": KeyboardInput,
+    };
 
-    if ( $session?.settings?.input === 'Manual' ) {
-      if ( !(inputMethod instanceof ManualInput) ) {
-        inputMethod.disconnect();
-        inputMethod = new ManualInput();
-      }
-    } else if ( $session?.settings?.input === 'StackMat' ) {
-      if ( !(inputMethod instanceof StackmatInput) ) {
-        inputMethod.disconnect();
-        inputMethod = new StackmatInput( inputContext );
-        inputMethod.init(deviceID, true);
-        dataService.sleep(true);
-      }
-    } else if ( $session?.settings?.input === 'GAN Cube' ) {
-      if ( !(inputMethod instanceof GANInput) ) {
-        inputMethod.disconnect();
-        inputMethod = new GANInput( inputContext );
-      }
-    } else {
+    let newClass = methodMap[$session?.settings?.input || 'Keyboard'];
+    let sameClass = true;
+
+    if ( !(inputMethod instanceof newClass) ) {
+      sameClass = false;
       inputMethod.disconnect();
+    }
+
+    dataService.sleep( newClass === StackmatInput );
+
+    if ( $session?.settings?.input === 'Manual' && !sameClass ) {
+      inputMethod = new ManualInput();
+    } else if ( $session?.settings?.input === 'StackMat' && !sameClass ) {
+      inputMethod = new StackmatInput( inputContext );
+      inputMethod.init(deviceID, true);
+    } else if ( $session?.settings?.input === 'GAN Cube' && !sameClass ) {
+      inputMethod = new GANInput( inputContext );
+      inputMethod.init();
+    } else if ( $session?.settings?.input === 'QY-Timer' && !sameClass ) {
+      inputMethod = new QiYiSmartTimerInput( inputContext );
+      inputMethod.init();
+    } else if ( $session?.settings?.input === 'Keyboard' && !sameClass ) {
       inputMethod = new KeyboardInput( inputContext );
       inputMethod.init();
     }
   }
 
   function updateDevices() {
-    StackmatInput.updateInputDevices().then(dev => {
+    StackmatInput.updateInputDevices()?.then(dev => {
       deviceList = dev;
     });
 
@@ -446,7 +458,9 @@
   }
 
   function searchBluetooth() {
-    let gn = new GANInput( inputContext );
+    let gn = modalData.settings.input === 'GAN Cube'
+      ? new GANInput( inputContext )
+      : new QiYiSmartTimerInput( inputContext );
 
     isSearching = true;
     $bluetoothList.length = 0;
@@ -455,12 +469,17 @@
       deviceID = mac;
       inputMethod.disconnect();
       inputMethod = gn;
-    }).catch(() => notification.addNotification({
-      key: crypto.randomUUID(),
-      header: 'Search error',
-      text: 'Bluetooth error.',
-    })).finally(() => {
+    }).catch((err) => {
+      notification.addNotification({
+        key: randomUUID(),
+        header: 'Search error',
+        text: 'Bluetooth error.',
+      });
+
+      console.log("ERROR: ", err);
+    }).finally(() => {
       isConnecting = false;
+      isSearching = false;
     });
   }
 
@@ -476,7 +495,7 @@
 
   function showBluetoothData() {
     notification.addNotification({
-      key: crypto.randomUUID(),
+      key: randomUUID(),
       header: 'GAN Cube info',
       text: '',
       html: $bluetoothStatus ? `
@@ -493,8 +512,10 @@
     });
   }
 
-  function refreshScramble() {
-    initScrambler();
+  function clean() {
+    $state = TimerState.CLEAN;
+    $time = 0;
+    $decimals = true;
   }
 
   onMount(() => {
@@ -502,7 +523,7 @@
       return;
     }
 
-    navigator.mediaDevices.addEventListener('devicechange', updateDevices);
+    navigator.mediaDevices?.addEventListener('devicechange', updateDevices);
 
     initInputHandler();
     $group = 0;
@@ -513,8 +534,6 @@
     subs = [
       dataService.bluetoothSub.subscribe((data) => {
         if ( !data ) return;
-
-        console.log("Bluetooth data: ", data);
 
         switch(data.type) {
           case 'move': {
@@ -537,13 +556,13 @@
             break;
           }
 
-          case 'connect': {
-            $bluetoothStatus = true;
-            break;
-          }
+          // case 'connect': {
+          //   $bluetoothStatus = true;
+          //   break;
+          // }
 
           case 'disconnect': {
-            $bluetoothStatus = false;
+            // $bluetoothStatus = false;
             deviceID = '';
             break;
           }
@@ -554,13 +573,14 @@
 
   onDestroy(() => {
     inputMethod.disconnect();
-    navigator.mediaDevices.removeEventListener('devicechange', updateDevices);
+    navigator.mediaDevices?.removeEventListener('devicechange', updateDevices);
     subs.forEach(s => s());
   });
 
   $: $solves.length === 0 && reset();
   $: $session && initInputHandler();
   $: $localLang, updateTexts();
+  $: $scramble && cleanOnScramble && clean();
 </script>
 
 <svelte:window
@@ -700,13 +720,6 @@
         </div>
       {/if}
     </div>
-  {/if}
-
-  <!-- Refresh scramble -->
-  {#if scrambleOnly}
-    <Button class="mx-auto mt-[8rem] bg-purple-700 text-gray-300" on:click={ refreshScramble }>
-      { $localLang.global.refresh }
-    </Button>
   {/if}
 
   <!-- Hints -->
@@ -877,7 +890,7 @@
             </section>
           {/if}
 
-          {#if modalData.settings.input === 'GAN Cube'}
+          {#if modalData.settings.input === 'GAN Cube' || modalData.settings.input === 'QY-Timer' }
             <section class="bg-white bg-opacity-10 p-2 shadow-md rounded-md">
               <div class="flex justify-center mb-4">
                 <Button class="bg-purple-600 text-gray-300" on:click={ searchBluetooth } loading={ isSearching }>
@@ -897,7 +910,9 @@
                 {/each}
               </ul>
             </section>
+          {/if}
 
+          {#if modalData.settings.input === 'GAN Cube'}
             <section>
               <Checkbox
                 bind:checked={ modalData.settings.showBackFace } on:change={ (e) => $session = $session }
@@ -963,18 +978,16 @@
   }
 
   #scramble span {
-    @apply ml-16 mr-10 inline-block text-center;
+    @apply lg:ml-16 lg:mr-10 mx-4 inline-block text-center max-lg:w-full lg:w-[calc(100%-15rem)];
     font-size: 1.5em;
-    width: calc(100% - 240px);
     word-spacing: 10px;
     max-height: 16rem;
-    overflow: scroll;
+    overflow: hidden auto;
   }
 
   #scramble span.battle {
-    width: 100%;
-    max-width: 45rem;
     margin: 0;
+    max-height: 9rem;
   }
 
   #timer {

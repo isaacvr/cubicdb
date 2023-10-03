@@ -32,22 +32,24 @@
 </script>
 
 <button {tabindex} class={`
-  border px-4 py-2 rounded-md shadow-md flex items-center justify-center border-none
+  px-4 py-2 rounded-md shadow-md flex items-center justify-center overflow-hidden
   relative uppercase font-bold text-gray-400 transition-all duration-200 content
 
   hover:shadow-lg
 ` +
   (flat ? " shadow-none px-2 py-1 " : "") +
-  (cl || " hover:bg-white hover:bg-opacity-10 ") +
-  ( loading ? ' isLoading' : '' )}
+  (cl || " hover:bg-white hover:bg-opacity-10 border-none") +
+  ( loading ? ' isLoading pointer-events-none' : '' )}
 
   on:click={handleClick} use:ripple={rp} aria-label={ariaLabel} 
 >
   <slot />
   
   {#if loading}
-    <div class="loading">
-      <LoadingIcon size="1.2rem" />
+    <div class="loading-wrapper">
+      <div class="loading">
+        <LoadingIcon size="1.2rem" />
+      </div>
     </div>
   {/if}
 </button>
@@ -57,7 +59,7 @@
     outline-color: transparent;
   }
 
-  button.isLoading > :global( :not(.loading) ) {
+  button.isLoading > :global( :not(.loading-wrapper) ) {
     opacity: 0;
     color: transparent;
   }
@@ -71,10 +73,19 @@
     }
   }
 
+  .loading-wrapper {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: inherit;
+  }
+
   .loading {
     position: absolute;
     left: 50%;
-    translate: -50% 0%;
+    translate: -50% 50%;
     animation: circle 1s linear infinite;
   }
 </style>

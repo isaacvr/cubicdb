@@ -60,8 +60,10 @@
   <footer class="flex mt-auto border-t-2 border-t-gray-700">
     {#each tabs as tab}
       <Button ariaLabel={ tab.ariaLabel }
-        class="rounded-none w-full
-        { tab.index === $selectedTab ? 'bg-blue-400 text-black hover:bg-blue-500 hover:bg-opacity-100' : '' }"
+        class="rounded-none w-full border border-gray-400 border-l-transparent first:border-l-gray-400 
+        { tab.index === $selectedTab
+          ? 'bg-blue-400 text-black hover:bg-blue-500 hover:bg-opacity-100'
+          : 'bg-gray-700 hover:bg-gray-600' }"
         on:click={ () => selectTab(tab) }
       >
         {#if tab.icon }

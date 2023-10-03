@@ -40,22 +40,29 @@
   import { Puzzle } from '@classes/puzzle/puzzle';
   import { PX_IMAGE } from '@constants';
   import { ScrambleParser } from '@classes/scramble-parser';
-  import { getUpdatedStatistics } from '@helpers/statistics';
-  import { timer } from '@helpers/timer';
+  import { INITIAL_STATISTICS, getUpdatedStatistics, statsReplaceId } from '@helpers/statistics';
+  import { infinitePenalty, timer } from '@helpers/timer';
   import { globalLang } from '@stores/language.service';
   import { getLanguage } from '@lang/index';
   import { NotificationService } from '@stores/notification.service';
+  import { randomUUID } from '@helpers/strings';
+
+  let MENU: SCRAMBLE_MENU[] = getLanguage($globalLang).MENU;
   
   export let battle = false;
   export let useScramble = '';
-  export let useMode = '';
+  export let useMode: string = '';
+  export let useLen: number = 0;
   export let useProb: number = -1;
   export let genScramble = true;
   export let enableKeyboard = true;
   export let timerOnly = false;
   export let scrambleOnly = false;
+  export let cleanOnScramble = false;
+  export let location = '';
 
-  let MENU: SCRAMBLE_MENU[] = [];
+  $: console.log('LOCATION: ', location);
+
   let groups: string[] = [];
   
   let localLang: Readable<Language> = derived(globalLang, ($lang) => {
@@ -63,37 +70,8 @@
     MENU = l.MENU;
     groups = MENU.map(e => e[0]);
     selectedGroup(false);
-
-    // let allModes = MENU.reduce((acc: string[], e) => [ ...acc, ...e[1].map(e1 => e1[1]) ], []);
-
-    // console.log("Empty modes: ", allModes.filter( m => !all.pScramble.scramblers.has(m) ));
-
     return l;
   });
-
-  const INITIAL_STATISTICS: Statistics = {
-    best: { value: 0, better: false, prev: Infinity },
-    worst: { value: 0, better: false },
-    count: { value: 0, better: false },
-    time: { value: 0, better: false },
-    avg: { value: 0, better: false },
-    dev: { value: 0, better: false },
-    Mo3: { value: -1, better: false },
-    Ao5: { value: -1, better: false },
-    Ao12: { value: -1, better: false },
-    Ao50: { value: -1, better: false },
-    Ao100: { value: -1, better: false },
-    Ao200: { value: -1, better: false },
-    Ao500: { value: -1, better: false },
-    Ao1k: { value: -1, better: false },
-    Ao2k: { value: -1, better: false },
-
-    NP:    { value: 0, better: false },
-    P2:    { value: 0, better: false },
-    DNS:   { value: 0, better: false },
-    DNF:   { value: 0, better: false },
-    counter: { value: 0, better: false },
-  };
 
   /// SERVICES
   const dataService = DataService.getInstance();
@@ -142,6 +120,7 @@
   let selected = writable<number>(0);
   let decimals = writable<boolean>(true);
   let bluetoothList = writable<BluetoothDeviceData[]>([]);
+  let bluetoothStatus = writable(false);
 
   let confetti = new JSConfetti();
   
@@ -208,7 +187,7 @@
         text: '',
         html: bestList.map(o => `${o.name}: ${ timer(o.now, true) } (${ $localLang.TIMER.from } ${ timer(o.prev, true) })`).join('<br>'),
         timeout: 5000,
-        key: crypto.randomUUID(),
+        key: randomUUID(),
       });
 
       confetti.addConfetti({
@@ -216,27 +195,17 @@
         confettiColors: [ '#009d54', '#3d81f6', '#ffeb3b' ]
       });
     }
-
   }
 
-  function updateSolves() {
+  function updateSolves(id?: any) {
     $solves = $allSolves.filter(s => s.session === ($session || {})._id);
-    let arr = [];
+    
+    // Calc next Ao5
+    let arr = $solves.slice(0, 4).filter( s => !infinitePenalty(s) ).map(s => s.time);
+    let sum = arr.reduce((ac, e) => ac + e, 0);
+    arr.sort();
 
-    for (let i = 0, j = 0, maxi = $solves.length; i < maxi && j < 4; i += 1) {
-      if ( $solves[i].penalty != Penalty.DNF ) {
-        arr.push( $solves[i].time );
-        j += 1;
-      }
-    }
-
-    if ( arr.length === 4 ) {
-      arr.sort();
-      let sum = arr.reduce((ac, e) => ac + e, 0);
-      $Ao5 = [ ( sum - arr[3] ) / 3, ( sum - arr[0] ) / 3 ].sort((a, b) => a - b);
-    } else {
-      $Ao5 = [];
-    }
+    $Ao5 = arr.length === 4 ? [ ( sum - arr[3] ) / 3, ( sum - arr[0] ) / 3 ].sort((a, b) => a - b) : [];
   }
 
   function sortSolves() {
@@ -318,14 +287,15 @@
     }
 
     let md = useMode || _mode || $mode[1];
+    let len = useLen || $mode[2];
     let s = useScramble || scr;
     let pb = useProb || _prob || $prob;
     
     if ( !genScramble ) {
       $scramble = scr || useScramble;
     } else {
-      $scramble = (s) ? s : (all.pScramble.scramblers.get(md) as any).apply(null, [
-        md, Math.abs($mode[2]), pb < 0 ? undefined : pb
+      $scramble = (s) ? s : (all.pScramble.scramblers.get(md) || (() => '')).apply(null, [
+        md, Math.abs(len), pb < 0 ? undefined : pb
       ]).replace(/\\n/g, '<br>').trim();
     }
 
@@ -406,6 +376,11 @@
     sessionsTab.editSolve(s);
   }
 
+  function sortSessions() {
+    sessions.sort((s1, s2) => s1.name.toLowerCase() < s2.name.toLowerCase() ? -1 : 1);
+    sessions = sessions;
+  }
+
   onMount(() => {
     if ( timerOnly && scrambleOnly ) {
       timerOnly = scrambleOnly = false;
@@ -426,10 +401,11 @@
             case 'add-solve': {
               let d = (data.data as Solve[])[0];
               let s = $allSolves.find(s => s.date === d.date);
-              
+
               if (s) {
+                statsReplaceId($stats, s._id, d._id);
                 s._id = d._id;
-                updateSolves();
+                updateSolves(d._id);
               }
               break;
             }
@@ -438,6 +414,7 @@
               for (let i = $allSolves.length - 1; i >= 0; i -= 1) {
                 ids.indexOf($allSolves[i]._id) > -1 && $allSolves.splice(i, 1);
               }
+              $stats = INITIAL_STATISTICS;
               setSolves();
               break;
             }
@@ -452,6 +429,7 @@
                     break;
                   }
                 }
+                $stats = INITIAL_STATISTICS;
                 setSolves(false);
               }
               break;
@@ -475,6 +453,7 @@
               let currentSession = sessions.find(s => s._id === ss);
               $session = currentSession || sessions[0];
               selectedSession();
+              sortSessions();
               break;
             }
             case 'rename-session':
@@ -485,7 +464,7 @@
                 updatedSession.name = session.name;
                 updatedSession.settings = session.settings;
               }
-              sessions = sessions;
+              sortSessions();
               break;
             }
             case 'add-session': {
@@ -494,6 +473,7 @@
               sessions = [ ...sessions, ns ];
               $session = ns;
               selectedSession();
+              sortSessions();
               break;
             }
             case 'remove-session': {
@@ -509,6 +489,7 @@
               if ( s._id === $session._id ) {
                 $session = sessions[0];
               }
+              sortSessions();
               break;
             }
           }
@@ -542,12 +523,12 @@
   let context: TimerContext = {
     state, ready, tab, solves, allSolves, session, Ao5, AoX, stats, scramble, decimals,
     group, mode, hintDialog, hint, cross, xcross, preview, prob, isRunning, selected,
-    bluetoothList,
+    bluetoothList, bluetoothStatus,
     sortSolves, updateStatistics, initScrambler, selectedGroup,
     setConfigFromSolve, selectSolve, selectSolveById, editSolve
   };
 
-  $: (useScramble || useMode) ? initScrambler(useScramble, useMode) : initScrambler();
+  $: (useScramble || useMode || useProb) ? initScrambler(useScramble, useMode, useProb) : initScrambler();
   $: enableKeyboard = !scrambleOnly;
 
 </script>
@@ -558,8 +539,7 @@
   {#if timerOnly || scrambleOnly }
     <TimerTab { timerOnly } { scrambleOnly } { context } { battle } { enableKeyboard } />
   {:else if battle}
-    <TimerTab
-      { context } { battle } { enableKeyboard }
+    <TimerTab { cleanOnScramble } { context } { battle } { enableKeyboard }
       on:solve={ (s) => dispatch("solve", s.detail) }
       on:update={ (s) => dispatch("solve", s.detail) }
     />

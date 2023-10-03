@@ -13,7 +13,7 @@
   import Tooltip from "@material/Tooltip.svelte";
   import CopyIcon from "@icons/ContentCopy.svelte";
   import DownArrowIcon from "@icons/ArrowDown.svelte";
-  import { copyToClipboard } from "@helpers/strings";
+  import { copyToClipboard, randomUUID } from "@helpers/strings";
   import { NotificationService } from "@stores/notification.service";
   import { sTimer, timerToMilli } from "@helpers/timer";
   import StatsTab from "./timer/StatsTab.svelte";
@@ -21,7 +21,7 @@
   import TextArea from "./material/TextArea.svelte";
   import { solvFacelet } from "@cstimer/scramble/scramble_333";
 
-  let MENU: SCRAMBLE_MENU[] = [];
+  let MENU: SCRAMBLE_MENU[] = getLanguage($globalLang).MENU;
   let groups: string[] = [];
   
   let localLang: Readable<Language> = derived(globalLang, ($lang) => {
@@ -113,11 +113,6 @@
   function selectedMode() {
     filters = all.pScramble.filters.get( $mode[1] ) || [];
     $prob = -1;
-    initScrambler();
-  }
-
-  function initScrambler() {
-    timer?.initScrambler();
   }
 
   function checkMode(s: string, list: string[]) {
@@ -148,7 +143,7 @@
 
     copyToClipboard(str).then(() => {
       notification.addNotification({
-        key: crypto.randomUUID(),
+        key: randomUUID(),
         header: $localLang.global.done,
         text: $localLang.global.scrambleCopied,
         timeout: 1000,
@@ -181,7 +176,7 @@
         selected: false,
         session: "",
         time,
-        _id: crypto.randomUUID(),
+        _id: randomUUID(),
       },
       ...$solves,
     ];
@@ -279,7 +274,7 @@
     }
 
     notification.addNotification({
-      key: crypto.randomUUID(),
+      key: randomUUID(),
       header,
       html: `
         ${ header != $localLang.TOOLS.error
@@ -333,10 +328,8 @@
   $: updateMetrics(metricString, selectedMetric);
 </script>
 
-<svelte:window on:keyup={ handleKeyup }/>
-
 <!-- Selection -->
-<div class="flex items-center justify-center gap-2">
+<div class="flex flex-wrap items-center justify-center gap-2">
   <Select
     items={[
       [$localLang.TOOLS.timerOnly, "timer-only"],
@@ -348,7 +341,7 @@
     ]}
     label={(e) => e[0]}
     transform={(e) => e[1]}
-    bind:value={selectedOption}
+    bind:value={ selectedOption }
   />
 
   {#if checkMode(selectedOption, ["scramble-only", "scramble-batch"])}
@@ -387,7 +380,6 @@
         transform={(i, p) => p}
         onChange={(i, p) => {
           $prob = p || 0;
-          initScrambler();
         }}
       />
     {/if}
@@ -395,6 +387,13 @@
 
   {#if checkMode(selectedOption, ['metrics'])}
     <Select items={ MetricList } label={ e => e[0] } transform={ e => e[1] } bind:value={ selectedMetric }/>
+  {/if}
+
+  <!-- Refresh scramble -->
+  {#if checkMode(selectedOption, ['scramble-only'])}
+    <Button class="bg-purple-700 text-gray-300" on:click={ () => timer?.initScrambler() }>
+      { $localLang.global.refresh }
+    </Button>
   {/if}
 </div>
 
@@ -404,14 +403,15 @@
     timerOnly={selectedOption === "timer-only"}
     scrambleOnly={selectedOption === "scramble-only"}
     useMode={ $mode[1] }
+    useLen={ $mode[2] }
     useProb={ $prob }
   />
 {:else if checkMode(selectedOption, ["scramble-batch"])}
   {#if scrambleBatch.length}
     <div
-      class="container-mini bg-white bg-opacity-10 mx-auto mt-4 w-max mb-0 p-4 rounded-md shadow-md text-center"
+      class="container-mini bg-white bg-opacity-10 mx-auto max-w-[calc(min(100%-2rem,100ch))] mt-4 w-max mb-0 p-4 rounded-md shadow-md text-center"
     >
-      <ul class="text-gray-400 grid gap-2 max-h-[55vh] overflow-scroll">
+      <ul class="text-gray-400 grid gap-2 max-h-[calc(100vh-25rem)] overflow-scroll">
         {#each scrambleBatch as scr, pos}
           <li>{pos + 1}- {scr}</li>
         {/each}
@@ -440,7 +440,7 @@
       on:UENTER={generateBatch}
     />
     <Button class="bg-purple-700 text-gray-300" on:click={generateBatch}
-      >Generate</Button
+      >{ $localLang.global.generate }</Button
     >
   </div>
 {:else if checkMode(selectedOption, ["statistics"])}

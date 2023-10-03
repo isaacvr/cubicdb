@@ -68,7 +68,7 @@ const saveSolve = ({ time, state, lastSolve, addSolve, initScrambler }: InputCon
   time.set(0);
 }
 
-const KeyboardMachine = createMachine<InputContext, any>({
+const KeyboardMachine = createMachine<InputContext>({
   predictableActionArguments: true,
   initial: 'CLEAR',
   states: {

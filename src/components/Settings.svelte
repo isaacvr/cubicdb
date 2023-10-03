@@ -10,6 +10,7 @@
   import { DataService } from "@stores/data.service";
 
   import { version } from "@stores/version.store";
+    import { randomUUID } from "@helpers/strings";
 
   const notService = NotificationService.getInstance();
 
@@ -49,7 +50,7 @@
     document.documentElement.style.setProperty('--timer-font', timerFont);
 
     notService.addNotification({
-      key: crypto.randomUUID(),
+      key: randomUUID(),
       header: 'Saved',
       text: 'Settings saved',
       timeout: 2000,
@@ -94,7 +95,7 @@
               header: $localLang.SETTINGS.updateError,
               text: $localLang.SETTINGS.updateErrorText,
               timeout: 2000,
-              key: crypto.randomUUID(),
+              key: randomUUID(),
             });
           } else if ( res ) {
             if ( $version === vs ) {
@@ -105,7 +106,7 @@
                 actions: [
                   { text: $localLang.global.accept, callback: () => {} }
                 ],
-                key: crypto.randomUUID(),
+                key: randomUUID(),
               });
             } else {
               notService.addNotification({
@@ -116,7 +117,7 @@
                   { text: $localLang.global.cancel, callback: () => {} },
                   { text: $localLang.global.update, callback: updateNow },
                 ],
-                key: crypto.randomUUID(),
+                key: randomUUID(),
               });
             }
           } else {
@@ -124,7 +125,7 @@
               header: $localLang.SETTINGS.alreadyUpdated,
               text: $localLang.SETTINGS.alreadyUpdatedText,
               timeout: 2000,
-              key: crypto.randomUUID(),
+              key: randomUUID(),
             });
           }
 

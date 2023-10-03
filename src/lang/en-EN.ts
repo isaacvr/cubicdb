@@ -17,6 +17,7 @@ export const English: Language = {
     save: 'Save',
     clear: 'Clear',
     reset: 'Reset',
+    generate: 'Generate',
   },
   NAVBAR: {
     home: 'Home',

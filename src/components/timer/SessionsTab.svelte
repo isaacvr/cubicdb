@@ -34,7 +34,7 @@
   import { getLanguage } from "@lang/index";
   import { tick } from "svelte";
   import Select from "@components/material/Select.svelte";
-    import { copyToClipboard } from "@helpers/strings";
+    import { copyToClipboard, randomUUID } from "@helpers/strings";
 
   let localLang: Readable<Language> = derived(globalLang, ($lang) => getLanguage( $lang ));
 
@@ -203,7 +203,7 @@
   function toClipboard(text: string) {
     copyToClipboard(text.replaceAll('<br>', '\n')).then(() => {
       notification.addNotification({
-        key: crypto.randomUUID(),
+        key: randomUUID(),
         header: $localLang.global.done,
         text: $localLang.global.copiedToClipboard,
         timeout: 1000
@@ -261,7 +261,7 @@
 
   $: updatePaginator($solves);
   $: $selected, updatePageFromSelected();
-
+  $: $tab != 1 && $selected && selectNone();
 </script>
 
 <svelte:window

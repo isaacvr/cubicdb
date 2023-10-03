@@ -1,6 +1,7 @@
 /// <reference types="web-bluetooth" />
 
-import type { GANInput } from '@components/timer/input-handlers/GAN';
+import { GANInput } from '@components/timer/input-handlers/GAN';
+import { QiYiSmartTimerInput } from '@components/timer/input-handlers/QY-Timer';
 import type { Algorithm, RawCard, Solve, Session, Tutorial, Sheet, CubeEvent, IPC, PDFOptions, UpdateCommand } from '@interfaces';
 import { ElectronAdaptor, BrowserAdaptor } from '@storage/index';
 import type { Writable } from 'svelte/store';
@@ -62,7 +63,8 @@ export class DataService {
     this.updateSub = writable<AnySub>();
     this.bluetoothSub = writable<AnySub>();
 
-    if ( navigator.userAgent.indexOf('Electron') > -1 ) {
+    // @ts-ignore
+    if ( window.electronAPI ) {
       this.ipc = new ElectronAdaptor();
     } else {
       // this.ipc = new NoopAdaptor();
@@ -168,7 +170,10 @@ export class DataService {
   }
 
   addSolve(s: Solve) {
-    this.ipc.addSolve(s);
+    let ts: Solve = Object.assign({}, s);
+    delete ts._id;
+
+    this.ipc.addSolve(ts);
   }
 
   updateSolve(s: Solve) {
@@ -269,22 +274,16 @@ export class DataService {
     this.ipc.pairingBluetoothResponse();
   }
 
-  searchBluetooth(gn: GANInput): Promise<string> {
+  searchBluetooth(inp: GANInput | QiYiSmartTimerInput): Promise<string> {
+    let filters = inp instanceof GANInput ? GANInput.BLUETOOTH_FILTERS : QiYiSmartTimerInput.BLUETOOTH_FILTERS;
+
+    console.log("FILTERS: ", filters);
+
     return new Promise((res, rej) => {
-      navigator.bluetooth.requestDevice({
-        filters: [{
-          namePrefix: 'GAN'
-        }],
-        // optionalServices: GANInput.opServices(),
-        optionalServices: [
-          '00001800-0000-1000-8000-00805f9b34fb',
-          '00001801-0000-1000-8000-00805f9b34fb',
-          '6e400001-b5a3-f393-e0a9-e50e24dc4179',
-          'f95a48e6-a721-11e9-a2a3-022ae2dbcce4'
-        ],
-      }).then(async(device) => {
-        gn.fromDevice( device ).then(res).catch(rej);
-      }).catch(rej);
+      navigator.bluetooth.requestDevice( filters )
+        .then(async(device) => {
+          inp.fromDevice( device ).then(res).catch(rej);
+        }).catch(rej);
     });
   }
 }

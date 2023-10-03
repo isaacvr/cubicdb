@@ -1,5 +1,6 @@
 import { Penalty, type CubeDBAdaptor, type CubeDBData } from "@interfaces";
 import { genSettings, identifyPuzzle } from "../common";
+import { randomUUID } from "@helpers/strings";
 
 export class CSTimer implements CubeDBAdaptor {
   public modes: string[];
@@ -27,7 +28,7 @@ export class CSTimer implements CubeDBAdaptor {
       let name = sessionNames[i];
       let sessionName = (typeof prop.name === 'number') ? name : prop.name.trim();
       let mode = prop.opt.scrType;
-      let id = crypto.randomUUID();
+      let id = randomUUID();
       let solves = data[name];
 
       res.sessions.push({

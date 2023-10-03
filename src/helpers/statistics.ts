@@ -1,7 +1,31 @@
 import { MultiSet } from "@classes/MultiSet";
 import { AverageSetting, Penalty, type Session, type Solve, type Statistics, type TurnMetric } from "@interfaces";
 import { adjustMillis, infinitePenalty } from "./timer";
-import { ScrambleParser, scrambleReg } from "@classes/scramble-parser";
+import { scrambleReg } from "@classes/scramble-parser";
+
+export const INITIAL_STATISTICS: Statistics = {
+  best: { value: 0, better: false, prev: Infinity },
+  worst: { value: 0, better: false },
+  count: { value: 0, better: false },
+  time: { value: 0, better: false },
+  avg: { value: 0, better: false },
+  dev: { value: 0, better: false },
+  Mo3: { value: -1, better: false },
+  Ao5: { value: -1, better: false },
+  Ao12: { value: -1, better: false },
+  Ao50: { value: -1, better: false },
+  Ao100: { value: -1, better: false },
+  Ao200: { value: -1, better: false },
+  Ao500: { value: -1, better: false },
+  Ao1k: { value: -1, better: false },
+  Ao2k: { value: -1, better: false },
+
+  NP:    { value: 0, better: false },
+  P2:    { value: 0, better: false },
+  DNS:   { value: 0, better: false },
+  DNF:   { value: 0, better: false },
+  counter: { value: 0, better: false },
+};
 
 export function mean(values: number[]): number {
   let cant = values.length;
@@ -126,6 +150,7 @@ export function getUpdatedStatistics(stats: Statistics, solves: Solve[], session
     stats.Ao1k.best ?? Infinity,
     stats.Ao2k.best ?? Infinity,
     stats.best.best ?? Infinity,
+    stats.worst.best ?? 0,
   ];
 
   let PREV_BEST = BEST.slice();
@@ -141,6 +166,7 @@ export function getUpdatedStatistics(stats: Statistics, solves: Solve[], session
     stats.Ao1k.id || '',
     stats.Ao2k.id || '',
     stats.best.id || '',
+    stats.worst.id || '',
   ];
 
   let IS_BEST = BEST.map(() => false);
@@ -149,7 +175,7 @@ export function getUpdatedStatistics(stats: Statistics, solves: Solve[], session
   let sum = 0, avg = 0, dev = 0;
   let pMap: Map<Penalty, number> = new Map();
 
-  let bw = solves.reduce((ac: number[], e) => {
+  solves.reduce((ac: number[], e) => {
     pMap.set( e.penalty, (pMap.get(e.penalty) || 0) + 1 );
 
     if ( infinitePenalty(e) ) {
@@ -167,6 +193,8 @@ export function getUpdatedStatistics(stats: Statistics, solves: Solve[], session
     
     if ( e.time > ac[1] ) {
       BEST_IDS[10] = e._id;
+      BEST[10] = e.time;
+      IS_BEST[10] = PREV_BEST[10] != 0;
     }
 
     return [ Math.min(ac[0], e.time), Math.max(ac[1], e.time) ];
@@ -195,8 +223,8 @@ export function getUpdatedStatistics(stats: Statistics, solves: Solve[], session
   let ps = Object.assign({}, stats);
 
   return {
-    best:  { value: bw[0], better: IS_BEST[9], best: bw[0], prev: PREV_BEST[9], id: BEST_IDS[9] },
-    worst: { value: bw[1], better: false, id: BEST_IDS[10] },
+    best:  { value: BEST[9], better: IS_BEST[9], best: BEST[9], prev: PREV_BEST[9], id: BEST_IDS[9] },
+    worst: { value: BEST[10], better: false, best: BEST[10], prev: PREV_BEST[10], id: BEST_IDS[10] },
     avg:   { value: avg, better: false },
     dev:   { value: dev, better: false },
     count: { value: solves.length, better: false },
@@ -255,4 +283,18 @@ export function computeMoves(scramble: string, metric: TurnMetric): {
     moves: cant,
     values
   };
+}
+
+export function statsReplaceId(stats: Statistics, prevId: string, currId: string) {
+  stats.Mo3.id = stats.Mo3.id === prevId ? currId : stats.Mo3.id;
+  stats.Ao5.id = stats.Ao5.id === prevId ? currId : stats.Ao5.id;
+  stats.Ao12.id = stats.Ao12.id === prevId ? currId : stats.Ao12.id;
+  stats.Ao50.id = stats.Ao50.id === prevId ? currId : stats.Ao50.id;
+  stats.Ao100.id = stats.Ao100.id === prevId ? currId : stats.Ao100.id;
+  stats.Ao200.id = stats.Ao200.id === prevId ? currId : stats.Ao200.id;
+  stats.Ao500.id = stats.Ao500.id === prevId ? currId : stats.Ao500.id;
+  stats.Ao1k.id = stats.Ao1k.id === prevId ? currId : stats.Ao1k.id;
+  stats.Ao2k.id = stats.Ao2k.id === prevId ? currId : stats.Ao2k.id;
+  stats.best.id = stats.best.id === prevId ? currId : stats.best.id;
+  stats.worst.id = stats.worst.id === prevId ? currId : stats.worst.id;
 }

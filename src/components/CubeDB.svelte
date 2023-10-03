@@ -10,7 +10,7 @@
   // @ts-ignore
   import TelegramIcon from '@icons/Telegram.svelte';
   import CopyIcon from '@icons/ContentCopy.svelte';
-  import { copyToClipboard } from '@helpers/strings';
+  import { copyToClipboard, randomUUID } from '@helpers/strings';
   import { NotificationService } from '@stores/notification.service';
   import { derived, type Readable } from 'svelte/store';
   import type { Language } from '@interfaces';
@@ -82,7 +82,7 @@
   function toClipboard(s: string) {
     copyToClipboard(s).then(() => {
       notification.addNotification({
-        key: crypto.randomUUID(),
+        key: randomUUID(),
         header: $localLang.global.done,
         text: $localLang.global.copiedToClipboard,
         timeout: 1000

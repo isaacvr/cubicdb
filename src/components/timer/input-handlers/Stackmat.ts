@@ -1,3 +1,4 @@
+import { randomUUID } from '@helpers/strings';
 import { TimerState, type InputContext, type StackmatCallback, type StackmatState, type TimerInputHandler } from '@interfaces';
 import { get } from 'svelte/store';
 import { createMachine, interpret } from 'xstate';
@@ -139,7 +140,7 @@ export class StackmatInput implements TimerInputHandler {
   constructor(context: InputContext) {
     this.interpreter = interpret( StackmatMachine.withContext(context) );
     this.audio_context = new AudioContext();
-    this.id = crypto.randomUUID();
+    this.id = randomUUID();
     this.isActive = false;
     // this.interpreter.onTransition((st) => console.log('STATE: ', st.value));
     this.lastState = null;
@@ -151,7 +152,7 @@ export class StackmatInput implements TimerInputHandler {
       resolve(devices);
     });
   
-    return navigator.mediaDevices.enumerateDevices().then(function(deviceInfos) {
+    return navigator?.mediaDevices?.enumerateDevices().then(function(deviceInfos) {
       for (let i = 0; i < deviceInfos.length; i++) {
         let deviceInfo = deviceInfos[i];
         if (deviceInfo.kind === 'audioinput') {
@@ -290,6 +291,8 @@ export class StackmatInput implements TimerInputHandler {
   }
 
   callback(sst: StackmatState) {
+    // console.log("STATE: ", sst.signalHeader);
+    
     if ( !this.isActive ) return;
 
     this.interpreter.machine.context.time.set( sst.time_milli );

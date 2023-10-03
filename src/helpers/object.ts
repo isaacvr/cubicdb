@@ -82,3 +82,13 @@ export function clone(obj: any): any {
     return acc;
   }, {});
 }
+
+export function getUint8DataView(dt: DataView): Uint8Array {
+  let res = new Array( dt.byteLength );
+
+  for (let i = 0, maxi = dt.byteLength; i < maxi; i += 1) {
+    res[i] = dt.getUint8(i);
+  }
+
+  return Uint8Array.from( res );
+}

@@ -4,13 +4,25 @@ export class AlgorithmSequence {
   scramble: string[];
   recovery: string[];
   cursor: number;
-  private temp: string;
+  // private temp: string;
 
-  constructor(s: string) {
-    this.scramble = s.split(' ').filter(m => MOVE_REG.test(m));
+  constructor(s?: string) {
+    this.scramble = [];
     this.recovery = [];
     this.cursor = 0;
-    this.temp = '';
+    // this.temp = '';
+
+    this.setScramble(s || '');
+  }
+
+  setScramble(s: string) {
+    return this.scramble = (s || '').split(' ').filter(m => MOVE_REG.test(m));
+  }
+
+  clear() {
+    this.setScramble('');
+    this.cursor = this.recovery.length = 0;
+    // this.temp = '';
   }
 
   // feed(move: string) {

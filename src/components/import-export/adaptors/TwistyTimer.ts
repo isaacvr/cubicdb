@@ -2,6 +2,7 @@ import { between } from "@helpers/math";
 import { Penalty, type CubeDBAdaptor, type CubeDBData, type Session } from "@interfaces";
 import moment from "moment";
 import { genSettings, identifyPuzzle } from "../common";
+import { randomUUID } from "@helpers/strings";
 
 const PUZZLE_CODE: Map<string, string> = new Map([
   ["333", "333"],
@@ -63,7 +64,7 @@ export class TwistyTimer implements CubeDBAdaptor {
       let comments = parts.join(";").slice(1, -1);
 
       if ( !sessionMap.has(session) ) {
-        sessionMap.set(session, crypto.randomUUID());
+        sessionMap.set(session, randomUUID());
         res.sessions.push({
           _id: sessionMap.get(session) || '',
           name: session,
@@ -78,7 +79,7 @@ export class TwistyTimer implements CubeDBAdaptor {
         selected: false,
         session: sessionMap.get(session) || '',
         time,
-        _id: crypto.randomUUID(),
+        _id: randomUUID(),
         comments,
         mode: PUZZLE_CODE.get(cat),
       });
@@ -95,7 +96,7 @@ export class TwistyTimer implements CubeDBAdaptor {
     };
     let rows = str.split('\n');
     let s: Session = {
-      _id: crypto.randomUUID(),
+      _id: randomUUID(),
       name: "My session",
       settings: genSettings(),
     };
@@ -122,7 +123,7 @@ export class TwistyTimer implements CubeDBAdaptor {
         selected: false,
         session: s._id,
         time,
-        _id: crypto.randomUUID(),
+        _id: randomUUID(),
         comments: "",
         mode: pz.mode,
         len: pz.len,

@@ -17,6 +17,7 @@ export const Spanish: Language = {
     save: 'Guardar',
     clear: 'Limpiar',
     reset: 'Reiniciar',
+    generate: 'Generar',
   },
   NAVBAR: {
     home: 'Inicio',

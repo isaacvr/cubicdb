@@ -7,7 +7,7 @@
   import { nameToPuzzle, type Algorithm, type Card, type Language } from "@interfaces";
   import { DataService } from "@stores/data.service";
   import Tooltip from "./material/Tooltip.svelte";
-  import { copyToClipboard, getSearchParams } from "@helpers/strings";
+  import { copyToClipboard, getSearchParams, randomUUID } from "@helpers/strings";
   import { NotificationService } from "@stores/notification.service";
   import { globalLang } from "@stores/language.service";
   import { getLanguage } from "@lang/index";
@@ -152,7 +152,7 @@
 
     copyToClipboard(s).then(() => {
       notification.addNotification({
-        key: crypto.randomUUID(),
+        key: randomUUID(),
         header: $localLang.global.done,
         text: $localLang.global.scrambleCopied,
         timeout: 1000

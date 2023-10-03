@@ -5,7 +5,7 @@
   import { getLanguage } from "@lang/index";
   import type { Card } from "@interfaces";
   import type { Puzzle } from "@classes/puzzle/puzzle";
-
+  
   let cards: Card[] = [];
 
   function updateTexts() {
@@ -41,7 +41,7 @@
       }, {
         title: HOME.battle,
         route: "/battle",
-        ready: showPrivate,
+        ready: true,
         cube: '/assets/battle.png',
       }, {
         title: HOME.pll_recognition,

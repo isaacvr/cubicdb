@@ -1,12 +1,83 @@
 import { AES128 } from "@classes/AES128";
+import { AlgorithmSequence } from "@classes/AlgorithmSequence";
 import { CubieCube, SOLVED_FACELET, valuedArray } from "@cstimer/lib/mathlib";
 import type { InputContext, TimerInputHandler } from "@interfaces";
 import { DataService } from "@stores/data.service";
-import { decompressFromBase64 } from 'async-lz-string';
+import { decompressFromBase64 } from "async-lz-string";
+import { get } from "svelte/store";
+import { InterpreterStatus, createMachine, interpret } from "xstate";
 
 function matchUUID(uuid1: string, uuid2: string) {
   return uuid1.toUpperCase() == uuid2.toUpperCase();
 }
+
+interface GANContext {
+  input: InputContext;
+  sequencer: AlgorithmSequence;
+  moves: string[];
+}
+
+const enterConnected = ({ input, moves, sequencer }: GANContext, ev: any) => {
+  sequencer.clear();
+  moves.length = 0;
+  console.log('[enterConnected]: ', ev);
+  input.bluetoothStatus.set(true);
+};
+
+const isScrambled = (ctx: GANContext, ev: any) => {
+  console.log("[isScrambled]: ", ctx, ev);
+  return false;
+};
+
+const incompleteCube = (ctx: GANContext, ev: any) => {
+  console.log("[incompleteCube]: ", ctx, ev);
+  return false;
+};
+
+const GANMachine = createMachine<GANContext>({
+  predictableActionArguments: true,
+  initial: 'DISCONNECTED',
+  states: {
+    DISCONNECTED: {
+      on: {
+        CONNECT: 'CONNECTED',
+      }
+    },
+    
+    CONNECTED: {
+      entry: enterConnected,
+      on: {
+        MOVE: 'SCRAMBLE'
+      }
+    },
+
+    SCRAMBLE: {
+      on: {
+        MOVE: {
+          target: 'INSPECTION',
+          cond: isScrambled
+        }
+      }
+    },
+
+    INSPECTION: {
+      on: {
+        MOVE: 'RUNNING'
+      }
+    },
+
+    RUNNING: {
+      on: {
+        MOVE: {
+          target: 'RUNNING',
+          cond: incompleteCube
+        }
+      }
+    },
+
+    STOPPED: {},
+  }
+});
 
 export class GANInput implements TimerInputHandler {
   private decoder: AES128 | null;
@@ -28,13 +99,28 @@ export class GANInput implements TimerInputHandler {
   private keyCheck: number;
   private deviceTimeOffset: number;
   private movesFromLastCheck: number;
-
   private dataService: DataService;
+  private interpreter;
+  private sequencer: AlgorithmSequence;
+  private moves: string[];
+  private context: GANContext;
 
   battery: number;
   connected: boolean;
 
   constructor(context: InputContext) {
+    this.sequencer = new AlgorithmSequence();
+    this.moves = [];
+    this.context = {
+      input: context,
+      moves: this.moves,
+      sequencer: this.sequencer
+    };
+    
+    this.interpreter = interpret( GANMachine.withContext( this.context ) );
+
+    this.interpreter.onTransition((st, ev) => console.log("STATE: ", st.value, ev));
+
     this.decoder = null;
     this.service_meta = null;
     this.service_data = null;
@@ -66,17 +152,14 @@ export class GANInput implements TimerInputHandler {
   }
 
   static get SERVICE_UUID_META() {
-    // return '00001801' + GANInput.UUID_SUFFIX;
     return '0000180a' + GANInput.UUID_SUFFIX;
   }
 
   static get CHRCT_UUID_VERSION() {
-    // return '00002a00' + GANInput.UUID_SUFFIX;
     return '00002a28' + GANInput.UUID_SUFFIX;
   }
   
   static get CHRCT_UUID_HARDWARE() {
-    // return '00002a01' + GANInput.UUID_SUFFIX;
     return '00002a23' + GANInput.UUID_SUFFIX;
   }
   
@@ -135,12 +218,107 @@ export class GANInput implements TimerInputHandler {
 		];
   }
 
-  init() {}
+  static get BLUETOOTH_FILTERS() {
+    return {
+      filters: [{
+        namePrefix: 'GAN'
+      }],
+      // optionalServices: GANInput.opServices(),
+      optionalServices: [
+        '00001800-0000-1000-8000-00805f9b34fb',
+        '00001801-0000-1000-8000-00805f9b34fb',
+        '6e400001-b5a3-f393-e0a9-e50e24dc4179',
+        'f95a48e6-a721-11e9-a2a3-022ae2dbcce4'
+      ],
+    }
+  }
+
+  init() {
+    this.interpreter.start();
+  }
   
   disconnect() {
     if ( !this.connected ) return;
     this.device?.gatt?.disconnect();
-    // this.disconnected();
+    this.connected = false;
+    this.context.input.bluetoothStatus.set(false);
+    this.interpreter.stop();
+  }
+
+  keyUpHandler() {}
+  keyDownHandler() {}
+  stopTimer() {}
+
+  async fromDevice(device: BluetoothDevice): Promise<string> {
+    this.clear();
+    this.disconnect();
+
+    this.device = device;
+    this.deviceMac = localStorage.getItem('bluetooth-mac') || '';
+
+    console.log('[gancube] deviceMac: ', this.deviceMac);
+
+    let server: BluetoothRemoteGATTServer | undefined;
+    
+    try {
+      server = await device.gatt?.connect();
+    } catch(err) {
+      console.log('Connect err: ', err);
+      return '';
+    }
+
+    let services: BluetoothRemoteGATTService[] | undefined = await server?.getPrimaryServices();
+
+    if ( !services ) {
+      this.disconnect();
+      return '';
+    }
+
+    for (let i = 0, maxi = services?.length || 0; i < maxi; i++) {
+      let service = services[i];
+      if ( matchUUID(service.uuid, GANInput.SERVICE_UUID_META) ) {
+        this.service_meta = service;
+      } else if ( matchUUID(service.uuid, GANInput.SERVICE_UUID_DATA) ) {
+        this.service_data = service;
+      } else if ( matchUUID(service.uuid, GANInput.SERVICE_UUID_V2DATA) ) {
+        this.service_v2data = service;
+      }
+    }
+
+    if ( this.service_v2data ) {
+      let res = await this.v2init((device.name || '').startsWith('AiCube') ? 1 : 0);
+
+      if ( res ) {
+        this.connected = true;
+        this.emit('connect', null);
+
+        device.addEventListener('gattserverdisconnected', () => {
+          this.disconnect();
+        });
+
+        if ( this.interpreter.status != InterpreterStatus.Running ) {
+          this.interpreter.start();
+        }
+
+        this.interpreter.send({
+          type: 'CONNECT',
+          data: {
+            scramble: get(this.context.input.scramble),
+          }
+        });
+
+        return this.deviceMac;
+      }
+
+      this.disconnect();
+      return '';
+    }
+
+    if ( this.service_data && this.service_meta ) {
+      // return this.v1init();
+    }
+
+    return '';
   }
 
   private clear() {
@@ -166,6 +344,10 @@ export class GANInput implements TimerInputHandler {
     this.prevMoveCnt = -1;
     this.battery = 100;
     return result;
+  }
+
+  private emit(type: string, data: any) {
+    this.dataService.bluetoothSub.set({ type, data });
   }
 
   private async v2initDecoder(mac: string, ver: any) {
@@ -291,12 +473,21 @@ export class GANInput implements TimerInputHandler {
       CubieCube.EdgeMult(this.prevCubie, CubieCube.moveCube[m], this.curCubie);
       CubieCube.CornMult(this.prevCubie, CubieCube.moveCube[m], this.curCubie);
       this.deviceTime += this.timeOffs[i];
-      // callback(curCubie.toFaceCube(), prevMoves.slice(i), [deviceTime, i == 0 ? locTime : null], deviceName + (isV2 ? '*' : ''));
       let tmp = this.curCubie;
       this.curCubie = this.prevCubie;
       this.prevCubie = tmp;
       
-      console.log('[gancube] move', this.prevMoves[i], this.timeOffs[i]);
+      // console.log('[gancube] move', this.prevMoves[i], this.timeOffs[i]);
+      console.log('[gancube] facelet: ', this.prevCubie.toFaceCube(), this.curCubie.toFaceCube());
+      
+      this.interpreter.send({
+        type: 'MOVE',
+        data: {
+          move: this.prevMoves[i],
+          offset: this.timeOffs[i],
+          facelet: this.prevCubie.toFaceCube()
+        }
+      });
       
       this.emit('move', [ this.prevMoves[i], this.timeOffs[i] ]);
     }
@@ -428,6 +619,60 @@ export class GANInput implements TimerInputHandler {
     }
   }
 
+  private decode(value: DataView) {
+    let ret = [];
+    
+    for (let i = 0; i < value.byteLength; i++) {
+      ret[i] = value.getUint8(i);
+    }
+    
+    if ( this.decoder == null ) {
+      return ret;
+    }
+    let iv = this.decoder.iv || [];
+    if (ret.length > 16) {
+      let offset = ret.length - 16;
+      let block = this.decoder.decrypt(ret.slice(offset));
+      for (let i = 0; i < 16; i++) {
+        ret[i + offset] = block[i] ^ (~~iv[i]);
+      }
+    }
+    
+    this.decoder.decrypt(ret);
+    
+    for (let i = 0; i < 16; i++) {
+      ret[i] ^= (~~iv[i]);
+    }
+    return ret;
+  }
+
+  private async getKey(version: number, value: DataView) {
+    let key = GANInput.KEYS[ version >> 8 & 0xff ];
+    
+    if (!key) {
+      return;
+    }
+
+    let k: number[] = JSON.parse( await decompressFromBase64(key) );
+    
+    for (let i = 0; i < 6; i++) {
+      k[i] = (k[i] + value.getUint8(5 - i)) & 0xff;
+    }
+    
+    return k;
+  }
+
+  private async getKeyV2(value: number[], ver: any): Promise<number[][]> {
+    let v = ver || 0;
+    let key = JSON.parse( await decompressFromBase64( GANInput.KEYS[2 + v * 2] ) );
+    let iv = JSON.parse( await decompressFromBase64( GANInput.KEYS[3 + v * 2] ));
+    for (let i = 0; i < 6; i++) {
+      key[i] = (key[i] + value[5 - i]) % 255;
+      iv[i] = (iv[i] + value[5 - i]) % 255;
+    }
+    return [key, iv];
+  }
+
   private v2init(ver: any): Promise<boolean> {
     console.log('[gancube] v2init start');
     this.keyCheck = 0;
@@ -469,173 +714,4 @@ export class GANInput implements TimerInputHandler {
       return this.v2requestBattery();
     }).then(() => true);
   }
-
-  private emit(type: string, data: any) {
-    this.dataService.bluetoothSub.set({ type, data });
-  }
-
-  private disconnected() {
-    this.connected = false;
-    this.emit('disconnect', null);
-  }
-
-  async fromDevice(device: BluetoothDevice): Promise<string> {
-    this.clear();
-
-    this.device = device;
-    this.deviceMac = localStorage.getItem('bluetooth-mac') || '';
-
-    console.log('[gancube] deviceMac: ', this.deviceMac);
-
-    let server: BluetoothRemoteGATTServer | undefined;
-    
-    try {
-      server = await device.gatt?.connect();
-    } catch(err) {
-      console.log('Connect err: ', err);
-      device.gatt?.disconnect();
-      return '';
-    }
-
-    let services: BluetoothRemoteGATTService[] | undefined = await server?.getPrimaryServices();
-
-    if ( !services ) {
-      device.gatt?.disconnect();
-      return '';
-    }
-
-    for (let i = 0, maxi = services?.length || 0; i < maxi; i++) {
-      let service = services[i];
-      if ( matchUUID(service.uuid, GANInput.SERVICE_UUID_META) ) {
-        this.service_meta = service;
-      } else if ( matchUUID(service.uuid, GANInput.SERVICE_UUID_DATA) ) {
-        this.service_data = service;
-      } else if ( matchUUID(service.uuid, GANInput.SERVICE_UUID_V2DATA) ) {
-        this.service_v2data = service;
-      }
-    }
-
-    if ( this.service_v2data ) {
-      let res = await this.v2init((device.name || '').startsWith('AiCube') ? 1 : 0);
-
-      if ( res ) {
-        this.connected = true;
-        this.emit('connect', null);
-
-        device.addEventListener('gattserverdisconnected', () => {
-          this.disconnected();
-        });
-
-        return this.deviceMac;
-      }
-
-      device.gatt?.disconnect();
-
-      return '';
-    }
-
-    if ( this.service_data && this.service_meta ) {
-      // return this.v1init();
-    }
-
-    return '';
-  }
-
-  checkHardware(server: any, characteristic: string): Promise<any> {
-    let _service_meta: any;
-
-    return server.getPrimaryService( GANInput.SERVICE_UUID_META ).then(( service_meta: any ) => {
-      console.log("SERVICE_META: ", service_meta);
-      _service_meta = service_meta;
-      return service_meta.getCharacteristic( characteristic );
-    }).then((chrct: any) => {
-      return chrct.readValue();
-    }).then((value: any) => {
-      console.log("CHARACTERISTIC_VALUE: ", value);
-      let version = value.getUint8(0) << 16 | value.getUint8(1) << 8 | value.getUint8(2);
-      
-      this.decoder = null;
-      
-      if (version > 0x010007 && (version & 0xfffe00) == 0x010000) {
-
-        console.log('READING UUID: ', GANInput.CHRCT_UUID_HARDWARE);
-
-        return _service_meta.getCharacteristic(GANInput.CHRCT_UUID_HARDWARE).then((chrct: any) => {
-          return chrct.readValue();
-        }).then(async (value: any) => {
-          console.log("UUID_VALUE", value);
-          let key = await this.getKey(version, value);
-          if (!key) {
-            // logohint.push('Not support your Gan cube');
-            console.log('Not support your Gan cube 1: ', characteristic);
-            return;
-          }
-          // console.log('[gancube] key', JSON.stringify(key));
-          this.decoder = new AES128(key);
-        });
-      } else { //not support
-        // logohint.push('Not support your Gan cube');
-        console.log('Not support your Gan cube 2: ', characteristic);
-      }
-    });
-  }
-
-  private decode(value: DataView) {
-    let ret = [];
-    
-    for (let i = 0; i < value.byteLength; i++) {
-      ret[i] = value.getUint8(i);
-    }
-    
-    if ( this.decoder == null ) {
-      return ret;
-    }
-    let iv = this.decoder.iv || [];
-    if (ret.length > 16) {
-      let offset = ret.length - 16;
-      let block = this.decoder.decrypt(ret.slice(offset));
-      for (let i = 0; i < 16; i++) {
-        ret[i + offset] = block[i] ^ (~~iv[i]);
-      }
-    }
-    
-    this.decoder.decrypt(ret);
-    
-    for (let i = 0; i < 16; i++) {
-      ret[i] ^= (~~iv[i]);
-    }
-    return ret;
-  }
-
-  private async getKey(version: number, value: DataView) {
-    let key = GANInput.KEYS[ version >> 8 & 0xff ];
-    
-    if (!key) {
-      return;
-    }
-
-    // key = JSON.parse(LZString.decompressFromEncodedURIComponent(key));
-    let k: number[] = JSON.parse( await decompressFromBase64(key) );
-    
-    for (let i = 0; i < 6; i++) {
-      k[i] = (k[i] + value.getUint8(5 - i)) & 0xff;
-    }
-    
-    return k;
-  }
-
-  private async getKeyV2(value: number[], ver: any): Promise<number[][]> {
-    let v = ver || 0;
-    let key = JSON.parse( await decompressFromBase64( GANInput.KEYS[2 + v * 2] ) );
-    let iv = JSON.parse( await decompressFromBase64( GANInput.KEYS[3 + v * 2] ));
-    for (let i = 0; i < 6; i++) {
-      key[i] = (key[i] + value[5 - i]) % 255;
-      iv[i] = (iv[i] + value[5 - i]) % 255;
-    }
-    return [key, iv];
-  }
-
-  keyUpHandler() {}
-  keyDownHandler() {}
-  stopTimer() {}
 }

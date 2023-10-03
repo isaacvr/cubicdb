@@ -20,3 +20,22 @@ export function processKey(str: string) {
 export function copyToClipboard(s: string) {
   return navigator.clipboard.writeText(s);
 }
+
+export function randomUUID () {
+  if ( crypto && crypto.randomUUID ) {
+    return crypto.randomUUID();
+  }
+
+  let lens = [ 8, 4, 4, 4, 12 ];
+  let res: string[][] = [];
+
+  for (let i = 0; i < 5; i += 1) {
+    res[i] = [];
+
+    for (let j = 0; j < lens[i]; j += 1) {
+      res[i].push( (~~(Math.random() * 15)).toString(16) );
+    }
+  }
+
+  return res.map(s => s.join('')).join('-');
+}

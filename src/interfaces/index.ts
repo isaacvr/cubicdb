@@ -170,9 +170,9 @@ export interface Solve {
   prob?: number;
 }
 
-export type TimerInput = 'Keyboard' | 'Manual' | 'StackMat' | 'GAN Cube';
+export type TimerInput = 'Keyboard' | 'Manual' | 'StackMat' | 'GAN Cube' | 'QY-Timer';
 
-export const TIMER_INPUT: TimerInput[] = [ 'Keyboard', 'Manual', 'StackMat'/*, 'GAN Cube'*/ ];
+export const TIMER_INPUT: TimerInput[] = [ 'Keyboard', 'Manual', 'StackMat'/*, 'GAN Cube', 'QY-Timer'*/ ];
 
 export interface SessionSettings {
   hasInspection: boolean;
@@ -295,6 +295,7 @@ export interface TimerContext {
   selected: Writable<number>;
   decimals: Writable<boolean>;
   bluetoothList: Writable<BluetoothDeviceData[]>;
+  bluetoothStatus: Writable<boolean>;
   
   sortSolves: () => any;
   updateStatistics: (inc ?: boolean) => any;
@@ -460,7 +461,7 @@ export interface PDFOptions {
 }
 
 export interface Game {
-  players: { 0: string, 1: { name: string, times: number[] } }[];
+  players: { 0: string, 1: { name: string, times: number[], connected: boolean } }[];
   observers: { 0: string, 1: { name: string } }[];
   round: number;
   total: number;
@@ -511,6 +512,8 @@ export interface InputContext {
   isRunning: Writable<boolean>;
   stackmatStatus: Writable<boolean>;
   decimals: Writable<boolean>;
+  bluetoothStatus: Writable<boolean>;
+  scramble: Writable<string>;
 
   reset: () => void;
   initScrambler: (scr?: string, _mode ?: string) => void;
@@ -543,6 +546,7 @@ export interface Language {
     save: string;
     clear: string;
     reset: string;
+    generate: string;
   }
   NAVBAR: {
     home: string;

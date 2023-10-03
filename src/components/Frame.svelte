@@ -10,6 +10,7 @@
   import { derived, type Readable, type Unsubscriber } from 'svelte/store';
   import { NotificationService } from '@stores/notification.service';
   import type { Language } from '@interfaces';
+    import { randomUUID } from '@helpers/strings';
 
   let localLang: Readable<Language> = derived(globalLang, ($lang, set) => {
     set( getLanguage( $lang ) );
@@ -45,7 +46,7 @@
               { text: $localLang.global.accept, callback: () => {} }
             ],
             timeout: 5000,
-            key: crypto.randomUUID(),
+            key: randomUUID(),
           });
           break;
         }
