@@ -10,7 +10,8 @@
   import { DataService } from "@stores/data.service";
 
   import { version } from "@stores/version.store";
-    import { randomUUID } from "@helpers/strings";
+  import { randomUUID } from "@helpers/strings";
+  import { timer } from "@helpers/timer";
 
   const notService = NotificationService.getInstance();
 
@@ -35,11 +36,13 @@
   ];
 
   const DEFAULT_APP_FONT = 'Ubuntu';
-  const DEFAULT_TIMER_FONT = 'CQMono';
+  const DEFAULT_TIMER_FONT = 'Ubuntu';
 
   let appFont = localStorage.getItem('app-font') || DEFAULT_APP_FONT;
   let timerFont = localStorage.getItem('timer-font') || DEFAULT_TIMER_FONT;
   let canCheckUpdate = true;
+  let dTime = 10587;
+  let itv: NodeJS.Timer;
   
   function save() {
     localStorage.setItem('app-font', appFont);
@@ -51,8 +54,8 @@
 
     notService.addNotification({
       key: randomUUID(),
-      header: 'Saved',
-      text: 'Settings saved',
+      header: $localLang.SETTINGS.saved,
+      text: $localLang.SETTINGS.settingsSaved,
       timeout: 2000,
     });
 
@@ -133,11 +136,16 @@
         }
       }
     });
+
+    itv = setInterval(() => {
+      dTime = Math.random() * 20000;
+    }, 2000);
   });    
 
   onDestroy(() => {
     $globalLang = finalLang;
     uSub();
+    clearInterval(itv);
   }); 
 </script>
 
@@ -171,7 +179,7 @@
     <Select items={ FONTS } bind:value={ timerFont } label={(e) => e.name}/>
     <p
       style="font-family: { timerFont };"
-      class="bg-black bg-opacity-60 p-2 rounded-md text-gray-300 text-6xl">10.34</p>
+      class="bg-black bg-opacity-60 p-2 rounded-md text-gray-300 text-6xl">{ timer(dTime, true) }</p>
   </div>
   <hr/>
 

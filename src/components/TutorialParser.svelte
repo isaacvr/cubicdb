@@ -23,8 +23,11 @@
   import PencilIcon from '@icons/PencilOutline.svelte';
   import DeleteIcon from '@icons/Delete.svelte';
   import DotsIcon from '@icons/DotsVertical.svelte';
+  import { useLocation } from "svelte-routing";
 
-  export let location: any, puzzle, tutorial;
+  const location = useLocation();
+
+  export let puzzle, tutorial;
 
   void puzzle;
   void tutorial;
@@ -198,7 +201,7 @@
 
       const type = list[0];
       const content = <Tutorial[]> list[1];
-      const _id = getSearchParams(location.search).get('id');
+      const _id = getSearchParams($location.search).get('id');
 
       if ( type === 'get-tutorials' ) {
         let current = content.find(t => t._id === _id);

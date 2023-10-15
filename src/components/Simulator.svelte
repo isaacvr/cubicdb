@@ -7,8 +7,8 @@
   import { TrackballControls } from "three/examples/jsm/controls/TrackballControls";
   import { puzzleReg } from "@classes/puzzle/puzzleRegister";
   import { onDestroy, onMount } from "svelte";
-  // @ts-ignore
-  import SettingsIcon from '@icons/Settings.svelte';
+
+  import SettingsIcon from '@icons/Cog.svelte';
   import Tooltip from "@components/material/Tooltip.svelte";
   import Modal from "@components/Modal.svelte";
   import Select from "@components/material/Select.svelte";

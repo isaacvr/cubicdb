@@ -3,7 +3,7 @@
   import zoomPlugin from 'chartjs-plugin-zoom';
   import { between, evalLine, rotatePoint } from '@helpers/math';
   import { decimate, decimateN, getAverageS, trendLSV } from '@helpers/statistics';
-  import { infinitePenalty, timer } from '@helpers/timer';
+  import { formatHour, infinitePenalty, timer } from '@helpers/timer';
   import { AverageSetting, Penalty, type Language, type Solve, type TimerContext } from '@interfaces';
   import { onMount } from 'svelte';
   import StatsProgress from './StatsProgress.svelte';
@@ -18,7 +18,7 @@
 
   let localLang: Readable<Language> = derived(globalLang, ($lang) => getLanguage( $lang ));
     
-  let { solves, AoX, stats, session, selectSolveById } = context;
+  let { solves, AoX, stats, session, STATS_WINDOW, AON, selectSolveById } = context;
 
   let chartElement: HTMLCanvasElement;
   let chartElement2: HTMLCanvasElement;
@@ -52,25 +52,12 @@
   }
 
   function updateChart(sv: Solve[]) {
-    // TIME CHART
-    const WIDTH = timeChart.width;
+    const len = sv.length - 1;
 
-    let newSv = decimate(sv, WIDTH);
-    const len0 = sv.length - 1;
-    const len = newSv.length - 1;
-    const lenFactor = len0 / (len || 1);
-
-    timeChart.data.labels = newSv.map((e, p) => p);
-
-    /// Regular solves
-    timeChart.data.datasets[0].data.length = 0;
-
-    newSv.forEach((e, p) => {
-      timeChart.data.datasets[0].data.push({
-        x: p * lenFactor,
-        y: infinitePenalty(newSv[len - p]) ? null : newSv[len - p].time
-      } as any);
-    });
+    timeChart.data.datasets[0].data = sv.map((e, p) => ({
+      x: p,
+      y: infinitePenalty(sv[len - p]) ? null : sv[len - p].time
+    } as any));
 
     // @ts-ignore
     timeChart.options.plugins.zoom.limits.x.max = len + 1;
@@ -81,20 +68,20 @@
     avgs.forEach((e, i) => {
       let dt = timeChart.data.datasets[i + 1];
       dt.data.length = 0;
-      let Ao = getAverageS(e, sv, $session?.settings?.calcAoX || AverageSetting.SEQUENTIAL);
-      decimateN(Ao, WIDTH).map((e, p) => (dt.data as any[]).push({ x: p * lenFactor, y: e }));
+      let pos = $AON.indexOf(e);
+      let Ao = pos > -1 ? $STATS_WINDOW[ pos ] : getAverageS(e, sv, $session?.settings?.calcAoX || AverageSetting.SEQUENTIAL);
+      dt.data = Ao.map((e, p) => ({ x: p, y: e } as any));
       dt.label = 'Ao' + e;
     });
     
     /// Best solves
-    timeChart.data.datasets[5].data.length = 0;
-    getBest(sv, true).forEach(e => timeChart.data.datasets[5].data.push(e));
+    timeChart.data.datasets[5].data = getBest(sv, true);
 
     // Least square
-    const { m, n } = trendLSV(newSv.map((s, p) => [len - p, s.time]));
-    timeChart.data.datasets[6].data.length = 0;
-    [{ x: 0, y: n }, { x: len * lenFactor, y: m * len + n }].forEach(e => timeChart.data.datasets[6].data.push(e));
-
+    const { m, n } = trendLSV(sv.map((s, p) => [len - p, s.time]));
+    
+    timeChart.data.datasets[6].data = [{ x: 0, y: n }, { x: len, y: m * len + n }];
+    
     timeChart.update();
     timeChart.resetZoom();
 
@@ -106,16 +93,16 @@
       return acc;
     }, new Array(24).fill(0));
 
-    hourChart.data.datasets[0].data = HData.map((e, p) => ({x: p, y: e}));
+    hourChart.data.datasets[0].data = HData.map((e, p) => ({x: p, y: e}));    
     hourChart.update();
 
     // WEEK CHART
     let WData: number[] = sv.reduce((acc, s) => {
-      acc[ moment(s.date).isoWeekday() ] += 1;
+      acc[ moment(s.date).isoWeekday() - 1 ] += 1;
       return acc;
     }, new Array(7).fill(0));
 
-    weekChart.data.datasets[0].data = WData; //.map((e, p) => [DAYS[p], e.toString()]);
+    weekChart.data.datasets[0].data = WData;
     weekChart.update();
   }
 
@@ -167,6 +154,7 @@
     // @ts-ignore
     weekChart.options.plugins.title.text = $localLang.TIMER.weekDistribution;
     weekChart.data.datasets[0].label = $localLang.TIMER.solves;
+    weekChart.data.labels = $localLang.TIMER.days;
     weekChart.update();
 
     // @ts-ignore
@@ -175,24 +163,26 @@
     distChart.update();
   }
 
-  onMount(() => {
+  function handleResize() {
+    [timeChart, hourChart, weekChart].forEach(c => c?.resize());
+  }
+
+  function initGraphs(s: any, timerOnly = false) {
+    void s;
+
+    timeChart && timeChart.destroy();
+    !timerOnly && hourChart && hourChart.destroy();
+    !timerOnly && weekChart && weekChart.destroy();
+    !timerOnly && distChart && distChart.destroy();
+
     const common = {
       showLine: true,
       fill: false,
       tension: .1,
-      xAxisID: 'x',
-      yAxisID: 'y',
-    };
-
-    const fastOptions = {
       normalized: true,
     };
 
     let ctx = chartElement.getContext('2d');
-    
-    Chart.register(zoomPlugin);
-    Chart.defaults.color = '#bbbbbb';
-    Chart.overrides.line.spanGaps = true;
 
     const shadingArea: Plugin = {
       id: 'shadingArea',
@@ -241,13 +231,13 @@
     timeChart = new Chart(ctx as any, {
       data: {
         datasets: [
-          { data: [], type: 'line', label: 'Time', ...common, ...fastOptions },
-          { data: [], type: 'line', hidden: true, label: 'Ao5', ...common, ...fastOptions },
-          { data: [], type: 'line', hidden: true, label: 'Ao12', ...common, ...fastOptions },
-          { data: [], type: 'line', hidden: true, label: 'Ao50', ...common, ...fastOptions },
-          { data: [], type: 'line', hidden: true, label: 'AoX', ...common, ...fastOptions },
-          { data: [], type: 'line', label: 'Best', borderDash: [5, 5], ...common, ...fastOptions },
-          { data: [], type: 'line', label: 'Trend', borderDash: [5, 5], ...common,  },
+          { data: [], type: 'line', label: 'Time', ...common, indexAxis: 'x' },
+          { data: [], type: 'line', hidden: true, label: 'Ao5', ...common, indexAxis: 'x' },
+          { data: [], type: 'line', hidden: true, label: 'Ao12', ...common, indexAxis: 'x' },
+          { data: [], type: 'line', hidden: true, label: 'Ao50', ...common, indexAxis: 'x' },
+          { data: [], type: 'line', hidden: true, label: 'AoX', ...common, indexAxis: 'x' },
+          { data: [], type: 'line', label: 'Best', borderDash: [5, 5], ...common, indexAxis: 'x' },
+          { data: [], type: 'line', label: 'Trend', borderDash: [5, 5], ...common, indexAxis: 'x' },
         ],
         labels: [],
       },
@@ -255,6 +245,7 @@
         responsive: true,
         maintainAspectRatio: true,
         animation: false,
+        parsing: false,
         scales: {
           x:{
             type: 'linear',
@@ -262,6 +253,7 @@
             grid: { display: false },
           },
           y: {
+            type: 'linear',
             position: 'left',
             grid: { color: '#555' },
             ticks: {
@@ -286,28 +278,62 @@
           zoom: {
             zoom: { wheel: { enabled: true }, mode: 'x', scaleMode: "x" },
             pan: { enabled: true, mode: "x", },
-            limits: { x: { min: 1, max: 40 } },
+            limits: { x: { min: -1 }, y: { min: 0 } },
           },
-          title: { text: "Time distribution", display: !headless, font: { size: 30, family: "Raleway" }, color: '#ddd' }
+          title: { text: "Time distribution", display: !headless, font: { size: 30, family: "Raleway" }, color: '#ddd' },
+          decimation: {
+            enabled: true,
+            algorithm: 'lttb',
+            samples: 700,
+          },
         }
       },
       plugins: [ shadingArea ]
     });
 
-    if ( headless ) return;
+    if ( headless || timerOnly ) {
+      updateChart($solves);
+      return;
+    }
 
-    let ctx2 = chartElement2.getContext('2d');
-
+    const colors = ['#36a2eb', '#40c883', '#cd69ff' ];
+    let ctx2 = chartElement2.getContext('2d') as CanvasRenderingContext2D;
+    
     hourChart = new Chart(ctx2 as any, {
-      data: { datasets: [{ data: [], label: "Solves", type: 'scatter', ...common, tension: .4 }] },
+      data: {
+        datasets: [{
+          data: [], label: "Solves", type: 'scatter', showLine: true, tension: .4, fill: true,
+          backgroundColor: colors[0] + '22', borderColor: colors[0]
+        }]
+      },
       options: {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
           legend: { display: false },
-          title: { text: "Hour distribution", display: true, font: { size: 30, family: "Raleway" }, color: '#ddd' }
+          title: { text: "Hour distribution", display: true, font: { size: 30, family: "Raleway" }, color: '#ddd' },
+          tooltip: {
+            mode: 'nearest',
+            intersect: false,
+            callbacks: {
+              label: (context) => {
+                let c = context.parsed;
+                return `${context.dataset.label}: ${c.y} (${ formatHour(c.x) })`;
+              }
+            }
+          },
         },
-        scales: { x: { min: 0, max: 23 }, y: { beginAtZero: true } }
+        scales: {
+          x: {
+            min: 0, max: 23,
+            ticks: {
+              callback: (val) => {
+                return formatHour(~~val);
+              }
+            }
+          },
+          y: { beginAtZero: true }
+        }
       }
     });
 
@@ -315,14 +341,21 @@
 
     weekChart = new Chart(ctx3 as any, {
       data: {
-        datasets: [{ data: [], label: "Solves", type: 'line', ...common, tension: .4 }],
-        labels: DAYS,
+        datasets: [{
+          data: [], label: "Solves", type: 'line', ...common, tension: .4,
+          fill: true, backgroundColor: colors[1] + '22', borderColor: colors[1]
+        }],
+        labels: DAYS
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
           legend: { display: false },
+          tooltip: {
+            mode: 'nearest',
+            intersect: false,
+          },
           title: { text: "Week distribution", display: true, font: {
             size: 30, family: "Raleway"
           }, color: '#ddd' }
@@ -335,7 +368,10 @@
 
     distChart = new Chart(ctx4 as any, {
       data: {
-        datasets: [{ data: [1, 2, 3, 4, 5], label: "Solves", type: 'bar' }],
+        datasets: [{
+          data: [1, 2, 3, 4, 5], label: "Solves", type: 'bar', backgroundColor: colors[2] + 'aa',
+          borderRadius: { topLeft: 7, topRight: 7 }
+        }],
         labels: ["A", "B", "C", "D", "E"],
       },
       options: {
@@ -343,6 +379,10 @@
         maintainAspectRatio: false,
         plugins: {
           legend: { display: false },
+          tooltip: {
+            mode: 'nearest',
+            intersect: false,
+          },
           title: { text: "Histogram", display: true, font: {
             size: 30, family: "Raleway"
           }, color: '#ddd' }
@@ -352,16 +392,23 @@
     });
 
     updateChart($solves);
+  }
 
+  onMount(() => {
+    Chart.register(zoomPlugin);
+    Chart.defaults.color = '#bbbbbb';
+    Chart.overrides.line.spanGaps = true;
+
+    initGraphs([]);
   });
 
-  $: $AoX && timeChart && updateChart($solves);
+  $: $AoX && timeChart && initGraphs($solves, true);
   $: $stats && distChart && updateStats();
   $: $localLang, timeChart && updateChartText();
 
 </script>
 
-<svelte:window on:resize={ () => [timeChart, hourChart, weekChart].forEach(c => c?.resize()) } />
+<svelte:window on:resize={ handleResize } />
 
 <main class:headless>
   <div class="canvas card grid place-items-center bg-white bg-opacity-10 rounded-md">
@@ -409,7 +456,7 @@
             }</span>
           <span>
             {#if $stats[ ao.key ].id}
-              <Button ariaLabel={ $localLang.TIMER.go } class="h-6 bg-green-700 text-gray-300 border-none" on:click={
+              <Button ariaLabel={ $localLang.TIMER.go } class="h-6 bg-green-700 hover:bg-green-600 text-gray-300 border-none" on:click={
                 () => selectSolveById($stats[ ao.key ].id || '', ao.select )
               }>{ $localLang.TIMER.go }</Button>
             {/if}
@@ -419,17 +466,14 @@
     </div>
 
     <div class="hour-distribution card">
-      <!-- <h2 class="text-2xl text-center font-bold text-gray-300">Hour distribution</h2> -->
       <canvas bind:this={ chartElement2 }></canvas>
     </div>
 
     <div class="week-distribution card">
-      <!-- <h2 class="text-2xl text-center font-bold text-gray-300">Week distribution</h2> -->
       <canvas bind:this={ chartElement3 }></canvas>
     </div>
 
     <div class="histogram card">
-      <!-- <h2 class="text-2xl text-center font-bold text-gray-300">Week distribution</h2> -->
       <canvas bind:this={ chartElement4 }></canvas>
     </div>
   {/if}

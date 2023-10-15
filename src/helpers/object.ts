@@ -92,3 +92,25 @@ export function getUint8DataView(dt: DataView): Uint8Array {
 
   return Uint8Array.from( res );
 }
+
+export function binSearch<T>(elem: T, arr: T[], cmp: (a: T, b: T) => number) {
+  let from = 0;
+  let to = arr.length;
+
+  while ( from < to ) {
+    let mid = (to + from) >> 1;
+    let comp = cmp(elem, arr[mid]);
+
+    if ( comp === 0 ) {
+      return mid;
+    }
+
+    if ( comp < 0 ) {
+      to = mid;
+    } else {
+      from = mid + 1;
+    }
+  }
+
+  return -1;
+}

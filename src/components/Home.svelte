@@ -41,7 +41,7 @@
       }, {
         title: HOME.battle,
         route: "/battle",
-        ready: true,
+        ready: false,
         cube: '/assets/battle.png',
       }, {
         title: HOME.pll_recognition,
@@ -112,11 +112,11 @@
 <main class="container-mini">
   <ul class="w-full grid gap-4 place-items-center">
     {#each cards as card (card.route)}
-      <li class="w-40 h-48 text-center shadow-md rounded-md select-none cursor-pointer
+      <li class={`w-40 h-48 text-center shadow-md rounded-md select-none cursor-pointer
       transition-all duration-200 flex flex-col items-center justify-between py-3
-      bg-white bg-opacity-10 text-gray-400
+      bg-backgroundLv1 text-gray-400
 
-      hover:rotate-3 hover:shadow-lg">
+      hover:rotate-3 hover:shadow-lg ` + 'card-premium'}>
         <Link to={ card.route }>
           <img class="w-32 h-32 mx-auto" src={card.puzzle ? card.puzzle.img : card.cube} alt={ card.title }>
           <h2>{card.title}</h2>

@@ -58,3 +58,11 @@ export function timerToMilli(n: number): number {
 export function adjustMillis(n: number): number {
   return Math.floor(n / 10) * 10;
 }
+
+export function formatHour(n: number, long?: boolean): string {
+  if ( long ) return (n % 12) + 'h';
+
+  let res = (n % 12) || 12;
+  let suff = ['am', 'pm'][ ~~(n >= 12) ];
+  return res + suff;
+}

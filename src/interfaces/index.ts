@@ -3,7 +3,7 @@ import type { Sticker } from './../classes/puzzle/Sticker';
 import type { Piece } from './../classes/puzzle/Piece';
 import type { Vector3D } from '../classes/vector3d';
 import type { CubeMode, SCRAMBLE_MENU } from "../constants";
-import type { Writable } from 'svelte/store';
+import type { Writable, Readable } from 'svelte/store';
 
 export const PuzzleTypeName = [
   'rubik', 'skewb', 'square1', 'pyraminx', 'axis', 'fisher', 'ivy'
@@ -296,6 +296,8 @@ export interface TimerContext {
   decimals: Writable<boolean>;
   bluetoothList: Writable<BluetoothDeviceData[]>;
   bluetoothStatus: Writable<boolean>;
+  AON: Readable<number[]>;
+  STATS_WINDOW: Writable<(number | null)[][]>;
   
   sortSolves: () => any;
   updateStatistics: (inc ?: boolean) => any;
@@ -680,6 +682,7 @@ export interface Language {
     hourDistribution: string;
     weekDistribution: string;
     histogram: string;
+    days: string[];
 
     // Best section
     bestMarks: string;

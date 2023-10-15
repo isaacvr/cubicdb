@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { io, Socket } from 'socket.io-client';
   import { AverageSetting, type Game, type Language, type Solve } from "@interfaces";
   import Button from "@material/Button.svelte";
   import Input from "@material/Input.svelte";
@@ -11,7 +10,7 @@
   import Tooltip from '@material/Tooltip.svelte';
   import EyeIcon from '@icons/Eye.svelte';
   import CloseIcon from '@icons/Close.svelte';
-  import Checkbox from './material/Checkbox.svelte';
+  import Checkbox from '../material/Checkbox.svelte';
   import { getAverage } from '@helpers/statistics';
   import { derived, type Readable } from 'svelte/store';
   import type { SCRAMBLE_MENU } from '@constants';
@@ -19,6 +18,8 @@
   import { getLanguage } from '@lang/index';
   import { randomUUID } from '@helpers/strings';
   import { NotificationService } from '@stores/notification.service';
+  import { SocketIOHandler } from './SocketIOHandler';
+  import { AblyHandler } from "./AblyHandler";
 
   const notification = NotificationService.getInstance();
 
@@ -44,13 +45,15 @@
   ]);
 
   let state: STATE = 'idle';
-  let socket: Socket;
+  // let socket: Socket;
+  let socket = new AblyHandler();
+  // let socket = new SocketIOHandler('ws://cubedb-battle-server.netlify.app:3000/');
+  // let socket = new SocketIOHandler('ws://192.168.67.93:3000/');
+  // let socket = new SocketIOHandler('ws://localhost:3000/');
   let checked = false;
   let ending = false;
-  let socketServer = 'ws://192.168.67.93:3000/';
-  // let socketServer = 'ws://localhost:3000/';
 
-  let username = 'Isaac';
+  let username = '';
   let userID = '';
   let gameID = '';
   let scramble = '';
@@ -88,9 +91,16 @@
     log('tryCreate', username, mode, socket.connected);
 
     if ( username && mode && socket.connected ) {
-      socket.emit('CREATE', username, userID);
+      socket.create(username, userID);
       return true;
     }
+
+    notification.addNotification({
+      header: 'Network error',
+      text: 'Please, check your connection.',
+      timeout: 3000,
+      key: randomUUID(),
+    });
 
     return false;
   }
@@ -101,9 +111,16 @@
     log(checked ? 'Trying to observe' : 'Trying to join')
 
     if ( username && /^[0-9a-f]{8}$/.test(gameID) && socket.connected ) {
-      socket.emit(checked ? 'LOOK' : 'JOIN', gameID, username, userID);
+      (checked ? socket.look : socket.join).apply(socket, [gameID, username, userID]);
       return true;
     }
+
+    notification.addNotification({
+      header: 'Network error',
+      text: 'Please, check your connection.',
+      timeout: 3000,
+      key: randomUUID(),
+    });
 
     return false;
   }
@@ -124,7 +141,7 @@
       s.group = round;
     }
 
-    socket.emit('TIME', gameID, infinitePenalty(s) ? Infinity : s.time, s.group);
+    socket.time(infinitePenalty(s) ? Infinity : s.time, s.group || round);
   }
 
   function computeStats() {
@@ -143,26 +160,22 @@
 
   function exit() {
     if ( socket.connected ) {
-      socket.emit('EXIT', gameID);
+      socket.exit();
     }
 
     toState('idle');
   }
 
   function rematch() {
-    socket.emit('REMATCH', gameID);
+    socket.rematch();
   }
 
   function start() {
-    socket.emit('START');
+    socket.start();
   }
 
   function connect() {
-    if ( socket?.connected ) {
-      socket.disconnect();
-    }
-
-    socket = io(socketServer);
+    socket.connect();
   }
 
   function disconnect() {
@@ -214,7 +227,7 @@
       notification.removeNotification(disconnectedKey);
 
       if ( state === 'play' ) {
-        socket.emit('RECONNECT', gameID, userID, round);
+        socket.reconnect(round);
       }
     });
 
@@ -233,7 +246,7 @@
     
     socket.on('TIMEOUT',    () => {
       log('TIMEOUT'); ending = true;
-      setTimer(() => isCreator && socket.emit('GAME_OVER', gameID));
+      setTimer(() => isCreator && socket.gameOver());
     });
 
     socket.on('NEXT_ROUND', () => {
@@ -245,7 +258,7 @@
         if ( isCreator ) {
           let sMode = MODES.find(m => m[1] === mode) as any;
           log('gen: ', mode, sMode);
-          socket.emit('SCRAMBLE', (all.pScramble.scramblers.get(mode) as any).apply(null, [
+          socket.scramble((all.pScramble.scramblers.get(mode) as any).apply(null, [
             mode, Math.abs(sMode[2]), undefined]).replace(/\\n/g, '<br>').trim());
         }
       } catch(e) {
@@ -256,7 +269,7 @@
     socket.on('NEXT_ROUND_AVAILABLE', () => {
       log('NEXT_ROUND_AVAILABLE');
       nextRoundAvailable = true;
-      setTimer(() => isCreator && socket.emit('NEXT_ROUND', gameID));
+      setTimer(() => isCreator && socket.nextRound());
     });
 
     socket.on('REMATCH',    (g: Game) => {
@@ -304,12 +317,10 @@
     });
 
     socket.on('disconnect', disconnect);
-    socket.on('connect_error', () => {});
-    socket.on('connect_failed', () => {});
   });
 
   onDestroy(() => {
-    socket.emit('EXIT');
+    socket.exit();
     socket.disconnect();
   });
 
@@ -354,7 +365,12 @@
       <div class="col-span-2"><Input bind:value={ username } size={50} focus={ true }/></div>
 
       <span class="col-span-1 flex justify-end items-center">Game ID:</span>
-      <div class="col-span-2"><Input type="number" on:input={ (e) => gameID = e.detail.target.value.toString() } size={50}/></div>
+      <div class="col-span-2">
+        <Input type="number" size={50}
+          on:input={ (e) => gameID = e.detail.target.value.toString() }
+          on:UENTER={ () => tryJoin() && toState('waiting') }
+        />
+      </div>
 
       <span class="col-span-3 flex justify-center gap-2">
         <Checkbox { checked } on:change={ (e) => checked = e.detail.value } label="Join as observer"/>
@@ -430,7 +446,7 @@
           useMode={ mode }
           genScramble={ false }
           cleanOnScramble={ true }
-          enableKeyboard={ !(locked || isObserver || ending || !socket?.connected) }
+          enableKeyboard={ !(locked || isObserver || ending || !socket.connected) }
         />
       </div>
     {/if}
@@ -503,7 +519,7 @@
   {/if}
 
   <!-- EVENT_LIST -->
-  <ul class="w-full text-white grid mt-8 items-center justify-center">
+  <ul class="w-full grid text-white mt-8 items-center justify-center">
     <li class="text-xl text-violet-400 font-bold">Event list</li>
     {#each eventList as ev}
       <li>{ ev }</li>

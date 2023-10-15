@@ -79,7 +79,7 @@ export class ElectronAdaptor implements IPC {
   }
 
   removeSolves(s: Solve[]) {
-    this.ipc.removeSolves(s.map(e => e._id));
+    this.ipc.removeSolves(s);
   }
 
   getSessions() {

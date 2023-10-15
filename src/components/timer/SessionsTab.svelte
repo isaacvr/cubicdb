@@ -34,7 +34,7 @@
   import { getLanguage } from "@lang/index";
   import { tick } from "svelte";
   import Select from "@components/material/Select.svelte";
-    import { copyToClipboard, randomUUID } from "@helpers/strings";
+  import { copyToClipboard, randomUUID } from "@helpers/strings";
 
   let localLang: Readable<Language> = derived(globalLang, ($lang) => getLanguage( $lang ));
 
@@ -59,6 +59,7 @@
   let showContextMenu = false;
   let contextMenuElement: HTMLUListElement;
   let solvesElement: HTMLDivElement;
+  let pSolves: Solve[] = [];
   
   function closeHandler(s?: Solve) {
     if ( s ) {
@@ -100,7 +101,7 @@
   function selectSolve(s: Solve) {
     s.selected = !s.selected;
     $selected += (s.selected) ? 1 : -1;
-    solves.update(() => $solves);
+    pSolves = pSolves;
   }
 
   function handleClick(s: Solve) {
@@ -161,8 +162,12 @@
 
   function selectNone() {
     $selected = 0;
-    for(let i = 0, maxi = $solves.length; i < maxi; i += 1) {
-      $solves[i].selected = false;
+    pSolves.forEach(s => s.selected = false);
+    pSolves = pSolves;
+
+    let sv = $solves;
+    for(let i = 0, maxi = sv.length; i < maxi; i += 1) {
+      sv[i].selected = false;
     }
   }
 
@@ -173,6 +178,7 @@
   function deleteSelected() {
     _delete( $solves.filter(s => s.selected) );
     $selected = 0;
+    pSolves = pSolves;
   }
 
   function handleKeyUp(e: KeyboardEvent) {
@@ -188,16 +194,22 @@
     }
   }
 
+  function updateSolves() {
+    pSolves = $solves.slice(pg.start, pg.end);
+    pg = pg;
+  }
+
   function updatePaginator(s: any) {
     pg.setData($solves);
-    pg = pg;
+
+    updateSolves();
   }
 
   function setPage(p: number) {
     p === -1 && pg.nextPage();
     p === -2 && pg.prevPage();
     p != -1 && p != -2 && pg.setPage(p);
-    pg = pg;
+    updateSolves();
   }
 
   function toClipboard(text: string) {
@@ -246,10 +258,13 @@
 
   function updatePageFromSelected() {
     if ( $selected === 1 ) {
-      for (let i = 0, maxi = $solves.length; i < maxi; i += 1) {
-        if ( $solves[i].selected ) {
+      let sv = $solves;
+
+      for (let i = 0, maxi = sv.length; i < maxi; i += 1) {
+        if ( sv[i].selected ) {
           let page = Math.ceil((i + 1) / pg.limit);
           pg.setPage(page);
+          updateSolves();
           tick().then(() => {
             solvesElement.children[i - pg.start].scrollIntoView({ block: 'center' });
           });
@@ -269,42 +284,37 @@
   on:click={ () => showContextMenu = false }></svelte:window>
 
 <main class="w-full h-full">
-  {#if pg.pages > 1}
-    <ul class="w-max flex justify-center mx-auto gap-2 text-gray-400">
-      <li class="paginator-item"
-        on:click={ () => setPage(1) }> <ChevronDoubleLeftIcon /> </li>
-      <li class="paginator-item"
-        on:click={ () => setPage(-2) }> <ChevronLeftIcon /> </li>
-      {#each pg.labels as lb}
-        <li class="paginator-item" class:selected={ pg.page === lb }
-          on:click={ () => setPage(lb) }>{ lb }</li>
-      {/each}
-      <li class="paginator-item"
-        on:click={ () => setPage(-1) }><ChevronRightIcon /></li>
-      <li class="paginator-item"
-        on:click={ () => setPage(Infinity) }><ChevronDoubleRightIcon /></li>
-    </ul>
-  {/if}
+  <ul class={"w-max flex justify-center mx-auto gap-2 text-gray-400 " + (pg.pages > 1 ? '' : 'hidden')}>
+    <li class="paginator-item"> <button on:click={ () => setPage(1) }> <ChevronDoubleLeftIcon /> </button> </li>
+    <li class="paginator-item"> <button on:click={ () => setPage(-2) }> <ChevronLeftIcon /> </button> </li>
+    {#each pg.labels as lb}
+      <li class="paginator-item" class:selected={ pg.page === lb }>
+        <button on:click={ () => setPage(lb) }>{ lb }</button>
+      </li>
+    {/each}
+    <li class="paginator-item"> <button on:click={ () => setPage(-1) }> <ChevronRightIcon /> </button> </li>
+    <li class="paginator-item"> <button on:click={ () => setPage(Infinity) }> <ChevronDoubleRightIcon /> </button> </li>
+  </ul>
 
   <div id="grid" class="text-gray-400 ml-8 mr-12 grid h-max-[100%] overflow-scroll" bind:this={ solvesElement }>
-    {#each $solves.slice(pg.start, pg.end) as solve}
-    <div
-      class="shadow-md w-24 h-12 rounded-md m-3 p-1 bg-white bg-opacity-10 relative
-        flex items-center justify-center transition-all duration-200 select-none cursor-pointer
+    {#each pSolves as solve (solve._id)}
+      <button
+        class="shadow-md w-24 h-12 rounded-md m-3 p-1 bg-backgroundLv1 relative
+          flex items-center justify-center transition-all duration-200 select-none cursor-pointer
 
-        hover:shadow-lg hover:bg-opacity-20
-      "
-      on:click={ () => handleClick(solve) }
-      on:contextmenu={ (e) => handleContextMenu(e, solve) }
-      class:selected={ solve.selected }>
-        <div class="font-small absolute top-0 left-2">{ moment(solve.date).format('DD/MM') }</div>
-        <span class="text-center font-bold">{ sTimer(solve, true) }</span>
+          hover:shadow-lg hover:bg-opacity-20
+        "
+        on:click={ () => handleClick(solve) }
+        on:contextmenu={ (e) => handleContextMenu(e, solve) }
+        class:selected={ solve.selected }>
+          <div class="font-small absolute top-0 left-2">{ moment(solve.date).format('DD/MM') }</div>
+          <span class="text-center font-bold">{ sTimer(solve, true) }</span>
 
-        <div class="absolute right-1 top-0 h-full flex flex-col items-center justify-evenly">
-          {#if solve.penalty === Penalty.P2} <span class="font-small">+2</span> {/if}
-          {#if solve.comments} <CommentPlusIcon width=".8rem"/> {/if}
-        </div>
-      </div>
+          <div class="absolute right-1 top-0 h-full flex flex-col items-center justify-evenly">
+            {#if solve.penalty === Penalty.P2} <span class="font-small">+2</span> {/if}
+            {#if solve.comments} <CommentPlusIcon width=".8rem"/> {/if}
+          </div>
+      </button>
     {/each}
   </div>
 
@@ -470,14 +480,14 @@
   @apply top-12 opacity-100 pointer-events-auto;
 }
 
-.paginator-item {
+.paginator-item button {
   @apply w-8 h-8 bg-violet-400 bg-opacity-30 grid place-items-center rounded-md cursor-pointer shadow-md
     transition-all duration-300 select-none
     
     hover:bg-opacity-40 hover:text-gray-300;
 }
 
-.paginator-item.selected {
+.paginator-item.selected button {
   @apply bg-violet-500 text-gray-200 bg-opacity-60 hover:bg-opacity-50;
 }
 

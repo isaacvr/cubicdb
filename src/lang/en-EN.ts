@@ -162,6 +162,7 @@ export const English: Language = {
     hourDistribution: 'Hour distribution',
     weekDistribution: 'Week distribution',
     histogram: 'Histogram',
+    days: [ "Sun", "Mon", "Tue", "Wen", "Thu", "Fri", "Sat" ],
 
     // Best section
     bestMarks: 'Best marks',

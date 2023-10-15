@@ -1,7 +1,7 @@
 <script lang="ts">
   import { createEventDispatcher, onDestroy, onMount } from 'svelte';
   import { generateCubeBundle } from '@helpers/cube-draw';
-  import { derived, writable, type Readable, type Unsubscriber } from 'svelte/store';
+  import { derived, writable, type Readable, type Unsubscriber, readable } from 'svelte/store';
   
   /// Modules
   import * as all from '@cstimer/scramble';
@@ -9,7 +9,7 @@
   import JSConfetti from 'js-confetti';
   
   /// Data
-  import { isNNN, SessionDefaultSettings, type SCRAMBLE_MENU } from '@constants';
+  import { isNNN, SessionDefaultSettings, type SCRAMBLE_MENU, AON } from '@constants';
   import { DataService } from '@stores/data.service';
   
   /// Components
@@ -46,6 +46,7 @@
   import { getLanguage } from '@lang/index';
   import { NotificationService } from '@stores/notification.service';
   import { randomUUID } from '@helpers/strings';
+  import { binSearch } from '@helpers/object';
 
   let MENU: SCRAMBLE_MENU[] = getLanguage($globalLang).MENU;
   
@@ -59,11 +60,8 @@
   export let timerOnly = false;
   export let scrambleOnly = false;
   export let cleanOnScramble = false;
-  export let location = '';
 
-  $: console.log('LOCATION: ', location);
-
-  let groups: string[] = [];
+  let groups: string[] = MENU.map(e => e[0]);
   
   let localLang: Readable<Language> = derived(globalLang, ($lang) => {
     let l = getLanguage( $lang );
@@ -121,6 +119,7 @@
   let decimals = writable<boolean>(true);
   let bluetoothList = writable<BluetoothDeviceData[]>([]);
   let bluetoothStatus = writable(false);
+  let STATS_WINDOW = writable<(number | null)[][]>( $AON.map(_ => []) );
 
   let confetti = new JSConfetti();
   
@@ -167,7 +166,10 @@
   }
 
   function updateStatistics(inc ?: boolean) {
-    $stats = getUpdatedStatistics($stats, $solves, $session, inc);
+    console.time('updateStatistics');
+    let st = getUpdatedStatistics($stats, $solves, $session, $AON, inc);
+    $stats = st.stats;
+    $STATS_WINDOW = st.window;
 
     let bestList = [];
 
@@ -195,9 +197,10 @@
         confettiColors: [ '#009d54', '#3d81f6', '#ffeb3b' ]
       });
     }
+    console.timeEnd('updateStatistics');
   }
 
-  function updateSolves(id?: any) {
+  function updateSolves() {
     $solves = $allSolves.filter(s => s.session === ($session || {})._id);
     
     // Calc next Ao5
@@ -209,7 +212,9 @@
   }
 
   function sortSolves() {
+    console.time('sort');
     $allSolves = $allSolves.sort((a, b) => b.date - a.date);
+    console.timeEnd('sort');
     updateSolves();
   }
 
@@ -405,17 +410,35 @@
               if (s) {
                 statsReplaceId($stats, s._id, d._id);
                 s._id = d._id;
-                updateSolves(d._id);
+                updateSolves();
               }
               break;
             }
             case 'remove-solves': {
               let ids = <Solve[]> data.data;
-              for (let i = $allSolves.length - 1; i >= 0; i -= 1) {
-                ids.indexOf($allSolves[i]._id) > -1 && $allSolves.splice(i, 1);
+              let ss = $solves;
+              let sl = ss.length;
+
+              let as = $allSolves;
+
+              for(let i = 0, maxi = ids.length; i < maxi; i += 1) {
+                let pos1 = binSearch<Solve>(ids[i], ss, (a: Solve, b: Solve) => b.date - a.date);
+                let pos2 = binSearch<Solve>(ids[i], as, (a: Solve, b: Solve) => b.date - a.date);
+
+                if ( pos1 > -1 ) {
+                  ss.splice(pos1, 1);
+                }
+                
+                if ( pos2 > -1 ) {
+                  as.splice(pos2, 1);
+                }
               }
-              $stats = INITIAL_STATISTICS;
-              setSolves();
+              
+              if ( ss.length != sl ) {
+                $stats = INITIAL_STATISTICS;
+                setSolves();
+              }
+
               break;
             }
             case 'update-solve': {
@@ -523,7 +546,7 @@
   let context: TimerContext = {
     state, ready, tab, solves, allSolves, session, Ao5, AoX, stats, scramble, decimals,
     group, mode, hintDialog, hint, cross, xcross, preview, prob, isRunning, selected,
-    bluetoothList, bluetoothStatus,
+    bluetoothList, bluetoothStatus, AON, STATS_WINDOW,
     sortSolves, updateStatistics, initScrambler, selectedGroup,
     setConfigFromSolve, selectSolve, selectSolveById, editSolve
   };
@@ -547,7 +570,7 @@
     <div class="fixed w-max -translate-x-1/2 left-1/2 z-10 grid grid-flow-col
       gap-2 top-12 items-center justify-center text-gray-400">
       <Tooltip text={ $localLang.TIMER.manageSessions }>
-        <span on:click={ editSessions } class="cursor-pointer"><TuneIcon width="1.2rem" height="1.2rem"/> </span>
+        <button on:click={ editSessions } class="cursor-pointer"><TuneIcon width="1.2rem" height="1.2rem"/> </button>
       </Tooltip>
       
       <Select class="min-w-[8rem]"
@@ -613,12 +636,12 @@
               class="bg-gray-600 text-gray-200 flex-1"  
               bind:value={ newSessionName } on:keyup={ (e) => handleInputKeyUp(e) }/>
             <div class="flex mx-2 flex-grow-0 w-10 items-center justify-center">
-              <span tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer" on:click={ newSession }>
+              <button tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer" on:click={ newSession }>
                 <CheckIcon width="100%" height="100%"/>
-              </span>
-              <span tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer" on:click={ closeAddSession }>
+              </button>
+              <button tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer" on:click={ closeAddSession }>
                 <CloseIcon width="100%" height="100%"/>
-              </span>
+              </button>
             </div>
           </div>
         {/if}
@@ -644,24 +667,24 @@
               }}/>
             <div class="flex mx-2 flex-grow-0 w-10 items-center justify-center">
               {#if !s.editing && !creatingSession}
-                <span tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer" on:click={() => {
+                <button tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer" on:click={() => {
                   sessions.forEach(s1 => s1.editing = false);
                   s.editing = true;
                 }}>
                   <PencilIcon width="100%" height="100%"/>
-                </span>
-                <span tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer" on:click={() => deleteSession(s)}>
+                </button>
+                <button tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer" on:click={() => deleteSession(s)}>
                   <DeleteIcon width="100%" height="100%"/>
-                </span>
+                </button>
               {/if}
 
               {#if s.editing && !creatingSession}
-                <span tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer" on:click={ () => renameSession(s) }>
+                <button tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer" on:click={ () => renameSession(s) }>
                   <CheckIcon width="100%" height="100%"/>
-                </span>
-                <span tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer" on:click={() => s.editing = false}>
+                </button>
+                <button tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer" on:click={() => s.editing = false}>
                   <CloseIcon width="100%" height="100%"/>
-                </span>
+                </button>
               {/if}
             </div>
           </div>

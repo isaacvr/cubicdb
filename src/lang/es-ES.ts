@@ -167,10 +167,11 @@ export const Spanish: Language = {
     timeDistribution: 'Distribución de tiempos',
     timeChartLabels: [ 'Tiempo', 'Ao5', 'A012', 'Ao50', 'AoX', 'Mejor', 'Tendencia' ],
     
-    solves: 'Resoluciones',
+    solves: 'Tiempos',
     hourDistribution: 'Distribución por horas',
     weekDistribution: 'Distribución semanal',
     histogram: 'Histograma',
+    days: [ "Dom", "Lun", "Mar", "Mie", "Jue", "Vie", "Sab" ],
 
     // Best section
     bestMarks: 'Mejores marcas',

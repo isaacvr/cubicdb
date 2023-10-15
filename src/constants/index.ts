@@ -1,5 +1,6 @@
 import { AverageSetting, type PuzzleOptions, type SessionSettings } from '@interfaces';
 import { options } from '@cstimer/scramble/scramble';
+import { readable } from 'svelte/store';
 
 export enum CubeMode {
   NORMAL = 0, OLL, PLL, CMLL, F2L, COLL, WV, ELL, VLS, ZBLL, OLLCP, GRAY, CENTERS, CROSS, FL, YCROSS
@@ -193,3 +194,5 @@ export const SessionDefaultSettings: SessionSettings = {
   withoutPrevention: true,
   recordCelebration: true,
 };
+
+export const AON = readable([ 3, 5, 12, 50, 100, 200, 500, 1000, 2000 ]);

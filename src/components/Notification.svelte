@@ -2,8 +2,7 @@
   import Button from '@material/Button.svelte';
   import { onMount } from 'svelte';
   import type { NotificationAction } from '@interfaces';
-  // @ts-ignore
-  import SettingsIcon from '@icons/Settings.svelte';
+  import SettingsIcon from '@icons/Cog.svelte';
   import CloseIcon from '@icons/Close.svelte';
   import { NotificationService } from '@stores/notification.service';
   

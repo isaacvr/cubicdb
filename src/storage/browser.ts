@@ -1,8 +1,7 @@
 import { SessionDefaultSettings } from "@constants";
 import type { Algorithm, AlgorithmOptions, CubeEvent, IPC, PDFOptions, Session, Sheet, Solve, Tutorial, UpdateCommand } from "@interfaces";
-// import type Nedb from "nedb";
-// @ts-ignore
-// import NeDB from 'nedb/browser-version/out/nedb.min';
+import algs from '../database/algs.json';
+import tuts from '../database/tutorials.json';
 
 export class BrowserAdaptor implements IPC {
   // private algorithms: Nedb<Algorithm>;
@@ -12,12 +11,7 @@ export class BrowserAdaptor implements IPC {
 
   private session_handler?: Function;
 
-  constructor() {
-    // this.algorithms = new NeDB({ filename: 'algorithms.db', autoload: true });
-    // this.tutorials = new NeDB({ filename: 'tutorials.db', autoload: true });
-    // this.sessions = new NeDB({ filename: 'sessions.db', autoload: true });
-    // this.solves = new NeDB({ filename: 'solves.db', autoload: true });
-  }
+  constructor() {}
 
   // Handlers
   handleAlgorithms(fn: Function) {}

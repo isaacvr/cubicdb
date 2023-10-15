@@ -1,12 +1,12 @@
 <script lang="ts">
   import { onDestroy, onMount } from 'svelte';
   import type { Tutorial } from '../interfaces';
-  import { Link } from 'svelte-routing';
+  import { Link, useLocation } from 'svelte-routing';
   import { DataService } from '../stores/data.service';
   import Plus from 'svelte-material-icons/Plus.svelte';
   import Button from './material/Button.svelte';
 
-  export let location: any;
+  const location = useLocation();
 
   let dataService = DataService.getInstance();
 
@@ -65,7 +65,7 @@
       <h2 class="text-gray-400 font-bold">{k}</h2>
       <div class="flex">
         {#each tutorials[k] as t}
-          <Link to="{ location.pathname + '/' + t.puzzle + '/' + t.titleLower + '?id=' + t._id }"
+          <Link to="{ $location.pathname + '/' + t.puzzle + '/' + t.titleLower + '?id=' + t._id }"
             class="m-1.5 text-gray-400 p-2.5 shadow-md bg-purple-900 rounded-md"
           >{t.title}
           </Link>

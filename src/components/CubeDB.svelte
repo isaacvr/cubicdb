@@ -1,5 +1,4 @@
 <script lang="ts">
-  // @ts-ignore
   import QRCode from 'qrcode';
   import { version } from '@stores/version.store';
   import Button from './material/Button.svelte';
@@ -7,8 +6,6 @@
   import InstagramIcon from '@icons/Instagram.svelte';
   import GmailIcon from '@icons/Gmail.svelte';
   
-  // @ts-ignore
-  import TelegramIcon from '@icons/Telegram.svelte';
   import CopyIcon from '@icons/ContentCopy.svelte';
   import { copyToClipboard, randomUUID } from '@helpers/strings';
   import { NotificationService } from '@stores/notification.service';
@@ -141,7 +138,7 @@
     
     <Button class="bg-blue-800 text-gray-300 gap-2"
       on:click={ () => to('https://t.me/isaacvr') }
-    > <TelegramIcon size="1.2rem"/> Telegram</Button>
+    > Telegram</Button>
   </section>
   
   <hr>

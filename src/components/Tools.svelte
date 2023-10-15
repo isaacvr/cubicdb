@@ -6,7 +6,7 @@
   import { Penalty, type Language, type Solve, type TimerContext, type Session, type Statistics, MetricList, type TurnMetric } from "@interfaces";
   import { globalLang } from "@stores/language.service";
   import { getLanguage } from "@lang/index";
-  import { STANDARD_PALETTE, SessionDefaultSettings, type SCRAMBLE_MENU } from "@constants";
+  import { STANDARD_PALETTE, SessionDefaultSettings, type SCRAMBLE_MENU, AON } from "@constants";
   import * as all from "@cstimer/scramble";
   import Button from "@material/Button.svelte";
   import Input from "@material/Input.svelte";
@@ -74,7 +74,8 @@
   // Timer and Scramble Only
   let modes: { 0: string; 1: string; 2: number }[] = [];
   let filters: string[] = [];
-  let selectedOption = "timer-only";
+  // let selectedOption = "timer-only";
+  let selectedOption = "solver";
   let timer: Timer;
 
   // Batch
@@ -101,8 +102,10 @@
   let facelets: string[][] = [
     ...[0, 1, 2, 3, 4, 5].map(n => [ '-', '-', '-', '-', fColors[n], '-', '-', '-', '-' ])
   ];
-  let fSelected = facelets.map(s => s.map(() => false));
+
   let keys = [ "[W]", "[R]", "[G]", "[Y]", "[O]", "[B]" ];
+  let color = 0;
+  let md = false;
 
   function selectedGroup() {
     modes = MENU[ $group ][1];
@@ -181,14 +184,14 @@
       ...$solves,
     ];
 
-    $stats = getUpdatedStatistics($stats, $solves, $session);
+    $stats = getUpdatedStatistics($stats, $solves, $session, $AON).stats;
 
     timeStr = "";
   }
 
   function clear() {
     $solves.length = 0;
-    $stats = getUpdatedStatistics($stats, $solves, $session);
+    $stats = getUpdatedStatistics($stats, $solves, $session, $AON).stats;
   }
 
   function validTimeStr(t: string): boolean {
@@ -204,28 +207,6 @@
 
   function getDescription(toolsMap: any, mt: string) {
     return toolsMap[ mt ];
-  }
-
-  function toggleSelect(i: number, j: number) {
-    j != 4 && (fSelected[i][j] = !fSelected[i][j]);
-  }
-
-  function cancelSelection() {
-    fSelected = facelets.map(s => s.map(() => false));
-  }
-
-  function assignColor(c: string) {
-    for (let i = 0, maxi = facelets.length; i < maxi; i += 1) {
-      let f = facelets[i];
-
-      for (let j = 0, maxj = f.length; j < maxj; j += 1) {
-        if ( fSelected[i][j] ) {
-          facelets[i][j] = c;
-        }
-      }
-    }
-
-    cancelSelection();
   }
 
   function getFacelets() {
@@ -299,21 +280,22 @@
     facelets = [
       ...[0, 1, 2, 3, 4, 5].map(n => [ '-', '-', '-', '-', fColors[n], '-', '-', '-', '-' ])
     ];
-    fSelected = facelets.map(s => s.map(() => false)); 
   }
 
   function handleKeyup(e: KeyboardEvent) {
     if ( selectedOption === 'solver' ) {
-      e.code === 'Escape' && cancelSelection();
-      e.key === 'w' && assignColor( fColors[0] );
-      e.key === 'r' && assignColor( fColors[1] );
-      e.key === 'g' && assignColor( fColors[2] );
-      e.key === 'y' && assignColor( fColors[3] );
-      e.key === 'o' && assignColor( fColors[4] );
-      e.key === 'b' && assignColor( fColors[5] );
-
-      // console.log("E: ", e);
+      e.key === 'w' && (color = 0);
+      e.key === 'r' && (color = 1);
+      e.key === 'g' && (color = 2);
+      e.key === 'y' && (color = 3);
+      e.key === 'o' && (color = 4);
+      e.key === 'b' && (color = 5);
     }
+  }
+
+  function assignColor(x: number, y: number) {
+    if ( y === 4 ) return;
+    facelets[x][y] = fColors[ color ];
   }
 
   onMount(() => {
@@ -327,6 +309,8 @@
 
   $: updateMetrics(metricString, selectedMetric);
 </script>
+
+<svelte:window on:keyup={ handleKeyup } on:mousedown={ () => md = true } on:mouseup={ () => md = false }/>
 
 <!-- Selection -->
 <div class="flex flex-wrap items-center justify-center gap-2">
@@ -454,7 +438,7 @@
   <div id="grid" class="text-gray-400 mx-8 mt-4 grid h-max-[100%] overflow-scroll">
     {#each $solves as _, p}
       <Tooltip text={ $localLang.TOOLS.clickToDelete } position="top">
-        <div
+        <button
           class="shadow-md w-24 h-12 rounded-md m-3 p-1 bg-white bg-opacity-10 relative
             flex items-center justify-center transition-all duration-200 select-none cursor-pointer
     
@@ -463,7 +447,7 @@
           on:click={ () => $solves = $solves.filter(s => s != $solves[$solves.length - p - 1]) }
         >
           <span class="text-center font-bold">{sTimer($solves[$solves.length - p - 1], true)}</span>
-        </div>
+        </button>
       </Tooltip>
     {/each}
   </div>
@@ -511,7 +495,7 @@
   <div class="colors">
     {#each fColors as f, p}
       <Tooltip position="bottom" text={ keys[p] } hasKeybinding>
-        <div class="color" on:click={ () => assignColor(f) } style={ `background-color: ${f}` }></div>
+        <button class="color" on:click={ () => color = p } class:selected={ p === color } style={ `background-color: ${f}` }></button>
       </Tooltip>
     {/each}
 
@@ -522,58 +506,16 @@
   <h2 class="text-2xl text-center mt-4">{ $localLang.TOOLS.stickers }</h2>
 
   <div class="cube-grid">
-    <div class="cube-u">
-      {#each facelets[0] as f, p}
-        <div class="facelet" class:selected={ fSelected[0][p] }
-          style={ `background-color: ${(f === '-' ? DEFAULT_COLOR : f)}` }
-          on:click={ () => toggleSelect(0, p) }
-        ></div>
-      {/each}
-    </div>
-
-    <div class="cube-l">
-      {#each facelets[4] as f, p}
-        <div class="facelet" class:selected={ fSelected[4][p] }
-          style={ `background-color: ${(f === '-' ? DEFAULT_COLOR : f)}` }
-          on:click={ () => toggleSelect(4, p) }
-        ></div>
-      {/each}
-    </div>
-
-    <div class="cube-f">
-      {#each facelets[2] as f, p}
-        <div class="facelet" class:selected={ fSelected[2][p] }
-          style={ `background-color: ${(f === '-' ? DEFAULT_COLOR : f)}` }
-          on:click={ () => toggleSelect(2, p) }
-        ></div>
-      {/each}
-    </div>
-    <div class="cube-r">
-      {#each facelets[1] as f, p}
-        <div class="facelet" class:selected={ fSelected[1][p] }
-          style={ `background-color: ${(f === '-' ? DEFAULT_COLOR : f)}` }
-          on:click={ () => toggleSelect(1, p) }
-        ></div>
-      {/each}
-    </div>
-
-    <div class="cube-b">
-      {#each facelets[5] as f, p}
-        <div class="facelet" class:selected={ fSelected[5][p] }
-          style={ `background-color: ${(f === '-' ? DEFAULT_COLOR : f)}` }
-          on:click={ () => toggleSelect(5, p) }
-        ></div>
-      {/each}
-    </div>
-
-    <div class="cube-d">
-      {#each facelets[3] as f, p}
-        <div class="facelet" class:selected={ fSelected[3][p] }
-          style={ `background-color: ${(f === '-' ? DEFAULT_COLOR : f)}` }
-          on:click={ () => toggleSelect(3, p) }
-        ></div>
-      {/each}
-    </div>
+    {#each [['0', 'cube-u'], ['4', 'cube-l'], ['2', 'cube-f'], ['1', 'cube-r'], ['5', 'cube-b'], ['3', 'cube-d']] as face}
+      <div class={ face[1] }>
+        {#each facelets[ +face[0] ] as f, p}
+          <button class="facelet" style={ `background-color: ${(f === '-' ? DEFAULT_COLOR : f)}` }
+            on:click={ () => assignColor(+face[0], p) }
+            on:mousemove={ () => md && facelets[+face[0]][p] != fColors[color] && assignColor(+face[0], p) }
+          ></button>
+        {/each}
+      </div>
+    {/each}
   </div>
 {/if}
 
@@ -596,6 +538,10 @@
     height: 3rem;
     border-radius: .3rem;
     border: .15rem solid black;
+  }
+
+  .colors .color.selected {
+    box-shadow: 0px 0px .5rem rgb(250, 222, 152);
   }
 
   .cube-grid {
@@ -645,9 +591,5 @@
     border-radius: .3rem;
     border: .15rem solid black;
     cursor: pointer;
-  }
-  
-  .cube-grid .facelet.selected {
-    box-shadow: 0px 0px .5rem rgb(250, 222, 152);
   }
 </style>

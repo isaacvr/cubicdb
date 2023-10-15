@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onDestroy, onMount } from "svelte";
-  import { Link, navigate } from "svelte-routing";
+  import { Link, navigate, useLocation } from "svelte-routing";
   import { derived, type Readable, type Unsubscriber } from "svelte/store";
   import { Puzzle } from "@classes/puzzle/puzzle";
   import { generateCubeBundle } from "@helpers/cube-draw";
@@ -11,8 +11,12 @@
   import { NotificationService } from "@stores/notification.service";
   import { globalLang } from "@stores/language.service";
   import { getLanguage } from "@lang/index";
+  import type { RouteLocation } from "svelte-routing/types/Route";
+  import ViewListIcon from '@icons/ViewList.svelte';
+  import ViewGridIcon from '@icons/Grid.svelte';
+    import Button from "./material/Button.svelte";
 
-  export let location: Location;
+  const location = useLocation();
   
   let localLang: Readable<Language> = derived(globalLang, ($lang, set) => {
     set( getLanguage( $lang ) );
@@ -28,6 +32,7 @@
   let selectedCase: Algorithm | null = null;
   let allSolutions = false;
   let imgExpanded = false;
+  let listView = true;
 
   let algSub: Unsubscriber;
 
@@ -115,11 +120,15 @@
 
   function handlekeyUp(e: KeyboardEvent) {
     if ( e.code === 'Escape' && allSolutions ) {
-      navigate(location.pathname.split('?')[0]);
+      navigate( $location.pathname.split('?')[0] );
+    }
+
+    if ( e.code === 'keyL' && e.ctrlKey && !allSolutions && (type === 2 || type >= 4) ) {
+      listView = !listView;
     }
   }
 
-  function updateCases(loc: Location) {
+  function updateCases(loc: RouteLocation) {
     let paramMap = getSearchParams(loc.search);
 
     let caseName = paramMap.get('case');
@@ -161,7 +170,7 @@
 
   }
 
-  $: updateCases(location);
+  $: updateCases($location);
   
   onMount(() => {
 
@@ -189,8 +198,11 @@
   {#if allSolutions}
     <div>
       <h1 class="text-gray-300 text-3xl font-bold text-center">{ selectedCase?.name }</h1>
-      <img src={ selectedCase?._puzzle?.img } class="puzzle-img flex mx-auto"
-        class:expanded={ imgExpanded } on:click={ () => imgExpanded = !imgExpanded } alt="">
+      <button class="flex mx-auto items-center justify-center" on:click={ () => imgExpanded = !imgExpanded }>
+        <img src={ selectedCase?._puzzle?.img } class="puzzle-img"
+          class:expanded={ imgExpanded } alt="">
+      </button>
+
       <div class="grid grid-cols-6">
         <h2 class="col-span-1 font-bold text-xl"> </h2>
         <h2 class="col-span-3 font-bold text-xl text-gray-300">{ $localLang.ALGORITHMS.solution }</h2>
@@ -200,7 +212,7 @@
         {#each (selectedCase?.solutions || []) as sol }
           <span class="col-span-1"></span>
           <Tooltip position="left" text="Click to copy" class="col-span-3">
-            <span
+            <span role="link" tabindex="0"
               on:click={ () => toClipboard(sol.moves) }
               class="mt-2 cursor-pointer hover:text-gray-300 transition-all duration-200">{ sol.moves }</span>
           </Tooltip>
@@ -216,7 +228,7 @@
           <Link to={ card.route }>
             <li class="w-40 h-48 text-center shadow-md rounded-md select-none cursor-pointer
             transition-all duration-200 flex flex-col items-center justify-between py-3
-            bg-white bg-opacity-10 text-gray-400
+            bg-backgroundLv1 text-gray-400
 
             hover:rotate-3 hover:shadow-lg">
               <img class="w-32 h-32" src="{card?.puzzle?.img || ''}" alt={card.title}>
@@ -227,8 +239,20 @@
       </ul>
     {/if}
 
-    {#if (type === 2 || type >= 4)}
-      <div class="grid text-gray-400">
+    {#if type === 2 || type >= 4}
+      <div class="absolute right-12 top-16 grid place-items-center">
+        <Button class="w-8 h-8 bg-backgroundLv1 hover:bg-purple-700 text-gray-400
+          hover:text-gray-200 grid place-items-center cursor-pointer"
+          on:click={ () => listView = !listView }>
+
+          {#if listView}
+            <ViewListIcon size="1.2rem"/>
+          {:else}
+            <ViewGridIcon size="1.2rem"/>
+          {/if}
+        </Button>
+      </div>
+      <div class="cases grid text-gray-400" class:compact={ !listView }>
         <div class="row">
           <span class="text-gray-300 font-bold">{ $localLang.ALGORITHMS.case }</span>
           <span class="text-gray-300 font-bold"></span>
@@ -238,9 +262,10 @@
         {#each cases as c, i}
           <div class="row">
             <span class="font-bold">{ c.name }</span>
-            <img on:click={ () => caseHandler(c) }
-              class="puzzle-img hover:shadow-lg transition-all duration-200 cursor-pointer"
-              src={c?._puzzle?.img || ''} alt="">
+            <button class="flex items-center justify-center" on:click={ () => caseHandler(c) }>
+              <img class="puzzle-img hover:shadow-lg transition-all duration-200 cursor-pointer"
+                src={c?._puzzle?.img || ''} alt="">
+            </button>
             <ul>
               {#each (c.solutions || []).slice(0, 4) as solution}
                 <li class="algorithm">{solution.moves}</li>
@@ -264,23 +289,57 @@
     height: calc(100vh - 7rem);
   }
 
-  .container-mini > * {
+  .container-mini > :not(.absolute) {
     max-height: 100%;
     overflow: scroll;
   }
 
-  .row {
+  .cases .row {
     @apply grid;
     grid-template-columns: 1fr 1fr 2fr;
     align-items: center;
   }
 
-  .row:not(:nth-child(-n + 2)) {
+  .cases:not(.compact) .row:not(:nth-child(-n + 2)) {
     @apply border-0 border-t border-t-gray-400;
   }
 
-  .row .puzzle-img:hover {
+  .cases .row .puzzle-img:hover {
     filter: drop-shadow(0 0 1rem #8a527c);
+  }
+
+  .cases.compact {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    padding-right: 1rem;
+    gap: 1rem;
+  }
+
+  .cases.compact .row:first-child {
+    display: none;
+  }
+
+  .cases.compact .row > span {
+    @apply text-gray-300;
+    grid-area: name;
+  }
+
+  .cases.compact .row > button {
+    grid-area: img;
+  }
+
+  .cases.compact .row > ul {
+    display: none;
+  }
+
+  .cases.compact .row {
+    place-items: center;
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "img"
+      "name";
+    padding-inline: .5rem;
+    background-color: #373737;
+    border-radius: .3rem;
   }
   
   .puzzle-img {

@@ -33,6 +33,10 @@ export default defineConfig((env) => ({
       "@workers": resolve(__dirname, './src/workers'),
       "@lang": resolve(__dirname, './src/lang'),
       "@public": resolve(__dirname, './public'),
+      
+      // PREMIUM
+      "@pcomponents": resolve(__dirname, "./src/cubedb-premium/components"),
+      "@pclasses": resolve(__dirname, "./src/cubedb-premium/classes"),
     },
     // dedupe: ["three"]
   },

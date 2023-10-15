@@ -13,9 +13,8 @@
   import Algorithms from '@components/Algorithms.svelte';
   import Simulator from '@components/Simulator.svelte';
   import TutorialParser from '@components/TutorialParser.svelte';
-  // import Contest from '@components/Contest.svelte';
   import ImportExport from '@components/import-export/ImportExport.svelte';
-  import Battle from '@components/Battle.svelte';
+  import Battle from '@components/battle/Battle.svelte';
   import Notification from '@components/Notification.svelte';
   import Settings from '@components/Settings.svelte';
   import { NotificationService } from '@stores/notification.service';
@@ -27,9 +26,21 @@
   import CubeDb from '@components/CubeDB.svelte';
   import Tools from '@components/Tools.svelte';
 
+  // Premium Stuff
+  import Contest from '@pcomponents/Contest.svelte';
+  import Particles from '@pcomponents/Particles.svelte';
+
   let notService = NotificationService.getInstance();
   let notifications: INotification[] = [];
   let nSub: Unsubscriber;
+
+  function handlePopState(ev: any) {
+    console.log("POP_STATE: ", ev);
+  }
+
+  function handleHashChange(ev: any) {
+    console.log("HASH_CHANGE: ", ev);
+  }
 
   onMount(() => {
     nSub = notService.notificationSub.subscribe((v) => {
@@ -50,7 +61,11 @@
   });
 </script>
 
+<svelte:window on:popstate={ handlePopState } on:hashchange={ handleHashChange }/>
+
 <Router>
+  <!-- <Particles /> -->
+
   <Frame />
   <Navbar />
 
@@ -65,7 +80,7 @@
     <Route path="/battle" component={ Battle }/>
     <Route path="/pll-trainer" component={ PllRecognition }/>
     <Route path="/simulator" component={ Simulator }/>
-    <!-- <Route path="/contest" component={ Contest }/> -->
+    <Route path="/contest" component={ Contest }/>
     <Route path="/import-export" component={ ImportExport }/>
     <Route path="/settings" component={ Settings }/>
     <Route path="/cubedb" component={ CubeDb }/>

@@ -11,9 +11,7 @@
   import Pencil from '@icons/PencilOutline.svelte';
   import Calendar from '@icons/CalendarTextOutline.svelte';
   import Copy from '@icons/ContentCopy.svelte';
-
-  // @ts-ignore
-  import Settings from '@icons/Settings.svelte';
+  import Settings from '@icons/Cog.svelte';
   import LightBulb from '@icons/LightbulbOn.svelte';
   import NoteIcon from '@icons/NoteEdit.svelte';
   import WatchOnIcon from '@icons/Wifi.svelte';
@@ -528,7 +526,7 @@
     initInputHandler();
     $group = 0;
     selectedGroup();
-    updateStatistics(false);
+    // updateStatistics(false);
     updateDevices();
 
     subs = [
@@ -680,7 +678,7 @@
           <Input
             bind:value={ timeStr } stopKeyupPropagation
             on:UENTER={ addTimeString }
-            class="w-full h-36 text-center {
+            class="w-full h-36 text-center mt-16 {
               validTimeStr(timeStr) ? '' :  'border-red-400 border-2' }
               focus-within:shadow-black"
             inpClass="text-center"/>
@@ -725,8 +723,8 @@
   <!-- Hints -->
   {#if !(battle || timerOnly || scrambleOnly) }
     <div id="hints"
-      class="bg-white bg-opacity-10 w-max p-2 { textColor } rounded-md
-        shadow-md absolute select-none left-0 top-1/4 transition-all duration-1000"
+      class="bg-backgroundLv1 w-max p-2 { textColor } rounded-md
+        shadow-md absolute select-none left-0 max-md:hidden md:top-1/4 transition-all duration-1000"
       class:isVisible={$hintDialog && !$isRunning}>
 
       <table class="inline-block align-middle transition-all duration-300" class:nshow={!$hint}>
@@ -978,7 +976,7 @@
   }
 
   #scramble span {
-    @apply lg:ml-16 lg:mr-10 mx-4 inline-block text-center max-lg:w-full lg:w-[calc(100%-15rem)];
+    @apply md:ml-16 md:mr-10 mx-4 inline-block text-center max-md:w-full md:w-[calc(100%-15rem)];
     font-size: 1.5em;
     word-spacing: 10px;
     max-height: 16rem;

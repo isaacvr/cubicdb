@@ -43,25 +43,46 @@ export function median(values: number[]): number {
 
 export function getAverage(n: number, arr: number[], calc: AverageSetting): (number | null)[] {
   let res: (number | null)[] = [];
+  let set: MultiSet<number> = new MultiSet();
+  let d = (n === 3) ? 0 : Math.ceil(n * 0.05);
   let len = arr.length - 1;
-  let elems: number[] = [];
-  let disc = (n === 3) ? 0 : Math.ceil(n * 0.05);
+  let infP = 0;
+  let sum = 0;
+  
+  let getIndex = (i: number) => len - i;
 
   for (let i = 0, maxi = len; i <= maxi; i += 1) {
-    elems.push( arr[len - i] );
+    let t = arr[ getIndex(i) ];
 
-    if ( elems.length < n ) {
-      res.push(null);
+    set.add( t );
+    infP += (isFinite(t) ? 0 : 1);
+    sum += (isFinite(t) ? t : 0);
+    
+    if ( i + 1 < n ) {
+      res.push( null );
     } else {
-      let e1 = elems.slice().sort((a, b) => isFinite(a) && isFinite(b) ? a - b : isFinite(a) ? -1 : 1);
-      let sumd = e1.reduce((s, e, p) => {
-        return (p >= disc && p < n - disc) ? s + e : s;
-      }, 0);
-      
-      res.push( isFinite(sumd) ? sumd / (n - disc * 2) : null);
+      if ( infP > d ) {
+        res.push( null );
+      } else {
+        let elems = set.toArray();
+        let s = sum;
+        
+        elems.slice(0, d).forEach(v => s -= v);
+        d && elems.slice(-d).filter(isFinite).forEach(v => s -= v);
 
-      calc === AverageSetting.GROUP && (elems.length = 0);
-      calc === AverageSetting.SEQUENTIAL && elems.shift();
+        res.push( s / (n - 2 * d) );
+      }
+
+      if ( calc === AverageSetting.SEQUENTIAL ) {
+        let t1 = arr[ getIndex(i - n + 1) ];
+        set.rem( t1 );
+        infP -= (isFinite(t1) ? 0 : 1);
+        sum -= (isFinite(t1) ? t1 : 0);
+      } else {
+        set.clear();
+        infP = sum = 0;
+      }
+      
     }
   }
 
@@ -72,32 +93,70 @@ export function getAverageS(n: number, arr: Solve[], calc: AverageSetting): (num
   return getAverage(n, arr.map(e => infinitePenalty(e) ? Infinity : e.time), calc);
 }
 
-export function bundleAverageS(N: number[], arr: Solve[], calc: AverageSetting): (number | null)[][] {
+export function bundleAverageS(N: number[], BEST: number[], BEST_IDS: string[], IS_BEST: boolean[],
+  PREV_BEST: number[], arr: Solve[], calc: AverageSetting ): (number | null)[][] {
+
   let res: (number | null)[][] = new Array(N.length).fill(0).map(_ => []);
   let sets: MultiSet<number>[] = new Array(N.length).fill(0).map(_ => new MultiSet());
   let disc = N.map(n => (n === 3) ? 0 : Math.ceil(n * 0.05));
   let len = arr.length - 1;
+  let infP: number[] = new Array(N.length).fill(0);
+  let sums: number[] = new Array(N.length).fill(0);
+  
+  let getIndex = (i: number) => len - i;
+  let getTime = (s: Solve) => infinitePenalty(s) ? Infinity : s.time;
 
   for (let i = 0, maxi = arr.length; i < maxi; i += 1) {
-    let ip = len - i;
+    let ip = getIndex(i);
+
     for (let j = 0, maxj = N.length; j < maxj; j += 1) {
-      sets[j].add( infinitePenalty(arr[ip]) ? Infinity : arr[ip].time );
+      let t = getTime( arr[ip] );
+      let d = disc[j];
+
+      sets[j].add( t );
+      infP[j] += (isFinite(t) ? 0 : 1);
+      sums[j] += (isFinite(t) ? t : 0);
+      
       if ( i + 1 < N[j] ) {
-        res[j].push(null);
+        res[j].push( null );
       } else {
-        if ( calc === AverageSetting.SEQUENTIAL || (calc === AverageSetting.GROUP && (ip + 1) % N[j] === 0) ) {
-          let d = disc[j];
-          res[j].push( sets[j].toArray().slice(d || 0, -d || N[j]).reduce((a, b) => a + b, 0) / N[j] );
+        if ( infP[j] > d ) {
+          res[j].push( null );
         } else {
-          res[j].push(null);
+          let elems = sets[j].toArray();
+          let s = sums[j];
+          
+          elems.slice(0, d).forEach(v => s -= v);
+          d && elems.slice(-d).filter(isFinite).forEach(v => s -= v);
+
+          let av = s / (N[j] - 2 * d);
+
+          if ( av < BEST[j] ) {
+            BEST[j] = adjustMillis(av);
+            BEST_IDS[j] = arr[ip]._id;
+            IS_BEST[j] = PREV_BEST[j] != Infinity;
+          }
+
+          res[j].push( av );
         }
 
-        sets[j].rem( infinitePenalty(arr[ip + N[j] - 1]) ? Infinity : arr[ip + N[j] - 1].time );
+        if ( calc === AverageSetting.SEQUENTIAL ) {
+          let t1 = getTime( arr[ getIndex(i - N[j] + 1) ]);
+          sets[j].rem( t1 );
+          infP[j] -= (isFinite(t1) ? 0 : 1);
+          sums[j] -= (isFinite(t1) ? t1 : 0);
+
+        } else {
+          sets[j].clear();
+          infP[j] = 0;
+          sums[j] = 0;
+        }
       }
     }
   }
 
   return res;
+
 }
 
 export function trendLSV(values: number[][]): { m: number, n: number } {
@@ -119,13 +178,15 @@ export function trendLSV(values: number[][]): { m: number, n: number } {
 
 export function decimateT<T>(arr: T[], width: number): T[] {
   const PPP = 2; /// Points per Pixels
-  const MAXP = width * PPP;
+  const MAXP = ~~(width * PPP);
 
   if ( arr.length <= MAXP  ) {
     return arr;
   }
 
-  return new Array(MAXP).fill(0).map((e, p) => arr[Math.round(p * (arr.length - 1) / (MAXP - 1))]);
+  const f = (arr.length - 1) / (MAXP - 1);
+
+  return (new Array(MAXP)).fill(0).map((e, p) => arr[Math.floor(p * f)]);
 }
 
 export function decimateN(arr: (number | null)[], width: number): (number | null)[] {
@@ -136,9 +197,11 @@ export function decimate(arr: Solve[], width: number): Solve[] {
   return decimateT<Solve>(arr, width);
 }
 
-export function getUpdatedStatistics(stats: Statistics, solves: Solve[], session: Session, inc?: boolean): Statistics {
-  let AON = [ 3, 5, 12, 50, 100, 200, 500, 1000, 2000 ];
-  let AVG = [ 0, 0, 0, 0, 0, 0, 0, 0, 0 ];
+export function getUpdatedStatistics(stats: Statistics, solves: Solve[], session: Session, AON: number[], inc?: boolean): {
+  stats: Statistics,
+  window: (number | null)[][],
+} {
+  let AVG: number[] = [];
   let BEST: number[] = [
     stats.Mo3.best ?? Infinity,
     stats.Ao5.best ?? Infinity,
@@ -199,52 +262,44 @@ export function getUpdatedStatistics(stats: Statistics, solves: Solve[], session
 
     return [ Math.min(ac[0], e.time), Math.max(ac[1], e.time) ];
   }, [Infinity, 0]);
-
+  
   avg = (len > 0) ? sum / len : 0;
   dev = (len > 0) ? Math.sqrt( solves.reduce((acc, e) => {
     return infinitePenalty(e) ? acc : (acc + (e.time - avg)**2 / len);
   }, 0) ) : 0;
   
-  for (let i = 0, maxi = AON.length; i < maxi; i += 1) {
-    let avgs = getAverageS(AON[i], solves, session?.settings?.calcAoX || AverageSetting.SEQUENTIAL);
-
-    for (let j = 0, maxj = avgs.length; j < maxj; j += 1) {
-      let av = avgs[j];
-
-      if ( av && av < BEST[i] ) {
-        BEST[i] = adjustMillis(av);
-        BEST_IDS[i] = solves[maxj - j - 1]._id;
-        IS_BEST[i] = PREV_BEST[i] != Infinity;
-      }
-    }
-    AVG[i] = avgs.pop() || -1;
-  }
+  let avgs = bundleAverageS(AON, BEST, BEST_IDS, IS_BEST, PREV_BEST, solves, session?.settings?.calcAoX || AverageSetting.SEQUENTIAL);
+  
+  AVG = avgs.map(a => a.slice(-1)[0] || -1);
 
   let ps = Object.assign({}, stats);
 
   return {
-    best:  { value: BEST[9], better: IS_BEST[9], best: BEST[9], prev: PREV_BEST[9], id: BEST_IDS[9] },
-    worst: { value: BEST[10], better: false, best: BEST[10], prev: PREV_BEST[10], id: BEST_IDS[10] },
-    avg:   { value: avg, better: false },
-    dev:   { value: dev, better: false },
-    count: { value: solves.length, better: false },
-    time:  { value: sum, better: false },
-    Mo3:   { value: AVG[0], better: IS_BEST[0], best: BEST[0], prev: PREV_BEST[0], id: BEST_IDS[0] },
-    Ao5:   { value: AVG[1], better: IS_BEST[1], best: BEST[1], prev: PREV_BEST[1], id: BEST_IDS[1] },
-    Ao12:  { value: AVG[2], better: IS_BEST[2], best: BEST[2], prev: PREV_BEST[2], id: BEST_IDS[2] },
-    Ao50:  { value: AVG[3], better: IS_BEST[3], best: BEST[3], prev: PREV_BEST[3], id: BEST_IDS[3] },
-    Ao100: { value: AVG[4], better: IS_BEST[4], best: BEST[4], prev: PREV_BEST[4], id: BEST_IDS[4] },
-    Ao200: { value: AVG[5], better: IS_BEST[5], best: BEST[5], prev: PREV_BEST[5], id: BEST_IDS[5] },
-    Ao500: { value: AVG[6], better: IS_BEST[6], best: BEST[6], prev: PREV_BEST[6], id: BEST_IDS[6] },
-    Ao1k:  { value: AVG[7], better: IS_BEST[7], best: BEST[7], prev: PREV_BEST[7], id: BEST_IDS[7] },
-    Ao2k:  { value: AVG[8], better: IS_BEST[8], best: BEST[8], prev: PREV_BEST[8], id: BEST_IDS[8] },
-    
-    // Penalties
-    NP:    { value: pMap.get(Penalty.NONE) || 0, better: false },
-    P2:    { value: pMap.get(Penalty.P2) || 0, better: false },
-    DNS:   { value: pMap.get(Penalty.DNS) || 0, better: false },
-    DNF:   { value: pMap.get(Penalty.DNF) || 0, better: false },
-    counter: { value: (inc) ? ps.counter.value + 1 : ps.counter.value, better: false },
+    stats: {
+      best:  { value: BEST[9], better: IS_BEST[9], best: BEST[9], prev: PREV_BEST[9], id: BEST_IDS[9] },
+      worst: { value: BEST[10], better: false, best: BEST[10], prev: PREV_BEST[10], id: BEST_IDS[10] },
+      avg:   { value: avg, better: false },
+      dev:   { value: dev, better: false },
+      count: { value: solves.length, better: false },
+      time:  { value: sum, better: false },
+      Mo3:   { value: AVG[0], better: IS_BEST[0], best: BEST[0], prev: PREV_BEST[0], id: BEST_IDS[0] },
+      Ao5:   { value: AVG[1], better: IS_BEST[1], best: BEST[1], prev: PREV_BEST[1], id: BEST_IDS[1] },
+      Ao12:  { value: AVG[2], better: IS_BEST[2], best: BEST[2], prev: PREV_BEST[2], id: BEST_IDS[2] },
+      Ao50:  { value: AVG[3], better: IS_BEST[3], best: BEST[3], prev: PREV_BEST[3], id: BEST_IDS[3] },
+      Ao100: { value: AVG[4], better: IS_BEST[4], best: BEST[4], prev: PREV_BEST[4], id: BEST_IDS[4] },
+      Ao200: { value: AVG[5], better: IS_BEST[5], best: BEST[5], prev: PREV_BEST[5], id: BEST_IDS[5] },
+      Ao500: { value: AVG[6], better: IS_BEST[6], best: BEST[6], prev: PREV_BEST[6], id: BEST_IDS[6] },
+      Ao1k:  { value: AVG[7], better: IS_BEST[7], best: BEST[7], prev: PREV_BEST[7], id: BEST_IDS[7] },
+      Ao2k:  { value: AVG[8], better: IS_BEST[8], best: BEST[8], prev: PREV_BEST[8], id: BEST_IDS[8] },
+      
+      // Penalties
+      NP:    { value: pMap.get(Penalty.NONE) || 0, better: false },
+      P2:    { value: pMap.get(Penalty.P2) || 0, better: false },
+      DNS:   { value: pMap.get(Penalty.DNS) || 0, better: false },
+      DNF:   { value: pMap.get(Penalty.DNF) || 0, better: false },
+      counter: { value: (inc) ? ps.counter.value + 1 : ps.counter.value, better: false },
+    },
+    window: avgs
   };
 }
 
