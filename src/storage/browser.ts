@@ -43,6 +43,7 @@ export class BrowserAdaptor implements IPC {
   // Solves
   getSolves() {}
   addSolve(s: Solve) {}
+  addSolves(s: Solve[]) {}
   updateSolve(s: Solve) {}
   removeSolves(s: Solve[]) {}
   
@@ -98,4 +99,19 @@ export class BrowserAdaptor implements IPC {
   cancelBluetoothRequest() {}
   pairingBluetoothResponse() {}
   handleBluetooth() {}
+
+  cacheCheckImage(hash: string): Promise<boolean> {
+    return Promise.resolve(false);
+  }
+
+  cacheGetImage(hash: string): Promise<string> {
+    return Promise.resolve('');
+  }
+
+  cacheSaveImage(hash: string): Promise<void> {
+    return Promise.resolve();
+  }
+
+  getAllDisplays() { return Promise.resolve([]); }
+  useDisplay(id: number) { return Promise.resolve(); }
 }

@@ -12,6 +12,7 @@ import * as p333 from './scramble_333';
 import * as pSq1 from './scramble_sq1';
 import * as pSkewb from './skewb';
 import * as pUtils from './utilscramble';
+import * as pKilo from './kilominx';
 
 export {
   p133,
@@ -28,4 +29,5 @@ export {
   pSq1,
   pSkewb,
   pUtils,
+  pKilo,
 }

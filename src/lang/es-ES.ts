@@ -61,6 +61,7 @@ export const Spanish: Language = {
     language: 'Idioma',
     appFont: 'Fuente',
     timerFont: 'Fuente del timer',
+    screen: 'Pantalla',
 
     // Notifications
     saved: 'Hecho!',

@@ -4,6 +4,7 @@ import type { Piece } from './../classes/puzzle/Piece';
 import type { Vector3D } from '../classes/vector3d';
 import type { CubeMode, SCRAMBLE_MENU } from "../constants";
 import type { Writable, Readable } from 'svelte/store';
+import type { Display } from 'electron';
 
 export const PuzzleTypeName = [
   'rubik', 'skewb', 'square1', 'pyraminx', 'axis', 'fisher', 'ivy'
@@ -421,6 +422,7 @@ export interface IPC {
   
   getSolves: () => any;
   addSolve: (s: Solve) => any;
+  addSolves: (s: Solve[]) => any;
   updateSolve: (s: Solve) => any;
   removeSolves: (s: Solve[]) => any;
   
@@ -452,6 +454,13 @@ export interface IPC {
   cancelBluetoothRequest: () => any; 
   pairingBluetoothResponse: () => any; 
   handleBluetooth: (fn: Function) => any;
+
+  cacheCheckImage: (hash: string) => Promise<boolean>;
+  cacheGetImage: (hash: string) => Promise<string>;
+  cacheSaveImage: (hash: string) => Promise<void>;
+
+  getAllDisplays: () => Promise<Display[]>;
+  useDisplay: (id: number) => Promise<void>;
 }
 
 export interface PDFOptions {
@@ -571,6 +580,7 @@ export interface Language {
     language: string;
     appFont: string;
     timerFont: string;
+    screen: string;
 
     // Notifications
     saved: string;

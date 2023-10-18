@@ -9,6 +9,7 @@ for (let i = 0; i < 32; ++i) {
     Cnk[i][j] = 0;
   }
 }
+
 for (let i = 0; i < 32; ++i) {
   Cnk[i][0] = Cnk[i][i] = 1;
   fact[i + 1] = fact[i] * (i + 1);
@@ -1154,22 +1155,28 @@ export function rndEl(x: any[]) {
   return x[~~(randGen.random() * x.length)];
 }
 
-export function rn(n) {
+export function rn(n: number) {
   return ~~(randGen.random() * n);
 }
 
-export function rndPerm(n) {
+export function rndPerm(n: number, isEven?: boolean) {
+  let p = 0;
   let arr = [];
   for (let i = 0; i < n; i++) {
     arr[i] = i;
   }
   for (let i = 0; i < n - 1; i++) {
-    circle(arr, i, i + rn(n - i));
+    let k = rn(n - i);
+    circle(arr, i, i + k);
+    p ^= Number(k != 0);
+  }
+  if (isEven && p) {
+    circle(arr, 0, 1);
   }
   return arr;
 }
 
-export function rndProb(plist) {
+export function rndProb(plist: number[]) {
   let cum = 0;
   let curIdx = 0;
   for (let i = 0; i < plist.length; i++) {
@@ -1239,12 +1246,83 @@ export function valuedArray(len, val) {
 }
 
 export function idxArray(arr: any[], idx: number) {
-  var ret = [];
-  for (var i = 0; i < arr.length; i++) {
+  let ret = [];
+  for (let i = 0; i < arr.length; i++) {
     ret.push(arr[i][idx]);
   }
   return ret;
 }
+
+export const minx = (function() {
+  let U = 0, R = 1, F = 2, L = 3, BL = 4, BR = 5, DR = 6, DL = 7, DBL = 8, B = 9, DBR = 10, D = 11;
+  let oppFace = [D, DBL, B, DBR, DR, DL, BL, BR, R, F, L, U];
+  let adjFaces = [
+    [BR, R, F, L, BL], //U
+    [DBR, DR, F, U, BR], //R
+    [DR, DL, L, U, R], //F
+    [DL, DBL, BL, U, F], //L
+    [DBL, B, BR, U, L], //BL
+    [B, DBR, R, U, BL], //BR
+    [D, DL, F, R, DBR], //DR
+    [D, DBL, L, F, DR], //DL
+    [D, B, BL, L, DL], //DBL
+    [D, DBR, BR, BL, DBL], //B
+    [D, DR, R, BR, B], //DBR
+    [DR, DBR, B, DBL, DL]  //D
+  ];
+
+  // wide: 0=single, 1=all, 2=all but single
+  // state: corn*5, edge*5, center*1
+  function doMove(state: number[], face: number, pow: number, wide: number) {
+    pow = (pow % 5 + 5) % 5;
+    if (pow == 0) {
+      return;
+    }
+    let base = face * 11;
+    let adjs = [];
+    let swaps: number[][] = [[], [], [], [], []];
+    for (let i = 0; i < 5; i++) {
+      let aface = adjFaces[face][i];
+      let ridx = adjFaces[aface].indexOf(face);
+      if (wide == 0 || wide == 1) {
+        swaps[i].push(base + i);
+        swaps[i].push(base + i + 5);
+        swaps[i].push(aface * 11 + ridx % 5 + 5);
+        swaps[i].push(aface * 11 + ridx % 5);
+        swaps[i].push(aface * 11 + (ridx + 1) % 5);
+      }
+      if (wide == 1 || wide == 2) {
+        swaps[i].push(aface * 11 + 10);
+        for (let j = 1; j < 5; j++) {
+          swaps[i].push(aface * 11 + (ridx + j) % 5 + 5);
+        }
+        for (let j = 2; j < 5; j++) {
+          swaps[i].push(aface * 11 + (ridx + j) % 5);
+        }
+        let ii = 4 - i;
+        let opp = oppFace[face];
+        let oaface = adjFaces[opp][ii];
+        let oridx = adjFaces[oaface].indexOf(opp);
+        swaps[i].push(opp * 11 + ii);
+        swaps[i].push(opp * 11 + ii + 5);
+        swaps[i].push(oaface * 11 + 10);
+        for (let j = 0; j < 5; j++) {
+          swaps[i].push(oaface * 11 + (oridx + j) % 5 + 5);
+          swaps[i].push(oaface * 11 + (oridx + j) % 5);
+        }
+      }
+    }
+    for (let i = 0; i < swaps[0].length; i++) {
+      acycle(state, [swaps[0][i], swaps[1][i], swaps[2][i], swaps[3][i], swaps[4][i]], pow);
+    }
+  }
+
+  return {
+    doMove: doMove,
+    oppFace: oppFace,
+    adjFaces: adjFaces
+  }
+})();
 
 export const SOLVED_FACELET =
   "UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB";

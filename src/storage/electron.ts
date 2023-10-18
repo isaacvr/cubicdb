@@ -74,6 +74,10 @@ export class ElectronAdaptor implements IPC {
     this.ipc.addSolve(s);
   }
 
+  addSolves(s: Solve[]) {
+    this.ipc.addSolves(s);
+  }
+
   updateSolve(s: Solve) {
     this.ipc.updateSolve(s);
   }
@@ -168,5 +172,25 @@ export class ElectronAdaptor implements IPC {
 
   handleBluetooth(fn: Function) {
     this.ipc.handleBluetooth(fn);
+  }
+
+  cacheCheckImage(hash: string): Promise<boolean> {
+    return this.ipc.cacheCheckImage(hash);
+  }
+
+  cacheGetImage(hash: string): Promise<string> {
+    return this.ipc.cacheGetImage(hash);
+  }
+
+  cacheSaveImage(hash: string): Promise<void> {
+    return this.ipc.cacheSaveImage(hash);
+  }
+
+  getAllDisplays() {
+    return this.ipc.getAllDisplays();
+  }
+
+  useDisplay(id: number) {
+    return this.ipc.useDisplay(id);
   }
 }

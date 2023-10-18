@@ -11,6 +11,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   handleCards: (dir) => ipc.on('cards', dir),
   
   addSolve: (s) => ipc.send('add-solve', s),
+  addSolves: (s) => ipc.send('add-solves', s),
   getSolves: () => ipc.send('get-solves'),
   updateSolve: (s) => ipc.send('update-solve', s),
   removeSolves: (s) => ipc.send('remove-solves', s),
@@ -61,4 +62,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   bluetoothPairingResponse: (response) => ipcRenderer.send('bluetooth-pairing-response', response)
   
   */
+
+  cacheCheckImage: async (hash) => await ipc.invoke('check-image', hash),
+  cacheGetImage: async (hash) => await ipc.invoke('get-image', hash),
+  cacheSaveImage: async (hash, data) => await ipc.invoke('save-image', hash, data),
+
+  getAllDisplays: () => ipc.invoke('get-all-displays'),
+  useDisplay: (id) => ipc.invoke('use-display', id),
 });

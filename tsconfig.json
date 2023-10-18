@@ -32,8 +32,8 @@
       "@public/*": ["public/*"],
 
       // PREMIUM
-      "@pcomponents": ["src/cubedb-premium/components/*"],
-      "@pclasses": ["src/cubedb-premium/classes/*"]
+      "@pcomponents/*": ["src/cubedb-premium/components/*"],
+      "@pclasses/*": ["src/cubedb-premium/classes/*"]
     }
   },
   "include": ["src/**/*.d.ts", "src/**/*.ts", "src/**/*.js", "src/**/*.svelte", "public/assets/audio-processor.js"],

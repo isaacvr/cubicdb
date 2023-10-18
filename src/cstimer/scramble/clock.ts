@@ -22,7 +22,7 @@ let moveArr = [
 	[11, 0, 11, 0, 0, 0, 11, 0, 11, 1, 1, 1, 1, 1] //ALL
 ];
 
-function select(n, k, idx) {
+function select(n: number, k: number, idx: number) {
 	let r = k;
 	let val = 0;
 	for (let i = n - 1; i >= 0; i--) {
@@ -49,20 +49,20 @@ function randomState() {
  *	@return the length of the solution (the number of non-zero elements in the solution array)
 	*		-1: invalid input
 	*/
-function Solution(clock, solution) {
+function Solution(clock: number[], solution: number[]) {
 	if (clock.length != 14 || solution.length != 18) {
 		return -1;
 	}
 	return solveIn(14, clock, solution);
 }
 
-function swap(arr, row1, row2) {
+function swap(arr: any[], row1: number, row2: number) {
 	let tmp = arr[row1];
 	arr[row1] = arr[row2];
 	arr[row2] = tmp;
 }
 
-function addTo(arr, row1, row2, startidx, mul) {
+function addTo(arr: number[][], row1: number, row2: number, startidx: number, mul: number) {
 	let length = arr[0].length;
 	for (let i = startidx; i < length; i++) {
 		arr[row2][i] = (arr[row2][i] + arr[row1][i] * mul) % 12;
@@ -72,7 +72,7 @@ function addTo(arr, row1, row2, startidx, mul) {
 //linearly dependent
 let ld_list = [7695, 42588, 47187, 85158, 86697, 156568, 181700, 209201, 231778];
 
-function solveIn(k, numbers, solution) {
+function solveIn(k: number, numbers: number[], solution: number[]) {
 	let n = 18;
 	let min_nz = k + 1;
 
@@ -95,7 +95,7 @@ function solveIn(k, numbers, solution) {
 				map[cnt++] = j;
 			}
 		}
-		let arr = [];
+		let arr: number[][] = [];
 		for (let i = 0; i < 14; i++) {
 			arr[i] = [];
 			for (let j = 0; j < k; j++) {
@@ -137,7 +137,7 @@ function solveIn(k, numbers, solution) {
 	return min_nz == k + 1 ? -1 : min_nz;
 }
 
-function GaussianElimination(arr) {
+function GaussianElimination(arr: number[][]) {
 	let m = 14;
 	let n = arr[0].length;
 	for (let i = 0; i < n - 1; i++) {
@@ -181,7 +181,7 @@ function GaussianElimination(arr) {
 	return 0;
 }
 
-function backSubstitution(arr) {
+function backSubstitution(arr: number[][]) {
 	let n = arr[0].length;
 	for (let i = n - 2; i > 0; i--) {
 		for (let j = i - 1; j >= 0; j--) {
@@ -194,9 +194,9 @@ function backSubstitution(arr) {
 
 let turns = ["UR", "DR", "DL", "UL", "U", "R", "D", "L", "ALL"];
 
-function getScramble(type) {
+function getScramble(type?: any) {
 	let rndarr = randomState();
-	let solution = [];
+	let solution: number[] = [];
 	solution.length = 18;
 	Solution(rndarr, solution);
 	let scramble = "";

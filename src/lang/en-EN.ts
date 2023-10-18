@@ -52,6 +52,7 @@ export const English: Language = {
     language: 'Language',
     appFont: 'Application font',
     timerFont: 'Timer font',
+    screen: 'Screen',
 
     // Notifications
     saved: 'Saved',

@@ -107,13 +107,23 @@
           let ss = <Session> e.data;
           rem -= 1;
           if ( cubeData ) {
-            for (let i = 0, maxi = cubeData.solves.length; i < maxi; i += 1) {
-              let sv = cubeData.solves[i];
-              if ( ss.tName === sv.session ) {
-                sv.session = ss._id;
-                dataService.addSolve(sv);
+            let solves = cubeData.solves.filter(s => {
+              if ( s.session === ss.tName ) {
+                s.session = ss._id;
+                return true;
               }
-            }
+
+              return false;
+            });
+
+            dataService.addSolves(solves);
+            // for (let i = 0, maxi = cubeData.solves.length; i < maxi; i += 1) {
+            //   let sv = cubeData.solves[i];
+            //   if ( ss.tName === sv.session ) {
+            //     sv.session = ss._id;
+            //     dataService.addSolve(sv);
+            //   }
+            // }
           }
           if ( rem === 0 ) {
             cubeData = null;

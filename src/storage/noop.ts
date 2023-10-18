@@ -20,6 +20,7 @@ export class NoopAdaptor implements IPC {
   
   getSolves() {}
   addSolve(s: Solve) {}
+  addSolves(s: Solve[]) {}
   updateSolve(s: Solve) {}
   removeSolves(s: Solve[]) {}
   

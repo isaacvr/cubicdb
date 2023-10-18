@@ -657,7 +657,7 @@
   <!-- Timer -->
   {#if !scrambleOnly}
     <div id="timer" class={ "absolute text-9xl flex flex-col items-center justify-center " + 
-      ($session?.settings?.input === 'GAN Cube' ? 'bottom-8 h-auto' : 'top-1/3 h-32') }>
+      ($session?.settings?.input === 'GAN Cube' ? 'bottom-8 h-auto' : 'top-[40%] h-32') }>
 
       <!-- Cube3D -->
       {#if $session?.settings?.input === 'GAN Cube'}

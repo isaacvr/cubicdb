@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, shell, powerSaveBlocker } = require('electron');
+const { app, BrowserWindow, ipcMain, shell, powerSaveBlocker, screen } = require('electron');
 const { autoUpdater } = require('electron-updater');
 const { join, resolve } = require('path');
 const { existsSync, mkdirSync, writeFileSync, unlinkSync, createWriteStream, copyFileSync } = require('fs');
@@ -10,7 +10,8 @@ const electronReload = require('electron-reload');
 const archiver = require('archiver');
 const express = require('express');
 const eApp = express();
-const http = require('http');
+const http = require('node:http');
+const fs = require('node:fs/promises');
 
 const args = process.argv.slice(1), serve = args.some(val => val === '--serve');
 
@@ -19,6 +20,11 @@ let prod = app.isPackaged;
 let params = [ prod ? appPath.replace(/app\.asar$/, '') : appPath, 'src', 'database' ];
 let dbFixedPath = join.apply(null, params);
 let dbPath = app.getPath('userData');
+let cachePath = join(dbPath, 'ImgCache');
+
+fs.mkdir(cachePath, { recursive: true })
+  .then(() => console.log('Cache path created!'))
+  .catch((err) => console.log('CACHE ERROR: ', err));
 
 const fixedResources = [ 'algs.db', 'tutorials.db' ];
 
@@ -28,7 +34,6 @@ fixedResources.forEach((res) => {
     copyFileSync( join(dbFixedPath, res), join(dbPath, res) );
   }
 });
-
 
 let Algorithms = new NeDB({ filename: resolve(dbPath, 'algs.db'), autoload: true });
 let Tutorials = new NeDB({ filename: resolve(dbPath, 'tutorials.db'), autoload: true });
@@ -125,7 +130,7 @@ ipcMain.on('add-session', (event, arg) => {
 });
 
 ipcMain.on('remove-session', (event, arg) => {
-  Solves.remove({ session: arg._id }, function(err) {
+  Solves.remove({ session: arg._id }, { multi: true }, function(err) {
     Sessions.remove({ _id: arg._id }, function(err1) {
       return event.sender.send('session', [ 'remove-session', err1 ? null : arg ]);
     });
@@ -157,6 +162,12 @@ ipcMain.on('get-solves', (event) => {
 ipcMain.on('add-solve', (event, arg) => {
   Solves.insert(arg, function(err, solve) {
     return event.sender.send('solves', ['add-solve', err ? null : [solve] ]);
+  });
+});
+
+ipcMain.on('add-solves', (event, arg) => {
+  Solves.insert(arg, function(err, solves) {
+    return event.sender.send('solves', ['add-solves', err ? null : [solves] ]);
   });
 });
 
@@ -306,6 +317,51 @@ ipcMain.on('reveal-file', (_, dir) => {
   exec('explorer /select,' + dir);
 });
 
+// Cache
+ipcMain.handle('check-image', async (_, hash) => {
+  return (await fs.stat( join(cachePath, hash) )).isFile();
+});
+
+ipcMain.handle('get-image', async (_, hash) => {
+  return (await fs.readFile( join(cachePath, hash) ));
+});
+
+ipcMain.handle('save-image', async (_, hash, data) => {
+  return await fs.writeFile( join(cachePath, hash), data );
+});
+
+// Clean unparented solves
+Sessions.find({}, (err, ss) => {
+  if ( err ) {
+    return console.log('Error reading sessions');
+  }
+
+  let ids = new Set(ss.map(s => s._id));
+  let ids1 = new Set();
+
+  Solves.find({}, (err1, svs) => {
+    if ( err1 ) {
+      return console.log('Error reading solves');
+    }
+
+    let count = 0;
+
+    for (let i = 0, maxi = svs.length; i < maxi; i += 1) {
+      if ( !ids.has( svs[i].session ) ) {
+        // Solves.remove({ _id: svs[i]._id }, () => {});
+        // count += 1;
+        ids1.add( svs[i].session );
+      }
+    }
+
+    let sArr = [ ...ids1 ];
+
+    Solves.remove({ session: { $in: sArr } }, { multi: true });
+
+    console.log("Unparented solves: ", count, "/", svs.length);
+  });
+});
+
 // AutoUpdater
 autoUpdater.disableWebInstaller = true;
 
@@ -354,7 +410,6 @@ ipcMain.on('sleep', (_, sleep) => {
 });
 
 function createWindow() {
-
   let win = new BrowserWindow({
     x: 0,
     y: 0,
@@ -403,7 +458,20 @@ function createWindow() {
     win.webContents.send('bluetooth', ['pairing-request', details]);
   });
 
-  /// Other Stuff
+  // Second screen
+  ipcMain.handle('get-all-displays', () => {
+    return screen.getAllDisplays();
+  });
+
+  ipcMain.handle('use-display', (_, id) => {
+    let dsp = screen.getAllDisplays().find(d => d.id === id);
+
+    if ( dsp ) {
+      win.setBounds( dsp.workArea );
+    }
+  });
+
+  // Other Stuff
   ipcMain.on('minimize', () => {
     // @ts-ignore
     win.minimize();

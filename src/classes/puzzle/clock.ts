@@ -65,11 +65,7 @@ export function CLOCK(): PuzzleInterface {
         continue;
       }
 
-      for (let x = 0; x < 3; x += 1) {
-        for (let y = 0; y < 3; y += 1) {
-          mat[x][y] = 0;
-        }
-      }
+      mat.forEach(m => m.fill(0));
 
       for (let j = 0, mask = 8; j < 4; j += 1, mask >>= 1) {
         if ( isNaN(up) || isNaN(down) ) {
@@ -94,6 +90,8 @@ export function CLOCK(): PuzzleInterface {
           for (let y = 0; y < 3; y += 1) {
             if ( mat[x][y] ) {
               add(upFace, x, y, up);
+
+              // Handle back corners
               if ( (x & 1) == 0 && (y & 1) == 0 ) {
                 add(1 - upFace, x, 2 - y, -up);
               }

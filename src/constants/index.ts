@@ -140,7 +140,7 @@ export interface SCRAMBLE_MENU {
 }
 
 const R222 = [ "222so", "222o", "2223", "222eg", "222eg0", "222eg1", "222eg2", "222nb" ];
-const R333 = [ "333", "333ni", "333fm", "333oh", "333o", "edges", "corners", "ll", "zbll", "cll", "ell", "lse", "lsemu", "cmll", "f2l", "lsll2", "2gll", "zbls", "zzll", "oll", "pll", "eoline", "easyc", "333ft", "2gen", "2genl", "roux", "3gen_F", "3gen_L", "RrU", "half", "lsll" ];
+const R333 = [ "333", "333ni", "333fm", "333oh", "333o", "edges", "corners", "ll", "zbll", "cll", "ell", "lse", "lsemu", "cmll", "f2l", "lsll2", "2gll", "zbls", "zzll", "oll", "pll", "eoline", "easyc", "333ft", "333custom", "2gen", "2genl", "roux", "3gen_F", "3gen_L", "RrU", "half", "lsll", "coll", "eols", "wvls", "vls", "easyxc", "sbrx", "mt3qb", "mteole", "mttdr", "mt6cp", "mtcdrll", "mtl5ep", "ttll", "222tcp", "222tcn", "222lsall",  ];
 const R444 = [ "444wca", "444bld", "444m", "444", "444yj", "4edge", "RrUu" ];
 const R555 = [ "555wca", "555bld", "555", "5edge" ];
 const R666 = [ "666wca", "666si", "666p", "666s", "6edge" ];

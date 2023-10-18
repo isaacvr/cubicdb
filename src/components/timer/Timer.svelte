@@ -76,13 +76,14 @@
   const notService = NotificationService.getInstance();
 
   /// GENERAL
-  let modes: { 0: string, 1: string, 2: number }[] = [];
+  let modes: { 0: string, 1: string, 2: number }[] = MENU[0][1];
   let filters: string[] = [];
   let sessions: Session[] = [];  
   let subs: Unsubscriber[] = [];
   let tabs: TabGroup;
   let dispatch = createEventDispatcher();
   let sessionsTab: SessionsTab;
+  let mounted = false;
   
   /// MODAL
   let openEdit = false;
@@ -166,7 +167,6 @@
   }
 
   function updateStatistics(inc ?: boolean) {
-    console.time('updateStatistics');
     let st = getUpdatedStatistics($stats, $solves, $session, $AON, inc);
     $stats = st.stats;
     $STATS_WINDOW = st.window;
@@ -197,7 +197,6 @@
         confettiColors: [ '#009d54', '#3d81f6', '#ffeb3b' ]
       });
     }
-    console.timeEnd('updateStatistics');
   }
 
   function updateSolves() {
@@ -212,9 +211,7 @@
   }
 
   function sortSolves() {
-    console.time('sort');
     $allSolves = $allSolves.sort((a, b) => b.date - a.date);
-    console.timeEnd('sort');
     updateSolves();
   }
 
@@ -271,7 +268,7 @@
       ...all.pScramble.options.get(md),
       rounded: true,
       headless: true
-    } as PuzzleOptions);
+    } as PuzzleOptions, false, false);
 
     generateCubeBundle([cb], 500).then(gen => {
       let subsc = gen.subscribe((c: any) => {
@@ -287,6 +284,8 @@
   }
 
   export function initScrambler(scr?: string, _mode ?: string, _prob ?: number) {
+    if ( !mounted ) return;
+
     if ( !$mode ) {
       $mode = MENU[ $group || 0 ][1][0];
     }
@@ -308,7 +307,7 @@
       $scramble = ScrambleParser.parseNNNString($scramble);
     }
 
-    const dialogModes = ["333", "333fm" ,"333oh" ,"333o" ,"easyc" ,"333ft"];
+    const dialogModes = ["333", "333fm" ,"333oh" ,"333o" ,"easyc" ,"333ft", "edges", "corners", "2gen", "2genl"];
 
     if ( dialogModes.indexOf(md) > -1 ) {
       $cross = solve_cross($scramble).map(e => e.map(e1 => e1.trim()).join(' '))[0];
@@ -323,6 +322,8 @@
 
     if ( all.pScramble.options.has(md) && $session?.settings?.genImage ) {
       updateImage(md);
+    } else {
+      $preview = PX_IMAGE;
     }
   }
 
@@ -387,6 +388,8 @@
   }
 
   onMount(() => {
+    mounted = true;
+
     if ( timerOnly && scrambleOnly ) {
       timerOnly = scrambleOnly = false;
     }

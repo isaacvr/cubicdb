@@ -4,6 +4,7 @@ import { GANInput } from '@components/timer/input-handlers/GAN';
 import { QiYiSmartTimerInput } from '@components/timer/input-handlers/QY-Timer';
 import type { Algorithm, RawCard, Solve, Session, Tutorial, Sheet, CubeEvent, IPC, PDFOptions, UpdateCommand } from '@interfaces';
 import { ElectronAdaptor, BrowserAdaptor } from '@storage/index';
+import type { Display } from 'electron';
 import type { Writable } from 'svelte/store';
 import { writable } from 'svelte/store';
 
@@ -176,6 +177,15 @@ export class DataService {
     this.ipc.addSolve(ts);
   }
 
+  addSolves(s: Solve[]) {
+    this.ipc.addSolves( s.map(sv => {
+      let ts: Solve = Object.assign({}, sv);
+      delete ts._id;
+      
+      return ts;
+    }) );
+  }
+
   updateSolve(s: Solve) {
     this.ipc.updateSolve(s);
   }
@@ -285,5 +295,25 @@ export class DataService {
           inp.fromDevice( device ).then(res).catch(rej);
         }).catch(rej);
     });
+  }
+
+  cacheCheckImage(hash: string): Promise<boolean> {
+    return this.ipc.cacheCheckImage(hash);
+  }
+
+  cacheGetImage(hash: string): Promise<string> {
+    return this.ipc.cacheGetImage(hash);
+  }
+
+  cacheSaveImage(hash: string): Promise<void> {
+    return this.ipc.cacheSaveImage(hash);
+  }
+
+  getAllDisplays(): Promise<Display[]> {
+    return this.ipc.getAllDisplays();
+  }
+
+  useDisplay(id: number): Promise<void> {
+    return this.ipc.useDisplay(id);
   }
 }

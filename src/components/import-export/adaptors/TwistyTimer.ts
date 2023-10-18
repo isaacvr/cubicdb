@@ -112,9 +112,14 @@ export class TwistyTimer implements CubeDBAdaptor {
 
       let time = +(parts.shift()?.slice(1, -1) || 0) * 1000;
       let scramble: string = parts.shift()?.slice(1, -1) || '';
-      let date = moment(parts.shift()?.slice(1, -1)).toDate().getDate();
+      let date = moment(parts.shift()?.slice(1, -1)).toDate().getTime();
       let penalty: string = parts.shift() || '';
       let pz = identifyPuzzle(scramble);
+
+      if  ( s.name == 'My session' ) {
+        console.log("PZ: ", pz);
+        s.name = pz.name + '-' + Math.random().toString().slice(-4);
+      }
 
       res.solves.push({
         date,

@@ -29,6 +29,7 @@
   // Premium Stuff
   import Contest from '@pcomponents/Contest.svelte';
   import Particles from '@pcomponents/Particles.svelte';
+  import Space from '@pcomponents/Space.svelte';
 
   let notService = NotificationService.getInstance();
   let notifications: INotification[] = [];
@@ -65,6 +66,7 @@
 
 <Router>
   <!-- <Particles /> -->
+  <!-- <Space /> -->
 
   <Frame />
   <Navbar />

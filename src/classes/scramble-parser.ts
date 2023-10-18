@@ -56,7 +56,6 @@ export class ScrambleParser {
     
     // Carrot Notation
     if ( !/R|D/.test(scramble) ) {
-      // console.info('Carrot Notation');
       let moves = scramble.match(/[+-]{2}|U'?/g);
       
       if ( !moves ) {
@@ -156,14 +155,49 @@ export class ScrambleParser {
 
   static parseClock(scramble: string) {
     let parts = scramble.replace('\\n', ' ').split(/\s+/g);
-    let res = [];
+    let res: number[][] = [];
+    
     if ( scramble.indexOf('/') > -1 ) { /// Concise notation
-      // let parts = scramble.split('/');
-      console.info('Concise notation not implemented yet!');
+      const pins = [ 0xc, 0x5, 0x3, 0xa, 0x7, 0xb, 0xe, 0xd, 0xf, 0x0, 0 ];
+
+      let parts = scramble.replace(/\s+/g, '').split('/');
+
+      if ( parts.length != 11 ) return res;
+
+      const BOTH_REG = /^\((-?\d),(-?\d)\)$/;
+      const SINGLE_REG = /^\((-?\d)\)$/;
+
+      for (let i = 0, maxi = parts.length; i < maxi; i += 1) {
+        let mv = parts[i];
+
+        if ( BOTH_REG.test(mv) && i < 4 ) {
+          let moves = mv.replace(BOTH_REG, '$1 $2').split(" ").map(Number);
+
+          res.push([ pins[i], moves[0], 0 ]);
+          res.push([ -1, -1, -1 ]);
+          res.push([ (i & 1) ? pins[i] : pins[(i + 2) & 3], -moves[1], 0 ]);
+          res.push([ -1, -1, -1 ]);
+        } else if ( SINGLE_REG.test(mv) ) {
+          let move = +mv.replace(SINGLE_REG, '$1');
+          
+          if (i === 9) {
+            res.push([-1, -1, -1]);
+            res.push([ 0xf, -move, 0 ]);
+            res.push([-1, -1, -1]);
+          } else {
+            res.push([ pins[i], move, 0 ]);
+          }
+        } else {
+          let pin = parseInt(mv.split('').map(s => s === 'U' ? 1 : 0).join(''), 2);
+          res.push([pin, NaN, NaN]);
+        }
+      }
+
     } else if ( !/(u|d)/.test(scramble) ) { /// WCA notation
-      let letters = [ 'UL', 'UR', 'DL', 'DR', 'ALL', 'U', 'R', 'D', 'L' ];
-      let pins = [ 0x8, 0x4, 0x2, 0x1, 0xf, 0xc, 0x5, 0x3, 0xa ];
-      let up = 1;
+      const letters = [ 'UL', 'UR', 'DL', 'DR', 'ALL', 'U', 'R', 'D', 'L' ];
+      const pins = [ 0x8, 0x4, 0x2, 0x1, 0xf, 0xc, 0x5, 0x3, 0xa ];
+      const up = 1;
+
       for (let i = 0, maxi = parts.length; i < maxi; i += 1) {
         if ( parts[i] === 'y2' ) {
           res.push([-1, -1, -1]);
@@ -171,7 +205,7 @@ export class ScrambleParser {
           let cmd = [0, 0, 0];
           for (let j = 0, maxj = letters.length; j < maxj; j += 1) {
             if ( parts[i].startsWith(letters[j]) ) {
-              let turns = parseInt(parts[i].substr(letters[j].length, 1));
+              let turns = parseInt(parts[i].slice(letters[j].length, letters[j].length + 1));
               if ( parts[i].indexOf('-') > -1 ) {
                 turns = -turns;
               }
@@ -186,7 +220,6 @@ export class ScrambleParser {
         }
       }
     } else { /// JAAP notation
-      // console.info('JAAP notation not implemented yet!');
       // let pins = '';
       // let d = 0;
       // let u = 0;

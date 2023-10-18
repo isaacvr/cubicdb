@@ -68,3 +68,7 @@ export function search(v: number, arr: number[], bound?: boolean): number {
 
   return bound ? ini : -1;
 }
+
+export function minmax(v: number, a: number, b: number) {
+  return Math.max(a, Math.min(v, b));
+}

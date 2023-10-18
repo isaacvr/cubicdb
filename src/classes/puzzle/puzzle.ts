@@ -328,10 +328,10 @@ export class Puzzle {
     return res.join(" ");
   }
 
-  static fromSequence(scramble: string, options: PuzzleOptions, inv ?: boolean): Puzzle {
+  static fromSequence(scramble: string, options: PuzzleOptions, inv = false, move = true): Puzzle {
     let p = new Puzzle(options);
     let s = (inv) ? Puzzle.inverse(options.type, scramble) : scramble;
-    p.move(s);
+    move && p.move(s);
     p.options.sequence = s;
     return p;
   }

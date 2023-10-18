@@ -5,13 +5,14 @@
   import { NotificationService } from "@stores/notification.service";
   import { onDestroy, onMount } from "svelte";
   import { derived, type Readable, type Unsubscriber } from "svelte/store";
-  import Button from "./material/Button.svelte";
-  import Select from "./material/Select.svelte";
+  import Button from "@material/Button.svelte";
+  import Select from "@material/Select.svelte";
   import { DataService } from "@stores/data.service";
-
   import { version } from "@stores/version.store";
   import { randomUUID } from "@helpers/strings";
   import { timer } from "@helpers/timer";
+  import type { Display } from "electron";
+  import ScreenIcon from '@icons/Monitor.svelte';
 
   const notService = NotificationService.getInstance();
 
@@ -43,6 +44,7 @@
   let canCheckUpdate = true;
   let dTime = 10587;
   let itv: NodeJS.Timer;
+  let displays: Display[] = [];
   
   function save() {
     localStorage.setItem('app-font', appFont);
@@ -80,11 +82,21 @@
     dataService.update('download');
   }
 
+  function updateDisplays() {
+    dataService.getAllDisplays().then(res => {
+      displays = res;
+    });
+  }
+
+  function useDisplay(id: number) {
+    dataService.useDisplay(id);
+  }
+
   onMount(() => {
+    updateDisplays();
+
     uSub = dataService.updateSub.subscribe((ev) => {
       if ( !ev ) return;
-
-      console.log("UPDATE: ", ev);
 
       switch( ev.type ) {
         case 'check': {
@@ -180,6 +192,24 @@
     <p
       style="font-family: { timerFont };"
       class="bg-black bg-opacity-60 p-2 rounded-md text-gray-300 text-6xl">{ timer(dTime, true) }</p>
+  </div>
+  <hr/>
+
+  <!-- Displays -->
+  <h2 class="text-center text-blue-300 text-2xl mb-4 mt-4">{ $localLang.SETTINGS.screen }</h2>
+  <div class="flex flex-col items-center justify-center gap-4">
+    <div class="flex justify-center gap-2">
+      {#each displays as display}
+        <Button class="flex items-center gap-2 bg-emerald-700 text-gray-300" on:click={ () => useDisplay(display.id) }>
+          <ScreenIcon size="1.2rem"/>
+          { display.label }
+        </Button>
+      {/each}
+    </div>
+
+    <div>
+      <Button class="bg-blue-700 text-gray-300" on:click={ updateDisplays }>{ $localLang.global.update }</Button>
+    </div>
   </div>
   <hr/>
 
