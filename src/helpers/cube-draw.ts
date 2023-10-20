@@ -1,19 +1,49 @@
 import type { Puzzle } from "@classes/puzzle/puzzle";
+import { DataService } from "@stores/data.service";
 import { writable, type Writable } from 'svelte/store';
+import { sha1 } from 'object-hash';
 
 export async function generateCubeBundle(
-  cubes: Puzzle[], width ?: number, all ?: boolean, inCube?: boolean, printable?: boolean
+  cubes: Puzzle[], width ?: number, all ?: boolean, inCube?: boolean, printable?: boolean, cache?: boolean
 ): Promise< Writable< string | string[] | null > > {
   let observer = writable<string | string[] | null>('__initial__');
+
+  const dataService = DataService.getInstance();
 
   const SyncWorker = await import('@workers/imageWorker?worker');
   const imageWorker = new SyncWorker.default();
   
-  let n = 0;
+  let n = 0, total = cubes.length, inCache = 0;
+
+  let images = await dataService.cacheGetImageBundle( cubes.map((c) => sha1(c.options)) );
+
+  for (let i = 0, maxi = cubes.length; i < maxi; i += 1) {
+    cubes[i].img = '';
+
+    if ( cache && images[i] ) {
+      inCache += 1;
+      cubes[i].img = images[i]; 
+    }
+  }
+  
+  if ( cache && total === inCache ) {
+    setTimeout(() => {
+      if ( inCube ) return observer.update(() => null);
+      
+      if ( !all ) {
+        cubes.forEach(c => observer.update(() => c.img));
+      } else {
+        observer.update(() => cubes.map(c => c.img));
+      }
+
+      observer.update(() => null);
+    }, 10);
+    return observer;
+  }
+
 
   imageWorker.onmessage = (e) => {
     if ( !e.data ) {
-      console.log('!e.data terminate');
       observer.update(() => null);
       imageWorker.terminate();
     }
@@ -21,7 +51,8 @@ export async function generateCubeBundle(
     if ( !all && !inCube ) {
       observer.update(() => e.data);
     } else if ( !all && inCube ) {
-      cubes[n++].img = e.data;
+      cubes[n].img = e.data;
+
       if ( n >= cubes.length ) {
         observer.update(() => null);
         imageWorker.terminate();
@@ -46,7 +77,7 @@ export async function generateCubeBundle(
     }
   };
 
-  imageWorker.postMessage([cubes.map(c => c.options), width, all, printable]);
+  imageWorker.postMessage([cubes.map(c => c.img || c.options), width, all, printable]);
 
   return observer;
 }

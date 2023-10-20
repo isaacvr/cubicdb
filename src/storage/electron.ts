@@ -38,8 +38,8 @@ export class ElectronAdaptor implements IPC {
     this.ipc.handleUpdate(fn);
   }
 
-  getAlgorithms(options: AlgorithmOptions): void {
-    this.ipc.getAlgorithms(options);
+  async getAlgorithms(options: AlgorithmOptions): Promise<Algorithm[]> {
+    return await this.ipc.getAlgorithms(options);
   }
 
   updateAlgorithm(alg: Algorithm) {
@@ -182,8 +182,12 @@ export class ElectronAdaptor implements IPC {
     return this.ipc.cacheGetImage(hash);
   }
 
-  cacheSaveImage(hash: string): Promise<void> {
-    return this.ipc.cacheSaveImage(hash);
+  cacheGetImageBundle(hashes: string[]): Promise<string[]> {
+    return this.ipc.cacheGetImageBundle(hashes);
+  }
+
+  cacheSaveImage(hash: string, data: string): Promise<void> {
+    return this.ipc.cacheSaveImage(hash, data);
   }
 
   getAllDisplays() {

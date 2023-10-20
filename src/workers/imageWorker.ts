@@ -21,22 +21,13 @@ declare var FileReaderSync: {
   new(): FileReaderSync;
 };
 
-async function generateCube(options: PuzzleOptions[], width ?: number, all ?: boolean, printable ?: boolean) {
+async function generateCube(options: (PuzzleOptions | string)[], width ?: number, all ?: boolean, printable ?: boolean) {
   const W = width || 250;
-  const cubes = options.map(o => {
-    let p = Puzzle.fromSequence(o.sequence || '', o);
-
-    if ( printable ) p.p.palette = PRINTABLE_PALETTE;
-    if ( o.rounded ) {
-      roundCorners(p.p, ...p.p.roundParams);
-    }
-    return p;
-  });
 
   let f1 = new FileReaderSync();
   let buff = [];
 
-  let cv: any = new OffscreenCanvas(W, W);
+  let cv = new OffscreenCanvas(W, W);
 
   let renderer = new WebGLRenderer({
     antialias: true,
@@ -54,28 +45,41 @@ async function generateCube(options: PuzzleOptions[], width ?: number, all ?: bo
   
   scene.add(camera);
 
-  for (let i = 0, maxi = cubes.length; i < maxi; i += 1) {
-    const cube = cubes[i];
-    let res: Blob;
+  for (let i = 0, maxi = options.length; i < maxi; i += 1) {
+    const opt = options[i];
+    let img = '';
 
-    if ( cube.type === 'clock' ) {
-      res = clockImage(cube, 500);
-    } else if ( [ 'plan', '2d' ].indexOf(cube.view) > -1 ) {
-      res = cube.view === 'plan' ? planView(cube, W) : projectedView(cube, W);
+    if ( typeof opt === 'string' ) {
+      img = opt;
     } else {
-      let ctt = cubeToThree(cube, cube.type === 'megaminx' ? Math.sqrt(7) / 2 : 1);
-      scene.add(ctt.group);
-      renderer.render(scene, camera);
-      res = cv.convertToBlob();
+      const cube = Puzzle.fromSequence(opt.sequence || '', opt);
+  
+      if ( printable ) cube.p.palette = PRINTABLE_PALETTE;
+      if ( opt.rounded ) {
+        roundCorners(cube.p, ...cube.p.roundParams);
+      }
 
-      // clean up
-      // scene.remove(ctt.group);
-      scene.children.length = 0;
-      ctt.meshes.map(m => (<Material> m.material).dispose());
-      ctt.meshes.map(m => (<Geometry> m.geometry).dispose());
+      let res: any;
+  
+      if ( cube.type === 'clock' ) {
+        res = clockImage(cube, 500);
+      } else if ( [ 'plan', '2d' ].indexOf(cube.view) > -1 ) {
+        res = cube.view === 'plan' ? planView(cube, W) : projectedView(cube, W);
+      } else {
+        let ctt = cubeToThree(cube, cube.type === 'megaminx' ? Math.sqrt(7) / 2 : 1);
+        scene.add(ctt.group);
+        renderer.render(scene, camera);
+        res = cv.convertToBlob();
+  
+        // clean up
+        // scene.remove(ctt.group);
+        scene.children.length = 0;
+        ctt.meshes.map(m => (<Material> m.material).dispose());
+        ctt.meshes.map(m => (<Geometry> m.geometry).dispose());
+      }
+      
+      img = f1.readAsDataURL(await res);
     }
-    
-    let img = f1.readAsDataURL(await res);
 
     all ? buff.push(img) : postMessage(img);
   }

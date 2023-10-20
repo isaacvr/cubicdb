@@ -41,20 +41,33 @@ let Sessions = new NeDB({ filename: resolve(dbPath, 'sessions.db'), autoload: tr
 let Solves = new NeDB({ filename: resolve(dbPath, 'solves.db'), autoload: true });
 let Contests = new NeDB({ filename: resolve(dbPath, 'contests.db'), autoload: true });
 
-/// Algorithms handler
-ipcMain.on('get-algorithms', (event, arg) => {
-  let filter = arg.all ? {} : { parentPath: arg.path };
+let cache = new Map();
 
-  // @ts-ignore
-  Algorithms.find(filter, (err, algs) => {
-    if ( err ) {
-      event.sender.send('algorithms', ['get-algorithms', []]);
-      return;
+(async function() {
+  let list = await fs.readdir(cachePath);
+
+  for (let i = 0, maxi = list.length; i < maxi; i += 1) {
+    if ( (await fs.stat( join(cachePath, list[i]) )).isFile() ) {
+      cache.set(list[i], await fs.readFile( join(cachePath, list[i]), { encoding: 'utf8' } ));
     }
+  }
+}());
 
-    event.sender.send('algorithms', ['get-algorithms', algs]);
+/// Algorithms handler
+ipcMain.handle('get-algorithms', async (event, arg) => {
+  return await new Promise((resolve) => {
+    let filter = arg.all ? {} : { parentPath: arg.path };
+  
+    // @ts-ignore
+    Algorithms.find(filter, (err, algs) => {
+      if ( err ) {
+        resolve([]);
+        return;
+      }
+      
+      resolve(algs);
+    });
   });
-
 });
 
 ipcMain.on('update-algorithm', (event, arg) => {
@@ -319,15 +332,33 @@ ipcMain.on('reveal-file', (_, dir) => {
 
 // Cache
 ipcMain.handle('check-image', async (_, hash) => {
-  return (await fs.stat( join(cachePath, hash) )).isFile();
+  return cache.has(hash);
 });
 
 ipcMain.handle('get-image', async (_, hash) => {
-  return (await fs.readFile( join(cachePath, hash) ));
+  if ( cache.has(hash) ) {
+    return cache.get(hash);
+  }
+
+  return '';
+});
+
+ipcMain.handle('get-image-bundle', async(_, hashes) => {
+  return hashes.map(h => cache.has(h) ? cache.get(h) : '');
 });
 
 ipcMain.handle('save-image', async (_, hash, data) => {
-  return await fs.writeFile( join(cachePath, hash), data );
+  if ( cache.has(hash) ) {
+    return true;
+  }
+
+  try {
+    await fs.writeFile( join(cachePath, hash), data );
+    cache.set(hash, data);
+    return true;
+  } catch(err) {
+    console.log('CACHE ERROR: ', err);
+  }
 });
 
 // Clean unparented solves

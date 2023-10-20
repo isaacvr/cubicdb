@@ -14,7 +14,8 @@
   import type { RouteLocation } from "svelte-routing/types/Route";
   import ViewListIcon from '@icons/ViewList.svelte';
   import ViewGridIcon from '@icons/Grid.svelte';
-    import Button from "./material/Button.svelte";
+  import Button from "./material/Button.svelte";
+  import { sha1 } from "object-hash";
 
   const location = useLocation();
   
@@ -32,14 +33,15 @@
   let selectedCase: Algorithm | null = null;
   let allSolutions = false;
   let imgExpanded = false;
-  let listView = true;
-
-  let algSub: Unsubscriber;
+  let listView = JSON.parse(localStorage.getItem('algs-list-view') || 'true');
 
   function handleAlgorithms(list: Algorithm[]) {
+    if ( list.length === 0 ) return;
+
     type = 0;
     cards.length = 0;
     cases.length = 0;
+
 
     if ( list.length > 0 ) {
       let hasSolutions = list.find(l => l.hasOwnProperty('solutions') && Array.isArray(l.solutions));
@@ -83,7 +85,7 @@
         view: e.view,
         tips: e.tips,
         headless: true,
-      }, true);
+      }, true, false);
     });
     
     for (let i = 0, maxi = list.length; i < maxi; i += 1) {
@@ -107,15 +109,33 @@
 
     let arr: Puzzle[] = type < 2 ? cards.map(e => e.puzzle as Puzzle ) : cases.map(e => e._puzzle as Puzzle);
 
-    generateCubeBundle(arr, 500, false, true).then(gen => {
+    generateCubeBundle(arr, 500, true, true, false, true).then(gen => {
       let subsc = gen.subscribe((c) => {
         if ( c === null ) {
           cards = cards;
           cases = cases;
+
+          cards.forEach(c => {
+            if ( c.puzzle ) {
+              dataService.cacheSaveImage(sha1(c.puzzle.options), c.puzzle.img);
+            }
+          });
+
+          cases.forEach(c => {
+            if ( c._puzzle ) {
+              dataService.cacheSaveImage(sha1(c._puzzle.options), c._puzzle.img);
+            }
+          });
+
           subsc();
         }
       });
     });
+  }
+
+  function toggleListView() {
+    listView = !listView;
+    localStorage.setItem('algs-list-view', listView);
   }
 
   function handlekeyUp(e: KeyboardEvent) {
@@ -123,12 +143,16 @@
       navigate( $location.pathname.split('?')[0] );
     }
 
-    if ( e.code === 'keyL' && e.ctrlKey && !allSolutions && (type === 2 || type >= 4) ) {
-      listView = !listView;
+    // console.log("KeyUp: ", e);
+
+    if ( e.code === 'KeyL' && e.ctrlKey && !allSolutions && (type === 2 || type >= 4) ) {
+      toggleListView();
     }
   }
 
-  function updateCases(loc: RouteLocation) {
+  async function updateCases(loc: RouteLocation) {
+    if ( !loc.pathname.startsWith('/algorithms') ) return;
+
     let paramMap = getSearchParams(loc.search);
 
     let caseName = paramMap.get('case');
@@ -149,7 +173,7 @@
       cards.length = 0;
       cases.length = 0;
       lastUrl = p1;
-      dataService.getAlgorithms(p1);
+      handleAlgorithms( await dataService.getAlgorithms(p1) );
     }
   }
 
@@ -170,26 +194,7 @@
 
   }
 
-  $: updateCases($location);
-  
-  onMount(() => {
-
-    algSub = dataService.algSub.subscribe((e) => {
-      if ( !e ) return;
-
-      switch(e.type) {
-        case 'get-algorithms': {
-          handleAlgorithms(e.data as Algorithm[]);
-          break;
-        }
-      }
-    });
-
-  });
-
-  onDestroy(() => {
-    algSub();
-  });
+ $: updateCases($location);
 </script>
 
 <svelte:window on:keyup={ handlekeyUp }></svelte:window>
@@ -241,16 +246,18 @@
 
     {#if type === 2 || type >= 4}
       <div class="absolute right-12 top-16 grid place-items-center">
-        <Button class="w-8 h-8 bg-backgroundLv1 hover:bg-purple-700 text-gray-400
-          hover:text-gray-200 grid place-items-center cursor-pointer"
-          on:click={ () => listView = !listView }>
-
-          {#if listView}
-            <ViewListIcon size="1.2rem"/>
-          {:else}
-            <ViewGridIcon size="1.2rem"/>
-          {/if}
-        </Button>
+        <Tooltip position="left" text={ $localLang.ALGORITHMS.toggleView + '[Ctrl+L]' } hasKeybinding>
+          <Button class="w-8 h-8 bg-backgroundLv1 hover:bg-purple-700 text-gray-400
+            hover:text-gray-200 grid place-items-center cursor-pointer"
+            on:click={ toggleListView }>
+  
+            {#if listView}
+              <ViewListIcon size="1.2rem"/>
+            {:else}
+              <ViewGridIcon size="1.2rem"/>
+            {/if}
+          </Button>
+        </Tooltip>
       </div>
       <div class="cases grid text-gray-400" class:compact={ !listView }>
         <div class="row">

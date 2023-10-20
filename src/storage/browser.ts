@@ -29,7 +29,10 @@ export class BrowserAdaptor implements IPC {
   handleUpdate(fn: Function) {}
   
   // Algorithms
-  getAlgorithms(options: AlgorithmOptions): void {}
+  getAlgorithms(options: AlgorithmOptions): Promise<Algorithm[]> {
+    return Promise.resolve([]);
+  }
+
   updateAlgorithm(alg: Algorithm): void {}
   
   // Cards
@@ -107,8 +110,12 @@ export class BrowserAdaptor implements IPC {
   cacheGetImage(hash: string): Promise<string> {
     return Promise.resolve('');
   }
+  
+  cacheGetImageBundle(hashes: string[]): Promise<string[]> {
+    return Promise.resolve([]);
+  }
 
-  cacheSaveImage(hash: string): Promise<void> {
+  cacheSaveImage(hash: string, data: string): Promise<void> {
     return Promise.resolve();
   }
 

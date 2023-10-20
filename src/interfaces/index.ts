@@ -412,7 +412,7 @@ export interface IPC {
   handleTutorials: (fn: Function) => any;
   handleUpdate: (fn: Function) => any;
   
-  getAlgorithms: (options: AlgorithmOptions) => any;
+  getAlgorithms: (options: AlgorithmOptions) => Promise<Algorithm[]>;
   updateAlgorithm: (alg: Algorithm) => any;
   getCards: () => any;
   
@@ -457,7 +457,8 @@ export interface IPC {
 
   cacheCheckImage: (hash: string) => Promise<boolean>;
   cacheGetImage: (hash: string) => Promise<string>;
-  cacheSaveImage: (hash: string) => Promise<void>;
+  cacheGetImageBundle: (hashes: string[]) => Promise<string[]>;
+  cacheSaveImage: (hash: string, data: string) => Promise<void>;
 
   getAllDisplays: () => Promise<Display[]>;
   useDisplay: (id: number) => Promise<void>;
@@ -606,6 +607,7 @@ export interface Language {
     moves: string;
     case: string;
     algorithms: string;
+    toggleView: string;
   },
   TIMER: {
     // TimerTab

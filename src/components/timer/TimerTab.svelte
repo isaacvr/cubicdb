@@ -633,6 +633,7 @@
         --width: { notesW }px;
         --height: calc({ notesH }px + 1.5rem);
       ">
+        <!-- svelte-ignore a11y-no-static-element-interactions -->
         <div class="relative w-full h-6 cursor-move flex items-center" on:mousedown={ handleMouseDown }>
           <span class="ml-auto mr-2 cursor-pointer text-gray-700" on:click={ () => showNotes = false }>
             <Close width="1.2rem" height="1.2rem"/>
@@ -710,9 +711,10 @@
         <div class="flex justify-center w-full" class:show={$state === TimerState.STOPPED}>
           {#each solveControl.slice(Number(battle), solveControl.length) as control}
             <Tooltip class="cursor-pointer" position="top" text={ control.text }>
-              <div class="my-3 mx-1 w-5 h-5 { control.highlight($solves[0] || {}) ? 'text-red-500' : '' }" on:click={ control.handler }>
+              <button class="my-3 mx-1 w-5 h-5 { control.highlight($solves[0] || {}) ? 'text-red-500' : '' }"
+                on:click={ control.handler }>
                 <svelte:component this={control.icon} width="100%" height="100%"/>
-              </div>
+              </button>
             </Tooltip>
           {/each}
         </div>
@@ -738,11 +740,11 @@
         {/if}
       </table>
 
-      <div id="bulb"
+      <button id="bulb"
         class="w-8 h-8 inline-block align-middle mx-0 my-2 cursor-pointer"
         class:nshow={!$hint} on:click={() => $hint = !$hint}>
         <LightBulb width="100%" height="100%"/>
-      </div>
+      </button>
     </div>
 
     <!-- Statistics -->
@@ -804,6 +806,7 @@
 
   <!-- Image -->
   {#if $session?.settings?.genImage || battle }
+    <!-- svelte-ignore a11y-no-static-element-interactions -->
     <div
       id="preview-container"
       class="absolute bottom-2 flex items-center justify-center w-full transition-all duration-300
@@ -823,14 +826,14 @@
     <Modal bind:this={ modal } bind:show={ show } onClose={ closeHandler }>
       <div class={"max-w-lg max-h-[30rem] " + (type === 'old-scrambles' ? 'overflow-scroll' : '')}>
         {#if type === 'edit-scramble'}
-          <TextArea on:keyup={ modalKeyupHandler }
-            class="bg-gray-600 text-gray-200"
-            bind:value={ modalData }/>
-          <div class="flex w-full justify-center my-2">
+          <TextArea on:keyup={ modalKeyupHandler } class="bg-gray-900 text-gray-200" bind:value={ modalData }/>
+
+          <div class="flex w-full justify-center my-2 gap-2">
             <Button ariaLabel={ $localLang.global.cancel } on:click={() => modal.close()}>
               { $localLang.global.cancel }
             </Button>
-            <Button ariaLabel={ $localLang.global.save } on:click={() => modal.close( modalData.trim() )}>
+            <Button class="bg-purple-800 hover:bg-purple-700 text-gray-300"
+              ariaLabel={ $localLang.global.save } on:click={() => modal.close( modalData.trim() )}>
               { $localLang.global.save }
             </Button>
           </div>

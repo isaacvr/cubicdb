@@ -64,7 +64,8 @@
 
 </script>
 
-<dialog bind:this={ modal } on:click={ handleClick } on:keyup={ keyUpHandler } on:keydown={ keyDownHandler }
+<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+<dialog bind:this={ modal } on:mousedown={ handleClick } on:keyup={ keyUpHandler } on:keydown={ keyDownHandler }
   class="bg-gray-800 rounded-md show p-4 pt-3 overflow-visible { _cl || '' }">
   {#if show}
     <slot />

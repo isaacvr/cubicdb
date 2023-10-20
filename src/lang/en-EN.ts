@@ -77,7 +77,8 @@ export const English: Language = {
     algorithms: 'Algorithms',
     case: 'Case',
     moves: 'Moves',
-    solution: 'Solution'
+    solution: 'Solution',
+    toggleView: 'Change view',
   },
   TIMER: {
     stackmatStatus: 'Timer Status',

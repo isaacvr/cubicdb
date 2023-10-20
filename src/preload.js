@@ -3,7 +3,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 const ipc = ipcRenderer;
 
 contextBridge.exposeInMainWorld('electronAPI', {
-  getAlgorithms: (dir) => ipc.send('get-algorithms', dir),
+  getAlgorithms: async (dir) => await ipc.invoke('get-algorithms', dir),
   updateAlgorithm: (dir) => ipc.send('update-algorithm', dir),
   handleAlgorithms: (dir) => ipc.on('algorithms', dir),
   
@@ -65,6 +65,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   cacheCheckImage: async (hash) => await ipc.invoke('check-image', hash),
   cacheGetImage: async (hash) => await ipc.invoke('get-image', hash),
+  cacheGetImageBundle: async (hashes) => await ipc.invoke('get-image-bundle', hashes),
   cacheSaveImage: async (hash, data) => await ipc.invoke('save-image', hash, data),
 
   getAllDisplays: () => ipc.invoke('get-all-displays'),

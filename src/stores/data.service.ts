@@ -142,8 +142,8 @@ export class DataService {
     });
   }
 
-  getAlgorithms(path: string, all?: boolean): void {
-    this.ipc.getAlgorithms({ all, path });
+  async getAlgorithms(path: string, all?: boolean): Promise<Algorithm[]> {
+    return await this.ipc.getAlgorithms({ all, path });
   }
 
   updateAlgorithm(alg: Algorithm) {
@@ -305,8 +305,12 @@ export class DataService {
     return this.ipc.cacheGetImage(hash);
   }
 
-  cacheSaveImage(hash: string): Promise<void> {
-    return this.ipc.cacheSaveImage(hash);
+  cacheGetImageBundle(hashes: string[]): Promise<string[]> {
+    return this.ipc.cacheGetImageBundle(hashes);
+  }
+
+  cacheSaveImage(hash: string, data: string): Promise<void> {
+    return this.ipc.cacheSaveImage(hash, data);
   }
 
   getAllDisplays(): Promise<Display[]> {

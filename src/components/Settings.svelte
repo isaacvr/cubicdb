@@ -24,6 +24,7 @@
   let localLang: Readable<Language> = derived(globalLang, ($lang, set) => {
     language = $lang;
     set( getLanguage( $lang ) );
+    updateDisplays();
   });
 
   const FONTS = [
@@ -84,7 +85,13 @@
 
   function updateDisplays() {
     dataService.getAllDisplays().then(res => {
-      displays = res;
+      let cnt = 1;
+      
+      displays = res.sort((a, b) => a.label < b.label ? -1 : 1).map(s => {
+        s.label = s.label || ($localLang.SETTINGS.screen + ' ' + (cnt++));
+        return s;
+      });
+
     });
   }
 

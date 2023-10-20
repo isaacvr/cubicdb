@@ -1,4 +1,4 @@
-import type { AlgorithmOptions, CubeEvent, IPC, PDFOptions, Session, Sheet, Solve, Tutorial, UpdateCommand } from "@interfaces";
+import type { Algorithm, AlgorithmOptions, CubeEvent, IPC, PDFOptions, Session, Sheet, Solve, Tutorial, UpdateCommand } from "@interfaces";
 
 export class NoopAdaptor implements IPC {
   handleAlgorithms(fn: Function) {}
@@ -10,7 +10,10 @@ export class NoopAdaptor implements IPC {
   handleTutorials(fn: Function) {}
   handleUpdate(fn: Function) {}
   
-  getAlgorithms(options: AlgorithmOptions): void {}
+  getAlgorithms(options: AlgorithmOptions): Promise<Algorithm[]> {
+    return Promise.resolve([]);
+  }
+
   updateAlgorithm(alg: Algorithm) {}
   getCards(): void {}
   
@@ -52,4 +55,12 @@ export class NoopAdaptor implements IPC {
   cancelBluetoothRequest() {}
   pairingBluetoothResponse() {}
   handleBluetooth() {}
+
+  cacheCheckImage(hash: string) { return Promise.resolve(false) };
+  cacheGetImage(hash: string) { return Promise.resolve(''); }
+  cacheGetImageBundle(hashes: string[]) { return Promise.resolve([]); }
+  cacheSaveImage(hash: string, data: string) { return Promise.resolve(); }
+
+  getAllDisplays() { return Promise.resolve([]); }
+  useDisplay(id: number) { return Promise.resolve(); }
 }

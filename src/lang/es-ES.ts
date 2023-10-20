@@ -86,7 +86,8 @@ export const Spanish: Language = {
     algorithms: 'Algoritmos',
     case: 'Caso',
     moves: 'Movimientos',
-    solution: 'Solución'
+    solution: 'Solución',
+    toggleView: 'Cambiar vista',
   },
   TIMER: {
     stackmatStatus: 'Estado del timer',
