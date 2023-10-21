@@ -79,9 +79,7 @@ export class ScrambleParser {
             break;
         }
       }
-    } else
-    // WCA Notation
-    if ( /(\+\+|\-\-)/.test(scramble) ) {
+    } else if ( /(\+\+|\-\-)/.test(scramble) ) { // WCA Notation
       let moves = scramble.match(/[RD](?:\+\+|--)|U'?/g) || [];
       for (let i = 0, maxi = moves.length; i < maxi; i += 1) {
         switch (moves[i]) {
@@ -105,9 +103,12 @@ export class ScrambleParser {
             break;
         }
       }
-    } else
-    // Old Style Notation
-    {}
+    } else { // Old Style Notation
+      // U F L D B R
+      // DR BL BR DL
+      // DBL DBR
+    }
+
     return res;
   }
 

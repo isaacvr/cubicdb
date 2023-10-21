@@ -151,7 +151,8 @@ export function MEGAMINX(_n: number, headless?: false): PuzzleInterface {
 
   let LDIST = Math.abs( corner.stickers[1].points[2].sub(anchors[0]).y );
 
-  let planes = [ center.stickers[0], midCenters[1].stickers[0] ].map(s => {
+  let planes = [ center, midCenters[1] ].map(p => {
+    let s = p.stickers[0];
     let mc = s.getMassCenter();
     return s.points.map(p => p.add( mc.unit().mul(-LDIST) ))
   });

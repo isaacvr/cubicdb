@@ -5,6 +5,7 @@
   export let cancel = true;
   export let onClose: Function = () => {};
   export let closeOnClickOutside = true;
+  export let closeOnEscape = true;
   
   let _cl = '';
   export {_cl as class};
@@ -19,6 +20,14 @@
   function keyDownHandler(e: KeyboardEvent) {
     if ( !show ) return;
     e.stopPropagation();
+
+    if ( e.code === 'Escape' ) {
+      if ( closeOnEscape && e.target === modal ) {
+        close(null);
+      } else {
+        e.preventDefault();
+      }
+    }
   }
 
   function handleShow(s: boolean) {

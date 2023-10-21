@@ -12,13 +12,14 @@
   import { globalLang } from '@stores/language.service';
   import { getLanguage } from '@lang/index';
   import Button from '@components/material/Button.svelte';
+  import { AON } from '@constants';
 
   export let context: TimerContext;
   export let headless = false;
 
   let localLang: Readable<Language> = derived(globalLang, ($lang) => getLanguage( $lang ));
     
-  let { solves, AoX, stats, session, STATS_WINDOW, AON, selectSolveById } = context;
+  let { solves, AoX, stats, session, STATS_WINDOW, selectSolveById } = context;
 
   let chartElement: HTMLCanvasElement;
   let chartElement2: HTMLCanvasElement;
@@ -69,7 +70,7 @@
       let dt = timeChart.data.datasets[i + 1];
       dt.data.length = 0;
       let pos = $AON.indexOf(e);
-      let Ao = pos > -1 ? $STATS_WINDOW[ pos ] : getAverageS(e, sv, $session?.settings?.calcAoX || AverageSetting.SEQUENTIAL);
+      let Ao = (pos > -1 && $STATS_WINDOW) ? $STATS_WINDOW[ pos ] : getAverageS(e, sv, $session?.settings?.calcAoX || AverageSetting.SEQUENTIAL);
       dt.data = Ao.map((e, p) => ({ x: p, y: e } as any));
       dt.label = 'Ao' + e;
     });
@@ -411,10 +412,11 @@
 <svelte:window on:resize={ handleResize } />
 
 <main class:headless>
-  <div class="canvas card grid place-items-center bg-white bg-opacity-10 rounded-md">
+  <div class={"canvas card grid place-items-center col-span-2 row-span-2 bg-white bg-opacity-10 rounded-md "
+    + (headless ? 'max-md:col-span-full' : '')}>
     <canvas bind:this={ chartElement }></canvas>
   </div>
-  <div class="stats card">
+  <div class={"stats flex card " + (headless ? 'max-md:hidden' : '')}>
     <StatsProgress
       title={ $localLang.TIMER.best } pColor="bg-green-400"
       label={ timer($stats.best.value, true, true) }
@@ -497,7 +499,7 @@ main.headless {
 }
 
 .stats {
-  @apply flex flex-col items-center justify-between;
+  @apply flex-col items-center justify-between;
 }
 
 main:not(.headless) .stats {
@@ -506,10 +508,6 @@ main:not(.headless) .stats {
 
 main.headless .stats {
   @apply row-span-2;
-}
-
-.canvas {
-  @apply col-span-2 row-span-2;
 }
 
 #best-marks {

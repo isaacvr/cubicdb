@@ -297,7 +297,6 @@ export interface TimerContext {
   decimals: Writable<boolean>;
   bluetoothList: Writable<BluetoothDeviceData[]>;
   bluetoothStatus: Writable<boolean>;
-  AON: Readable<number[]>;
   STATS_WINDOW: Writable<(number | null)[][]>;
   
   sortSolves: () => any;

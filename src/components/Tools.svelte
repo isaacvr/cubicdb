@@ -74,8 +74,8 @@
   // Timer and Scramble Only
   let modes: { 0: string; 1: string; 2: number }[] = [];
   let filters: string[] = [];
+  let selectedOption = "statistics";
   // let selectedOption = "timer-only";
-  let selectedOption = "solver";
   let timer: Timer;
 
   // Batch
@@ -418,7 +418,7 @@
   <div class="flex items-center justify-center gap-2 mt-8">
     <Input
       type="number"
-      class="w-20"
+      class="!w-20"
       bind:value={batch}
       min={1}
       on:UENTER={generateBatch}
@@ -435,11 +435,11 @@
 
   <hr class="border-gray-200 w-full mt-2"/>
 
-  <div id="grid" class="text-gray-400 mx-8 mt-4 grid h-max-[100%] overflow-scroll">
+  <div id="grid" class="text-gray-400 gap-2 mx-8 my-4 grid max-h-[15rem] overflow-x-hidden overflow-y-auto">
     {#each $solves as _, p}
       <Tooltip text={ $localLang.TOOLS.clickToDelete } position="top">
         <button
-          class="shadow-md w-24 h-12 rounded-md m-3 p-1 bg-white bg-opacity-10 relative
+          class="shadow-md w-24 h-12 rounded-md p-1 bg-white bg-opacity-10 relative
             flex items-center justify-center transition-all duration-200 select-none cursor-pointer
     
             hover:shadow-lg hover:bg-opacity-20
@@ -521,8 +521,7 @@
 
 <style>
   #grid {
-    grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr));
-    max-height: calc(100vh - 8rem);
+    grid-template-columns: repeat(auto-fill, minmax(6rem, 1fr));
   }
 
   .colors {

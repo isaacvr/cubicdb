@@ -253,8 +253,9 @@
 
   function handleInputKeyUp(ce: any) {
     if ( !enableKeyboard ) return;
-
+   
     const e = ce.detail;
+
     if ( e.key === 'Enter' ) {
       newSession();
     } else if ( e.key === 'Escape' ) {
@@ -549,7 +550,7 @@
   let context: TimerContext = {
     state, ready, tab, solves, allSolves, session, Ao5, AoX, stats, scramble, decimals,
     group, mode, hintDialog, hint, cross, xcross, preview, prob, isRunning, selected,
-    bluetoothList, bluetoothStatus, AON, STATS_WINDOW,
+    bluetoothList, bluetoothStatus, STATS_WINDOW,
     sortSolves, updateStatistics, initScrambler, selectedGroup,
     setConfigFromSolve, selectSolve, selectSolveById, editSolve
   };
@@ -625,13 +626,14 @@
   {/if}
 
   {#if !timerOnly}
-    <Modal show={ openEdit } onClose={ handleClose }>
+    <Modal show={ openEdit } onClose={ handleClose } class="w-[min(40rem,100%)]">
       <Button ariaLabel={ $localLang.TIMER.addNewSession }
-        on:click={ openAddSession }>
+        on:click={ openAddSession } class="mx-auto bg-blue-700 hover:bg-blue-600 text-gray-300">
         <PlusIcon /> { $localLang.TIMER.addNewSession }
       </Button>
-      
-      <div class="grid">
+
+      <div class="grid gap-2 m-2 mt-4 max-h-[min(80vh,25rem)] overflow-scroll"
+        style="grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr));">
         {#if creatingSession}
           <div class="flex">
             <Input
@@ -650,10 +652,11 @@
         {/if}
 
         {#each sessions as s}
-          <div class="flex">
+          <div class="grid border border-gray-400 rounded-md">
             <Input
               disabled={ !s.editing }
-              class="bg-transparent text-gray-400 flex-1 { !s.editing ? 'border-transparent' : '' }"  
+              class="bg-transparent text-gray-400 flex-1 { !s.editing ? 'border-transparent' : '' }"
+              inpClass="text-center text-ellipsis" 
               bind:value={ s.tName } focus={ s.editing } on:keyup={ (e) => {
                 switch ( e.detail.code ) {
                   case 'Enter': {
@@ -668,25 +671,25 @@
                   }
                 }
               }}/>
-            <div class="flex mx-2 flex-grow-0 w-10 items-center justify-center">
+            <div class="flex mx-2 items-center justify-center">
               {#if !s.editing && !creatingSession}
-                <button tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer" on:click={() => {
+                <button tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer hover:text-blue-500" on:click={() => {
                   sessions.forEach(s1 => s1.editing = false);
                   s.editing = true;
                 }}>
-                  <PencilIcon width="100%" height="100%"/>
+                  <PencilIcon size="1.2rem"/>
                 </button>
-                <button tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer" on:click={() => deleteSession(s)}>
-                  <DeleteIcon width="100%" height="100%"/>
+                <button tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer hover:text-blue-500" on:click={() => deleteSession(s)}>
+                  <DeleteIcon size="1.2rem"/>
                 </button>
               {/if}
 
               {#if s.editing && !creatingSession}
-                <button tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer" on:click={ () => renameSession(s) }>
-                  <CheckIcon width="100%" height="100%"/>
+                <button tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer hover:text-blue-500" on:click={ () => renameSession(s) }>
+                  <CheckIcon size="1.2rem"/>
                 </button>
-                <button tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer" on:click={() => s.editing = false}>
-                  <CloseIcon width="100%" height="100%"/>
+                <button tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer hover:text-blue-500" on:click={() => s.editing = false}>
+                  <CloseIcon size="1.2rem"/>
                 </button>
               {/if}
             </div>
