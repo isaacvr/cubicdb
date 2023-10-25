@@ -23,7 +23,7 @@
   import PencilIcon from '@icons/PencilOutline.svelte';
   import DeleteIcon from '@icons/Delete.svelte';
   import DotsIcon from '@icons/DotsVertical.svelte';
-  import { useLocation } from "svelte-routing";
+  import { navigate, useLocation } from "svelte-routing";
 
   const location = useLocation();
 
@@ -52,8 +52,6 @@
   let creatingBlock = false;
   let mpos = 0;
   let toTop = false;
-
-  let sub: Unsubscriber;
 
   function init(sheet: any) {
     blocks.length = 0;
@@ -196,29 +194,18 @@
   }
 
   onMount(() => {
-    sub = dataService.tutSub.subscribe((list) => {
-      if (!list) return;
-
-      const type = list[0];
-      const content = <Tutorial[]> list[1];
+    dataService.getTutorials().then(tuts => {
       const _id = getSearchParams($location.search).get('id');
+      let current = tuts.find(t => t._id === _id);
 
-      if ( type === 'get-tutorials' ) {
-        let current = content.find(t => t._id === _id);
-
-        if ( current ) {
-          tut = current;
-          tut.content = tut.content || [];
-          init(tut.content);
-        }
+      if ( current ) {
+        tut = current;
+        tut.content = tut.content || [];
+        init(tut.content);
+      } else {
+        navigate('/tutorials');
       }
     });
-
-    dataService.getTutorials();
-  });
-
-  onDestroy(() => {
-    sub();
   });
 </script>
 

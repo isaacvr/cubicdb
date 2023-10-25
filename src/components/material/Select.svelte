@@ -70,9 +70,10 @@
   <div class="expand w-5 h-full absolute right-2 top-0 flex my-auto pointer-events-none">
     <ExpandIcon width="100%" height="100%"/>
   </div>
+  <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div class="options
-    bg-gray-700 bg-opacity-100 p-2 w-full rounded-md border border-solid border-gray-400
-    absolute z-10 grid grid-cols-1 max-h-72 overflow-x-hidden overflow-y-scroll"
+    bg-gray-700 bg-opacity-100 p-2 rounded-md border border-solid border-gray-400
+    fixed z-10 grid grid-cols-1 max-h-72 overflow-x-hidden overflow-y-scroll"
     class:visible={ showOptions } bind:this={ optionList }
     on:keydown={ focusHandler }
     >

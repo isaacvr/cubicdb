@@ -1,7 +1,6 @@
 <script lang="ts">
-  import { onDestroy, onMount } from "svelte";
   import { Link, navigate, useLocation } from "svelte-routing";
-  import { derived, type Readable, type Unsubscriber } from "svelte/store";
+  import { derived, type Readable } from "svelte/store";
   import { Puzzle } from "@classes/puzzle/puzzle";
   import { generateCubeBundle } from "@helpers/cube-draw";
   import { nameToPuzzle, type Algorithm, type Card, type Language } from "@interfaces";
@@ -217,9 +216,9 @@
         {#each (selectedCase?.solutions || []) as sol }
           <span class="col-span-1"></span>
           <Tooltip position="left" text="Click to copy" class="col-span-3">
-            <span role="link" tabindex="0"
+            <button role="link" tabindex="0"
               on:click={ () => toClipboard(sol.moves) }
-              class="mt-2 cursor-pointer hover:text-gray-300 transition-all duration-200">{ sol.moves }</span>
+              class="mt-2 cursor-pointer hover:text-gray-300 transition-all duration-200">{ sol.moves }</button>
           </Tooltip>
           <span class="col-span-1 mt-2">{ sol.moves.split(" ").length }</span>
           <span class="col-span-1"></span>

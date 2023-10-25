@@ -178,10 +178,10 @@
   ">
   <h1 class="text-center text-3xl mb-4 text-gray-300 font-bold">{ $localLang.PLL.title }</h1>
 
-  <span class="absolute right-4 top-4 bg-gray-500 text-gray-200 w-6 h-6 flex items-center justify-center
+  <button class="absolute right-4 top-4 bg-gray-500 text-gray-200 w-6 h-6 flex items-center justify-center
     cursor-pointer rounded-full shadow-md hover:shadow-lg hover:bg-gray-400 font-bold
     transition-all duration-200
-  " on:click={ () => showModal = true }>?</span>
+  " on:click={ () => showModal = true }>?</button>
   
   {#if stage === 0}
     <div class="grid grid-cols-2 w-max items-center mx-auto gap-4">

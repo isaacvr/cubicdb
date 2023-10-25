@@ -18,6 +18,10 @@ export const English: Language = {
     clear: 'Clear',
     reset: 'Reset',
     generate: 'Generate',
+    restartNow: 'Restart now',
+    name: 'Name',
+    steps: 'Steps',
+    step: 'Step',
   },
   NAVBAR: {
     home: 'Home',
@@ -114,6 +118,16 @@ export const English: Language = {
     withoutPrevention: 'Without prevention time',
     withoutPreventionDescription: 'How long Spacebar needs to be pressed',
     recordCelebration: 'Celebrate when a record is broken',
+    sessionTypeMap: {
+      "mixed": "Mixed",
+      "single": "Single",
+      "multi-step": "Multi-steps",
+    },
+    sessionTypeDescription: {
+      "mixed": "Multiple scramblers in the same session (2x2, 3x3, ...)",
+      "single": "Session for a single category",
+      "multi-step": "Set up multiple steps for each solve",
+    },
 
     // Last solve tooltip
     comments: 'Comments',
@@ -151,6 +165,7 @@ export const English: Language = {
     noPenalty: 'Clean',
 
     removeAllSolves: 'Do you want to remove all the solves?',
+    removeSession: 'Do you want to delete this session?',
     select: 'Select',
 
     // Stats Tab

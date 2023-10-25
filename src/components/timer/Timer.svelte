@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { createEventDispatcher, onDestroy, onMount } from 'svelte';
+  import { createEventDispatcher, onMount } from 'svelte';
   import { generateCubeBundle } from '@helpers/cube-draw';
-  import { derived, writable, type Readable, type Unsubscriber, readable } from 'svelte/store';
+  import { derived, writable, type Readable } from 'svelte/store';
   
   /// Modules
   import * as all from '@cstimer/scramble';
@@ -36,7 +36,7 @@
   import DeleteIcon from '@icons/Delete.svelte';
   
   /// Types
-  import { TimerState, type Solve, type Session, Penalty, type Statistics, type TimerContext, type PuzzleOptions, type Language, type BluetoothDeviceData } from '@interfaces';
+  import { TimerState, type Solve, type Session, Penalty, type Statistics, type TimerContext, type PuzzleOptions, type Language, type BluetoothDeviceData, SESSION_TYPE, type SessionType } from '@interfaces';
   import { Puzzle } from '@classes/puzzle/puzzle';
   import { PX_IMAGE } from '@constants';
   import { ScrambleParser } from '@classes/scramble-parser';
@@ -79,8 +79,9 @@
   let modes: { 0: string, 1: string, 2: number }[] = MENU[0][1];
   let filters: string[] = [];
   let sessions: Session[] = [];  
-  let subs: Unsubscriber[] = [];
   let tabs: TabGroup;
+  let deleteSessionModal: Modal;
+  let showDeleteSession = false;
   let dispatch = createEventDispatcher();
   let sessionsTab: SessionsTab;
   let mounted = false;
@@ -89,7 +90,12 @@
   let openEdit = false;
   let creatingSession = false;
   let newSessionName = "";
-  
+  let newSessionType: SessionType = 'mixed';
+  let newSessionSteps = 2;
+  let newSessionGroup = 0;
+  let newSessionMode = 0;
+  let sSession: Session;
+
   /// CONTEXT
   let state = writable<TimerState>(TimerState.CLEAN);
   let ready = writable<boolean>(false);
@@ -108,7 +114,7 @@
   let stats = writable<Statistics>(INITIAL_STATISTICS);
   let scramble = writable<string>();
   let group = writable<number>();
-  let mode = writable<{ 0: string, 1: string, 2: number }>();
+  let mode = writable<{ 0: string, 1: string, 2: number }>(modes[0]);
   let hintDialog = writable<boolean>(true);
   let hint = writable<boolean>();
   let cross = writable<string>();
@@ -218,7 +224,15 @@
   function setSolves(rescramble: boolean = true) {
     sortSolves();
     updateStatistics(true);
-    $solves.length > 0 && setConfigFromSolve($solves[0], rescramble);
+
+    if ( $session.settings.sessionType === 'mixed' ) {
+      if ( $solves.length > 0 ) {
+        setConfigFromSolve($solves[0], rescramble);
+        return;
+      }
+    }
+
+    rescramble && initScrambler();
   }
 
   function editSessions() {
@@ -348,6 +362,26 @@
 
   function selectedSession() {
     localStorage.setItem('session', $session._id);
+    
+    if ( $session.settings.sessionType != 'mixed' ) {
+      let targetMode = $session.settings.mode || '333';
+      let fnd = false;
+
+      for (let i = 0, maxi = MENU.length; i < maxi; i += 1) {
+        let md = MENU[i][1].find(m => m[1] === targetMode);
+
+        if ( md ) {
+          $mode = md;
+          fnd = true;    
+          break;
+        }
+      }
+
+      if ( !fnd ) {
+        $mode = MENU[0][1][0];
+      }
+    }
+
     restartStats();
     setSolves();
   }
@@ -355,16 +389,66 @@
   function newSession() {
     let name = newSessionName.trim();
 
-    if ( name != '' ) {
-      dataService.addSession({ _id: '', name, settings: Object.assign({}, SessionDefaultSettings) });
-      closeAddSession();
+    if ( !name ) return;
+
+    let settings = Object.assign({}, SessionDefaultSettings);
+    
+    settings.sessionType = newSessionType;
+
+    if ( newSessionType === 'single' || newSessionType === 'multi-step' ) {
+      settings.mode = MENU[ newSessionGroup ][1][ newSessionMode ][1];
     }
+
+    if ( newSessionType === 'multi-step' ) {
+      settings.steps = newSessionSteps;
+    }
+
+    dataService.addSession({ _id: '', name, settings })
+      .then((ns) => {
+        ns.tName = ns.name;
+        sessions = [ ...sessions, ns ];
+        $session = ns;
+        
+        if ( !$session.settings.sessionType ) {
+          $session.settings.sessionType = $session.settings.sessionType || 'mixed';
+          dataService.updateSession($session);
+        }
+
+        selectedSession();
+        sortSessions();
+      });
+    
+    closeAddSession();
   }
 
-  function deleteSession(s: Session) {
-    if ( confirm('Do you really want to remove this session? You will loose all the solves in the session.') ) {
-      dataService.removeSession(s);
+  function deleteSessionHandler(remove?: boolean) {
+    if ( remove ) {
+      dataService.removeSession(sSession).then((ss) => {
+        sessions = sessions.filter(s1 => s1._id != ss._id);
+  
+        if ( sessions.length === 0 ) {
+          newSessionName = 'Session 1';
+          newSession();
+          return;
+        }
+  
+        if ( ss._id === $session._id ) {
+          $session = sessions[0];
+        }
+        sortSessions();
+      });
     }
+
+    showDeleteSession = false;
+  }
+
+  function handleUpdateSession(session: Session) {
+    let updatedSession = sessions.find(s => s._id === session._id);
+    if ( updatedSession ) {
+      updatedSession.name = session.name;
+      updatedSession.settings = session.settings;
+    }
+    sortSessions();
   }
 
   function renameSession(s: Session) {
@@ -374,7 +458,8 @@
       return;
     }
 
-    dataService.updateSession({ _id: s._id, name: s.tName?.trim() || "Session -", settings: s.settings });
+    dataService.updateSession({ _id: s._id, name: s.tName?.trim() || "Session -", settings: s.settings })
+      .then( handleUpdateSession );
   }
 
   function editSolve(s: Solve) {
@@ -388,6 +473,39 @@
     sessions = sessions;
   }
 
+  function handleUpdateSolve(updatedSolve: Solve) {
+    for (let i = 0, maxi = $allSolves.length; i < maxi; i += 1) {
+      if ( $allSolves[i]._id === updatedSolve._id ) {
+        $allSolves[i].comments = updatedSolve.comments;
+        $allSolves[i].penalty = updatedSolve.penalty;
+        $allSolves[i].time = updatedSolve.time;
+        break;
+      }
+    }
+    $stats = INITIAL_STATISTICS;
+    setSolves(false);
+  }
+
+  function handleRemoveSolves(ids: Solve[]) {
+    let ss = $solves;
+    let sl = ss.length;
+
+    let as = $allSolves;
+
+    for (let i = 0, maxi = ids.length; i < maxi; i += 1) {
+      let pos1 = binSearch < Solve > (ids[i], ss, (a: Solve, b: Solve) => b.date - a.date);
+      let pos2 = binSearch < Solve > (ids[i], as, (a: Solve, b: Solve) => b.date - a.date);
+      
+      pos1 > -1 && ss.splice(pos1, 1);
+      pos2 > -1 && as.splice(pos2, 1);
+    }
+
+    if (ss.length != sl) {
+      $stats = INITIAL_STATISTICS;
+      setSolves();
+    }
+  }
+
   onMount(() => {
     mounted = true;
 
@@ -396,163 +514,38 @@
     }
 
     if ( !(battle || timerOnly || scrambleOnly) ) {
-      subs = [
-        dataService.solveSub.subscribe((data) => {
-          if ( !data || !data.data ) {
-            return;
-          }
-          switch(data.type) {
-            case 'get-solves': {
-              $allSolves = <Solve[]> data.data;
-              setSolves();
-              break;
-            }
-            case 'add-solve': {
-              let d = (data.data as Solve[])[0];
-              let s = $allSolves.find(s => s.date === d.date);
+      dataService.getSessions().then((_sessions) => {
+        sessions = _sessions.map(s => { s.tName = s.name; return s; });
 
-              if (s) {
-                statsReplaceId($stats, s._id, d._id);
-                s._id = d._id;
-                updateSolves();
-              }
-              break;
-            }
-            case 'remove-solves': {
-              let ids = <Solve[]> data.data;
-              let ss = $solves;
-              let sl = ss.length;
+        if ( sessions.length === 0 ) {
+          newSessionName = 'Session 1';
+          newSession();
+          return;
+        }
 
-              let as = $allSolves;
+        let ss = localStorage.getItem('session');
+        let currentSession = sessions.find(s => s._id === ss);
+        $session = currentSession || sessions[0];
+        console.log("SESSION: ", $session);
 
-              for(let i = 0, maxi = ids.length; i < maxi; i += 1) {
-                let pos1 = binSearch<Solve>(ids[i], ss, (a: Solve, b: Solve) => b.date - a.date);
-                let pos2 = binSearch<Solve>(ids[i], as, (a: Solve, b: Solve) => b.date - a.date);
+        selectedSession();
+        sortSessions();
+      });
 
-                if ( pos1 > -1 ) {
-                  ss.splice(pos1, 1);
-                }
-                
-                if ( pos2 > -1 ) {
-                  as.splice(pos2, 1);
-                }
-              }
-              
-              if ( ss.length != sl ) {
-                $stats = INITIAL_STATISTICS;
-                setSolves();
-              }
-
-              break;
-            }
-            case 'update-solve': {
-              let updatedSolve = <Solve> data.data;
-              if ( updatedSolve ) {
-                for (let i = 0, maxi = $allSolves.length; i < maxi; i += 1) {
-                  if ( $allSolves[i]._id === updatedSolve._id ) {
-                    $allSolves[i].comments = updatedSolve.comments;
-                    $allSolves[i].penalty = updatedSolve.penalty;
-                    $allSolves[i].time = updatedSolve.time;
-                    break;
-                  }
-                }
-                $stats = INITIAL_STATISTICS;
-                setSolves(false);
-              }
-              break;
-            }
-          }
-        }),
-        dataService.sessSub.subscribe((data) => {
-          if ( !data || !data.data ) return;
-
-          switch ( data.type ) {
-            case 'get-sessions': {
-              sessions = (<Session[]> data.data).map(s => { s.tName = s.name; return s; });
-
-              if ( sessions.length === 0 ) {
-                newSessionName = 'Session 1';
-                newSession();
-                return;
-              }
-
-              let ss = localStorage.getItem('session');
-              let currentSession = sessions.find(s => s._id === ss);
-              $session = currentSession || sessions[0];
-              selectedSession();
-              sortSessions();
-              break;
-            }
-            case 'rename-session':
-            case 'update-session': {
-              let session = <Session> data.data;
-              let updatedSession = sessions.find(s => s._id === session._id);
-              if ( updatedSession ) {
-                updatedSession.name = session.name;
-                updatedSession.settings = session.settings;
-              }
-              sortSessions();
-              break;
-            }
-            case 'add-session': {
-              let ns = <Session> data.data;
-              ns.tName = ns.name;
-              sessions = [ ...sessions, ns ];
-              $session = ns;
-              selectedSession();
-              sortSessions();
-              break;
-            }
-            case 'remove-session': {
-              let s = <Session> data.data;
-              sessions = sessions.filter(s1 => s1._id != s._id);
-
-              if ( sessions.length === 0 ) {
-                newSessionName = 'Session 1';
-                newSession();
-                return;
-              }
-
-              if ( s._id === $session._id ) {
-                $session = sessions[0];
-              }
-              sortSessions();
-              break;
-            }
-          }
-        }),
-        dataService.bluetoothSub.subscribe((data) => {
-          if ( !data ) return;
-
-          switch(data.type) {
-            case 'device-list': {
-              let list = data.data as BluetoothDeviceData[];
-              $bluetoothList = list.map(dv => ({
-                deviceId: dv.deviceId,
-                deviceName: ( dv.deviceName.endsWith(`(${dv.deviceId})`) ) ? dv.deviceId : dv.deviceName,
-                connected: false
-              }));
-              break;
-            }
-          }
-        }),
-      ];
-
-      dataService.getSessions();
-      dataService.getSolves();
+      dataService.getSolves().then((sv) => {
+        $allSolves = sv;
+        setSolves();
+      });
     }
-  });
-
-  onDestroy(() => {
-    subs.forEach(s => s());
   });
 
   let context: TimerContext = {
     state, ready, tab, solves, allSolves, session, Ao5, AoX, stats, scramble, decimals,
     group, mode, hintDialog, hint, cross, xcross, preview, prob, isRunning, selected,
     bluetoothList, bluetoothStatus, STATS_WINDOW,
-    sortSolves, updateStatistics, initScrambler, selectedGroup,
-    setConfigFromSolve, selectSolve, selectSolveById, editSolve
+    setSolves, sortSolves, updateSolves, handleUpdateSession, handleUpdateSolve, updateStatistics,
+    initScrambler, selectedGroup, setConfigFromSolve, selectSolve, selectSolveById, editSolve,
+    handleRemoveSolves
   };
 
   $: (useScramble || useMode || useProb) ? initScrambler(useScramble, useMode, useProb) : initScrambler();
@@ -583,7 +576,7 @@
         onChange={ (g) => { $session = g; selectedSession(); } }
       />
 
-      {#if $tab === 0}
+      {#if $tab === 0 && ($session.settings.sessionType || 'mixed') === 'mixed'}
         <Select class="min-w-[8rem]"
           placeholder={ $localLang.TIMER.selectGroup }
           value={ groups[$group] } items={ groups } transform={ e => e }
@@ -627,75 +620,146 @@
 
   {#if !timerOnly}
     <Modal show={ openEdit } onClose={ handleClose } class="w-[min(40rem,100%)]">
-      <Button ariaLabel={ $localLang.TIMER.addNewSession }
-        on:click={ openAddSession } class="mx-auto bg-blue-700 hover:bg-blue-600 text-gray-300">
-        <PlusIcon /> { $localLang.TIMER.addNewSession }
-      </Button>
+      {#if !creatingSession}
+        <Button ariaLabel={ $localLang.TIMER.addNewSession }
+          on:click={ openAddSession } class="mx-auto bg-blue-700 hover:bg-blue-600 text-gray-300">
+          <PlusIcon /> { $localLang.TIMER.addNewSession }
+        </Button>
+      {/if}
 
-      <div class="grid gap-2 m-2 mt-4 max-h-[min(80vh,25rem)] overflow-scroll"
+      <div class="grid gap-2 m-2 mt-4 max-h-[min(80vh,30rem)] overflow-scroll"
         style="grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr));">
         {#if creatingSession}
-          <div class="flex">
-            <Input
-              focus={ creatingSession }
-              class="bg-gray-600 text-gray-200 flex-1"  
-              bind:value={ newSessionName } on:keyup={ (e) => handleInputKeyUp(e) }/>
-            <div class="flex mx-2 flex-grow-0 w-10 items-center justify-center">
+          <div class="grid col-span-full justify-center gap-4">
+            <Select
+              items={ SESSION_TYPE }
+              label={ e => $localLang.TIMER.sessionTypeMap[e] }
+              transform={ e => e }
+              bind:value={ newSessionType }
+              class="m-auto"
+            />
+
+            <i class="note text-gray-300">{ $localLang.TIMER.sessionTypeDescription[newSessionType] }</i>
+
+            {#if newSessionType != 'mixed'}
+              <div class="flex flex-wrap gap-2 justify-center">
+                <Select class="min-w-[8rem]"
+                  placeholder={ $localLang.TIMER.selectGroup }
+                  bind:value={ newSessionGroup } items={ groups } transform={ (_, p) => p }
+                />
+    
+                <Select class="min-w-[8rem]"
+                  placeholder={[ $localLang.TIMER.selectMode ]}
+                  bind:value={ newSessionMode } items={ MENU[newSessionGroup][1] }
+                  label={ e => e[0] } transform={ (_, p) => p }
+                />
+              </div>
+            {/if}
+            
+            <div class="flex flex-wrap gap-2 justify-center">
+              <div class="flex items-center justify-center gap-2">
+                <span>{ $localLang.global.name }</span>
+
+                <Input
+                  focus={ creatingSession }
+                  class="bg-gray-600 text-gray-200 flex-1 max-w-[20ch]"
+                  bind:value={ newSessionName } on:keyup={ (e) => handleInputKeyUp(e) }/>
+              </div>
+
+              {#if newSessionType === 'multi-step'}
+                <div class="flex items-center justify-center gap-2">
+                  <span>{ $localLang.global.steps }</span>
+
+                  <Input
+                    class="bg-gray-600 text-gray-200 flex-1 max-w-[10ch]"
+                    inpClass="text-center" type="number" min={2} max={10}
+                    bind:value={ newSessionSteps } on:keyup={ (e) => handleInputKeyUp(e) }/>
+                </div>
+              {/if}
+            </div>
+
+            <div class="flex justify-center gap-2 mt-8">
+              <Button on:click={ closeAddSession }>{ $localLang.global.cancel }</Button>
+              <Button on:click={ newSession } class="bg-blue-700 hover:bg-blue-600 text-gray-300">
+                { $localLang.global.save }
+              </Button>
+            </div>
+
+            <!-- <div class="flex mx-2 flex-grow-0 w-10 items-center justify-center">
               <button tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer" on:click={ newSession }>
                 <CheckIcon width="100%" height="100%"/>
               </button>
               <button tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer" on:click={ closeAddSession }>
                 <CloseIcon width="100%" height="100%"/>
               </button>
-            </div>
+            </div> -->
           </div>
+        {:else}
+          {#each sessions as s}
+            <div class="grid border border-gray-400 rounded-md">
+              <Input
+                disabled={ !s.editing }
+                class="bg-transparent text-gray-400 flex-1 { !s.editing ? 'border-transparent' : '' }"
+                inpClass="text-center text-ellipsis" 
+                bind:value={ s.tName } focus={ s.editing } on:keyup={ (e) => {
+                  switch ( e.detail.code ) {
+                    case 'Enter': {
+                      s.editing = false;
+                      renameSession(s);
+                      break;
+                    }
+                    case 'Escape': {
+                      e.detail.stopPropagation();
+                      s.editing = false;
+                      break;
+                    }
+                  }
+                }}/>
+              <div class="flex mx-2 items-center justify-center">
+                {#if !s.editing && !creatingSession}
+                  <button tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer hover:text-blue-500" on:click={() => {
+                    sessions.forEach(s1 => s1.editing = false);
+                    s.editing = true;
+                  }}>
+                    <PencilIcon size="1.2rem"/>
+                  </button>
+                  <button tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer hover:text-blue-500" on:click={() => {
+                    sSession = s;
+                    showDeleteSession = true;
+                  }}>
+                    <DeleteIcon size="1.2rem"/>
+                  </button>
+                {/if}
+
+                {#if s.editing && !creatingSession}
+                  <button tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer hover:text-blue-500" on:click={ () => renameSession(s) }>
+                    <CheckIcon size="1.2rem"/>
+                  </button>
+                  <button tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer hover:text-blue-500" on:click={() => s.editing = false}>
+                    <CloseIcon size="1.2rem"/>
+                  </button>
+                {/if}
+              </div>
+            </div>
+          {/each}
         {/if}
-
-        {#each sessions as s}
-          <div class="grid border border-gray-400 rounded-md">
-            <Input
-              disabled={ !s.editing }
-              class="bg-transparent text-gray-400 flex-1 { !s.editing ? 'border-transparent' : '' }"
-              inpClass="text-center text-ellipsis" 
-              bind:value={ s.tName } focus={ s.editing } on:keyup={ (e) => {
-                switch ( e.detail.code ) {
-                  case 'Enter': {
-                    s.editing = false;
-                    renameSession(s);
-                    break;
-                  }
-                  case 'Escape': {
-                    e.detail.stopPropagation();
-                    s.editing = false;
-                    break;
-                  }
-                }
-              }}/>
-            <div class="flex mx-2 items-center justify-center">
-              {#if !s.editing && !creatingSession}
-                <button tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer hover:text-blue-500" on:click={() => {
-                  sessions.forEach(s1 => s1.editing = false);
-                  s.editing = true;
-                }}>
-                  <PencilIcon size="1.2rem"/>
-                </button>
-                <button tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer hover:text-blue-500" on:click={() => deleteSession(s)}>
-                  <DeleteIcon size="1.2rem"/>
-                </button>
-              {/if}
-
-              {#if s.editing && !creatingSession}
-                <button tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer hover:text-blue-500" on:click={ () => renameSession(s) }>
-                  <CheckIcon size="1.2rem"/>
-                </button>
-                <button tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer hover:text-blue-500" on:click={() => s.editing = false}>
-                  <CloseIcon size="1.2rem"/>
-                </button>
-              {/if}
-            </div>
-          </div>
-        {/each}
       </div>
     </Modal>
   {/if}
+
+  <Modal bind:this={ deleteSessionModal } bind:show={ showDeleteSession } onClose={ deleteSessionHandler }>
+    <h1 class="text-gray-400 mb-4 text-lg">{ $localLang.TIMER.removeSession }</h1>
+    <div class="flex justify-evenly">
+      <Button ariaLabel={ $localLang.global.cancel }
+        on:click={ () => deleteSessionModal.close(false) }>
+        { $localLang.global.cancel }
+      </Button>
+      
+      <Button ariaLabel={ $localLang.global.delete }
+        class="bg-red-800 hover:bg-red-700 text-gray-400"
+        on:click={ () => deleteSessionModal.close(true) }>
+        { $localLang.global.delete }
+      </Button>
+    </div>
+  </Modal>
 </main>

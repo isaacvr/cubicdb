@@ -1,20 +1,21 @@
-import { get } from 'svelte/store';
-import { isEscape, isSpace, notEscape } from '@helpers/stateMachine';
-import { TimerState, type InputContext, type TimerInputHandler, Penalty, type Solve } from '@interfaces';
+import { get, writable, type Writable } from 'svelte/store';
+import { isEscape, isSpace } from '@helpers/stateMachine';
+import { TimerState, type InputContext, type TimerInputHandler, Penalty, type Solve, type KeyboardContext } from '@interfaces';
 import { createMachine, interpret, type Sender } from 'xstate';
 
-const clear = ({ state, time, decimals }: InputContext) => {
+const clear = ({ state, time, decimals, currentStep, stepsTime }: KeyboardContext) => {
   state.set(TimerState.CLEAN);
   time.set(0);
   decimals.set(true);
+  stepsTime.set([]);
 }
 
-const checkPrevention = ({ session, state }: InputContext, snd: Sender<any>) => {
+const checkPrevention = ({ session, state }: KeyboardContext, snd: Sender<any>) => {
   state.set(TimerState.PREVENTION);
   get(session).settings.withoutPrevention && snd('READY');
 }
 
-const setTimerInspection = ({ time, lastSolve, session, addSolve, state, ready, decimals }: InputContext, snd: Sender<any>) => {
+const setTimerInspection = ({ time, lastSolve, session, addSolve, state, ready, decimals }: KeyboardContext, snd: Sender<any>) => {
   state.set(TimerState.INSPECTION);
   ready.set(false);
   decimals.set(false);
@@ -48,27 +49,65 @@ const setTimerInspection = ({ time, lastSolve, session, addSolve, state, ready, 
   return () => { clearInterval(itv); };
 }
 
-const setTimerRunner = ({ decimals, time, lastSolve, state }: InputContext) => {
+const setTimerRunner = ({ decimals, time, lastSolve, state, timeRef, currentStep, stepsTime }: KeyboardContext) => {
   decimals.set(true);
   state.set(TimerState.RUNNING);
+  currentStep.set(1);
+  stepsTime.set([]);
 
   let ref = performance.now() - ( get( lastSolve )?.penalty === Penalty.P2 ? 2000: 0 );
   let itv = setInterval(() => time.set(performance.now() - ref));
-  return () => clearInterval(itv);
+
+  timeRef.set(ref);
+
+  return () => {
+    let p = performance.now();
+    clearInterval(itv);
+    time.set(p - ref);
+  };
 }
 
-const saveSolve = ({ time, state, lastSolve, addSolve, initScrambler }: InputContext) => {
+const saveSolve = ({ time, state, lastSolve, stepsTime, timeRef, session, addSolve, initScrambler }: KeyboardContext) => {
   state.set(TimerState.STOPPED);
   initScrambler();
   
+  let type = get(session).settings.sessionType;
   let t = get(time);
-  let ls = get(lastSolve);
+  let ls = get(lastSolve) as Solve;
+  let ref = get(timeRef);
+  let steps = get(stepsTime).map(tm => tm - ref );
 
+  steps.push( t );
+
+  for (let i = 1, s = steps[0], maxi = steps.length; i < maxi; i += 1) {
+    let sp = steps[i];
+    steps[i] -= s;
+    s = sp;
+  }
+
+  if ( type === 'multi-step' ) {
+    ls.steps = steps;
+  }
+
+  console.log("STEPS: ", steps, t );
   t > 0 && addSolve(t, ls?.penalty);
   time.set(0);
 }
 
-const KeyboardMachine = createMachine<InputContext>({
+const endedSteps = ({ steps, currentStep, stepsTime }: KeyboardContext, ev: any) => {
+  console.log('[endedSteps]: ', get(steps), get(currentStep) );
+
+  if ( get(steps) === get(currentStep) ) {
+    return true;
+  }
+
+  currentStep.set( get(currentStep) + 1 );
+  stepsTime.set( [ ...get(stepsTime), performance.now() ] );
+
+  return false;
+};
+
+const KeyboardMachine = createMachine<KeyboardContext>({
   predictableActionArguments: true,
   initial: 'CLEAR',
   states: {
@@ -136,13 +175,15 @@ const KeyboardMachine = createMachine<InputContext>({
         src: (ctx) => () => setTimerRunner(ctx),
       },
       on: {
-        keydown: [{
-          target: "CLEAR",
-          cond: "isEscape"
-        }, {
-          target: "STOPPED",
-          cond: "notEscape",
-        }]
+        keydown: [
+          {
+            target: "CLEAR",
+            cond: "isEscape"
+          }, {
+            target: "STOPPED",
+            cond: "endedSteps",
+          }
+        ]
       }
     },
 
@@ -165,7 +206,7 @@ const KeyboardMachine = createMachine<InputContext>({
   guards: {
     isSpace,
     isEscape,
-    notEscape,
+    endedSteps,
   },
   actions: {
     clear
@@ -177,8 +218,15 @@ export class KeyboardInput implements TimerInputHandler {
   interpreter;
 
   constructor(context: InputContext) {
-    this.interpreter = interpret(KeyboardMachine.withContext(context));
-    // this.interpreter.onTransition((st) => console.log("STATE: ", st.value) );
+    let ctx: KeyboardContext = {
+      steps: writable(get(context.session).settings.steps || 1),
+      stepsTime: writable([]),
+      currentStep: writable(1),
+      timeRef: writable(0),
+      ...context
+    };
+
+    this.interpreter = interpret(KeyboardMachine.withContext(ctx));
     this.isActive = false;
   }
 

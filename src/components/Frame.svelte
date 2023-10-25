@@ -10,7 +10,7 @@
   import { derived, type Readable, type Unsubscriber } from 'svelte/store';
   import { NotificationService } from '@stores/notification.service';
   import type { Language } from '@interfaces';
-    import { randomUUID } from '@helpers/strings';
+  import { randomUUID } from '@helpers/strings';
 
   let localLang: Readable<Language> = derived(globalLang, ($lang, set) => {
     set( getLanguage( $lang ) );
@@ -20,8 +20,24 @@
   const notService = NotificationService.getInstance();
 
   let date: string, itv: NodeJS.Timer;
-  let uSub: Unsubscriber;
   let progress = 0;
+
+  function handleProgress(p: number) {
+    progress = Math.round(p * 100) / 100;
+  }
+  
+  function handleDone() {
+    notService.addNotification({
+      header: $localLang.SETTINGS.update,
+      text: $localLang.SETTINGS.updateCompleted,
+      actions: [
+        { text: $localLang.global.accept, callback: () => {} },
+        { text: $localLang.global.restartNow, callback: () => dataService.close() },
+      ],
+      timeout: 5000,
+      key: randomUUID(),
+    });
+  }
 
   onMount(() => {
     date = moment().format('hh:mm a');
@@ -30,33 +46,14 @@
       date = moment().format('hh:mm a');
     }, 1000);
 
-    uSub = dataService.updateSub.subscribe((s) => {
-      if ( !s ) return;
-
-      switch( s.type ) {
-        case 'progress': {
-          progress = Math.round(s.data[0] * 100) / 100;
-          break;
-        }
-        case 'completed': {
-          notService.addNotification({
-            header: $localLang.SETTINGS.update,
-            text: $localLang.SETTINGS.updateCompleted,
-            actions: [
-              { text: $localLang.global.accept, callback: () => {} }
-            ],
-            timeout: 5000,
-            key: randomUUID(),
-          });
-          break;
-        }
-      }
-    })
+    dataService.on('download-progress', handleProgress);
+    dataService.on('update-downloaded', handleDone);
   });
 
   onDestroy(() => {
     clearInterval(itv);
-    uSub();
+    dataService.off('download-progress', handleProgress);
+    dataService.off('update-downloaded', handleDone);
   });
 
   function minimize() {
@@ -83,11 +80,11 @@
     <Select class="w-20 h-[2rem] mr-4"
       items={ LANGUAGES } label={e => e[1].code} bind:value={ $globalLang } transform={e => e[1].code} onChange={ updateLang }/>
     <span>{date}</span>
-    <span class="ml-2 cursor-pointer" on:click={ minimize }>
+    <button class="ml-2 cursor-pointer" on:click={ minimize }>
       <Minus />
-    </span>
-    <span class="ml-2 mr-1 cursor-pointer" on:click={ close }>
+    </button>
+    <button class="ml-2 mr-1 cursor-pointer" on:click={ close }>
       <Close height="100%"/>
-    </span>
+    </button>
   </div>
 </section>

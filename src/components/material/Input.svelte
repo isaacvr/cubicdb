@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { minmax } from '@helpers/math';
   import { createEventDispatcher, tick } from 'svelte';
 
   const dispatch = createEventDispatcher();
@@ -42,7 +43,18 @@
   
   function input(e: any) { dispatch("input", e); }
   
-  function change(e: any) { dispatch("change", e); }
+  function change(e: any) {
+    let t = e.target;
+
+    if ( t.type === 'number' ) {
+      let min = t.min ? +t.min : -Infinity;
+      let max = t.max ? +t.max : Infinity;
+
+      t.value = value = minmax(t.value, min, max);
+    }
+
+    dispatch("change", e);
+  }
 
 </script>
 
@@ -89,10 +101,6 @@
 
   input:not(:placeholder-shown) + .placeholder {
     @apply absolute top-0 -my-5 scale-75;
-  }
-
-  input[disabled] {
-    cursor: not-allowed;
   }
 
   .hidden-markers input::-webkit-outer-spin-button,

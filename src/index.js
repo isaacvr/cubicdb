@@ -54,7 +54,7 @@ let cache = new Map();
 }());
 
 /// Algorithms handler
-ipcMain.handle('get-algorithms', async (event, arg) => {
+ipcMain.handle('get-algorithms', async (_, arg) => {
   return await new Promise((resolve) => {
     let filter = arg.all ? {} : { parentPath: arg.path };
   
@@ -70,263 +70,328 @@ ipcMain.handle('get-algorithms', async (event, arg) => {
   });
 });
 
-ipcMain.on('update-algorithm', (event, arg) => {
-  Algorithms.update({ _id: arg._id }, {
-    $set: {
-      name: arg.name,
-      order: arg.order,
-      scramble: arg.scramble,
-      puzzle: arg.puzzle,
-      mode: arg.mode,
-      view: arg.view,
-      tips: arg.tips,
-      solutions: arg.solutions,
-    }
-    // @ts-ignore
-  }, function(err) {
-    return event.sender.send('algorithms', [ 'update-algorithm', err ? null : arg ]);
+ipcMain.handle('update-algorithm', async (_, arg) => {
+  return await new Promise((res, rej) => {
+    Algorithms.update({ _id: arg._id }, {
+      $set: {
+        name: arg.name,
+        order: arg.order,
+        scramble: arg.scramble,
+        puzzle: arg.puzzle,
+        mode: arg.mode,
+        view: arg.view,
+        tips: arg.tips,
+        solutions: arg.solutions,
+      }
+      // @ts-ignore
+    }, function(err) {
+      if ( err ) return rej(err);
+      res(arg);
+    });
   });
 });
+
+// return await new Promise((res, rej) => {
+// });
 
 /// Tutorials handler
-ipcMain.on('get-tutorials', (event) => {
-  // @ts-ignore
-  Tutorials.find({}, (err, tutorials) => {
-    return event.sender.send('tutorial', ['get-tutorials', err ? null : tutorials]);
-  });
-});
-
-ipcMain.on('add-tutorial', (event, arg) => {
-  Tutorials.insert(arg, function(err, tutorial) {
-    return event.sender.send('tutorial', [ 'add-tutorial', err ? null: tutorial ]);
-  });
-});
-
-ipcMain.on('remove-tutorial', (event, arg) => {
-  Tutorials.remove({ _id: arg._id }, function(err, tutorial) {
-    return event.sender.send('tutorial', [ 'remove-tutorial', err ? null : tutorial ]);
-  });
-});
-
-ipcMain.on('update-tutorial', (event, arg) => {
-  Tutorials.update({ _id: arg._id }, {
-    $set: {
-      title: arg.title,
-      titleLower: arg.titleLower,
-      puzzle: arg.puzzle,
-      algs: arg.algs,
-      content: arg.content,
-      level: arg.level || 0
-    }
+ipcMain.handle('get-tutorials', async (_) => {
+  return await new Promise((res, rej) => {
     // @ts-ignore
-  }, function(err) {
-    return event.sender.send('tutorial', [ 'update-tutorial', err ? null : arg ]);
+    Tutorials.find({}, (err, tutorials) => {
+      if ( err ) return rej(err);
+      res(tutorials);
+    });
+  });
+});
+
+ipcMain.handle('add-tutorial', async (_, arg) => {
+  return await new Promise((res, rej) => {
+    Tutorials.insert(arg, function(err, tutorial) {
+      if ( err ) return rej(err);
+      res(tutorial);
+    });
+  });
+});
+
+ipcMain.handle('remove-tutorial', async (_, arg) => {
+  return await new Promise((res, rej) => {
+    Tutorials.remove({ _id: arg._id }, function(err, tutorial) {
+      if ( err ) return rej(err);
+      res(tutorial);
+    });
+  });
+});
+
+ipcMain.handle('update-tutorial', async (_, arg) => {
+  return await new Promise((res, rej) => {
+    Tutorials.update({ _id: arg._id }, {
+      $set: {
+        title: arg.title,
+        titleLower: arg.titleLower,
+        puzzle: arg.puzzle,
+        algs: arg.algs,
+        content: arg.content,
+        level: arg.level || 0
+      }
+      // @ts-ignore
+    }, function(err) {
+      if ( err ) return rej(err);
+      res(arg);
+    });
   });
 });
 
 /// Sessions handler
-ipcMain.on('get-sessions', (event) => {
-  // @ts-ignore
-  Sessions.find({}, function(err, sessions) {
-    return event.sender.send('session', ['get-sessions', err ? null : sessions]);
-  });
-});
-
-ipcMain.on('add-session', (event, arg) => {
-  Sessions.insert({
-    name: arg.name,
-    settings: arg.settings,
-    tName: arg.tName || "",
-  }, function(err, session) {
-    return event.sender.send('session', [ 'add-session', err ? null: session ]);
-  });
-});
-
-ipcMain.on('remove-session', (event, arg) => {
-  Solves.remove({ session: arg._id }, { multi: true }, function(err) {
-    Sessions.remove({ _id: arg._id }, function(err1) {
-      return event.sender.send('session', [ 'remove-session', err1 ? null : arg ]);
+ipcMain.handle('get-sessions', async () => {
+  return await new Promise((res, rej) => {
+    // @ts-ignore
+    Sessions.find({}, function(err, sessions) {
+      if ( err ) return rej(err);
+      res(sessions);
     });
   });
 });
 
-ipcMain.on('rename-session', (event, arg) => {
-  // @ts-ignore
-  Sessions.update({ _id: arg._id }, { $set: { name: arg.name } }, function(err) {
-    return event.sender.send('session', [ 'rename-session', err ? null : arg ]);
+ipcMain.handle('add-session', async (event, arg) => {
+  return await new Promise((res, rej) => {
+    Sessions.insert({
+      name: arg.name,
+      settings: arg.settings,
+      tName: arg.tName || "",
+    }, function(err, session) {
+      if ( err ) return rej(err);
+      res(session);
+    });
   });
 });
 
-ipcMain.on('update-session', (event, arg) => {
-  // @ts-ignore
-  Sessions.update({ _id: arg._id }, { $set: { name: arg.name, settings: arg.settings } }, function(err) {
-    return event.sender.send('session', [ 'update-session', err ? null : arg ]);
+ipcMain.handle('remove-session', async (event, arg) => {
+  return await new Promise((res, rej) => {
+    Solves.remove({ session: arg._id }, { multi: true }, function(err) {
+      Sessions.remove({ _id: arg._id }, function(err1) {
+        if ( err ) return rej(err);
+        res(arg);
+      });
+    });
   });
+
+});
+
+ipcMain.handle('rename-session', async (event, arg) => {
+  return await new Promise((res, rej) => {
+    // @ts-ignore
+    Sessions.update({ _id: arg._id }, { $set: { name: arg.name } }, function(err) {
+      if ( err ) return rej(err);
+      res(arg);
+    });
+  });
+});
+
+ipcMain.handle('update-session', async (event, arg) => {
+  return await new Promise((res, rej) => {
+    // @ts-ignore
+    Sessions.update({ _id: arg._id }, { $set: { name: arg.name, settings: arg.settings } }, function(err) {
+      if ( err ) return rej(err);
+      res(arg);
+    });
+  });
+
 });
 
 /// Solves handler
-ipcMain.on('get-solves', (event) => {
-  // @ts-ignore
-  Solves.find({}, (err, solves) => {
-    return event.sender.send('solves', ['get-solves', err ? null : solves ]);
+ipcMain.handle('get-solves', async (event) => {
+  return await new Promise((res, rej) => {
+    // @ts-ignore
+    Solves.find({}, (err, solves) => {
+      if ( err ) return rej(err);
+      res(solves);
+    });
+  });
+
+});
+
+ipcMain.handle('add-solve', async (event, arg) => {
+  return await new Promise((res, rej) => {
+    Solves.insert(arg, function(err, solve) {
+      if ( err ) return rej(err);
+      res(solve);
+    });
   });
 });
 
-ipcMain.on('add-solve', (event, arg) => {
-  Solves.insert(arg, function(err, solve) {
-    return event.sender.send('solves', ['add-solve', err ? null : [solve] ]);
+ipcMain.handle('add-solves', async (event, arg) => {
+  return await new Promise((res, rej) => {
+    Solves.insert(arg, function(err, solves) {
+      if ( err ) return rej(err);
+      res(solves);
+    });
   });
 });
 
-ipcMain.on('add-solves', (event, arg) => {
-  Solves.insert(arg, function(err, solves) {
-    return event.sender.send('solves', ['add-solves', err ? null : [solves] ]);
+ipcMain.handle('update-solve', async (event, arg) => {
+  return await new Promise((res, rej) => {
+    Solves.update({ _id: arg._id }, {
+      $set: {
+        comments: arg.comments,
+        penalty: arg.penalty,
+        time: arg.time,
+      }
+    // @ts-ignore
+    }, (err) => {
+      if ( err ) return rej(err);
+      res(arg);
+    });
   });
 });
 
-ipcMain.on('update-solve', (event, arg) => {
-  Solves.update({ _id: arg._id }, {
-    $set: {
-      comments: arg.comments,
-      penalty: arg.penalty,
-      time: arg.time,
-    }
-  // @ts-ignore
-  }, (err, n, solve) => {
-    return event.sender.send('solves', ['update-solve', err ? null : arg ]);
-  });
-});
-
-ipcMain.on('remove-solves', (event, arg) => {
-  Solves.remove({ _id: { $in: arg.map(s => s._id) } }, { multi: true }, function(err) {
-    return event.sender.send('solves', ['remove-solves', err ? null : arg ]);
+ipcMain.handle('remove-solves', async (event, arg) => {
+  return await new Promise((res, rej) => {
+    Solves.remove({ _id: { $in: arg.map(s => s._id) } }, { multi: true }, function(err) {
+      if ( err ) return rej(err);
+      res(arg);
+    });
   });
 });
 
 /// Contests handler
-ipcMain.on('get-contests', (event) => {
-  // @ts-ignore
-  Contests.find({}, (err, contests) => {
-    return event.sender.send('contests', ['get-contests', err ? null : contests ]);
+ipcMain.handle('get-contests', async (event) => {
+  return await new Promise((res, rej) => {
+    // @ts-ignore
+    Contests.find({}, (err, contests) => {
+      if ( err ) return rej(err);
+      res(contests);
+    });
   });
 });
 
-ipcMain.on('add-contest', (event, arg) => {
-  Contests.insert(arg, function(err, contest) {
-    return event.sender.send('contests', ['add-contest', err ? null : contest ]);
+ipcMain.handle('add-contest', async (event, arg) => {
+  return await new Promise((res, rej) => {
+    Contests.insert(arg, function(err, contest) {
+      if ( err ) return rej(err);
+      res(contest);
+    });
   });
 });
 
-ipcMain.on('update-contest', (event, arg) => {
-  Contests.update({ _id: arg._id }, {
-    $set: {
-      name: arg.name,
-      place: arg.place,
-      date: arg.date,
-      status: arg.status,
-      contestants: arg.contestants,
-      inscriptionI: arg.inscriptionI,
-      inscriptionF: arg.inscriptionF,
-      inscriptionCost: arg.inscriptionCost,
-      rounds: arg.rounds,
-    }
-  }, {}, (err) => {
-    return event.sender.send('contests', ['update-contest', err ? null : arg ]);
+ipcMain.handle('update-contest', async (event, arg) => {
+  return await new Promise((res, rej) => {
+    Contests.update({ _id: arg._id }, {
+      $set: {
+        name: arg.name,
+        place: arg.place,
+        date: arg.date,
+        status: arg.status,
+        contestants: arg.contestants,
+        inscriptionI: arg.inscriptionI,
+        inscriptionF: arg.inscriptionF,
+        inscriptionCost: arg.inscriptionCost,
+        rounds: arg.rounds,
+      }
+    // @ts-ignore
+    }, (err) => {
+      if ( err ) return rej(err);
+      res(arg);
+    });
   });
 });
 
-ipcMain.on('remove-contests', (event, arg) => {
-  Contests.remove({ _id: { $in: arg } }, { multi: true }, function(err) {
-    return event.sender.send('contests', ['remove-contests', err ? null : arg ]);
+ipcMain.handle('remove-contests', async (event, arg) => {
+  return await new Promise((res, rej) => {
+    Contests.remove({ _id: { $in: arg } }, { multi: true }, function(err) {
+      if ( err ) return rej(err);
+      res(arg);
+    });
   });
 });
 
-ipcMain.on('close', () => {
+ipcMain.handle('close', () => {
   app.exit();
+  return true;
 });
 
-ipcMain.on('generate-pdf', (event, arg) => {
-  let pdfWin = new BrowserWindow({
-    width: arg.width,
-    height: arg.height,
-    webPreferences: { offscreen: true },
-    show: false,
-  });
-
-  const tmpDir = join( tmpdir(), '/CubeDB/');
-
-  if ( !existsSync( tmpDir ) ) {
-    mkdirSync( tmpDir, { recursive: true } );
-  }
-
-  let date = (new Date).toLocaleDateString().replace(/\//g, '-');
-  let tempFile = join(tmpDir, 'Contest-' + (Math.random().toString().split('.')[1]) + '.html');
-  
-  try {
-    writeFileSync(tempFile, arg.html);
-
-    pdfWin.webContents.once('did-finish-load', () => {
-      pdfWin.webContents.printToPDF({
-        printBackground: true,
-      }).then((buffer) => {
-        event.sender.send('any', ['generate-pdf', {
-          name: `${arg.mode} - Round ${arg.round}_${date}.pdf`,
-          buffer,
-          mode: arg.mode,
-          round: arg.round,
-        }]);
-
-        try {
-          unlinkSync(tempFile);
-        } catch(err) {}
-
-      }).catch((err) => {
-        event.sender.send('any', ['generate-pdf-error', err]);
-      });
+ipcMain.handle('generate-pdf', async (event, arg) => {
+  return await new Promise((res, rej) => {
+    let pdfWin = new BrowserWindow({
+      width: arg.width,
+      height: arg.height,
+      webPreferences: { offscreen: true },
+      show: false,
     });
   
-    pdfWin.loadFile(tempFile);
-  } catch(err) {
-    return event.sender.send('any', ['generate-pdf-error', err]);
-  }
+    const tmpDir = join( tmpdir(), '/CubeDB/');
+  
+    if ( !existsSync( tmpDir ) ) {
+      mkdirSync( tmpDir, { recursive: true } );
+    }
+  
+    let date = (new Date).toLocaleDateString().replace(/\//g, '-');
+    let tempFile = join(tmpDir, 'Contest-' + (Math.random().toString().split('.')[1]) + '.html');
+    
+    try {
+      writeFileSync(tempFile, arg.html);
+  
+      pdfWin.webContents.once('did-finish-load', () => {
+        pdfWin.webContents.printToPDF({
+          printBackground: true,
+        }).then((buffer) => {
+          res({
+            name: `${arg.mode} - Round ${arg.round}_${date}.pdf`,
+            buffer,
+            mode: arg.mode,
+            round: arg.round,
+          });
+  
+          try {
+            unlinkSync(tempFile);
+          } catch(err) {}
+  
+        }).catch(rej);
+      });
+    
+      pdfWin.loadFile(tempFile);
+    } catch(err) {
+      rej(err);
+    }
+  });
 });
 
-ipcMain.on('zip-pdf', (event, data) => {
-  const tmpDir = join( tmpdir(), '/CubeDB/');
-  const { name, files } = data;
-
-  if ( !existsSync( tmpDir ) ) {
-    mkdirSync( tmpDir, { recursive: true } );
-  }
-
-  const output = createWriteStream( join(tmpDir, name + '.zip') );  
-
-  output.on('close', () => {
-    event.sender.send('any', ['zip-pdf', join(tmpDir, name + '.zip')]);
+ipcMain.handle('zip-pdf', async (event, data) => {
+  return await new Promise((res, rej) => {
+    const tmpDir = join( tmpdir(), '/CubeDB/');
+    const { name, files } = data;
+  
+    if ( !existsSync( tmpDir ) ) {
+      mkdirSync( tmpDir, { recursive: true } );
+    }
+    
+    const fileName = join(tmpDir, name + '.zip');
+    const output = createWriteStream( fileName );  
+  
+    output.on('close', () => {
+      res( fileName );
+    });
+  
+    const archive = archiver('zip', {
+      zlib: { level: 1 }
+    });
+  
+    archive.on('error', rej);
+    archive.pipe(output);
+  
+    for (let i = 0, maxi = files.length; i < maxi; i += 1) {
+      archive.append(Buffer.from(files[i].buffer), { name: files[i].name });
+    }
+  
+    archive.finalize();
   });
-
-  const archive = archiver('zip', {
-    zlib: { level: 1 }
-  });
-
-  archive.on('error', (err) => {
-    event.sender.send('any', ['zip-pdf-error', err]);
-  });
-
-  archive.pipe(output);
-
-  for (let i = 0, maxi = files.length; i < maxi; i += 1) {
-    archive.append(Buffer.from(files[i].buffer), { name: files[i].name });
-  }
-
-  archive.finalize();
 });
 
-ipcMain.on('open-file', (_, dir) => {
+ipcMain.handle('open-file', async (_, dir) => {
   shell.openExternal(dir);
 });
 
-ipcMain.on('reveal-file', (_, dir) => {
+ipcMain.handle('reveal-file', async(_, dir) => {
   exec('explorer /select,' + dir);
 });
 
@@ -401,43 +466,16 @@ if ( !prod ) {
   autoUpdater.forceDevUpdateConfig = true;
 }
 
-ipcMain.on('update', (ev, cmd) => {
-  autoUpdater.autoDownload = cmd === 'download';
-
-  if ( cmd === 'check' ) {
-    autoUpdater.checkForUpdatesAndNotify()
-      .then((res) => {
-        console.log("RES: ", res);
-
-        if ( res ) {
-          ev.sender.send('update', [ 'check', true, res.updateInfo.version ]);
-        } else {
-          ev.sender.send('update', ['check', false]);
-        }
-      })
-      .catch(_ => ev.sender.send('update', [ 'check', 'error' ]));
-  } else if ( cmd === 'download' ) {
-    autoUpdater.on('download-progress', (dp) => ev.sender.send('update', [ 'progress', dp.percent ]));
-    autoUpdater.on('update-downloaded', () => ev.sender.send('update', [ 'completed' ]))
-    
-    autoUpdater.checkForUpdates()
-      .then((res) => {
-        console.log("RES1: ", res);
-      })
-      .catch(_ => ev.sender.send('update', [ 'check', 'error' ]));;
-  }
-});
-
 // Power Management to prevent sleep
 // @ts-ignore
 let sleepId = -1, win;
 
-ipcMain.on('sleep', (_, sleep) => {
+ipcMain.handle('sleep', async (_, sleep) => {
   if ( sleep ) {
     !powerSaveBlocker.isStarted(sleepId) && (sleepId = powerSaveBlocker.start('prevent-display-sleep'));
   } else {
     powerSaveBlocker.isStarted(sleepId) && powerSaveBlocker.stop(sleepId);
-  } 
+  }
 });
 
 function createWindow() {
@@ -467,17 +505,17 @@ function createWindow() {
     win.webContents.send('bluetooth', ['device-list', deviceList]);
   });
 
-  ipcMain.on('connect-bluetooth-device', (event, deviceID) => {
+  ipcMain.handle('connect-bluetooth-device', (event, deviceID) => {
     selectBluetoothCallback(deviceID);
     selectBluetoothCallback = defaultCallback
   });
 
-  ipcMain.on('cancel-bluetooth-request', (event) => {
+  ipcMain.handle('cancel-bluetooth-request', (event) => {
     selectBluetoothCallback('');
     selectBluetoothCallback = defaultCallback
   });
 
-  ipcMain.on('bluetooth-pairing-response', (event, response) => {
+  ipcMain.handle('bluetooth-pairing-response', (event, response) => {
     bluetoothPinCallback(response);
     bluetoothPinCallback = defaultCallback;
   });
@@ -487,6 +525,37 @@ function createWindow() {
 
     // Send a message to the renderer to prompt the user to confirm the pairing.
     win.webContents.send('bluetooth', ['pairing-request', details]);
+  });
+
+  // Update
+  ipcMain.handle('update', async (ev, cmd) => {
+    return await new Promise((res, rej) => {
+      autoUpdater.autoDownload = cmd === 'download';
+    
+      if ( cmd === 'check' ) {
+        autoUpdater.checkForUpdatesAndNotify()
+          .then((data) => {
+            console.log("RES: ", data);
+            res( data ? data.updateInfo.version : null );
+          })
+          .catch(rej);
+      } else if ( cmd === 'download' ) {
+        autoUpdater.on('download-progress', (dp) => {
+          win.webContents.send('download-progress', dp.percent );
+          console.log("PERCENT: ", dp.percent);
+        });
+
+        autoUpdater.on('update-downloaded', () => {
+          win.webContents.send('update-downloaded');
+          console.log("DOWNLOADED!");
+        });
+
+        autoUpdater.checkForUpdates()
+          .then((r) => { console.log(r); res(null); })
+          .catch(rej);
+      }
+    });
+  
   });
 
   // Second screen
@@ -503,12 +572,12 @@ function createWindow() {
   });
 
   // Other Stuff
-  ipcMain.on('minimize', () => {
+  ipcMain.handle('minimize', () => {
     // @ts-ignore
     win.minimize();
   });
 
-  ipcMain.on('maximize', () => {
+  ipcMain.handle('maximize', () => {
     // @ts-ignore
     if ( !win ) return;
 
@@ -565,8 +634,23 @@ function createWindow() {
           withoutPrevention: true,
           recordCelebration: true,
           showBackFace: false,
+          sessionType: 'mixed'
         }
       });
+    }
+  });
+
+  // @ts-ignore
+  Sessions.find({}, (err, sessions) => {
+    if ( err ) return;
+
+    for (let i = 0, maxi = sessions.length; i < maxi; i += 1) {
+      if ( !sessions[i].settings.sessionType ) {
+        sessions[i].settings.sessionType = "mixed";
+
+        // @ts-ignore
+        Sessions.update({ _id: sessions[i]._id }, { $set: { settings: sessions[i].settings } }, () => {});
+      }
     }
   });
 

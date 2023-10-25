@@ -1,68 +1,21 @@
 /// <reference types="web-bluetooth" />
 
+import { Emitter } from '@classes/Emitter';
 import { GANInput } from '@components/timer/input-handlers/GAN';
 import { QiYiSmartTimerInput } from '@components/timer/input-handlers/QY-Timer';
-import type { Algorithm, RawCard, Solve, Session, Tutorial, Sheet, CubeEvent, IPC, PDFOptions, UpdateCommand } from '@interfaces';
+import type { Algorithm, Solve, Session, Tutorial, Sheet, CubeEvent, IPC, PDFOptions, UpdateCommand } from '@interfaces';
 import { ElectronAdaptor, BrowserAdaptor } from '@storage/index';
 import type { Display } from 'electron';
-import type { Writable } from 'svelte/store';
-import { writable } from 'svelte/store';
 
-interface TutorialData {
-  0: string;
-  1: Tutorial | Tutorial[];
-}
-
-interface AlgSub {
-  type: string;
-  data: Algorithm | Algorithm[];
-}
-
-interface SolveSub {
-  type: string;
-  data: Solve | Solve[];
-}
-
-interface ContestSub {
-  type: string;
-  data: CubeEvent | CubeEvent[];
-}
-
-interface SessionSub {
-  type: string;
-  data: Session[];
-}
-
-interface AnySub {
-  type: string;
-  data: any;
-}
+type DownloadEvent = 'download-progress' | 'update-downloaded';
 
 export class DataService {
-  ipc: IPC;
-  algSub: Writable< AlgSub >;
-  cardSub: Writable< RawCard[] >;
-  tutSub: Writable< TutorialData >;
-  solveSub: Writable<SolveSub>;
-  contestSub: Writable<ContestSub>;
-  sessSub: Writable< { type: string, data: Session | Session[] } >;
-  anySub: Writable<AnySub>;
-  updateSub: Writable<AnySub>;
-  bluetoothSub: Writable<AnySub>;
-
+  private emitter: Emitter;
+  private ipc: IPC;
   private static _instance: DataService;
 
   private constructor() {
-
-    this.algSub = writable< AlgSub >();
-    this.cardSub = writable< RawCard[] >([]);
-    this.solveSub = writable< SolveSub >();
-    this.tutSub = writable< TutorialData >();
-    this.sessSub = writable< SessionSub >();
-    this.contestSub = writable< ContestSub >();
-    this.anySub = writable<AnySub>();
-    this.updateSub = writable<AnySub>();
-    this.bluetoothSub = writable<AnySub>();
+    this.emitter = new Emitter();
 
     // @ts-ignore
     if ( window.electronAPI ) {
@@ -84,101 +37,58 @@ export class DataService {
   }
 
   setIpc() {
-    this.ipc.handleTutorials((_: any, tuts: any) => {
-      this.tutSub.set(tuts);
-    })
-
-    this.ipc.handleAlgorithms((_: any, algs: any) => {
-      this.algSub.set({
-        type: algs[0],
-        data: algs[1]
-      });
+    this.ipc.addDownloadProgressListener((_, progress: number) => {
+      this.emitter.emit('download-progress', progress);
+      console.log('download-progress', progress);
     });
 
-    this.ipc.handleCards((_: any, cards: any) => {
-      this.cardSub.set(cards);
-    });
-
-    this.ipc.handleSolves((_: any, slv: any) => {
-      this.solveSub.set({
-        type: slv[0],
-        data: slv[1]
-      });
-    });
-    
-    this.ipc.handleContests((_: any, cnt: any) => {
-      this.contestSub.set({
-        type: cnt[0],
-        data: cnt[1]
-      });
-    });
-
-    this.ipc.handleSessions((_: any, sess: any) => {
-      this.sessSub.set({
-        type: sess[0],
-        data: sess[1]
-      });
-    });
-
-    this.ipc.handleAny((_: any, ev: any) => {
-      this.anySub.set({
-        type: ev[0],
-        data: ev[1],
-      });
-    });
-
-    this.ipc.handleUpdate((_: any, ev: any) => {
-      this.updateSub.set({
-        type: ev[0],
-        data: ev.slice(1),
-      });
-    });
-
-    this.ipc.handleBluetooth((_: any, ev: any) => {
-      this.bluetoothSub.set({
-        type: ev[0],
-        data: ev[1],
-      });
-    });
+    this.ipc.addDownloadDoneListener(() => {
+      this.emitter.emit('update-downloaded');
+      console.log('update-downloaded')
+    }); 
   }
 
-  async getAlgorithms(path: string, all?: boolean): Promise<Algorithm[]> {
-    return await this.ipc.getAlgorithms({ all, path });
+  on(ev: DownloadEvent, cb: (...args: any[]) => any) {
+    this.emitter.on(ev, cb);
+  }
+
+  off(ev: DownloadEvent, cb: (...args: any[]) => any) {
+    this.emitter.off(ev, cb);
+  }
+
+  getAlgorithms(path: string, all?: boolean): Promise<Algorithm[]> {
+    return this.ipc.getAlgorithms({ all, path });
   }
 
   updateAlgorithm(alg: Algorithm) {
-    this.ipc.updateAlgorithm(alg);
-  }
-
-  getCards(): void {
-    this.ipc.getCards();
+    return this.ipc.updateAlgorithm(alg);
   }
 
   getTutorials() {
-    this.ipc.getTutorials();
+    return this.ipc.getTutorials();
   }
 
   addTutorial(t: Tutorial) {
-    this.ipc.addTutorial(t);
+    return this.ipc.addTutorial(t);
   }
 
   updateTutorial(t: Tutorial) {
-    this.ipc.updateTutorial(t);
+    return this.ipc.updateTutorial(t);
   }
 
   getSolves() {
-    this.ipc.getSolves();
+    return this.ipc.getSolves();
   }
 
   addSolve(s: Solve) {
     let ts: Solve = Object.assign({}, s);
     delete ts._id;
 
-    this.ipc.addSolve(ts);
+    return this.ipc.addSolve(ts);
   }
 
   addSolves(s: Solve[]) {
-    this.ipc.addSolves( s.map(sv => {
+    return this.ipc.addSolves( s.map(sv => {
       let ts: Solve = Object.assign({}, sv);
       delete ts._id;
       
@@ -187,101 +97,101 @@ export class DataService {
   }
 
   updateSolve(s: Solve) {
-    this.ipc.updateSolve(s);
+    return this.ipc.updateSolve(s);
   }
 
   removeSolves(s: Solve[]) {
-    this.ipc.removeSolves(s);
+    return this.ipc.removeSolves(s);
   }
 
   getSessions() {
-    this.ipc.getSessions();
+    return this.ipc.getSessions();
   }
 
   addSession(s: Session) {
-    this.ipc.addSession(s);
+    return this.ipc.addSession(s);
   }
 
   removeSession(s: Session) {
-    this.ipc.removeSession(s);
+    return this.ipc.removeSession(s);
   }
 
   renameSession(s: Session) {
-    this.ipc.renameSession(s);
+    return this.ipc.renameSession(s);
   }
 
   updateSession(s: Session) {
-    this.ipc.updateSession(s);
+    return this.ipc.updateSession(s);
   }
 
   addContest(c: CubeEvent) {
-    this.ipc.addContest(c);
+    return this.ipc.addContest(c);
   }
 
   getContests() {
-    this.ipc.getContests();
+    return this.ipc.getContests();
   }
 
   updateContest(c: CubeEvent) {
-    this.ipc.updateContest(c);
+    return this.ipc.updateContest(c);
   }
 
   removeContests(c: CubeEvent[]) {
-    this.ipc.removeContests(c);
+    return this.ipc.removeContests(c);
   }
 
   minimize() {
-    this.ipc.minimize();
+    return this.ipc.minimize();
   }
 
   maximize() {
-    this.ipc.maximize();
+    return this.ipc.maximize();
   }
 
   close() {
-    this.ipc.close();
+    return this.ipc.close();
   }
 
   generatePDF(args: PDFOptions) {
-    this.ipc.generatePDF(args);
+    return this.ipc.generatePDF(args);
   }
 
   zipPDF(s: { name: string, files: Sheet[]}) {
-    this.ipc.zipPDF(s);
+    return this.ipc.zipPDF(s);
   }
 
   openFile(f: string) {
-    this.ipc.openFile("file://" + f);
+    return this.ipc.openFile("file://" + f);
   }
 
   openURL(url: string) {
-    this.ipc.openFile(url);
+    return this.ipc.openFile(url);
   }
 
   revealFile(f: string) {
-    this.ipc.revealFile(f);
+    return this.ipc.revealFile(f);
   }
 
   update(cmd: UpdateCommand) {
-    this.ipc.update(cmd);
+    return this.ipc.update(cmd);
   }
 
   sleep(s: boolean) {
-    this.ipc.sleep(s);
+    return this.ipc.sleep(s);
   }
 
   connectBluetoothDevice(id: string) {
     localStorage.setItem('bluetooth-mac', id);
-    this.ipc.connectBluetoothDevice(id);
+    return this.ipc.connectBluetoothDevice(id);
   }
 
   cancelBluetoothRequest() {
     localStorage.removeItem('bluetooth-mac');
-    this.ipc.cancelBluetoothRequest();
+    return this.ipc.cancelBluetoothRequest();
   }
 
   pairingBluetoothResponse() {
-    this.ipc.pairingBluetoothResponse();
+    return this.ipc.pairingBluetoothResponse();
   }
 
   searchBluetooth(inp: GANInput | QiYiSmartTimerInput): Promise<string> {

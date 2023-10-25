@@ -18,6 +18,10 @@ export const Spanish: Language = {
     clear: 'Limpiar',
     reset: 'Reiniciar',
     generate: 'Generar',
+    restartNow: 'Reiniciar ahora',
+    name: 'Nombre',
+    steps: 'Pasos',
+    step: 'Paso',
   },
   NAVBAR: {
     home: 'Inicio',
@@ -123,6 +127,16 @@ export const Spanish: Language = {
     withoutPrevention: 'Sin tiempo de prevención',
     withoutPreventionDescription: 'Tiempo que debe mantener la tecla Espacio presionada',
     recordCelebration: 'Celebrar cuando se rompe un record',
+    sessionTypeMap: {
+      "mixed": "Mixta",
+      "single": "Simple",
+      "multi-step": "Multi-pasos",
+    },
+    sessionTypeDescription: {
+      "mixed": "Múltiples mezcladores en la misma sesión (2x2, 3x3, ...)",
+      "single": "Sesión de una sola categoría",
+      "multi-step": "Establezca múltiples pasos para cada resolución",
+    },
 
     // Last solve tooltip
     comments: 'Comentarios',
@@ -159,7 +173,8 @@ export const Spanish: Language = {
     comment: 'Comentarios...',
     noPenalty: 'Limpio',
 
-    removeAllSolves: 'Deseas eliminar todos los tiempos?',
+    removeAllSolves: '¿Deseas eliminar todos los tiempos?',
+    removeSession: '¿Desea eliminar esta sesión?',
     select: 'Seleccionar',
 
     // Stats Tab

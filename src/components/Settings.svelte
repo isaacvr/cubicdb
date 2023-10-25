@@ -18,7 +18,6 @@
 
   let finalLang = $globalLang;
   let dataService = DataService.getInstance();
-  let uSub: Unsubscriber;
   let language = $globalLang;
 
   let localLang: Readable<Language> = derived(globalLang, ($lang, set) => {
@@ -76,11 +75,51 @@
 
   function checkUpdate() {
     canCheckUpdate = false;
-    dataService.update('check');
+    dataService.update('check').then(res => {
+      if ( !res ) return;
+
+      if ( $version === res ) {
+        notService.addNotification({
+          header: $localLang.SETTINGS.alreadyUpdated,
+          text: $localLang.SETTINGS.alreadyUpdatedText,
+          fixed: true,
+          actions: [
+            { text: $localLang.global.accept, callback: () => {} }
+          ],
+          key: randomUUID(),
+        });
+      } else {
+        notService.addNotification({
+          header: `${ $localLang.SETTINGS.updateAvailable } (${ res })`,
+          text: $localLang.SETTINGS.updateAvailableText,
+          fixed: true,
+          actions: [
+            { text: $localLang.global.cancel, callback: () => {} },
+            { text: $localLang.global.update, callback: updateNow },
+          ],
+          key: randomUUID(),
+        });
+      }
+    }).catch((err) => {
+      notService.addNotification({
+        header: $localLang.SETTINGS.updateError,
+        text: $localLang.SETTINGS.updateErrorText,
+        timeout: 2000,
+        key: randomUUID(),
+      });
+
+      console.dir(err);
+    }).finally(() => canCheckUpdate = true);
   }
 
   function updateNow() {
-    dataService.update('download');
+    dataService.update('download').then(() => {
+      console.log('Downloaded');
+    })
+    .catch(err => {
+      console.log('update error: ');
+      console.dir(err);
+    });
   }
 
   function updateDisplays() {
@@ -102,60 +141,6 @@
   onMount(() => {
     updateDisplays();
 
-    uSub = dataService.updateSub.subscribe((ev) => {
-      if ( !ev ) return;
-
-      switch( ev.type ) {
-        case 'check': {
-          canCheckUpdate = true;
-
-          let res = ev.data[0];
-          let vs = ev.data[1];
-
-          if ( res === 'error' ) {
-            notService.addNotification({
-              header: $localLang.SETTINGS.updateError,
-              text: $localLang.SETTINGS.updateErrorText,
-              timeout: 2000,
-              key: randomUUID(),
-            });
-          } else if ( res ) {
-            if ( $version === vs ) {
-              notService.addNotification({
-                header: $localLang.SETTINGS.alreadyUpdated,
-                text: $localLang.SETTINGS.alreadyUpdatedText,
-                fixed: true,
-                actions: [
-                  { text: $localLang.global.accept, callback: () => {} }
-                ],
-                key: randomUUID(),
-              });
-            } else {
-              notService.addNotification({
-                header: `${ $localLang.SETTINGS.updateAvailable } (${ vs })`,
-                text: $localLang.SETTINGS.updateAvailableText,
-                fixed: true,
-                actions: [
-                  { text: $localLang.global.cancel, callback: () => {} },
-                  { text: $localLang.global.update, callback: updateNow },
-                ],
-                key: randomUUID(),
-              });
-            }
-          } else {
-            notService.addNotification({
-              header: $localLang.SETTINGS.alreadyUpdated,
-              text: $localLang.SETTINGS.alreadyUpdatedText,
-              timeout: 2000,
-              key: randomUUID(),
-            });
-          }
-
-          break;
-        }
-      }
-    });
-
     itv = setInterval(() => {
       dTime = Math.random() * 20000;
     }, 2000);
@@ -163,7 +148,6 @@
 
   onDestroy(() => {
     $globalLang = finalLang;
-    uSub();
     clearInterval(itv);
   }); 
 </script>

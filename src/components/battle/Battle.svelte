@@ -410,11 +410,11 @@
           <div class="flex items-center gap-1"><EyeIcon size="1.2rem" /> { game.observers.length }</div>
         </Tooltip>
       </li>
-      <li class="bg-red-700 text-gray-300" on:click={ exit }>
+      <button class="bg-red-700 text-gray-300" on:click={ exit }>
         <Tooltip position="top" text="Exit">
           <div class="flex items-center"><CloseIcon size="1.2rem" /></div>
         </Tooltip>
-      </li>
+      </button>
     </ul>
 
     {#if isCreator}

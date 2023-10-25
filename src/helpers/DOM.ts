@@ -35,7 +35,9 @@ export function getStackingContext(e: HTMLElement): HTMLElement {
       return e;
     }
 
-
+    if ( e.getAttribute("data-type") === "modal" ) {
+      return e;
+    }
   }
 }
 

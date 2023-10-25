@@ -6,40 +6,16 @@ export class ElectronAdaptor implements IPC {
     this.ipc = (<any> window).electronAPI as IPC;
   }
 
-  handleAlgorithms(fn: Function) {
-    this.ipc.handleAlgorithms(fn);
-  }
-
-  handleAny(fn: Function) {
-    this.ipc.handleAny(fn);
-  }
-
-  handleCards(fn: Function) {
-    this.ipc.handleCards(fn);
-  }
-
-  handleContests(fn: Function) {
-    this.ipc.handleContests(fn);
-  }
-
-  handleSessions(fn: Function) {
-    this.ipc.handleSessions(fn);
-  }
-
-  handleSolves(fn: Function) {
-    this.ipc.handleSolves(fn);
-  }
-
-  handleTutorials(fn: Function) {
-    this.ipc.handleTutorials(fn);
-  }
-  
-  handleUpdate(fn: Function) {
-    this.ipc.handleUpdate(fn);
-  }
-
   async getAlgorithms(options: AlgorithmOptions): Promise<Algorithm[]> {
     return await this.ipc.getAlgorithms(options);
+  }
+
+  addDownloadProgressListener(cb: any) {
+    this.ipc.addDownloadProgressListener(cb);
+  }
+
+  addDownloadDoneListener(cb: any) {
+    this.ipc.addDownloadDoneListener(cb);
   }
 
   updateAlgorithm(alg: Algorithm) {
@@ -47,131 +23,123 @@ export class ElectronAdaptor implements IPC {
 
     delete cp._puzzle;
 
-    this.ipc.updateAlgorithm(cp);
-  }
-
-  getCards(): void {
-    this.ipc.getCards();
+    return this.ipc.updateAlgorithm(cp);
   }
 
   getTutorials() {
-    this.ipc.getTutorials();
+    return this.ipc.getTutorials();
   }
 
   addTutorial(t: Tutorial) {
-    this.ipc.addTutorial(t);
+    return this.ipc.addTutorial(t);
   }
 
   updateTutorial(t: Tutorial) {
-    this.ipc.updateTutorial(t);
+    return this.ipc.updateTutorial(t);
   }
 
   getSolves() {
-    this.ipc.getSolves();
+    return this.ipc.getSolves();
   }
 
   addSolve(s: Solve) {
-    this.ipc.addSolve(s);
+    return this.ipc.addSolve(s);
   }
 
   addSolves(s: Solve[]) {
-    this.ipc.addSolves(s);
+    return this.ipc.addSolves(s);
   }
 
   updateSolve(s: Solve) {
-    this.ipc.updateSolve(s);
+    return this.ipc.updateSolve(s);
   }
 
   removeSolves(s: Solve[]) {
-    this.ipc.removeSolves(s);
+    return this.ipc.removeSolves(s);
   }
 
   getSessions() {
-    this.ipc.getSessions();
+    return this.ipc.getSessions();
   }
 
   addSession(s: Session) {
-    this.ipc.addSession(s);
+    return this.ipc.addSession(s);
   }
 
   removeSession(s: Session) {
-    this.ipc.removeSession(s);
+    return this.ipc.removeSession(s);
   }
 
   renameSession(s: Session) {
-    this.ipc.renameSession(s);
+    return this.ipc.renameSession(s);
   }
 
   updateSession(s: Session) {
-    this.ipc.updateSession(s);
+    return this.ipc.updateSession(s);
   }
 
   addContest(c: CubeEvent) {
-    this.ipc.addContest(c);
+    return this.ipc.addContest(c);
   }
 
   getContests() {
-    this.ipc.getContests();
+    return this.ipc.getContests();
   }
 
   updateContest(c: CubeEvent) {
-    this.ipc.updateContest(c);
+    return this.ipc.updateContest(c);
   }
 
   removeContests(c: CubeEvent[]) {
-    this.ipc.removeContests(c);
+    return this.ipc.removeContests(c);
   }
 
   minimize() {
-    this.ipc.minimize();
+    return this.ipc.minimize();
   }
 
   maximize() {
-    this.ipc.maximize();
+    return this.ipc.maximize();
   }
 
   close() {
-    this.ipc.close();
+    return this.ipc.close();
   }
 
   generatePDF(args: PDFOptions) {
-    this.ipc.generatePDF(args);
+    return this.ipc.generatePDF(args);
   }
 
   zipPDF(s: { name: string, files: Sheet[]}) {
-    this.ipc.zipPDF(s);
+    return this.ipc.zipPDF(s);
   }
 
   openFile(f: string) {
-    this.ipc.openFile(f);
+    return this.ipc.openFile(f);
   }
 
   revealFile(f: string) {
-    this.ipc.revealFile(f);
+    return this.ipc.revealFile(f);
   }
 
   update(cmd: UpdateCommand) {
-    this.ipc.update(cmd);
+    return this.ipc.update(cmd);
   }
 
   sleep(s: boolean) {
-    this.ipc.sleep(s);
+    return this.ipc.sleep(s);
   }
 
   connectBluetoothDevice(id: string) {
-    this.ipc.connectBluetoothDevice(id);
+    return this.ipc.connectBluetoothDevice(id);
   }
 
   cancelBluetoothRequest() {
-    this.ipc.cancelBluetoothRequest();
+    return this.ipc.cancelBluetoothRequest();
   }
 
   pairingBluetoothResponse() {
-    this.ipc.pairingBluetoothResponse();
-  }
-
-  handleBluetooth(fn: Function) {
-    this.ipc.handleBluetooth(fn);
+    return this.ipc.pairingBluetoothResponse();
   }
 
   cacheCheckImage(hash: string): Promise<boolean> {

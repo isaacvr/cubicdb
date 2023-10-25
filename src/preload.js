@@ -4,70 +4,60 @@ const ipc = ipcRenderer;
 
 contextBridge.exposeInMainWorld('electronAPI', {
   getAlgorithms: async (dir) => await ipc.invoke('get-algorithms', dir),
-  updateAlgorithm: (dir) => ipc.send('update-algorithm', dir),
-  handleAlgorithms: (dir) => ipc.on('algorithms', dir),
+  updateAlgorithm: async (dir) => await ipc.invoke('update-algorithm', dir),
   
-  getCards: () => ipc.send('cards'),
-  handleCards: (dir) => ipc.on('cards', dir),
+  getCards: async () => await ipc.invoke('cards'),
   
-  addSolve: (s) => ipc.send('add-solve', s),
-  addSolves: (s) => ipc.send('add-solves', s),
-  getSolves: () => ipc.send('get-solves'),
-  updateSolve: (s) => ipc.send('update-solve', s),
-  removeSolves: (s) => ipc.send('remove-solves', s),
-  handleSolves: (dir) => ipc.on('solves', dir),
+  addSolve: async (s) => await ipc.invoke('add-solve', s),
+  addSolves: async (s) => await ipc.invoke('add-solves', s),
+  getSolves: async () => await ipc.invoke('get-solves'),
+  updateSolve: async (s) => await ipc.invoke('update-solve', s),
+  removeSolves: async (s) => await ipc.invoke('remove-solves', s),
   
-  addContest: (s) => ipc.send('add-contest', s),
-  getContests: () => ipc.send('get-contests'),
-  updateContest: (s) => ipc.send('update-contest', s),
-  removeContests: (s) => ipc.send('remove-contests', s),
-  handleContests: (dir) => ipc.on('contests', dir),
+  addContest: async (s) => await ipc.invoke('add-contest', s),
+  getContests: async () => await ipc.invoke('get-contests'),
+  updateContest: async (s) => await ipc.invoke('update-contest', s),
+  removeContests: async (s) => await ipc.invoke('remove-contests', s),
   
-  addSession: (s) => ipc.send('add-session', s),
-  getSessions: () => ipc.send('get-sessions'),
-  removeSession: (s) => ipc.send('remove-session', s),
-  renameSession: (s) => ipc.send('rename-session', s),
-  updateSession: (s) => ipc.send('update-session', s),
-  handleSessions: (dir) => ipc.on('session', dir),
+  addSession: async (s) => await ipc.invoke('add-session', s),
+  getSessions: async () => await ipc.invoke('get-sessions'),
+  removeSession: async (s) => await ipc.invoke('remove-session', s),
+  renameSession: async (s) => await ipc.invoke('rename-session', s),
+  updateSession: async (s) => await ipc.invoke('update-session', s),
   
-  addTutorial: (t) => ipc.send('add-tutorial', t),
-  getTutorials: () => ipc.send('get-tutorials'),
-  updateTutorial: (t) => ipc.send('update-tutorial', t),
-  handleTutorials: (cb) => ipc.on('tutorial', cb),
+  addTutorial: async (t) => await ipc.invoke('add-tutorial', t),
+  getTutorials: async () => await ipc.invoke('get-tutorials'),
+  updateTutorial: async (t) => await ipc.invoke('update-tutorial', t),
 
-  minimize: () => ipc.send('minimize'),
-  maximize: () => ipc.send('maximize'),
-  close: () => ipc.send('close'),
-  generatePDF: (opts) => ipc.send('generate-pdf', opts),
-  zipPDF: (sheets) => ipc.send('zip-pdf', sheets),
-  openFile: (f) => ipc.send('open-file', f),
-  revealFile: (f) => ipc.send('reveal-file', f),
-  handleAny: (cb) => ipc.on('any', cb),
+  // Misc functions
+  minimize: async () => await ipc.invoke('minimize'),
+  maximize: async () => await ipc.invoke('maximize'),
+  close: async () => await ipc.invoke('close'),
+  generatePDF: async (opts) => await ipc.invoke('generate-pdf', opts),
+  zipPDF: async (sheets) => await ipc.invoke('zip-pdf', sheets),
+  openFile: async (f) => await ipc.invoke('open-file', f),
+  revealFile: async (f) => await ipc.invoke('reveal-file', f),
 
-  update: (cmd) => ipc.send('update', cmd),
-  handleUpdate: (cb) => ipc.on('update', cb),
+  // Update
+  update: async (cmd) => await ipc.invoke('update', cmd),
+  addDownloadProgressListener: (cb) => ipc.on('download-progress', cb),
+  addDownloadDoneListener: (cb) => ipc.on('update-downloaded', cb),
 
-  sleep: (s) => ipc.send('sleep', s),
+  // Power control
+  sleep: async (s) => await ipc.invoke('sleep', s),
 
   // Bluetooth
-  connectBluetoothDevice: (id) => ipc.send('connect-bluetooth-device', id),
-  cancelBluetoothRequest: () => ipc.send('cancel-bluetooth-request'),
-  pairingBluetoothResponse: (id) => ipc.send('connect-bluetooth-device', id),
-  handleBluetooth: (cb) => ipc.on('bluetooth', cb),
+  connectBluetoothDevice: async (id) => await ipc.invoke('connect-bluetooth-device', id),
+  cancelBluetoothRequest: async () => await ipc.invoke('cancel-bluetooth-request'),
+  pairingBluetoothResponse: async (id) => await ipc.invoke('connect-bluetooth-device', id),
 
-  /*
-
-  cancelBluetoothRequest: (callback) => ipcRenderer.send('cancel-bluetooth-request', callback),
-  bluetoothPairingRequest: (callback) => ipcRenderer.on('bluetooth-pairing-request', callback),
-  bluetoothPairingResponse: (response) => ipcRenderer.send('bluetooth-pairing-response', response)
-  
-  */
-
+  // Cache
   cacheCheckImage: async (hash) => await ipc.invoke('check-image', hash),
   cacheGetImage: async (hash) => await ipc.invoke('get-image', hash),
   cacheGetImageBundle: async (hashes) => await ipc.invoke('get-image-bundle', hashes),
   cacheSaveImage: async (hash, data) => await ipc.invoke('save-image', hash, data),
 
-  getAllDisplays: () => ipc.invoke('get-all-displays'),
-  useDisplay: (id) => ipc.invoke('use-display', id),
+  // Screens
+  getAllDisplays: async () => await ipc.invoke('get-all-displays'),
+  useDisplay: async (id) => await ipc.invoke('use-display', id),
 });

@@ -193,6 +193,8 @@ export const SessionDefaultSettings: SessionSettings = {
   input: 'Keyboard',
   withoutPrevention: true,
   recordCelebration: true,
+  showBackFace: false,
+  sessionType: 'mixed'
 };
 
 export const AON = readable([ 3, 5, 12, 50, 100, 200, 500, 1000, 2000 ]);

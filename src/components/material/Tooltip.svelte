@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { getStackingContext } from '@helpers/DOM';
+  import { getStackingContext } from '@helpers/DOM';
   import { processKey } from '@helpers/strings';
   import { onMount } from 'svelte';
 
@@ -30,8 +30,11 @@
 
     let e1: HTMLElement | null | undefined = getStackingContext(elem);
     let cp = e1.getBoundingClientRect();
-    _x -= cp.x;
-    _y -= cp.y;
+
+    if ( !(e1.getAttribute('data-type') === 'modal') ) {
+      _x -= cp.x;
+      _y -= cp.y;
+    }
 
     if ( position === 'right' || position === 'left' ) {
       x = position === 'left' ? `calc(${_x - ct.width}px - 0.5rem)` : `calc(${_x + ce.width}px + 0.5rem)`;
@@ -56,6 +59,7 @@
 
 <svelte:window on:resize={ resize }></svelte:window>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
   on:mouseenter={mouseenter}
   on:mouseleave={mouseleave}
@@ -89,34 +93,5 @@
   .wrapper {
     @apply w-fit h-fit;
     display: initial;
-  }
-
-  .tooltip {
-    @apply fixed bg-neutral-600 px-3 py-2 rounded-sm flex
-      transition-all text-neutral-200 items-center justify-center text-center;
-    width: max-content;
-    max-width: 35ch;
-    transition-duration: var(--duration);
-    transition-delay: var(--delay);
-    left: var(--x);
-    top: var(--y);
-    z-index: 999;
-    font-size: 1rem;
-    filter: drop-shadow(0 0 0.2rem #222);
-  }
-
-  .tooltip:not(.visible) {
-    @apply opacity-0 pointer-events-none select-none;
-  }
-
-  .tooltip::before {
-    content: '';
-    @apply absolute w-2 h-2 bg-neutral-600
-      border border-gray-600;
-    left: var(--tx);
-    top: var(--ty);
-    transform: rotate( var(--tr) );
-    border-right: none;
-    border-bottom: none;
   }
 </style>

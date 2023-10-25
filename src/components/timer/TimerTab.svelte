@@ -33,10 +33,9 @@
   /// Helpers
   import { sTimer, timer, timerToMilli } from '@helpers/timer';
   import { createEventDispatcher, onDestroy, onMount } from 'svelte';
-  import type { Unsubscriber } from 'svelte/store';
   import { DataService } from '@stores/data.service';
   import { NotificationService } from '@stores/notification.service';
-  import { derived, writable, type Readable, type Writable } from 'svelte/store';
+  import { derived, writable, type Readable, type Writable, get } from 'svelte/store';
 
   import { StackmatInput } from './input-handlers/Stackmat';
   import { ManualInput } from './input-handlers/Manual';
@@ -47,6 +46,8 @@
   import Simulator from '@components/Simulator.svelte';
   import { KeyboardInput } from './input-handlers/Keyboard';
   import { QiYiSmartTimerInput } from './input-handlers/QY-Timer';
+    import { statsReplaceId } from '@helpers/statistics';
+    import StatsProgress from './StatsProgress.svelte';
 
   export let context: TimerContext;
   export let battle = false;
@@ -60,7 +61,8 @@
   const {
     state, ready, tab, solves, allSolves, session, Ao5, stats, scramble, group, mode, hintDialog,
     hint, cross, xcross, preview, isRunning, decimals, bluetoothList,
-    sortSolves, initScrambler, updateStatistics, selectedGroup, setConfigFromSolve, editSolve
+    setSolves, sortSolves, updateSolves, initScrambler, updateStatistics, selectedGroup,
+    setConfigFromSolve, editSolve, handleUpdateSession, handleUpdateSolve, handleRemoveSolves
   } = context;
 
   const dispatch = createEventDispatcher();
@@ -74,7 +76,7 @@
   let solveControl = [
     { text: "Delete", icon: Close, highlight: () => false, handler: () => {
       if ( $lastSolve ) {
-        dataService.removeSolves([ $lastSolve ]);
+        dataService.removeSolves([ $lastSolve ]).then( handleRemoveSolves );
         $time = 0;
         reset();
       }
@@ -83,7 +85,7 @@
       if ( $lastSolve ) {
         $lastSolve.penalty = $lastSolve.penalty === Penalty.DNF ? Penalty.NONE : Penalty.DNF;
         $time = $lastSolve.penalty === Penalty.DNF ? Infinity : $lastSolve.time;
-        battle ? dispatch('update', $lastSolve) : dataService.updateSolve($lastSolve);
+        battle ? dispatch('update', $lastSolve) : dataService.updateSolve($lastSolve).then( handleUpdateSolve );
       }
     } },
     { text: "+2", icon: Flag, highlight: (s: any) => s.penalty === Penalty.P2, handler: () => {
@@ -95,7 +97,7 @@
         if ( battle ) {
           dispatch('update', $lastSolve);
         } else {
-          dataService.updateSolve($lastSolve);
+          dataService.updateSolve($lastSolve).then( handleUpdateSolve );
         }
       }
     } },
@@ -126,10 +128,11 @@
   };
 
   let inputMethod: TimerInputHandler = new ManualInput();
+  let currentStep = writable(1);
+  let totalSteps = writable(1);
   let deviceID = 'default';
   let deviceList: string[][] = [];
   let autoConnectId: string[] = [];
-  let subs: Unsubscriber[] = [];
 
   /// NOTES
   let showNotes = false;
@@ -191,7 +194,7 @@
           if ( timerOnly ) return;
 
           initInputHandler();
-          dataService.updateSession($session);
+          dataService.updateSession($session).then( handleUpdateSession );
           initialCalc != $session.settings.calcAoX && updateStatistics(false);
         }
       });
@@ -228,7 +231,15 @@
       ls.group = -1;
       dispatch('solve', $lastSolve);
     } else {
-      dataService.addSolve(ls);
+      dataService.addSolve(ls).then(d => {
+        let s = $allSolves.find(s => s.date === d.date);
+
+        if (s) {
+          statsReplaceId($stats, s._id, d._id);
+          s._id = d._id;
+          updateSolves();
+        }
+      });
       sortSolves();
       updateStatistics(true);
     }
@@ -399,8 +410,14 @@
     } else if ( $session?.settings?.input === 'QY-Timer' && !sameClass ) {
       inputMethod = new QiYiSmartTimerInput( inputContext );
       inputMethod.init();
-    } else if ( $session?.settings?.input === 'Keyboard' && !sameClass ) {
-      inputMethod = new KeyboardInput( inputContext );
+    } else if ( $session?.settings?.input === 'Keyboard' ) {
+      inputMethod.disconnect();
+      let ki = new KeyboardInput( inputContext );
+      
+      inputMethod = ki;
+
+      currentStep = ki.interpreter.machine.context.currentStep;
+      totalSteps = ki.interpreter.machine.context.steps;
       inputMethod.init();
     }
   }
@@ -529,50 +546,50 @@
     // updateStatistics(false);
     updateDevices();
 
-    subs = [
-      dataService.bluetoothSub.subscribe((data) => {
-        if ( !data ) return;
+    // subs = [
+    //   dataService.bluetoothSub.subscribe((data) => {
+    //     if ( !data ) return;
 
-        switch(data.type) {
-          case 'move': {
-            simulator.applyMove( data.data[0], data.data[1] );
-            break;
-          }
+    //     switch(data.type) {
+    //       case 'move': {
+    //         simulator.applyMove( data.data[0], data.data[1] );
+    //         break;
+    //       }
 
-          case 'facelet': {
-            simulator.fromFacelet( data.data );
-            break;
-          }
+    //       case 'facelet': {
+    //         simulator.fromFacelet( data.data );
+    //         break;
+    //       }
 
-          case 'hardware': {
-            bluetoothHardware = data.data;
-            break;
-          }
+    //       case 'hardware': {
+    //         bluetoothHardware = data.data;
+    //         break;
+    //       }
 
-          case 'battery': {
-            bluetoothBattery = data.data;
-            break;
-          }
+    //       case 'battery': {
+    //         bluetoothBattery = data.data;
+    //         break;
+    //       }
 
-          // case 'connect': {
-          //   $bluetoothStatus = true;
-          //   break;
-          // }
+    //       // case 'connect': {
+    //       //   $bluetoothStatus = true;
+    //       //   break;
+    //       // }
 
-          case 'disconnect': {
-            // $bluetoothStatus = false;
-            deviceID = '';
-            break;
-          }
-        }
-      })
-    ];
+    //       case 'disconnect': {
+    //         // $bluetoothStatus = false;
+    //         deviceID = '';
+    //         break;
+    //       }
+    //     }
+    //   })
+    // ];
   });
 
   onDestroy(() => {
     inputMethod.disconnect();
     navigator.mediaDevices?.removeEventListener('devicechange', updateDevices);
-    subs.forEach(s => s());
+    // subs.forEach(s => s());
   });
 
   $: $solves.length === 0 && reset();
@@ -693,6 +710,13 @@
             { $state === TimerState.STOPPED ? sTimer($lastSolve, $decimals, false) : timer($time, $decimals, false)}
           </span>
         
+        {#if $session.settings.sessionType === 'multi-step' && $state === TimerState.RUNNING }
+          <div class="step-progress w-[min(100%,30rem)] text-base">
+            <StatsProgress value={ $currentStep } total={ $totalSteps }
+              title="" label={ `${ $currentStep } / ${ $totalSteps }` }/>
+          </div>
+        {/if}
+
         {#if $session?.settings?.input === 'StackMat' }
           <span class="text-2xl flex gap-2 items-center">
             { $localLang.TIMER.stackmatStatus }:
@@ -854,9 +878,15 @@
         {/if}
 
         {#if type === 'settings'}
-          {#if !timerOnly}
+          {#if !(timerOnly || $session.settings.sessionType === 'multi-step') }
             <section class="flex gap-4 items-center mb-4">
               { $localLang.TIMER.inputMethod }: <Select bind:value={ modalData.settings.input } items={ TIMER_INPUT } transform={ (e) => e }/>
+            </section>
+          {/if}
+
+          {#if $session.settings.sessionType === 'multi-step' }
+            <section class="flex mb-4 w-max px-2 py-1 rounded-md shadow-md mx-auto my-2 border border-gray-600 cursor-default">
+              { $localLang.global.steps }: { $session.settings.steps }
             </section>
           {/if}
 

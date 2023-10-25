@@ -17,6 +17,14 @@
   function keydown(e: KeyboardEvent) {
     dispatch('keydown', e);
   }
+  
+  function focus(e: FocusEvent) {
+    dispatch('focus', e);
+  }
+  
+  function blur(e: FocusEvent) {
+    dispatch('blur', e);
+  }
 
   $: innerText = value.replace(/\n/g, '<br>') + '<br>';
 </script>
@@ -26,7 +34,7 @@
     class="lesp bg-transparent text-transparent outline-none p-2 border-4 border-transparent"
     bind:innerHTML={ innerText } contenteditable="false"></div>
   <textarea
-    on:keyup={ keyup } on:keydown={ keydown }
+    on:keyup={ keyup } on:keydown={ keydown } on:focus={ focus } on:blur={ blur }
     { placeholder }
     bind:value class={`flex m-auto p-2 rounded-md border border-solid border-gray-400
       focus:text-gray-300 outline-none transition-all duration-200 absolute inset-0

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onDestroy, onMount } from 'svelte';
+  import { onMount } from 'svelte';
   import type { Tutorial } from '../interfaces';
   import { Link, useLocation } from 'svelte-routing';
   import { DataService } from '../stores/data.service';
@@ -14,42 +14,19 @@
   let keys: string[] = [];
   let edition = false;
 
-  let tutSub = dataService.tutSub.subscribe((t) => {
-    if ( !t ) return;
-
-    switch(t[0]) {
-      case 'get-tutorials': {
-        let tut = <Tutorial[]> t[1];
-
-        tutorials = tut.reduce((acc: { [key: string]: Tutorial[] }, e) => {
-          !acc[e.puzzle] && (acc[e.puzzle] = []);
-          acc[e.puzzle].push(e);
-          return acc;
-        }, {});
-
-        keys = Object.keys(tutorials);
-
-        keys.forEach(k => tutorials[k].sort((a, b) => a.level < b.level ? -1 : 1))
-        break;
-      }
-
-      case 'update-tutorial': {
-        let tut = <Tutorial> t[1];
-        let pos = tutorials[tut.puzzle].reduce((r, e, p) => e._id === tut._id ? p : r, -1);
-        tutorials[tut.puzzle][pos] = tut;
-        break;
-      }
-    }
-  });
-
   onMount(() => {
-    dataService.getTutorials();
-  });
+    dataService.getTutorials().then(tut => {
+      tutorials = tut.reduce((acc: { [key: string]: Tutorial[] }, e) => {
+        !acc[e.puzzle] && (acc[e.puzzle] = []);
+        acc[e.puzzle].push(e);
+        return acc;
+      }, {});
 
-  onDestroy(() => {
-    tutSub();
-  });
+      keys = Object.keys(tutorials);
 
+      keys.forEach(k => tutorials[k].sort((a, b) => a.level < b.level ? -1 : 1))
+    })
+  });
 </script>
 
 <main>

@@ -3,8 +3,9 @@ import type { Sticker } from './../classes/puzzle/Sticker';
 import type { Piece } from './../classes/puzzle/Piece';
 import type { Vector3D } from '../classes/vector3d';
 import type { CubeMode, SCRAMBLE_MENU } from "../constants";
-import type { Writable, Readable } from 'svelte/store';
+import type { Writable } from 'svelte/store';
 import type { Display } from 'electron';
+import type { Interpreter } from 'xstate';
 
 export const PuzzleTypeName = [
   'rubik', 'skewb', 'square1', 'pyraminx', 'axis', 'fisher', 'ivy'
@@ -14,6 +15,7 @@ export const PuzzleTypeName = [
 ];
 
 export declare type PuzzleType = typeof PuzzleTypeName[number];
+type AnyCallback = (...args: any[]) => any;
 
 export declare type CubeView = 'plan' | 'trans' | '2d';
 export const CubeViewMap: [ CubeView, string ][] = [
@@ -136,8 +138,8 @@ export interface PuzzleInterface {
   dims?: number[];
   raw?: any;
   scramble?: () => any;
-  toMove?: (...args: any) => any;
-  vectorsFromCamera?: (...args: any) => any;
+  toMove?: AnyCallback;
+  vectorsFromCamera?: AnyCallback;
 }
 
 export interface PuzzleOptions {
@@ -169,11 +171,14 @@ export interface Solve {
   mode?: string;
   len?: number;
   prob?: number;
+  steps?: number[];
 }
 
 export type TimerInput = 'Keyboard' | 'Manual' | 'StackMat' | 'GAN Cube' | 'QY-Timer';
+export type SessionType = 'mixed' | 'single' | 'multi-step';
 
 export const TIMER_INPUT: TimerInput[] = [ 'Keyboard', 'Manual', 'StackMat'/*, 'GAN Cube', 'QY-Timer'*/ ];
+export const SESSION_TYPE: SessionType[] = [ 'mixed', 'single', 'multi-step' ];
 
 export interface SessionSettings {
   hasInspection: boolean;
@@ -186,6 +191,9 @@ export interface SessionSettings {
   withoutPrevention: boolean;
   recordCelebration?: boolean;
   showBackFace?: boolean;
+  sessionType?: SessionType;
+  mode?: string;
+  steps?: number;
 }
 
 export interface Session {
@@ -299,7 +307,9 @@ export interface TimerContext {
   bluetoothStatus: Writable<boolean>;
   STATS_WINDOW: Writable<(number | null)[][]>;
   
+  setSolves: (rescramble?: boolean) => any;
   sortSolves: () => any;
+  updateSolves: () => any;
   updateStatistics: (inc ?: boolean) => any;
   initScrambler: (scr?: string, _mode ?: string) => any;
   selectedGroup: () => any;
@@ -307,6 +317,9 @@ export interface TimerContext {
   selectSolve: (s: Solve) => any;
   selectSolveById: (id: string, n: number) => any;
   editSolve: (s: Solve) => any;
+  handleUpdateSession: (s: Session) => any;
+  handleUpdateSolve: (s: Solve) => any;
+  handleRemoveSolves: (sv: Solve[]) => any;
 }
 
 export const ROLES = {
@@ -402,57 +415,55 @@ export interface AlgorithmOptions {
 }
 
 export interface IPC {
-  handleAlgorithms: (fn: Function) => any;
-  handleAny: (fn: Function) => any;
-  handleCards: (fn: Function) => any;
-  handleContests: (fn: Function) => any;
-  handleSessions: (fn: Function) => any;
-  handleSolves: (fn: Function) => any;
-  handleTutorials: (fn: Function) => any;
-  handleUpdate: (fn: Function) => any;
+  addDownloadProgressListener: (cb: AnyCallback) => any;
+  addDownloadDoneListener: (cb: AnyCallback) => any;
   
   getAlgorithms: (options: AlgorithmOptions) => Promise<Algorithm[]>;
-  updateAlgorithm: (alg: Algorithm) => any;
-  getCards: () => any;
+  updateAlgorithm: (alg: Algorithm) => Promise<Algorithm>;
   
-  getTutorials: () => any;
-  addTutorial: (t: Tutorial) => any;
-  updateTutorial: (t: Tutorial) => any;
+  getTutorials: () => Promise<Tutorial[]>;
+  addTutorial: (t: Tutorial) => Promise<Tutorial>;
+  updateTutorial: (t: Tutorial) => Promise<Tutorial>;
   
-  getSolves: () => any;
-  addSolve: (s: Solve) => any;
-  addSolves: (s: Solve[]) => any;
-  updateSolve: (s: Solve) => any;
-  removeSolves: (s: Solve[]) => any;
+  getSolves: () => Promise<Solve[]>;
+  addSolve: (s: Solve) => Promise<Solve>;
+  addSolves: (s: Solve[]) => Promise<Solve[]>;
+  updateSolve: (s: Solve) => Promise<Solve>;
+  removeSolves: (s: Solve[]) => Promise<Solve[]>;
   
-  getSessions: () => any;
-  addSession: (s: Session) => any;
-  removeSession: (s: Session) => any;
-  renameSession: (s: Session) => any;
-  updateSession: (s: Session) => any;
+  getSessions: () => Promise<Session[]>;
+  addSession: (s: Session) => Promise<Session>;
+  removeSession: (s: Session) => Promise<Session>;
+  renameSession: (s: Session) => Promise<Session>;
+  updateSession: (s: Session) => Promise<Session>;
   
-  addContest: (c: CubeEvent) => any;
-  getContests: () => any;
-  updateContest: (c: CubeEvent) => any;
-  removeContests: (c: CubeEvent[]) => any;
+  addContest: (c: CubeEvent) => Promise<CubeEvent>;
+  getContests: () => Promise<CubeEvent[]>;
+  updateContest: (c: CubeEvent) => Promise<CubeEvent>;
+  removeContests: (c: CubeEvent[]) => Promise<CubeEvent[]>;
   
-  minimize: () => any;
-  maximize: () => any;
-  close: () => any;
+  minimize: () => Promise<void>;
+  maximize: () => Promise<void>;
+  close: () => Promise<void>;
   
-  generatePDF: (args: PDFOptions) => any;
-  zipPDF: (s: { name: string, files: Sheet[]}) => any;
-  openFile: (f: string) => any;
-  revealFile: (f: string) => any;
-  
-  update: (cmd: UpdateCommand) => any;
-  
-  sleep: (s: boolean) => any;
+  generatePDF: (args: PDFOptions) => Promise<{
+    name: string,
+    buffer: Buffer,
+    mode: PDFOptions['mode'],
+    round: PDFOptions['round']
+  }>;
 
-  connectBluetoothDevice: (id: string) => any; 
-  cancelBluetoothRequest: () => any; 
-  pairingBluetoothResponse: () => any; 
-  handleBluetooth: (fn: Function) => any;
+  zipPDF: (s: { name: string, files: Sheet[]}) => Promise<string>;
+  openFile: (f: string) => Promise<void>;
+  revealFile: (f: string) => Promise<void>;
+  
+  update: (cmd: UpdateCommand) => Promise<string | null>;
+  
+  sleep: (s: boolean) => Promise<void>;
+
+  connectBluetoothDevice: (id: string) => Promise<void>; 
+  cancelBluetoothRequest: () => Promise<void>; 
+  pairingBluetoothResponse: () => Promise<void>; 
 
   cacheCheckImage: (hash: string) => Promise<boolean>;
   cacheGetImage: (hash: string) => Promise<string>;
@@ -532,8 +543,15 @@ export interface InputContext {
   createNewSolve: () => void;
 }
 
+export interface KeyboardContext extends InputContext {
+  steps: Writable<number>;
+  stepsTime: Writable<number[]>;
+  currentStep: Writable<number>;
+  timeRef: Writable<number>;
+}
+
 export interface TimerInputHandler {
-  init: (...params: any[]) => void;
+  init: AnyCallback;
   disconnect: () => void;
   stopTimer: () => void;
   keyUpHandler: (e: KeyboardEvent) => void;
@@ -558,6 +576,10 @@ export interface Language {
     clear: string;
     reset: string;
     generate: string;
+    restartNow: string;
+    name: string;
+    steps: string;
+    step: string;
   }
   NAVBAR: {
     home: string;
@@ -643,6 +665,8 @@ export interface Language {
     withoutPrevention: string;
     withoutPreventionDescription: string;
     recordCelebration: string;
+    sessionTypeMap: { [key: string]: string };
+    sessionTypeDescription: { [key: string]: string };
 
     // Last solve tooltip
     comments: string;
@@ -680,6 +704,7 @@ export interface Language {
     noPenalty: string;
 
     removeAllSolves: string;
+    removeSession: string;
     select: string;
 
     // Stats Tab

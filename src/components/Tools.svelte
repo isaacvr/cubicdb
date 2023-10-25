@@ -74,8 +74,7 @@
   // Timer and Scramble Only
   let modes: { 0: string; 1: string; 2: number }[] = [];
   let filters: string[] = [];
-  let selectedOption = "statistics";
-  // let selectedOption = "timer-only";
+  let selectedOption = "timer-only";
   let timer: Timer;
 
   // Batch
@@ -92,6 +91,14 @@
   const TIMER_DIGITS = /^\d+$/;
   const TIMER_DNF = /^\s*dnf\s*$/i;
   const TIMER_DNS = /^\s*dns\s*$/i;
+  const faces = [
+    ['0', 'cube-u'],
+    ['4', 'cube-l'],
+    ['2', 'cube-f'],
+    ['1', 'cube-r'],
+    ['5', 'cube-b'],
+    ['3', 'cube-d']
+  ];
 
   // Solver
   // UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB
@@ -393,9 +400,10 @@
 {:else if checkMode(selectedOption, ["scramble-batch"])}
   {#if scrambleBatch.length}
     <div
-      class="container-mini bg-white bg-opacity-10 mx-auto max-w-[calc(min(100%-2rem,100ch))] mt-4 w-max mb-0 p-4 rounded-md shadow-md text-center"
+      class="container-mini bg-white bg-opacity-10 mx-auto max-w-[calc(min(100%-2rem,100ch))] mt-4
+        w-max mb-0 p-4 rounded-md shadow-md text-center"
     >
-      <ul class="text-gray-400 grid gap-2 max-h-[calc(100vh-25rem)] overflow-scroll">
+      <ul class="text-gray-400 grid gap-2 max-h-[calc(100vh-25rem)] overflow-auto">
         {#each scrambleBatch as scr, pos}
           <li>{pos + 1}- {scr}</li>
         {/each}
@@ -506,7 +514,7 @@
   <h2 class="text-2xl text-center mt-4">{ $localLang.TOOLS.stickers }</h2>
 
   <div class="cube-grid">
-    {#each [['0', 'cube-u'], ['4', 'cube-l'], ['2', 'cube-f'], ['1', 'cube-r'], ['5', 'cube-b'], ['3', 'cube-d']] as face}
+    {#each faces as face}
       <div class={ face[1] }>
         {#each facelets[ +face[0] ] as f, p}
           <button class="facelet" style={ `background-color: ${(f === '-' ? DEFAULT_COLOR : f)}` }
@@ -544,6 +552,7 @@
   }
 
   .cube-grid {
+    --order: 3;
     display: grid;
     grid-template-areas:
       ". u . ."
@@ -556,8 +565,8 @@
 
   .cube-grid [class*=cube-] {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    grid-template-rows: repeat(3, 1fr);
+    grid-template-columns: repeat(var(--order), 1fr);
+    grid-template-rows: repeat(var(--order), 1fr);
     gap: .2rem;
   }
 

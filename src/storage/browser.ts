@@ -9,100 +9,74 @@ export class BrowserAdaptor implements IPC {
   // private sessions: Nedb<Session>;
   // private solves: Nedb<Solve>;
 
-  private session_handler?: Function;
-
   constructor() {}
 
-  // Handlers
-  handleAlgorithms(fn: Function) {}
-  handleAny(fn: Function) {}
-  handleCards(fn: Function) {}
-  handleContests(fn: Function) {}
-
-  handleSessions(fn: Function) {
-    this.session_handler = fn;
-    console.log('Add session handler');
-  }
-  
-  handleSolves(fn: Function) {}
-  handleTutorials(fn: Function) {}
-  handleUpdate(fn: Function) {}
+  addDownloadProgressListener(cb: any) {}
+  addDownloadDoneListener(cb: any) {}
   
   // Algorithms
   getAlgorithms(options: AlgorithmOptions): Promise<Algorithm[]> {
     return Promise.resolve([]);
   }
 
-  updateAlgorithm(alg: Algorithm): void {}
-  
-  // Cards
-  getCards(): void {}
+  updateAlgorithm(alg: Algorithm) {
+    return Promise.reject();
+  }
   
   // Tutorials
-  getTutorials() {}
-  addTutorial(t: Tutorial) {}
-  updateTutorial(t: Tutorial) {}
+  getTutorials() { return Promise.resolve([]); }
+  addTutorial(t: Tutorial) { return Promise.reject(); }
+  updateTutorial(t: Tutorial) { return Promise.reject(); }
   
   // Solves
-  getSolves() {}
-  addSolve(s: Solve) {}
-  addSolves(s: Solve[]) {}
-  updateSolve(s: Solve) {}
-  removeSolves(s: Solve[]) {}
+  getSolves() { return Promise.resolve([]); }
+  addSolve(s: Solve) { return Promise.reject(); }
+  addSolves(s: Solve[]) { return Promise.reject(); }
+  updateSolve(s: Solve) { return Promise.reject(); }
+  removeSolves(s: Solve[]) { return Promise.reject(); }
   
   // Sessions
   getSessions() {
-    // this.sessions.find({}, (res: any) => {
-    //   console.log("SESSIONS: ", res);
-    // });
-
-    console.log('get-sessions');
-
-    this.session_handler && this.session_handler(null, ['get-sessions', [{
+    return Promise.resolve([{
       _id: '',
       name: 'Default',
       settings: Object.assign({}, SessionDefaultSettings)
-    }]]);
+    }]);
   }
 
-  addSession(s: Session) {
-    console.log('add-session');
+  addSession(s: Session) { return Promise.reject(); }
 
-    this.session_handler && this.session_handler(null, ['add-session', s]);
-  }
-
-  removeSession(s: Session) { console.log('remove-session !'); }
-  renameSession(s: Session) { console.log('rename-session !'); }
-  updateSession(s: Session) { console.log('update-session !'); }
+  removeSession(s: Session) { return Promise.reject(); }
+  renameSession(s: Session) { return Promise.reject(); }
+  updateSession(s: Session) { return Promise.reject(); }
   
   // Contests
-  addContest(c: CubeEvent) {}
-  getContests() {}
-  updateContest(c: CubeEvent) {}
-  removeContests(c: CubeEvent[]) {}
+  addContest(c: CubeEvent) { return Promise.reject(); }
+  getContests() { return Promise.resolve([]); }
+  updateContest(c: CubeEvent) { return Promise.reject(); }
+  removeContests(c: CubeEvent[]) { return Promise.reject(); }
 
   // UI handlers
-  minimize() {}
-  maximize() {}
-  close() {}
+  minimize() { return Promise.resolve(); }
+  maximize() { return Promise.resolve(); }
+  close() { return Promise.resolve(); }
 
   // PDF generation
-  generatePDF(args: PDFOptions) {}
-  zipPDF(s: { name: string, files: Sheet[]}) {}
-  openFile(f: string) {}
-  revealFile(f: string) {}
+  generatePDF(args: PDFOptions) { return Promise.reject(); }
+  zipPDF(s: { name: string, files: Sheet[]}) { return Promise.reject(); }
+  openFile(f: string) { return Promise.reject(); }
+  revealFile(f: string) { return Promise.reject(); }
 
   // Update
-  update(cmd: UpdateCommand) {}
+  update(cmd: UpdateCommand) { return Promise.reject(); }
 
   // Power saving options
-  sleep(s: boolean) {}
+  sleep(s: boolean) { return Promise.resolve(); }
 
-  connectBluetoothDevice() {}
-  cancelBluetoothRequest() {}
-  pairingBluetoothResponse() {}
-  handleBluetooth() {}
-
+  connectBluetoothDevice() { return Promise.reject(); }
+  cancelBluetoothRequest() { return Promise.reject(); }
+  pairingBluetoothResponse() { return Promise.reject(); }
+  
   cacheCheckImage(hash: string): Promise<boolean> {
     return Promise.resolve(false);
   }

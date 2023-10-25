@@ -18,7 +18,7 @@
 </script>
 
 <section class="tree relative" class:expanded={ obj.expanded }>
-  <header on:click|stopPropagation={ toggleExpanded }>
+  <button class="header" on:click|stopPropagation={ toggleExpanded }>
     <div class="name">
       <div class="icon" class:hidden={ !obj.children.length }>
         <ArrowIcon size="1.2rem"/>
@@ -26,9 +26,9 @@
       { obj.name }
     </div>
     <div class="actions pr-4">
-      <span on:click|stopPropagation={ () => editAlgorithm(obj.alg) }><EditIcon size="1.2rem"/></span>
+      <button on:click|stopPropagation={ () => editAlgorithm(obj.alg) }><EditIcon size="1.2rem"/></button>
     </div>
-  </header>
+  </button>
 
   <div class="content">
     <div>
@@ -46,24 +46,24 @@
     background-color: #555;
   }
 
-  .tree header {
+  .tree .header {
     @apply py-2 hover:bg-black hover:bg-opacity-20 flex items-center
       transition-all duration-100 cursor-pointer rounded-sm;
   }
 
-  .tree header .name {
+  .tree .header .name {
     @apply flex items-center;
   }
 
-  .tree header .actions {
+  .tree .header .actions {
     @apply flex ml-8 mr-auto pointer-events-none opacity-0 transition-all duration-200;
   }
 
-  .tree header:hover .actions {
+  .tree .header:hover .actions {
     @apply pointer-events-auto opacity-100;
   }
 
-  .tree > header .actions span {
+  .tree > .header .actions button {
     padding: 0.2rem;
     border-radius: 50%;
     box-sizing: border-box;
@@ -75,7 +75,7 @@
     transition: all var(--anim-t);
   }
 
-  .tree > header .actions span:hover {
+  .tree > .header .actions button:hover {
     background: #fff4;
     box-shadow: 0px 0.1rem 1rem #0004;
   }
@@ -93,15 +93,15 @@
     grid-template-rows: 1fr;
   }
 
-  .tree > header .icon {
+  .tree > .header .icon {
     transition: all var(--anim-t);
   }
   
-  .tree:not(.expanded) > header .icon {
+  .tree:not(.expanded) > .header .icon {
     rotate: 0deg;
   }
 
-  .tree.expanded > header .icon {
+  .tree.expanded > .header .icon {
     rotate: 90deg;
   }
 

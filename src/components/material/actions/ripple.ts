@@ -1,22 +1,37 @@
 import { Color } from "@classes/Color";
-import { getStackingContext } from "@helpers/DOM";
 
-export function ripple(node: HTMLElement, eProps: any) {
-  let POSITION: string;
+type RIPPLE_POSITION = 'center' | 'cursor';
+type PROPS = { position?: RIPPLE_POSITION, duration?: number, background?: string } | boolean;
+
+/** @type {import('svelte/action').Action}  */
+export function ripple(node: HTMLElement, eProps: PROPS) {
+  let POSITION: RIPPLE_POSITION;
   let DURATION: number;
   let BACKGROUND = new Color();
-  // const ripple = document.createElement('span');
-  // node.appendChild(ripple);
 
-  let initialize = (p: any) => {
-    POSITION = (p || {}).position || 'cursor';
-    DURATION = Math.abs((p || {}).duration || 400);
-    BACKGROUND.fromString( (p || {}).background || "#fff" );
+  let initialize = (p: PROPS) => {
+    let _p: PROPS;
+
+    if ( typeof p === 'boolean' ) {
+      if (!p) {
+        return DURATION = 0;
+      }
+
+      _p = {
+        position: 'cursor',
+        duration: 400,
+        background: '#fff'
+      };
+    } else {
+      _p = p;
+    }
+
+    POSITION = _p.position || 'cursor';
+    DURATION = Math.abs(_p.duration || 400);
+    BACKGROUND.fromString( _p.background || "#fff" );
   };
 
   initialize(eProps);
-
-  // node.classList.add('ripple');
 
   const getProps = (e: MouseEvent) => {
     let box = node.getBoundingClientRect();

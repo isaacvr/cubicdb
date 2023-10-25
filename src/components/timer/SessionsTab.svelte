@@ -43,7 +43,23 @@
 
   export let context: TimerContext;
 
-  let { solves, tab, selected } = context;
+  let { solves, tab, selected, handleUpdateSolve, handleRemoveSolves } = context;
+
+  const STEP_COLORS = [
+    "#2196F3",
+    "#8BC34A",
+    "#E91E63",
+    "#FFEB3B",
+    "#009688",
+    "#FF5722",
+    "#673AB7",
+    "#FF9800",
+    "#3F51B5",
+    "#FFC107",
+    // "#4CAF50",
+    // "#F44336",
+    // "#9C27B0",
+  ];
 
   let pg = new Paginator([], 100);
   let LAST_CLICK = 0;
@@ -60,20 +76,46 @@
   let contextMenuElement: HTMLUListElement;
   let solvesElement: HTMLDivElement;
   let pSolves: Solve[] = [];
+  let solveSteps: number[] = [];
+  let fComment = false;
+  let collapsed = false;
   
   function closeHandler(s?: Solve) {
     if ( s ) {
       gSolve.comments = (s.comments || '').trim();
       gSolve.penalty = s.penalty;
-      dataService.updateSolve(s);
+      dataService.updateSolve(s).then( res => {
+        handleUpdateSolve(res);
+        pSolves = pSolves;
+      });
     }
     show = false;
+  }
+
+  function calcPercents(s: Solve) {
+    if ( !s.steps ) return;
+
+    let st = s.steps.slice();
+    let acc = 0;
+
+    solveSteps.length = 0;
+
+    for (let i = 0, maxi = st.length; i < maxi; i += 1) {
+      let perc = st[i] * 100 / s.time;
+      let newV = Math.round(perc + acc);
+      acc = perc - newV;
+      solveSteps.push(newV);
+    }
+
+    solveSteps = solveSteps;
   }
 
   export function editSolve(s: Solve) {
     gSolve = s;
     sSolve = { ...s };
-    
+ 
+    calcPercents(sSolve);
+
     let sMode = sSolve.mode as string;
     let md = options.has(sMode) ? sMode : '333';
     
@@ -123,7 +165,7 @@
     sSolve.penalty = p;
 
     if ( update ) {
-      dataService.updateSolve(sSolve);
+      dataService.updateSolve(sSolve).then( handleUpdateSolve );
     }
   }
 
@@ -172,7 +214,7 @@
   }
 
   function _delete(s: Solve[]) {
-    dataService.removeSolves(s);
+    dataService.removeSolves(s).then( handleRemoveSolves );
   }
 
   function deleteSelected() {
@@ -253,6 +295,9 @@
     contextMenuElement.style.left = e.clientX + 'px';
     contextMenuElement.style.top = e.clientY + 'px';
     sSolve = s;
+    
+    calcPercents(sSolve);
+    
     showContextMenu = true;
   }
 
@@ -321,20 +366,20 @@
   <div class="absolute top-3 right-2 text-gray-400 my-3 mx-1 flex flex-col gap-2">
     {#if $solves.length > 0}
       <Tooltip position="left" text={ $localLang.TIMER.deleteAll + " [D]"} hasKeybinding>
-        <span on:click={ deleteAll } class="cursor-pointer grid place-items-center">
+        <button on:click={ deleteAll } class="cursor-pointer grid place-items-center">
           <DeleteAllIcon width="1.2rem" height="1.2rem"/>
-        </span>
+        </button>
       </Tooltip>
       {/if}
       <Tooltip position="left" text={ $localLang.TIMER.shareAo5 }>
-        <span on:click={ () => shareAoX(5) } class="cursor-pointer grid place-items-center">
+        <button on:click={ () => shareAoX(5) } class="cursor-pointer grid place-items-center">
           <ShareIcon width="1.2rem" height="1.2rem"/>
-        </span>
+        </button>
       </Tooltip>
       <Tooltip position="left" text={ $localLang.TIMER.shareAo12 }>
-        <span on:click={ () => shareAoX(12) } class="cursor-pointer grid place-items-center">
+        <button on:click={ () => shareAoX(12) } class="cursor-pointer grid place-items-center">
           <ShareIcon width="1.2rem" height="1.2rem"/>
-        </span>
+        </button>
       </Tooltip>
   </div>
 
@@ -367,7 +412,7 @@
     </Button>
   </div>
 
-  <Modal bind:this={ modal } bind:show={ show } onClose={ closeHandler } class="max-w-xl">
+  <Modal bind:this={ modal } bind:show={ show } onClose={ closeHandler } class="w-[min(100%,36rem)]">
     <div class="flex justify-between items-center text-gray-400 m-2">
       <h2 class="m-1 w-max">
         {#if sSolve.penalty === Penalty.NONE || sSolve.penalty === Penalty.P2}
@@ -391,25 +436,54 @@
         </span>
       </span>
     </div>
-    <div class="algorithm-container text-gray-400 m-2">
+    <div class={"algorithm-container text-gray-400 m-2 transition-all duration-300 delay-100 " + ((fComment || collapsed) ? 'collapsed' : '')}>
       <Dice5Icon /> <span bind:innerHTML={ sSolve.scramble } contenteditable="false" class="text-center"></span>
-      <img src={ preview } class="preview col-start-1 col-end-3 mb-2 mx-auto" alt="">
+      <button class="preview col-span-2 mb-2 mt-2 mx-auto overflow-hidden" on:click={ () => collapsed = !collapsed }>
+        <img class="w-full h-full" src={ preview } alt="">
+      </button>
+
+      {#if sSolve.steps }
+        <hr class="w-full border border-t-gray-400 col-span-2">
+        <h3 class="text-gray-300 text-center col-span-2 mt-2 mb-8 text-lg">{ $localLang.global.steps }</h3>
+
+        <div class="col-span-2 flex mb-4">
+          {#each solveSteps as s, p (p)}
+            <span class="step-part text-gray-300"
+              data-percent={ `${ s }%` }
+              data-time={ timer((sSolve.steps || [])[p], true) }
+              style={`
+                width: ${ s }%;
+                background-color: ${ STEP_COLORS[p] };
+                --p: ${p};
+              `}
+            ></span>
+          {/each}
+        </div>
+      {/if}
+
+      <CommentIcon />
       
-      <CommentIcon /> <TextArea cClass="max-h-[35ch]" bind:value={ sSolve.comments } placeholder={ $localLang.TIMER.comment }/>
+      <TextArea
+        on:focus={ () => fComment = true }
+        on:blur={ () => fComment = false }
+        cClass={fComment ? "max-h-[30ch]" : 'max-h-[20ch]'} bind:value={ sSolve.comments } placeholder={ $localLang.TIMER.comment }/>
     </div>
-    <div class="mt-2 flex">
-      <Button ariaLabel={ $localLang.global.delete } flat class="text-red-500"
+    <div class="mt-2 flex justify-between gap-1">
+      <Button ariaLabel={ $localLang.global.delete } flat
+        class="text-red-500 border border-red-500 hover:text-gray-200 hover:bg-red-700"
         on:click={ () => { _delete([ sSolve ]); modal.close()} }>
         <DeleteIcon /> { $localLang.global.delete }
       </Button>
       
       <Button ariaLabel={ $localLang.global.cancel } flat
-        on:click={ () => modal.close() } class="">
+        on:click={ () => modal.close() }
+        class="border border-gray-400 text-gray-400 hover:bg-gray-900 hover:text-gray-200">
         <CloseIcon /> { $localLang.global.cancel }
       </Button>
       
       <Button ariaLabel={ $localLang.global.save } flat
-        on:click={ () => modal.close(sSolve) } class="mr-2">
+        on:click={ () => modal.close(sSolve) }
+        class="border border-purple-400 text-purple-400 hover:bg-purple-900 hover:text-gray-200 mr-2">
         <SendIcon /> { $localLang.global.save }
       </Button>
 
@@ -440,6 +514,7 @@
   </Modal>
 
   <!-- Context Menu -->
+  <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
   <ul
     class="context-menu"
     class:active={ showContextMenu }
@@ -455,7 +530,7 @@
 <style lang="postcss">
 #grid {
   grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr));
-  max-height: calc(100vh - 8rem);
+  max-height: calc(100vh - 10rem);
 }
 
 .font-small {
@@ -465,6 +540,11 @@
 .algorithm-container {
   display: grid;
   grid-template-columns: 1.3rem 1fr;
+  grid-template-rows: auto 1fr auto auto auto;
+}
+
+.algorithm-container.collapsed {
+  grid-template-rows: auto .4fr auto auto auto;
 }
 
 .actions {
@@ -505,4 +585,34 @@
     pr-2 hover:pl-2 hover:hover:pr-1 hover:bg-gray-800;
 }
 
+.step-part {
+  height: 1.8rem;
+  display: flex;
+  position: relative;
+}
+
+.step-part:first-child {
+  @apply rounded-l-full;
+}
+
+.step-part:last-child {
+  @apply rounded-r-full;
+}
+
+.step-part::before {
+  content: attr(data-percent);
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%, -1.5rem);
+}
+
+.step-part::after {
+  content: attr(data-time);
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  color: black;
+  font-size: .8rem;
+}
 </style>
