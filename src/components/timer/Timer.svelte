@@ -1,6 +1,6 @@
 <script lang="ts">
   import { createEventDispatcher, onMount } from 'svelte';
-  import { generateCubeBundle } from '@helpers/cube-draw';
+  import { pGenerateCubeBundle } from '@helpers/cube-draw';
   import { derived, writable, type Readable } from 'svelte/store';
   
   /// Modules
@@ -9,9 +9,9 @@
   import JSConfetti from 'js-confetti';
   
   /// Data
-  import { isNNN, SessionDefaultSettings, type SCRAMBLE_MENU, AON } from '@constants';
+  import { isNNN, SessionDefaultSettings, type SCRAMBLE_MENU, AON, R222, R333, R444, R555, R666, R777, CLCK, MEGA, PYRA, SKWB, SQR1 } from '@constants';
   import { DataService } from '@stores/data.service';
-  
+
   /// Components
   import TabGroup from '@material/TabGroup.svelte';
   import Tab from '@material/Tab.svelte';
@@ -32,21 +32,59 @@
   import PlusIcon from '@icons/Plus.svelte';
   import CheckIcon from '@icons/Check.svelte';
   import CloseIcon from '@icons/Close.svelte';
-  import PencilIcon from '@icons/Pencil.svelte';
   import DeleteIcon from '@icons/Delete.svelte';
   
   /// Types
-  import { TimerState, type Solve, type Session, Penalty, type Statistics, type TimerContext, type PuzzleOptions, type Language, type BluetoothDeviceData, SESSION_TYPE, type SessionType } from '@interfaces';
+  import { TimerState, type Solve, type Session,  type Statistics, type TimerContext, type PuzzleOptions, type Language, type BluetoothDeviceData, SESSION_TYPE, type SessionType } from '@interfaces';
   import { Puzzle } from '@classes/puzzle/puzzle';
   import { PX_IMAGE } from '@constants';
   import { ScrambleParser } from '@classes/scramble-parser';
-  import { INITIAL_STATISTICS, getUpdatedStatistics, statsReplaceId } from '@helpers/statistics';
+  import { INITIAL_STATISTICS, getUpdatedStatistics } from '@helpers/statistics';
   import { infinitePenalty, timer } from '@helpers/timer';
   import { globalLang } from '@stores/language.service';
   import { getLanguage } from '@lang/index';
   import { NotificationService } from '@stores/notification.service';
   import { randomUUID } from '@helpers/strings';
   import { binSearch } from '@helpers/object';
+
+  // ICONS
+  import Icon333 from '@components/wca/333.svelte';
+  import Icon222 from '@components/wca/222.svelte';
+  import Icon333fm from '@components/wca/333fm.svelte';
+  import Icon333mbf from '@components/wca/333mbf.svelte';
+  import Icon333ni from '@components/wca/333ni.svelte';
+  import Icon333oh from '@components/wca/333oh.svelte';
+  import Icon444bld from '@components/wca/444bld.svelte';
+  import Icon444wca from '@components/wca/444wca.svelte';
+  import Icon555bld from '@components/wca/555bld.svelte';
+  import Icon555wca from '@components/wca/555wca.svelte';
+  import Icon666wca from '@components/wca/666wca.svelte';
+  import Icon777wca from '@components/wca/777wca.svelte';
+  import Iconclkwca from '@components/wca/clkwca.svelte';
+  import Iconmgmp from '@components/wca/mgmp.svelte';
+  import Iconpyrso from '@components/wca/pyrso.svelte';
+  import Iconskbso from '@components/wca/skbso.svelte';
+  import Iconsqrs from '@components/wca/sqrs.svelte';
+
+  const ICONS = [
+    { icon: Icon222, name: '2x2x2', scrambler: R222 },
+    { icon: Icon333, name: '3x3x3', scrambler: R333 },
+    { icon: Icon333fm, name: '3x3x3 FM', scrambler: '333fm' },
+    { icon: Icon333ni, name: '3x3x3 BF', scrambler: '333ni' },
+    { icon: Icon333mbf, name: '3x3x3 MBF', scrambler: '333mbf' },
+    { icon: Icon333oh, name: '3x3x3 OH', scrambler: '333oh' },
+    { icon: Icon444wca, name: '4x4x4', scrambler: R444 },
+    { icon: Icon444bld, name: '4x4x4 BLD', scrambler: '444bld' },
+    { icon: Icon555wca, name: '5x5x5', scrambler: R555 },
+    { icon: Icon555bld, name: '5x5x5 BLD', scrambler: '555bld' },
+    { icon: Icon666wca, name: '6x6x6', scrambler: R666 },
+    { icon: Icon777wca, name: '7x7x7', scrambler: R777 },
+    { icon: Iconclkwca, name: 'Clock', scrambler: CLCK },
+    { icon: Iconmgmp, name: 'Megaminx', scrambler: MEGA },
+    { icon: Iconpyrso, name: 'Pyraminx', scrambler: PYRA },
+    { icon: Iconskbso, name: 'Skewb', scrambler: SKWB },
+    { icon: Iconsqrs, name: 'Square-1', scrambler: SQR1 },
+  ];
 
   let MENU: SCRAMBLE_MENU[] = getLanguage($globalLang).MENU;
   
@@ -94,6 +132,7 @@
   let newSessionSteps = 2;
   let newSessionGroup = 0;
   let newSessionMode = 0;
+  let stepNames: string[] = [ '', '' ];
   let sSession: Session;
 
   /// CONTEXT
@@ -278,24 +317,14 @@
     e.stopPropagation();
   }
 
-  function updateImage(md: string) {
+  async function updateImage(md: string) {
     let cb = Puzzle.fromSequence( $scramble, {
       ...all.pScramble.options.get(md),
       rounded: true,
       headless: true
     } as PuzzleOptions, false, false);
 
-    generateCubeBundle([cb], 500).then(gen => {
-      let subsc = gen.subscribe((c: any) => {
-        if (c === '__initial__') return;
-
-        if ( c === null ) {
-          subsc();
-        } else {
-          $preview = c;
-        }
-      });
-    });
+    $preview = (await pGenerateCubeBundle([cb], 500))[0];
   }
 
   export function initScrambler(scr?: string, _mode ?: string, _prob ?: number) {
@@ -408,6 +437,8 @@
         ns.tName = ns.name;
         sessions = [ ...sessions, ns ];
         $session = ns;
+
+        updateSessionsIcons();
         
         if ( !$session.settings.sessionType ) {
           $session.settings.sessionType = $session.settings.sessionType || 'mixed';
@@ -435,6 +466,8 @@
         if ( ss._id === $session._id ) {
           $session = sessions[0];
         }
+
+        updateSessionsIcons();
         sortSessions();
       });
     }
@@ -506,6 +539,24 @@
     }
   }
 
+  function updateSessionsIcons() {
+    for (let i = 0, maxi = sessions.length; i < maxi; i += 1) {
+      if ( sessions[i].settings?.sessionType != 'mixed' ) {
+        for (let j = 0, maxj = ICONS.length; j < maxj; j += 1) {
+          if ( Array.isArray(ICONS[j].scrambler) ) {
+            if ( (ICONS[j].scrambler as string[]).some(s => s === sessions[i].settings?.mode ) ) {
+              sessions[i].icon = ICONS[j];
+              break;
+            }
+          } else if ( ICONS[j].scrambler === sessions[i].settings?.mode ) {
+            sessions[i].icon = ICONS[j];
+            break;
+          }
+        }
+      }
+    }
+  }
+
   onMount(() => {
     mounted = true;
 
@@ -526,8 +577,8 @@
         let ss = localStorage.getItem('session');
         let currentSession = sessions.find(s => s._id === ss);
         $session = currentSession || sessions[0];
-        console.log("SESSION: ", $session);
 
+        updateSessionsIcons();
         selectedSession();
         sortSessions();
       });
@@ -625,6 +676,14 @@
           on:click={ openAddSession } class="mx-auto bg-blue-700 hover:bg-blue-600 text-gray-300">
           <PlusIcon /> { $localLang.TIMER.addNewSession }
         </Button>
+
+        <!-- <div class="flex gap-2">
+          {#each ICONS as icon}
+            <Tooltip text={ icon.name } position="top">
+              <svelte:component this={ icon.icon } size="1.2rem"/>
+            </Tooltip>
+          {/each}
+        </div> -->
       {/if}
 
       <div class="grid gap-2 m-2 mt-4 max-h-[min(80vh,30rem)] overflow-scroll"
@@ -673,10 +732,24 @@
                   <Input
                     class="bg-gray-600 text-gray-200 flex-1 max-w-[10ch]"
                     inpClass="text-center" type="number" min={2} max={10}
-                    bind:value={ newSessionSteps } on:keyup={ (e) => handleInputKeyUp(e) }/>
+                    bind:value={ newSessionSteps } on:keyup={ (e) => handleInputKeyUp(e) }
+                    on:change={ ev => stepNames = [ ...stepNames, ...(new Array(newSessionSteps).fill('')) ].slice(0, newSessionSteps) }
+                    />
                 </div>
               {/if}
             </div>
+
+            {#if newSessionType === 'multi-step'}
+              <div class="flex flex-wrap flex-col gap-2 justify-center">
+                <h2 class="text-xl text-gray-300 text-center">{ $localLang.TIMER.stepNames }</h2>
+                
+                <ul class="flex justify-center items-center gap-2">
+                  {#each stepNames as sn, p (p)}
+                    <li class="w-20"> <Input bind:value={ sn }/> </li>
+                  {/each}
+                </ul>
+              </div>
+            {/if}
 
             <div class="flex justify-center gap-2 mt-8">
               <Button on:click={ closeAddSession }>{ $localLang.global.cancel }</Button>
@@ -696,7 +769,18 @@
           </div>
         {:else}
           {#each sessions as s}
-            <div class="grid border border-gray-400 rounded-md">
+            <button class={"grid h-max border border-gray-400 rounded-md relative " + (s.icon ? 'pl-8' : '')} on:click={() => {
+              sessions.forEach(s1 => s1.editing = false);
+              s.editing = true;
+            }}>
+              
+              {#if s.icon}
+                <span class="absolute bg-purple-700 p-[.05rem] rounded-sm text-white
+                  left-[.5rem] top-1/2 -translate-y-1/2">
+                  <svelte:component this={ s.icon.icon }/>
+                </span>
+              {/if}
+
               <Input
                 disabled={ !s.editing }
                 class="bg-transparent text-gray-400 flex-1 { !s.editing ? 'border-transparent' : '' }"
@@ -716,31 +800,24 @@
                   }
                 }}/>
               <div class="flex mx-2 items-center justify-center">
-                {#if !s.editing && !creatingSession}
-                  <button tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer hover:text-blue-500" on:click={() => {
-                    sessions.forEach(s1 => s1.editing = false);
-                    s.editing = true;
-                  }}>
-                    <PencilIcon size="1.2rem"/>
+                {#if s.editing && !creatingSession}
+                  <button tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer hover:text-blue-500"
+                    on:click|stopPropagation={ (ev) => renameSession(s) }>
+                    <CheckIcon size="1.2rem"/>
                   </button>
-                  <button tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer hover:text-blue-500" on:click={() => {
+                  <button tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer hover:text-blue-500"
+                    on:click|stopPropagation={() => s.editing = false}>
+                    <CloseIcon size="1.2rem"/>
+                  </button>
+                  <button tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer hover:text-blue-500" on:click|stopPropagation={() => {
                     sSession = s;
                     showDeleteSession = true;
                   }}>
                     <DeleteIcon size="1.2rem"/>
                   </button>
                 {/if}
-
-                {#if s.editing && !creatingSession}
-                  <button tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer hover:text-blue-500" on:click={ () => renameSession(s) }>
-                    <CheckIcon size="1.2rem"/>
-                  </button>
-                  <button tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer hover:text-blue-500" on:click={() => s.editing = false}>
-                    <CloseIcon size="1.2rem"/>
-                  </button>
-                {/if}
               </div>
-            </div>
+            </button>
           {/each}
         {/if}
       </div>

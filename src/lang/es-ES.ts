@@ -160,6 +160,7 @@ export const Spanish: Language = {
     selectMode: 'Elegir modo',
     selectFilter: 'Elegir filtro',
     addNewSession: 'Crear sesión',
+    stepNames: 'Nombre de los pasos',
 
     // Sessions Tab
     deleteAll: 'Eliminar todos',

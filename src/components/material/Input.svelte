@@ -56,6 +56,10 @@
     dispatch("change", e);
   }
 
+  function click(e: MouseEvent) {
+    dispatch('click', e);
+  }
+
 </script>
 
 <div class="w-full h-10 px-2 py-2 rounded-md relative transition-all
@@ -64,18 +68,18 @@
   { cl || "bg-gray-600 text-gray-300" }">
   {#if type === 'text'}
   <input class={ inpClass || '' }
-    bind:this={ref} bind:value
+    bind:this={ref} bind:value on:click={ click }
     on:keydown={keydown} on:keyup={keyup} on:input={ input } on:change={ change }
     {disabled} type="text" { size } placeholder="">
   {/if}
   
   {#if type === 'number'}
-  <input class={ inpClass || '' } {min} {max} {disabled} {step} type="number"
+  <input class={ inpClass || '' } {min} {max} {disabled} {step} type="number" on:click={ click }
     on:keydown={keydown} on:keyup={keyup} on:input={ input } on:change={ change } bind:value placeholder="">
   {/if}
 
   {#if type === 'date'}
-  <input class={ inpClass || '' } {disabled} type="date"
+  <input class={ inpClass || '' } {disabled} type="date" on:click={ click }
     on:keydown={keydown} on:keyup={keyup} on:input={ input } on:change={ change } bind:value placeholder="">
   {/if}
   <span class="placeholder">{placeholder}</span>
@@ -84,6 +88,10 @@
 <style lang="postcss">
   input {
     @apply h-full flex w-full bg-transparent border-none outline-none text-inherit pointer-events-auto;
+  }
+
+  input[disabled] {
+    @apply pointer-events-none;
   }
 
   input::placeholder {

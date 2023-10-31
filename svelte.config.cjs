@@ -7,4 +7,7 @@ module.exports = {
     postcss: true,
   }),
   
+  compilerOptions: {
+    css: 'external'
+  }
 }

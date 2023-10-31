@@ -63,7 +63,6 @@
 <div
   on:mouseenter={mouseenter}
   on:mouseleave={mouseleave}
-  on:click
   bind:this={ elem }
   style={
     '--duration: ' + duration + 'ms;\

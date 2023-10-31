@@ -518,12 +518,11 @@
   <ul
     class="context-menu"
     class:active={ showContextMenu }
-    bind:this={ contextMenuElement }
-    on:click={() => showContextMenu = false}>
-    <li on:click={ () => editSolve(sSolve) }>{ $localLang.TIMER.edit }</li>
-    <li on:click={ () => selectSolve(sSolve) }>{ $localLang.TIMER.select }</li>
-    <li on:click={ () => toClipboard(sSolve.scramble) }>{ $localLang.TIMER.copyScramble }</li>
-    <li on:click={ () => _delete([sSolve]) }>{ $localLang.global.delete }</li>
+    bind:this={ contextMenuElement }>
+    <li> <button on:click={ () => editSolve(sSolve) }>{ $localLang.TIMER.edit }</button> </li>
+    <li> <button on:click={ () => selectSolve(sSolve) }>{ $localLang.TIMER.select }</button> </li>
+    <li> <button on:click={ () => toClipboard(sSolve.scramble) }>{ $localLang.TIMER.copyScramble }</button> </li>
+    <li> <button on:click={ () => _delete([sSolve]) }>{ $localLang.global.delete }</button> </li>
   </ul>
 </main>
 

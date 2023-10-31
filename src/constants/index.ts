@@ -139,19 +139,19 @@ export interface SCRAMBLE_MENU {
   1: { 0: string, 1: string, 2: number, 3?: number, 4?: number[] }[]
 }
 
-const R222 = [ "222so", "222o", "2223", "222eg", "222eg0", "222eg1", "222eg2", "222nb" ];
-const R333 = [ "333", "333ni", "333fm", "333oh", "333o", "edges", "corners", "ll", "zbll", "cll", "ell", "lse", "lsemu", "cmll", "f2l", "lsll2", "2gll", "zbls", "zzll", "oll", "pll", "eoline", "easyc", "333ft", "333custom", "2gen", "2genl", "roux", "3gen_F", "3gen_L", "RrU", "half", "lsll", "coll", "eols", "wvls", "vls", "easyxc", "sbrx", "mt3qb", "mteole", "mttdr", "mt6cp", "mtcdrll", "mtl5ep", "ttll", "222tcp", "222tcn", "222lsall",  ];
-const R444 = [ "444wca", "444bld", "444m", "444", "444yj", "4edge", "RrUu" ];
-const R555 = [ "555wca", "555bld", "555", "5edge" ];
-const R666 = [ "666wca", "666si", "666p", "666s", "6edge" ];
-const R777 = [ "777wca", "777si", "777p", "777s", "7edge" ];
-const PYRA = [ "pyrso", "pyro", "pyrm", "pyrl4e", "pyr4c", "pyrnb" ];
-const SKWB = [ "skbso", "skbo", "skb", "skbnb" ];
-const SQR1 = [ "sqrs", "sqrcsp", "sq1h", "sq1t" ];
-const CLCK = [ "clkwca", "clk", "clkwca", "clko", "clkc", "clke" ];
-const MEGA = [ "mgmp", "mgmc", "mgmo" ];
-const KILO = [ "kilo" ];
-const GIGA = [ "giga" ];
+export const R222 = [ "222so", "222o", "2223", "2226", "222eg", "222eg0", "222eg1", "222eg2", "222nb", "222tcp", "222tcn", "222lsall" ];
+export const R333 = [ "333", "333ni", "333fm", "333oh", "333o", "edges", "corners", "ll", "zbll", "cll", "ell", "lse", "lsemu", "cmll", "f2l", "lsll2", "2gll", "zbls", "zzll", "oll", "pll", "eoline", "easyc", "333ft", "333custom", "2gen", "2genl", "roux", "3gen_F", "3gen_L", "RrU", "half", "lsll", "coll", "eols", "wvls", "vls", "easyxc", "sbrx", "mt3qb", "mteole", "mttdr", "mt6cp", "mtcdrll", "mtl5ep", "ttll" ];
+export const R444 = [ "444wca", "444bld", "444m", "444", "444yj", "4edge", "RrUu" ];
+export const R555 = [ "555wca", "555bld", "555", "5edge" ];
+export const R666 = [ "666wca", "666si", "666p", "666s", "6edge" ];
+export const R777 = [ "777wca", "777si", "777p", "777s", "7edge" ];
+export const PYRA = [ "pyrso", "pyro", "pyrm", "pyrl4e", "pyr4c", "pyrnb" ];
+export const SKWB = [ "skbso", "skbo", "skb", "skbnb" ];
+export const SQR1 = [ "sqrs", "sqrcsp", "sq1h", "sq1t" ];
+export const CLCK = [ "clkwca", "clk", "clkwca", "clko", "clkc", "clke" ];
+export const MEGA = [ "mgmp", "mgmc", "mgmo", "minx2g", "mlsll" ];
+export const KILO = [ "kilo" ];
+export const GIGA = [ "giga" ];
 
 const OPTS: PuzzleOptions[] = [
   { type: 'rubik', order: [2] }, { type: 'rubik', order: [3] }, { type: 'rubik', order: [4] },

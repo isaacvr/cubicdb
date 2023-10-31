@@ -35,7 +35,7 @@
   import { createEventDispatcher, onDestroy, onMount } from 'svelte';
   import { DataService } from '@stores/data.service';
   import { NotificationService } from '@stores/notification.service';
-  import { derived, writable, type Readable, type Writable, get } from 'svelte/store';
+  import { derived, writable, type Readable, type Writable } from 'svelte/store';
 
   import { StackmatInput } from './input-handlers/Stackmat';
   import { ManualInput } from './input-handlers/Manual';
@@ -46,8 +46,8 @@
   import Simulator from '@components/Simulator.svelte';
   import { KeyboardInput } from './input-handlers/Keyboard';
   import { QiYiSmartTimerInput } from './input-handlers/QY-Timer';
-    import { statsReplaceId } from '@helpers/statistics';
-    import StatsProgress from './StatsProgress.svelte';
+  import { statsReplaceId } from '@helpers/statistics';
+  import StatsProgress from './StatsProgress.svelte';
 
   export let context: TimerContext;
   export let battle = false;
@@ -652,9 +652,9 @@
       ">
         <!-- svelte-ignore a11y-no-static-element-interactions -->
         <div class="relative w-full h-6 cursor-move flex items-center" on:mousedown={ handleMouseDown }>
-          <span class="ml-auto mr-2 cursor-pointer text-gray-700" on:click={ () => showNotes = false }>
+          <button class="ml-auto mr-2 cursor-pointer text-gray-700" on:click={ () => showNotes = false }>
             <Close width="1.2rem" height="1.2rem"/>
-          </span>
+          </button>
         </div>
         <TextArea bind:value={ noteContent } cClass="w-full h-full" class="bg-gray-600 text-gray-300 p-4"></TextArea>
       </div>
@@ -831,7 +831,7 @@
   <!-- Image -->
   {#if $session?.settings?.genImage || battle }
     <!-- svelte-ignore a11y-no-static-element-interactions -->
-    <div
+    <button
       id="preview-container"
       class="absolute bottom-2 flex items-center justify-center w-full transition-all duration-300
         select-none bg-transparent"
@@ -842,7 +842,7 @@
         on:dragstart|preventDefault
         class="bottom-2 transition-all duration-300 cursor-pointer w-full h-full object-contain"
         src={ $preview } alt="">
-    </div>
+    </button>
   {/if}
 
   <!-- Modal -->

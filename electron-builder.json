@@ -25,7 +25,7 @@
     "!pnpm-lock.yaml",
     "!yarn.lock",
     "!postcss.config.cjs",
-    "!svelte.config.js",
+    "!svelte.config.cjs",
     "!tailwind.config.cjs",
     "!Todo.md",
     "!tsconfig.json",
@@ -34,7 +34,7 @@
     "package.json",
     "dist/**/*",
     "public/assets/**/*",
-    "src/index.js",
+    "src/index.cjs",
     "src/preload.js"
   ],
   "extraResources": [

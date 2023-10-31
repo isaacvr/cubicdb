@@ -32,14 +32,14 @@
 
 <div class="wrapper flex items-center" class:disabled={ disabled }
   aria-disabled={ disabled } aria-label={ label } aria-checked={ checked }>
-  <div class:checked class:undef class="box { _class }"
+  <button class:checked class:undef class="box { _class }"
     on:click={ toggle } on:keydown={ handleKeydown } tabindex={ disabled ? -1 : tabindex }>
     <div class="mark"></div>
-  </div>
+  </button>
   {#if label}
-    <span class="label ml-1 cursor-pointer" on:click={ toggle } on:keydown={ handleKeydown }>
+    <button class="label ml-1 cursor-pointer" on:click={ toggle } on:keydown={ handleKeydown }>
       {label}
-    </span>
+    </button>
   {/if}
 </div>
 

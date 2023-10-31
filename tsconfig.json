@@ -2,7 +2,7 @@
   "extends": "@tsconfig/svelte/tsconfig.json",
   "compilerOptions": {
     "baseUrl": ".",
-    "target": "ESNext",
+    "target": "es2021",
     "types": [ "vite/client" ],
     "useDefineForClassFields": true,
     "module": "ESNext",
@@ -16,6 +16,9 @@
     "checkJs": true,
     "isolatedModules": true,
     "lib": [ "ESNext", "DOM" ],
+    "importsNotUsedAsValues": "remove",
+    "verbatimModuleSyntax": true,
+    "preserveValueImports": false,
     "paths": {
       "@icons/*": ["node_modules/svelte-material-icons/*"],
       "@components/*": ["src/components/*"],

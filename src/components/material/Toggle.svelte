@@ -20,10 +20,10 @@
   }
 </script>
 
-<div class:checked class="wrapper" on:click={ toggle } on:keydown={ handleKeydown }
+<button role="checkbox" class:checked class="wrapper" on:click={ toggle } on:keydown={ handleKeydown }
   { tabindex } aria-disabled={ false } aria-checked={ checked }>
   <div class="mark"></div>
-</div>
+</button>
 
 <style lang="postcss">
   .wrapper {

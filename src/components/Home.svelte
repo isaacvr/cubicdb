@@ -5,7 +5,6 @@
   import { getLanguage } from "@lang/index";
   import type { Card } from "@interfaces";
   import type { Puzzle } from "@classes/puzzle/puzzle";
-  
   let cards: Card[] = [];
 
   function updateTexts() {

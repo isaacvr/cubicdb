@@ -202,6 +202,7 @@ export interface Session {
   editing?: boolean;
   tName?: string;
   settings: SessionSettings;
+  icon?: any;
 }
 
 export interface TimerPuzzleCategory {
@@ -690,6 +691,7 @@ export interface Language {
     selectMode: string;
     selectFilter: string;
     addNewSession: string;
+    stepNames: string;
 
     // Sessions Tab
     deleteAll: string;

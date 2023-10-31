@@ -151,6 +151,7 @@ export const English: Language = {
     selectMode: 'Select mode',
     selectFilter: 'Select filter',
     addNewSession: 'Add session',
+    stepNames: 'Step names',
 
     // Sessions Tab
     deleteAll: 'Delete all',

@@ -41,7 +41,6 @@ export async function generateCubeBundle(
     return observer;
   }
 
-
   imageWorker.onmessage = (e) => {
     if ( !e.data ) {
       observer.update(() => null);
@@ -80,4 +79,53 @@ export async function generateCubeBundle(
   imageWorker.postMessage([cubes.map(c => c.img || c.options), width, all, printable]);
 
   return observer;
+}
+
+export async function pGenerateCubeBundle(
+  cubes: Puzzle[], width ?: number, _all ?: boolean, inCube?: boolean, printable?: boolean, cache?: boolean
+): Promise< string[] > {
+  return new Promise(async (resolve) => {
+    const dataService = DataService.getInstance();
+  
+    const SyncWorker = await import('@workers/imageWorker?worker');
+    const imageWorker = new SyncWorker.default();
+    
+    let n = 0, total = cubes.length, inCache = 0, res = [];
+    let all = true;
+  
+    let images = await dataService.cacheGetImageBundle( cubes.map((c) => sha1(c.options)) );
+  
+    for (let i = 0, maxi = cubes.length; i < maxi; i += 1) {
+      cubes[i].img = '';
+  
+      if ( cache && images[i] ) {
+        inCache += 1;
+        cubes[i].img = images[i]; 
+      }
+    }
+    
+    if ( cache && total === inCache ) {
+      if ( inCube ) return resolve([]);
+      return resolve(cubes.map(c => c.img));
+    }
+
+    imageWorker.onmessage = (e) => {
+      if ( !e.data ) {
+        resolve([]);
+        imageWorker.terminate();
+        return;
+      }
+
+      if ( inCube ) {
+        for (let i = 0, maxi = cubes.length; i < maxi; i += 1) {
+          cubes[i].img = e.data[i];
+        }
+      }
+      
+      resolve( e.data );
+      imageWorker.terminate();
+    };
+  
+    imageWorker.postMessage([cubes.map(c => c.img || c.options), width, all, printable]);
+  });
 }

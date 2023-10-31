@@ -1,6 +1,5 @@
 import { readable, type Readable } from 'svelte/store';
 
-// @ts-ignore
-let version: Readable<string> = readable(VERSION);
+let version: Readable<string> = readable("2.0.0");
 
 export { version };

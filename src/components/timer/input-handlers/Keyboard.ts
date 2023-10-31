@@ -89,14 +89,11 @@ const saveSolve = ({ time, state, lastSolve, stepsTime, timeRef, session, addSol
     ls.steps = steps;
   }
 
-  console.log("STEPS: ", steps, t );
   t > 0 && addSolve(t, ls?.penalty);
   time.set(0);
 }
 
 const endedSteps = ({ steps, currentStep, stepsTime }: KeyboardContext, ev: any) => {
-  console.log('[endedSteps]: ', get(steps), get(currentStep) );
-
   if ( get(steps) === get(currentStep) ) {
     return true;
   }
