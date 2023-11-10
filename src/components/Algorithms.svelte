@@ -203,7 +203,7 @@
     <div>
       <h1 class="text-gray-300 text-3xl font-bold text-center">{ selectedCase?.name }</h1>
       <button class="flex mx-auto items-center justify-center" on:click={ () => imgExpanded = !imgExpanded }>
-        <img src={ selectedCase?._puzzle?.img } class="puzzle-img"
+        <img src={ selectedCase?._puzzle?.img } class="puzzle-img object-contain"
           class:expanded={ imgExpanded } alt="">
       </button>
 
@@ -235,7 +235,7 @@
             bg-backgroundLv1 text-gray-400
 
             hover:rotate-3 hover:shadow-lg">
-              <img class="w-32 h-32" src="{card?.puzzle?.img || ''}" alt={card.title}>
+              <img class="w-32 h-32 object-contain" src="{card?.puzzle?.img || ''}" alt={card.title}>
               <h2>{card.title}</h2>
             </li>
           </Link>
@@ -269,7 +269,7 @@
           <div class="row">
             <span class="font-bold">{ c.name }</span>
             <button class="flex items-center justify-center" on:click={ () => caseHandler(c) }>
-              <img class="puzzle-img hover:shadow-lg transition-all duration-200 cursor-pointer"
+              <img class="puzzle-img hover:shadow-lg transition-all duration-200 cursor-pointer object-contain"
                 src={c?._puzzle?.img || ''} alt="">
             </button>
             <ul>

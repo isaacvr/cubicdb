@@ -1,7 +1,7 @@
 <script lang="ts">
   import { Puzzle } from "@classes/puzzle/puzzle";
   import { getPLLScramble, pllfilter } from "@cstimer/scramble/scramble_333";
-  import { generateCubeBundle } from "@helpers/cube-draw";
+  import { pGenerateCubeBundle } from "@helpers/cube-draw";
   import Select from "@components/material/Select.svelte";
   import Button from "@components/material/Button.svelte";
   import Modal from "@components/Modal.svelte";
@@ -12,8 +12,10 @@
   import type { Language } from "@interfaces";
   import { globalLang } from "@stores/language.service";
   import { getLanguage } from "@lang/index";
+  import { DataService } from "@stores/data.service";
 
   let localLang: Readable<Language> = derived(globalLang, ($lang) => getLanguage( $lang ));
+  const isMobile = DataService.getInstance().isMobile;
 
   let TOP_FACE = [
     { value: 'random', label: 'Color neutral' },
@@ -78,20 +80,12 @@
           }) );
         }
 
-
-        generateCubeBundle(puzzles, undefined, true).then(g => {
-          let subscr = g.subscribe((res: any) => {
-            if ( (res as unknown) === '__initial__' ) return;
-
-            if ( res !== null ) {
-              images.push(...res);
-            } else {
-              lastTime = Date.now();
-              stage = 1;
-              setTimeout(() => subscr());
-            }
-          });
-        })
+        pGenerateCubeBundle(puzzles, 500, true).then(res => {
+          images.length = 0;
+          images.push(...res);
+          lastTime = Date.now();
+          stage = 1;
+        });
         break;
       }
       case 1: {
@@ -178,17 +172,19 @@
   ">
   <h1 class="text-center text-3xl mb-4 text-gray-300 font-bold">{ $localLang.PLL.title }</h1>
 
-  <button class="absolute right-4 top-4 bg-gray-500 text-gray-200 w-6 h-6 flex items-center justify-center
-    cursor-pointer rounded-full shadow-md hover:shadow-lg hover:bg-gray-400 font-bold
-    transition-all duration-200
-  " on:click={ () => showModal = true }>?</button>
-  
+  {#if !$isMobile}
+    <button class="absolute right-4 top-4 bg-gray-500 text-gray-200 w-6 h-6 flex items-center justify-center
+      cursor-pointer rounded-full shadow-md hover:shadow-lg hover:bg-gray-400 font-bold
+      transition-all duration-200
+    " on:click={ () => showModal = true }>?</button>
+  {/if}
+
   {#if stage === 0}
-    <div class="grid grid-cols-2 w-max items-center mx-auto gap-4">
-      <span>{ $localLang.PLL.topFace }</span>
+    <div class={"grid items-center mx-auto " + (!$isMobile ? 'grid-cols-2' : '')}>
+      <span class="my-2">{ $localLang.PLL.topFace }</span>
       <Select items={ TOP_FACE } label={ e => e.label  } bind:value={ topFace }/>
       
-      <span>{ $localLang.PLL.cases }</span>
+      <span class="mt-6 mb-2">{ $localLang.PLL.cases }</span>
       <Select items={ CASES } transform={ e => e } bind:value={ cases }/>
     </div>
 
@@ -199,12 +195,13 @@
 
   {#if stage === 1}
     <h3>{ $localLang.PLL.case } {idx + 1} / {cases}</h3>
-    <img src={ images[ idx ] } class="puzzle-img" alt="">
+    <img src={ images[ idx ] } class={"puzzle-img " + ($isMobile ? '' : '!w-60 !h-60')} alt="">
 
-    <div class="answer-container grid gap-2 my-4 max-w-2xl">
+    <div class="answer-container grid gap-2 my-4 w-full max-w-2xl" class:isMobile={ $isMobile }> 
       {#each filters as f}
         <button
-          class="answer border border-gray-300 p-4 flex items-center justify-center outline-none rounded-md"
+          class="answer border border-gray-300 flex items-center justify-center outline-none rounded-md "
+          class:isMobile={ $isMobile }
           class:right={ f === caseName[idx] && showAnswer }
           class:wrong={ f != caseName[idx] && f === lastAnswer && showAnswer }
           on:click={ () => addAnswer(f) }
@@ -259,7 +256,11 @@
   }
 
   .answer-container {
-    grid-template-columns: repeat(auto-fit, minmax(3rem, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(var(--minw, 3rem), 1fr));
+  }
+
+  .answer-container.isMobile {
+    --minw: 2.4rem;
   }
 
   .answer.right {
@@ -268,6 +269,14 @@
   
   .answer.wrong {
     @apply border-red-400 text-red-400 shadow-red-400 shadow-md;
+  }
+
+  .answer {
+    padding: 1rem;
+  }
+
+  .answer.isMobile {
+    padding: .5rem;
   }
 
   h1 {

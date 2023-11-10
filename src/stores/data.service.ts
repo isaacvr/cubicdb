@@ -6,13 +6,19 @@ import { QiYiSmartTimerInput } from '@components/timer/input-handlers/QY-Timer';
 import type { Algorithm, Solve, Session, Tutorial, Sheet, CubeEvent, IPC, PDFOptions, UpdateCommand } from '@interfaces';
 import { ElectronAdaptor, BrowserAdaptor } from '@storage/index';
 import type { Display } from 'electron';
+import { writable } from 'svelte/store';
 
 type DownloadEvent = 'download-progress' | 'update-downloaded';
+
+function extractKey(obj: any, key: any): any {
+  return { [key]: obj[key] };
+}
 
 export class DataService {
   private emitter: Emitter;
   private ipc: IPC;
   private static _instance: DataService;
+  private _isMobile = writable(false);
 
   private constructor() {
     this.emitter = new Emitter();
@@ -27,6 +33,11 @@ export class DataService {
 
     this.setIpc();
 
+    this._isMobile.set(window.innerWidth <= 768);
+
+    window.addEventListener('resize', () => {
+      this._isMobile.set(window.innerWidth <= 768);
+    });
   }
 
   static getInstance(): DataService {
@@ -34,6 +45,10 @@ export class DataService {
       return DataService._instance;
     }
     return DataService._instance = new DataService();
+  }
+
+  get isMobile() {
+    return this._isMobile;
   }
 
   setIpc() {
@@ -113,7 +128,7 @@ export class DataService {
   }
 
   removeSession(s: Session) {
-    return this.ipc.removeSession(s);
+    return this.ipc.removeSession( extractKey(s, '_id') as Session );
   }
 
   renameSession(s: Session) {

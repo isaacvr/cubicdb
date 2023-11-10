@@ -4,7 +4,6 @@ class AudioProcessor extends AudioWorkletProcessor {
 
     this.sample_rate = 41000;
     this.last_power = 1;
-    this.agc_factor = 0.0001;
     this.bitAnalyzer = null;
     this.state = {
       device: '',
@@ -20,6 +19,7 @@ class AudioProcessor extends AudioWorkletProcessor {
       noise: 1,
       power: 1
     };
+    this.multiplier = 1;
 
     //========== Audio2Bits Part ==========
     this.lastVal = [];
@@ -53,10 +53,35 @@ class AudioProcessor extends AudioWorkletProcessor {
     let input = inputs[0] || [];
 
     if ( !input || !input[0] ) return true;
-    
+
+    // let sm = [0, 0];
+    // let c = [0, 0];
+
+    // for (let i = 0, maxi = input[0].length; i < maxi; i++) {
+    //   let signal = input[1][i] - input[0][i];
+      
+    //   if ( signal > 0 ) {
+    //     sm[1] += signal;
+    //     c[1] += 1;
+    //   } else {
+    //     sm[0] += signal;
+    //     c[0] += 1;
+    //   }
+    // }
+
+    // console.log("AVGS: ", sm[0] / c[0], sm[1] / c[1]);
+
+    // const maxs = 0.0005;
+    // let f1 = (c[0] === 0 || sm[0] === 0) ? 1 : -maxs / (sm[0] / c[0]);
+    // let f2 = (c[1] === 0 || sm[1] === 0) ? 1 : maxs / (sm[1] / c[1]);
+
+    // // mm => [-0.001, 0.001];
+    // this.multiplier = this.multiplier + (Math.min(f1, f2) - this.multiplier) * 0.01;
+    // console.log("MULT: ", this.multiplier);
+
     //AGC
     for (let i = 0, maxi = input[0].length; i < maxi; i++) {
-      let signal = input[1][i] - input[0][i];
+      let signal = (input[1][i] - input[0][i]) * this.multiplier;
       let power = signal ** 2;
       this.last_power = Math.max(0.0001, this.last_power + (power - this.last_power) * this.agc_factor);
       let gain = 1 / Math.sqrt( this.last_power );

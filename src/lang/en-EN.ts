@@ -181,6 +181,8 @@ export const English: Language = {
     weekDistribution: 'Week distribution',
     histogram: 'Histogram',
     days: [ "Sun", "Mon", "Tue", "Wen", "Thu", "Fri", "Sat" ],
+    stepsAverage: 'Steps average',
+    stepsPercent: 'Steps percent',
 
     // Best section
     bestMarks: 'Best marks',

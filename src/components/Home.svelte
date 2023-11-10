@@ -5,7 +5,10 @@
   import { getLanguage } from "@lang/index";
   import type { Card } from "@interfaces";
   import type { Puzzle } from "@classes/puzzle/puzzle";
+  import { DataService } from "@stores/data.service";
+  
   let cards: Card[] = [];
+  const isMobile = DataService.getInstance().isMobile;
 
   function updateTexts() {
     const HOME = getLanguage( $globalLang ).HOME;
@@ -109,16 +112,16 @@
 </script>
 
 <main class="container-mini">
-  <ul class="w-full grid gap-4 place-items-center">
+  <ul class="w-full grid place-items-center" class:isMobile={ $isMobile }>
     {#each cards as card (card.route)}
-      <li class={`w-40 h-48 text-center shadow-md rounded-md select-none cursor-pointer
-      transition-all duration-200 flex flex-col items-center justify-between py-3
+      <li class={`text-center shadow-md rounded-md select-none cursor-pointer
+      transition-all duration-200 py-3 px-3
       bg-backgroundLv1 text-gray-400
 
       hover:rotate-3 hover:shadow-lg ` + 'card-premium'}>
-        <Link to={ card.route }>
-          <img class="w-32 h-32 mx-auto" src={card.puzzle ? card.puzzle.img : card.cube} alt={ card.title }>
-          <h2>{card.title}</h2>
+        <Link class="flex flex-col items-center justify-between w-full h-full" to={ card.route }>
+          <img class="mx-auto" src={card.puzzle ? card.puzzle.img : card.cube} alt={ card.title }>
+          <h2 class="text-sm">{card.title}</h2>
         </Link>
       </li>
     {/each}
@@ -126,8 +129,30 @@
 </main>
 
 <style lang="postcss">
-  ul:not(.no-grid) {
-    grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+  ul {
+    grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
     row-gap: 2rem;
+    padding-bottom: 1rem;
+  }
+
+  ul.isMobile {
+    grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+    row-gap: 1rem;
+  }
+
+  ul li {
+    @apply w-40 h-48;
+  }
+
+  ul img {
+    @apply w-32 h-32 object-contain;
+  }
+
+  ul.isMobile li {
+    @apply w-36 h-48;
+  }
+
+  ul.isMobile img {
+    @apply w-32 h-32;
   }
 </style>

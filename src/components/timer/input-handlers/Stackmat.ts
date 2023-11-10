@@ -1,3 +1,4 @@
+import { map } from '@helpers/math';
 import { randomUUID } from '@helpers/strings';
 import { TimerState, type InputContext, type StackmatCallback, type StackmatState, type TimerInputHandler } from '@interfaces';
 import { get } from 'svelte/store';
@@ -262,7 +263,49 @@ export class StackmatInput implements TimerInputHandler {
         curTimer: 0
       }
     });
-    
+
+    // let cnv: HTMLCanvasElement = document.getElementById('stackmat-signal') as HTMLCanvasElement;
+    // let ctx: CanvasRenderingContext2D | null = null;
+    // let buff: number[] = [];
+    // const cnvW = 800;
+    // const cnvH = 400;
+    // const cnvH2 = cnvH / 2;
+    // const BUFFSIZE = 50000;
+
+    // if ( !cnv ) {
+    //   cnv = document.createElement('canvas');
+    //   ctx = cnv.getContext('2d');
+
+    //   document.body.appendChild(cnv);
+
+    //   cnv.width = cnvW;
+    //   cnv.height = cnvH;
+    //   cnv.style.backgroundColor = 'white';
+    //   cnv.style.position = 'absolute';
+    //   cnv.style.top = '0';
+    //   cnv.style.left = '0';
+    //   cnv.setAttribute('id', 'stackmat-signal');
+    // } else {
+    //   ctx = cnv.getContext('2d');
+    // }
+
+    // this.node.port.onmessage = (ev) => {
+    //   let { data } = ev;
+
+    //   buff = [...buff, ...(data[0][0].map((e: number) => e * 1000))].slice(-BUFFSIZE);
+
+    //   ctx?.clearRect(0, 0, cnvW, cnvH);
+    //   ctx?.beginPath();
+    //   ctx?.moveTo(0, cnvH2);
+    //   ctx && (ctx.strokeStyle = '1px solid black');
+
+    //   for (let i = 0, maxi = buff.length; i < maxi; i += 1) {
+    //     ctx?.lineTo( map(i, 0, BUFFSIZE, 0, cnvW), cnvH2 - buff[i] );
+    //   }
+
+    //   ctx?.stroke();
+    // };
+
     this.node.port.onmessage = (ev) => {
       let { data }: { data: StackmatState} = ev;
       data.stackmatId = this.id;
@@ -280,19 +323,22 @@ export class StackmatInput implements TimerInputHandler {
 
     if ( this.audio_stream != undefined ) {
       try {
-        await this.audio_context.close();
+        this.audio_stream.getTracks().forEach(t => t.stop());
         this.audio_stream = undefined;
         this.source?.disconnect( this.node as AudioWorkletNode );
         this.node?.disconnect( this.audio_context.destination );
+        this.node?.port.close();
+        this.source?.disconnect();
+        this.node?.disconnect();
+        await this.audio_context.close();
+        console.log("AUDIO_PROCESSOR_DISCONNECTED");
       } catch(err) {
         console.log("AUDIO_PROCESSOR_ERROR: ", err);
       }
     }
   }
 
-  callback(sst: StackmatState) {
-    // console.log("STATE: ", sst.signalHeader);
-    
+  callback(sst: StackmatState) {    
     if ( !this.isActive ) return;
 
     this.interpreter.machine.context.time.set( sst.time_milli );

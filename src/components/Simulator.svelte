@@ -27,6 +27,9 @@
   import { globalLang } from "@stores/language.service";
   import type { Sticker } from "@classes/puzzle/Sticker";
   import Checkbox from "./material/Checkbox.svelte";
+  import { DataService } from "@stores/data.service";
+
+  const isMobile = DataService.getInstance().isMobile;
 
   export let enableKeyboard = true;
   export let enableDrag = true;
@@ -35,7 +38,7 @@
   export let contained = false;
   export let selectedPuzzle: PuzzleType = "rubik";
   export let order = 3;
-  export let animationTime = 200; /// Default animation time: 200ms
+  export let animationTime = $isMobile ? 150 : 200; /// Default animation time: 200ms
   export let showBackFace = false;
 
   let localLang: Readable<Language> = derived(globalLang, ($lang) => getLanguage( $lang ));

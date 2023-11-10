@@ -57,18 +57,19 @@
 
 <svelte:window on:click|capture={() => showOptions = false}></svelte:window>
 
-<main class={`select-container relative cursor-pointer border border-solid border-gray-400 h-max-10 rounded-md ` + (cl || '')}>
+<main class={`select-container relative cursor-pointer border border-solid
+  bg-gray-700 border-gray-400 h-max-10 rounded-md pr-6 ` + (cl || '')}>
   <button tabindex="0"
     on:click|self|stopPropagation={handleClick}
     class="
-      bg-gray-700 text-gray-200 p-2 flex items-center rounded-md select-none pr-8
+      bg-gray-700 text-gray-200 p-2 flex items-center rounded-md select-none
       whitespace-nowrap text-ellipsis w-full h-full text-left overflow-hidden">{
     items.some((a, p, i) => transform(a, p, i) === value)
       ? label( items.find((e, p, i) => transform(e, p, i) === value) )
       : placeholder
   }</button>
-  <div class="expand w-5 h-full absolute right-2 top-0 flex my-auto pointer-events-none">
-    <ExpandIcon width="100%" height="100%"/>
+  <div class="expand w-5 h-full absolute right-[.1rem] top-0 flex my-auto pointer-events-none">
+    <ExpandIcon size="100%"/>
   </div>
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div class="options

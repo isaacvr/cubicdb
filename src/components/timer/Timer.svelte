@@ -123,6 +123,7 @@
   let dispatch = createEventDispatcher();
   let sessionsTab: SessionsTab;
   let mounted = false;
+  let isMobile = dataService.isMobile;
   
   /// MODAL
   let openEdit = false;
@@ -430,6 +431,7 @@
 
     if ( newSessionType === 'multi-step' ) {
       settings.steps = newSessionSteps;
+      settings.stepNames = stepNames;
     }
 
     dataService.addSession({ _id: '', name, settings })
@@ -596,7 +598,7 @@
     bluetoothList, bluetoothStatus, STATS_WINDOW,
     setSolves, sortSolves, updateSolves, handleUpdateSession, handleUpdateSolve, updateStatistics,
     initScrambler, selectedGroup, setConfigFromSolve, selectSolve, selectSolveById, editSolve,
-    handleRemoveSolves
+    handleRemoveSolves, editSessions
   };
 
   $: (useScramble || useMode || useProb) ? initScrambler(useScramble, useMode, useProb) : initScrambler();
@@ -606,7 +608,7 @@
 
 <svelte:window on:keyup={ handleKeyUp }></svelte:window>
 
-<main class={"w-full " + (scrambleOnly || timerOnly ? 'h-auto' : 'h-full')}>
+<main class={"w-full pt-8 " + (scrambleOnly || timerOnly ? 'h-auto' : 'h-full')}>
   {#if timerOnly || scrambleOnly }
     <TimerTab { timerOnly } { scrambleOnly } { context } { battle } { enableKeyboard } />
   {:else if battle}
@@ -617,24 +619,27 @@
   {:else}
     <div class="fixed w-max -translate-x-1/2 left-1/2 z-10 grid grid-flow-col
       gap-2 top-12 items-center justify-center text-gray-400">
-      <Tooltip text={ $localLang.TIMER.manageSessions }>
-        <button on:click={ editSessions } class="cursor-pointer"><TuneIcon width="1.2rem" height="1.2rem"/> </button>
-      </Tooltip>
       
-      <Select class="min-w-[8rem]"
+      {#if !$isMobile}
+        <Tooltip text={ $localLang.TIMER.manageSessions }>
+          <button on:click={ editSessions } class="cursor-pointer"><TuneIcon width="1.2rem" height="1.2rem"/> </button>
+        </Tooltip>
+      {/if}
+      
+      <Select
         placeholder={ $localLang.TIMER.selectSession }
         value={ $session } items={ sessions } label={ (s) => (s || {}).name } transform={ e => e }
         onChange={ (g) => { $session = g; selectedSession(); } }
       />
 
       {#if $tab === 0 && ($session.settings.sessionType || 'mixed') === 'mixed'}
-        <Select class="min-w-[8rem]"
+        <Select
           placeholder={ $localLang.TIMER.selectGroup }
           value={ groups[$group] } items={ groups } transform={ e => e }
           onChange={ (g, p) => { $group = p || 0; selectedGroup(); } }
         />
 
-        <Select class="min-w-[8rem]"
+        <Select
           placeholder={[ $localLang.TIMER.selectMode ]}
           value={ $mode } items={ modes } label={ e => e[0] } transform={ e => e }
           onChange={ (g) => { $mode = g; selectedMode(); } }
@@ -642,7 +647,7 @@
       {/if}
 
       {#if filters.length > 0 && $tab === 0}
-        <Select class="min-w-[8rem]"
+        <Select
           placeholder={ $localLang.TIMER.selectFilter }
           value={ $prob } items={ filters } label={ e => e.toUpperCase() } transform={ (i, p) => p }
           onChange={ (i, p) => { $prob = p || 0; selectedFilter(); } }
@@ -676,14 +681,6 @@
           on:click={ openAddSession } class="mx-auto bg-blue-700 hover:bg-blue-600 text-gray-300">
           <PlusIcon /> { $localLang.TIMER.addNewSession }
         </Button>
-
-        <!-- <div class="flex gap-2">
-          {#each ICONS as icon}
-            <Tooltip text={ icon.name } position="top">
-              <svelte:component this={ icon.icon } size="1.2rem"/>
-            </Tooltip>
-          {/each}
-        </div> -->
       {/if}
 
       <div class="grid gap-2 m-2 mt-4 max-h-[min(80vh,30rem)] overflow-scroll"
@@ -757,15 +754,6 @@
                 { $localLang.global.save }
               </Button>
             </div>
-
-            <!-- <div class="flex mx-2 flex-grow-0 w-10 items-center justify-center">
-              <button tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer" on:click={ newSession }>
-                <CheckIcon width="100%" height="100%"/>
-              </button>
-              <button tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer" on:click={ closeAddSession }>
-                <CloseIcon width="100%" height="100%"/>
-              </button>
-            </div> -->
           </div>
         {:else}
           {#each sessions as s}
@@ -799,7 +787,7 @@
                     }
                   }
                 }}/>
-              <div class="flex mx-2 items-center justify-center">
+              <div class="flex items-center justify-center">
                 {#if s.editing && !creatingSession}
                   <button tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer hover:text-blue-500"
                     on:click|stopPropagation={ (ev) => renameSession(s) }>

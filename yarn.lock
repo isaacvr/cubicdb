@@ -734,6 +734,11 @@
   dependencies:
     "@types/glob" "*"
 
+"@types/audioworklet@^0.0.50":
+  version "0.0.50"
+  resolved "https://registry.yarnpkg.com/@types/audioworklet/-/audioworklet-0.0.50.tgz#be35418a1b9f889afffa35aebd47186958293678"
+  integrity sha512-Wic6k+tczhJZz4yq2ianEowIF/xH10wI9ac8sBDh27Jvs+WIvXIeM+nWPPRITFwSKuLZKlvVjfLiNmUjfy4koA==
+
 "@types/axios@^0.14.0":
   version "0.14.0"
   resolved "https://registry.npmjs.org/@types/axios/-/axios-0.14.0.tgz#ec2300fbe7d7dddd7eb9d3abf87999964cafce46"

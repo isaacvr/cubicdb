@@ -15,7 +15,7 @@
     "allowJs": true,
     "checkJs": true,
     "isolatedModules": true,
-    "lib": [ "ESNext", "DOM" ],
+    "lib": [ "ESNext" ],
     "importsNotUsedAsValues": "remove",
     "verbatimModuleSyntax": true,
     "preserveValueImports": false,

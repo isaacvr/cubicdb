@@ -103,6 +103,7 @@
     "@sveltejs/vite-plugin-svelte": "^2.4.6",
     "@tsconfig/svelte": "3.0.0",
     "@types/archiver": "^5.3.1",
+    "@types/audioworklet": "^0.0.50",
     "@types/axios": "^0.14.0",
     "@types/nedb": "^1.8.12",
     "@types/object-hash": "^3.0.4",

@@ -72,3 +72,17 @@ export function search(v: number, arr: number[], bound?: boolean): number {
 export function minmax(v: number, a: number, b: number) {
   return Math.max(a, Math.min(v, b));
 }
+
+export function calcPercents(st: number[], time: number) {
+  let acc = 0;
+  let solveSteps = [];
+
+  for (let i = 0, maxi = st.length; i < maxi; i += 1) {
+    let perc = st[i] * 100 / time;
+    let newV = Math.round(perc + acc);
+    acc = perc - newV;
+    solveSteps.push(newV);
+  }
+
+  return solveSteps;
+}

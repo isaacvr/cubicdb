@@ -2,6 +2,7 @@ import { SessionDefaultSettings } from "@constants";
 import type { Algorithm, AlgorithmOptions, CubeEvent, IPC, PDFOptions, Session, Sheet, Solve, Tutorial, UpdateCommand } from "@interfaces";
 import algs from '../database/algs.json';
 import tuts from '../database/tutorials.json';
+import { randomUUID } from "@helpers/strings";
 
 export class BrowserAdaptor implements IPC {
   // private algorithms: Nedb<Algorithm>;
@@ -30,7 +31,12 @@ export class BrowserAdaptor implements IPC {
   
   // Solves
   getSolves() { return Promise.resolve([]); }
-  addSolve(s: Solve) { return Promise.reject(); }
+  
+  addSolve(s: Solve) {
+    s._id = randomUUID();
+    return Promise.resolve(s);
+  }
+
   addSolves(s: Solve[]) { return Promise.reject(); }
   updateSolve(s: Solve) { return Promise.reject(); }
   removeSolves(s: Solve[]) { return Promise.reject(); }
@@ -44,7 +50,7 @@ export class BrowserAdaptor implements IPC {
     }]);
   }
 
-  addSession(s: Session) { return Promise.reject(); }
+  addSession(s: Session) { return Promise.resolve(s); }
 
   removeSession(s: Session) { return Promise.reject(); }
   renameSession(s: Session) { return Promise.reject(); }

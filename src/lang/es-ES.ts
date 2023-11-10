@@ -190,6 +190,8 @@ export const Spanish: Language = {
     weekDistribution: 'Distribución semanal',
     histogram: 'Histograma',
     days: [ "Dom", "Lun", "Mar", "Mie", "Jue", "Vie", "Sab" ],
+    stepsAverage: 'Promedio de pasos',
+    stepsPercent: '% de pasos',
 
     // Best section
     bestMarks: 'Mejores marcas',

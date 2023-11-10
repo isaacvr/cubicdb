@@ -198,3 +198,19 @@ export const SessionDefaultSettings: SessionSettings = {
 };
 
 export const AON = readable([ 3, 5, 12, 50, 100, 200, 500, 1000, 2000 ]);
+
+export const STEP_COLORS = [
+  "#2196F3",
+  "#8BC34A",
+  "#E91E63",
+  "#FFEB3B",
+  "#009688",
+  "#FF5722",
+  "#673AB7",
+  "#FF9800",
+  "#3F51B5",
+  "#FFC107",
+  "#4CAF50",
+  "#F44336",
+  "#9C27B0",
+];

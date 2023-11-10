@@ -1,10 +1,10 @@
 <script lang="ts">
   import Chart, { type Plugin } from 'chart.js/auto';
   import zoomPlugin from 'chartjs-plugin-zoom';
-  import { between, evalLine, rotatePoint } from '@helpers/math';
-  import { decimate, decimateN, getAverageS, trendLSV } from '@helpers/statistics';
+  import { between, calcPercents, evalLine, rotatePoint } from '@helpers/math';
+  import { getAverageS, trendLSV } from '@helpers/statistics';
   import { formatHour, infinitePenalty, timer } from '@helpers/timer';
-  import { AverageSetting, Penalty, type Language, type Solve, type TimerContext } from '@interfaces';
+  import { AverageSetting, Penalty, type Language, type Solve, type TimerContext, type Session } from '@interfaces';
   import { onMount } from 'svelte';
   import StatsProgress from './StatsProgress.svelte';
   import moment from 'moment';
@@ -12,10 +12,13 @@
   import { globalLang } from '@stores/language.service';
   import { getLanguage } from '@lang/index';
   import Button from '@components/material/Button.svelte';
-  import { AON } from '@constants';
+  import { AON, STEP_COLORS } from '@constants';
+  import { DataService } from '@stores/data.service';
 
   export let context: TimerContext;
   export let headless = false;
+
+  const isMobile = DataService.getInstance().isMobile;
 
   let localLang: Readable<Language> = derived(globalLang, ($lang) => getLanguage( $lang ));
     
@@ -25,10 +28,15 @@
   let chartElement2: HTMLCanvasElement;
   let chartElement3: HTMLCanvasElement;
   let chartElement4: HTMLCanvasElement;
+  let chartElement5: HTMLCanvasElement;
+  let chartElement6: HTMLCanvasElement;
   let timeChart: Chart;
   let hourChart: Chart;
   let weekChart: Chart;
   let distChart: Chart;
+  let stepTimeChart: Chart;
+  let stepPercentChart: Chart;
+  let steps: number[] = [];
 
   const DAYS = [ "Sun", "Mon", "Tue", "Wen", "Thu", "Fri", "Sat" ];
 
@@ -105,6 +113,10 @@
 
     weekChart.data.datasets[0].data = WData;
     weekChart.update();
+
+    if ( $session.settings?.sessionType === 'multi-step' ) {
+      
+    }
   }
 
   function updateStats() {
@@ -117,9 +129,11 @@
     let f = (x: number) => minT + (maxT - minT) * x / splits;
 
     let itvs = new Array(splits).fill(0).map((_, p) => [ f(p), f(p + 1) ]);
+    let nonPenalty = 0;
     let cants = $solves.reduce((acc, s) => {
       if ( !infinitePenalty(s) ) {
         acc[ Math.floor((s.time - minT) * splits / (maxT - minT)) ] += 1;
+        nonPenalty += 1;
       }
       return acc;
     }, new Array(splits).fill(0));
@@ -128,6 +142,37 @@
     distChart.data.labels = itvs.map(a => `${ timer(a[0], true) } - ${ timer(a[1], true) }`);
 
     distChart.update();
+
+    if ( !$session.settings || $session.settings.sessionType != 'multi-step' ) {
+      return;
+    }
+
+    // Splits
+    let sessionSteps = $session.settings.steps || 0;
+    steps = (new Array(sessionSteps)).fill(0);
+
+    for (let i = 0, maxi = $solves.length; i < maxi; i += 1) {
+      if ( !infinitePenalty($solves[i]) ) {
+        let st = $solves[i].steps || [];
+
+        for (let j = 0; j < sessionSteps; j += 1) {
+          steps[j] += (st[j] || 0);
+        }
+      }
+    }
+
+    steps = steps.map(e => nonPenalty ? e / nonPenalty : 0);
+
+    if ( !stepTimeChart || !stepPercentChart ) {
+      return;
+    }
+
+    stepTimeChart.data.datasets[0].data = steps;
+    stepTimeChart.update();
+
+    stepPercentChart.data.datasets[0].data = calcPercents(steps, $stats.avg.value);
+    stepPercentChart.update();
+
   }
 
   function updateChartText() {
@@ -162,6 +207,28 @@
     distChart.options.plugins.title.text = $localLang.TIMER.histogram;
     distChart.data.datasets[0].label = $localLang.TIMER.solves;
     distChart.update();
+
+    if ( !$session.settings || $session.settings.sessionType != 'multi-step' || !stepTimeChart || !stepPercentChart ) {
+      return;
+    }
+
+    stepTimeChart.data.labels = (new Array($session.settings.steps)).fill('').map((e, p) =>
+      ($session.settings.stepNames || [])[p] || `${ $localLang.global.step } ${p + 1}`
+    );
+
+    // @ts-ignore
+    stepTimeChart.options.plugins.title.text = $localLang.TIMER.stepsAverage;
+    stepTimeChart.data.datasets[0].label = $localLang.TIMER.average;
+
+    stepPercentChart.data.labels = (new Array($session.settings.steps)).fill('').map((e, p) =>
+      ($session.settings.stepNames || [])[p] || `${ $localLang.global.step } ${p + 1}`
+    );
+
+    // @ts-ignore
+    stepPercentChart.options.plugins.title.text = $localLang.TIMER.stepsPercent;
+
+    stepTimeChart.update();
+    stepPercentChart.update();
   }
 
   function handleResize() {
@@ -258,7 +325,7 @@
             position: 'left',
             grid: { color: '#555' },
             ticks: {
-              callback: (value: string | number) => timer(+value, false, true)
+              callback: (value: string | number) => timer(+value, true, true)
             }
           }
         },
@@ -281,13 +348,27 @@
             pan: { enabled: true, mode: "x", },
             limits: { x: { min: -1 }, y: { min: 0 } },
           },
-          title: { text: "Time distribution", display: !headless, font: { size: 30, family: "Raleway" }, color: '#ddd' },
+          title: { text: "Time distribution", display: !headless, font: {
+            size: $isMobile ? 20 : 30, family: "Raleway"
+          }, color: '#ddd' },
           decimation: {
             enabled: true,
             algorithm: 'lttb',
             samples: 700,
           },
-        }
+          legend: {
+            labels: {
+              boxWidth: $isMobile ? 20 : undefined,
+              filter: ({ datasetIndex }: any, { datasets }) => {
+                if ( datasetIndex > 0 && !datasets[ datasetIndex ].data.some((e: any) => !!e.y) ) {
+                  return false;
+                }
+
+                return true;
+              }
+            }
+          }
+        },
       },
       plugins: [ shadingArea ]
     });
@@ -392,7 +473,127 @@
       }
     });
 
+    if ( $session.settings?.sessionType != 'multi-step' ) {
+      return;
+    }
+    
     updateChart($solves);
+  }
+
+  async function updateMultiSteps(s: Session) {
+    if ( !s.settings || s.settings.sessionType != 'multi-step' ) {
+      return;
+    }
+
+    await new Promise((res) => {
+      let tm = setInterval(() => {
+        if ( chartElement5 && chartElement6 ) {
+          clearInterval(tm);
+          res(null);
+        }
+      }, 1000);
+    });
+
+    if ( stepTimeChart && stepPercentChart ) {
+      stepTimeChart.data.datasets[0].data = steps;
+      stepTimeChart.data.labels = (new Array(s.settings.steps)).fill('').map((e, p) =>
+        (s.settings.stepNames || [])[p] || `${ $localLang.global.step } ${p + 1}`
+      );
+
+      stepPercentChart.data.datasets[0].data = calcPercents(steps, $stats.avg.value);
+      stepPercentChart.data.labels = (new Array(s.settings.steps)).fill('').map((e, p) =>
+        (s.settings.stepNames || [])[p] || `${ $localLang.global.step } ${p + 1}`
+      );
+
+      stepTimeChart.update();
+      stepPercentChart.update();
+      return;
+    }
+
+    let ctx5 = chartElement5.getContext('2d');
+
+    stepTimeChart = new Chart(ctx5 as any, {
+      data: {
+        datasets: [{
+          data: steps, label: $localLang.TIMER.average, type: 'bar', backgroundColor: STEP_COLORS,
+          borderRadius: { topLeft: 7, topRight: 7 }
+        }],
+        labels: (new Array(s.settings.steps)).fill('').map((e, p) =>
+          (s.settings.stepNames || [])[p] || `${ $localLang.global.step } ${p + 1}`
+        ),
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            type: 'linear',
+            position: 'left',
+            grid: { color: '#555' },
+            beginAtZero: true,
+            ticks: {
+              callback: (value: string | number) => timer(+value, true, true)
+            }
+          }
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            mode: 'nearest',
+            intersect: false,
+            callbacks: {
+              label: (context) => {
+                let label = context.dataset.label;
+                let yLabel = context.parsed.y;
+                return label + ": " + timer(+yLabel, true, true);
+              },
+            }
+          },
+          title: { text: $localLang.TIMER.stepsAverage, display: true, font: {
+            size: 30, family: "Raleway"
+          }, color: '#ddd' }
+        },
+      }
+    });
+
+    let ctx6 = chartElement6.getContext('2d');
+
+    let percents = calcPercents(steps, $stats.avg.value);
+
+    // @ts-ignore
+    stepPercentChart = new Chart(ctx6 as any, {
+      data: {
+        datasets: [{
+          data: percents, type: 'doughnut',
+          backgroundColor: STEP_COLORS,
+          borderColor: '#0004'
+        }],
+        labels: (new Array(s.settings.steps)).fill('').map((e, p) =>
+          (s.settings.stepNames || [])[p] || `${ $localLang.global.step } ${p + 1}`
+        ),
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            mode: 'nearest',
+            intersect: false,
+            callbacks: {
+              label: (context) => {
+                let label = context.label;
+                let yLabel = context.parsed;
+                return `${label}: ${yLabel}%`;
+              },
+            }
+          },
+          title: { text: $localLang.TIMER.stepsPercent, display: true, font: {
+            size: 30, family: "Raleway"
+          }, color: '#ddd' }
+        },
+      }
+    });
   }
 
   onMount(() => {
@@ -406,13 +607,15 @@
   $: $AoX && timeChart && initGraphs($solves, true);
   $: $stats && distChart && updateStats();
   $: $localLang, timeChart && updateChartText();
+  $: updateMultiSteps($session);
 
 </script>
 
 <svelte:window on:resize={ handleResize } />
 
 <main class:headless>
-  <div class={"canvas card grid place-items-center col-span-2 row-span-2 bg-white bg-opacity-10 rounded-md "
+  <div class={`canvas card grid place-items-center
+    max-sm:col-span-1 max-sm:row-span-1 sm:row-span-1 col-span-2 md:row-span-2 bg-white bg-opacity-10 rounded-md `
     + (headless ? 'max-md:col-span-full' : '')}>
     <canvas bind:this={ chartElement }></canvas>
   </div>
@@ -467,6 +670,16 @@
       </div>
     </div>
 
+    {#if $session.settings?.sessionType === 'multi-step'}
+      <div class="steps-graph card">
+        <canvas bind:this={ chartElement5 }></canvas>
+      </div>
+
+      <div class="steps-percents card">
+        <canvas bind:this={ chartElement6 }></canvas>
+      </div>
+    {/if}
+
     <div class="hour-distribution card">
       <canvas bind:this={ chartElement2 }></canvas>
     </div>
@@ -482,49 +695,65 @@
 </main>
 
 <style lang="postcss">
-main:not(.headless) {
-  @apply w-full overflow-scroll p-4 grid gap-4 grid-rows-5 grid-cols-2 lg:grid-cols-3 lg:grid-rows-3;
-  max-height: calc(100vh - 8rem);
-  grid-template-rows: repeat(4, minmax(22rem, 1fr));
-}
+  main { --rows: 5; }
+  
+  @media not all and (min-width: 640px) {
+    main { --rows: 8; }
+  }
 
-main.headless {
-  @apply grid grid-cols-3 mx-4 gap-4;
-  max-height: calc(40vh);
-  grid-template-rows: 1fr 1fr;
-}
+  main:not(.headless) {
+    @apply w-full overflow-scroll p-4 grid gap-4 grid-rows-5 grid-cols-2
+      lg:grid-cols-3 lg:grid-rows-3 max-sm:grid-cols-1;
+    max-height: calc(100vh - 8rem);
+    grid-template-rows: repeat(var(--rows), minmax(22rem, 1fr));
+  }
 
-.card {
-  @apply text-gray-300 p-6 bg-white bg-opacity-10 rounded-md;
-}
+  main.headless {
+    @apply grid grid-cols-3 mx-4 gap-4;
+    max-height: calc(40vh);
+    grid-template-rows: 1fr 1fr;
+  }
 
-.stats {
-  @apply flex-col items-center justify-between;
-}
+  .card {
+    @apply text-gray-300 p-6 bg-white bg-opacity-10 rounded-md;
+  }
 
-main:not(.headless) .stats {
-  @apply row-span-1;
-}
+  .stats {
+    @apply flex-col items-center justify-between;
+  }
 
-main.headless .stats {
-  @apply row-span-2;
-}
+  main:not(.headless) .stats {
+    @apply row-span-1;
+  }
 
-#best-marks {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  row-gap: .25rem;
-}
+  main.headless .stats {
+    @apply row-span-2;
+  }
 
-.hour-distribution {
-  @apply grid col-span-1 lg:col-span-2;
-}
+  #best-marks {
+    @apply grid gap-y-1;
+    grid-template-columns: 1fr 1fr auto;
+    width: min(100%, 20rem);
+    margin: auto;
+  }
 
-.week-distribution {
-  @apply grid;
-}
+  .steps-graph {
+    @apply lg:col-span-2;
+  }
 
-.histogram {
-  @apply col-span-full;
-}
+  .steps-percents {
+    color: inherit;
+  }
+
+  .hour-distribution {
+    @apply grid col-span-1 lg:col-span-2;
+  }
+
+  .week-distribution {
+    @apply grid;
+  }
+
+  .histogram {
+    @apply col-span-full;
+  }
 </style>

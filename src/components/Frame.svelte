@@ -7,10 +7,11 @@
   import Select from './material/Select.svelte';
   import { LANGUAGES, getLanguage } from '@lang/index';
   import { globalLang } from '@stores/language.service';
-  import { derived, type Readable, type Unsubscriber } from 'svelte/store';
+  import { derived, type Readable } from 'svelte/store';
   import { NotificationService } from '@stores/notification.service';
   import type { Language } from '@interfaces';
   import { randomUUID } from '@helpers/strings';
+  import { navigate } from 'svelte-routing';
 
   let localLang: Readable<Language> = derived(globalLang, ($lang, set) => {
     set( getLanguage( $lang ) );
@@ -18,6 +19,7 @@
 
   const dataService = DataService.getInstance();
   const notService = NotificationService.getInstance();
+  const isElectron = !!(window as any).electronAPI;
 
   let date: string, itv: NodeJS.Timer;
   let progress = 0;
@@ -70,21 +72,27 @@
 </script>
 
 <section class="w-full h-8 shadow-sm bg-backgroundLv1 text-gray-400 fixed z-50 mb-3 select-none flex items-center">
-
-  <img draggable="false" src="/assets/logo-100.png" alt="" width="100%" height="100%" class="ml-1 w-8 flex my-auto">
+  <button on:click={ () => navigate('/') }>
+    <img draggable="false" src="/assets/logo-100.png" alt="" width="100%" height="100%" class="ml-1 w-8 flex my-auto">
+  </button>
   
-  <h4 class="ml-1">CubeDB</h4>
+  <h4 class="ml-1 max-sm:hidden">CubeDB</h4>
 
   <div class="absolute right-0 top-0 flex h-8 items-center">
     {#if progress} <span class="mr-2 text-yellow-500"> { progress + "%" } </span> {/if}
-    <Select class="w-20 h-[2rem] mr-4"
-      items={ LANGUAGES } label={e => e[1].code} bind:value={ $globalLang } transform={e => e[1].code} onChange={ updateLang }/>
-    <span>{date}</span>
-    <button class="ml-2 cursor-pointer" on:click={ minimize }>
-      <Minus />
-    </button>
-    <button class="ml-2 mr-1 cursor-pointer" on:click={ close }>
-      <Close height="100%"/>
-    </button>
+
+    <Select class="h-[2rem] mr-4"
+      items={ LANGUAGES } label={e => e[1].name } bind:value={ $globalLang } transform={e => e[1].code} onChange={ updateLang }/>
+      
+    {#if isElectron}
+      <span>{date}</span>
+      
+      <button class="ml-2 cursor-pointer" on:click={ minimize }>
+        <Minus />
+      </button>
+      <button class="ml-2 mr-1 cursor-pointer" on:click={ close }>
+        <Close height="100%"/>
+      </button>
+    {/if}
   </div>
 </section>

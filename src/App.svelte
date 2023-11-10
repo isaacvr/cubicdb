@@ -71,7 +71,7 @@
   <Frame />
   <Navbar />
 
-  <main class="pt-24 absolute w-full h-full overflow-x-hidden">
+  <main class="pt-16 absolute w-full h-full overflow-x-hidden">
     <Route path="/" component={ Home }/>
     <Route path="/tutorials" component={ Tutorials }/>
     <Route path="/tutorials/:something" component={ Tutorials }/>

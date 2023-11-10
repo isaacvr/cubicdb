@@ -8,9 +8,9 @@
   import Tooltip from "@components/material/Tooltip.svelte";
   import TextArea from "@components/material/TextArea.svelte";
   import { Puzzle } from "@classes/puzzle/puzzle";
-  import { generateCubeBundle } from "@helpers/cube-draw";
+  import { pGenerateCubeBundle } from "@helpers/cube-draw";
   import { options } from "@cstimer/scramble/scramble";
-  import { PX_IMAGE } from "@constants";
+  import { PX_IMAGE, STEP_COLORS } from "@constants";
   import { Paginator } from "@classes/Paginator";
 
   /// ICONS
@@ -35,6 +35,7 @@
   import { tick } from "svelte";
   import Select from "@components/material/Select.svelte";
   import { copyToClipboard, randomUUID } from "@helpers/strings";
+  import { calcPercents } from "@helpers/math";
 
   let localLang: Readable<Language> = derived(globalLang, ($lang) => getLanguage( $lang ));
 
@@ -43,23 +44,7 @@
 
   export let context: TimerContext;
 
-  let { solves, tab, selected, handleUpdateSolve, handleRemoveSolves } = context;
-
-  const STEP_COLORS = [
-    "#2196F3",
-    "#8BC34A",
-    "#E91E63",
-    "#FFEB3B",
-    "#009688",
-    "#FF5722",
-    "#673AB7",
-    "#FF9800",
-    "#3F51B5",
-    "#FFC107",
-    // "#4CAF50",
-    // "#F44336",
-    // "#9C27B0",
-  ];
+  let { solves, tab, selected, session, handleUpdateSolve, handleRemoveSolves } = context;
 
   let pg = new Paginator([], 100);
   let LAST_CLICK = 0;
@@ -92,29 +77,13 @@
     show = false;
   }
 
-  function calcPercents(s: Solve) {
-    if ( !s.steps ) return;
-
-    let st = s.steps.slice();
-    let acc = 0;
-
-    solveSteps.length = 0;
-
-    for (let i = 0, maxi = st.length; i < maxi; i += 1) {
-      let perc = st[i] * 100 / s.time;
-      let newV = Math.round(perc + acc);
-      acc = perc - newV;
-      solveSteps.push(newV);
-    }
-
-    solveSteps = solveSteps;
-  }
-
   export function editSolve(s: Solve) {
     gSolve = s;
     sSolve = { ...s };
  
-    calcPercents(sSolve);
+    if ( sSolve.steps ) {
+      solveSteps = calcPercents(sSolve.steps, sSolve.time);
+    }
 
     let sMode = sSolve.mode as string;
     let md = options.has(sMode) ? sMode : '333';
@@ -125,17 +94,8 @@
       headless: true,
     });
 
-    generateCubeBundle([cube], 200).then(g => {
-      let subscr = g.subscribe((img) => {
-        if ( img === '__initial__' ) return;
-
-        if ( img != null ) {
-          preview = img as string;
-        } else {
-          subscr();
-        }
-      });
-    })
+    pGenerateCubeBundle([cube], 400, true)
+      .then(res => preview = res[0]);
     
     show = true;
   }
@@ -296,13 +256,15 @@
     contextMenuElement.style.top = e.clientY + 'px';
     sSolve = s;
     
-    calcPercents(sSolve);
+    if ( sSolve.steps ) {
+      solveSteps = calcPercents(sSolve.steps, sSolve.time);
+    }
     
     showContextMenu = true;
   }
 
   function updatePageFromSelected() {
-    if ( $selected === 1 ) {
+    if ( $selected ) {
       let sv = $solves;
 
       for (let i = 0, maxi = sv.length; i < maxi; i += 1) {
@@ -438,6 +400,7 @@
     </div>
     <div class={"algorithm-container text-gray-400 m-2 transition-all duration-300 delay-100 " + ((fComment || collapsed) ? 'collapsed' : '')}>
       <Dice5Icon /> <span bind:innerHTML={ sSolve.scramble } contenteditable="false" class="text-center"></span>
+      
       <button class="preview col-span-2 mb-2 mt-2 mx-auto overflow-hidden" on:click={ () => collapsed = !collapsed }>
         <img class="w-full h-full" src={ preview } alt="">
       </button>
@@ -450,7 +413,7 @@
           {#each solveSteps as s, p (p)}
             <span class="step-part text-gray-300"
               data-percent={ `${ s }%` }
-              data-time={ timer((sSolve.steps || [])[p], true) }
+              data-time={ timer((sSolve.steps || [])[p], true, true) }
               style={`
                 width: ${ s }%;
                 background-color: ${ STEP_COLORS[p] };
@@ -459,11 +422,17 @@
             ></span>
           {/each}
         </div>
+
+        <div class="col-span-2 flex mb-4 text-center -mt-4">
+          {#each solveSteps as s, p (p)}
+            <span style={`width: ${ s }%; `}>{ ($session.settings.stepNames || [])[p] || '' }</span>
+          {/each}
+        </div>
       {/if}
 
       <CommentIcon />
       
-      <TextArea
+      <TextArea blurOnEscape
         on:focus={ () => fComment = true }
         on:blur={ () => fComment = false }
         cClass={fComment ? "max-h-[30ch]" : 'max-h-[20ch]'} bind:value={ sSolve.comments } placeholder={ $localLang.TIMER.comment }/>
@@ -539,11 +508,11 @@
 .algorithm-container {
   display: grid;
   grid-template-columns: 1.3rem 1fr;
-  grid-template-rows: auto 1fr auto auto auto;
+  grid-template-rows: auto 18rem auto auto auto;
 }
 
 .algorithm-container.collapsed {
-  grid-template-rows: auto .4fr auto auto auto;
+  grid-template-rows: auto 6rem auto auto auto;
 }
 
 .actions {

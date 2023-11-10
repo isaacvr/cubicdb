@@ -19,6 +19,7 @@
   import CommentIcon from '@icons/CommentPlusOutline.svelte';
   import BluetoothOnIcon from '@icons/Bluetooth.svelte';
   import BluetoothOffIcon from '@icons/BluetoothOff.svelte';
+  import TuneIcon from '@icons/Tune.svelte';
 
   /// Components
   import Tooltip from '@material/Tooltip.svelte';
@@ -62,11 +63,13 @@
     state, ready, tab, solves, allSolves, session, Ao5, stats, scramble, group, mode, hintDialog,
     hint, cross, xcross, preview, isRunning, decimals, bluetoothList,
     setSolves, sortSolves, updateSolves, initScrambler, updateStatistics, selectedGroup,
-    setConfigFromSolve, editSolve, handleUpdateSession, handleUpdateSolve, handleRemoveSolves
+    setConfigFromSolve, editSolve, handleUpdateSession, handleUpdateSolve, handleRemoveSolves,
+    editSessions
   } = context;
 
   const dispatch = createEventDispatcher();
   const notification = NotificationService.getInstance();
+  const dataService = DataService.getInstance();
 
   /// CLOCK
   const TIMER_DIGITS = /^\d+$/;
@@ -115,6 +118,7 @@
   let prob = -1;
   let prevExpanded: boolean = false;
   let stackmatStatus = writable(false);
+  let isMobile = dataService.isMobile;
 
   // BLUETOOTH
   let bluetoothStatus = writable(false);
@@ -200,8 +204,6 @@
       });
     } },
   ];
-
-  const dataService = DataService.getInstance();
 
   function selectNone() {
     selected = 0;
@@ -425,6 +427,12 @@
   function updateDevices() {
     StackmatInput.updateInputDevices()?.then(dev => {
       deviceList = dev;
+
+      // if ( inputMethod instanceof StackmatInput && !deviceList.some(e => e[0] === deviceID) ) {
+      //   deviceID = deviceList[0][0];
+      //   inputMethod.disconnect();
+      //   inputMethod.init(deviceID, true);
+      // }
     });
 
     autoConnectId.forEach(id => {
@@ -590,6 +598,7 @@
     inputMethod.disconnect();
     navigator.mediaDevices?.removeEventListener('devicechange', updateDevices);
     // subs.forEach(s => s());
+    document.querySelectorAll('#stackmat-signal').forEach(e => e.remove());
   });
 
   $: $solves.length === 0 && reset();
@@ -609,8 +618,8 @@
   class="w-full h-full { textColor } { (timerOnly || scrambleOnly) ? 'mt-8' : '' }"
   >
   {#if !timerOnly }
-    <!-- Scramble and options -->
-    <div id="scramble" class="transition-all duration-300">
+    <!-- Scramble -->
+    <div id="scramble" class="transition-all duration-300 max-md:text-xs max-md:leading-5">
       {#if !$scramble}
         <span> {stateMessage} </span>
       {/if}
@@ -619,24 +628,44 @@
         class:battle={ battle }
         contenteditable="false" bind:innerHTML={$scramble}></span>
 
+      <!-- Options -->
       {#if !scrambleOnly }
-        <div class="absolute top-1 right-12 flex flex-col" class:hide={ $isRunning }>
+        <div class="absolute md:top-1 md:right-12 md:flex md:flex-col
+          max-md:left-1/2 max-md:-translate-x-[50%] max-md:top-[11rem] max-md:w-max" class:hide={ $isRunning }>
           {#each options.filter((e, p) => !battle ? true : p === 3 || p === 5) as option}
-            <Tooltip class="cursor-pointer" position="left" text={ option.text } hasKeybinding>
-              <button aria-label={ option.text } tabindex="0" class="my-3 mx-1 w-5 h-5 { textColor }"
+            {#if !$isMobile}
+              <Tooltip class="cursor-pointer" position="left" text={ option.text } hasKeybinding>
+                <button aria-label={ option.text } tabindex="0" class="my-3 mx-1 w-5 h-5 { textColor }"
+                  on:click={ option.handler } on:keydown={ (e) => e.code === 'Space' ? e.preventDefault() : null }>
+                  <svelte:component this={option.icon} width="100%" height="100%"/>
+                </button>
+              </Tooltip>
+            {:else}
+              <button aria-label={ option.text } tabindex="0" class="my-3 mx-2 w-5 h-5 { textColor }"
                 on:click={ option.handler } on:keydown={ (e) => e.code === 'Space' ? e.preventDefault() : null }>
                 <svelte:component this={option.icon} width="100%" height="100%"/>
               </button>
-            </Tooltip>
+            {/if}
           {/each}
 
+          {#if $isMobile}
+            <button on:click={ editSessions } class="cursor-pointer"><TuneIcon size="1.2rem"/> </button>
+          {/if}
+
           {#if $session?.settings?.input === 'GAN Cube'}
-            <Tooltip class="cursor-pointer" position="left" text={ 'GAN Cube' } hasKeybinding>
+            {#if !$isMobile}
+              <Tooltip class="cursor-pointer" position="left" text={ 'GAN Cube' } hasKeybinding>
+                <button aria-label={ 'GAN Cube' } tabindex="0" class="my-3 mx-1 w-5 h-5 { $bluetoothStatus ? 'text-blue-600' : textColor }"
+                  on:click={ showBluetoothData } on:keydown={ (e) => e.code === 'Space' ? e.preventDefault() : null }>
+                  <svelte:component this={ $bluetoothStatus ? BluetoothOnIcon : BluetoothOffIcon } width="100%" height="100%"/>
+                </button>
+              </Tooltip>
+            {:else}
               <button aria-label={ 'GAN Cube' } tabindex="0" class="my-3 mx-1 w-5 h-5 { $bluetoothStatus ? 'text-blue-600' : textColor }"
                 on:click={ showBluetoothData } on:keydown={ (e) => e.code === 'Space' ? e.preventDefault() : null }>
                 <svelte:component this={ $bluetoothStatus ? BluetoothOnIcon : BluetoothOffIcon } width="100%" height="100%"/>
               </button>
-            </Tooltip>
+            {/if}
           {/if}
         </div>
       {/if}
@@ -696,7 +725,7 @@
           <Input
             bind:value={ timeStr } stopKeyupPropagation
             on:UENTER={ addTimeString }
-            class="w-full h-36 text-center mt-16 {
+            class="w-full max-md:w-[min(90%,20rem)] mx-auto h-36 text-center mt-16 {
               validTimeStr(timeStr) ? '' :  'border-red-400 border-2' }
               focus-within:shadow-black"
             inpClass="text-center"/>
@@ -713,7 +742,8 @@
         {#if $session.settings.sessionType === 'multi-step' && $state === TimerState.RUNNING }
           <div class="step-progress w-[min(100%,30rem)] text-base">
             <StatsProgress value={ $currentStep } total={ $totalSteps }
-              title="" label={ `${ $currentStep } / ${ $totalSteps }` }/>
+              title={ ($session.settings.stepNames || [])[$currentStep - 1] || '' }
+              label={ `${ $currentStep } / ${ $totalSteps }` }/>
           </div>
         {/if}
 
@@ -724,6 +754,8 @@
             <span class={ $stackmatStatus ? 'text-green-600' : 'text-red-600' }>
               <svelte:component this={ $stackmatStatus ? WatchOnIcon : WatchOffIcon }/>
             </span>
+
+            <br />
           </span>
         {/if}
       {/if}
@@ -773,7 +805,7 @@
 
     <!-- Statistics -->
     <div id="statistics"
-      class="{ textColor } pointer-events-none transition-all duration-300"
+      class="{ textColor } pointer-events-none transition-all duration-300 max-md:text-xs"
       class:hide={ $isRunning }>
 
       <div class="left absolute select-none bottom-0 left-0 ">
@@ -840,7 +872,7 @@
       on:click={() => prevExpanded = !prevExpanded }>
       <img
         on:dragstart|preventDefault
-        class="bottom-2 transition-all duration-300 cursor-pointer w-full h-full object-contain"
+        class="bottom-2 transition-all duration-300 cursor-pointer h-full object-contain"
         src={ $preview } alt="">
     </button>
   {/if}
@@ -1009,10 +1041,10 @@
   }
 
   #scramble span {
-    @apply md:ml-16 md:mr-10 mx-4 inline-block text-center max-md:w-full md:w-[calc(100%-15rem)];
+    @apply md:ml-16 md:mr-10 mx-4 inline-block text-center md:w-[calc(100%-15rem)]
+      max-md:max-h-[10rem] md:max-h-[16rem];
     font-size: 1.5em;
-    word-spacing: 10px;
-    max-height: 16rem;
+    word-spacing: .5rem;
     overflow: hidden auto;
   }
 
@@ -1089,7 +1121,7 @@
   }
 
   #preview-container {
-    height: 25%;
+    @apply max-md:h-[20%] md:h-[25%];
     transition: all 400ms cubic-bezier(0.88, 0.33, 0.32, 1.19);
     transition-timing-function: cubic-bezier(0.88, 0.33, 0.32, 1.19);
   }
@@ -1097,6 +1129,11 @@
   #preview-container.expanded {
     height: 98%;
     background-color: rgba(0, 0, 0, 0.4);
+  }
+
+  #preview-container:not(.expanded) img {
+    max-width: calc(100% - 13rem);
+    margin-left: 2rem;
   }
 
   .hide {

@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { minmax } from '@helpers/math';
+  import { minmax } from '@helpers/math';
   import { createEventDispatcher, tick } from 'svelte';
 
   const dispatch = createEventDispatcher();
@@ -30,14 +30,14 @@
   function keyup(e: KeyboardEvent) {
     stopKeyupPropagation && e.stopPropagation();
     dispatch("keyup", e);
-    (e.code === "Enter" || e.code === 'NumpadEnter') && dispatch("UENTER", e);
+    (e.code === "Enter" || e.code === 'NumpadEnter' || e.key === 'Enter') && dispatch("UENTER", e);
     e.code === "Esc" && dispatch("UESCAPE", e);
   }
 
   function keydown(e: KeyboardEvent) {
     stopKeydownPropagation && e.stopPropagation();
     dispatch("keydown", e);
-    (e.code === "Enter" || e.code === 'NumpadEnter') && dispatch("DENTER", e);
+    (e.code === "Enter" || e.code === 'NumpadEnter' || e.key === 'Enter') && dispatch("DENTER", e);
     e.code === "Esc" && dispatch("DESCAPE", e);
   }
   
@@ -70,7 +70,7 @@
   <input class={ inpClass || '' }
     bind:this={ref} bind:value on:click={ click }
     on:keydown={keydown} on:keyup={keyup} on:input={ input } on:change={ change }
-    {disabled} type="text" { size } placeholder="">
+    {disabled} type="text" autocomplete="off" { size } placeholder="">
   {/if}
   
   {#if type === 'number'}

@@ -194,6 +194,7 @@ export interface SessionSettings {
   sessionType?: SessionType;
   mode?: string;
   steps?: number;
+  stepNames?: string[];
 }
 
 export interface Session {
@@ -321,6 +322,7 @@ export interface TimerContext {
   handleUpdateSession: (s: Session) => any;
   handleUpdateSolve: (s: Solve) => any;
   handleRemoveSolves: (sv: Solve[]) => any;
+  editSessions: () => any;
 }
 
 export const ROLES = {
@@ -726,6 +728,8 @@ export interface Language {
     bestMarks: string;
     go: string;
     bestList: {title: string, key: string, select: number }[];
+    stepsAverage: string;
+    stepsPercent: string;
     // ['Ao5', 'Ao12', 'Ao50', 'Ao100', 'Ao200', 'Ao500', 'Ao1k', 'Ao2k' ]
   },
   PLL: {

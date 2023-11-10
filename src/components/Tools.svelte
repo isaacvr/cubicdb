@@ -17,7 +17,7 @@
   import { NotificationService } from "@stores/notification.service";
   import { sTimer, timerToMilli } from "@helpers/timer";
   import StatsTab from "./timer/StatsTab.svelte";
-  import { computeMoves, getUpdatedStatistics } from "@helpers/statistics";
+  import { INITIAL_STATISTICS, computeMoves, getUpdatedStatistics } from "@helpers/statistics";
   import TextArea from "./material/TextArea.svelte";
   import { solvFacelet } from "@cstimer/scramble/scramble_333";
 
@@ -34,29 +34,6 @@
   let notification = NotificationService.getInstance();
 
   // Context
-  const INITIAL_STATISTICS: Statistics = {
-    best: { value: 0, better: false, prev: Infinity },
-    worst: { value: 0, better: false },
-    count: { value: 0, better: false },
-    time: { value: 0, better: false },
-    avg: { value: 0, better: false },
-    dev: { value: 0, better: false },
-    Mo3: { value: -1, better: false },
-    Ao5: { value: -1, better: false },
-    Ao12: { value: -1, better: false },
-    Ao50: { value: -1, better: false },
-    Ao100: { value: -1, better: false },
-    Ao200: { value: -1, better: false },
-    Ao500: { value: -1, better: false },
-    Ao1k: { value: -1, better: false },
-    Ao2k: { value: -1, better: false },
-
-    NP:    { value: 0, better: false },
-    P2:    { value: 0, better: false },
-    DNS:   { value: 0, better: false },
-    DNF:   { value: 0, better: false },
-    counter: { value: 0, better: false },
-  };
   let solves = writable<Solve[]>([]);
   let session = writable<Session>({
     _id: '',
@@ -74,7 +51,8 @@
   // Timer and Scramble Only
   let modes: { 0: string; 1: string; 2: number }[] = [];
   let filters: string[] = [];
-  let selectedOption = "timer-only";
+  // let selectedOption = "timer-only";
+  let selectedOption = "statistics";
   let timer: Timer;
 
   // Batch
@@ -424,13 +402,7 @@
   {/if}
 
   <div class="flex items-center justify-center gap-2 mt-8">
-    <Input
-      type="number"
-      class="!w-20"
-      bind:value={batch}
-      min={1}
-      on:UENTER={generateBatch}
-    />
+    <Input type="number" class="!w-20" bind:value={batch} min={1} on:UENTER={generateBatch} />
     <Button class="bg-purple-700 text-gray-300" on:click={generateBatch}
       >{ $localLang.global.generate }</Button
     >
@@ -462,20 +434,15 @@
 
   <hr class="border-gray-200 w-full mb-2"/>
 
-  <div class="w-[30rem] grid grid-cols-1 gap-2 mx-auto">
+  <div class="w-[min(100%,30rem)] grid grid-cols-1 gap-2 mx-auto max-md:place-items-center">
     <i class="text-yellow-500 flex items-center gap-2 justify-start">{ $localLang.TOOLS.writeYourTime }<DownArrowIcon size="1.2rem"/> </i>
-    <div class="flex items-center gap-2">
-      <Input focus={ true }
-        bind:value={timeStr}
-        stopKeyupPropagation
-        on:UENTER={ addTimeString }
-        class="w-full text-8xl !h-24 text-center {validTimeStr(timeStr)
-          ? ''
-          : '!border-red-400 !border-2'}
+    <div class="flex max-md:grid max-md:w-[min(90%,20rem)] items-center gap-2">
+      <Input focus={ true } bind:value={timeStr} stopKeyupPropagation on:UENTER={ addTimeString }
+        class="w-full text-8xl mx-auto !h-24 text-center {validTimeStr(timeStr)
+          ? '' : '!border-red-400 !border-2'}
           focus-within:shadow-black"
         inpClass="text-center"
       />
-  
       <Button class="h-min bg-purple-700 text-gray-300" on:click={ addTimeString }>{ $localLang.global.add }</Button>
       <Button class="h-min bg-red-700 text-gray-300" on:click={ clear }>{ $localLang.global.clear }</Button>
     </div>

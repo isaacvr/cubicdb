@@ -4,14 +4,21 @@
   export let value = '';
   export let cClass = '';
   export let placeholder = '';
+  export let blurOnEscape = false;
+
   let cl = '';
   export { cl as class };
 
   let innerText = '<br>';
   let dispatch = createEventDispatcher();
+  let textarea: HTMLTextAreaElement;
 
   function keyup(e: KeyboardEvent) {
     dispatch('keyup', e);
+
+    if ( blurOnEscape && e.code === 'Escape' ) {
+      textarea.blur();
+    }
   }
 
   function keydown(e: KeyboardEvent) {
@@ -35,7 +42,7 @@
     bind:innerHTML={ innerText } contenteditable="false"></div>
   <textarea
     on:keyup={ keyup } on:keydown={ keydown } on:focus={ focus } on:blur={ blur }
-    { placeholder }
+    { placeholder } bind:this={ textarea }
     bind:value class={`flex m-auto p-2 rounded-md border border-solid border-gray-400
       focus:text-gray-300 outline-none transition-all duration-200 absolute inset-0
       w-full h-full resize-none ` + ( cl || "bg-gray-600 text-gray-300" )}></textarea>
