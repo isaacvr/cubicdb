@@ -3,21 +3,28 @@ import type { Algorithm, AlgorithmOptions, CubeEvent, IPC, PDFOptions, Session, 
 import algs from '../database/algs.json';
 import tuts from '../database/tutorials.json';
 import { randomUUID } from "@helpers/strings";
+import { clone } from "@helpers/object";
 
 export class BrowserAdaptor implements IPC {
-  // private algorithms: Nedb<Algorithm>;
-  // private tutorials: Nedb<Tutorial>;
-  // private sessions: Nedb<Session>;
-  // private solves: Nedb<Solve>;
+  cache: Map<string, string>;
 
-  constructor() {}
+  constructor() {
+    this.cache = new Map<string, string>();
+  }
 
   addDownloadProgressListener(cb: any) {}
   addDownloadDoneListener(cb: any) {}
   
   // Algorithms
   getAlgorithms(options: AlgorithmOptions): Promise<Algorithm[]> {
-    return Promise.resolve([]);
+    // console.log('get-algs: ', options, algs);
+    if ( options.all ) return Promise.resolve(clone(algs) as Algorithm[]);
+    
+    let fAlgs = algs.filter(a => a.parentPath === options.path) as Algorithm[];
+
+    // console.log('fAlgs: ', algs, '/', fAlgs);
+
+    return Promise.resolve( clone(fAlgs) );
   }
 
   updateAlgorithm(alg: Algorithm) {
@@ -84,18 +91,21 @@ export class BrowserAdaptor implements IPC {
   pairingBluetoothResponse() { return Promise.reject(); }
   
   cacheCheckImage(hash: string): Promise<boolean> {
-    return Promise.resolve(false);
+    return Promise.resolve( this.cache.has( hash ) );
   }
 
   cacheGetImage(hash: string): Promise<string> {
-    return Promise.resolve('');
+    return Promise.resolve( this.cache.get(hash) || '' );
   }
   
   cacheGetImageBundle(hashes: string[]): Promise<string[]> {
-    return Promise.resolve([]);
+    console.log(`saved ${ hashes.length } hash`);
+    return Promise.resolve( hashes.map(h => this.cache.get(h) || '') );
   }
 
   cacheSaveImage(hash: string, data: string): Promise<void> {
+    console.log('saved 1 hash');
+    this.cache.set(hash, data);
     return Promise.resolve();
   }
 

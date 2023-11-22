@@ -1,7 +1,7 @@
 {
   "name": "cube-db",
   "productName": "CubeDB",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "description": "The definitive speedcubing app",
   "homepage": "https://github.com/isaacvr/cubedb-svelte",
   "repository": {
@@ -80,7 +80,6 @@
     "express": "4.18.2",
     "js-confetti": "^0.11.0",
     "jszip": "3.10.1",
-    "modern-palette": "^0.2.4",
     "moment": "2.29.4",
     "nedb": "1.8.0",
     "node-machine-id": "^1.1.12",
@@ -88,6 +87,7 @@
     "qrcode": "^1.5.3",
     "socket.io-client": "^4.7.2",
     "svelte-chartjs": "3.1.2",
+    "svelte-easy-crop": "^2.0.1",
     "svelte-material-icons": "3.0.5",
     "svelte-routing": "2.5.0",
     "three": "0.120.1",

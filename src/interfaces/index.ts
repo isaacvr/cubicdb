@@ -771,6 +771,7 @@ export interface Language {
     puzzle: string;
     order: string;
     setPuzzle: string;
+    showBackFace: string;
   },
   IMPORT_EXPORT: {
     title: string;
@@ -797,6 +798,7 @@ export interface Language {
     statistics: string;
     metrics: string;
     solver: string;
+    mosaic: string,
 
     // Statistics
     writeYourTime: string;

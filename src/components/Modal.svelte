@@ -84,9 +84,21 @@
 </dialog>
 
 <style lang="postcss">
+  @keyframes fadeIn {
+    from {
+      background-color: #0000;
+      backdrop-filter: blur(0);
+    }
+    
+    to {
+      background-color: #0003;
+      backdrop-filter: blur(.4rem);
+    }
+  }
+
   dialog::backdrop {
-    background-color: #0008;
     z-index: -1;
+    animation: fadeIn 200ms linear 0ms forwards;
   }
 
   .show {

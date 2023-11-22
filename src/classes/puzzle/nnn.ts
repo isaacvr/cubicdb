@@ -5,6 +5,7 @@ import { STANDARD_PALETTE } from "@constants";
 import { Piece } from './Piece';
 import { Sticker } from './Sticker';
 import { assignColors, getAllStickers, random } from './puzzleUtils';
+import { isBetween } from '@helpers/math';
 
 export function RUBIK(_a: number, _b:number, _c:number): PuzzleInterface {
   const dims = [_a, _b, _c].sort();
@@ -22,7 +23,7 @@ export function RUBIK(_a: number, _b:number, _c:number): PuzzleInterface {
     dims,
     faceColors: [ 'w', 'r', 'g', 'y', 'o', 'b' ],
     move: () => false,
-    roundParams: [],
+    roundParams: [ undefined, undefined, a < 10 ? 10 : a < 20 ? 5 : 2 ],
   };
 
   let fc = rubik.faceColors;
@@ -50,6 +51,8 @@ export function RUBIK(_a: number, _b:number, _c:number): PuzzleInterface {
   for (let z = 0; z < c; z += 1) {
     for (let y = 0; y < b; y += 1) {
       for (let x = 0; x < a; x += 1) {
+        if ( z > 0 && z < c - 1 && y > 0 && y < b - 1 && x > 0 && x < a - 1 ) continue;
+
         let anchor = ref.add( DOWN.mul(z).add( FRONT.mul(y)).add( RIGHT.mul(x) ).mul(len) );
         let center = anchor.add( FRONT.add(RIGHT).add(DOWN).mul(len / 2) );
         let p = new Piece();
@@ -165,10 +168,7 @@ export function RUBIK(_a: number, _b:number, _c:number): PuzzleInterface {
   ];
 
   assignColors(rubik, rubik.faceColors);
-  // isCube && roundCorners(rubik, null, null, null, (s: Sticker) => s.color != 'x');
-  // !isCube && roundCorners(rubik);
-  // roundCorners(rubik);
-
+  
   return rubik;
 
 }

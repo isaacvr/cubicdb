@@ -72,7 +72,7 @@
     <ExpandIcon size="100%"/>
   </div>
   <!-- svelte-ignore a11y-no-static-element-interactions -->
-  <div class="options
+  <div class="options w-max max-w-[10rem]
     bg-gray-700 bg-opacity-100 p-2 rounded-md border border-solid border-gray-400
     fixed z-10 grid grid-cols-1 max-h-72 overflow-x-hidden overflow-y-scroll"
     class:visible={ showOptions } bind:this={ optionList }

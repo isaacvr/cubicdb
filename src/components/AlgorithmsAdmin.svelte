@@ -1,6 +1,5 @@
 <script lang="ts">
-  import { onDestroy, onMount } from "svelte";
-  import type { Unsubscriber } from "svelte/store";
+  import { onMount } from "svelte";
   import { CubeViewMap, type Algorithm, nameToPuzzle, type AlgorithmTree } from "@interfaces";
   import { DataService } from "@stores/data.service";
   import Modal from "./Modal.svelte";
@@ -15,7 +14,6 @@
 
   const dataService = DataService.getInstance();
 
-  let aSub: Unsubscriber;
   let algs: Algorithm[] = [];
   let fAlgs: Algorithm[] = [];
   let show = false;
@@ -152,8 +150,25 @@
     }
   }
 
+  function handleUpdateAlgorithms(alg: Algorithm) {
+    let Q = [t];
+
+    while( Q.length ) {
+      let subt: AlgorithmTree = Q[0];
+      Q.shift();
+
+      if ( subt.alg._id === alg._id ) {
+        subt.alg = alg;
+        Q.length = 0;
+        break;
+      }
+
+      subt.children.forEach(st => Q.push(st));
+    }
+  }
+
   function saveAlgorithm() {
-    dataService.updateAlgorithm(sAlg);
+    dataService.updateAlgorithm(sAlg).then( handleUpdateAlgorithms );
     show = false;
   }
 
@@ -192,79 +207,48 @@
     });
 
     if ( ft.length ) {
-      fAlgs.forEach(alg => dataService.updateAlgorithm(alg));
+      fAlgs.forEach(alg => dataService.updateAlgorithm(alg).then( handleUpdateAlgorithms ));
     }
 
   }
 
   function refresh() {
-    dataService.getAlgorithms('', true);
+    dataService.getAlgorithms('', true)
+      .then(a => {
+        algs = a;
+
+        if ( !algs.some(a => a.parentPath === '') ) return;
+        
+        resetT();
+
+        algs.sort((a1, a2) => {
+          let p1 = a1.parentPath || '';
+          let p2 = a2.parentPath || '';
+
+          if ( p1.length != p2.length ) {
+            return p1.length < p2.length ? -1 : 1;
+          }
+
+          return p1 < p2 ? -1 : 1;
+        });
+
+        makeTree();
+        sortTree(t);
+        t = t;
+      })
+      .catch(err => console.log('ERROR: ', err));
   }
 
   function removeSolutions() {
     fAlgs.forEach(alg => {
       delete alg.solutions;
-      dataService.updateAlgorithm(alg);
+      dataService.updateAlgorithm(alg).then( handleUpdateAlgorithms );
     });
   }
   
   onMount(() => {
-    aSub = dataService.algSub.subscribe((a) => {
-      if ( !a ) return;
-
-      switch(a.type) {
-        case 'get-algorithms': {
-          algs = a.data as Algorithm[];
-
-          if ( !algs.some(a => a.parentPath === '') ) return;
-          
-          resetT();
-
-          algs.sort((a1, a2) => {
-            let p1 = a1.parentPath || '';
-            let p2 = a2.parentPath || '';
-
-            if ( p1.length != p2.length ) {
-              return p1.length < p2.length ? -1 : 1;
-            }
-
-            return p1 < p2 ? -1 : 1;
-          });
-
-          makeTree();
-          sortTree(t);
-          t = t;
-          break;
-        }
-        case 'update-algorithm': {
-          let alg = a.data as Algorithm;
-          let Q = [t];
-
-          while( Q.length ) {
-            let subt: AlgorithmTree = Q[0];
-            Q.shift();
-
-            if ( subt.alg._id === alg._id ) {
-              subt.alg = alg;
-              Q.length = 0;
-              break;
-            }
-
-            subt.children.forEach(st => Q.push(st));
-          }
-          
-          break;
-        }
-      }
-    });
-
     refresh();
   });
-
-  onDestroy(() => {
-    aSub();
-  });
-
 </script>
 
 <main class="container-mini text-gray-400 bg-white bg-opacity-10 m-4 p-4 rounded-md">

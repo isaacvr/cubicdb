@@ -2,6 +2,7 @@ import { FaceSticker } from "@classes/puzzle/FaceSticker";
 import type { Sticker } from "@classes/puzzle/Sticker";
 import type { Puzzle } from "@classes/puzzle/puzzle";
 import { roundCorners } from "@classes/puzzle/puzzleUtils";
+import { CubeMode } from "@constants";
 import { DoubleSide, Face3, Geometry, Material, Mesh, MeshBasicMaterial, Object3D, Vector3 } from "three";
 
 export function piecesToTree(cube: Puzzle, F: number = 1, sTrans: Function = (s: Sticker[]) => s, side = DoubleSide) {
@@ -67,7 +68,14 @@ export function cubeToThree(cube: Puzzle, F: number = 1) {
   
   roundCorners(nc.p, ...nc.p.roundParams);
   
-  let { group, meshes } = piecesToTree(nc, F);
+  let defFilter = (s: Sticker[]) => s;
+  let rubikFilter = (s: Sticker[]) => {
+    return s.filter(st => !(st.color === 'x' || st.oColor === 'x' || st._generated.color === 'x' || st._generated.oColor === 'x'));
+  };
+
+  let normalMode = [ CubeMode.NORMAL, CubeMode.ELL, CubeMode.PLL, CubeMode.ZBLL ].some(e => e === cube.mode);
+
+  let { group, meshes } = piecesToTree(nc, F, (cube.type === 'rubik' && normalMode) ? rubikFilter : defFilter);
 
   group.rotation.x = nc.rotation.x;
   group.rotation.y = nc.rotation.y;

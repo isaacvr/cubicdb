@@ -1,12 +1,11 @@
 <script lang="ts">
   import { Puzzle } from "@classes/puzzle/puzzle";
   import { CubeMode } from "@constants";
-  import { generateCubeBundle } from "@helpers/cube-draw";
+  import { generateCubeBundle, pGenerateCubeBundle } from "@helpers/cube-draw";
   import { getSearchParams } from "@helpers/strings";
-  import type { BlockType, CubeType, PuzzleInterface, Tutorial } from "@interfaces";
+  import type { BlockType, CubeType, Tutorial } from "@interfaces";
   import { DataService } from "@stores/data.service";
-  import { onDestroy, onMount } from "svelte";
-  import type { Unsubscriber } from "svelte/store";
+  import { onMount } from "svelte";
   import Tooltip from "@components/material/Tooltip.svelte";
   import Button from "@components/material/Button.svelte";
   import Modal from "@components/Modal.svelte";
@@ -123,14 +122,8 @@
       }
     }
 
-    generateCubeBundle(allCubes, 150, false, true).then(g => {
-      let subs = g.subscribe((img: any) => {
-        if ( img === '__initial__' ) return;
-        if ( img === null ) {
-          blocks = blocks;
-          subs();
-        }
-      })
+    pGenerateCubeBundle(allCubes, 150, true, true).then(() => {
+      blocks = blocks;
     });
   }
 

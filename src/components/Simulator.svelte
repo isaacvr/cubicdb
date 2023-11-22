@@ -26,8 +26,8 @@
   import { getLanguage } from "@lang/index";
   import { globalLang } from "@stores/language.service";
   import type { Sticker } from "@classes/puzzle/Sticker";
-  import Checkbox from "./material/Checkbox.svelte";
   import { DataService } from "@stores/data.service";
+  import Toggle from "./material/Toggle.svelte";
 
   const isMobile = DataService.getInstance().isMobile;
 
@@ -55,6 +55,7 @@
   let puzzles: any[] = [];
   let hasOrder = true;
   let GUIExpanded = false;
+  let resettingPuzzle = false;
 
   /// Animation
   let animating = false;
@@ -118,17 +119,14 @@
       let pieces: Piece[] = g.pieces;
       let subBuffer: Object3D[] = [];
       let subUserData: any[] = [];
-      let backV = showBackFace;
 
       group.children.forEach((p: Object3D, pos: number) => {
         if (findPiece(<Piece>p.userData, pieces)) {
           subUserData.push(p.userData);
           subBuffer.push(p);
 
-          if ( backV ) {
-            subUserData.push(new Piece([]));
-            subBuffer.push( backFace.children[pos] );
-          }
+          subUserData.push(new Piece([]));
+          subBuffer.push( backFace.children[pos] );
         }
       });
 
@@ -204,9 +202,12 @@
   }
 
   function resetPuzzle(facelet?: string) {
+    resettingPuzzle = true;
+
     let children = scene.children;
     scene.remove(...children);
 
+    // console.time('puzzle-constructor');
     if ( facelet ) {
       cube = Puzzle.fromFacelet(facelet);
     } else {
@@ -217,17 +218,24 @@
         mode: CubeMode.NORMAL,
       });
     }
+    // console.timeEnd('puzzle-constructor');
 
+    // console.time('cube-to-three');
     let ctt = cubeToThree(cube);
+    // console.timeEnd('cube-to-three');
+    
+    // console.time('pieces-to-three');
     let bfc = piecesToTree(cube, 1, (st: Sticker[]) => {
       return st
         .filter( s => cube.p.faceColors.indexOf(s.color) > -1)
         .map(s => s
-          .reflect1(s.getMassCenter().add( s.getOrientation().mul(0.6) ), s.getOrientation(), true)
+        .reflect1(s.getMassCenter().add( s.getOrientation().mul(0.6) ), s.getOrientation(), true)
           .mul(1.3)
         )
     }, FrontSide);
+    // console.timeEnd('pieces-to-three');
 
+    // console.time('resetting-view');
     group = ctt.group;
     cube = ctt.nc;
     backFace = bfc.group;
@@ -246,6 +254,8 @@
     scene.add(light);
 
     resetCamera();
+    // console.timeEnd('resetting-view');
+    resettingPuzzle = false;
   }
 
   for (let [key, value] of puzzleReg) {
@@ -541,6 +551,12 @@
         }
         break;
       }
+      case 'KeyB': {
+        if ( e.ctrlKey ) {
+          showBackFace = !showBackFace;
+        }
+        break;
+      }
     }
   }
 
@@ -614,6 +630,11 @@
     class="absolute right-4 text-gray-400 z-20 hover:text-gray-300 transition-all duration-100 cursor-pointer">
     <SettingsIcon width="1.2rem" height="1.2rem"/>
   </Tooltip>
+  
+  <Tooltip hasKeybinding text={ $localLang.SIMULATOR.showBackFace+ '[Ctrl+B]' } position="left"
+    class="absolute right-3 mt-8 text-gray-400 z-20 hover:text-gray-300 transition-all duration-100 cursor-pointer">
+    <Toggle bind:checked={ showBackFace }/>
+  </Tooltip>
 
   <Modal bind:show={ GUIExpanded }>
     <h1 class="text-3xl text-gray-300 text-center m-4">{ $localLang.SIMULATOR.puzzleSettings }</h1>
@@ -625,17 +646,14 @@
         
       {#if hasOrder}
         <span>{ $localLang.SIMULATOR.order }</span>
-        <Input type="number" min={1} bind:value={order} class="bg-white bg-opacity-10 text-gray-400"/>
+        <Input on:UENTER={() => {resetPuzzle(); hideGUI(); }}
+          type="number" min={1} bind:value={order} class="bg-white bg-opacity-10 text-gray-400"/>
       {/if}
 
-      <span class="col-span-2">
-        <Checkbox bind:checked={ showBackFace } label={ 'Show back face' }/> 
-      </span>
-
       <Button on:click={ hideGUI }>{ $localLang.global.cancel }</Button>
-      <Button
+      <Button loading={ resettingPuzzle }
         class="bg-green-700 hover:bg-green-600 text-gray-300"
-        on:click={ () => {resetPuzzle(); hideGUI(); }}>{ $localLang.SIMULATOR.setPuzzle }</Button>
+        on:click={() => {resetPuzzle(); hideGUI(); }}>{ $localLang.SIMULATOR.setPuzzle }</Button>
     </div>
   </Modal>
 {/if}

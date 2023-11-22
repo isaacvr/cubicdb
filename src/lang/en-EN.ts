@@ -239,6 +239,7 @@ export const English: Language = {
     puzzle: 'Puzzle',
     order: 'Order',
     setPuzzle: 'Set puzzle',
+    showBackFace: 'Show back face',
   },
   IMPORT_EXPORT: {
     title: 'Import / Export',
@@ -265,6 +266,7 @@ export const English: Language = {
     statistics: 'Statistics',
     metrics: 'Metrics',
     solver: 'Solver 3x3',
+    mosaic: 'Mosaic',
 
     // Statistics
     writeYourTime: 'Write your time here',

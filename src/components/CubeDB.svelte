@@ -123,7 +123,7 @@
   <hr>
 
   <!-- RRSS -->
-  <section>
+  <section class="flex items-center justify-center flex-wrap">
     <Button class="bg-gray-600 text-gray-300 gap-2"
       on:click={ () => to('https://github.com/isaacvr/cubedb-svelte') }
     > <GithubIcon size="1.2rem"/> GitHub</Button>
@@ -189,10 +189,11 @@
     place-items: center;
     gap: 1rem;
     width: 100%;
+    row-gap: 2rem;
   }
 
   .donation {
-    @apply grid place-items-center relative bg-black bg-opacity-30 p-4 rounded-md shadow-lg;
+    @apply h-full grid place-items-center relative bg-black bg-opacity-30 p-4 rounded-md shadow-lg;
   }
 
   .donation .donation-img {
@@ -204,11 +205,11 @@
   }
   
   .donation .donation-address {
-    @apply flex py-1 items-center gap-2 cursor-pointer hover:text-pink-400;
+    @apply flex flex-wrap justify-center py-1 items-center gap-2 cursor-pointer hover:text-pink-400;
   }
   
   .donation .donation-address span {
-    max-width: 19ch;
+    max-width: 12ch;
     text-overflow: ellipsis;
     overflow: hidden;
   }

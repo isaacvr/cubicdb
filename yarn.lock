@@ -3912,11 +3912,6 @@ mkdirp@^1.0.3:
   resolved "https://registry.yarnpkg.com/mkdirp/-/mkdirp-1.0.4.tgz#3eb5ed62622756d79a5f0e2a221dfebad75c2f7e"
   integrity sha512-vVqVZQyf3WLx2Shd0qJ9xuvqgAyKPLAiqITEtqW0oIUjzo3PePDd6fW9iFz30ef7Ysp/oiWqbhszeGWW2T6Gzw==
 
-modern-palette@^0.2.4:
-  version "0.2.4"
-  resolved "https://registry.yarnpkg.com/modern-palette/-/modern-palette-0.2.4.tgz#9c1e57c5df2bcb9e2be2f552f8b7824542c74a40"
-  integrity sha512-dxehp2X4SNuA1Z3KX0OcmlfgiUQ8QpGC5IbHQffZpH4KXfqXhj5kSP1ZW4sx4JlM6kSefV2D68ztZUbZez2g3A==
-
 moment@2.29.4:
   version "2.29.4"
   resolved "https://registry.npmjs.org/moment/-/moment-2.29.4.tgz#3dbe052889fe7c1b2ed966fcb3a77328964ef108"
@@ -5402,6 +5397,11 @@ svelte-check@3.5.2:
     sade "^1.7.4"
     svelte-preprocess "^5.0.4"
     typescript "^5.0.3"
+
+svelte-easy-crop@^2.0.1:
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/svelte-easy-crop/-/svelte-easy-crop-2.0.1.tgz#267aa61d3b9dea9c5999ed87579c70d03f93846b"
+  integrity sha512-5cB5wif3DuP92u0etdxk3u0fbGwyNq5G4Dd454g3LeMdVn15oim2rlWPNcbgH5Jr1AJZI5k4Bsp70zbQ0lpNtg==
 
 svelte-hmr@^0.15.3:
   version "0.15.3"

@@ -1,3 +1,4 @@
+import { Color } from "@classes/Color";
 import type { Vector3D } from "@classes/vector3d";
 
 export function map(v: number, a: number, b: number, A: number, B: number): number {
@@ -32,6 +33,11 @@ export function rotateSegment(x1: number, y1: number, x2: number, y2: number, an
 
 export function between(n: number, a: number, b: number): number {
   return Math.min(b, Math.max(a, n));
+}
+
+export function isBetween(n: number, a: number, b: number, inclusive = true): boolean {
+  let v = Math.sign(n - a) * Math.sign(n - b);
+  return inclusive ? v <= 0 : v < 0;
 }
 
 export function planeLineIntersection(p0: Vector3D, n: Vector3D, l0: Vector3D, l: Vector3D): Vector3D | null | undefined {
@@ -85,4 +91,22 @@ export function calcPercents(st: number[], time: number) {
   }
 
   return solveSteps;
+}
+
+export function getPixelCoord(x: number, y: number, width: number): number {
+  return (y * width + x) * 4;
+}
+
+export function getPixelInfo(x: number, y: number, d: ImageData): Color {
+  let idx = getPixelCoord(x, y, d.width);
+  let data = d.data;
+
+  return new Color(data[idx], data[idx + 1], data[idx + 2]);
+}
+
+export function colorDistance(a: Color, b: Color): number {
+  let c1 = a.color;
+  let c2 = b.color;
+  
+  return c1.map((e, p) => (e - c2[p]) ** 2).reduce((a, b) => a + b, 0);
 }

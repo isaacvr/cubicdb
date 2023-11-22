@@ -36,11 +36,12 @@ export function assignColors(p: PuzzleInterface, cols ?: string[]) {
     let p1 = sticker.points[ _i[0] ];
     let p2 = sticker.points[ _i[1] ];
     let p3 = sticker.points[ _i[2] ];
+    let u = Vector3D.cross(p1, p2, p3);
     let dirs = [0, 0, 0];
     let ok = false;
 
     for (let j = 0, maxj = pieces.length; j < maxj; j += 1) {
-      dirs[ pieces[j].direction(p1, p2, p3, true) + 1] += 1;
+      dirs[ pieces[j].direction1(p1, u, true) + 1] += 1;
       if ( dirs[0] > 0 && dirs[2] > 0 ) {
         sticker.color = 'x';
         sticker.oColor = 'x';

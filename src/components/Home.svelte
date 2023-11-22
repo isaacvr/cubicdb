@@ -13,13 +13,13 @@
   function updateTexts() {
     const HOME = getLanguage( $globalLang ).HOME;
 
-    const showPrivate = false;
+    const showPrivate = true;
 
     cards = [
       {
         title: HOME.tutorials,
         route: "/tutorials",
-        ready: true,
+        ready: false,
         timer: false,
         cube: '/assets/tutorials.png',
       }, {
@@ -43,7 +43,7 @@
       }, {
         title: HOME.battle,
         route: "/battle",
-        ready: false,
+        ready: showPrivate,
         cube: '/assets/battle.png',
       }, {
         title: HOME.pll_recognition,
@@ -62,7 +62,6 @@
         route: '/contest',
         cube: '/assets/logo-500.png',
         ready: showPrivate,
-        // puzzle: new Puzzle({ type: 'redi' })
       }, {
         title: HOME.tools,
         route: '/tools',
@@ -73,7 +72,7 @@
         title: HOME.importExport,
         route: '/import-export',
         cube: '/assets/import-export.png',
-        ready: true,
+        ready: !$isMobile,
         timer: false,
       }, {
         title: HOME.settings,
@@ -97,7 +96,7 @@
       return ac;
     }, []);
   
-    generateCubeBundle(cubes, undefined, false, true).then(gen => {
+    generateCubeBundle(cubes, undefined, false, true, undefined, true).then(gen => {
       let subsc = gen.subscribe((c) => {
         if ( c === null ) {
           subsc();
@@ -149,7 +148,7 @@
   }
 
   ul.isMobile li {
-    @apply w-36 h-48;
+    @apply w-36 h-44;
   }
 
   ul.isMobile img {

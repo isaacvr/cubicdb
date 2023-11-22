@@ -248,6 +248,7 @@ export const Spanish: Language = {
     puzzle: 'Puzzle',
     order: 'Orden',
     setPuzzle: 'Establecer',
+    showBackFace: 'Mostrar caras traseras',
   },
   IMPORT_EXPORT: {
     title: 'Importar / Exportar',
@@ -274,6 +275,7 @@ export const Spanish: Language = {
     statistics: 'Estadísticas',
     metrics: 'Métricas',
     solver: 'Solucionador 3x3',
+    mosaic: 'Mosaico',
 
     // Statistics
     writeYourTime: 'Escribe tu tiempo aquí',

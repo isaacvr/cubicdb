@@ -767,7 +767,7 @@
         <div class="flex justify-center w-full" class:show={$state === TimerState.STOPPED}>
           {#each solveControl.slice(Number(battle), solveControl.length) as control}
             <Tooltip class="cursor-pointer" position="top" text={ control.text }>
-              <button class="my-3 mx-1 w-5 h-5 { control.highlight($solves[0] || {}) ? 'text-red-500' : '' }"
+              <button class="flex my-3 mx-1 w-5 h-5 { control.highlight($solves[0] || {}) ? 'text-red-500' : '' }"
                 on:click={ control.handler }>
                 <svelte:component this={control.icon} width="100%" height="100%"/>
               </button>

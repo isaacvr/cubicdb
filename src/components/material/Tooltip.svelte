@@ -1,7 +1,7 @@
 <script lang="ts">
   import { getStackingContext } from '@helpers/DOM';
   import { processKey } from '@helpers/strings';
-  import { onMount } from 'svelte';
+  import { createEventDispatcher, onMount } from 'svelte';
 
   type Direction = 'right' | 'left' | 'top' | 'bottom';
 
@@ -13,6 +13,7 @@
   let _class = '';
   export { _class as class };
 
+  const dispatch = createEventDispatcher();
   let isVisible = false;
   let elem: HTMLElement, tt: HTMLElement;
   let x: string, y: string;
@@ -52,6 +53,10 @@
     }
   }
 
+  function clickHandler(ev: any) {
+    dispatch('click', ev);
+  }
+
   onMount(() => {
     resize();
   });
@@ -59,10 +64,10 @@
 
 <svelte:window on:resize={ resize }></svelte:window>
 
-<!-- svelte-ignore a11y-no-static-element-interactions -->
-<div
+<button
   on:mouseenter={mouseenter}
   on:mouseleave={mouseleave}
+  on:click={ clickHandler }
   bind:this={ elem }
   style={
     '--duration: ' + duration + 'ms;\
@@ -86,7 +91,7 @@
       &nbsp; <span class="flex ml-auto text-yellow-400">{ processKey(text)[1] }</span>
     {/if}
   </div>
-</div>
+</button>
 
 <style lang="postcss">
   .wrapper {

@@ -24,6 +24,7 @@
 
   const dataService = DataService.getInstance();
   const notification = NotificationService.getInstance();
+  const isMobile = dataService.isMobile;
 
   let lastUrl: string = '';
   let cards: Card[] = [];
@@ -160,11 +161,10 @@
     if ( caseName && fCases.length ) {
       selectedCase = fCases[0];
       allSolutions = true;
+      imgExpanded = false;
     } else {
       allSolutions = false;
     }
-
-    imgExpanded = allSolutions;
 
     let p1 = loc.pathname.split('/').slice(2).join('/');
 
@@ -208,20 +208,21 @@
       </button>
 
       <div class="grid grid-cols-6">
-        <h2 class="col-span-1 font-bold text-xl"> </h2>
-        <h2 class="col-span-3 font-bold text-xl text-gray-300">{ $localLang.ALGORITHMS.solution }</h2>
-        <h2 class="col-span-1 font-bold text-xl text-gray-300">{ $localLang.ALGORITHMS.moves }</h2>
-        <h2 class="col-span-1 font-bold text-xl"> </h2>
+        <h2 class="max-sm:hidden col-span-1 font-bold text-xl bg-red-500"> </h2>
+        <h2 class="max-sm:col-span-5 col-span-3 font-bold text-xl text-gray-300">{ $localLang.ALGORITHMS.solution }</h2>
+        <h2 class="max-sm:col-span-1 col-span-1 font-bold text-xl text-right text-gray-300">{ $localLang.ALGORITHMS.moves }</h2>
+        <h2 class="max-sm:hidden col-span-1 font-bold text-xl"> </h2>
   
         {#each (selectedCase?.solutions || []) as sol }
-          <span class="col-span-1"></span>
-          <Tooltip position="left" text="Click to copy" class="col-span-3">
+          <span class="max-sm:hidden col-span-1"></span>
+          <Tooltip position={ $isMobile ? "top" : "left" } text="Click to copy" class="max-sm:col-span-5 col-span-3">
             <button role="link" tabindex="0"
               on:click={ () => toClipboard(sol.moves) }
-              class="mt-2 cursor-pointer hover:text-gray-300 transition-all duration-200">{ sol.moves }</button>
+              class="mt-2 cursor-pointer hover:text-gray-300 transition-all
+              duration-200 border-l-4 border-l-blue-500 pl-2">{ sol.moves }</button>
           </Tooltip>
-          <span class="col-span-1 mt-2">{ sol.moves.split(" ").length }</span>
-          <span class="col-span-1"></span>
+          <span class="max-sm:col-span-1 col-span-1 mt-2 text-right">{ sol.moves.split(" ").length }</span>
+          <span class="max-sm:hidden col-span-1"></span>
         {/each}
       </div>
     </div>
@@ -229,25 +230,26 @@
     {#if type < 2}
       <ul class="w-full grid py-4">
         {#each cards as card }
-          <Link to={ card.route }>
-            <li class="w-40 h-48 text-center shadow-md rounded-md select-none cursor-pointer
-            transition-all duration-200 flex flex-col items-center justify-between py-3
-            bg-backgroundLv1 text-gray-400
+          <li class="max-w-[12rem] h-48 text-center shadow-md rounded-md select-none cursor-pointer
+          transition-all duration-200 flex flex-col items-center justify-between py-3
+          bg-backgroundLv1 text-gray-400
 
-            hover:rotate-3 hover:shadow-lg">
+          hover:rotate-3 hover:shadow-lg">
+            <Link to={ card.route } class="w-[fit-content]">
               <img class="w-32 h-32 object-contain" src="{card?.puzzle?.img || ''}" alt={card.title}>
               <h2>{card.title}</h2>
-            </li>
-          </Link>
+            </Link>
+          </li>
         {/each}
       </ul>
     {/if}
 
-    {#if type === 2 || type >= 4}
-      <div class="absolute right-12 top-16 grid place-items-center">
+    {#if type === 2 || type >= 4 }
+      <div class={"fixed right-2 grid place-items-center " + ( $isMobile ? "bottom-16" : "top-16" )}>
         <Tooltip position="left" text={ $localLang.ALGORITHMS.toggleView + '[Ctrl+L]' } hasKeybinding>
-          <Button class="w-8 h-8 bg-backgroundLv1 hover:bg-purple-700 text-gray-400
-            hover:text-gray-200 grid place-items-center cursor-pointer"
+          <Button class={`bg-purple-600 hover:bg-purple-500 text-gray-300
+            hover:text-gray-200 grid place-items-center !p-0 cursor-pointer `
+              + ($isMobile ? 'w-12 h-12 !rounded-full shadow-xl border border-black' : 'w-8 h-8')}
             on:click={ toggleListView }>
   
             {#if listView}
@@ -286,13 +288,10 @@
 
 <style lang="postcss">
   ul:not(.no-grid) {
-    grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr));
     row-gap: 2rem;
+    column-gap: 1rem;
     grid-template-rows: max-content;
-  }
-
-  .container-mini {
-    height: calc(100vh - 7rem);
   }
 
   .container-mini > :not(.absolute) {
@@ -315,8 +314,7 @@
   }
 
   .cases.compact {
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    padding-right: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
     gap: 1rem;
   }
 

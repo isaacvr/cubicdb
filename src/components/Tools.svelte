@@ -6,7 +6,7 @@
   import { Penalty, type Language, type Solve, type TimerContext, type Session, type Statistics, MetricList, type TurnMetric } from "@interfaces";
   import { globalLang } from "@stores/language.service";
   import { getLanguage } from "@lang/index";
-  import { STANDARD_PALETTE, SessionDefaultSettings, type SCRAMBLE_MENU, AON } from "@constants";
+  import { STANDARD_PALETTE, SessionDefaultSettings, type SCRAMBLE_MENU, AON, PRINTABLE_PALETTE } from "@constants";
   import * as all from "@cstimer/scramble";
   import Button from "@material/Button.svelte";
   import Input from "@material/Input.svelte";
@@ -20,6 +20,9 @@
   import { INITIAL_STATISTICS, computeMoves, getUpdatedStatistics } from "@helpers/statistics";
   import TextArea from "./material/TextArea.svelte";
   import { solvFacelet } from "@cstimer/scramble/scramble_333";
+  import Cropper from 'svelte-easy-crop';
+  import { colorDistance, getPixelInfo } from "@helpers/math";
+  import { Color } from "@classes/Color";
 
   let MENU: SCRAMBLE_MENU[] = getLanguage($globalLang).MENU;
   let groups: string[] = [];
@@ -51,8 +54,8 @@
   // Timer and Scramble Only
   let modes: { 0: string; 1: string; 2: number }[] = [];
   let filters: string[] = [];
-  // let selectedOption = "timer-only";
-  let selectedOption = "statistics";
+  let selectedOption = "timer-only";
+  // let selectedOption = "mosaic";
   let timer: Timer;
 
   // Batch
@@ -91,6 +94,18 @@
   let keys = [ "[W]", "[R]", "[G]", "[Y]", "[O]", "[B]" ];
   let color = 0;
   let md = false;
+
+  // Mosaics
+  // let imgStr = '/assets/a.jpg';
+  let imgStr = '';
+  let imgStr1 = '';
+  let imgElement: HTMLImageElement;
+  let imgW = 50;
+  let imgH = 50;
+  let puzzleOrder = 3;
+  let cropData = {
+    x: 0, y: 0, width: 0, height: 0
+  };
 
   function selectedGroup() {
     modes = MENU[ $group ][1];
@@ -283,6 +298,111 @@
     facelets[x][y] = fColors[ color ];
   }
 
+  function imageHandler(ev: any) {
+    let img = ev.detail[0];
+    let fr = new FileReader();
+
+    fr.onloadend = (ev1) => {
+      if ( ev1.target ) {
+        imgStr = ev1.target.result as string;
+        imgElement = new Image();
+        imgElement.src = imgStr;
+      }
+    };
+
+    fr.readAsDataURL(img);
+
+  }
+
+  function generateMosaic() {
+    console.log(cropData);
+
+    let cnv = document.createElement('canvas');
+    let ctx = cnv.getContext('2d');
+
+    let aux = document.createElement('canvas');
+    let auxc = aux.getContext('2d');
+
+    if ( !ctx || !auxc ) return;
+
+    let W = cropData.width;
+    let H = cropData.height;
+
+    let FW = imgW * puzzleOrder;
+    let FH = imgW * puzzleOrder;
+
+    let f = Math.ceil( W / FW );
+
+    W = FW * f;
+    H = FH * f;
+
+    cnv.width = imgElement.naturalWidth;
+    cnv.height = imgElement.naturalHeight;
+
+    ctx?.drawImage(imgElement, 0, 0);
+    let imgData = ctx.getImageData(cropData.x, cropData.y, cropData.width, cropData.height);
+    cnv.width = imgData.width;
+    cnv.height = imgData.height;
+    ctx.putImageData(imgData, 0, 0);
+
+    console.log("FACTOR: ", f, imgData.width, imgData.height, W, H);
+
+    aux.width = W;
+    aux.height = H;
+
+    auxc.drawImage(cnv, 0, 0, imgData.width, imgData.height, 0, 0, W, H);
+
+    imgData = auxc.getImageData(0, 0, W, H);
+
+    let len = imgData.data.length;
+    
+    let colorData = new ImageData(FW, FH);
+    let arr: number[] = [];
+    let colors = [ 'y', 'g', 'r', 'b', 'w', 'o' ].map((e) => new Color( (PRINTABLE_PALETTE as any)[e] ));
+
+    for (let y = 0; y < H; y += f) {
+      for (let x = 0; x < W; x += f) {
+        let rsum = 0, gsum = 0, bsum = 0;
+        let cant = f * f;
+
+        for (let k = 0; k < f; k += 1) {
+          for (let l = 0; l < f; l += 1) {
+            let pInfo = getPixelInfo(x + k, y + l, imgData);
+            rsum += pInfo.color[0];
+            gsum += pInfo.color[1];
+            bsum += pInfo.color[2];
+          }
+        }
+
+        let minDist = Infinity;
+        let minColor = new Color();
+
+        for (let i = 0; i < 6; i += 1) {
+          let cd = colorDistance( colors[i], new Color(~~(rsum / cant), ~~(gsum / cant), ~~(bsum / cant)) );
+
+          if ( cd < minDist ) {
+            minDist = cd;
+            minColor = colors[i];
+          }
+        }
+
+        arr.push( minColor.color[0], minColor.color[1], minColor.color[2], 255 );
+      }
+    }
+
+    console.log("ARRAY-LENGTH_FW_FH: ", arr.length, len, W, H, FW, FH);
+
+    let nArr = Uint8ClampedArray.from(arr);
+    nArr.forEach((n, p) => colorData.data[p] = n);
+
+    cnv.width = FW;
+    cnv.height = FH;
+
+    ctx.putImageData(colorData, 0, 0);
+
+    imgStr1 = cnv.toDataURL('image/jpg');
+  }
+
   onMount(() => {
     selectedGroup();
     // fromFacelet('UBBLURBBRFDUURDDDLDUURFFFULRRBFDFLLDLURDLFFLDRRBLBBFBU');
@@ -307,6 +427,7 @@
       [$localLang.TOOLS.statistics, "statistics"],
       [$localLang.TOOLS.metrics, "metrics"],
       [$localLang.TOOLS.solver, "solver"],
+      // [$localLang.TOOLS.mosaic, "mosaic"],
     ]}
     label={(e) => e[0]}
     transform={(e) => e[1]}
@@ -491,6 +612,34 @@
         {/each}
       </div>
     {/each}
+  </div>
+{:else if checkMode(selectedOption, ['mosaic'])}
+  <div class="bg-backgroundLv1 w-[min(90%,50rem)] mx-auto mt-8 p-4 rounded-md shadow-md">
+    <div class="flex flex-wrap justify-center gap-4 text-center">
+      <div>
+        Width (in cubes) <Input bind:value={imgW} inpClass="text-center" type="number" min={1} max={100}/>
+      </div>
+      <div>
+        Height (in cubes) <Input bind:value={imgH} inpClass="text-center" type="number" min={1} max={100}/>
+      </div>
+    </div>
+  </div>
+  
+  <div class="bg-backgroundLv1 w-[min(90%,50rem)] mx-auto mt-8 rounded-md shadow-md p-4 grid place-items-center">
+    <div class="relative h-[20rem] w-full">
+      <Cropper image={imgStr} zoom={1} aspect={ imgW / imgH } on:cropcomplete={e => cropData = e.detail.pixels}/>
+    </div>
+
+    <img src={ imgStr1 } alt=""/>
+
+    <div class="flex flex-wrap gap-2">
+      <Button class="bg-purple-700 text-gray-300 mt-8" file="image"
+        on:files={ imageHandler }>Select image</Button>
+  
+      {#if imgStr}
+        <Button class="bg-green-700 text-gray-300 mt-8" on:click={ generateMosaic }>Generate</Button>
+      {/if}
+    </div>
   </div>
 {/if}
 
