@@ -124,19 +124,27 @@ export class DataService {
   }
 
   addSession(s: Session) {
-    return this.ipc.addSession(s);
+    let _s = Object.assign({}, s);
+    delete _s.icon;
+    return this.ipc.addSession(_s);
   }
 
   removeSession(s: Session) {
-    return this.ipc.removeSession( extractKey(s, '_id') as Session );
+    let _s = Object.assign({}, s);
+    delete _s.icon;
+    return this.ipc.removeSession( extractKey(_s, '_id') as Session );
   }
 
   renameSession(s: Session) {
-    return this.ipc.renameSession(s);
+    let _s = Object.assign({}, s);
+    delete _s.icon;
+    return this.ipc.renameSession(_s);
   }
 
   updateSession(s: Session) {
-    return this.ipc.updateSession(s);
+    let _s = Object.assign({}, s);
+    delete _s.icon;
+    return this.ipc.updateSession(_s);
   }
 
   addContest(c: CubeEvent) {

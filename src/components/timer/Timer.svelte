@@ -478,6 +478,8 @@
   }
 
   function handleUpdateSession(session: Session) {
+    console.log("UPDATED: ", session);
+
     let updatedSession = sessions.find(s => s._id === session._id);
     if ( updatedSession ) {
       updatedSession.name = session.name;

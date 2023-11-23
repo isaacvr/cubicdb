@@ -35,14 +35,6 @@
   let notifications: INotification[] = [];
   let nSub: Unsubscriber;
 
-  function handlePopState(ev: any) {
-    console.log("POP_STATE: ", ev);
-  }
-
-  function handleHashChange(ev: any) {
-    console.log("HASH_CHANGE: ", ev);
-  }
-
   onMount(() => {
     nSub = notService.notificationSub.subscribe((v) => {
       notifications = v;
@@ -61,8 +53,6 @@
     nSub();
   });
 </script>
-
-<svelte:window on:popstate={ handlePopState } on:hashchange={ handleHashChange }/>
 
 <Router>
   <!-- <Particles /> -->

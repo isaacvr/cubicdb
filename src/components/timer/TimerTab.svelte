@@ -198,7 +198,8 @@
           if ( timerOnly ) return;
 
           initInputHandler();
-          dataService.updateSession($session).then( handleUpdateSession );
+
+          dataService.updateSession($session).then( res => console.log(res) );
           initialCalc != $session.settings.calcAoX && updateStatistics(false);
         }
       });

@@ -281,6 +281,10 @@
     }
   }
 
+  function globalHandleClick(ev: MouseEvent) {
+    showContextMenu = false;
+  }
+
   $: updatePaginator($solves);
   $: $selected, updatePageFromSelected();
   $: $tab != 1 && $selected && selectNone();
@@ -288,7 +292,7 @@
 
 <svelte:window
   on:keyup={ handleKeyUp }
-  on:click={ () => showContextMenu = false }></svelte:window>
+  on:click={ globalHandleClick }></svelte:window>
 
 <main class="w-full h-full">
   <ul class={"w-max flex justify-center mx-auto gap-2 text-gray-400 " + (pg.pages > 1 ? '' : 'hidden')}>
@@ -549,8 +553,12 @@
 }
 
 .context-menu li {
-  @apply p-1 rounded-md transition-all duration-200 cursor-pointer
-    pr-2 hover:pl-2 hover:hover:pr-1 hover:bg-gray-800;
+  @apply  pointer-events-none;
+}
+
+.context-menu li button {
+  @apply pointer-events-auto pr-2 hover:pl-2 hover:pr-1 p-1 rounded-md transition-all duration-200 cursor-pointer
+     hover:bg-gray-800 w-full text-left;
 }
 
 .step-part {

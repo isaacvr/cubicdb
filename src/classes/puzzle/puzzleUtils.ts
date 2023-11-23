@@ -90,8 +90,9 @@ export function scaleSticker(st: Sticker, scale: number): Sticker {
   return st.sub(cm).mul(SCALE).add(cm).add( n.mul(0.005) );
 }
 
-export function roundStickerCorners(s: Sticker, rd?: number, scale?: number, ppc?: number): Sticker {
+export function roundStickerCorners(s: Sticker, rd?: number | Function, scale?: number, ppc?: number): Sticker {
   const RAD = rd || 0.11;
+  const RAD_FN = typeof rd === 'function' ? rd : () => RAD;
   const PPC = ppc || 10;
   const C2k = [ 1, 2, 1 ];
   const SCALE = scale || 0.925;
@@ -101,8 +102,8 @@ export function roundStickerCorners(s: Sticker, rd?: number, scale?: number, ppc
   let newSt = new Sticker();
 
   for (let i = 0, maxi = pts.length; i < maxi; i += 1) {
-    let v1 = pts[ (i + 1) % maxi ].sub( pts[i] ).mul(RAD);
-    let v2 = pts[ (i - 1 + maxi) % maxi ].sub( pts[i] ).mul(RAD);
+    let v1 = pts[ (i + 1) % maxi ].sub( pts[i] ).mul( RAD_FN(s, i) );
+    let v2 = pts[ (i - 1 + maxi) % maxi ].sub( pts[i] ).mul( RAD_FN(s, i) );
     let P = [ pts[i].add(v2), pts[i], pts[i].add(v1) ];
     
     for (let j = 0; j <= PPC; j += 1) {

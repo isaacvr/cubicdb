@@ -16,7 +16,13 @@ export function SQUARE1(): PuzzleInterface {
     getAllStickers: () => [],
     faceColors: [ 'w', 'b', 'r', 'y', 'g', 'o' ],
     move: () => true,
-    roundParams: [null, 0.95],
+    roundParams: [
+      (s: Sticker, i: number) => {
+        if ( s.getOrientation().sub(UP).abs() > 1e-6 && s.getOrientation().sub(DOWN).abs() > 1e-6 ) return 0.11;
+
+        if ( s.points.length === 3 ) return i === 1 ? 0.4 : 0.11;
+        return i === 2 ? 0.2 : 0.11;
+      }, 0.95],
   };
 
   sq1.getAllStickers = getAllStickers.bind(sq1);

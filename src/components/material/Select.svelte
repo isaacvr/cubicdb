@@ -58,12 +58,12 @@
 <svelte:window on:click|capture={() => showOptions = false}></svelte:window>
 
 <main class={`select-container relative cursor-pointer border border-solid
-  bg-gray-700 border-gray-400 h-max-10 rounded-md pr-6 ` + (cl || '')}>
+  bg-gray-700 border-gray-400 h-max-10 rounded-md ` + (cl || '')}>
   <button tabindex="0"
     on:click|self|stopPropagation={handleClick}
     class="
       bg-gray-700 text-gray-200 p-2 flex items-center rounded-md select-none
-      whitespace-nowrap text-ellipsis w-full h-full text-left overflow-hidden">{
+      whitespace-nowrap text-ellipsis w-full h-full text-left overflow-hidden pr-6">{
     items.some((a, p, i) => transform(a, p, i) === value)
       ? label( items.find((e, p, i) => transform(e, p, i) === value) )
       : placeholder
