@@ -1,7 +1,8 @@
-import { Vector3D } from './../vector3d';
+import { CENTER, Vector3D } from './../vector3d';
 import { Sticker } from './Sticker';
 import type { PuzzleInterface } from '@interfaces';
 import { FaceSticker } from './FaceSticker';
+import { lineIntersection3D } from '@helpers/math';
 
 export function assignColors(p: PuzzleInterface, cols ?: string[]) {
   let colors = cols || [ 'y', 'o', 'g', 'w', 'r', 'b' ];
@@ -96,16 +97,38 @@ export function roundStickerCorners(s: Sticker, rd?: number | Function, scale?: 
   const PPC = ppc || 10;
   const C2k = [ 1, 2, 1 ];
   const SCALE = scale || 0.925;
+  const PI_2 = Math.PI / 2;
 
   let st = s;
   let pts = st.points;
   let newSt = new Sticker();
 
   for (let i = 0, maxi = pts.length; i < maxi; i += 1) {
-    let v1 = pts[ (i + 1) % maxi ].sub( pts[i] ).mul( RAD_FN(s, i) );
-    let v2 = pts[ (i - 1 + maxi) % maxi ].sub( pts[i] ).mul( RAD_FN(s, i) );
-    let P = [ pts[i].add(v2), pts[i], pts[i].add(v1) ];
+    let r = RAD_FN(s, i);
+    let isCircle = Array.isArray(r);
+    let seg_perc = isCircle ? r[0] : r;
+    let v1 = pts[ (i - 1 + maxi) % maxi ].sub( pts[i] ).mul( seg_perc );
+    let v2 = pts[ (i + 1) % maxi ].sub( pts[i] ).mul( seg_perc );
+    let P = [ pts[i].add(v1), pts[i], pts[i].add(v2) ];
     
+    let u = Vector3D.cross(P[0], P[1], P[2]).unit();
+
+    if ( isCircle && Math.abs(v1.abs() - v2.abs()) < 1e-6 ) {
+      let center = lineIntersection3D(P[0], v1.rotate(CENTER, u, PI_2), P[2], v2.rotate(CENTER, u, PI_2));
+
+      if ( center ) {
+        let sides = [v1.abs(), v2.abs(), v1.sub(v2).abs()];
+        let ang = Math.PI - Math.acos( (sides[2] ** 2 - sides[0] ** 2 - sides[1] ** 2) / (-2 * sides[0] * sides[1]) );
+  
+        for (let j = 0; j <= PPC; j += 1) {
+          let a = j / PPC;
+          newSt.points.push( P[0].rotate(center, u, a * ang) );
+        }
+
+        continue;
+      }
+    }
+
     for (let j = 0; j <= PPC; j += 1) {
       let a = j / PPC;
       newSt.points.push(

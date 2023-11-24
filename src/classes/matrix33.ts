@@ -14,6 +14,10 @@ export class Matrix33 {
     }
   }
   
+  setData(v00: number, v01: number, v02: number, v10: number, v11: number, v12: number, v20: number, v21: number, v22: number) {
+    this.data = [ [ v00, v01, v02 ], [ v10, v11, v12 ], [ v20, v21, v22 ] ];
+  }
+
   add(m: Matrix33): Matrix33 {
     let newMat = new Matrix33();
 

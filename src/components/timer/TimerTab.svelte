@@ -256,6 +256,7 @@
     switch( $tab ) {
       case 0: {
         inputMethod.keyDownHandler(event);
+        prevExpanded = false;
         break;
       }
       case 1: {

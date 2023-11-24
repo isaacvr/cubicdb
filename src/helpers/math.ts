@@ -1,5 +1,7 @@
 import { Color } from "@classes/Color";
-import type { Vector3D } from "@classes/vector3d";
+import { Matrix33 } from "@classes/matrix33";
+import { Vector2D } from "@classes/vector2-d";
+import { Vector3D } from "@classes/vector3d";
 
 export function map(v: number, a: number, b: number, A: number, B: number): number {
   return b === a ? A : (v - a) * (B - A) / (b - a) + A;
@@ -109,4 +111,37 @@ export function colorDistance(a: Color, b: Color): number {
   let c2 = b.color;
   
   return c1.map((e, p) => (e - c2[p]) ** 2).reduce((a, b) => a + b, 0);
+}
+
+export function lineIntersection2D(a: Vector2D, _ua: Vector2D, b: Vector2D, _ub: Vector2D): Vector2D | null {
+  let ua = _ua.unit();
+  let ub = _ub.unit();
+
+  if ( Math.abs( Vector2D.cross(ua, ub) ) < 1e-6 ) return null;
+
+  let D = ua.y * ub.x - ua.x * ub.y;
+  let D1 = (b.y - a.y) * ub.x - (b.x - a.x) * ub.y;
+
+  let t1 = D1 / D;
+
+  return a.add( ua.mul(t1) );
+}
+
+export function lineIntersection3D(a: Vector3D, ua: Vector3D, b: Vector3D, ub: Vector3D): Vector3D | null {
+  let v1 = ua.cross(ub);
+  let v2 = b.sub(a).cross(ub);
+
+  if ( v1.abs() < 1e-6 ) return null;
+
+  let r = v2.abs() / v1.abs();
+
+  if ( v1.mul(r).sub(v2).abs() < 1e-6 ) {
+    return a.add( ua.mul(r) );
+  }
+
+  if ( v1.mul(-r).sub(v2).abs() < 1e-6 ) {
+    return a.add( ua.mul(-r) );
+  }
+
+  return null;
 }

@@ -7,6 +7,10 @@ export class Vector2D {
     this.y = y || 0; 
   }
 
+  static cross(a: Vector2D, b: Vector2D): number {
+    return a.x * b.y - b.x * a.y;
+  }
+
   add(v: Vector2D): Vector2D {
     return new Vector2D(this.x + v.x, this.y + v.y);
   }
