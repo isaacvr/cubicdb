@@ -4,7 +4,7 @@ import { Vector3D, CENTER } from '../../classes/vector3d';
 import type { PuzzleInterface } from '@interfaces';
 import { STANDARD_PALETTE } from "@constants";
 import { Sticker } from './Sticker';
-import { assignColors, getAllStickers } from './puzzleUtils';
+import { assignColors, getAllStickers, random } from './puzzleUtils';
 
 function its(a: Vector3D, b: Vector3D, axis: 'x' | 'y' | 'z'): Vector3D {
   let ini = 0;
@@ -91,7 +91,10 @@ export function SQUARE2(): PuzzleInterface {
     ]);
 
     pieces.push( pc );
-    pieces.push( pc.rotate(CENTER, RIGHT, PI) );
+  }
+  
+  for (let i = 0, maxi = PTS.length; i < maxi; i += 1) {
+    pieces.push( pieces[i].rotate(CENTER, RIGHT, PI) );
   }
   
   let mid = new Piece([
@@ -154,6 +157,35 @@ export function SQUARE2(): PuzzleInterface {
       pieces: toMovePieces,
       ang
     };
+  };
+
+  sq2.scramble = function() {
+    if ( !sq2.toMove ) return;
+
+    const MOVES = 30;
+    let TOP_PIECES = pieces.slice(0, 12);
+    let BOTTOM_PIECES = pieces.slice(12, 24);
+    let EQ = pieces[ pieces.length - 1 ] as Piece;
+
+    for (let i = 0; i < MOVES; i += 1) {
+      let pt = random( TOP_PIECES ) as Piece;
+      let pb = random( BOTTOM_PIECES ) as Piece;
+
+      let s1 = random(pt.stickers.filter(s => !/^[xd]{1}$/.test(s.color) && s.getOrientation().cross(UP).abs() > 1e-6));
+      let s2 = random(pb.stickers.filter(s => !/^[xd]{1}$/.test(s.color) && s.getOrientation().cross(UP).abs() > 1e-6));
+      
+      let pcs1 = sq2.toMove(pt, s1, UP);
+      let pcs2 = sq2.toMove(pb, s2, DOWN);
+      
+      let cant1 = random(12);
+      let cant2 = random(12);
+
+      pcs1.pieces.forEach((p: Piece) => p.rotate(CENTER, UP, pcs1.ang * cant1, true));
+      pcs2.pieces.forEach((p: Piece) => p.rotate(CENTER, DOWN, pcs2.ang * cant2, true));
+      
+      let pcs3 = sq2.toMove(EQ, EQ.stickers[0], EQ.stickers[0].vecs[0]);
+      pcs3.pieces.forEach((p: Piece) => p.rotate(CENTER, EQ.stickers[0].vecs[0], pcs3.ang, true));
+    }
   };
 
   sq2.rotation = {

@@ -32,17 +32,14 @@ export function assignColors(p: PuzzleInterface, cols ?: string[]) {
 
   for (let i = 0, maxi = stickers.length; i < maxi; i += 1) {
     let sticker = stickers[i];
-    let _i = [0, 1, 2].map(e => Math.round((e / 3) * sticker.points.length));
-
-    let p1 = sticker.points[ _i[0] ];
-    let p2 = sticker.points[ _i[1] ];
-    let p3 = sticker.points[ _i[2] ];
-    let u = Vector3D.cross(p1, p2, p3);
+    let p1 = sticker.getMassCenter();
+    let u = sticker.getOrientation();
     let dirs = [0, 0, 0];
     let ok = false;
 
     for (let j = 0, maxj = pieces.length; j < maxj; j += 1) {
       dirs[ pieces[j].direction1(p1, u, true) + 1] += 1;
+
       if ( dirs[0] > 0 && dirs[2] > 0 ) {
         sticker.color = 'x';
         sticker.oColor = 'x';
@@ -53,9 +50,8 @@ export function assignColors(p: PuzzleInterface, cols ?: string[]) {
 
     if ( !ok ) {
       if ( dirs[0] > 0 ) {
-        let v = sticker.getOrientation();
         for (let j = 0, maxj = colors.length; j < maxj; j += 1) {
-          if ( v.sub( p.faceVectors[j] ).abs() < 1e-6 ) {
+          if ( u.sub( p.faceVectors[j] ).abs() < 1e-6 ) {
             sticker.color = colors[j];
             sticker.oColor = colors[j];
             break;
@@ -173,7 +169,6 @@ export function roundCorners(p: PuzzleInterface, rd ?: number, scale ?: number, 
       
       s[j].color = 'd';
       s[j].oColor = 'd';
-      s[j].vecs.length = 0;
 
       pc.stickers.push( newSt );
 

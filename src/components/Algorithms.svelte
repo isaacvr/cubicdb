@@ -34,6 +34,7 @@
   let allSolutions = false;
   let imgExpanded = false;
   let listView = JSON.parse(localStorage.getItem('algs-list-view') || 'true');
+  const NUMBER_REG = /^[+-]?[\d]+(\.[\d]+)?$/;
 
   function handleAlgorithms(list: Algorithm[]) {
     if ( list.length === 0 ) return;
@@ -41,7 +42,6 @@
     type = 0;
     cards.length = 0;
     cases.length = 0;
-
 
     if ( list.length > 0 ) {
       let hasSolutions = list.find(l => l.hasOwnProperty('solutions') && Array.isArray(l.solutions));
@@ -64,7 +64,7 @@
 
       for (let i = 0, maxi = Math.min(A.length, B.length); i < maxi; i += 1) {
         if ( A[i] != B[i] ) {
-          if ( !isNaN( parseInt(A[i]) ) && !isNaN( parseInt(B[i]) ) ) {
+          if ( NUMBER_REG.test(A[i]) && NUMBER_REG.test(B[i]) ) {
             return parseInt(A[i]) - parseInt(B[i]);
           } else {
             return A[i] < B[i] ? -1 : 1;
@@ -72,7 +72,7 @@
         }
       }
 
-      return a < b ? -1 : 1;
+      return A.length < B.length ? -1 : 1;
     });
     
     let cubes = list.map(e => {
@@ -85,6 +85,7 @@
         view: e.view,
         tips: e.tips,
         headless: true,
+        rounded: true
       }, true, false);
     });
     
@@ -208,7 +209,7 @@
       </button>
 
       <div class="grid grid-cols-6">
-        <h2 class="max-sm:hidden col-span-1 font-bold text-xl bg-red-500"> </h2>
+        <h2 class="max-sm:hidden col-span-1 font-bold text-xl"> </h2>
         <h2 class="max-sm:col-span-5 col-span-3 font-bold text-xl text-gray-300">{ $localLang.ALGORITHMS.solution }</h2>
         <h2 class="max-sm:col-span-1 col-span-1 font-bold text-xl text-right text-gray-300">{ $localLang.ALGORITHMS.moves }</h2>
         <h2 class="max-sm:hidden col-span-1 font-bold text-xl"> </h2>

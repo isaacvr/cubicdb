@@ -2,6 +2,7 @@ import type { Piece } from "@classes/puzzle/Piece";
 import type { Sticker } from "@classes/puzzle/Sticker";
 import type { Puzzle } from "@classes/puzzle/puzzle";
 import { roundStickerCorners } from "@classes/puzzle/puzzleUtils";
+import { Vector2D } from "@classes/vector2-d";
 import { BACK, CENTER, DOWN, FRONT, LEFT, RIGHT, UP, Vector3D } from "@classes/vector3d";
 import { CubeMode } from "@constants";
 import { map } from "@helpers/math";
@@ -18,6 +19,15 @@ export function projectedView(cube: Puzzle, DIM: number) {
   const PI_6 = PI / 6;
   const FACTOR = 2.1;
   let LW = DIM * 0.007;
+  const SPECIAL_SQ1 = [CubeMode.CS, CubeMode.EO, , CubeMode.CO];
+
+  const getFactor = () => {
+    if ( cube.type === 'square1' && SPECIAL_SQ1.some(m => m === cube.mode) ) {
+      return 1.6;
+    }
+
+    return FACTOR;
+  };
 
   if ( cube.type === 'pyraminx' ) {
     H = W / 1.1363636363636365;
@@ -123,32 +133,35 @@ export function projectedView(cube: Puzzle, DIM: number) {
         });
 
         if ( pts.length > 0 ) {
-          let st1 = st._generator.clone();
-          st1.points.map(p => p.y = (p.y + pts[0].y) / 2);
-          st1.updateMassCenter();
-          st1.rotate(pts[0], pts[0].sub(pts[1]), PI_2, true);
+          if ( !SPECIAL_SQ1.some(m => cube.mode === m) ) {
+            let st1 = st._generator.clone();
+            st1.points.map(p => p.y = (p.y + pts[0].y) / 2);
+            st1.updateMassCenter();
+            st1.rotate(pts[0], pts[0].sub(pts[1]), PI_2, true);
 
-          let points = st1.points;
-          for (let j = 1; j <= 2; j += 1) {
-            SQ1_ANCHORS.sort((a, b) => a.sub(points[j]).abs() - b.sub(points[j]).abs());
-            points[j] = SQ1_ANCHORS[0].clone();
-          }
+            let points = st1.points;
+            for (let j = 1; j <= 2; j += 1) {
+              SQ1_ANCHORS.sort((a, b) => a.sub(points[j]).abs() - b.sub(points[j]).abs());
+              points[j] = SQ1_ANCHORS[0].clone();
+            }
 
-          let rounded = cube.options.rounded ? roundStickerCorners(st1, ...cube.p.roundParams) : st1;
-          rounded.color = st.color;
-          rounded.oColor = st.oColor;
+            let rounded = cube.options.rounded ? roundStickerCorners(st1, ...cube.p.roundParams) : st1;
+            rounded.color = st.color;
+            rounded.oColor = st.oColor;
 
-          if ( pts[0].y > 0 ) {
-            sideStk.U.push( rounded );
-          } else {
-            sideStk.D.push( rounded ); 
+            if ( pts[0].y > 0 ) {
+              sideStk.U.push( rounded );
+            } else {
+              sideStk.D.push( rounded ); 
+            }
           }
         } else {
           let isFront = st._generator.points.reduce((ac, p) => ac && p.z >= 1, true);
           
           if ( isFront ) {
             let st1 = st.clone();
-            st1.points.map(p => {p.y /= 2; p.x *= 4/3;});
+            let f = SPECIAL_SQ1.some(m => m === cube.mode) ? 1 : 4 / 3;
+            st1.points.map(p => {p.y /= 2; p.x *= f;});
             sideStk.M.push(st1);
           }
         }
@@ -179,8 +192,8 @@ export function projectedView(cube: Puzzle, DIM: number) {
     sideStk.D = sideStk.D.map(s => s.add(cm2) );
     sideStk.L = sideStk.L.map(s => s.add(cm3) );
   } else if ( cube.type === 'square1' ) {
-    sideStk.U = sideStk.U.map(st => st.rotate(CENTER, RIGHT, PI_2).add( UP.mul(FACTOR) ));
-    sideStk.D = sideStk.D.map(st => st.rotate(CENTER, RIGHT, -PI_2).add( DOWN.mul(FACTOR) ));
+    sideStk.U = sideStk.U.map(st => st.rotate(CENTER, RIGHT, PI_2).add( UP.mul( getFactor() ) ));
+    sideStk.D = sideStk.D.map(st => st.rotate(CENTER, RIGHT, -PI_2).add( DOWN.mul( getFactor() ) ));
   } else if ( cube.type === 'megaminx' ) {
     let raw = cube.p.raw;
     let FACE_ANG = raw[1];
@@ -241,22 +254,27 @@ export function projectedView(cube: Puzzle, DIM: number) {
     allStickers.push(...sideStk[ faceName[i] ]);
   }
 
-  let __min = Math.min;
-  let __max = Math.max;
+  let _min = Math.min;
+  let _max = Math.max;
 
   let limits = [ Infinity, -Infinity, Infinity, -Infinity ];
   
   for (let i = 0, maxi = allStickers.length; i < maxi; i += 1) {
     let pts = allStickers[i].points;
     pts.forEach(p => {
-      limits[0] = __min(limits[0], p.x); limits[1] = __max(limits[1], p.x);
-      limits[2] = __min(limits[2], p.y); limits[3] = __max(limits[3], p.y);
+      limits[0] = _min(limits[0], p.x); limits[1] = _max(limits[1], p.x);
+      limits[2] = _min(limits[2], p.y); limits[3] = _max(limits[3], p.y);
     });
   }
 
   allStickers.sort((s1, s2) => s1.color === 'd' ? -1 : 1);
   
   const PAD = 2;
+  const F = _min( (W - 2 * PAD) / (limits[1] - limits[0]), (H - 2 * PAD) / (limits[3] - limits[2]) );
+  let v1 = new Vector2D(limits[0], limits[2]);
+  let v2 = new Vector2D(limits[1], limits[3]);
+  let vdif = v2.sub(v1).mul(F);
+  let offset = new Vector2D(W / 2, H / 2).sub(new Vector2D(vdif.x / 2, vdif.y / 2));
 
   for (let i = 0, maxi = allStickers.length; i < maxi; i += 1) {
     ctx.fillStyle = cube.getHexStrColor( allStickers[i].color );
@@ -265,8 +283,8 @@ export function projectedView(cube: Puzzle, DIM: number) {
     ctx.beginPath();
 
     for (let j = 0, maxj = pts.length; j < maxj; j += 1) {
-      let x = map(pts[j].x, limits[0], limits[1], PAD, W - PAD);
-      let y = map(pts[j].y, limits[2], limits[3], PAD, H - PAD);
+      let x = map(pts[j].x, limits[0], limits[1], 0, vdif.x) + offset.x;
+      let y = map(pts[j].y, limits[2], limits[3], 0, vdif.y) + offset.y;
       if ( j === 0 ) {
         ctx.moveTo(x, H - y);
       } else {

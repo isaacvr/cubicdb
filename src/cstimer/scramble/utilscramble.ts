@@ -87,7 +87,7 @@ function yj4x4(type, len) {
 
 regScrambler('444yj', yj4x4);
 
-function bicube(type, len) {
+export function bicube(type, len) {
 	function canMove(face) {
 		let u = [],
 			i, j, done, z = 0;

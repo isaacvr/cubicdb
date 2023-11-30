@@ -3,7 +3,8 @@ import { options } from '@cstimer/scramble/scramble';
 import { readable } from 'svelte/store';
 
 export enum CubeMode {
-  NORMAL = 0, OLL, PLL, CMLL, F2L, COLL, WV, ELL, VLS, ZBLL, OLLCP, GRAY, CENTERS, CROSS, FL, YCROSS
+  NORMAL = 0, OLL, PLL, CMLL, F2L, COLL, WV, ELL, VLS, ZBLL, OLLCP, GRAY, CENTERS, CROSS, FL, YCROSS,
+  CS, EO, CO
 };
 
 export const CubeModeMap = [
@@ -23,6 +24,9 @@ export const CubeModeMap = [
   [ 'Cross', CubeMode.CROSS ],
   [ 'First Layer', CubeMode.FL ],
   [ 'Yellow Cross', CubeMode.YCROSS ],
+  [ 'Cube Shape', CubeMode.CS ],
+  [ 'Edge Orientation', CubeMode.EO ],
+  [ 'Corner Orientation', CubeMode.CO ],
 ];
 
 // export declare type ColorName = 'green' | 'red' | 'blue' | 'orange' | 'yellow' | 'white' | 'gray' | 'black';
@@ -37,6 +41,7 @@ const COLORS: { [key: string]: string } = {
   "white": "rgb(230, 230, 230)",
   "black": "rgb(0, 0, 0)",
   "gray": "rgb(80, 80, 80)",
+  "darkgray": "rgb(50, 50, 50)",
   "lightGray": "rgb(232, 232, 232)",
   "violet": "rgb(138, 27, 255)",
   "pink": "rgb(237, 150, 161)",
@@ -89,6 +94,7 @@ export const STANDARD_PALETTE = {
   x: getColorByName('gray'),
   d: getColorByName('black'),
   v: getColorByName('violet'),
+  k: getColorByName('yellow'),
 
   yellow:    getColorByName('yellow'),
   red:       getColorByName('red'),

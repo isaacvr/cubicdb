@@ -307,10 +307,10 @@
     <li class="paginator-item"> <button on:click={ () => setPage(Infinity) }> <ChevronDoubleRightIcon /> </button> </li>
   </ul>
 
-  <div id="grid" class="text-gray-400 ml-8 mr-12 grid h-max-[100%] overflow-scroll" bind:this={ solvesElement }>
+  <div id="grid" class="text-gray-400 ml-8 mt-4 grid h-max-[100%] overflow-scroll" bind:this={ solvesElement }>
     {#each pSolves as solve (solve._id)}
       <button
-        class="shadow-md w-24 h-12 rounded-md m-3 p-1 bg-backgroundLv1 relative
+        class="shadow-md w-full h-full min-h-[3rem] rounded-md p-1 bg-backgroundLv1 relative
           flex items-center justify-center transition-all duration-200 select-none cursor-pointer
 
           hover:shadow-lg hover:bg-opacity-20
@@ -351,28 +351,28 @@
 
   <div class:isVisible={ $selected }
     class="fixed rounded-md p-2 top-0 opacity-0 pointer-events-none
-    transition-all duration-300 bg-gray-700 shadow-md flex w-max max-w-full actions z-20">
-    <Button ariaLabel={ $localLang.TIMER.selectAll }
+    transition-all duration-300 bg-gray-700 shadow-md flex flex-wrap w-max max-w-full actions z-20">
+    <Button ariaLabel={ $localLang.TIMER.selectAll } class="hover:text-white text-gray-400 hover:bg-white hover:bg-opacity-10"
       tabindex={ $selected ? 0 : -1 } flat on:click={() => selectAll()}>
       { $localLang.TIMER.selectAll } &nbsp; <span class="flex ml-auto text-yellow-400">[A]</span>
     </Button>
     
-    <Button ariaLabel={ $localLang.TIMER.selectInterval }
+    <Button ariaLabel={ $localLang.TIMER.selectInterval } class="hover:text-white text-gray-400 hover:bg-white hover:bg-opacity-10"
       tabindex={ $selected ? 0 : -1 } flat on:click={() => selectInterval()}>
       { $localLang.TIMER.selectInterval } &nbsp; <span class="flex ml-auto text-yellow-400">[T]</span>
     </Button>
     
-    <Button ariaLabel={ $localLang.TIMER.invertSelection }
+    <Button ariaLabel={ $localLang.TIMER.invertSelection } class="hover:text-white text-gray-400 hover:bg-white hover:bg-opacity-10"
       tabindex={ $selected ? 0 : -1 } flat on:click={() => selectInvert()}>
       { $localLang.TIMER.invertSelection } &nbsp; <span class="flex ml-auto text-yellow-400">[V]</span>
     </Button>
     
-    <Button ariaLabel={ $localLang.global.cancel }
+    <Button ariaLabel={ $localLang.global.cancel } class="hover:text-white text-gray-400 hover:bg-white hover:bg-opacity-10"
       tabindex={ $selected ? 0 : -1 } flat on:click={() => selectNone()}>
       { $localLang.global.cancel } &nbsp; <span class="flex ml-auto text-yellow-400">[Esc]</span>
     </Button>
 
-    <Button ariaLabel={ $localLang.global.delete }
+    <Button ariaLabel={ $localLang.global.delete } class="hover:text-white text-gray-400 hover:bg-white hover:bg-opacity-10"
       tabindex={ $selected ? 0 : -1 } flat on:click={() => deleteSelected()}>
       { $localLang.global.delete } &nbsp; <span class="flex ml-auto text-yellow-400">[D]</span>
     </Button>
@@ -406,7 +406,7 @@
       <Dice5Icon /> <span bind:innerHTML={ sSolve.scramble } contenteditable="false" class="text-center"></span>
       
       <button class="preview col-span-2 mb-2 mt-2 mx-auto overflow-hidden" on:click={ () => collapsed = !collapsed }>
-        <img class="w-full h-full" src={ preview } alt="">
+        <img class="w-full h-full object-contain" src={ preview } alt="">
       </button>
 
       {#if sSolve.steps }
@@ -501,8 +501,12 @@
 
 <style lang="postcss">
 #grid {
-  grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));
   max-height: calc(100vh - 10rem);
+  gap: .5rem;
+  padding-bottom: 2rem;
+  padding-right: .5rem;
+  margin-right: 2.5rem;
 }
 
 .font-small {

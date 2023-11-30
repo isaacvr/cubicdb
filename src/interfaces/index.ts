@@ -423,6 +423,8 @@ export interface IPC {
   
   getAlgorithms: (options: AlgorithmOptions) => Promise<Algorithm[]>;
   updateAlgorithm: (alg: Algorithm) => Promise<Algorithm>;
+  addAlgorithm: (alg: Algorithm) => Promise<Algorithm>;
+  removeAlgorithm: (alg: Algorithm) => Promise<boolean>;
   
   getTutorials: () => Promise<Tutorial[]>;
   addTutorial: (t: Tutorial) => Promise<Tutorial>;
@@ -583,6 +585,8 @@ export interface Language {
     name: string;
     steps: string;
     step: string;
+    scramble: string;
+    toScramble: string;
   }
   NAVBAR: {
     home: string;

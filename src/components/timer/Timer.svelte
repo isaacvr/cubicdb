@@ -168,6 +168,8 @@
   let bluetoothStatus = writable(false);
   let STATS_WINDOW = writable<(number | null)[][]>( $AON.map(_ => []) );
 
+  let lastPreview = 0;
+
   let confetti = new JSConfetti();
   
   $: $isRunning = $state === TimerState.INSPECTION || $state === TimerState.RUNNING;
@@ -318,6 +320,13 @@
     e.stopPropagation();
   }
 
+  function setPreview(img: string, date: number, type: any) {
+    if ( date > lastPreview ) {
+      $preview = img;
+      lastPreview = date;
+    }
+  }
+
   async function updateImage(md: string) {
     let cb = Puzzle.fromSequence( $scramble, {
       ...all.pScramble.options.get(md),
@@ -325,7 +334,8 @@
       headless: true
     } as PuzzleOptions, false, false);
 
-    $preview = (await pGenerateCubeBundle([cb], 500))[0];
+    let date = Date.now();
+    setPreview((await pGenerateCubeBundle([cb], 500))[0], date, cb.type);
   }
 
   export function initScrambler(scr?: string, _mode ?: string, _prob ?: number) {
@@ -368,7 +378,7 @@
     if ( all.pScramble.options.has(md) && $session?.settings?.genImage ) {
       updateImage(md);
     } else {
-      $preview = PX_IMAGE;
+      setPreview(PX_IMAGE, Date.now(), '-');
     }
   }
 
@@ -478,8 +488,6 @@
   }
 
   function handleUpdateSession(session: Session) {
-    console.log("UPDATED: ", session);
-
     let updatedSession = sessions.find(s => s._id === session._id);
     if ( updatedSession ) {
       updatedSession.name = session.name;

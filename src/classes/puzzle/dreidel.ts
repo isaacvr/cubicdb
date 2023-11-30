@@ -4,7 +4,7 @@ import type { PuzzleInterface } from '@interfaces';
 import { STANDARD_PALETTE } from "@constants";
 import { Piece } from './Piece';
 import { Sticker } from './Sticker';
-import { assignColors, getAllStickers } from './puzzleUtils';
+import { assignColors, getAllStickers, random } from './puzzleUtils';
 import { FaceSticker } from './FaceSticker';
 import { Vector2D } from '../vector2-d';
 
@@ -123,7 +123,9 @@ export function DREIDEL(): PuzzleInterface {
   wingSticker.computeBoundingBox();
 
   let wingPiece = new Piece([ wingSticker ]);
-
+  
+  console.log('P1: ', pieces.length);
+  
   for (let i = 0; i < 4; i += 1) {
     for (let j = 0; j < 3; j += 1) {
       pieces.push(
@@ -139,6 +141,8 @@ export function DREIDEL(): PuzzleInterface {
       );
     }
   }
+
+  console.log('P2: ', pieces.length);
 
   let edgeSticker = new Sticker([], '', [ LEFT, UP ]);
   let curve1: Vector3D[] = [];
@@ -205,8 +209,6 @@ export function DREIDEL(): PuzzleInterface {
   edgePiece.stickers.push( blackSticker.reflect1(LU, BACK) );
   edgePiece.updateMassCenter();
   
-  // pieces.push( edgePiece );
-
   for (let i = 0; i < 4; i += 1) {
     pieces.push( edgePiece.rotate(CENTER, UP, PI_2 * i) );
     pieces.push( edgePiece.rotate(CENTER, LEFT, PI_2).rotate(CENTER, UP, PI_2 * i) );
@@ -224,7 +226,7 @@ export function DREIDEL(): PuzzleInterface {
       };
     } else if ( !normalTurn ) {
       let stmc = sticker.getMassCenter();
-      let closest = <Vector3D> CORNERS.reduce((acc, c) => {
+      let closest = <Vector3D> CORNERS.reduce((acc: any, c) => {
         let dist = c.sub(stmc).abs();
         if ( dist < acc[0] ) {
           return [ dist, c ];
@@ -256,6 +258,56 @@ export function DREIDEL(): PuzzleInterface {
       pieces: pcs[0].length > 0 ? [] : pcs[1],
       ang: PI_2
     };
+  };
+
+  dreidel.scramble = function() {
+    let w = pieces.slice(14, 38);
+    const v = [ FRONT, RIGHT, UP ];
+    
+    for (let i = 0, maxi = w.length; i < maxi; i += 1) {
+      let pc = w[i];
+      let st = pc.stickers[0];
+      let o = st.getOrientation();
+
+      if ( v.some(e => e.cross(o).abs() < 1e-6) ) {
+        let pcs = dreidel.toMove!(pc, st, st.vecs[0]);
+        let cant = random(3) * 2 + 1;
+        pcs.pieces.forEach((p: Piece) => p.rotate(CENTER, st.vecs[0], pcs.ang * cant, true));
+      }
+    }
+
+    let edges = pieces.slice(38);
+
+    for (let i = 0; i < 5; i += 1) {
+      for (let j = 0; j < 10; j += 1) {
+        let pc = random(edges) as Piece;
+        let st = random(pc.stickers.filter(s => !/^[xd]{1}$/.test(s.color))) as Sticker;
+        let vec = random(st.vecs);
+        let cant = 1 + random(3);
+        let pcs = dreidel.toMove!(pc, st, vec);
+        pcs.pieces.forEach((p: Piece) => p.rotate(CENTER, vec, pcs.ang * cant, true));
+      }
+
+      for (let j = 0; j < 4; j += 1) {
+        let pc = random(w) as Piece;
+        let st = random(pc.stickers.filter(s => !/^[xd]{1}$/.test(s.color))) as Sticker;
+        let vec = random(st.vecs);
+        let cant = random(3);
+        let pcs = dreidel.toMove!(pc, st, vec);
+        pcs.pieces.forEach((p: Piece) => p.rotate(CENTER, vec, pcs.ang * cant * 2, true));
+      }
+    }
+
+    for (let i = 0, maxi = w.length; i < maxi; i += 1) {
+      let pc = w[i];
+      let st = pc.stickers[0];
+      let o = st.getOrientation();
+
+      if ( v.some(e => e.cross(o).abs() > 1e-6) ) {
+        let pcs = dreidel.toMove!(pc, st, st.vecs[0]);
+        pcs.pieces.forEach((p: Piece) => p.rotate(CENTER, st.vecs[0], pcs.ang, true));
+      }
+    }
   };
 
   dreidel.rotation = {

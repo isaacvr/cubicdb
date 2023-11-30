@@ -13,6 +13,9 @@ export function RUBIK(_a: number, _b:number, _c:number): PuzzleInterface {
   const isCube = a == b && b == c;
   const len = dims.reduce((m, e) => Math.min(m, 2 / e), 2);
 
+  const edgePoint = (p: Vector3D) => [p.x, p.y, p.z].reduce((acc, n) =>
+    [-1, 0, 1].some(d => Math.abs(d - n) < 1e-6) ? acc + 1 : acc, 0)
+
   const rubik: PuzzleInterface = {
     pieces: [],
     palette: STANDARD_PALETTE,
@@ -23,7 +26,9 @@ export function RUBIK(_a: number, _b:number, _c:number): PuzzleInterface {
     dims,
     faceColors: [ 'w', 'r', 'g', 'y', 'o', 'b' ],
     move: () => false,
-    roundParams: [ undefined, undefined, a < 10 ? 10 : a < 20 ? 5 : 2 ],
+    roundParams: [ (s: Sticker, i: number) => {
+      return 0.11;
+    }, undefined, a < 10 ? 10 : a < 20 ? 5 : 2 ],
   };
 
   let fc = rubik.faceColors;
@@ -147,14 +152,18 @@ export function RUBIK(_a: number, _b:number, _c:number): PuzzleInterface {
   };
 
   rubik.scramble = function() {
-    const MOVES = 100;
-    let mv = [];
+    if ( !rubik.toMove ) return;
+
+    const MOVES = a >= 2 ? (a - 2) * 30 + 10 : 0;
 
     for (let i = 0; i < MOVES; i += 1) {
-      mv.push([ random(a - 1) + 1, random(MOVE_MAP), random(3) + 1 ]);
+      let p = random( pieces ) as Piece;
+      let s = random(p.stickers.filter(s => !/^[xd]{1}$/.test(s.color))) as Sticker;
+      let vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > 1e-6));
+      let pcs = rubik.toMove(p, s, vec);
+      let cant = 1 + random(3);
+      pcs.pieces.forEach((p: Piece) => p.rotate(CENTER, vec, pcs.ang * cant, true));
     }
-
-    rubik.move(mv);
   };
 
   rubik.rotation = {

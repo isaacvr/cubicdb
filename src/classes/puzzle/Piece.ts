@@ -134,6 +134,10 @@ export class Piece {
   }
 
   direction(p1: Vector3D, p2: Vector3D, p3: Vector3D, useMassCenter?: boolean, disc?: Function): -1 | 0 | 1 {
+    return this.direction1(p1, Vector3D.cross(p1, p2, p3), useMassCenter, disc);
+  }
+
+  direction1(anchor: Vector3D, u: Vector3D, useMassCenter?: boolean, disc?: Function): -1 | 0 | 1 {
     let dirs = [0, 0, 0];
     let st = this.stickers;
     let len = 0;
@@ -142,41 +146,20 @@ export class Piece {
     for (let i = 0, maxi = st.length; i < maxi; i += 1) {
       if ( fn(st[i]) ) {
         len += 1;
-        dirs[ st[i].direction(p1, p2, p3, useMassCenter) + 1 ] += 1;
+        let d = st[i].direction1(anchor, u, useMassCenter);
+        dirs[ d + 1 ] += 1;
+
+        if ( !useMassCenter && d === 0 ) {
+          return 0;
+        }
+        
         if (dirs[0] > 0 && dirs[2] > 0) {
           return 0;
         }
       }
     }
 
-    if ( dirs[1] === len ) {
-      return 0;
-    } else if ( dirs[0] > 0 ) {
-      return -1;
-    }
-
-    return 1;
-  }
-
-  direction1(anchor: Vector3D, u: Vector3D, useMassCenter?: boolean): -1 | 0 | 1 {
-    let dirs = [0, 0, 0];
-    let st = this.stickers;
-    let len = st.length;
-
-    for (let i = 0; i < len; i += 1) {
-      dirs[ st[i].direction1(anchor, u, useMassCenter) + 1 ] += 1;
-      
-      if ( (dirs[0] > 0 && dirs[2] > 0) || dirs[1] > 0 ) {
-        return 0;
-      }
-    }    
-
-    if ( dirs[0] ) {
-      return -1;
-    }
-
-    return 1;
-
+    return dirs[1] === len ? 0 : dirs[0] ? -1 : 1;
   }
 
   reflect(p1: Vector3D, p2: Vector3D, p3: Vector3D, preserveOrientation?: boolean): Piece {

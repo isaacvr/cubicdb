@@ -31,6 +31,14 @@ export class BrowserAdaptor implements IPC {
     return Promise.reject();
   }
   
+  addAlgorithm(alg: Algorithm) {
+    return Promise.reject();
+  }
+
+  removeAlgorithm(alg: Algorithm) {
+    return Promise.reject();
+  }
+  
   // Tutorials
   getTutorials() { return Promise.resolve([]); }
   addTutorial(t: Tutorial) { return Promise.reject(); }

@@ -1,7 +1,7 @@
 import { Vector3D, UP, DOWN, FRONT, CENTER } from '../vector3d';
 import { Sticker } from './Sticker';
 import { Piece } from './Piece';
-import { assignColors, getAllStickers } from './puzzleUtils';
+import { assignColors, getAllStickers, random } from './puzzleUtils';
 import type { PuzzleInterface } from '@interfaces';
 import { STANDARD_PALETTE } from "@constants";
 
@@ -140,6 +140,20 @@ export function PYRAMINX(n: number): PuzzleInterface {
       pieces: toMovePieces,
       ang: 2 * PI / 3
     };
+  };
+
+  pyra.scramble = function() {
+    if ( !pyra.toMove ) return;
+
+    const MOVES = n >= 2 ? (n - 2) * 20 + 10 : 0;
+
+    for (let i = 0; i < MOVES; i += 1) {
+      let p = random( pieces ) as Piece;
+      let s = random(p.stickers.filter(s => /^[^xd]$/.test(s.color))) as Sticker;
+      let vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > 1e-6));
+      let pcs = pyra.toMove(p, s, vec);
+      pcs.pieces.forEach((p: Piece) => p.rotate(CENTER, vec, pcs.ang, true));
+    }
   };
 
   assignColors(pyra, pyra.faceColors);

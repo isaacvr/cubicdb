@@ -9,6 +9,7 @@
   import { onDestroy, onMount } from "svelte";
 
   import SettingsIcon from '@icons/Cog.svelte';
+  import Refresh from '@icons/Refresh.svelte';
   import Tooltip from "@components/material/Tooltip.svelte";
   import Modal from "@components/Modal.svelte";
   import Select from "@components/material/Select.svelte";
@@ -36,7 +37,7 @@
   export let enableRotation = true;
   export let gui = true;
   export let contained = false;
-  export let selectedPuzzle: PuzzleType = "rubik";
+  export let selectedPuzzle: PuzzleType = "gear";
   export let order = 3;
   export let animationTime = $isMobile ? 150 : 200; /// Default animation time: 200ms
   export let showBackFace = false;
@@ -201,13 +202,12 @@
     camera.updateProjectionMatrix();
   }
 
-  function resetPuzzle(facelet?: string) {
+  function resetPuzzle(facelet?: string, scramble = false) {
     resettingPuzzle = true;
 
     let children = scene.children;
     scene.remove(...children);
 
-    // console.time('puzzle-constructor');
     if ( facelet ) {
       cube = Puzzle.fromFacelet(facelet);
     } else {
@@ -217,14 +217,11 @@
         order: Array.isArray(order) ? order : [order, order, order],
         mode: CubeMode.NORMAL,
       });
-    }
-    // console.timeEnd('puzzle-constructor');
 
-    // console.time('cube-to-three');
+      scramble && cube.p.scramble && cube.p.scramble();
+    }
+
     let ctt = cubeToThree(cube);
-    // console.timeEnd('cube-to-three');
-    
-    // console.time('pieces-to-three');
     let bfc = piecesToTree(cube, 1, (st: Sticker[]) => {
       return st
         .filter( s => cube.p.faceColors.indexOf(s.color) > -1)
@@ -233,9 +230,7 @@
           .mul(1.3)
         )
     }, FrontSide);
-    // console.timeEnd('pieces-to-three');
 
-    // console.time('resetting-view');
     group = ctt.group;
     cube = ctt.nc;
     backFace = bfc.group;
@@ -247,15 +242,17 @@
     group.rotation.y = 0;
     group.rotation.z = 0;
 
-    // let light = new HemisphereLight('#ffffff', '#000000', 0.5);
     let light = new PointLight("#ffffff", 1, 2, 3);
     light.position.set(2, 2, 2);
 
     scene.add(light);
 
     resetCamera();
-    // console.timeEnd('resetting-view');
     resettingPuzzle = false;
+  }
+
+  function scramble() {
+    resetPuzzle(undefined, true);
   }
 
   for (let [key, value] of puzzleReg) {
@@ -528,6 +525,8 @@
 
   function keyDownHandler(e: KeyboardEvent) {
     let mc = new Vector2(mcx, mcy);
+    // console.log('e.code: ', e.code);
+    
     switch(e.code) {
       case 'ArrowUp': {
         moveFromKeyboard(mc.add( new Vector2(0, -50) ));
@@ -545,7 +544,7 @@
         moveFromKeyboard(mc.add( new Vector2(50, 0) ));
         break;
       }
-      case 'KeyS': {
+      case 'Comma': {
         if ( e.ctrlKey ) {
           showGUI();
         }
@@ -554,6 +553,12 @@
       case 'KeyB': {
         if ( e.ctrlKey ) {
           showBackFace = !showBackFace;
+        }
+        break;
+      }
+      case 'KeyS': {
+        if ( e.ctrlKey ) {
+          scramble();
         }
         break;
       }
@@ -625,16 +630,24 @@
 <canvas bind:this={ canvas }/>
 
 {#if gui}
-  <Tooltip hasKeybinding text={ $localLang.SIMULATOR.settings + '[Ctrl + S]' } position="left"
+  <Tooltip hasKeybinding text={ $localLang.SIMULATOR.settings + '[Ctrl + ,]' } position="left"
     on:click={ showGUI }
-    class="absolute right-4 text-gray-400 z-20 hover:text-gray-300 transition-all duration-100 cursor-pointer">
+    class="absolute right-[1rem] text-gray-400 z-20 hover:text-gray-300 transition-all duration-100 cursor-pointer">
     <SettingsIcon width="1.2rem" height="1.2rem"/>
   </Tooltip>
   
-  <Tooltip hasKeybinding text={ $localLang.SIMULATOR.showBackFace+ '[Ctrl+B]' } position="left"
-    class="absolute right-3 mt-8 text-gray-400 z-20 hover:text-gray-300 transition-all duration-100 cursor-pointer">
+  <Tooltip hasKeybinding text={ $localLang.SIMULATOR.showBackFace+ '[Ctrl + B]' } position="left"
+    class="absolute right-[1rem] mt-[2rem] text-gray-400 z-20 hover:text-gray-300 transition-all duration-100 cursor-pointer">
     <Toggle bind:checked={ showBackFace }/>
   </Tooltip>
+  
+  {#if cube?.p.scramble}
+    <Tooltip hasKeybinding text={ $localLang.global.toScramble + '[Ctrl + S]' } position="left"
+      class="absolute right-[1rem] mt-[5rem] text-gray-400 z-20 hover:text-gray-300 transition-all duration-100 cursor-pointer"
+      on:click={ scramble }>
+      <Refresh size="1.2rem"/>
+    </Tooltip>
+  {/if}
 
   <Modal bind:show={ GUIExpanded }>
     <h1 class="text-3xl text-gray-300 text-center m-4">{ $localLang.SIMULATOR.puzzleSettings }</h1>

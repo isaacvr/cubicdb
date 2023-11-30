@@ -4,7 +4,7 @@ import type { PuzzleInterface } from '@interfaces';
 import { STANDARD_PALETTE } from "@constants";
 import { Piece } from './Piece';
 import { Sticker } from './Sticker';
-import { assignColors, getAllStickers } from './puzzleUtils';
+import { assignColors, getAllStickers, random } from './puzzleUtils';
 
 function getAngle(a: Vector3D, b: Vector3D): number {
   return Math.acos( a.unit().dot( b.unit() ) );
@@ -122,6 +122,21 @@ export function REX(): PuzzleInterface {
       pieces: toMovePieces,
       ang: ANG
     };
+  };
+
+  rex.scramble = function() {
+    if ( !rex.toMove ) return;
+
+    const MOVES = 50;
+
+    for (let i = 0; i < MOVES; i += 1) {
+      let p = random( pieces ) as Piece;
+      let s = random(p.stickers.filter(s => !/^[xd]{1}$/.test(s.color))) as Sticker;
+      let vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > 1e-6));
+      let pcs = rex.toMove(p, s, vec);
+      let cant = 1 + random(2);
+      pcs.pieces.forEach((p: Piece) => p.rotate(CENTER, vec, pcs.ang * cant, true));
+    }
   };
 
   rex.rotation = {

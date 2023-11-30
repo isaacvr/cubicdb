@@ -4,7 +4,7 @@ import { STANDARD_PALETTE } from '@constants';
 import type { PuzzleInterface } from '@interfaces';
 import { Vector3D } from '../vector3d';
 import { Piece } from './Piece';
-import { assignColors, getAllStickers } from './puzzleUtils';
+import { assignColors, getAllStickers, random } from './puzzleUtils';
 
 export function AXIS(): PuzzleInterface {
 
@@ -54,7 +54,6 @@ export function AXIS(): PuzzleInterface {
     .rotate(CENTER, FRONT, PI_2)
 
   let DEF = new Sticker([ F, D, E ]);
-  let BEF = new Sticker([ F, E, B ]);
   let BCE = new Sticker([ B, E, C ]);
   let ACDE = new Sticker([ E, D, A, C ]);
   let BCH = new Sticker([ B, C, H ]);
@@ -146,6 +145,21 @@ export function AXIS(): PuzzleInterface {
       pieces: toMovePieces,
       ang: PI_2
     };
+  };
+
+  axis.scramble = function() {
+    if ( !axis.toMove ) return;
+
+    const MOVES = 40;
+
+    for (let i = 0; i < MOVES; i += 1) {
+      let p = random( pieces ) as Piece;
+      let s = random(p.stickers.filter(s => !/^[xd]{1}$/.test(s.color))) as Sticker;
+      let vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > 1e-6));
+      let pcs = axis.toMove(p, s, vec);
+      let cant = 1 + random(3);
+      pcs.pieces.forEach((p: Piece) => p.rotate(CENTER, vec, pcs.ang * cant, true));
+    }
   };
 
   axis.rotation = {

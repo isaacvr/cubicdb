@@ -75,6 +75,14 @@ export class DataService {
     return this.ipc.getAlgorithms({ all, path });
   }
 
+  addAlgorithm(alg: Algorithm) {
+    return this.ipc.addAlgorithm(alg);
+  }
+
+  removeAlgorithm(alg: Algorithm) {
+    return this.ipc.removeAlgorithm(alg);
+  }
+
   updateAlgorithm(alg: Algorithm) {
     return this.ipc.updateAlgorithm(alg);
   }

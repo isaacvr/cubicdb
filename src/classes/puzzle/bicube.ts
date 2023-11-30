@@ -5,6 +5,7 @@ import { STANDARD_PALETTE } from "@constants";
 import { Piece } from './Piece';
 import { Sticker } from './Sticker';
 import { assignColors, assignVectors, getAllStickers } from './puzzleUtils';
+import { bicube } from '@cstimer/scramble/utilscramble';
 
 function pc(x: number, y: number, z: number) {
   return LEFT.add(UP).add(BACK).add(
@@ -14,7 +15,7 @@ function pc(x: number, y: number, z: number) {
 
 export function BICUBE(): PuzzleInterface {
 
-  const bicube: PuzzleInterface = {
+  const bic: PuzzleInterface = {
     pieces: [],
     palette: STANDARD_PALETTE,
     rotation: {},
@@ -26,13 +27,13 @@ export function BICUBE(): PuzzleInterface {
     roundParams: [],
   };
 
-  bicube.getAllStickers = getAllStickers.bind(bicube);
+  bic.getAllStickers = getAllStickers.bind(bic);
 
   const PI = Math.PI;
   const PI_2 = PI / 2;
   const PI23 = 2 * PI / 3;
 
-  let pieces = bicube.pieces;
+  let pieces = bic.pieces;
   
   let small = new Piece([
     new Sticker([ pc(2, 0, 2), pc(2, 0, 3), pc(3, 0, 3), pc(3, 0, 2) ]),
@@ -67,10 +68,10 @@ export function BICUBE(): PuzzleInterface {
   pieces.pop();
   pieces.push( big1 );
 
-  bicube.toMove = function(piece: Piece, sticker: Sticker, dir: Vector3D) {
+  bic.toMove = function(piece: Piece, sticker: Sticker, dir: Vector3D) {
     let mc = sticker.updateMassCenter();
     let ac = dir.unit().toNormal().div(3);
-    let intersected = pieces.filter(p => p.direction1(ac, dir) === 0);
+    let intersected = pieces.filter(p => p.direction1(ac, dir, false, (s: Sticker) => !/^[xd]{1}$/.test(s.color)) === 0);
     let toMovePieces = pieces.filter(p => p.direction1(mc, dir) === 0);
 
     return {
@@ -79,18 +80,32 @@ export function BICUBE(): PuzzleInterface {
     };
   };
 
-  bicube.rotation = {
+  bic.scramble = function() {
+    let moveMap = "URFDLB";
+    let moveVec = [ UP, RIGHT, FRONT, DOWN, LEFT, BACK ].map(v => v.div(2));
+    let scramble = bicube('', 30).split(' ').filter(e => e);
+
+    for (let i = 0, maxi = scramble.length; i < maxi; i += 1) {
+      let mv = scramble[i];
+      let pos = moveMap.indexOf(mv[0]);
+      let ang = mv.endsWith("'") ? PI_2 : mv.endsWith('2') ? PI : -PI_2;
+      let pcs = pieces.filter(p => p.direction1(moveVec[pos], moveVec[pos]) === 0);
+      pcs.forEach(p => p.rotate(CENTER, moveVec[pos], ang, true));
+    }
+  };
+
+  bic.rotation = {
     x: PI / 6,
     y: -PI / 4,
     z: 0,
   };
   
-  bicube.faceVectors = [
+  bic.faceVectors = [
     UP, RIGHT, FRONT, DOWN, LEFT, BACK
   ];
 
-  assignColors(bicube, bicube.faceColors);
-  assignVectors(bicube);
+  assignColors(bic, bic.faceColors);
+  assignVectors(bic);
 
   pieces.forEach(p => {
     p.stickers = p.stickers.filter(s => s.color != "x");
@@ -112,6 +127,6 @@ export function BICUBE(): PuzzleInterface {
   //   }
   // }
 
-  return bicube;
+  return bic;
 
 }

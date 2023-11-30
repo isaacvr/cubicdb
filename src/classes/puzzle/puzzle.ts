@@ -1,4 +1,4 @@
-import { UP, Vector3D } from './../vector3d';
+import { DOWN, UP, Vector3D } from './../vector3d';
 import type { Sticker } from './Sticker';
 import { Color } from './../Color';
 import { ScrambleParser } from './../scramble-parser';
@@ -141,8 +141,14 @@ export class Puzzle {
   }
 
   private adjustColors() {
+    const typeFilter: PuzzleType[] = ['rubik', 'square1'];
+    const modeFilter: CubeMode[] = [ CubeMode.NORMAL, CubeMode.CS, CubeMode.EO, CubeMode.CO ];
 
-    if ( this.type != 'rubik' ) {
+    if ( !typeFilter.some( e => e === this.type ) ) {
+      return;
+    }
+
+    if ( this.type === 'square1' && !modeFilter.some( m => m === this.mode ) ) {
       return;
     }
     
@@ -287,6 +293,42 @@ export class Puzzle {
           let cnd = pieces[i].contains(TOP_COLOR) && stLen > 2;
           for (let j = 0; j < stLen; j += 1) {
             stickers[j].color = cnd ? 'x' : stickers[j].oColor;
+          }
+          break;
+        }
+        case CubeMode.CS: {
+          for (let i = 0; i < stLen; i += 1) {
+            stickers[i].color = 'w';
+          }
+          break;
+        }
+        case CubeMode.EO: {
+          for (let i = 0; i < stLen; i += 1) {
+            let stref = stickers[i]._generator != stickers[i] ? stickers[i]._generator : stickers[i];
+            let o = stref.getOrientation();
+
+            if ( stref.points.length === 3 ) {
+              if ( (stickers[i].oColor === TOP_COLOR && o.sub(UP).abs() < 1e-6) ||
+                (stickers[i].oColor === BOTTOM_COLOR && o.sub(DOWN).abs() < 1e-6) ) {
+                  stickers[i].color = 'k';
+                } else {
+                  stickers[i].color = 'w';
+                }
+            } else {
+              stickers[i].color = 'w';
+            }
+          }
+          break;
+        }
+        case CubeMode.CO: {
+          for (let i = 0; i < stLen; i += 1) {
+            let stref = stickers[i]._generator != stickers[i] ? stickers[i]._generator : stickers[i];
+            
+            if ( stickers[i].oColor === BOTTOM_COLOR && stref.points.length === 4 ) {
+              stickers[i].color = 'k';
+            } else {
+              stickers[i].color = 'w';
+            }
           }
           break;
         }

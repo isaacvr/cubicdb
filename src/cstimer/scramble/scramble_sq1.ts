@@ -710,14 +710,14 @@ let cspprobs = [16, 16, 16, 10, 16, 24, 16, 24, 16, 24, 16, 16, 4, 24, 16, 48, 3
 
 let search = new Search_Search;
 
-function square1SolverGetRandomScramble(type, length, cases) {
+export function square1SolverGetRandomScramble() {
   Shape_$clinit();
   Square_$clinit();
   let scrambleString = Search_solution(search, FullCube_randomCube());
   return scrambleString;
 }
 
-function square1CubeShapeParityScramble(type, length, cases) {
+function square1CubeShapeParityScramble(type: any, length: any, cases: any) {
   Shape_$clinit();
   Square_$clinit();
   CSPInit();

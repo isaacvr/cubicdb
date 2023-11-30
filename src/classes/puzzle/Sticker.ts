@@ -149,7 +149,7 @@ export class Sticker {
     let dirs = [0, 0, 0];
     let pts = (useMc) ? [this.getMassCenter()] : this.points;
     let len = pts.length;
-
+    
     for (let i = 0; i < len; i += 1) {
       dirs[ Vector3D.direction1(anchor, u, pts[i]) + 1 ] += 1;
       
@@ -157,36 +157,12 @@ export class Sticker {
         return 0;
       }
     }
-    
-    if ( dirs[1] === len ) {
-      return 0;
-    } else if ( dirs[0] > 0 ) {
-      return -1;
-    }
 
-    return 1;
+    return dirs[1] === len ? 0 : dirs[0] ? -1 : 1;
   }
 
   direction(p1: Vector3D, p2: Vector3D, p3: Vector3D, useMassCenter?: boolean): -1 | 0 | 1 {
-    let dirs = [0, 0, 0];
-    let pts = (useMassCenter) ? [this.getMassCenter()] : this.points;
-
-    for (let i = 0, maxi = pts.length; i < maxi; i += 1) {
-      dirs[ Vector3D.direction(p1, p2, p3, pts[i]) + 1 ] += 1;
-
-      if ( dirs[0] > 0 && dirs[2] > 0 ) {
-        return 0;
-      }
-    }
-
-    if ( dirs[1] === pts.length ) {
-      return 0;
-    } else if ( dirs[0] > 0 ) {
-      return -1;
-    }
-
-    return 1;
-    
+    return this.direction1(p1, Vector3D.cross(p1, p2, p3), useMassCenter);
   }
 
   reflect(p1: Vector3D, p2: Vector3D, p3: Vector3D, preserveOrientation?: boolean): Sticker {

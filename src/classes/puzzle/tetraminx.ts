@@ -1,7 +1,7 @@
 import { Vector3D, UP, DOWN, FRONT, CENTER } from '../vector3d';
 import { Sticker } from './Sticker';
 import { Piece } from './Piece';
-import { assignColors, getAllStickers } from './puzzleUtils';
+import { assignColors, getAllStickers, random } from './puzzleUtils';
 import type { PuzzleInterface } from '@interfaces';
 import { STANDARD_PALETTE } from "@constants";
 
@@ -100,6 +100,21 @@ export function TETRAMINX(): PuzzleInterface {
       pieces: toMovePieces,
       ang: 2 * PI / 3
     };
+  };
+
+  tetra.scramble = function() {
+    if ( !tetra.toMove ) return;
+
+    const MOVES = 40;
+
+    for (let i = 0; i < MOVES; i += 1) {
+      let p = random( pieces ) as Piece;
+      let s = random(p.stickers.filter(s => !/^[xd]{1}$/.test(s.color))) as Sticker;
+      let vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > 1e-6));
+      let pcs = tetra.toMove(p, s, vec);
+      let cant = 1 + random(4);
+      pcs.pieces.forEach((p: Piece) => p.rotate(CENTER, vec, pcs.ang * cant, true));
+    }
   };
 
   tetra.faceVectors.push(PU.unit(), PR.unit(), PL.unit(), PB.unit());

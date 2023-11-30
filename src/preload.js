@@ -4,7 +4,9 @@ const ipc = ipcRenderer;
 
 contextBridge.exposeInMainWorld('electronAPI', {
   getAlgorithms: async (dir) => await ipc.invoke('get-algorithms', dir),
-  updateAlgorithm: async (dir) => await ipc.invoke('update-algorithm', dir),
+  addAlgorithm: async (alg) => await ipc.invoke('add-algorithm', alg),
+  updateAlgorithm: async (alg) => await ipc.invoke('update-algorithm', alg),
+  removeAlgorithm: async (alg) => await ipc.invoke('remove-algorithm', alg),
   
   getCards: async () => await ipc.invoke('cards'),
   

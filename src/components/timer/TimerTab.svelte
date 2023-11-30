@@ -62,7 +62,7 @@
   const {
     state, ready, tab, solves, allSolves, session, Ao5, stats, scramble, group, mode, hintDialog,
     hint, cross, xcross, preview, isRunning, decimals, bluetoothList,
-    setSolves, sortSolves, updateSolves, initScrambler, updateStatistics, selectedGroup,
+    sortSolves, updateSolves, initScrambler, updateStatistics, selectedGroup,
     setConfigFromSolve, editSolve, handleUpdateSession, handleUpdateSolve, handleRemoveSolves,
     editSessions
   } = context;
@@ -633,7 +633,7 @@
       <!-- Options -->
       {#if !scrambleOnly }
         <div class="absolute md:top-1 md:right-12 md:flex md:flex-col
-          max-md:left-1/2 max-md:-translate-x-[50%] max-md:top-[11rem] max-md:w-max" class:hide={ $isRunning }>
+          max-md:left-1/2 max-md:-translate-x-[50%] max-md:top-[min(11rem,24vh)] max-md:w-max" class:hide={ $isRunning }>
           {#each options.filter((e, p) => !battle ? true : p === 3 || p === 5) as option}
             {#if !$isMobile}
               <Tooltip class="cursor-pointer" position="left" text={ option.text } hasKeybinding>
@@ -906,7 +906,7 @@
                 col-span-3 cursor-pointer hover:text-blue-400 my-2 text-left
                 text-ellipsis overflow-hidden whitespace-nowrap
               " on:click={ () => select(s) }>{ s.scramble }</button>
-              <span class="col-span-1 flex items-center justify-center">{ timer(s.time, false, true) }</span>
+              <span class="col-span-1 flex items-center justify-center">{ timer(s.time, true, true) }</span>
             {/each}
           </div>
         {/if}
@@ -1044,7 +1044,7 @@
 
   #scramble span {
     @apply md:ml-16 md:mr-10 mx-4 inline-block text-center md:w-[calc(100%-15rem)]
-      max-md:max-h-[10rem] md:max-h-[16rem];
+      max-md:max-h-[min(10rem,21vh)] md:max-h-[16rem];
     font-size: 1.5em;
     word-spacing: .5rem;
     overflow: hidden auto;

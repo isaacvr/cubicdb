@@ -22,6 +22,8 @@ export const Spanish: Language = {
     name: 'Nombre',
     steps: 'Pasos',
     step: 'Paso',
+    scramble: 'Mezcla',
+    toScramble: 'Mezclar cubo',
   },
   NAVBAR: {
     home: 'Inicio',
@@ -248,7 +250,7 @@ export const Spanish: Language = {
     puzzle: 'Puzzle',
     order: 'Orden',
     setPuzzle: 'Establecer',
-    showBackFace: 'Mostrar caras traseras',
+    showBackFace: 'Caras traseras',
   },
   IMPORT_EXPORT: {
     title: 'Importar / Exportar',

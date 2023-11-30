@@ -5,6 +5,8 @@ import type { PuzzleInterface } from '@interfaces';
 import { STANDARD_PALETTE } from "@constants";
 import { Sticker } from './Sticker';
 import { assignColors, getAllStickers } from './puzzleUtils';
+import { square1SolverGetRandomScramble } from '@cstimer/scramble/scramble_sq1';
+import { ScrambleParser } from '@classes/scramble-parser';
 
 export function SQUARE1(): PuzzleInterface {
   const sq1: PuzzleInterface = {
@@ -197,6 +199,11 @@ export function SQUARE1(): PuzzleInterface {
       pieces: toMovePieces,
       ang
     };
+  };
+
+  sq1.scramble = function() {
+    let scramble = ScrambleParser.parseSquare1( square1SolverGetRandomScramble() );
+    sq1.move(scramble);
   };
 
   sq1.faceVectors = [

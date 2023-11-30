@@ -4,7 +4,7 @@ import { STANDARD_PALETTE } from '@constants';
 import type { PuzzleInterface } from '@interfaces';
 import { Vector3D } from '../vector3d';
 import { Piece } from './Piece';
-import { assignColors, getAllStickers } from './puzzleUtils';
+import { assignColors, getAllStickers, random } from './puzzleUtils';
 
 export function WINDMILL(): PuzzleInterface {
 
@@ -34,8 +34,6 @@ export function WINDMILL(): PuzzleInterface {
   const anchor2 = RIGHT.add( UP ).add( FRONT );
   const vdir = new Vector3D( Math.cos(ANG), 0, -Math.sin(ANG) );
 
-  console.log("VDIR: ", vdir);
-  
   let pieces = windmill.pieces; 
 
   let edgePiece = new Piece([
@@ -116,6 +114,20 @@ export function WINDMILL(): PuzzleInterface {
       ang: PI_2
     };
   };
+
+  windmill.scramble = function() {
+    if ( !windmill.toMove ) return;
+
+    const MOVES = 30;
+
+    for (let i = 0; i < MOVES; i += 1) {
+      let p = random( pieces ) as Piece;
+      let s = random(p.stickers.filter(s => !/^[xd]{1}$/.test(s.color))) as Sticker;
+      let vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > 1e-6));
+      let pcs = windmill.toMove(p, s, vec);
+      pcs.pieces.forEach((p: Piece) => p.rotate(CENTER, vec, pcs.ang, true));
+    }
+  }
 
   windmill.rotation = {
     x: Math.PI / 6,

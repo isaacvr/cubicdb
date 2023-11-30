@@ -4,7 +4,7 @@ import type { PuzzleInterface } from '@interfaces';
 import { STANDARD_PALETTE } from "@constants";
 import { Piece } from './Piece';
 import { Sticker } from './Sticker';
-import { assignColors, getAllStickers } from './puzzleUtils';
+import { assignColors, getAllStickers, random } from './puzzleUtils';
 
 export function REDI(): PuzzleInterface {
 
@@ -78,6 +78,21 @@ export function REDI(): PuzzleInterface {
       pieces: toMovePieces,
       ang: ANG
     };
+  };
+
+  redi.scramble = function() {
+    if ( !redi.toMove ) return;
+
+    const MOVES = 40;
+
+    for (let i = 0; i < MOVES; i += 1) {
+      let p = random( pieces ) as Piece;
+      let s = random(p.stickers.filter(s => !/^[xd]{1}$/.test(s.color))) as Sticker;
+      let vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > 1e-6));
+      let pcs = redi.toMove(p, s, vec);
+      let cant = 1 + random(3);
+      pcs.pieces.forEach((p: Piece) => p.rotate(CENTER, vec, pcs.ang * cant, true));
+    }
   };
 
   redi.rotation = {

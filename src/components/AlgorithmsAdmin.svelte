@@ -1,16 +1,18 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { CubeViewMap, type Algorithm, nameToPuzzle, type AlgorithmTree } from "@interfaces";
+  import { CubeViewMap, type Algorithm, nameToPuzzle, type AlgorithmTree, type Solution } from "@interfaces";
   import { DataService } from "@stores/data.service";
   import Modal from "./Modal.svelte";
   import Input from "@material/Input.svelte";
   import Select from "@material/Select.svelte";
   import { CubeMode, CubeModeMap } from "@constants";
-  import { generateCubeBundle } from "@helpers/cube-draw";
+  import { pGenerateCubeBundle } from "@helpers/cube-draw";
   import { Puzzle } from "@classes/puzzle/puzzle";
   import Button from "./material/Button.svelte";
   import Tree from "./material/Tree.svelte";
   import Checkbox from "./material/Checkbox.svelte";
+  import DeleteIcon from '@icons/Delete.svelte';
+  import { clone } from "@helpers/object";
 
   const dataService = DataService.getInstance();
 
@@ -18,7 +20,11 @@
   let fAlgs: Algorithm[] = [];
   let show = false;
   let showQuery = false;
+  let isAdding = false;
   let sAlg: Algorithm;
+  let pAlg: Algorithm;
+  let tipTemp: string[] = [];
+  let solTemp: Solution[] = [];
   let fAlg: Algorithm = {
     mode: CubeMode.NORMAL,
     name: '',
@@ -67,35 +73,46 @@
 
   let img = '';
   let t: AlgorithmTree;
+  let deleteAllModal: any;
+  let showDeleteAll = false;
 
-  function renderSAlg() {
+  async function renderSAlg() {
     let args = nameToPuzzle(sAlg.puzzle || '');
 
-    sAlg._puzzle = Puzzle.fromSequence(sAlg.scramble + " z2", {
+    sAlg.tips = tipTemp.length ? tipTemp.join(", ").split(", ").map(Number) : [];
+
+    if ( solTemp.length ) {
+      sAlg.solutions = clone(solTemp);
+    }
+
+    sAlg._puzzle = Puzzle.fromSequence((sAlg.scramble || '') + " z2", {
       type: args[0],
       order: args.slice(1, args.length),
       mode: sAlg.mode,
       view: sAlg.view,
       tips: sAlg.tips,
-      headless: true,
+      rounded: true
     }, true);
 
-    console.log("PUZZLE: ", sAlg._puzzle);
-
-    generateCubeBundle([ sAlg._puzzle ], 200, false).then(gen => {
-      let subsc = gen.subscribe((c) => {
-        if ( c === null ) {
-          return subsc();
-        }
-        img = c as string;
-      });
-    });
+    img = (await pGenerateCubeBundle([ sAlg._puzzle ], 200, true))[0];
   }
 
   function selectAlg(a: Algorithm) {
-    sAlg = { ...a };
-    sAlg.tips = (a.tips || []).slice();
+    sAlg = clone(a);
+    sAlg.tips = (sAlg.tips || []).slice();
     show = true;
+    
+    tipTemp.length = 0;
+    
+    let { tips } = sAlg;
+    
+    for (let i = 0, maxi = tips.length; i < maxi; i += 5) {
+      tipTemp.push( tips.slice(i, i + 5).join(', ') );
+    }
+    
+    tipTemp = tipTemp;
+    solTemp = sAlg.solutions ? clone(sAlg.solutions) : [];
+
     renderSAlg();
   }
 
@@ -137,20 +154,35 @@
       name: 'Root',
       alg: {} as Algorithm,
       children: [],
+      expanded: true
     };
   }
 
   resetT();
 
   function handleEdit(ev: CustomEvent<Algorithm>) {
-    let alg = ev.detail;
+    pAlg = ev.detail;
 
-    if ( alg.name != 'Root' ) {
-      selectAlg(alg);
+    if ( isAdding ) {
+      selectAlg({
+        mode: pAlg.mode,
+        name: '',
+        order: pAlg.order,
+        ready: true,
+        scramble: '',
+        shortName: '',
+        _id: '',
+        group: '',
+        parentPath: pAlg === t.alg ? '' : [pAlg.parentPath, pAlg.shortName].filter(e => e && e.trim()).join('/'),
+        view: '2d',
+        puzzle: pAlg.puzzle || '333'
+      });
+    } else if ( pAlg != t.alg ) {
+      selectAlg(pAlg);
     }
   }
 
-  function handleUpdateAlgorithms(alg: Algorithm) {
+  function findTree(alg: Algorithm) {
     let Q = [t];
 
     while( Q.length ) {
@@ -158,17 +190,46 @@
       Q.shift();
 
       if ( subt.alg._id === alg._id ) {
-        subt.alg = alg;
         Q.length = 0;
-        break;
+        return subt;
       }
 
       subt.children.forEach(st => Q.push(st));
     }
+
+    return null;
+  }
+
+  function handleUpdateAlgorithms(alg: Algorithm) {
+    let subt = findTree(alg);
+    
+    if ( subt ) {
+      subt.alg = alg;
+    }
   }
 
   function saveAlgorithm() {
-    dataService.updateAlgorithm(sAlg).then( handleUpdateAlgorithms );
+    if ( isAdding ) {
+      dataService.addAlgorithm(sAlg).then((alg) => {
+        sAlg._id = alg._id;
+        let subt = findTree(pAlg);
+
+        if ( subt ) {
+          subt.children.push({
+            alg: sAlg,
+            children: [],
+            name: sAlg.name,
+            route: sAlg.shortName,
+            expanded: false
+          });
+
+          t = t;
+        }
+      });
+    } else {
+      dataService.updateAlgorithm(sAlg).then( handleUpdateAlgorithms );
+    }
+
     show = false;
   }
 
@@ -245,6 +306,30 @@
       dataService.updateAlgorithm(alg).then( handleUpdateAlgorithms );
     });
   }
+
+  function addTip() {
+    tipTemp = [...tipTemp, [0, 0, 0, 0, 0].join(", ")];
+  }
+
+  function addSolution() {
+    solTemp = [ ...solTemp, { moves: '', votes: 0 } ];
+  }
+
+  function handleAdd(ev: CustomEvent<Algorithm>) {
+    isAdding = true;
+    handleEdit(ev);
+  }
+
+  function handleDelete(ev: CustomEvent<Algorithm>) {
+    showDeleteAll = true;
+    sAlg = ev.detail;
+  }
+
+  function deleteAlgorithmHandler(rem: boolean) {
+    if ( rem ) {
+      return dataService.removeAlgorithm(sAlg).then( refresh );
+    }
+  }
   
   onMount(() => {
     refresh();
@@ -259,16 +344,16 @@
     <Button class="bg-blue-700 text-gray-300" on:click={ refresh }>Refresh</Button>
   </section>
 
-  <Tree obj={ t } on:edit={ handleEdit }></Tree>
+  <Tree obj={ t } on:edit={ handleEdit } on:add={ handleAdd } on:delete={ handleDelete }></Tree>
 </main>
 
-<Modal bind:show onClose={ () => show = false }>
-  <div class="grid grid-cols-3 max-md:grid-cols-2 gap-4 place-items-center max-w-[50rem]">
+<Modal class="!overflow-auto" bind:show onClose={ () => {show = false; isAdding = false; } }>
+  <div class="grid grid-cols-3 max-md:grid-cols-2 gap-4 place-items-center max-w-[50rem] max-h-[92vh] overflow-auto">
     <section>
       Nombre: <Input bind:value={ sAlg.name }/>
     </section>
     <section>
-      Nombre corto: <Input bind:value={ sAlg.shortName } disabled/>
+      Nombre corto: <Input bind:value={ sAlg.shortName } disabled={ !isAdding }/>
     </section>
     <section>
       Padre: <Input bind:value={ sAlg.parentPath }/>
@@ -290,14 +375,50 @@
       Vista <Select class="w-full" items={ CubeViewMap } label={ e => e[1] } transform={ e => e[0] }
         bind:value={ sAlg.view }/>
     </section>
-    <section>
-      Tips: { sAlg.tips?.length || '-' }
+
+    <section class="row-span-2">
+      Tips:
+
+      {#if tipTemp.length }
+        <ul class="grid gap-2">
+          {#each tipTemp as tip, pos}
+            <li class="flex gap-2 items-center">
+              <Input bind:value={ tip }/>
+              <button tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer hover:text-red-500" on:click|stopPropagation={() => {
+                tipTemp = tipTemp.filter((_, p) => p != pos);
+              }}>
+                <DeleteIcon size="1.2rem"/>
+              </button>
+            </li>
+          {/each}
+        </ul>
+      {/if}
+
+      <Button class="bg-blue-700 text-gray-300 mt-4" on:click={ addTip }>Añadir flecha</Button>
     </section>
+    
     <section class="place-items-center">
       <img src={ img } alt="" class="max-h-52">
     </section>
     <section>
-      Soluciones: { sAlg.solutions ? sAlg.solutions[0].moves : '-' }
+      Soluciones:
+
+      {#if solTemp.length }
+        <ul class="grid gap-2">
+          {#each solTemp as solution, pos}
+            <li class="flex gap-2 items-center">
+              <Input bind:value={ solution.moves }/>
+              <button tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer hover:text-red-500" on:click|stopPropagation={() => {
+                solTemp = solTemp.filter((_, p) => p != pos);
+              }}>
+                <DeleteIcon size="1.2rem"/>
+              </button>
+            </li>
+          {/each}
+        </ul>
+      {/if}
+
+      <Button class="bg-blue-700 text-gray-300 mt-4" on:click={ addSolution }>Añadir solución</Button>
     </section>
     <section class="actions col-span-full">
       <Button class="text-gray-300 bg-purple-700" on:click={ renderSAlg }>Actualizar Imagen</Button>
@@ -409,6 +530,15 @@
       <Button class="text-gray-300 bg-red-700" on:click={ removeSolutions }>Eliminar soluciones</Button>
       <Button class="text-gray-300 bg-green-700" on:click={ applyFilter }>Aplicar</Button>
     </section>
+  </div>
+</Modal>
+
+<Modal bind:this={ deleteAllModal } bind:show={ showDeleteAll } onClose={ deleteAlgorithmHandler }>
+  <h1 class="text-gray-400 mb-4 text-lg">¿Desea eliminar este algoritmo?</h1>
+  <div class="flex justify-evenly">
+    <Button ariaLabel="Cancelar" on:click={ () => deleteAllModal.close() }> Cancelar </Button>
+    <Button ariaLabel="Eliminar" class="bg-red-800 hover:bg-red-700 text-gray-400"
+      on:click={ () => deleteAllModal.close(true) }> Eliminar </Button>
   </div>
 </Modal>
 

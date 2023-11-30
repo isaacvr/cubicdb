@@ -22,6 +22,8 @@ export const English: Language = {
     name: 'Name',
     steps: 'Steps',
     step: 'Step',
+    scramble: 'Scramble',
+    toScramble: 'Scramble puzzle',
   },
   NAVBAR: {
     home: 'Home',

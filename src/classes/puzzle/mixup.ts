@@ -4,7 +4,7 @@ import type { PuzzleInterface } from '@interfaces';
 import { STANDARD_PALETTE } from "@constants";
 import { Piece } from './Piece';
 import { Sticker } from './Sticker';
-import { assignColors, getAllStickers } from './puzzleUtils';
+import { assignColors, getAllStickers, random } from './puzzleUtils';
 
 export function MIXUP(): PuzzleInterface {
   const n = 3;
@@ -179,6 +179,21 @@ export function MIXUP(): PuzzleInterface {
       pieces: toMovePieces,
       ang: (type < 3) ? PI / 4 : PI_2
     };
+  };
+
+  mixup.scramble = function() {
+    if ( !mixup.toMove ) return;
+
+    const MOVES = 100;
+
+    for (let i = 0; i < MOVES; i += 1) {
+      let p = random( pieces ) as Piece;
+      let s = random(p.stickers.filter(s => !/^[xd]{1}$/.test(s.color))) as Sticker;
+      let vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > 1e-6));
+      let pcs = mixup.toMove(p, s, vec);
+      let cant = 1 + random(3);
+      pcs.pieces.forEach((p: Piece) => p.rotate(CENTER, vec, pcs.ang * cant, true));
+    }
   };
 
   mixup.rotation = {

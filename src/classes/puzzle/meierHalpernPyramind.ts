@@ -1,7 +1,7 @@
 import { Vector3D, UP, DOWN, FRONT, CENTER } from '../vector3d';
 import { Sticker } from './Sticker';
 import { Piece } from './Piece';
-import { assignColors, getAllStickers } from './puzzleUtils';
+import { assignColors, getAllStickers, random } from './puzzleUtils';
 import type { PuzzleInterface } from '@interfaces';
 import { STANDARD_PALETTE } from "@constants";
 
@@ -87,6 +87,22 @@ export function MEIER_HALPERN_PYRAMIND(): PuzzleInterface {
       pieces: toMovePieces,
       ang: ANG
     };
+  };
+
+  mhp.scramble = function() {
+    if ( !mhp.toMove ) return;
+
+    const MOVES = 100;
+    const _pieces = pieces.slice(0, pieces.length - 4);
+
+    for (let i = 0; i < MOVES; i += 1) {
+      let p = random( _pieces ) as Piece;
+      let s = random(p.stickers.filter(s => !/^[xd]{1}$/.test(s.color))) as Sticker;
+      let vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > 1e-6));
+      let pcs = mhp.toMove(p, s, vec);
+      let cant = 1 + random(4);
+      pcs.pieces.forEach((p: Piece) => p.rotate(CENTER, vec, pcs.ang * cant, true));
+    }
   };
 
   assignColors(mhp, mhp.faceColors);

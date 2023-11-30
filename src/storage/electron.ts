@@ -26,6 +26,18 @@ export class ElectronAdaptor implements IPC {
     return this.ipc.updateAlgorithm(cp);
   }
 
+  addAlgorithm(alg: Algorithm) {
+    let cp = { ...alg };
+    delete cp._puzzle;
+    return this.ipc.addAlgorithm(cp);
+  }
+
+  removeAlgorithm(alg: Algorithm) {
+    let cp = { ...alg };
+    delete cp._puzzle;
+    return this.ipc.removeAlgorithm(cp);
+  }
+
   getTutorials() {
     return this.ipc.getTutorials();
   }

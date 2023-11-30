@@ -3,7 +3,7 @@ import { Vector3D } from '../../classes/vector3d';
 import type { PuzzleInterface } from '@interfaces';
 import { Piece } from './Piece';
 import { Sticker } from './Sticker';
-import { assignColors, getAllStickers } from './puzzleUtils';
+import { assignColors, getAllStickers, random } from './puzzleUtils';
 import { STANDARD_PALETTE } from '@constants';
 
 export function MEGAMINX(_n: number, headless?: false): PuzzleInterface {
@@ -144,9 +144,11 @@ export function MEGAMINX(_n: number, headless?: false): PuzzleInterface {
   );
 
   mega.faceVectors.push( center.stickers[0].getOrientation() );
+
   for (let i = 0, maxi = midCenters.length; i < maxi; i += 1) {
     mega.faceVectors.push( midCenters[i].stickers[0].getOrientation() );
   }
+
   mega.faceVectors.push(center.stickers[0].getOrientation().rotate(CENTER, RIGHT, PI) );
 
   let LDIST = Math.abs( corner.stickers[1].points[2].sub(anchors[0]).y );
@@ -191,6 +193,24 @@ export function MEGAMINX(_n: number, headless?: false): PuzzleInterface {
       pieces: pieces.filter(p => p.direction1(mc, u) == 0),
       ang: INNER_ANG,
     };
+  };
+
+  mega.scramble = function() {
+    if ( !mega.toMove ) return;
+
+    const MOVES = n >= 2 ? (n - 2) * 50 + 10 : 0;
+
+    for (let i = 0; i < MOVES; i += 1) {
+      let p = random( pieces ) as Piece;
+      if ( !p ) { i -= 1; continue; }
+      let s = random(p.stickers.filter(s => !/^[xd]{1}$/.test(s.color))) as Sticker;
+      if ( !s ) { i -= 1; continue; }
+      let vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > 1e-6));
+      if ( !vec ) { i -= 1; continue; }
+      let pcs = mega.toMove(p, s, vec);
+      let cant = 1 + random(3);
+      pcs.pieces.forEach((p: Piece) => p.rotate(CENTER, vec, pcs.ang * cant, true));
+    }
   };
 
   mega.rotation = {

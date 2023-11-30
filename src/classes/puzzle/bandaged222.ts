@@ -4,7 +4,7 @@ import type { PuzzleInterface } from '@interfaces';
 import { STANDARD_PALETTE } from "@constants";
 import { Piece } from './Piece';
 import { Sticker } from './Sticker';
-import { assignColors, getAllStickers } from './puzzleUtils';
+import { assignColors, getAllStickers, random } from './puzzleUtils';
 
 export function BDG(): PuzzleInterface {
 
@@ -76,6 +76,32 @@ export function BDG(): PuzzleInterface {
     };
   };
 
+  bdg.scramble = function() {
+    const vecs = [ BACK, UP ];
+
+    function getPieces(v: Vector3D) {
+      return pieces.filter(p => p.direction1(v.unit().mul(0.1), v) === 0);
+    }
+
+    getPieces(UP).map(p => p.rotate(CENTER, UP, -PI_2, true));
+
+    const moves = 5;
+
+    for (let i = 0; i < moves; i += 1) {
+      let cant = 1 + random(3);
+      let i1 = i & 1;
+      let i2 = i1 ^ 1;
+      getPieces( vecs[ i1 ] ).map(p => p.rotate(CENTER, vecs[ i1 ], PI_2 * cant, true));
+      getPieces( vecs[ i2 ] ).map(p => p.rotate(CENTER, vecs[ i2 ], PI_2 * 2, true));
+      getPieces( vecs[ i1 ] ).map(p => p.rotate(CENTER, vecs[ i1 ], PI_2 * 2, true));
+    }
+
+    let cant = Math.round(Math.random()) * 2 - 1;
+    let i = (moves & 1) ^ 1;
+
+    getPieces( vecs[ i ] ).map(p => p.rotate(CENTER, vecs[ i ], PI_2 * cant, true));
+  };
+
   bdg.rotation = {
     x: PI / 6,
     y: -PI / 4,
@@ -87,7 +113,6 @@ export function BDG(): PuzzleInterface {
   ];
 
   assignColors(bdg, bdg.faceColors);
-  // roundCorners(bdg);
 
   return bdg;
 
