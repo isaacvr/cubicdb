@@ -7,7 +7,7 @@ import type { Writable } from 'svelte/store';
 import type { Display } from 'electron';
 
 export const PuzzleTypeName = [
-  'rubik', 'skewb', 'square1', 'pyraminx', 'axis', 'fisher', 'ivy'
+  'rubik', 'icarry', 'skewb', 'square1', 'pyraminx', 'axis', 'fisher', 'ivy'
  , 'clock', 'megaminx', 'mirror', 'dino', 'rex', 'redi', 'mixup', 'pyramorphix', 'gear', 'dreidel'
  , 'bandaged222', 'bicube', 'square2', 'pandora', 'ultimateSkewb', 'pyraminxCrystal', 'tetraminx'
  , 'meierHalpernPyramid', 'sq1Star', 'windmill'
@@ -177,7 +177,7 @@ export interface Solve {
 export type TimerInput = 'Keyboard' | 'Manual' | 'StackMat' | 'GAN Cube' | 'QY-Timer';
 export type SessionType = 'mixed' | 'single' | 'multi-step';
 
-export const TIMER_INPUT: TimerInput[] = [ 'Keyboard', 'Manual', 'StackMat'/*, 'GAN Cube', 'QY-Timer'*/ ];
+export const TIMER_INPUT: TimerInput[] = [ 'Keyboard', 'Manual', 'StackMat', 'GAN Cube'/*, 'QY-Timer'*/ ];
 export const SESSION_TYPE: SessionType[] = [ 'mixed', 'single', 'multi-step' ];
 
 export interface SessionSettings {
@@ -420,6 +420,7 @@ export interface AlgorithmOptions {
 export interface IPC {
   addDownloadProgressListener: (cb: AnyCallback) => any;
   addDownloadDoneListener: (cb: AnyCallback) => any;
+  addBluetoothListener: (cb: AnyCallback) => any;
   
   getAlgorithms: (options: AlgorithmOptions) => Promise<Algorithm[]>;
   updateAlgorithm: (alg: Algorithm) => Promise<Algorithm>;
@@ -451,12 +452,8 @@ export interface IPC {
   maximize: () => Promise<void>;
   close: () => Promise<void>;
   
-  generatePDF: (args: PDFOptions) => Promise<{
-    name: string,
-    buffer: Buffer,
-    mode: PDFOptions['mode'],
-    round: PDFOptions['round']
-  }>;
+  generatePDF: (args: PDFOptions) => Promise<PDFResult>;
+  generateContestPDF: (args: ContestPDFOptions) => Promise<ContestPDFResult>;
 
   zipPDF: (s: { name: string, files: Sheet[]}) => Promise<string>;
   openFile: (f: string) => Promise<void>;
@@ -483,8 +480,24 @@ export interface PDFOptions {
   width: number;
   height: number;
   html: string;
+  name?: string;
+}
+
+export interface PDFResult {
+  name: string,
+  buffer: Buffer;
+}
+
+export interface ContestPDFOptions extends PDFOptions {
   mode: string;
   round: number;
+}
+
+export interface ContestPDFResult extends PDFResult {
+  name: string;
+  buffer: Buffer;
+  mode: ContestPDFOptions['mode'];
+  round: ContestPDFOptions['round'];
 }
 
 export interface Game {
@@ -541,6 +554,8 @@ export interface InputContext {
   decimals: Writable<boolean>;
   bluetoothStatus: Writable<boolean>;
   scramble: Writable<string>;
+  sequenceParts: Writable<string[]>;
+  recoverySequence: Writable<string>;
 
   reset: () => void;
   initScrambler: (scr?: string, _mode ?: string) => void;
@@ -586,6 +601,7 @@ export interface Language {
     steps: string;
     step: string;
     scramble: string;
+    search: string;
     toScramble: string;
   }
   NAVBAR: {
@@ -832,6 +848,13 @@ export interface Language {
     parity: string;
     solutionFound: string;
     solutionInstruction: string;
+
+    // Mosaic
+    widthInCubes: string;
+    heightInCubes: string;
+    cubeOrder: string;
+    selectImage: string;
+    generate: string;
   },
   MENU: SCRAMBLE_MENU[]
 }

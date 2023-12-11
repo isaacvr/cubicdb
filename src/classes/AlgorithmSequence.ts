@@ -1,4 +1,14 @@
+import { Puzzle } from "./puzzle/puzzle";
+
 const MOVE_REG = /^[RLUDFB]['2]?$/;
+const RECOVERY_MAX_LENGTH = 5;
+
+function getMoveParts(move: string) {
+  return {
+    move: move[0],
+    dir: move.endsWith("'") ? -1 : move.endsWith("2") ? 2 : 1
+  };
+}
 
 export class AlgorithmSequence {
   scramble: string[];
@@ -16,7 +26,15 @@ export class AlgorithmSequence {
   }
 
   setScramble(s: string) {
-    return this.scramble = (s || '').split(' ').filter(m => MOVE_REG.test(m));
+    this.cursor = 0;
+    this.recovery.length = 0;
+    return this.scramble = (s || '').split(/\s+/g).filter(m => MOVE_REG.test(m));
+  }
+
+  getRecoveryScramble(): string {
+    if ( this.cursor >= this.scramble.length || this.recovery.length === 0 ) return '';
+    if ( this.recovery.length === 1 && this.recovery[0][0] === this.scramble[ this.cursor ][0][0] ) return '';
+    return Puzzle.inverse("rubik", this.recovery.slice().reverse().join(" "));
   }
 
   clear() {
@@ -25,37 +43,64 @@ export class AlgorithmSequence {
     // this.temp = '';
   }
 
-  // feed(move: string) {
-  //   if ( !MOVE_REG.test(move) ) return;
-  //   if ( this.cursor >= this.scramble.length ) return;
+  feed(move: string): boolean {
+    if ( !MOVE_REG.test(move) ) return false;
+    if ( this.cursor >= this.scramble.length ) return false;
 
-  //   let m = this.scramble[ this.cursor ];
+    let m = this.scramble[ this.cursor ];
 
-  //   if ( this.temp && this.temp[0] != move[0] ) {
-  //     this.recovery.unshift( move );
-  //     return;
-  //   }
-  
-  //   if ( m.length === 2 && m[1] === '2' ) {
-  //     if ( m[0] != move[0] ) {
-  //       this.recovery.unshift( move );
-  //       return;
-  //     }
+    if ( m === move ) {
+      this.cursor += 1;
+      return true;
+    }
 
-  //     if ( !this.temp ) {
-  //       this.temp = move;
-  //     } else {
-  //       this.temp = '';
-  //       this.cursor += 1;
-  //     }
+    if ( this.beyondScramble() ) {
+      return false;
+    }
 
-  //     return;
-  //   }
+    let mdata = getMoveParts( move );
+    let moveMap = "URFDLB";
+    let index = (l: string) => moveMap.indexOf(l);
+    let discardTopRecovery = () => {
+      while ( this.recovery.length && this.recovery[0] === this.scramble[ this.cursor ] ) {
+        this.recovery.shift();
+        this.cursor += 1;
+      }
+    };
 
-  //   if ( m === move ) {
-  //     this.cursor += 1;
-  //   } else {
-  //     this.recovery.unshift( move );
-  //   }
-  // }
+    for (let i = 0, maxi = this.recovery.length; i < maxi; i += 1) {
+      let rdata = getMoveParts(this.recovery[i]);
+
+      if ( rdata.move === mdata.move ) {
+        let res = (rdata.dir + mdata.dir + 4) & 3;
+
+        if ( res === 0 ) {
+          this.recovery.splice(i, 1);
+          discardTopRecovery();
+          return true;
+        }
+
+        this.recovery[i] = rdata.move + ["", "", "2", "'"][res];
+        discardTopRecovery();
+        return true;
+      }
+
+      if ( index(this.recovery[i][0]) % 3 === index( mdata.move ) % 3 ) {
+        continue;
+      }
+
+      break;
+    }
+    
+    this.recovery.unshift(move);
+    return true;
+  }
+
+  beyondScramble(): boolean {
+    return this.recovery.length >= RECOVERY_MAX_LENGTH;
+  }
+
+  done(): boolean {
+    return this.cursor >= this.scramble.length && this.recovery.length === 0;
+  }
 }

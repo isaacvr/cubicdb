@@ -3,6 +3,7 @@ import { Sticker } from './Sticker';
 import type { PuzzleInterface } from '@interfaces';
 import { FaceSticker } from './FaceSticker';
 import { lineIntersection3D } from '@helpers/math';
+import { ImageSticker } from './ImageSticker';
 
 export function assignColors(p: PuzzleInterface, cols ?: string[]) {
   let colors = cols || [ 'y', 'o', 'g', 'w', 'r', 'b' ];
@@ -31,6 +32,8 @@ export function assignColors(p: PuzzleInterface, cols ?: string[]) {
   }
 
   for (let i = 0, maxi = stickers.length; i < maxi; i += 1) {
+    if ( stickers[i].nonInteractive || stickers[i] instanceof ImageSticker ) continue;
+
     let sticker = stickers[i];
     let p1 = sticker.getMassCenter();
     let u = sticker.getOrientation();
@@ -101,10 +104,12 @@ export function roundStickerCorners(s: Sticker, rd?: number | Function, scale?: 
 
   for (let i = 0, maxi = pts.length; i < maxi; i += 1) {
     let r = RAD_FN(s, i);
-    let isCircle = Array.isArray(r);
-    let seg_perc = isCircle ? r[0] : r;
+    let isCircle = Array.isArray(r) && r.length === 1;
+    let isEllipse = Array.isArray(r) && r.length > 1;
+    let seg_perc = (isCircle || isEllipse) ? r[0] : r;
+    let seg_perc1 = isEllipse ? r[1] : isCircle ? r[0] : r;
     let v1 = pts[ (i - 1 + maxi) % maxi ].sub( pts[i] ).mul( seg_perc );
-    let v2 = pts[ (i + 1) % maxi ].sub( pts[i] ).mul( seg_perc );
+    let v2 = pts[ (i + 1) % maxi ].sub( pts[i] ).mul( seg_perc1 );
     let P = [ pts[i].add(v1), pts[i], pts[i].add(v2) ];
     
     let u = Vector3D.cross(P[0], P[1], P[2]).unit();
@@ -143,7 +148,7 @@ export function roundCorners(p: PuzzleInterface, rd ?: number, scale ?: number, 
     return;
   }
 
-  const CHECK = fn || ((s: Sticker) => !(s instanceof FaceSticker));
+  const CHECK = fn || ((s: Sticker) => !(s instanceof FaceSticker) && !(s instanceof ImageSticker));
   
   p.isRounded = true;
   let pieces = p.pieces;
@@ -169,11 +174,15 @@ export function roundCorners(p: PuzzleInterface, rd ?: number, scale ?: number, 
       
       s[j].color = 'd';
       s[j].oColor = 'd';
-
-      pc.stickers.push( newSt );
-
       newSt._generator = s[j];
       s[j]._generated = newSt;
+
+      if ( s[j].nonInteractive ) {
+        pc.stickers.splice(j, 1, newSt);
+      } else {
+        pc.stickers.push( newSt );
+      }
+
     }
 
   }

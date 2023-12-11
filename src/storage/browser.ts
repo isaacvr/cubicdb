@@ -1,5 +1,5 @@
 import { SessionDefaultSettings } from "@constants";
-import type { Algorithm, AlgorithmOptions, CubeEvent, IPC, PDFOptions, Session, Sheet, Solve, Tutorial, UpdateCommand } from "@interfaces";
+import type { Algorithm, AlgorithmOptions, CubeEvent, IPC, ContestPDFOptions, Session, Sheet, Solve, Tutorial, UpdateCommand, PDFOptions } from "@interfaces";
 import algs from '../database/algs.json';
 import tuts from '../database/tutorials.json';
 import { randomUUID } from "@helpers/strings";
@@ -14,6 +14,7 @@ export class BrowserAdaptor implements IPC {
 
   addDownloadProgressListener(cb: any) {}
   addDownloadDoneListener(cb: any) {}
+  addBluetoothListener(cb: any) {}
   
   // Algorithms
   getAlgorithms(options: AlgorithmOptions): Promise<Algorithm[]> {
@@ -84,6 +85,7 @@ export class BrowserAdaptor implements IPC {
 
   // PDF generation
   generatePDF(args: PDFOptions) { return Promise.reject(); }
+  generateContestPDF(args: ContestPDFOptions) { return Promise.reject(); }
   zipPDF(s: { name: string, files: Sheet[]}) { return Promise.reject(); }
   openFile(f: string) { return Promise.reject(); }
   revealFile(f: string) { return Promise.reject(); }
@@ -107,7 +109,6 @@ export class BrowserAdaptor implements IPC {
   }
   
   cacheGetImageBundle(hashes: string[]): Promise<string[]> {
-    console.log(`saved ${ hashes.length } hash`);
     return Promise.resolve( hashes.map(h => this.cache.get(h) || '') );
   }
 

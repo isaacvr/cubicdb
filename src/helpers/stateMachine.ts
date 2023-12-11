@@ -1,13 +1,13 @@
 import type { InputContext } from "@interfaces";
 
-export const isSpace = (_: InputContext, ev: any) => {
+export const isSpace = <Context = InputContext>(_: Context, ev: any) => {
   return ev.code === 'Space';
 };
 
-export const isEscape = (_: InputContext, ev: any) => {
+export const isEscape = <Context = InputContext>(_: Context, ev: any) => {
   return ev.code === 'Escape';
 };
 
-export const notEscape = (_: InputContext, ev: any) => {
+export const notEscape = <Context = InputContext>(_: Context, ev: any) => {
   return !isEscape(_, ev);
 };

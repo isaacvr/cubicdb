@@ -36,6 +36,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   maximize: async () => await ipc.invoke('maximize'),
   close: async () => await ipc.invoke('close'),
   generatePDF: async (opts) => await ipc.invoke('generate-pdf', opts),
+  generateContestPDF: async (opts) => await ipc.invoke('generate-contest-pdf', opts),
   zipPDF: async (sheets) => await ipc.invoke('zip-pdf', sheets),
   openFile: async (f) => await ipc.invoke('open-file', f),
   revealFile: async (f) => await ipc.invoke('reveal-file', f),
@@ -52,6 +53,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   connectBluetoothDevice: async (id) => await ipc.invoke('connect-bluetooth-device', id),
   cancelBluetoothRequest: async () => await ipc.invoke('cancel-bluetooth-request'),
   pairingBluetoothResponse: async (id) => await ipc.invoke('connect-bluetooth-device', id),
+  addBluetoothListener: (cb) => ipc.on('bluetooth', cb),
 
   // Cache
   cacheCheckImage: async (hash) => await ipc.invoke('check-image', hash),

@@ -1,9 +1,11 @@
 import { FaceSticker } from "@classes/puzzle/FaceSticker";
+import { ImageSticker } from "@classes/puzzle/ImageSticker";
 import type { Sticker } from "@classes/puzzle/Sticker";
 import type { Puzzle } from "@classes/puzzle/puzzle";
 import { roundCorners } from "@classes/puzzle/puzzleUtils";
 import { CubeMode } from "@constants";
 import { DoubleSide, Face3, Geometry, Material, Mesh, MeshBasicMaterial, Object3D, Vector3 } from "three";
+import { loadImageToPiece } from "./loadImageToPiece";
 
 export function piecesToTree(cube: Puzzle, F: number = 1, sTrans: Function = (s: Sticker[]) => s, side = DoubleSide) {
   let group = new Object3D();
@@ -17,11 +19,16 @@ export function piecesToTree(cube: Puzzle, F: number = 1, sTrans: Function = (s:
     piece.userData = pieces[p];
 
     for (let s = 0, maxs = stickers.length; s < maxs; s += 1) {
-      let sticker = stickers[s].mul(F); 
+      let sticker = stickers[s].mul(F);
       let color = cube.getHexColor( sticker.color );
-      let stickerGeometry = new Geometry(); 
+      let stickerGeometry = new Geometry();
       let stickerMaterial: Material;
 
+      if ( sticker instanceof ImageSticker ) {
+        loadImageToPiece(sticker, piece);
+        continue;
+      }
+      
       stickerGeometry.vertices.push( ...sticker.points.map(p => new Vector3(p.x, p.y, p.z)) );
 
       if ( sticker instanceof FaceSticker ) {

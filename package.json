@@ -37,7 +37,8 @@
     "build": "vite build",
     "dev": "vite",
     "preview": "vite preview",
-    "builder": "electron-builder build"
+    "builder": "electron-builder build",
+    "buildWorker": "esbuild ./src/workers/imageWorker.ts --bundle --minify --outfile=./public/assets/imageWorker.js"
   },
   "license": "MIT",
   "config": {
@@ -79,6 +80,7 @@
     "eruda": "^3.0.1",
     "express": "4.18.2",
     "js-confetti": "^0.11.0",
+    "jspdf": "^2.5.1",
     "jszip": "3.10.1",
     "moment": "2.29.4",
     "nedb": "1.8.0",

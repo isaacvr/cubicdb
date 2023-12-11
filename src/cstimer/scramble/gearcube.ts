@@ -86,7 +86,7 @@ function getRandomState() {
 	return ret;
 }
 
-function generateScramble(type) {
+export function generateGearScramble(type) {
 	init();
 	let state;
 	do {
@@ -102,4 +102,4 @@ function generateScramble(type) {
 	}
 	return sol.reverse().join(" ");
 }
-regScrambler(['gearo', 'gearso'], generateScramble);
+regScrambler(['gearo', 'gearso'], generateGearScramble);

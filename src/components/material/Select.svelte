@@ -28,7 +28,7 @@
     let pos = findValuePosition();
 
     if ( pos > -1 ) {
-      optionList.children[pos * 2].scrollIntoView({ inline: 'center', block: 'center' });
+      optionList.children[pos * 2].scrollIntoView({ inline: 'nearest', block: 'nearest', behavior: 'smooth' });
       tick().then(() => {
         (optionList.firstElementChild as HTMLButtonElement)?.focus();
       });
@@ -74,7 +74,7 @@
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div class="options w-max max-w-[10rem]
     bg-gray-700 bg-opacity-100 p-2 rounded-md border border-solid border-gray-400
-    fixed z-10 grid grid-cols-1 max-h-72 overflow-x-hidden overflow-y-scroll"
+    absolute z-10 grid grid-cols-1 max-h-72 overflow-x-hidden overflow-y-scroll"
     class:visible={ showOptions } bind:this={ optionList }
     on:keydown={ focusHandler }
     >

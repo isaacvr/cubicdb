@@ -24,7 +24,7 @@
   import { globalLang } from '@stores/language.service';
   import AlgorithmsAdmin from '@components/AlgorithmsAdmin.svelte';
   import CubeDb from '@components/CubeDB.svelte';
-  import Tools from '@components/Tools.svelte';
+  import Tools from '@components/tools/Tools.svelte';
 
   // Premium Stuff
   import Contest from '@pcomponents/Contest.svelte';
@@ -34,6 +34,7 @@
   let notService = NotificationService.getInstance();
   let notifications: INotification[] = [];
   let nSub: Unsubscriber;
+  // let dialog: HTMLDialogElement | null = null;
 
   onMount(() => {
     nSub = notService.notificationSub.subscribe((v) => {
@@ -80,12 +81,12 @@
   </main>
 
   <!-- Notifications -->
-  <section class="notification-container fixed top-0 right-0 h-full pr-2
-    flex flex-col gap-4 justify-center text-gray-400 pointer-events-none">
+  <dialog open={ false } class="notification-container mt-0 mr-0 h-full pr-2 overflow-hidden
+    flex flex-col gap-4 justify-center text-gray-400 bg-transparent outline-none pointer-events-none">
     {#each notifications as nt (nt.key)}
       <Notification {...nt} fixed={ nt.fixed }/>
     {/each}
-  </section>
+  </dialog>
 </Router>
 
 <style>

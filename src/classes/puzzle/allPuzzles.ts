@@ -26,8 +26,10 @@ import { PYRAMINX_CRYSTAL } from './pyraminxCrystal';
 import { TETRAMINX } from './tetraminx';
 import { MEIER_HALPERN_PYRAMIND } from './meierHalpernPyramind';
 import { SQUARE1_STAR } from './square1Star';
+import { GAN333 } from './gan333';
 
 registerPuzzle("rubik", "Rubik", RUBIK, true);
+registerPuzzle("icarry", "GAN iCarry", GAN333, false);
 registerPuzzle("mirror", "Mirror", MIRROR, true);
 registerPuzzle("windmill", "Windmill", WINDMILL, false);
 registerPuzzle("pyraminx", "Pyraminx", PYRAMINX, true);

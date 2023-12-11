@@ -144,6 +144,8 @@ export class Piece {
     let fn = disc || (() => true);
 
     for (let i = 0, maxi = st.length; i < maxi; i += 1) {
+      if ( st[i].nonInteractive ) continue;
+
       if ( fn(st[i]) ) {
         len += 1;
         let d = st[i].direction1(anchor, u, useMassCenter);

@@ -10,7 +10,7 @@ export default defineConfig((env) => ({
   base: env.mode === 'production' ? './' : '',
   server: {
     host: true,
-    port: 5000
+    port: 5432
   },
   build: {
     rollupOptions: { output: { dir: "./dist" } },

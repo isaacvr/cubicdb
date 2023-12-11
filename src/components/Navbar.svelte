@@ -47,7 +47,7 @@
   <nav class="w-max ml-28 max-sm:ml-14 select-none text-gray-400 fixed z-[2000]">
     <button class="md:hidden" on:click={ () => expanded = !expanded }> <MenuIcon size="2rem"/> </button>
 
-    <!-- svelte-ignore a11y-no-static-element-interactions -->
+    <!-- svelte-ignore a11y-no-static-element-interactions a11y-click-events-have-key-events -->
     <div on:click={ () => expanded = false } class:expanded class:isMobile={ $isMobile } class="backdrop max-md:bg-black
       max-md:bg-opacity-90 grid place-items-center max-md:fixed inset-0 md:visible">
       <div class="flex items-center justify-center gap-1 max-sm:flex-col">

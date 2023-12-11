@@ -132,12 +132,14 @@ export class ScrambleParser {
 
   static parseSquare1(scramble: string) {
     let newScramble = scramble.replace(/\s+/g, '').split('/');
-    let sqre = /\s*\(?(-?\d+), *(-?\d+)\)?\s*/;
+    let sqres = [ /\((-?\d),(-?\d)\)/, /(-?\d),(-?\d)/, /(-?\d)(-?\d)/, /(-?\d)/ ];
     let res = [];
 
     for (let i = 0, maxi = newScramble.length; i < maxi; i += 1) {
-      let m = sqre.exec(newScramble[i]);
-      if (m) {
+      let reg = sqres.find(reg => reg.exec(newScramble[i]));
+      
+      if ( reg ) {
+        let m = reg.exec(newScramble[i])!;
         let u = ~~m[1];
         let d = ~~m[2];
         if (u != 0) {
@@ -147,6 +149,7 @@ export class ScrambleParser {
           res.push([2, d]);
         }
       }
+      
       if (i != maxi - 1) {
         res.push([0, 6]);
       }

@@ -23,6 +23,7 @@ export const English: Language = {
     steps: 'Steps',
     step: 'Step',
     scramble: 'Scramble',
+    search: 'Search',
     toScramble: 'Scramble puzzle',
   },
   NAVBAR: {
@@ -298,6 +299,13 @@ export const English: Language = {
     parity: 'There is parity (two corners or edges swapped).',
     solutionFound: 'Solution found',
     solutionInstruction: 'With green center on the front and white center on top:',
+
+    // Mosaic
+    widthInCubes: "Width (in cubes)",
+    heightInCubes: "Height (in cubes)",
+    cubeOrder: "Cube order",
+    generate: "Generate",
+    selectImage: "Select image",
   },
   MENU: [
     [

@@ -13,7 +13,7 @@
   function updateTexts() {
     const HOME = getLanguage( $globalLang ).HOME;
 
-    const showPrivate = true;
+    const showPrivate = false;
 
     cards = [
       {

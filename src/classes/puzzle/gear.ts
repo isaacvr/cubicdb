@@ -4,7 +4,8 @@ import type { PuzzleInterface } from '@interfaces';
 import { STANDARD_PALETTE } from "@constants";
 import { Piece } from './Piece';
 import { Sticker } from './Sticker';
-import { assignColors, getAllStickers } from './puzzleUtils';
+import { assignColors, getAllStickers, random } from './puzzleUtils';
+import { generateGearScramble } from '@cstimer/scramble/gearcube';
 
 function stickerFromPath(px: number[], py: number[], a1: Vector3D, a2: Vector3D, a3: Vector3D): Sticker {
   let cx = [ ...px ];
@@ -28,7 +29,7 @@ function getType(p: Piece): number {
 function edgeCallback(p: Piece, center: Vector3D, dir: Vector3D, ang: number, three ?: boolean, vc?: any) {
   if ( three ) {
     let p1 = <any> p;
-    let dir1 = new Vector3D(dir.x, dir.y, dir.z);
+    let dir1 = new Vector3D(dir.x, dir.y, dir.z).toNormal();
     let a = (<Piece>p1.userData).anchor.rotate(center, dir1, ang);
     let u1 = new vc(a.x, a.y, a.z);
     let u1n = u1.clone().normalize();
@@ -37,7 +38,7 @@ function edgeCallback(p: Piece, center: Vector3D, dir: Vector3D, ang: number, th
   } else {
     p
       .rotate( center, p.anchor, -ang * 4 / 3, true )
-      .rotate( center, dir, ang, true );
+      .rotate( center, dir.clone().toNormal(), ang, true );
   }
 }
 
@@ -173,7 +174,7 @@ export function GEAR(): PuzzleInterface {
   pieces.push( centerPiece.rotate(CENTER, LEFT, PI_2) );
 
   gear.toMove = function(piece: Piece, sticker: Sticker, dir: Vector3D) {
-    if ( ![ LEFT, UP, FRONT ].reduce((ac, v) => ac || v.cross(dir).abs() < 1e-6, false) ) {
+    if ( ![ RIGHT, UP, FRONT ].reduce((ac, v) => ac || v.cross(dir).abs() < 1e-6, false) ) {
       return [];
     }
 
@@ -186,8 +187,8 @@ export function GEAR(): PuzzleInterface {
     let borderPieces: Piece[] = [];
 
     toMovePieces.forEach(p => {
-      let goodStickers = p.stickers.filter(s => s.color != 'd');
-      let central = goodStickers.reduce((ac, s) => ac || s.direction1(CENTER, dir) == 0, false);
+      let central = p.direction1(CENTER, dir, false, (s: Sticker) => s.color != 'd') === 0;
+
       if ( central ) {
         let type = getType(p);
 
@@ -207,15 +208,47 @@ export function GEAR(): PuzzleInterface {
       {
         pieces: centralPieces,
         ang: PI_2,
-        animationTime: 600
+        animationTime: 500
       },
       {
         pieces: borderPieces,
         ang: PI,
-        animationTime: 600
+        animationTime: 500
       },
     ];
   };
+
+  gear.scramble = function() {
+    let scr = generateGearScramble('gearo').trim().split(/\s+/g);
+    let moves = [ UP, RIGHT, FRONT ];
+    let _pieces = pieces.slice(0, 8);
+
+    for (let i = 0, maxi = scr.length; i < maxi; i += 1) {
+      let m = scr[i];
+      let pos = "URF".indexOf(m[0]);
+      let dir = m.endsWith("'") ? -1 : 1;
+      let cant = isNaN( parseInt(m.slice(1)) ) ? 1 : parseInt(m.slice(1));
+      let fp = _pieces.filter(p => p.direction1(moves[pos].mul(0.8), moves[pos]) === 0);
+
+      console.log(m, pos, dir * cant);
+
+      let p = random(fp) as Piece;
+      let st = random(p.stickers.filter(s => s.color != 'd')) as Sticker;
+      let v = moves[ pos ];
+      let pcs = gear.toMove!(p, st, v);
+  
+      pcs.forEach((pc: any) => {
+        pc.pieces.forEach((p: Piece) => {
+          if (p.hasCallback) {
+            p.callback(p, CENTER, v, pc.ang * dir * cant);
+          } else {
+            p.rotate(CENTER, v, pc.ang * dir * cant, true);
+          }
+        });
+      });
+    }
+
+  }
 
   gear.rotation = {
     x: PI / 6,

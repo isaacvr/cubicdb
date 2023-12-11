@@ -3,12 +3,15 @@
 import { Emitter } from '@classes/Emitter';
 import { GANInput } from '@components/timer/input-handlers/GAN';
 import { QiYiSmartTimerInput } from '@components/timer/input-handlers/QY-Timer';
-import type { Algorithm, Solve, Session, Tutorial, Sheet, CubeEvent, IPC, PDFOptions, UpdateCommand } from '@interfaces';
+import type { Algorithm, Solve, Session, Tutorial, Sheet, CubeEvent, IPC, ContestPDFOptions, UpdateCommand, PDFOptions } from '@interfaces';
 import { ElectronAdaptor, BrowserAdaptor } from '@storage/index';
 import type { Display } from 'electron';
 import { writable } from 'svelte/store';
 
 type DownloadEvent = 'download-progress' | 'update-downloaded';
+type BluetoothEvent = 'bluetooth';
+type TimerEvent = 'scramble';
+type DataEvent = DownloadEvent | BluetoothEvent | TimerEvent;
 
 function extractKey(obj: any, key: any): any {
   return { [key]: obj[key] };
@@ -60,14 +63,18 @@ export class DataService {
     this.ipc.addDownloadDoneListener(() => {
       this.emitter.emit('update-downloaded');
       console.log('update-downloaded')
-    }); 
+    });
+
+    this.ipc.addBluetoothListener((_, args) => {
+      this.emitter.emit('bluetooth', ...args);
+    });
   }
 
-  on(ev: DownloadEvent, cb: (...args: any[]) => any) {
+  on(ev: DataEvent, cb: (...args: any[]) => any) {
     this.emitter.on(ev, cb);
   }
 
-  off(ev: DownloadEvent, cb: (...args: any[]) => any) {
+  off(ev: DataEvent, cb: (...args: any[]) => any) {
     this.emitter.off(ev, cb);
   }
 
@@ -187,6 +194,10 @@ export class DataService {
     return this.ipc.generatePDF(args);
   }
 
+  generateContestPDF(args: ContestPDFOptions) {
+    return this.ipc.generateContestPDF(args);
+  }
+
   zipPDF(s: { name: string, files: Sheet[]}) {
     return this.ipc.zipPDF(s);
   }
@@ -260,5 +271,13 @@ export class DataService {
 
   useDisplay(id: number): Promise<void> {
     return this.ipc.useDisplay(id);
+  }
+
+  emitBluetoothData(type: string, data: any) {
+    this.emitter.emit('bluetooth', type, data);
+  }
+
+  scramble(s: string) {
+    this.emitter.emit<DataEvent>('scramble', s);
   }
 }

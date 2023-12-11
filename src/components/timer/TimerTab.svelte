@@ -112,7 +112,6 @@
   ];
 
   /// LAYOUT
-  const textColor = 'text-gray-400';
   let selected: number = 0;
   let lastSolve: Writable<Solve | null> = writable(null);
   let prob = -1;
@@ -124,11 +123,13 @@
   let bluetoothStatus = writable(false);
   let bluetoothHardware: any = null;
   let bluetoothBattery: number = 0;
+  let sequenceParts = writable<string[]>([]);
+  let recoverySequence = writable<string>('');
 
   // ---------------------------------------------------
   let inputContext: InputContext = {
     isRunning, lastSolve, ready, session, state, time, stackmatStatus, decimals, scramble,
-    bluetoothStatus, addSolve, initScrambler, reset, createNewSolve
+    sequenceParts, recoverySequence, bluetoothStatus, addSolve, initScrambler, reset, createNewSolve
   };
 
   let inputMethod: TimerInputHandler = new ManualInput();
@@ -310,6 +311,8 @@
         showNotes = true;
       } else if ( code === 'KeyS' && event.ctrlKey ) {
         initScrambler();
+      } else if ( code === 'Comma' && event.ctrlKey ) {
+        options[5].handler();
       }
     }
   }
@@ -479,7 +482,7 @@
     options[2].text = `${ $localLang.TIMER.useOldScramble } [Ctrl + O]`;
     options[3].text = `${ $localLang.TIMER.copyScramble } [Ctrl + C]`;
     options[4].text = `${ $localLang.TIMER.notes } [Ctrl + N]`;
-    options[5].text = `${ $localLang.TIMER.settings }`;
+    options[5].text = `${ $localLang.TIMER.settings } [Ctrl + ,]`;
   }
 
   function searchBluetooth() {
@@ -491,21 +494,25 @@
     $bluetoothList.length = 0;
 
     dataService.searchBluetooth(gn).then(mac => {
-      deviceID = mac;
+      deviceID = mac;``
       inputMethod.disconnect();
       inputMethod = gn;
     }).catch((err) => {
-      notification.addNotification({
-        key: randomUUID(),
-        header: 'Search error',
-        text: 'Bluetooth error.',
-      });
+      // notification.addNotification({
+      //   key: randomUUID(),
+      //   header: 'Search error',
+      //   text: 'Bluetooth error.',
+      // });
 
       console.log("ERROR: ", err);
     }).finally(() => {
       isConnecting = false;
       isSearching = false;
     });
+  }
+
+  function cancelSearch() {
+    dataService.cancelBluetoothRequest();
   }
 
   function connectBluetooth(id: string) {
@@ -543,57 +550,57 @@
     $decimals = true;
   }
 
+  function bluetoothHandler(type: string, data: any) {
+    switch( type ) {
+      case 'move': {
+        simulator.applyMove( data[0], data[1] );
+        break;
+      }
+
+      case 'facelet': {
+        simulator.fromFacelet( data );
+        break;
+      }
+
+      case 'hardware': {
+        bluetoothHardware = data;
+        break;
+      }
+
+      case 'battery': {
+        bluetoothBattery = data;
+        break;
+      }
+
+      case 'connect': {
+        $bluetoothStatus = true;
+        break;
+      }
+
+      case 'disconnect': {
+        $bluetoothStatus = false;
+        deviceID = '';
+        break;
+      }
+
+      case 'device-list': {
+        $bluetoothList = data;
+        break;
+      }
+    }
+  }
+
   onMount(() => {
     if ( timerOnly || scrambleOnly ) {
       return;
     }
 
     navigator.mediaDevices?.addEventListener('devicechange', updateDevices);
-
     initInputHandler();
     $group = 0;
     selectedGroup();
-    // updateStatistics(false);
     updateDevices();
-
-    // subs = [
-    //   dataService.bluetoothSub.subscribe((data) => {
-    //     if ( !data ) return;
-
-    //     switch(data.type) {
-    //       case 'move': {
-    //         simulator.applyMove( data.data[0], data.data[1] );
-    //         break;
-    //       }
-
-    //       case 'facelet': {
-    //         simulator.fromFacelet( data.data );
-    //         break;
-    //       }
-
-    //       case 'hardware': {
-    //         bluetoothHardware = data.data;
-    //         break;
-    //       }
-
-    //       case 'battery': {
-    //         bluetoothBattery = data.data;
-    //         break;
-    //       }
-
-    //       // case 'connect': {
-    //       //   $bluetoothStatus = true;
-    //       //   break;
-    //       // }
-
-    //       case 'disconnect': {
-    //         // $bluetoothStatus = false;
-    //         deviceID = '';
-    //         break;
-    //       }
-    //     }
-    //   })
-    // ];
+    dataService.on('bluetooth', bluetoothHandler);
   });
 
   onDestroy(() => {
@@ -601,6 +608,7 @@
     navigator.mediaDevices?.removeEventListener('devicechange', updateDevices);
     // subs.forEach(s => s());
     document.querySelectorAll('#stackmat-signal').forEach(e => e.remove());
+    dataService.off('bluetooth', bluetoothHandler);
   });
 
   $: $solves.length === 0 && reset();
@@ -617,7 +625,7 @@
 ></svelte:window>
 
 <div
-  class="w-full h-full { textColor } { (timerOnly || scrambleOnly) ? 'mt-8' : '' }"
+  class="w-full h-full text-gray-400 { (timerOnly || scrambleOnly) ? 'mt-8' : '' }"
   >
   {#if !timerOnly }
     <!-- Scramble -->
@@ -625,25 +633,45 @@
       {#if !$scramble}
         <span> {stateMessage} </span>
       {/if}
-      <span
-        class:hide={ $isRunning }
-        class:battle={ battle }
-        contenteditable="false" bind:innerHTML={$scramble}></span>
+
+      {#if inputMethod instanceof GANInput }
+        <span
+          class:hide={ $isRunning }
+          class:battle={ battle }>
+          {#if $recoverySequence }
+            {"=> " + $recoverySequence}
+          {:else}
+            {#if $sequenceParts.length < 3 }
+              { stateMessage }
+            {:else}
+              { $sequenceParts[0] } <mark>{ $sequenceParts[1] }</mark> { $sequenceParts[2] }
+            {/if}
+          {/if}
+        </span>
+      {:else}
+        <span
+          class:hide={ $isRunning }
+          class:battle={ battle }
+          contenteditable="false" bind:innerHTML={$scramble}></span>
+      {/if}
 
       <!-- Options -->
       {#if !scrambleOnly }
-        <div class="absolute md:top-1 md:right-12 md:flex md:flex-col
-          max-md:left-1/2 max-md:-translate-x-[50%] max-md:top-[min(11rem,24vh)] max-md:w-max" class:hide={ $isRunning }>
+        <div class={`absolute md:top-1 md:right-4 md:w-[2rem] md:items-center md:flex md:flex-col
+          max-md:left-1/2 max-md:-translate-x-[50%] max-md:w-max ` + (
+            $session.settings.input === 'GAN Cube' ? "top-[4rem] bg-white bg-opacity-5 rounded-md " : "max-md:top-[min(11rem,24vh)]"
+          )
+          } class:hide={ $isRunning }>
           {#each options.filter((e, p) => !battle ? true : p === 3 || p === 5) as option}
             {#if !$isMobile}
               <Tooltip class="cursor-pointer" position="left" text={ option.text } hasKeybinding>
-                <button aria-label={ option.text } tabindex="0" class="my-3 mx-1 w-5 h-5 { textColor }"
+                <button aria-label={ option.text } tabindex="0" class="my-3 mx-1 w-5 h-5 text-gray-400"
                   on:click={ option.handler } on:keydown={ (e) => e.code === 'Space' ? e.preventDefault() : null }>
                   <svelte:component this={option.icon} width="100%" height="100%"/>
                 </button>
               </Tooltip>
             {:else}
-              <button aria-label={ option.text } tabindex="0" class="my-3 mx-2 w-5 h-5 { textColor }"
+              <button aria-label={ option.text } tabindex="0" class="my-3 mx-2 w-5 h-5 text-gray-400"
                 on:click={ option.handler } on:keydown={ (e) => e.code === 'Space' ? e.preventDefault() : null }>
                 <svelte:component this={option.icon} width="100%" height="100%"/>
               </button>
@@ -657,13 +685,13 @@
           {#if $session?.settings?.input === 'GAN Cube'}
             {#if !$isMobile}
               <Tooltip class="cursor-pointer" position="left" text={ 'GAN Cube' } hasKeybinding>
-                <button aria-label={ 'GAN Cube' } tabindex="0" class="my-3 mx-1 w-5 h-5 { $bluetoothStatus ? 'text-blue-600' : textColor }"
+                <button aria-label={ 'GAN Cube' } tabindex="0" class="my-3 mx-1 w-5 h-5 { $bluetoothStatus ? 'text-blue-600' : 'text-gray-400' }"
                   on:click={ showBluetoothData } on:keydown={ (e) => e.code === 'Space' ? e.preventDefault() : null }>
                   <svelte:component this={ $bluetoothStatus ? BluetoothOnIcon : BluetoothOffIcon } width="100%" height="100%"/>
                 </button>
               </Tooltip>
             {:else}
-              <button aria-label={ 'GAN Cube' } tabindex="0" class="my-3 mx-1 w-5 h-5 { $bluetoothStatus ? 'text-blue-600' : textColor }"
+              <button aria-label={ 'GAN Cube' } tabindex="0" class="my-3 mx-1 w-5 h-5 { $bluetoothStatus ? 'text-blue-600' : 'text-gray-400' }"
                 on:click={ showBluetoothData } on:keydown={ (e) => e.code === 'Space' ? e.preventDefault() : null }>
                 <svelte:component this={ $bluetoothStatus ? BluetoothOnIcon : BluetoothOffIcon } width="100%" height="100%"/>
               </button>
@@ -694,7 +722,7 @@
     <div class="absolute top-1/3 right-12 flex flex-col" class:hide={ $isRunning }>
       {#each options.filter((e, p) => p === 5) as option}
         <Tooltip class="cursor-pointer" position="left" text={ option.text } hasKeybinding>
-          <button aria-label={ option.text } tabindex="0" class="my-3 mx-1 w-5 h-5 { textColor }"
+          <button aria-label={ option.text } tabindex="0" class="my-3 mx-1 w-5 h-5 text-gray-400"
             on:click={ option.handler } on:keydown={ (e) => e.code === 'Space' ? e.preventDefault() : null }>
             <svelte:component this={option.icon} width="100%" height="100%"/>
           </button>
@@ -706,12 +734,16 @@
   <!-- Timer -->
   {#if !scrambleOnly}
     <div id="timer" class={ "absolute text-9xl flex flex-col items-center justify-center " + 
-      ($session?.settings?.input === 'GAN Cube' ? 'bottom-8 h-auto' : 'top-[40%] h-32') }>
+      ($session?.settings?.input === 'GAN Cube'
+        ? ( $state === TimerState.RUNNING ? ' bottom-16' : ' bottom-4' ) + ' h-auto'
+        : 'top-[40%] h-32'
+      ) }>
 
       <!-- Cube3D -->
       {#if $session?.settings?.input === 'GAN Cube'}
         <section class="relative cube-3d">
           <Simulator
+            selectedPuzzle={ 'icarry' }
             enableDrag={ false }
             enableKeyboard={ false }
             gui={ false }
@@ -734,7 +766,7 @@
         </div>
       {:else}
         <span
-          class="timer { textColor }"
+          class="timer text-gray-400 max-sm:text-7xl max-sm:[line-height:8rem]"
           class:prevention={ $state === TimerState.PREVENTION }
           class:ready={$ready}
           hidden={$state === TimerState.RUNNING && !$session.settings.showElapsedTime}>
@@ -766,7 +798,8 @@
         class="timer"
         hidden={!($state === TimerState.RUNNING && !$session.settings.showElapsedTime)}>----</span> 
       {#if !timerOnly && $state === TimerState.STOPPED}
-        <div class="flex justify-center w-full" class:show={$state === TimerState.STOPPED}>
+        <div class={"flex justify-center w-full " + ( $session.settings.input === 'GAN Cube' ? '-my-4' : '' ) }
+            class:show={$state === TimerState.STOPPED}>
           {#each solveControl.slice(Number(battle), solveControl.length) as control}
             <Tooltip class="cursor-pointer" position="top" text={ control.text }>
               <button class="flex my-3 mx-1 w-5 h-5 { control.highlight($solves[0] || {}) ? 'text-red-500' : '' }"
@@ -783,7 +816,7 @@
   <!-- Hints -->
   {#if !(battle || timerOnly || scrambleOnly) }
     <div id="hints"
-      class="bg-backgroundLv1 w-max p-2 { textColor } rounded-md
+      class="bg-backgroundLv1 w-max p-2 text-gray-400 rounded-md
         shadow-md absolute select-none left-0 max-md:hidden md:top-1/4 transition-all duration-1000"
       class:isVisible={$hintDialog && !$isRunning}>
 
@@ -807,7 +840,7 @@
 
     <!-- Statistics -->
     <div id="statistics"
-      class="{ textColor } pointer-events-none transition-all duration-300 max-md:text-xs"
+      class="text-gray-400 pointer-events-none transition-all duration-300 max-md:text-xs"
       class:hide={ $isRunning }>
 
       <div class="left absolute select-none bottom-0 left-0 ">
@@ -957,10 +990,16 @@
 
           {#if modalData.settings.input === 'GAN Cube' || modalData.settings.input === 'QY-Timer' }
             <section class="bg-white bg-opacity-10 p-2 shadow-md rounded-md">
-              <div class="flex justify-center mb-4">
+              <div class="flex justify-center mb-4 gap-2">
                 <Button class="bg-purple-600 text-gray-300" on:click={ searchBluetooth } loading={ isSearching }>
-                  Search
+                  { $localLang.global.search }
                 </Button>
+
+                {#if isSearching}
+                  <Button on:click={ cancelSearch }>
+                    { $localLang.global.cancel }
+                  </Button>
+                {/if}
               </div>
 
               <ul>
@@ -1046,6 +1085,7 @@
     @apply md:ml-16 md:mr-10 mx-4 inline-block text-center md:w-[calc(100%-15rem)]
       max-md:max-h-[min(10rem,21vh)] md:max-h-[16rem];
     font-size: 1.5em;
+    line-height: 1.5rem;
     word-spacing: .5rem;
     overflow: hidden auto;
   }
@@ -1143,8 +1183,10 @@
   }
 
   .cube-3d {
-    @apply bg-white bg-opacity-20 overflow-hidden shadow-md rounded-md;
-    width: calc(100vw - 20rem);
-    height: calc(100vh - 25rem);
+    @apply bg-white bg-opacity-20 overflow-hidden shadow-md rounded-md
+    w-[calc(100vw-20rem)] max-md:w-[calc(100vw-3rem)]
+    h-[calc(100vh-22rem)] max-md:h-[calc(100vh-25rem)];
+    
+    /* height: calc(100vh - 25rem); */
   }
 </style>

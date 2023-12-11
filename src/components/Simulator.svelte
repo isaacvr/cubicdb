@@ -29,6 +29,7 @@
   import type { Sticker } from "@classes/puzzle/Sticker";
   import { DataService } from "@stores/data.service";
   import Toggle from "./material/Toggle.svelte";
+  import { ImageSticker } from "@classes/puzzle/ImageSticker";
 
   const isMobile = DataService.getInstance().isMobile;
 
@@ -37,7 +38,7 @@
   export let enableRotation = true;
   export let gui = true;
   export let contained = false;
-  export let selectedPuzzle: PuzzleType = "gear";
+  export let selectedPuzzle: PuzzleType = "rubik";
   export let order = 3;
   export let animationTime = $isMobile ? 150 : 200; /// Default animation time: 200ms
   export let showBackFace = false;
@@ -45,7 +46,6 @@
   let localLang: Readable<Language> = derived(globalLang, ($lang) => getLanguage( $lang ));
 
   let cube: Puzzle;
-  // let scramble = "";
   let dragging = false;
   let group: Object3D = new Object3D();
   let backFace: Object3D = new Object3D();
@@ -53,10 +53,21 @@
   let H = 0;
 
   /// GUI
+  let excludedPuzzles: PuzzleType[] = [ 'clock', 'icarry' ];
   let puzzles: any[] = [];
   let hasOrder = true;
   let GUIExpanded = false;
   let resettingPuzzle = false;
+
+  for (let [key, value] of puzzleReg) {
+    if ( excludedPuzzles.indexOf( key as PuzzleType ) === -1 ) {
+      puzzles.push({
+        name: value.name,
+        value: key,
+        order: value.order,
+      });
+    }
+  }
 
   /// Animation
   let animating = false;
@@ -221,10 +232,13 @@
       scramble && cube.p.scramble && cube.p.scramble();
     }
 
+    // @ts-ignore
+    window.cube = cube;
+
     let ctt = cubeToThree(cube);
     let bfc = piecesToTree(cube, 1, (st: Sticker[]) => {
       return st
-        .filter( s => cube.p.faceColors.indexOf(s.color) > -1)
+        .filter( s => cube.p.faceColors.indexOf(s.color) > -1 && !(s instanceof ImageSticker))
         .map(s => s
         .reflect1(s.getMassCenter().add( s.getOrientation().mul(0.6) ), s.getOrientation(), true)
           .mul(1.3)
@@ -253,16 +267,6 @@
 
   function scramble() {
     resetPuzzle(undefined, true);
-  }
-
-  for (let [key, value] of puzzleReg) {
-    if (key != "clock") {
-      puzzles.push({
-        name: value.name,
-        value: key,
-        order: value.order,
-      });
-    }
   }
 
   let piece: Intersection | null = null;
@@ -302,9 +306,18 @@
     piece = null;
 
     if (intersects.length > 0) {
-      if ((<any>intersects[0].object).material.color.getHex()) {
-        piece = intersects[0];
+      for (let i = 0, maxi = intersects.length; i < maxi; i += 1) {
+        if ( (intersects[i].object.userData as Sticker).nonInteractive ) {
+          continue;
+        }
+
+        if ((<any>intersects[i].object).material.color.getHex()) {
+          piece = intersects[i];
+        } else {
+          break;
+        }
       }
+      
       controls.enabled = false;
     }
   };

@@ -5,16 +5,12 @@ import { STANDARD_PALETTE } from "@constants";
 import { Piece } from './Piece';
 import { Sticker } from './Sticker';
 import { assignColors, getAllStickers, random } from './puzzleUtils';
-import { isBetween } from '@helpers/math';
 
 export function RUBIK(_a: number, _b:number, _c:number): PuzzleInterface {
   const dims = [_a, _b, _c].sort();
   const a = dims[0], b = dims[1], c = dims[2];
   const isCube = a == b && b == c;
   const len = dims.reduce((m, e) => Math.min(m, 2 / e), 2);
-
-  const edgePoint = (p: Vector3D) => [p.x, p.y, p.z].reduce((acc, n) =>
-    [-1, 0, 1].some(d => Math.abs(d - n) < 1e-6) ? acc + 1 : acc, 0)
 
   const rubik: PuzzleInterface = {
     pieces: [],
@@ -26,9 +22,7 @@ export function RUBIK(_a: number, _b:number, _c:number): PuzzleInterface {
     dims,
     faceColors: [ 'w', 'r', 'g', 'y', 'o', 'b' ],
     move: () => false,
-    roundParams: [ (s: Sticker, i: number) => {
-      return 0.11;
-    }, undefined, a < 10 ? 10 : a < 20 ? 5 : 2 ],
+    roundParams: [ undefined, undefined, a < 10 ? 10 : a < 20 ? 5 : 2 ],
   };
 
   let fc = rubik.faceColors;

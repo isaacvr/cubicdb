@@ -29,10 +29,7 @@ export const CubeModeMap = [
   [ 'Corner Orientation', CubeMode.CO ],
 ];
 
-// export declare type ColorName = 'green' | 'red' | 'blue' | 'orange' | 'yellow' | 'white' | 'gray' | 'black';
-export declare type ColorName = string;
-
-const COLORS: { [key: string]: string } = {
+const COLORS = {
   "green": "rgb(0, 157, 84)",
   "red": "rgb(220,66,47)",
   "blue": "rgb(61, 129, 246)",
@@ -63,17 +60,19 @@ const COLORS: { [key: string]: string } = {
   "plgreen": "rgb(74, 217, 49)",
   "plyellow": "rgb(255, 255, 183)",
   "plblue": "rgb(83, 177, 243)",
-};
+} as const;
+
+export declare type ColorName = keyof (typeof COLORS);
 
 export function getColorByName(colorName: ColorName) {
-  return COLORS[ colorName ] || "rgb(150, 150, 150)";
+  return COLORS[ colorName ] || (colorName as string);
 }
 
 export function getNameByColor(color: string): ColorName {
   let et = Object.entries(COLORS);
   for (let i = 0, maxi = et.length; i < maxi; i += 1) {
     if ( et[i][1] === color ) {
-      return et[i][0];
+      return et[i][0] as ColorName;
     }
   }
   return "gray";
@@ -110,7 +109,7 @@ export const STANDARD_PALETTE = {
   lblue:     getColorByName('lblue'),
   lyellow:   getColorByName('lyellow'),
   lgreen:    getColorByName('lgreen'),
-};
+} as const;
 
 export const PRINTABLE_PALETTE = {
   y: getColorByName('pyellow'),
@@ -136,7 +135,7 @@ export const PRINTABLE_PALETTE = {
   lblue:   getColorByName('plblue'),
   lyellow: getColorByName('plyellow'),
   lgreen:  getColorByName('plgreen'),
-};
+} as const;
 
 export const PX_IMAGE = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQIW2NgAAIAAAUAAR4f7BQAAAAASUVORK5CYII=";
 

@@ -2,7 +2,7 @@
   import { Link, navigate, useLocation } from "svelte-routing";
   import { derived, type Readable } from "svelte/store";
   import { Puzzle } from "@classes/puzzle/puzzle";
-  import { generateCubeBundle } from "@helpers/cube-draw";
+  import { generateCubeBundle, pGenerateCubeBundle } from "@helpers/cube-draw";
   import { nameToPuzzle, type Algorithm, type Card, type Language } from "@interfaces";
   import { DataService } from "@stores/data.service";
   import Tooltip from "./material/Tooltip.svelte";
@@ -110,28 +110,34 @@
 
     let arr: Puzzle[] = type < 2 ? cards.map(e => e.puzzle as Puzzle ) : cases.map(e => e._puzzle as Puzzle);
 
-    generateCubeBundle(arr, 500, true, true, false, true).then(gen => {
-      let subsc = gen.subscribe((c) => {
-        if ( c === null ) {
-          cards = cards;
-          cases = cases;
+    pGenerateCubeBundle(arr, 500, true, true, false, true).then(res => {
+      cards = cards;
+      cases = cases;
+    })
+    .catch(err => console.log("ERROR: ", err));
 
-          cards.forEach(c => {
-            if ( c.puzzle ) {
-              dataService.cacheSaveImage(sha1(c.puzzle.options), c.puzzle.img);
-            }
-          });
+    // generateCubeBundle(arr, 500, true, true, false, true).then(gen => {
+    //   let subsc = gen.subscribe((c) => {
+    //     if ( c === null ) {
+    //       cards = cards;
+    //       cases = cases;
 
-          cases.forEach(c => {
-            if ( c._puzzle ) {
-              dataService.cacheSaveImage(sha1(c._puzzle.options), c._puzzle.img);
-            }
-          });
+    //       cards.forEach(c => {
+    //         if ( c.puzzle ) {
+    //           dataService.cacheSaveImage(sha1(c.puzzle.options), c.puzzle.img);
+    //         }
+    //       });
 
-          subsc();
-        }
-      });
-    });
+    //       cases.forEach(c => {
+    //         if ( c._puzzle ) {
+    //           dataService.cacheSaveImage(sha1(c._puzzle.options), c._puzzle.img);
+    //         }
+    //       });
+
+    //       subsc();
+    //     }
+    //   });
+    // });
   }
 
   function toggleListView() {
@@ -143,8 +149,6 @@
     if ( e.code === 'Escape' && allSolutions ) {
       navigate( $location.pathname.split('?')[0] );
     }
-
-    // console.log("KeyUp: ", e);
 
     if ( e.code === 'KeyL' && e.ctrlKey && !allSolutions && (type === 2 || type >= 4) ) {
       toggleListView();

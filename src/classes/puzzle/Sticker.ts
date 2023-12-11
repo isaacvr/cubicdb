@@ -9,18 +9,19 @@ export class Sticker {
   vecs: Vector3D[];
   boundingBox: Vector3D[];
   _cached_mass_center: Vector3D;
+  nonInteractive: boolean;
 
-  constructor(pts?: Vector3D[], color?: string, vecs ?: Vector3D[]) {
+  constructor(pts?: Vector3D[], color?: string, vecs ?: Vector3D[], nonInteractive = false) {
     this.points = (pts || []).map(e => e.clone());
     this.oColor = color || 'w';
     this.color = this.oColor;
     this.boundingBox = [];
     this._cached_mass_center = CENTER;
     this.updateMassCenter();
-    // this.computeBoundingBox();
     this._generator = this;
     this._generated = this;
     this.vecs = (vecs || []).map(v => v.clone());
+    this.nonInteractive = nonInteractive;
   }
 
   computeBoundingBox(): Vector3D[] {
@@ -142,6 +143,7 @@ export class Sticker {
     s.oColor = this.oColor;
     s._cached_mass_center = this._cached_mass_center.clone();
     s.vecs = this.vecs.map(e => e.clone());
+    s.nonInteractive = this.nonInteractive;
     return s;
   }
 

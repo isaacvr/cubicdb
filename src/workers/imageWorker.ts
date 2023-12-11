@@ -8,6 +8,8 @@ import { planView } from "./imageGenerators/plainView";
 import { projectedView } from "./imageGenerators/projectedView";
 import { clockImage } from "./imageGenerators/clockImage";
 
+// console.log("imgWorker");
+
 interface FileReaderSync {
   readAsArrayBuffer(blob: Blob): ArrayBuffer;
   /** @deprecated */

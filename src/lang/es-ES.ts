@@ -23,6 +23,7 @@ export const Spanish: Language = {
     steps: 'Pasos',
     step: 'Paso',
     scramble: 'Mezcla',
+    search: 'Buscar',
     toScramble: 'Mezclar cubo',
   },
   NAVBAR: {
@@ -307,6 +308,13 @@ export const Spanish: Language = {
     parity: 'Hay paridad (Dos esquinas o dos aristsa intercambiadas).',
     solutionFound: 'Solución encontrada',
     solutionInstruction: 'Con el centro verde al frente y el blanco arriba:',
+
+    // Mosaic
+    widthInCubes: "Ancho (en cubos)",
+    heightInCubes: "Alto (en cubos)",
+    cubeOrder: "Orden",
+    generate: "Generar",
+    selectImage: "Seleccionar imagen",
   },
   MENU: [
     [

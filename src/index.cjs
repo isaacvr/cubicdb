@@ -356,13 +356,13 @@ ipcMain.handle('close', () => {
   return true;
 });
 
-ipcMain.handle('generate-pdf', async (event, arg) => {
-  return await new Promise((res, rej) => {
+async function createPDF(width, height, html) {
+  return new Promise((res, rej) => {
     let pdfWin = new BrowserWindow({
-      width: arg.width,
-      height: arg.height,
+      width: width,
+      height: height,
       webPreferences: { offscreen: true },
-      show: false,
+      show: false
     });
   
     const tmpDir = join( tmpdir(), '/CubeDB/');
@@ -370,29 +370,19 @@ ipcMain.handle('generate-pdf', async (event, arg) => {
     if ( !existsSync( tmpDir ) ) {
       mkdirSync( tmpDir, { recursive: true } );
     }
-  
-    let date = (new Date).toLocaleDateString().replace(/\//g, '-');
-    let tempFile = join(tmpDir, 'Contest-' + (Math.random().toString().split('.')[1]) + '.html');
+
+    let tempFile = join(tmpDir, 'pdf-' + (Math.random().toString().split('.')[1]) + '.html');
     
     try {
-      writeFileSync(tempFile, arg.html);
+      writeFileSync(tempFile, html);
   
       pdfWin.webContents.once('did-finish-load', () => {
         pdfWin.webContents.printToPDF({
           printBackground: true,
-        }).then((buffer) => {
-          res({
-            name: `${arg.mode} - Round ${arg.round}_${date}.pdf`,
-            buffer,
-            mode: arg.mode,
-            round: arg.round,
-          });
-  
-          try {
-            unlinkSync(tempFile);
-          } catch(err) {}
-  
-        }).catch(rej);
+          margins: {
+            marginType: 'none'
+          }
+        }).then(res).catch(rej);
       });
     
       pdfWin.loadFile(tempFile);
@@ -400,6 +390,30 @@ ipcMain.handle('generate-pdf', async (event, arg) => {
       rej(err);
     }
   });
+}
+
+ipcMain.handle('generate-pdf', async (_, arg) => {
+  return {
+    name: arg.name,
+    buffer: await createPDF(arg.width, arg.height, arg.html),
+  };
+});
+
+ipcMain.handle('generate-contest-pdf', async (_, arg) => {
+  let buffer = await createPDF(arg.width, arg.height, arg.html);
+  
+  try {
+    unlinkSync(tempFile);
+  } catch(err) {}
+
+  let date = (new Date).toLocaleDateString().replace(/\//g, '-');
+
+  return {
+    name: `${arg.mode} - Round ${arg.round}_${date}.pdf`,
+    buffer,
+    mode: arg.mode,
+    round: arg.round,
+  };
 });
 
 ipcMain.handle('zip-pdf', async (event, data) => {
@@ -642,7 +656,7 @@ function createWindow() {
       awaitWriteFinish: true
     });
 
-    win.loadURL( process.env.ELECTRON_APP_URL || "http://localhost:5000/" );
+    win.loadURL( process.env.ELECTRON_APP_URL || "http://localhost:5432/" );
 
   } else {
     let server = http.createServer(eApp).listen();

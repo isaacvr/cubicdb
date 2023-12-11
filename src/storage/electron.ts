@@ -1,4 +1,4 @@
-import type { Algorithm, AlgorithmOptions, CubeEvent, IPC, PDFOptions, Session, Sheet, Solve, Tutorial, UpdateCommand } from "@interfaces";
+import type { Algorithm, AlgorithmOptions, CubeEvent, IPC, ContestPDFOptions, Session, Sheet, Solve, Tutorial, UpdateCommand, PDFOptions } from "@interfaces";
 
 export class ElectronAdaptor implements IPC {
   private ipc: IPC;
@@ -16,6 +16,10 @@ export class ElectronAdaptor implements IPC {
 
   addDownloadDoneListener(cb: any) {
     this.ipc.addDownloadDoneListener(cb);
+  }
+
+  addBluetoothListener(cb: any) {
+    this.ipc.addBluetoothListener(cb);
   }
 
   updateAlgorithm(alg: Algorithm) {
@@ -120,6 +124,10 @@ export class ElectronAdaptor implements IPC {
 
   generatePDF(args: PDFOptions) {
     return this.ipc.generatePDF(args);
+  }
+
+  generateContestPDF(args: ContestPDFOptions) {
+    return this.ipc.generateContestPDF(args);
   }
 
   zipPDF(s: { name: string, files: Sheet[]}) {

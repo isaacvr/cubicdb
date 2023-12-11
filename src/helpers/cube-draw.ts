@@ -3,6 +3,10 @@ import { DataService } from "@stores/data.service";
 import { writable, type Writable } from 'svelte/store';
 import { sha1 } from 'object-hash';
 
+// import ImageWorker from '@workers/imageWorker?worker';
+// const imageWorker = new ImageWorker();
+// const imageWorker = new Worker( new URL('/assets/imageWorker.js', import.meta.url) );
+
 export async function generateCubeBundle(
   cubes: Puzzle[], width ?: number, all ?: boolean, inCube?: boolean, printable?: boolean, cache?: boolean
 ): Promise< Writable< string | string[] | null > > {
@@ -12,6 +16,7 @@ export async function generateCubeBundle(
 
   const SyncWorker = await import('@workers/imageWorker?worker');
   const imageWorker = new SyncWorker.default();
+  // const imageWorker = new ImageWorker();
   
   let n = 0, total = cubes.length, inCache = 0;
 
@@ -89,8 +94,9 @@ export async function pGenerateCubeBundle(
   
     const SyncWorker = await import('@workers/imageWorker?worker');
     const imageWorker = new SyncWorker.default();
+    // const imageWorker = new ImageWorker();
     
-    let n = 0, total = cubes.length, inCache = 0, res = [];
+    let n = 0, total = cubes.length, inCache = 0;
     let all = true;
   
     let images = await dataService.cacheGetImageBundle( cubes.map((c) => sha1(c.options)) );
@@ -105,12 +111,16 @@ export async function pGenerateCubeBundle(
     }
     
     if ( cache && total === inCache ) {
+      // console.log("Resolve all from cache", total);
       if ( inCube ) return resolve([]);
       return resolve(cubes.map(c => c.img));
     }
 
+    // console.log("image worker: ", imageWorker);
+
     imageWorker.onmessage = (e) => {
       if ( !e.data ) {
+        // console.log("Resolve []");
         resolve([]);
         imageWorker.terminate();
         return;
@@ -122,6 +132,8 @@ export async function pGenerateCubeBundle(
         }
       }
       
+      // console.log("Resolve data");
+
       resolve( e.data );
       imageWorker.terminate();
     };

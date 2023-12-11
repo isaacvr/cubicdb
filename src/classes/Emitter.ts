@@ -41,7 +41,7 @@ export class Emitter {
     }
   }
 
-  emit(eventName: string, ...args: any[]) {
+  emit<T extends string>(eventName: T, ...args: any[]) {
     if ( !this.callbackSet.has(eventName) ) return;
 
     this.callBackObject[eventName].forEach(cb => cb.apply(null, args));
