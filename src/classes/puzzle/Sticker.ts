@@ -10,8 +10,9 @@ export class Sticker {
   boundingBox: Vector3D[];
   _cached_mass_center: Vector3D;
   nonInteractive: boolean;
+  name: string;
 
-  constructor(pts?: Vector3D[], color?: string, vecs ?: Vector3D[], nonInteractive = false) {
+  constructor(pts?: Vector3D[], color?: string, vecs ?: Vector3D[], nonInteractive = false, name = "") {
     this.points = (pts || []).map(e => e.clone());
     this.oColor = color || 'w';
     this.color = this.oColor;
@@ -22,6 +23,7 @@ export class Sticker {
     this._generated = this;
     this.vecs = (vecs || []).map(v => v.clone());
     this.nonInteractive = nonInteractive;
+    this.name = name;
   }
 
   computeBoundingBox(): Vector3D[] {
@@ -144,6 +146,7 @@ export class Sticker {
     s._cached_mass_center = this._cached_mass_center.clone();
     s.vecs = this.vecs.map(e => e.clone());
     s.nonInteractive = this.nonInteractive;
+    s.name = this.name;
     return s;
   }
 
@@ -258,4 +261,32 @@ export class Sticker {
       points: inters,
     }
   }
+
+  // scale(c: Vector3D, factor: number, self: boolean = false) {
+  //   let res = self ? this : this.clone();
+  //   res.sub(c, true).mul(factor, true).add(c, true);
+  //   return res;
+  // }
+
+  // scaleX(c: Vector3D, factor: number, self: boolean = false) {
+  //   let res = self ? this : this.clone();
+  //   res.sub(c, true);
+    
+  //   res.points.forEach(p => { p.x *= factor; });
+  //   res._cached_mass_center.x *= factor;
+  //   res.add(c, true);
+
+  //   return res;
+  // }
+
+  // scaleY(c: Vector3D, factor: number, self: boolean = false) {
+  //   let res = self ? this : this.clone();
+  //   res.sub(c, true);
+    
+  //   res.points.forEach(p => { p.y *= factor; });
+  //   res._cached_mass_center.y *= factor;
+  //   res.add(c, true);
+    
+  //   return res;
+  // }
 }

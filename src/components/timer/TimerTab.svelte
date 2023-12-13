@@ -1,7 +1,7 @@
 <script lang="ts">
   /// Types
   import { Penalty, TimerState, TIMER_INPUT, type InputContext, type Language,
-    type Solve, type TimerContext, type TimerInputHandler } from '@interfaces';
+    type Solve, type TimerContext, type TimerInputHandler, DIALOG_MODES } from '@interfaces';
 
   /// Icons
   import Close from '@icons/Close.svelte';
@@ -66,6 +66,10 @@
     setConfigFromSolve, editSolve, handleUpdateSession, handleUpdateSolve, handleRemoveSolves,
     editSessions
   } = context;
+
+  let timerInput = derived(session, ($s) => {
+    return DIALOG_MODES.indexOf($s.settings.mode || $mode[1] || '') > -1 ? TIMER_INPUT : TIMER_INPUT.filter(inp => inp != 'GAN Cube');
+  });
 
   const dispatch = createEventDispatcher();
   const notification = NotificationService.getInstance();
@@ -947,7 +951,7 @@
         {#if type === 'settings'}
           {#if !(timerOnly || $session.settings.sessionType === 'multi-step') }
             <section class="flex gap-4 items-center mb-4">
-              { $localLang.TIMER.inputMethod }: <Select bind:value={ modalData.settings.input } items={ TIMER_INPUT } transform={ (e) => e }/>
+              { $localLang.TIMER.inputMethod }: <Select bind:value={ modalData.settings.input } items={ $timerInput } transform={ (e) => e }/>
             </section>
           {/if}
 

@@ -28,7 +28,7 @@
     let pos = findValuePosition();
 
     if ( pos > -1 ) {
-      optionList.children[pos * 2].scrollIntoView({ inline: 'nearest', block: 'nearest', behavior: 'smooth' });
+      optionList.children[pos * 2].scrollIntoView({ inline: 'nearest', block: 'nearest' });
       tick().then(() => {
         (optionList.firstElementChild as HTMLButtonElement)?.focus();
       });

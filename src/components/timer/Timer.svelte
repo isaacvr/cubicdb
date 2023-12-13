@@ -35,7 +35,7 @@
   import DeleteIcon from '@icons/Delete.svelte';
   
   /// Types
-  import { TimerState, type Solve, type Session,  type Statistics, type TimerContext, type PuzzleOptions, type Language, type BluetoothDeviceData, SESSION_TYPE, type SessionType } from '@interfaces';
+  import { TimerState, type Solve, type Session,  type Statistics, type TimerContext, type PuzzleOptions, type Language, type BluetoothDeviceData, SESSION_TYPE, type SessionType, DIALOG_MODES } from '@interfaces';
   import { Puzzle } from '@classes/puzzle/puzzle';
   import { PX_IMAGE } from '@constants';
   import { ScrambleParser } from '@classes/scramble-parser';
@@ -348,7 +348,7 @@
     let md = useMode || _mode || $mode[1];
     let len = useLen || $mode[2];
     let s = useScramble || scr;
-    let pb = useProb || _prob || $prob;
+    let pb = useProb != -1 ? useProb : (_prob != -1 && typeof _prob === 'number') ? _prob : $prob;
     
     if ( !genScramble ) {
       $scramble = scr || useScramble;
@@ -362,9 +362,7 @@
       $scramble = ScrambleParser.parseNNNString($scramble);
     }
 
-    const dialogModes = ["333", "333fm" ,"333oh" ,"333o" ,"easyc" ,"333ft", "edges", "corners", "2gen", "2genl"];
-
-    if ( dialogModes.indexOf(md) > -1 ) {
+    if ( DIALOG_MODES.indexOf(md) > -1 ) {
       $cross = solve_cross($scramble).map(e => e.map(e1 => e1.trim()).join(' '))[0];
       $xcross = solve_xcross($scramble, 0).map(e => e.trim()).join(' ');
       // $hintDialog = true;

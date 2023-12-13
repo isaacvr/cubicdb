@@ -9,6 +9,9 @@ import { square1SolverGetRandomScramble } from '@cstimer/scramble/scramble_sq1';
 import { ScrambleParser } from '@classes/scramble-parser';
 
 export function SQUARE1(): PuzzleInterface {
+  const edgePoint = (p: Vector3D) => [p.x, p.y, p.z].reduce((acc, n) =>
+    [-1, 0, 1].some(d => Math.abs(d - n) < 1e-6) ? acc + 1 : acc, 0);
+
   const sq1: PuzzleInterface = {
     pieces: [],
     palette: STANDARD_PALETTE,
@@ -20,18 +23,34 @@ export function SQUARE1(): PuzzleInterface {
     move: () => true,
     roundParams: [
       (s: Sticker, i: number) => {
-        if ( s.getOrientation().sub(UP).abs() > 1e-6 && s.getOrientation().sub(DOWN).abs() > 1e-6 ) return 0.11;
+        let o = s.getOrientation();
+        let acc = s.points.reduce((acc, v) => acc + (edgePoint(v) >= 2 ? 1 : 0), 0);
 
-        if ( s.points.length === 3 ) return i === 1 ? [0.25] : 0.11;
-        return i === 2 ? [0.2] : 0.11;
+        if ( o.cross(UP).abs() < 1e-6 ) {
+          if ( s.points.length === 3 ) return i === 1 ? [0.25] : 0.11;
+          return i === 2 ? [ 0.2 ] : 0.11;
+        }
+
+        if ( s.name === 'side-equator' ) {
+          return [0.05, true];
+        }
+
+        if ( s.name === 'side-corner' ) {
+          return (i === 2) ? [0.2, true] : [0.05, true];
+        }
+
+        if ( s.name === 'side-edge' ) {
+          return (i === 1 || i === 2) ? [0.2, true] : [0.05, true];
+        }
+
+        return i === 1 || i === 2 ? [0.2, true] : [0.05, true];
       }, 0.95],
   };
 
   sq1.getAllStickers = getAllStickers.bind(sq1);
 
-  const L = 1;
-  const L23 = 2 * L / 3;
-  const L1 = L * Math.sqrt(2);
+  const L23 = 2 / 3;
+  const L1 = Math.sqrt(2);
   const PI = Math.PI;
   const PI_2 = PI / 2;
   const PI_6 = PI / 6;
@@ -42,37 +61,35 @@ export function SQUARE1(): PuzzleInterface {
 
   let pieceBig = new Piece([
     new Sticker([
-      LEFT.add(BACK).add(UP).mul(L),
-      LEFT.add(BACK).add(UP).mul(L).add( FRONT.mul(BIG) ),
-      UP.mul(L),
-      LEFT.add(BACK).add(UP).mul(L).add( RIGHT.mul(BIG) ),
+      LEFT.add(BACK).add(UP),
+      LEFT.add(BACK).add(UP).add( FRONT.mul(BIG) ),
+      UP,
+      LEFT.add(BACK).add(UP).add( RIGHT.mul(BIG) ),
     ]),
     new Sticker([
-      LEFT.add(BACK).add(UP).mul(L),
-      LEFT.add(BACK).add(UP).mul(L).add( DOWN.mul(L23) ),
-      LEFT.add(BACK).add(UP).mul(L).add( DOWN.mul(L23) ).add( FRONT.mul(BIG) ),
-      LEFT.add(BACK).add(UP).mul(L).add( FRONT.mul(BIG) ),
-    ]),
+      LEFT.add(BACK).add(UP),
+      LEFT.add(BACK).add(UP).add( DOWN.mul(L23) ),
+      LEFT.add(BACK).add(UP).add( DOWN.mul(L23) ).add( FRONT.mul(BIG) ),
+      LEFT.add(BACK).add(UP).add( FRONT.mul(BIG) ),
+    ], undefined, [], false, 'side-corner'),
   ]);
 
   pieceBig.stickers.push( pieceBig.stickers[0].add( DOWN.mul(L23) ).reverse() );
   pieceBig.stickers.push(
-    pieceBig.stickers[1]
-    .rotate(LEFT.add(BACK).add(UP).mul(L), DOWN, PI_2)
-    .add( RIGHT.mul(BIG) )
-    );
+    pieceBig.stickers[1].reflect1(CENTER, Vector3D.cross(CENTER, LEFT.add(BACK), LEFT.add(BACK).add(UP)), true)
+  );
     
   let pieceSmall = new Piece([
     new Sticker([
-      RIGHT.add(UP).add(BACK).mul(L).add( LEFT.mul(BIG) ),
-      RIGHT.add(UP).add(BACK).mul(L).add( LEFT.mul(BIG) ).add( DOWN.mul(L23) ),
-      LEFT.add(UP).add(BACK).mul(L).add( RIGHT.mul(BIG) ).add( DOWN.mul(L23) ),
-      LEFT.add(UP).add(BACK).mul(L).add( RIGHT.mul(BIG) ),
-    ]),
+      RIGHT.add(UP).add(BACK).add( LEFT.mul(BIG) ),
+      RIGHT.add(UP).add(BACK).add( LEFT.mul(BIG) ).add( DOWN.mul(L23) ),
+      LEFT.add(UP).add(BACK).add( RIGHT.mul(BIG) ).add( DOWN.mul(L23) ),
+      LEFT.add(UP).add(BACK).add( RIGHT.mul(BIG) ),
+    ], undefined, [], false, 'side-edge'),
     new Sticker([
-      LEFT.add(UP).add(BACK).mul(L).add( RIGHT.mul(BIG) ),
-      UP.mul(L),
-      RIGHT.add(UP).add(BACK).mul(L).add( LEFT.mul(BIG) ),
+      LEFT.add(UP).add(BACK).add( RIGHT.mul(BIG) ),
+      UP,
+      RIGHT.add(UP).add(BACK).add( LEFT.mul(BIG) ),
     ]),
   ]);
 
@@ -81,40 +98,40 @@ export function SQUARE1(): PuzzleInterface {
   
   let mid = new Piece([
     new Sticker([
-      LEFT.add(BACK).add(UP).mul(L).add( DOWN.mul(L23) ),
-      LEFT.add(BACK).add(DOWN).mul(L).add( UP.mul(L23) ),
-      LEFT.add(FRONT).add(DOWN).mul(L).add( UP.mul(L23) ),
-      LEFT.add(FRONT).add(UP).mul(L).add( DOWN.mul(L23) ),
+      LEFT.add(BACK).add(UP).add( DOWN.mul(L23) ),
+      LEFT.add(BACK).add(DOWN).add( UP.mul(L23) ),
+      LEFT.add(FRONT).add(DOWN).add( UP.mul(L23) ),
+      LEFT.add(FRONT).add(UP).add( DOWN.mul(L23) ),
+    ], undefined, [], false, 'side-equator'),
+    new Sticker([
+      LEFT.add(FRONT).add(DOWN).add( UP.mul(L23) ),
+      LEFT.add(FRONT).add(DOWN).add( UP.mul(L23) ).add( RIGHT.mul(BIG) ),
+      LEFT.add(FRONT).add(UP).add( DOWN.mul(L23) ).add( RIGHT.mul(BIG) ),
+      LEFT.add(FRONT).add(UP).add( DOWN.mul(L23) ),
     ]),
     new Sticker([
-      LEFT.add(FRONT).add(UP).mul(L).add( DOWN.mul(L23) ),
-      LEFT.add(FRONT).add(DOWN).mul(L).add( UP.mul(L23) ),
-      LEFT.add(FRONT).add(DOWN).mul(L).add( UP.mul(L23) ).add( RIGHT.mul(BIG) ),
-      LEFT.add(FRONT).add(UP).mul(L).add( DOWN.mul(L23) ).add( RIGHT.mul(BIG) ),
+      LEFT.add(FRONT).add(UP).add( DOWN.mul(L23) ).add( RIGHT.mul(BIG) ),
+      LEFT.add(FRONT).add(DOWN).add( UP.mul(L23) ).add( RIGHT.mul(BIG) ),
+      RIGHT.add(BACK).add(DOWN).add( UP.mul(L23) ).add( LEFT.mul(BIG) ),
+      RIGHT.add(BACK).add(UP).add( DOWN.mul(L23) ).add( LEFT.mul(BIG) ),
     ]),
     new Sticker([
-      LEFT.add(FRONT).add(UP).mul(L).add( DOWN.mul(L23) ).add( RIGHT.mul(BIG) ),
-      LEFT.add(FRONT).add(DOWN).mul(L).add( UP.mul(L23) ).add( RIGHT.mul(BIG) ),
-      RIGHT.add(BACK).add(DOWN).mul(L).add( UP.mul(L23) ).add( LEFT.mul(BIG) ),
-      RIGHT.add(BACK).add(UP).mul(L).add( DOWN.mul(L23) ).add( LEFT.mul(BIG) ),
+      LEFT.add(BACK).add(UP).add( DOWN.mul(L23) ),
+      RIGHT.add(BACK).add(UP).add( DOWN.mul(L23) ).add( LEFT.mul(BIG) ),
+      RIGHT.add(BACK).add(DOWN).add( UP.mul(L23) ).add( LEFT.mul(BIG) ),
+      LEFT.add(BACK).add(DOWN).add( UP.mul(L23) ),
     ]),
     new Sticker([
-      RIGHT.add(BACK).add(UP).mul(L).add( DOWN.mul(L23) ).add( LEFT.mul(BIG) ),
-      RIGHT.add(BACK).add(DOWN).mul(L).add( UP.mul(L23) ).add( LEFT.mul(BIG) ),
-      LEFT.add(BACK).add(DOWN).mul(L).add( UP.mul(L23) ),
-      LEFT.add(BACK).add(UP).mul(L).add( DOWN.mul(L23) ),
+      LEFT.add(BACK).add(UP).add( DOWN.mul(L23) ),
+      LEFT.add(FRONT).add(UP).add( DOWN.mul(L23) ),
+      LEFT.add(FRONT).add(UP).add( DOWN.mul(L23) ).add( RIGHT.mul(BIG) ),
+      RIGHT.add(BACK).add(UP).add( DOWN.mul(L23) ).add( LEFT.mul(BIG) ),
     ]),
     new Sticker([
-      LEFT.add(BACK).add(UP).mul(L).add( DOWN.mul(L23) ),
-      LEFT.add(FRONT).add(UP).mul(L).add( DOWN.mul(L23) ),
-      LEFT.add(FRONT).add(UP).mul(L).add( DOWN.mul(L23) ).add( RIGHT.mul(BIG) ),
-      RIGHT.add(BACK).add(UP).mul(L).add( DOWN.mul(L23) ).add( LEFT.mul(BIG) ),
-    ]),
-    new Sticker([
-      LEFT.add(BACK).add(DOWN).mul(L).add( UP.mul(L23) ),
-      LEFT.add(FRONT).add(DOWN).mul(L).add( UP.mul(L23) ),
-      LEFT.add(FRONT).add(DOWN).mul(L).add( UP.mul(L23) ).add( RIGHT.mul(BIG) ),
-      RIGHT.add(BACK).add(DOWN).mul(L).add( UP.mul(L23) ).add( LEFT.mul(BIG) ),
+      LEFT.add(BACK).add(DOWN).add( UP.mul(L23) ),
+      LEFT.add(FRONT).add(DOWN).add( UP.mul(L23) ),
+      LEFT.add(FRONT).add(DOWN).add( UP.mul(L23) ).add( RIGHT.mul(BIG) ),
+      RIGHT.add(BACK).add(DOWN).add( UP.mul(L23) ).add( LEFT.mul(BIG) ),
     ]).reverse(),
   ]);
 

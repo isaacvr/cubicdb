@@ -6,6 +6,7 @@
   export let onClose: Function = () => {};
   export let closeOnClickOutside = true;
   export let closeOnEscape = true;
+  export let transitionName = 'none';
   
   let _cl = '';
   export {_cl as class};
@@ -77,7 +78,8 @@
 
 <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 <dialog data-type="modal" bind:this={ modal } on:mousedown={ handleClick } on:keyup={ keyUpHandler } on:keydown={ keyDownHandler }
-  class="bg-gray-800 rounded-md show p-4 pt-3 overflow-visible { _cl || '' }">
+  class="bg-gray-800 rounded-md show p-4 pt-3 overflow-visible { _cl || '' }"
+  style="view-transition-name: { transitionName };">
   {#if show}
     <slot />
   {/if}
@@ -99,6 +101,8 @@
   dialog::backdrop {
     z-index: -1;
     animation: fadeIn 200ms linear 0ms forwards;
+    background-color: #0003;
+    backdrop-filter: blur(.4rem);
   }
 
   .show {

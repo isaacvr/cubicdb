@@ -180,6 +180,8 @@ export type SessionType = 'mixed' | 'single' | 'multi-step';
 export const TIMER_INPUT: TimerInput[] = [ 'Keyboard', 'Manual', 'StackMat', 'GAN Cube'/*, 'QY-Timer'*/ ];
 export const SESSION_TYPE: SessionType[] = [ 'mixed', 'single', 'multi-step' ];
 
+export const DIALOG_MODES = ["333", "333fm" ,"333oh" ,"333o" ,"easyc" ,"333ft", "edges", "corners", "2gen", "2genl"];
+
 export interface SessionSettings {
   hasInspection: boolean;
   inspection: number;

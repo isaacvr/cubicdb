@@ -239,7 +239,7 @@ const GANMachine = createMachine<GANContext>({
     }
   },
   on: {
-    DISCONNECTED: 'DISCONNECTED',
+    DISCONNECTED: 'DISCONNECTED'
   }
 }, {
   guards: {
@@ -423,7 +423,12 @@ export class GANInput implements TimerInputHandler {
   }
 
   keyUpHandler() {}
-  keyDownHandler() {}
+  
+  keyDownHandler(ev: KeyboardEvent) {
+    if ( !this.connected ) return;
+    this.interpreter.send(ev);
+  }
+
   stopTimer() {}
 
   private handleScramble(s: string) {

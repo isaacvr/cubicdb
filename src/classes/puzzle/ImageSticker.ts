@@ -11,7 +11,7 @@ export class ImageSticker extends Sticker {
     this.scale = scale;
   }
 
-  clone() {
+  clone(excludePoints = false) {
     return new ImageSticker(this.url, this.points, this.color, this.vecs, this.nonInteractive, this.scale);
   }
 }

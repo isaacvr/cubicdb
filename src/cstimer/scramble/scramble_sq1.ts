@@ -718,6 +718,7 @@ export function square1SolverGetRandomScramble() {
 }
 
 function square1CubeShapeParityScramble(type: any, length: any, cases: any) {
+  console.log("SQ1 CSP: ", type, length, cases, arguments);
   Shape_$clinit();
   Square_$clinit();
   CSPInit();

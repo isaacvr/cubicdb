@@ -1,9 +1,9 @@
-import { TextureLoader, type Object3D, MeshBasicMaterial, Mesh, Face3, Vector3, PlaneGeometry } from "three";
+import { TextureLoader, type Object3D, MeshBasicMaterial, Mesh, Vector3, PlaneGeometry } from "three";
 import type { ImageSticker } from "@classes/puzzle/ImageSticker";
 
 export function loadImageToPiece(sticker: ImageSticker, piece: Object3D) {
   const texture = new TextureLoader().load( sticker.url );
-  
+
   let material = new MeshBasicMaterial( { map: texture, transparent: true } );
   let geometry = new PlaneGeometry();
   let up = sticker.getOrientation();

@@ -36,6 +36,7 @@
   import Select from "@components/material/Select.svelte";
   import { copyToClipboard, randomUUID } from "@helpers/strings";
   import { calcPercents } from "@helpers/math";
+    import { startViewTransition } from "@helpers/DOM";
 
   let localLang: Readable<Language> = derived(globalLang, ($lang) => getLanguage( $lang ));
 
@@ -106,11 +107,22 @@
     pSolves = pSolves;
   }
 
-  function handleClick(s: Solve) {
+  function handleClick(s: Solve, ev: MouseEvent) {
     if ( (performance.now() - LAST_CLICK < 200) || $selected ) {
       selectSolve(s);
     } else {
-      setTimeout(() => performance.now() - LAST_CLICK >= 200 && editSolve(s), 200);
+      setTimeout(() => {
+        if ( performance.now() - LAST_CLICK >= 200 ) {
+          let target = ev.target as HTMLButtonElement;
+          
+          target.classList.add('modal-transition');
+
+          startViewTransition(async () => {
+            target.classList.remove('modal-transition');
+            editSolve(s);
+          });
+        }
+      }, 200);
     }
     
     LAST_CLICK = performance.now();
@@ -315,7 +327,7 @@
 
           hover:shadow-lg hover:bg-opacity-20
         "
-        on:click={ () => handleClick(solve) }
+        on:click={ (ev) => handleClick(solve, ev) }
         on:contextmenu={ (e) => handleContextMenu(e, solve) }
         class:selected={ solve.selected }>
           <div class="font-small absolute top-0 left-2">{ moment(solve.date).format('DD/MM') }</div>
@@ -378,7 +390,7 @@
     </Button>
   </div>
 
-  <Modal bind:this={ modal } bind:show={ show } onClose={ closeHandler } class="w-[min(100%,36rem)]">
+  <Modal bind:this={ modal } bind:show={ show } onClose={ closeHandler } class="w-[min(100%,36rem)]" transitionName="modal">
     <div class="flex justify-between items-center text-gray-400 m-2">
       <h2 class="m-1 w-max">
         {#if sSolve.penalty === Penalty.NONE || sSolve.penalty === Penalty.P2}
@@ -594,5 +606,9 @@
   transform: translate(-50%, -50%);
   color: black;
   font-size: .8rem;
+}
+
+.modal-transition {
+  view-transition-name: modal;
 }
 </style>

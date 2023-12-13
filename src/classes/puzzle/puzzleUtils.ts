@@ -107,16 +107,28 @@ export function roundStickerCorners(s: Sticker, rd?: number | Function, scale?: 
     let isCircle = Array.isArray(r) && r.length === 1;
     let isEllipse = Array.isArray(r) && r.length > 1;
     let seg_perc = (isCircle || isEllipse) ? r[0] : r;
-    let seg_perc1 = isEllipse ? r[1] : isCircle ? r[0] : r;
+    let seg_perc1 = isEllipse ? (typeof r[1] != 'boolean' ? r[1] : r[0]) : isCircle ? r[0] : r;
     let v1 = pts[ (i - 1 + maxi) % maxi ].sub( pts[i] ).mul( seg_perc );
     let v2 = pts[ (i + 1) % maxi ].sub( pts[i] ).mul( seg_perc1 );
+
+    if ( isEllipse && typeof r[1] === 'boolean' ) {
+
+      if ( v1.abs() < v2.abs() ) {
+        v2 = v2.setLength( v1.abs() );
+      } else {
+        v1 = v1.setLength( v2.abs() );
+      }
+
+      isCircle = true;
+    }
+
     let P = [ pts[i].add(v1), pts[i], pts[i].add(v2) ];
     
     let u = Vector3D.cross(P[0], P[1], P[2]).unit();
 
     if ( isCircle && Math.abs(v1.abs() - v2.abs()) < 1e-6 ) {
       let center = lineIntersection3D(P[0], v1.rotate(CENTER, u, PI_2), P[2], v2.rotate(CENTER, u, PI_2));
-
+      
       if ( center ) {
         let sides = [v1.abs(), v2.abs(), v1.sub(v2).abs()];
         let ang = Math.PI - Math.acos( (sides[2] ** 2 - sides[0] ** 2 - sides[1] ** 2) / (-2 * sides[0] * sides[1]) );

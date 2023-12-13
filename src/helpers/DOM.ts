@@ -1,3 +1,5 @@
+import { tick } from "svelte";
+
 export function getStackingContext(e: HTMLElement): HTMLElement {
   while( true ) {
     if ( !e.parentElement ) {
@@ -43,4 +45,21 @@ export function getStackingContext(e: HTMLElement): HTMLElement {
 
 export function stopPropagation(e: Event) {
   e.stopPropagation();
+}
+
+export function startViewTransition(callback: (...args: any[]) => Promise<any>) {
+  if ( document.startViewTransition ) {
+    return document.startViewTransition(async() => {
+      await callback();
+      await tick();
+    });
+  }
+
+  return {
+    finished: Promise.resolve(callback())
+  }
+}
+
+async function a() {
+
 }

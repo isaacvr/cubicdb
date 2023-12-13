@@ -66,13 +66,14 @@ export function projectedView(cube: Puzzle, DIM: number) {
     [ CENTER, UP, PI_2, LEFT, FACTOR ],
     [ CENTER, UP, PI, RIGHT, FACTOR * 2 ],
   ];
-  let SQ1_ANCHORS: Vector3D[] = [];
+  let SQ1_A1: Vector3D[] = [];
 
   for (let i = 0; i < 12; i += 1) {
-    SQ1_ANCHORS.push(
-      UP.add( BACK.rotate(CENTER, UP, PI_6 * i + PI_6 / 2).mul(1.38036823524362) ),
-      UP.add( BACK.rotate(CENTER, UP, PI_6 * i + PI_6 / 2).mul(1.88561808632825) )
+    SQ1_A1.push(
+      BACK.rotate(CENTER, UP, PI_6 * i + PI_6 / 2).mul(1.38036823524362),
+      BACK.rotate(CENTER, UP, PI_6 * i + PI_6 / 2).mul(1.88561808632825),
     );
+    // SQ1_A2.push( BACK.rotate(CENTER, UP, PI_6 * i + PI_6 / 2).mul(1.88561808632825) );
   }
 
   if ( cube.type === 'pyraminx' ) {
@@ -134,15 +135,27 @@ export function projectedView(cube: Puzzle, DIM: number) {
 
         if ( pts.length > 0 ) {
           if ( !SPECIAL_SQ1.some(m => cube.mode === m) ) {
+
+            let pt = st._generator.points.find(p => {
+              return Math.abs(p.y) < 1;
+            });
+    
+            let f = st._generator.name === 'side-corner' ?
+              -Math.sign( st.getOrientation().dot(Vector3D.cross(pts[0], pts[1], pt!)) ) : 1;
+
             let st1 = st._generator.clone();
             st1.points.map(p => p.y = (p.y + pts[0].y) / 2);
             st1.updateMassCenter();
-            st1.rotate(pts[0], pts[0].sub(pts[1]), PI_2, true);
+            st1.rotate(pts[0], pts[0].sub(pts[1]), PI_2 * f, true);
 
             let points = st1.points;
-            for (let j = 1; j <= 2; j += 1) {
-              SQ1_ANCHORS.sort((a, b) => a.sub(points[j]).abs() - b.sub(points[j]).abs());
-              points[j] = SQ1_ANCHORS[0].clone();
+            let ini = f > 0 ? 1 : 2;
+
+            for (let j = ini; j <= ini + 1; j += 1) {
+              SQ1_A1.sort((a, b) => a.sub(points[j]).abs2() - b.sub(points[j]).abs2());
+              let closer = SQ1_A1[0];
+              points[j].x = closer.x;
+              points[j].z = closer.z;
             }
 
             let rounded = cube.options.rounded ? roundStickerCorners(st1, ...cube.p.roundParams) : st1;

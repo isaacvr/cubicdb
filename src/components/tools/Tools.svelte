@@ -52,8 +52,7 @@
   // Timer and Scramble Only
   let modes: { 0: string; 1: string; 2: number }[] = [];
   let filters: string[] = [];
-  // let selectedOption = "timer-only";
-  let selectedOption = "mosaic";
+  let selectedOption = "timer-only";
   let timer: Timer;
 
   // Batch
