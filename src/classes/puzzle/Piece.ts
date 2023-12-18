@@ -1,3 +1,4 @@
+import { randomUUID } from '@helpers/strings';
 import { CENTER, Vector3D } from '../vector3d';
 import type { Sticker } from './Sticker';
 
@@ -10,8 +11,10 @@ export class Piece {
   _cached_mass_center: Vector3D;
   raw: any;
   allPointsRef: number[][];
+  _id: string;
 
   constructor(stickers?: Sticker[]) {
+    this._id = randomUUID();
     this.stickers = (stickers || []).map(e => e.clone());
     this.hasCallback = false;
     this.callback = () => {};
@@ -21,6 +24,10 @@ export class Piece {
     this._cached_mass_center = CENTER.clone();
     this.updateMassCenter();
     this.computeBoundingBox();
+  }
+
+  get id() {
+    return this._id;
   }
 
   updateMassCenter(recursive?: boolean): Vector3D {
@@ -231,6 +238,10 @@ export class Piece {
     }
 
     return true;
+  }
+
+  exact(p1: Piece): boolean {
+    return this.id === p1.id;
   }
 
   computeBoundingBox(): Vector3D[] {

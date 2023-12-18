@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Piece } from "@classes/puzzle/Piece";
-  import { Vector3D } from "@classes/vector3d";
+  import { CENTER, Vector3D } from "@classes/vector3d";
   import { CubeMode } from "@constants";
   import { Puzzle } from "@classes/puzzle/puzzle";
   import type { Language, PuzzleType } from "@interfaces";
@@ -8,17 +8,25 @@
   import { puzzleReg } from "@classes/puzzle/puzzleRegister";
   import { onDestroy, onMount } from "svelte";
 
-  import SettingsIcon from '@icons/Cog.svelte';
-  import Refresh from '@icons/Refresh.svelte';
+  import SettingsIcon from "@icons/Cog.svelte";
+  import Refresh from "@icons/Refresh.svelte";
   import Tooltip from "@components/material/Tooltip.svelte";
   import Modal from "@components/Modal.svelte";
   import Select from "@components/material/Select.svelte";
   import Button from "@components/material/Button.svelte";
   import Input from "@components/material/Input.svelte";
   import {
-    Matrix4, Object3D, PerspectiveCamera, PointLight, Raycaster, Scene, Vector2, Vector3, WebGLRenderer,
+    Matrix4,
+    Object3D,
+    PerspectiveCamera,
+    PointLight,
+    Raycaster,
+    Scene,
+    Vector2,
+    Vector3,
+    WebGLRenderer,
     type Intersection,
-    FrontSide
+    FrontSide,
   } from "three";
 
   // } from "three";
@@ -42,8 +50,13 @@
   export let order = 3;
   export let animationTime = $isMobile ? 150 : 200; /// Default animation time: 200ms
   export let showBackFace = false;
+  export let sequence: string[] = [];
+  export let sequenceAlpha = 0;
+  export let useScramble = '';
 
-  let localLang: Readable<Language> = derived(globalLang, ($lang) => getLanguage( $lang ));
+  let localLang: Readable<Language> = derived(globalLang, ($lang) =>
+    getLanguage($lang),
+  );
 
   let cube: Puzzle;
   let dragging = false;
@@ -53,14 +66,15 @@
   let H = 0;
 
   /// GUI
-  let excludedPuzzles: PuzzleType[] = [ 'clock', 'icarry' ];
+  let excludedPuzzles: PuzzleType[] = ["clock", "icarry"];
   let puzzles: any[] = [];
   let hasOrder = true;
   let GUIExpanded = false;
   let resettingPuzzle = false;
+  let mounted = false;
 
   for (let [key, value] of puzzleReg) {
-    if ( excludedPuzzles.indexOf( key as PuzzleType ) === -1 ) {
+    if (excludedPuzzles.indexOf(key as PuzzleType) === -1) {
       puzzles.push({
         name: value.name,
         value: key,
@@ -81,8 +95,15 @@
   let animationQueue: any[] = [];
   let moveQueue: any[] = [];
 
+  // Reconstruction
+  let states: Matrix4[][] = [];
+  let stateAngle: number[] = [];
+  let stateCenter: Vector3D[] = [];
+  let stateDir: Vector3D[] = [];
+  let stateFilter: boolean[][] = [];
+
   function vectorsFromCamera(vecs: any[], cam: PerspectiveCamera) {
-    return vecs.map(e => {
+    return vecs.map((e) => {
       let vp = new Vector3(e.x, e.y, e.z).project(cam);
       return new Vector3D(vp.x, -vp.y, 0);
     });
@@ -92,7 +113,7 @@
     mx: number,
     my: number,
     arr: any[],
-    camera: PerspectiveCamera
+    camera: PerspectiveCamera,
   ): Intersection[] {
     let mouse = new Vector2(mx, my);
     let raycaster = new Raycaster();
@@ -100,7 +121,17 @@
     return raycaster.intersectObjects(arr);
   }
 
-  function dataFromGroup(pc: any, best: Vector3D, vv: Vector3D, dir: number) {
+  function findPiece(p: Piece, arr: Piece[]): boolean {
+    for (let i = 0, maxi = arr.length; i < maxi; i += 1) {
+      if (arr[i].equal(p)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  function dataFromGroup(pc: any, best: Vector3D, vv: Vector3D, dir: number, fp = findPiece) {
     let animationBuffer: Object3D[][] = [];
     let userData: any[][] = [];
     let angs: number[] = [];
@@ -109,21 +140,11 @@
     let toMove = cube.p.toMove ? cube.p.toMove(pc[0], pc[1], best) : [];
     let groupToMove = Array.isArray(toMove) ? toMove : [toMove];
 
-    let findPiece = (p: Piece, arr: Piece[]): boolean => {
-      for (let i = 0, maxi = arr.length; i < maxi; i += 1) {
-        if (arr[i].equal(p)) {
-          return true;
-        }
-      }
-
-      return false;
-    };
-
     let u: any = best;
 
     groupToMove.forEach((g) => {
-      if ( g.dir ) {
-        let cr = vv.cross( vectorsFromCamera([g.dir], camera)[0] );
+      if (g.dir) {
+        let cr = vv.cross(vectorsFromCamera([g.dir], camera)[0]);
         dir = -Math.sign(cr.z);
         u = g.dir;
       }
@@ -133,12 +154,12 @@
       let subUserData: any[] = [];
 
       group.children.forEach((p: Object3D, pos: number) => {
-        if (findPiece(<Piece>p.userData, pieces)) {
+        if ( fp(<Piece>p.userData, pieces) ) {
           subUserData.push(p.userData);
           subBuffer.push(p);
 
           subUserData.push(new Piece([]));
-          subBuffer.push( backFace.children[pos] );
+          subBuffer.push(backFace.children[pos]);
         }
       });
 
@@ -158,12 +179,132 @@
     };
   }
 
+  export function handleSequence(s: string[], scr: string) {
+    if (!mounted) return;
+
+    let nc: Puzzle;
+
+    try {
+      resetPuzzle('', false, scr);
+  
+      nc = Puzzle.fromSequence(scr, {
+        type: selectedPuzzle,
+        view: "trans",
+        order: Array.isArray(order) ? order : [order, order, order],
+        mode: CubeMode.NORMAL,
+      });
+    } catch {
+      return;
+    }
+
+    let cubeIDs = cube.p.pieces.map((p) => p.id);
+    let ncIDs = nc.p.pieces.map((p) => p.id);
+    let idMap: Map<string, string> = new Map(ncIDs.map((id, pos) => [ id, cubeIDs[pos] ]));
+
+    states.length = 0;
+    stateAngle.length = 0;
+    stateCenter.length = 0;
+    stateDir.length = 0;
+    stateFilter.length = 0;
+
+    if (nc.p.applySequence) {
+      let seq = nc.p.applySequence(s);
+
+      let getMatrices = (data: Object3D[]) => {
+        return data.map(d => d.matrixWorld.clone());
+      };
+
+      let allObjects = [ ...group.children, ...backFace.children ];
+
+      states.push( getMatrices(allObjects) );
+
+      for (let i = 0, maxi = seq.length; i < maxi; i += 1) {
+        let s = seq[i];
+        let nu = new Vector3(s.u.x, s.u.y, s.u.z).normalize();
+        let ang = s.ang;
+        let ids = s.pieces;
+        let center = cube.p.center;
+        let c = new Vector3(center.x, center.y, center.z);
+
+        stateFilter.push( allObjects.map(d => {
+          if ( !ids.some(id => idMap.get(id) === (d.userData as Piece).id) ) {
+            return false;
+          }
+          // if (p.hasCallback) {
+          //   p.callback(d, new Vector3(0, 0, 0), u, ang, true, Vector3);
+          // } else {
+
+          d.parent?.localToWorld(d.position);
+          d.position.sub(c);
+          d.position.applyAxisAngle(nu, ang);
+          d.position.add(c);
+          d.parent?.worldToLocal(d.position);
+          d.rotateOnWorldAxis(nu, ang);
+          d.updateMatrixWorld();
+
+          // }
+
+          return true;
+        }));
+
+        states.push( getMatrices(allObjects) );
+        stateAngle.push(ang);
+        stateCenter.push( center.clone() );
+        stateDir.push( s.u.clone() );
+      }
+
+      allObjects.forEach((d, idx) => {
+        d.rotation.setFromRotationMatrix(states[0][idx]);
+        d.position.setFromMatrixPosition(states[0][idx]);
+      });
+
+      stateAngle.push(0);
+      stateCenter.push( CENTER );
+      stateDir.push( CENTER );
+      stateFilter.push( [] );
+
+      sequenceAlpha = 0;
+    }
+  }
+
+  function handleAlpha(a: number) {
+    if ( !mounted ) return;
+    if ( a < 0 || a >= states.length ) return;
+    
+    let id = ~~a;
+    let alpha = ((n: number) => n > 0.9 ? 1 : n / 0.9 )(a - id);
+
+    let state = states[id];
+    let ang = stateAngle[id];
+    let center = stateCenter[id];
+    let u = stateDir[id];
+    let filter = stateFilter[id];
+    let c = new Vector3(center.x, center.y, center.z);
+    let nu = new Vector3(u.x, u.y, u.z);
+
+    let allObjects = [ ...group.children, ...backFace.children ];
+
+    allObjects.forEach((d, idx) => {
+      d.rotation.setFromRotationMatrix( state[idx] );
+      d.position.setFromMatrixPosition( state[idx] );
+
+      if ( !filter[idx] ) return;
+      
+      d.parent?.localToWorld(d.position);
+      d.position.sub(c);
+      d.position.applyAxisAngle(nu, ang * alpha);
+      d.position.add(c);
+      d.parent?.worldToLocal(d.position);
+      d.rotateOnWorldAxis(nu, ang * alpha);
+    });
+  }
+
   function drag(
     piece: Intersection,
     ini: Vector2,
     fin: Vector2,
     camera: PerspectiveCamera,
-    vec3?: Vector3D
+    vec3?: Vector3D,
   ) {
     camera.updateMatrix();
     camera.updateMatrixWorld();
@@ -171,7 +312,9 @@
 
     let pc = [piece.object.parent?.userData, piece.object.userData];
     let po = pc[1]?.getOrientation();
-    let vecs: Vector3D[] = pc[1]?.vecs.filter((v: Vector3D) => v.cross(po).abs() > 1e-6);
+    let vecs: Vector3D[] = pc[1]?.vecs.filter(
+      (v: Vector3D) => v.cross(po).abs() > 1e-6,
+    );
     let v = fin.clone().sub(ini);
     let vv = vec3 || new Vector3D(v.x, v.y, 0);
 
@@ -189,8 +332,8 @@
       }
       return ac;
     }, -Infinity);
-    
-    if ( best.x === 0 && best.y === 0 && best.z === 0 ) {
+
+    if (best.x === 0 && best.y === 0 && best.z === 0) {
       return null;
     }
 
@@ -202,27 +345,31 @@
   let scene = new Scene();
   let canvas: HTMLCanvasElement;
 
-  let camera = new PerspectiveCamera( 40, 1, 0.1, 50);
+  let camera = new PerspectiveCamera(40, 1, 0.1, 50);
   let controls: TrackballControls;
 
-  function resetCamera() {
-    camera.position.set(5.296722614625655, 2.6519943868108236, 5.045980364854634);
+  export function resetCamera() {
+    camera.position.set(
+      5.296722614625655,
+      2.6519943868108236,
+      5.045980364854634,
+    );
     camera.rotation.set(0, 0, 0);
     camera.up.set(0, 1, 0);
     camera.lookAt(0, 0, 0);
     camera.updateProjectionMatrix();
   }
 
-  function resetPuzzle(facelet?: string, scramble = false) {
+  function resetPuzzle(facelet?: string, scramble = false, useScr = '') {
     resettingPuzzle = true;
 
     let children = scene.children;
     scene.remove(...children);
 
-    if ( facelet ) {
+    if (facelet) {
       cube = Puzzle.fromFacelet(facelet);
     } else {
-      cube = new Puzzle({
+      cube = Puzzle.fromSequence(useScr, {
         type: selectedPuzzle,
         view: "trans",
         order: Array.isArray(order) ? order : [order, order, order],
@@ -236,14 +383,28 @@
     window.cube = cube;
 
     let ctt = cubeToThree(cube);
-    let bfc = piecesToTree(cube, 1, (st: Sticker[]) => {
-      return st
-        .filter( s => cube.p.faceColors.indexOf(s.color) > -1 && !(s instanceof ImageSticker))
-        .map(s => s
-        .reflect1(s.getMassCenter().add( s.getOrientation().mul(0.6) ), s.getOrientation(), true)
-          .mul(1.3)
-        )
-    }, FrontSide);
+    let bfc = piecesToTree(
+      cube,
+      1,
+      (st: Sticker[]) => {
+        return st
+          .filter(
+            (s) =>
+              cube.p.faceColors.indexOf(s.color) > -1 &&
+              !(s instanceof ImageSticker),
+          )
+          .map((s) =>
+            s
+              .reflect1(
+                s.getMassCenter().add(s.getOrientation().mul(0.6)),
+                s.getOrientation(),
+                true,
+              )
+              .mul(1.3),
+          );
+      },
+      FrontSide,
+    );
 
     group = ctt.group;
     cube = ctt.nc;
@@ -272,7 +433,8 @@
   let piece: Intersection | null = null;
   let ini: Vector2 | null = null;
   let iniM = null;
-  let mcx: number = 0, mcy: number = 0; // Mouse coordinates
+  let mcx: number = 0,
+    mcy: number = 0; // Mouse coordinates
 
   let downHandler = (event: MouseEvent) => {
     event.preventDefault && event.preventDefault();
@@ -282,7 +444,7 @@
       return;
     }
 
-    if ( !enableDrag ) {
+    if (!enableDrag) {
       dragging = false;
       return;
     }
@@ -292,7 +454,7 @@
     ini = new Vector2(event.clientX, event.clientY);
     iniM = new Vector3(
       (event.clientX / W) * 2 - 1,
-      -(event.clientY / H) * 2 + 1
+      -(event.clientY / H) * 2 + 1,
     );
 
     let allStickers: Object3D[] = [];
@@ -307,7 +469,7 @@
 
     if (intersects.length > 0) {
       for (let i = 0, maxi = intersects.length; i < maxi; i += 1) {
-        if ( (intersects[i].object.userData as Sticker).nonInteractive ) {
+        if ((intersects[i].object.userData as Sticker).nonInteractive) {
           continue;
         }
 
@@ -317,7 +479,7 @@
           break;
         }
       }
-      
+
       controls.enabled = false;
     }
   };
@@ -327,8 +489,8 @@
     controls.enabled = true;
   };
 
-  let prepareFromDrag = (data: any) => {
-    animationQueue.push({
+  let prepareFromDrag = (data: any, push = true) => {
+    let animation = {
       animBuffer: data.buffer,
       userData: data.userData,
       u: data.u,
@@ -336,7 +498,11 @@
       from: data.buffer.map((g: any[]) => g.map((e) => e.matrixWorld.clone())),
       animationTimes: data.animationTime.map((e: any) => e || animationTime),
       timeIni: performance.now(),
-    });
+    };
+
+    push && animationQueue.push(animation);
+
+    return animation;
   };
 
   let moveHandler = (event: MouseEvent) => {
@@ -345,20 +511,31 @@
     mcx = event.clientX;
     mcy = event.clientY;
 
-    if ( !dragging ) {
+    if (!dragging) {
       return;
     }
 
     let fin = new Vector2(event.clientX, event.clientY);
 
-    if (piece && fin.clone().sub(ini as Vector2).length() > 40) {
+    if (
+      piece &&
+      fin
+        .clone()
+        .sub(ini as Vector2)
+        .length() > 40
+    ) {
       let data: any = drag(piece, ini as Vector2, fin, camera);
       data && prepareFromDrag(data);
       dragging = false;
     }
   };
 
-  let interpolate = (data: Object3D[], from: Matrix4[], ang: number, userData: Piece[]) => {
+  let interpolate = (
+    data: Object3D[],
+    from: Matrix4[],
+    ang: number,
+    userData: Piece[],
+  ) => {
     let nu = new Vector3(u.x, u.y, u.z).normalize();
     let center = cube.p.center;
     let c = new Vector3(center.x, center.y, center.z);
@@ -394,9 +571,9 @@
 
   let addMove = (mov: any[]) => {
     let m = mov[0];
-    animationTime = Math.min(100, mov[1] * 2 / 3);
+    animationTime = Math.min(100, (mov[1] * 2) / 3);
 
-    let mv = [ 'R', 'L', 'U', 'D', 'F', 'B' ];
+    let mv = ["R", "L", "U", "D", "F", "B"];
     let mc = [
       new Vector3D(0.9, 0, 0),
       new Vector3D(-0.9, 0, 0),
@@ -406,33 +583,35 @@
       new Vector3D(0, 0, -0.9),
     ];
 
-    let pos = mv.indexOf( m[0] );
+    let pos = mv.indexOf(m[0]);
 
-    if ( pos < 0 ) {
-      console.log('Invalid move: ', m);
+    if (pos < 0) {
+      console.log("Invalid move: ", m);
       return false;
     }
 
     let dir = m[1] === "'" ? 1 : -1;
     let u: any = mc[pos];
-    let piece = cube.pieces.find(p => p.direction1(u, u, true) === 0 && p.stickers.length > 4);
-    let sticker = piece?.stickers.find(s => s.vecs.length === 3);
-    
-    let data: any = dataFromGroup([ piece, sticker ], u, u, dir);
+    let piece = cube.pieces.find(
+      (p) => p.direction1(u, u, true) === 0 && p.stickers.length > 4,
+    );
+    let sticker = piece?.stickers.find((s) => s.vecs.length === 3);
+
+    let data: any = dataFromGroup([piece, sticker], u, u, dir);
     data && prepareFromDrag(data);
     return true;
   };
 
   let render = () => {
-    if ( !animating ) {
-      if ( moveQueue.length ) {
-        if ( addMove( moveQueue[0] ) ) {
+    if (!animating) {
+      if (moveQueue.length) {
+        if (addMove(moveQueue[0])) {
           setAnimationData();
           animating = true;
         }
-        
+
         moveQueue.shift();
-      } else if ( animationQueue.length ) {
+      } else if (animationQueue.length) {
         setAnimationData();
         animating = true;
       }
@@ -446,8 +625,8 @@
       for (let i = 0; i < total; i += 1) {
         let animationTime = animationTimes[i];
         let alpha = (performance.now() - timeIni) / animationTime;
-        
-        if ( animLen ) {
+
+        if (animLen) {
           alpha = 2;
         }
 
@@ -478,12 +657,12 @@
     renderer.render(scene, camera);
     requestAnimationFrame(render);
   };
-  
+
   let resizeHandler = () => {
     W = window.innerWidth;
     H = window.innerHeight;
 
-    if ( contained && canvas?.parentElement ) {
+    if (contained && canvas?.parentElement) {
       W = (canvas.parentElement as any).clientWidth;
       H = (canvas.parentElement as any).clientHeight;
     }
@@ -495,8 +674,8 @@
   };
 
   export function applyMove(m: string, t: number) {
-    if ( cube.type != 'rubik' ) return;
-    moveQueue.push( [m, t] );
+    if (cube.type != "rubik") return;
+    moveQueue.push([m, t]);
   }
 
   export function fromFacelet(f: string) {
@@ -504,7 +683,7 @@
   }
 
   function moveFromKeyboard(vec: Vector2) {
-    if ( animating || !enableKeyboard ) return;
+    if (animating || !enableKeyboard) return;
 
     let allStickers: Object3D[] = [];
 
@@ -512,10 +691,7 @@
       allStickers.push(...c.children);
     });
 
-    let mcm = new Vector3(
-      (mcx / W) * 2 - 1,
-      -(mcy / H) * 2 + 1
-    );
+    let mcm = new Vector3((mcx / W) * 2 - 1, -(mcy / H) * 2 + 1);
 
     let intersects = mouseIntersection(mcm.x, mcm.y, allStickers, camera);
 
@@ -528,49 +704,47 @@
       controls.enabled = false;
     }
 
-    if ( !piece ) return;
+    if (!piece) return;
 
     let data: any = drag(piece, new Vector2(mcx, mcy), vec, camera);
 
     data && prepareFromDrag(data);
-
   }
 
   function keyDownHandler(e: KeyboardEvent) {
     let mc = new Vector2(mcx, mcy);
-    // console.log('e.code: ', e.code);
-    
-    switch(e.code) {
-      case 'ArrowUp': {
-        moveFromKeyboard(mc.add( new Vector2(0, -50) ));
+
+    switch (e.code) {
+      case "ArrowUp": {
+        moveFromKeyboard(mc.add(new Vector2(0, -50)));
         break;
       }
-      case 'ArrowDown': {
-        moveFromKeyboard(mc.add( new Vector2(0, 50) ));
+      case "ArrowDown": {
+        moveFromKeyboard(mc.add(new Vector2(0, 50)));
         break;
       }
-      case 'ArrowLeft': {
-        moveFromKeyboard(mc.add( new Vector2(-50, 0) ));
+      case "ArrowLeft": {
+        moveFromKeyboard(mc.add(new Vector2(-50, 0)));
         break;
       }
-      case 'ArrowRight': {
-        moveFromKeyboard(mc.add( new Vector2(50, 0) ));
+      case "ArrowRight": {
+        moveFromKeyboard(mc.add(new Vector2(50, 0)));
         break;
       }
-      case 'Comma': {
-        if ( e.ctrlKey ) {
+      case "Comma": {
+        if (e.ctrlKey) {
           showGUI();
         }
         break;
       }
-      case 'KeyB': {
-        if ( e.ctrlKey ) {
+      case "KeyB": {
+        if (e.ctrlKey) {
           showBackFace = !showBackFace;
         }
         break;
       }
-      case 'KeyS': {
-        if ( e.ctrlKey ) {
+      case "KeyS": {
+        if (e.ctrlKey) {
           scramble();
         }
         break;
@@ -579,13 +753,15 @@
   }
 
   onMount(() => {
-    document.body.style.overflow = 'hidden';
+    mounted = true;
+
+    document.body.style.overflow = "hidden";
 
     renderer = new WebGLRenderer({
       antialias: true,
       alpha: true,
       powerPreference: "high-performance",
-      canvas
+      canvas,
     });
 
     renderer.setPixelRatio(window.devicePixelRatio);
@@ -593,22 +769,34 @@
     canvas.style.position = "absolute";
     canvas.style.top = "0";
     canvas.style.left = "0";
-    
+
     canvas.addEventListener("pointerdown", downHandler);
     canvas.addEventListener("pointerup", upHandler);
     canvas.addEventListener("pointermove", moveHandler);
 
-    canvas.addEventListener("touchstart", (e) => downHandler(e.touches[0] as any), { passive: true });
+    canvas.addEventListener(
+      "touchstart",
+      (e) => downHandler(e.touches[0] as any),
+      { passive: true },
+    );
     canvas.addEventListener("touchend", upHandler);
-    canvas.addEventListener("touchmove", (e) => moveHandler(e.touches[0] as any), { passive: true });
+    canvas.addEventListener(
+      "touchmove",
+      (e) => moveHandler(e.touches[0] as any),
+      { passive: true },
+    );
 
     controls = new TrackballControls(camera, canvas);
     controls.rotateSpeed = 3;
     controls.noPan = true;
     controls.minDistance = 3;
-    controls.maxDistance = 9;
+    controls.maxDistance = 12;
 
     resetPuzzle();
+    
+    handleSequence(sequence, useScramble);
+    handleAlpha(sequenceAlpha);
+
     resizeHandler();
     render();
 
@@ -619,7 +807,7 @@
     renderer.domElement.remove();
     renderer.dispose();
     controls.dispose();
-    document.body.style.overflow = 'auto';
+    document.body.style.overflow = "auto";
   });
 
   /// GUI
@@ -636,50 +824,83 @@
   }
 
   $: controls && (controls.noRotate = !enableRotation);
+  $: handleSequence(sequence, useScramble);
+  $: handleAlpha(sequenceAlpha);
 </script>
 
-<svelte:window on:resize={resizeHandler} on:keydown={ keyDownHandler }/>
+<svelte:window on:resize={resizeHandler} on:keydown={keyDownHandler} />
 
-<canvas bind:this={ canvas }/>
+<canvas bind:this={canvas} />
 
 {#if gui}
-  <Tooltip hasKeybinding text={ $localLang.SIMULATOR.settings + '[Ctrl + ,]' } position="left"
-    on:click={ showGUI }
-    class="absolute right-[1rem] text-gray-400 z-20 hover:text-gray-300 transition-all duration-100 cursor-pointer">
-    <SettingsIcon width="1.2rem" height="1.2rem"/>
+  <Tooltip
+    hasKeybinding
+    text={$localLang.SIMULATOR.settings + "[Ctrl + ,]"}
+    position="left"
+    on:click={showGUI}
+    class="absolute right-[1rem] text-gray-400 z-20 hover:text-gray-300 transition-all duration-100 cursor-pointer"
+  >
+    <SettingsIcon width="1.2rem" height="1.2rem" />
   </Tooltip>
-  
-  <Tooltip hasKeybinding text={ $localLang.SIMULATOR.showBackFace+ '[Ctrl + B]' } position="left"
-    class="absolute right-[1rem] mt-[2rem] text-gray-400 z-20 hover:text-gray-300 transition-all duration-100 cursor-pointer">
-    <Toggle bind:checked={ showBackFace }/>
+
+  <Tooltip
+    hasKeybinding
+    text={$localLang.SIMULATOR.showBackFace + "[Ctrl + B]"}
+    position="left"
+    class="absolute right-[1rem] mt-[2rem] text-gray-400 z-20 hover:text-gray-300 transition-all duration-100 cursor-pointer"
+  >
+    <Toggle bind:checked={showBackFace} />
   </Tooltip>
-  
+
   {#if cube?.p.scramble}
-    <Tooltip hasKeybinding text={ $localLang.global.toScramble + '[Ctrl + S]' } position="left"
+    <Tooltip
+      hasKeybinding
+      text={$localLang.global.toScramble + "[Ctrl + S]"}
+      position="left"
       class="absolute right-[1rem] mt-[5rem] text-gray-400 z-20 hover:text-gray-300 transition-all duration-100 cursor-pointer"
-      on:click={ scramble }>
-      <Refresh size="1.2rem"/>
+      on:click={scramble}
+    >
+      <Refresh size="1.2rem" />
     </Tooltip>
   {/if}
 
-  <Modal bind:show={ GUIExpanded }>
-    <h1 class="text-3xl text-gray-300 text-center m-4">{ $localLang.SIMULATOR.puzzleSettings }</h1>
+  <Modal bind:show={GUIExpanded}>
+    <h1 class="text-3xl text-gray-300 text-center m-4">
+      {$localLang.SIMULATOR.puzzleSettings}
+    </h1>
     <div class="grid grid-cols-2 gap-4 place-items-center text-gray-400">
-      <span>{ $localLang.SIMULATOR.puzzle }</span>
+      <span>{$localLang.SIMULATOR.puzzle}</span>
       <Select
-        items={puzzles} label={e => e.name} bind:value={ selectedPuzzle }
-        onChange={ setOrder } class="text-gray-400 w-full max-w-[unset]"/>
-        
+        items={puzzles}
+        label={(e) => e.name}
+        bind:value={selectedPuzzle}
+        onChange={setOrder}
+        class="text-gray-400 w-full max-w-[unset]"
+      />
+
       {#if hasOrder}
-        <span>{ $localLang.SIMULATOR.order }</span>
-        <Input on:UENTER={() => {resetPuzzle(); hideGUI(); }}
-          type="number" min={1} bind:value={order} class="bg-white bg-opacity-10 text-gray-400"/>
+        <span>{$localLang.SIMULATOR.order}</span>
+        <Input
+          on:UENTER={() => {
+            resetPuzzle();
+            hideGUI();
+          }}
+          type="number"
+          min={1}
+          bind:value={order}
+          class="bg-white bg-opacity-10 text-gray-400"
+        />
       {/if}
 
-      <Button on:click={ hideGUI }>{ $localLang.global.cancel }</Button>
-      <Button loading={ resettingPuzzle }
+      <Button on:click={hideGUI}>{$localLang.global.cancel}</Button>
+      <Button
+        loading={resettingPuzzle}
         class="bg-green-700 hover:bg-green-600 text-gray-300"
-        on:click={() => {resetPuzzle(); hideGUI(); }}>{ $localLang.SIMULATOR.setPuzzle }</Button>
+        on:click={() => {
+          resetPuzzle();
+          hideGUI();
+        }}>{$localLang.SIMULATOR.setPuzzle}</Button
+      >
     </div>
   </Modal>
 {/if}

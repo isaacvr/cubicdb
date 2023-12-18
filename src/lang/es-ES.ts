@@ -55,6 +55,7 @@ export const Spanish: Language = {
     tutorials: 'Tutoriales',
     algorithms: 'Algoritmos',
     timer: 'Temporizador',
+    reconstructions: 'Reconstrucciones',
     battle: 'Batalla',
     pll_recognition: 'Reconocimiento PLL',
     simulator: 'Simulador',

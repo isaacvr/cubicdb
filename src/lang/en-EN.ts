@@ -46,6 +46,7 @@ export const English: Language = {
     tutorials: 'Tutorials',
     algorithms: 'Algorithms',
     timer: 'Timer',
+    reconstructions: 'Reconstructions',
     battle: 'Battle',
     pll_recognition: 'PLL Recognition',
     simulator: 'Puzzle Simulator',

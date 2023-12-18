@@ -139,6 +139,7 @@ export interface PuzzleInterface {
   raw?: any;
   scramble?: () => any;
   toMove?: AnyCallback;
+  applySequence?: (...args: any[]) => { u: Vector3D, ang: number, pieces: string[] }[];
   vectorsFromCamera?: AnyCallback;
 }
 
@@ -614,6 +615,7 @@ export interface Language {
     tutorials: string;
     algorithms: string;
     timer: string;
+    reconstructions: string;
     battle: string;
     pll_recognition: string;
     simulator: string;

@@ -28,6 +28,7 @@
 
   // Premium Stuff
   import Contest from '@pcomponents/Contest.svelte';
+    import Reconstruction from '@components/Reconstruction.svelte';
   // import Particles from '@pcomponents/Particles.svelte';
   // import Space from '@pcomponents/Space.svelte';
 
@@ -62,7 +63,7 @@
   <Frame />
   <Navbar />
 
-  <main class="pt-16 absolute w-full h-full overflow-x-hidden">
+  <main class="pt-16 absolute w-full h-full overflow-x-clip">
     <Route path="/" component={ Home }/>
     <Route path="/tutorials" component={ Tutorials }/>
     <Route path="/tutorials/:something" component={ Tutorials }/>
@@ -70,6 +71,7 @@
     <Route path="/algorithms/*" component={ Algorithms }/>
     <Route path="/algorithms-admin" component={ AlgorithmsAdmin }/>
     <Route path="/timer" component={ Timer }/>
+    <Route path="/reconstructions" component={ Reconstruction }/>
     <Route path="/battle" component={ Battle }/>
     <Route path="/pll-trainer" component={ PllRecognition }/>
     <Route path="/simulator" component={ Simulator }/>

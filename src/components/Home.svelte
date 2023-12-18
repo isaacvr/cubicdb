@@ -13,7 +13,7 @@
   function updateTexts() {
     const HOME = getLanguage( $globalLang ).HOME;
 
-    const showPrivate = false;
+    const showPrivate = true;
 
     cards = [
       {
@@ -40,6 +40,12 @@
         timer: true,
         ready: true,
         cube: '/assets/timer.png',
+      }, {
+        title: HOME.reconstructions,
+        route: "/reconstructions",
+        timer: true,
+        ready: true,
+        cube: '/assets/reconstructions.png',
       }, {
         title: HOME.battle,
         route: "/battle",

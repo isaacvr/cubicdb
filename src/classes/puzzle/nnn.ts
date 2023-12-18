@@ -5,6 +5,7 @@ import { STANDARD_PALETTE } from "@constants";
 import { Piece } from './Piece';
 import { Sticker } from './Sticker';
 import { assignColors, getAllStickers, random } from './puzzleUtils';
+import { ScrambleParser } from '@classes/scramble-parser';
 
 export function RUBIK(_a: number, _b:number, _c:number): PuzzleInterface {
   const dims = [_a, _b, _c].sort();
@@ -43,7 +44,6 @@ export function RUBIK(_a: number, _b:number, _c:number): PuzzleInterface {
     [ FRONT, PI_2 * (1 + (a === 1 ? 1 : ((a ^ c) & 1))) ],
     [ RIGHT, PI_2 * (1 + (a === 1 ? 1 : ((b ^ c) & 1))) ],
   ];
-  // const shapeShifts = turns.some(t => t[1] < 3) && turns.some(t => t[1] > 3);
 
   let pieces = rubik.pieces;
 
@@ -106,31 +106,50 @@ export function RUBIK(_a: number, _b:number, _c:number): PuzzleInterface {
     [ ref, ref.add(RIGHT), ref.add(DOWN) ]
   ];
 
+  let trySingleMove = (mv: any): { pieces: Piece[], u: Vector3D, ang: number } | null => {
+    let moveId = MOVE_MAP.indexOf( mv[1] );
+    let layers = mv[0] === a ? mv[0] + 1 : mv[0];
+    let turns = mv[2];
+    const pts1 = planes[moveId];
+    const u = Vector3D.cross(pts1[0], pts1[1], pts1[2]).unit();
+    const mu = u.mul(-1);
+    const pts2 = pts1.map(p => p.add( mu.mul(len * layers) ));
+    const ang = Math.PI / 2 * turns;
+
+    let pcs = [];
+
+    for (let i = 0, maxi = pieces.length; i < maxi; i += 1) {
+      let d = pieces[i].direction(pts2[0], pts2[1], pts2[2], true);
+
+      if ( d === 0 ) {
+        console.log("Invalid move. Piece intersection detected.", "URFDLB"[moveId], turns, mv);
+        console.log("Piece: ", i, pieces[i], pts2);
+        return null;
+      }
+
+      if ( d > 0 ) {
+        pcs.push( pieces[i] );
+      }
+    }
+
+    return {
+      pieces: pcs,
+      u: mu,
+      ang
+    };
+  };
+
   rubik.move = function(moves: any[]) {
     for (let m = 0, maxm = moves.length; m < maxm; m += 1) {
       let mv = moves[m];
-      let moveId = MOVE_MAP.indexOf( mv[1] );
-      let layers = mv[0] === a ? mv[0] + 1 : mv[0];
-      let turns = mv[2];
-      const pts1 = planes[moveId];
-      const u = Vector3D.cross(pts1[0], pts1[1], pts1[2]).unit();
-      const mu = u.mul(-1);
-      const pts2 = pts1.map(p => p.add( mu.mul(len * layers) ));
-      const ang = Math.PI / 2 * turns;
+      let pcs = trySingleMove(mv);
 
-      for (let i = 0, maxi = pieces.length; i < maxi; i += 1) {
-        let d = pieces[i].direction(pts2[0], pts2[1], pts2[2], true);
-
-        if ( d === 0 ) {
-          console.log("Invalid move. Piece intersection detected.", "URFDLB"[moveId], turns, mv);
-          console.log("Piece: ", i, pieces[i], pts2);
-          return false;
-        }
-
-        if ( d > 0 ) {
-          pieces[i].stickers.map(s => s.rotate(CENTER, mu, ang, true));
-        }
+      if ( !pcs ) {
+        return false;
       }
+      
+      let { u, ang } = pcs;
+      pcs.pieces.forEach(p => p.rotate(CENTER, u, ang, true));
     }
     return true;
   };
@@ -158,6 +177,34 @@ export function RUBIK(_a: number, _b:number, _c:number): PuzzleInterface {
       let cant = 1 + random(3);
       pcs.pieces.forEach((p: Piece) => p.rotate(CENTER, vec, pcs.ang * cant, true));
     }
+  };
+
+  rubik.applySequence = function(seq: string[]) {
+    let moves = seq.map( mv => ScrambleParser.parseNNN( mv, a )[0]);
+    let res: { u: Vector3D, ang: number, pieces: string[] }[] = [];
+
+    for (let i = 0, maxi = moves.length; i < maxi; i += 1) {
+      let pcs;
+      
+      try {
+        pcs = trySingleMove(moves[i]);
+      } catch(e) {
+        console.log("ERROR: ", seq[i], moves[i], e);
+      }
+
+      if ( !pcs ) {
+        continue;
+      }
+
+      let { u, ang } = pcs;
+      
+      res.push({ u, ang, pieces: pcs.pieces.map(p => p.id) });
+
+      pcs.pieces.forEach(p => p.rotate(CENTER, u, ang, true));
+
+    }
+
+    return res;
   };
 
   rubik.rotation = {

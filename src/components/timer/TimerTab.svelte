@@ -204,7 +204,7 @@
 
           initInputHandler();
 
-          dataService.updateSession($session).then( res => console.log(res) );
+          dataService.updateSession($session);
           initialCalc != $session.settings.calcAoX && updateStatistics(false);
         }
       });

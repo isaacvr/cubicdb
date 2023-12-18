@@ -1,5 +1,6 @@
 <script lang="ts">
   import { getStackingContext } from '@helpers/DOM';
+    import { minmax } from '@helpers/math';
   import { processKey } from '@helpers/strings';
   import { createEventDispatcher, onMount } from 'svelte';
 
@@ -43,9 +44,8 @@
       tx = position === 'right' ? `-.29rem` : `calc(100% - .25rem)`;
       ty = 'calc(50% - .25rem)';
       tr = position === 'right' ? `-45deg` : `135deg`;
-    }
-    else {
-      x = `${_x + (ce.width - ct.width) / 2}px`
+    } else {
+      x = `${minmax(_x + (ce.width - ct.width) / 2, 1, window.innerWidth - ct.width)}px`
       y = position === 'top' ? `calc(${_y - ct.height}px - 0.5rem)` : `calc(${_y + ce.height}px + 0.5rem)`;
       tx = 'calc(50% - .25rem)';
       ty = position === 'top' ? `calc(100% - .21rem)` : `-.28rem`;

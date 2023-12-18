@@ -5,6 +5,7 @@ import { STANDARD_PALETTE } from "@constants";
 import { Piece } from './Piece';
 import { Sticker } from './Sticker';
 import { assignColors, getAllStickers, random } from './puzzleUtils';
+import { ScrambleParser } from '@classes/scramble-parser';
 
 export function SKEWB(): PuzzleInterface {
   let skewb: PuzzleInterface = {
@@ -21,16 +22,16 @@ export function SKEWB(): PuzzleInterface {
 
   skewb.getAllStickers = getAllStickers.bind(skewb);
 
-  const L = 1;
   const PI = Math.PI;
   const PI_2 = PI / 2;
+  const PI_3 = PI / 3;
 
   let center = new Piece([
     new Sticker([
-      UP.add(BACK).mul(L),
-      UP.add(LEFT).mul(L),
-      UP.add(FRONT).mul(L),
-      UP.add(RIGHT).mul(L),
+      UP.add(BACK),
+      UP.add(LEFT),
+      UP.add(FRONT),
+      UP.add(RIGHT),
     ])
   ]);
 
@@ -42,12 +43,12 @@ export function SKEWB(): PuzzleInterface {
   ];
 
   let cornerSticker = new Sticker([
-    UP.add(RIGHT).mul(L),
-    UP.add(FRONT).mul(L),
-    UP.add(FRONT).add(RIGHT).mul(L)
+    UP.add(RIGHT),
+    UP.add(FRONT),
+    UP.add(FRONT).add(RIGHT)
   ]);
 
-  let anchor = UP.add(FRONT).add(RIGHT).mul(L);
+  let anchor = UP.add(FRONT).add(RIGHT);
 
   let corner = new Piece([
     cornerSticker,
@@ -75,42 +76,77 @@ export function SKEWB(): PuzzleInterface {
     }
   }
 
-  const MOVE_MAP = "URLB";
+  const MOVE_MAP = "FURLB";
 
   let pieces = skewb.pieces;
 
   let planes = [
-    [ RIGHT.add(UP).mul(L), FRONT.add(UP).mul(L), FRONT.add(LEFT).mul(L) ],
-    [ BACK.add(UP).mul(L), RIGHT.add(FRONT).mul(L), RIGHT.add(UP).mul(L) ],
-    [ RIGHT.add(FRONT).mul(L), LEFT.add(UP).mul(L), UP.add(FRONT).mul(L) ],
-    [ LEFT.add(UP).mul(L), RIGHT.add(BACK).mul(L), BACK.add(UP).mul(L) ],
+    [ LEFT.add(UP), BACK.add(UP), BACK.add(RIGHT) ],
+    [ RIGHT.add(UP), FRONT.add(UP), FRONT.add(LEFT) ],
+    [ BACK.add(UP), RIGHT.add(FRONT), RIGHT.add(UP) ],
+    [ RIGHT.add(FRONT), LEFT.add(UP), UP.add(FRONT) ],
+    [ LEFT.add(UP), RIGHT.add(BACK), BACK.add(UP) ],
   ];
 
-  skewb.move = function(moves: any[]) {
-    for (let m = 0, maxm = moves.length; m < maxm; m += 1) {
-      let mv = moves[m];
-      let moveId = mv[0];
-      let turns = mv[1];
-      const pts1 = planes[moveId];
-      const u = Vector3D.cross(pts1[0], pts1[1], pts1[2]).unit();
-      const mu = u.mul(-1);
-      const ang = 2 * Math.PI / 3 * turns;
+  let trySingleMove = (mv: any): { pieces: Piece[], u: Vector3D, ang: number } | null => {
+    let moveId = mv[0];
+    let turns = mv[1];
 
-      // let ini = performance.now();
-      for (let i = 0, maxi = pieces.length; i < maxi; i += 1) {
-        let d = pieces[i].direction(pts1[0], pts1[1], pts1[2]);
-        if ( d === 0 ) {
-          console.log("Invalid move. Piece intersection detected.", MOVE_MAP[moveId], turns, mv);
-          console.log("Piece: ", i, pieces[i], pts1);
-          return;
-        }
+    let pts1 = planes[moveId + 1];
 
-        if ( d < 0 ) {
-          // pieces[i].stickers = pieces[i].stickers.map(s => s.rotate(CENTER, mu, ang));
-          pieces[i].stickers.map(s => s.rotate(CENTER, mu, ang, true));
-        }
+    if ( Math.abs(turns) > 2 ) {
+      pts1 = [
+        [RIGHT, UP, LEFT].map(e => e.add(FRONT.mul(2))), // z
+        [RIGHT, BACK, LEFT].map(e => e.add(UP.mul(2))), // y
+        [BACK, UP, FRONT].map(e => e.add(RIGHT.mul(2))), // x
+      ][moveId + 1];
+
+      turns = (-turns - 2) * 3 / 4;
+    }
+
+    const u = Vector3D.cross(pts1[0], pts1[1], pts1[2]).unit();
+
+    const mu = u.mul(-1);
+    const ang = 2 * PI_3 * turns;
+
+    let pcs = [];
+
+    for (let i = 0, maxi = pieces.length; i < maxi; i += 1) {
+      let d = pieces[i].direction1(pts1[0], u);
+      if ( d === 0 ) {
+        console.log("Invalid move. Piece intersection detected.", MOVE_MAP[moveId], turns, mv);
+        console.log("Piece: ", i, pieces[i], pts1);
+        return null;
+      }
+
+      if ( d < 0 ) {
+        pcs.push( pieces[i] );
       }
     }
+
+    return {
+      pieces: pcs,
+      u: mu,
+      ang
+    };
+  };
+
+  skewb.move = function(moves: any[]) {
+    console.log("MOVES: ", moves);
+    
+    for (let m = 0, maxm = moves.length; m < maxm; m += 1) {
+      let mv = moves[m];
+      let pcs = trySingleMove(mv);
+
+      if ( !pcs ) {
+        return false;
+      }
+      
+      let { u, ang } = pcs;
+      pcs.pieces.forEach(p => p.rotate(CENTER, u, ang, true));
+    }
+
+    return true;
   };
 
   skewb.toMove = function(piece: Piece, sticker: Sticker, dir: Vector3D) {
@@ -118,7 +154,7 @@ export function SKEWB(): PuzzleInterface {
     let toMovePieces = pieces.filter(p => p.direction1(mc, dir) >= 0);
     return {
       pieces: toMovePieces,
-      ang: 2 * PI / 3
+      ang: 2 * PI_3
     };
   };
 
@@ -135,6 +171,34 @@ export function SKEWB(): PuzzleInterface {
       let cant = 1 + random(2);
       pcs.pieces.forEach((p: Piece) => p.rotate(CENTER, vec, pcs.ang * cant, true));
     }
+  };
+
+  skewb.applySequence = function(seq: string[]) {
+    let moves = seq.map( mv => ScrambleParser.parseSkewb( mv )[0]);
+    let res: { u: Vector3D, ang: number, pieces: string[] }[] = [];
+
+    for (let i = 0, maxi = moves.length; i < maxi; i += 1) {
+      let pcs;
+      
+      try {
+        pcs = trySingleMove(moves[i]);
+      } catch(e) {
+        console.log("ERROR: ", seq[i], moves[i], e);
+      }
+
+      if ( !pcs ) {
+        continue;
+      }
+
+      let { u, ang } = pcs;
+      
+      res.push({ u, ang, pieces: pcs.pieces.map(p => p.id) });
+
+      pcs.pieces.forEach(p => p.rotate(CENTER, u, ang, true));
+
+    }
+
+    return res;
   };
 
   skewb.rotation = {

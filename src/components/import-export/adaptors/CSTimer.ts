@@ -2,6 +2,18 @@ import { Penalty, type CubeDBAdaptor, type CubeDBData } from "@interfaces";
 import { genSettings, identifyPuzzle } from "../common";
 import { randomUUID } from "@helpers/strings";
 
+interface CSTimerSessionOptions {
+  scrType?: string;
+}
+
+interface CSTimerSessionProperty {
+  date: number[];
+  name: string | number;
+  opt: CSTimerSessionOptions;
+  rank: number;
+  stats: number[];
+}
+
 export class CSTimer implements CubeDBAdaptor {
   public modes: string[];
 
@@ -21,7 +33,7 @@ export class CSTimer implements CubeDBAdaptor {
       solves: [],
     };
     
-    let props = JSON.parse(data.properties.sessionData);
+    let props = JSON.parse(data.properties.sessionData) as { [key: string]: CSTimerSessionProperty };
 
     for (let i = 0, maxi = sessionNames.length; i < maxi; i += 1) {
       let prop = props[ (i + 1).toString() ];
@@ -30,12 +42,18 @@ export class CSTimer implements CubeDBAdaptor {
       let mode = prop.opt.scrType;
       let id = randomUUID();
       let solves = data[name];
-
-      res.sessions.push({
+      let session = {
         _id: id,
         name: sessionName,
         settings: genSettings(),
-      });
+      };
+
+      if ( prop.opt.scrType ) {
+        session.settings.sessionType = 'single';
+        session.settings.mode = prop.opt.scrType;
+      }
+
+      res.sessions.push( session );
 
       for (let j = 0, maxj = solves.length; j < maxj; j += 1) {
         let pz = identifyPuzzle(solves[j][1]);

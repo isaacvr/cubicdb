@@ -5,6 +5,8 @@
   export let cClass = '';
   export let placeholder = '';
   export let blurOnEscape = false;
+  export let spellcheck = false;
+  export let getInnerText = defaultInnerText;
 
   let cl = '';
   export { cl as class };
@@ -12,6 +14,15 @@
   let innerText = '<br>';
   let dispatch = createEventDispatcher();
   let textarea: HTMLTextAreaElement;
+  let cedit: HTMLDivElement;
+
+  export function getTextArea() {
+    return textarea;
+  }
+
+  export function getContentEdit() {
+    return cedit;
+  }
 
   function keyup(e: KeyboardEvent) {
     dispatch('keyup', e);
@@ -33,19 +44,38 @@
     dispatch('blur', e);
   }
 
-  $: innerText = value.replace(/\n/g, '<br>') + '<br>';
+  function click(e: MouseEvent) {
+    dispatch('click', e);
+  }
+
+  function defaultInnerText(v: string) {
+    return v.replace(/\n/g, '<br>') + '<br>';
+  }
+
+  function focusTextArea() {
+    cedit.blur();
+    textarea.focus();
+  }
+
+  function handleScroll() {
+    cedit.scrollTop = textarea.scrollTop;
+  }
+
+  $: innerText = getInnerText(value);
 </script>
 
-<div class="relative {cClass || ""}">
-  <div
-    class="lesp bg-transparent text-transparent outline-none p-2 border-4 border-transparent"
-    bind:innerHTML={ innerText } contenteditable="false"></div>
+<div class="relative {cClass || ""}" on:focus={ focusTextArea }>
+  <!-- lesp bg-white text-black p-2 border-none outline-none pointer-events-none -->
+  <div on:focus={ focusTextArea } bind:this={ cedit }
+    class={`lesp bg-transparent outline-none p-2 pointer-events-none border-4 border-transparent `
+      + ( cl || "bg-gray-600 text-gray-300" ) }
+    bind:innerHTML={ innerText } contenteditable="true" { spellcheck }></div>
   <textarea
-    on:keyup={ keyup } on:keydown={ keydown } on:focus={ focus } on:blur={ blur }
-    { placeholder } bind:this={ textarea }
-    bind:value class={`flex m-auto p-2 rounded-md border border-solid border-gray-400
-      focus:text-gray-300 outline-none transition-all duration-200 absolute inset-0
-      w-full h-full resize-none ` + ( cl || "bg-gray-600 text-gray-300" )}></textarea>
+    on:keyup={ keyup } on:keydown={ keydown } on:focus={ focus } on:blur={ blur } on:click={ click }
+    on:scroll={ handleScroll } { placeholder } bind:this={ textarea } { spellcheck }
+    bind:value class={`lesp flex m-auto p-2 rounded-md text-transparent caret-white bg-transparent
+      border-none outline-none transition-all duration-200 absolute inset-0 w-full h-full resize-none `
+      + ( cl || "bg-gray-600 text-gray-300" )}></textarea>
 </div>
 
 <style>

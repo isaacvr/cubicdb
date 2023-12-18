@@ -7,9 +7,9 @@
   export let placeholder: any = 'Select';
   export let value: any = placeholder;
   export let items: any[];
-  export let onChange = (item?: any, pos?: number, arr?: any) => {};
+  export let onChange = (item?: any, pos?: number, arr?: any[]) => {};
   export let label = (item?: any) => (item || "");
-  export let transform = (item: any, pos?: number, arr?: any) => item.value;
+  export let transform = (item: any, pos?: number, arr?: any[]) => item.value;
 
   let showOptions = false;
   let optionList: HTMLDivElement;
@@ -25,6 +25,21 @@
   }
 
   function handleClick(e: MouseEvent) {
+    let rect = optionList.getBoundingClientRect();
+    let { x, y, width, height } = rect;
+    let W = window.innerWidth;
+    let H = window.innerHeight;
+
+    if ( x + width > W ) {
+      optionList.style.marginLeft = `${W - width - x}px`;
+    }
+
+    if ( y + height > H ) {
+      optionList.style.marginTop = `${H - height - y}px`;
+    }
+
+    optionList
+
     let pos = findValuePosition();
 
     if ( pos > -1 ) {
@@ -35,6 +50,7 @@
     }
 
     showOptions = true;
+
   }
 
   function focusHandler(e: KeyboardEvent) {

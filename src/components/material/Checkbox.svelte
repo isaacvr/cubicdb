@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { processKey } from "@helpers/strings";
   import { createEventDispatcher, onMount } from "svelte";
 
   export let checked: boolean = false;
@@ -6,6 +7,7 @@
   export let label = '';
   export let disabled = false;
   export let tabindex = 0;
+  export let hasKeybinding = false;
   let _class = '';
   export { _class as class };
   
@@ -37,8 +39,12 @@
     <div class="mark"></div>
   </button>
   {#if label}
-    <button class="label ml-1 cursor-pointer" on:click={ toggle } on:keydown={ handleKeydown }>
-      {label}
+    <button class="label ml-1 cursor-pointer flex" on:click={ toggle } on:keydown={ handleKeydown }>
+      { hasKeybinding ? processKey(label)[0] : label }
+
+      {#if hasKeybinding}
+        &nbsp; <span class="flex ml-auto text-yellow-400">{ processKey(label)[1] }</span>
+      {/if}
     </button>
   {/if}
 </div>

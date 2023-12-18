@@ -1,12 +1,13 @@
 <script lang="ts">
   import { map, minmax } from "@helpers/math";
-  import { onMount } from "svelte";
+  import { createEventDispatcher, onMount } from "svelte";
 
   // let type: 'simple' | 'range' | 'reverse' = "simple";
   export let min = 0;
   export let max = 100;
   export let value = 0;
 
+  let dispatch = createEventDispatcher();
   let wrapper: HTMLButtonElement;
   let mark: HTMLButtonElement;
   let moving = false;
@@ -14,8 +15,15 @@
   let cl = '';
   export { cl as class };
 
-  function mousedownHandler() { moving = true }
-  function mouseupHandler() { moving = false }
+  function mousedownHandler(ev: MouseEvent) {
+    moving = true;
+    xToValue(ev.x);
+    dispatch('mousedown', ev);
+  }
+
+  function mouseupHandler() {
+    moving = false;
+  }
 
   function xToValue(x: number) {
     let box = wrapper.getBoundingClientRect();
@@ -67,7 +75,7 @@
   }
   
   .mark {
-    @apply w-4 h-4 bg-purple-600 rounded-full shadow-md absolute -translate-x-1/2;
+    @apply w-4 h-4 bg-current rounded-full shadow-md absolute -translate-x-1/2;
     --left: 0%;
     left: var(--left);
   }
