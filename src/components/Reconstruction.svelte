@@ -27,6 +27,7 @@
     { puzzle: 'rubik', name: "5x5x5", order: 5 },
     { puzzle: 'rubik', name: "6x6x6", order: 6 },
     { puzzle: 'rubik', name: "7x7x7", order: 7 },
+    { puzzle: 'pyraminx', name: "Pyraminx", order: 3 },
     { puzzle: 'skewb', name: "Skewb", order: -1 },
   ];
 

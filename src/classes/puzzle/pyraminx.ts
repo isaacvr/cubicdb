@@ -4,6 +4,7 @@ import { Piece } from './Piece';
 import { assignColors, getAllStickers, random } from './puzzleUtils';
 import type { PuzzleInterface } from '@interfaces';
 import { STANDARD_PALETTE } from "@constants";
+import { ScrambleParser } from '@classes/scramble-parser';
 
 export function PYRAMINX(n: number): PuzzleInterface {
   let pyra: PuzzleInterface = {
@@ -33,6 +34,7 @@ export function PYRAMINX(n: number): PuzzleInterface {
   let PL = PB.rotate(CENTER, UP, 2 * PI_3);
 
   pyra.pieces = [];
+  let pieces = pyra.pieces;
 
   const ANCHORS = [
     PU, PR, PB, PL
@@ -70,14 +72,14 @@ export function PYRAMINX(n: number): PuzzleInterface {
   for (let f = 0; f < 4; f += 1) {
     for (let i = 0; i < n; i += 1) {
       for (let j = 0; j <= i; j += 1) {
-        pyra.pieces.push( createPiece(
+        pieces.push( createPiece(
           ANCHORS[f].add( UNITS[f][0].mul(i).add( UNITS[f][1].mul(j) ) ),
           ANCHORS[f].add( UNITS[f][0].mul(i + 1).add( UNITS[f][1].mul(j) ) ),
           ANCHORS[f].add( UNITS[f][0].mul(i + 1).add( UNITS[f][1].mul(j + 1) ) ),
         ) );
 
         if ( j < i ) {
-          pyra.pieces.push( createPiece(
+          pieces.push( createPiece(
             ANCHORS[f].add( UNITS[f][0].mul(i).add( UNITS[f][1].mul(j) ) ),
             ANCHORS[f].add( UNITS[f][0].mul(i + 1).add( UNITS[f][1].mul(j + 1) ) ),
             ANCHORS[f].add( UNITS[f][0].mul(i).add( UNITS[f][1].mul(j + 1) ) ),
@@ -88,8 +90,6 @@ export function PYRAMINX(n: number): PuzzleInterface {
   }
 
   const MOVE_MAP = "URLB";
-
-  let pieces = pyra.pieces;
 
   let planes = [
     [ PL, PB, PR ],
@@ -102,33 +102,51 @@ export function PYRAMINX(n: number): PuzzleInterface {
 
   pieces.forEach(p => p.stickers.forEach(s => s.vecs = pyra.faceVectors.map(v => v.clone())));
   
+  let trySingleMove = (mv: any): { pieces: Piece[], u: Vector3D, ang: number } | null => {
+    let moveId = mv[0];
+    let layers = mv[3];
+    let turns = mv[1];
+    const pts1 = planes[moveId];
+    const u = Vector3D.cross(pts1[0], pts1[1], pts1[2]).unit();
+    const mu = u.mul(-1);
+    const pts2 = pts1.map(p => p.add( mu.mul(len * layers) ));
+    const ang = 2 * Math.PI / 3 * turns;
+
+    let pcs = [];
+
+    for (let i = 0, maxi = pieces.length; i < maxi; i += 1) {
+      let d = pieces[i].direction1(pts2[0], u, false, (s: Sticker) => !/^[xd]$/.test(s.color));
+
+      if ( d === 0 ) {
+        console.log("Invalid move. Piece intersection detected.", MOVE_MAP[moveId], turns, mv);
+        console.log("Piece: ", i, pieces[i], pts2);
+        return null;
+      }
+
+      if ( d < 0 ) {
+        pcs.push( pieces[i] );
+      }
+    }
+
+    return {
+      pieces: pcs,
+      u: mu,
+      ang
+    };
+  };
+
   /// [ id, turns, -3?, layers ]
   pyra.move = function(moves: any[]) {
     for (let m = 0, maxm = moves.length; m < maxm; m += 1) {
       let mv = moves[m];
-      let moveId = mv[0];
-      let layers = mv[3];
-      let turns = mv[1];
-      const pts1 = planes[moveId];
-      const u = Vector3D.cross(pts1[0], pts1[1], pts1[2]).unit();
-      const mu = u.mul(-1);
-      const pts2 = pts1.map(p => p.add( mu.mul(len * layers) ));
-      const ang = 2 * Math.PI / 3 * turns;
+      let pcs = trySingleMove(mv);
 
-      // let ini = performance.now();
-      for (let i = 0, maxi = pieces.length; i < maxi; i += 1) {
-        let d = pieces[i].direction(pts2[0], pts2[1], pts2[2]);
-        if ( d === 0 ) {
-          console.log("Invalid move. Piece intersection detected.", MOVE_MAP[moveId], turns, mv);
-          console.log("Piece: ", i, pieces[i], pts2);
-          return false;
-        }
-
-        if ( d < 0 ) {
-          // pieces[i].stickers = pieces[i].stickers.map(s => s.rotate(CENTER, mu, ang));
-          pieces[i].stickers.map(s => s.rotate(CENTER, mu, ang, true));
-        }
+      if ( !pcs ) {
+        return false;
       }
+      
+      let { u, ang } = pcs;
+      pcs.pieces.forEach(p => p.rotate(CENTER, u, ang, true));
     }
     return true;
   };
@@ -156,9 +174,42 @@ export function PYRAMINX(n: number): PuzzleInterface {
     }
   };
 
-  assignColors(pyra, pyra.faceColors);
-  // roundCorners(pyra);
+  pyra.applySequence = function(seq: string[]) {
+    let moves = seq.map( mv => ScrambleParser.parsePyraminx( mv )[0]);
+    let res: { u: Vector3D, ang: number, pieces: string[] }[] = [];
 
+    for (let i = 0, maxi = moves.length; i < maxi; i += 1) {
+      let pcs;
+      
+      try {
+        pcs = trySingleMove(moves[i]);
+      } catch(e) {
+        console.log("ERROR: ", seq[i], moves[i], e);
+      }
+
+      if ( !pcs ) {
+        continue;
+      }
+
+      let { u, ang } = pcs;
+      
+      res.push({ u, ang, pieces: pcs.pieces.map(p => p.id) });
+
+      pcs.pieces.forEach(p => p.rotate(CENTER, u, ang, true));
+
+    }
+
+    return res;
+  };
+
+  for (let i = 0, maxi = pieces.length; i < maxi; i += 1) {
+    let { stickers } = pieces[i];
+
+    stickers = stickers.filter(s => s.getOrientation().abs() > 1e-6);
+  }
+
+  assignColors(pyra, pyra.faceColors);
+  
   // Initial rotation
   pyra.rotation = {
     x: Math.PI / 6,

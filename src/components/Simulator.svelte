@@ -193,7 +193,8 @@
         order: Array.isArray(order) ? order : [order, order, order],
         mode: CubeMode.NORMAL,
       });
-    } catch {
+    } catch(err) {
+      console.log("ERROR: ", err);
       return;
     }
 

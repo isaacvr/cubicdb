@@ -181,7 +181,7 @@ export class Vector3D {
     if ( len != 0 ) {
       return this.div(len);
     }
-    return new Vector3D(1, 0, 0);
+    return new Vector3D(0, 0, 0);
   }
 
   proj(a: Vector3D): Vector3D {
