@@ -59,6 +59,15 @@ body {
   min-height: 100dvh;
 }
 
+.ubuntu { font-family: 'Ubuntu'; }
+.ropa-sans { font-family: 'RopaSans'; }
+.bree-serif { font-family: 'BreeSerif'; }
+.cq-mono { font-family: 'CQMono'; }
+.raleway { font-family: 'Raleway'; }
+.roboto { font-family: 'Roboto'; }
+.lcd4 { font-family: 'lcd4'; }
+.monospaced { font-family: 'Courier New', Courier, monospace; }
+
 @property --percent {
   syntax: '<percentage>';
   inherits: false;

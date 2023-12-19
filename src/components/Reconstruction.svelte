@@ -15,6 +15,7 @@
   import Checkbox from "./material/Checkbox.svelte";
   import Select from "./material/Select.svelte";
   import type { PuzzleType } from "@interfaces";
+  import { ScrambleParser } from "@classes/scramble-parser";
   import Input from "./material/Input.svelte";
 
   type IToken = ReturnType< Interpreter['getTree'] >['program'];
@@ -27,6 +28,7 @@
     { puzzle: 'rubik', name: "5x5x5", order: 5 },
     { puzzle: 'rubik', name: "6x6x6", order: 6 },
     { puzzle: 'rubik', name: "7x7x7", order: 7 },
+    { puzzle: 'square1', name: "Square-1", order: -1 },
     { puzzle: 'pyraminx', name: "Pyraminx", order: 3 },
     { puzzle: 'skewb', name: "Skewb", order: -1 },
   ];
@@ -38,8 +40,23 @@
 
   let showBackFace = true;
   let title = "";
-  let scramble = "";
-  let reconstruction = ``;
+  let scramble = "(0,-1) / (-3,-3) / (1,-2) / (-1,-4) / (4,-5) / (-4,0) / (6,-3) / (2,-3) / (-2,0) / (2,0) / (-1,-2) / (2,0)";
+  let reconstruction = `z2 - inspection
+(0, -2) / ( 1,2 ) / ( 0, -2 ) / (   -4, 1   ) / (0,3) / - cubeshape
+(1,0) / (-3,0) / (-3,0) / - CO
+(6,0) / (3,0) / (3,0) / (-1,-1) / (-3,0) / (-3,0) / - EO
+/ (3,-3) / (-3,3) / - CP
+(1,1) / (3,0) / (-1,-1) / (3,0) / (-3,0) / (1,1) / (3,0) / (6,0) / (-4,3) - EP`;
+  
+//   reconstruction = `z2 - inspection
+// (0,-2) - / (1,2) / (0,-2) / (-4,1) / (0,3) / - cubeshape
+// - (1,0) / (-3,0) / (-3,0) / - CO
+// - (6,0) / (3,0) / (3,0) / (-1,-1) / (-3,0) / (-3,0) / - EO
+// - / (3,-3) / (-3,3) / - CP
+// - (1,1) / (3,0) / (-1,-1) / (3,0) / (-3,0) / (1,1) / (3,0) / (6,0) / (4,3) - EP`;
+
+  // scramble = '';
+  // reconstruction = '';
 
   let errorCursor = -1;
   let sequence: string[] = [];
@@ -56,6 +73,27 @@
   let limit = -1;
   let dir: 1 | -1 = 1;
 
+  function getMoveLength(): number {
+    let s = sequence.join(' ');
+    try {
+      switch ( puzzle.puzzle ) {
+        case 'rubik': {
+          return sequence.reduce((acc: any[], e) => [...acc, ...ScrambleParser.parseNNN(e, puzzle.order)], []).length;
+        }
+  
+        case 'skewb': {
+          return sequence.reduce((acc: any[], e) => [...acc, ...ScrambleParser.parseSkewb(e)], []).length;
+        }
+  
+        case 'square1': {
+          return sequence.reduce((acc: any[], e) => [...acc, ...ScrambleParser.parseSquare1(e)], []).length;
+        }
+      }
+    } catch {}
+
+    return 0;
+  }
+
   function defaultInner(s: string, withSuffix = true) {
     return s.replace(/\n/g, '<br>') + (withSuffix ? '<br>' : '');
   }
@@ -65,15 +103,33 @@
 
     switch( token.type ) {
       case 'Move': {
-        return `<span class="move">${ value }</span>`;
+        if ( puzzle.puzzle === 'square1' && token.value != '/' ) {
+          let regs = [/^(\()(\s*)(-?\d)(,)(\s*)(-?\d)(\s*)(\))/, /^(-?\d)(,)(\s*)(-?\d)/, /^(-?\d)(-?\d)/, /^(-?\d)/];
+          let operators = /^[\(\,\)]$/;
+
+          for (let i = 0, maxi = regs.length; i < maxi; i += 1) {
+            let m = regs[i].exec(value);
+
+            if ( m ) {
+              return m.slice(1).map(s =>
+                operators.test(s)
+                  ? `<span class="operator">${ s }</span>`
+                  : /\d$/.test(s)
+                    ? s === '0' ? `<span class="move silent">${ s }</span>` : `<span class="move">${ s }</span>`
+                    : defaultInner(s, false)
+              ).join('');
+            }
+          }
+        }
+        return `<span class="move">${ defaultInner(value, false) }</span>`;
       }
       
       case 'Comment': {
-        return `<span class="comment">${ value }</span>`;
+        return `<span class="comment">${ defaultInner(value, false) }</span>`;
       }
 
       case 'Space': {
-        return value.split("").map((e1: string) => e1 === '\n' ? '<br>' : '<span>&nbsp</span>').join('');
+        return defaultInner(value, false);
       }
 
       case 'Expression': {
@@ -109,7 +165,7 @@
   }
 
   function parseReconstruction(s: string) {
-    let itp = new Interpreter(true, puzzle.puzzle);
+    let itp = new Interpreter(false, puzzle.puzzle);
     
     errorCursor = -1;
     sequence.length = 0;
@@ -118,10 +174,10 @@
     try {
       let tree = itp.getTree(s);
 
-      console.log("TREE: ", tree);
+      // console.log("TREE: ", tree);
 
       if ( tree.error ) {
-        console.log("ERROR: ", tree.error, tree.cursor);
+        // console.log("ERROR: ", tree.error, tree.cursor);
         if ( typeof tree.cursor === 'number' ) {
           errorCursor = tree.cursor;
         } else {
@@ -132,9 +188,19 @@
         let flat = program.filter(token => token.cursor >= 0);
         
         sequence = flat.map(token => token.value);
-        sequenceIndex = flat.map(token => token.cursor);
 
-        finalAlpha = sequence.length;
+        finalAlpha = getMoveLength();
+
+        switch ( puzzle.puzzle ) {
+          case 'square1': {
+            sequenceIndex = (new Array(finalAlpha).fill(0)).map((_, i) => i);
+            break;
+          }
+
+          default: {
+            sequenceIndex = flat.map(token => token.cursor);
+          }
+        }
 
         return getTreeString(tree.program.value) + "<br>";
       }
@@ -182,7 +248,7 @@
   }
 
   function handlePlay() {
-    if ( sequence.length === 0 ) return;
+    if ( finalAlpha === 0 ) return;
 
     if ( playing ) {
       playing = false;
@@ -203,7 +269,7 @@
     let id = sequenceIndex[~~a];
 
     if ( lastId != id && id >= initAlpha && id < finalAlpha ) {
-      let allMoves = textarea.getContentEdit().querySelectorAll('.move');
+      let allMoves = textarea.getContentEdit().querySelectorAll('.move:not(.silent)');
       allMoves.forEach(mv => mv.classList.remove('current'));
       allMoves[id].classList.add('current');
       lastId = id;
@@ -259,7 +325,7 @@
   async function resetPuzzle() {
     await tick();
     simulator.handleSequence(sequence, scramble);
-    finalAlpha = sequence.length;
+    // finalAlpha = getMoveLength();
   }
 
   onMount(() => mounted = true);
@@ -283,7 +349,7 @@
 
     <div class="controls  bg-gray-600 h-[4rem] absolute bottom-0 w-full">
       <div class="flex px-3">
-        <Slider class="text-white" bind:value={ sequenceAlpha } min={0} max={ sequence.length } on:mousedown={ pause }/>
+        <Slider class="text-white" bind:value={ sequenceAlpha } min={ initAlpha } max={ finalAlpha } on:mousedown={ pause }/>
       </div>
 
       <div class="flex justify-evenly">
@@ -298,7 +364,7 @@
             {#if playing}
               <PauseIcon size={ iconSize }/>
             {:else}
-              {#if sequenceAlpha === sequence.length }
+              {#if sequenceAlpha === finalAlpha }
                 <RestartIcon size={ iconSize }/>
               {:else}
                 <PlayIcon size={ iconSize }/>
@@ -322,12 +388,12 @@
 
     <div>
       <h2>Scramble</h2>
-      <Input bind:value={ scramble } class="bg-transparent rounded-none w-full border-none"/>
+      <Input bind:value={ scramble } class="bg-transparent rounded-none w-full border-none monospaced"/>
     </div>
 
     <div>
       <h2>Reconstruction</h2>
-      <TextArea class="rounded-none border-none absolute inset-0 overflow-auto" placeholder="[Type your reconstruction here]"
+      <TextArea class="rounded-none border-none absolute inset-0 overflow-auto monospaced break-words whitespace-pre-wrap" placeholder="[Type your reconstruction here]"
         bind:value={ reconstruction } cClass="h-[30vh] overflow-clip" getInnerText={ parseReconstruction } bind:this={ textarea }
       />
     </div>
@@ -335,7 +401,7 @@
     <div>
       <h2>Settings</h2>
 
-      <ul class="setting-list grid p-2 gap-4 place-items-center">
+      <ul class="setting-list p-2 gap-4 place-items-center">
         <li> <Checkbox label="Show back faces [Ctrl + B]" hasKeybinding bind:checked={ showBackFace }/></li>
         <li> Puzzle: <Select bind:value={ puzzle } items={ PUZZLES } label={ e => e.name } transform={ e => e } onChange={ resetPuzzle }/> </li>
         <li>
@@ -384,16 +450,22 @@
   .setting-list {
     width: 100%;
     min-height: 4rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(10rem, max-content));
   }
 
   .setting-list li {
     display: flex;
     gap: .25rem;
     align-items: center;
+    height: 100%;
+    border-radius: .3rem;
+    box-shadow: 0px 0px .3rem #fff3;
+    padding: .3rem;
   }
 
-  :global(.move), :global(.operator) {
-    display: inline-block;
+  :global(.space) {
+    width: 1ch;
   }
 
   :global(.move) {

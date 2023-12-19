@@ -108,7 +108,7 @@ export function SQUARE1(): PuzzleInterface {
       LEFT.add(FRONT).add(DOWN).add( UP.mul(L23) ).add( RIGHT.mul(BIG) ),
       LEFT.add(FRONT).add(UP).add( DOWN.mul(L23) ).add( RIGHT.mul(BIG) ),
       LEFT.add(FRONT).add(UP).add( DOWN.mul(L23) ),
-    ]),
+    ], undefined, [], false, 'small-equator'),
     new Sticker([
       LEFT.add(FRONT).add(UP).add( DOWN.mul(L23) ).add( RIGHT.mul(BIG) ),
       LEFT.add(FRONT).add(DOWN).add( UP.mul(L23) ).add( RIGHT.mul(BIG) ),
@@ -158,36 +158,74 @@ export function SQUARE1(): PuzzleInterface {
     pieceBig.stickers[2].clone().points.reverse(),
     mid.stickers[5].clone().points,
     mid.stickers[2].clone().points.map(p => p.rotate(CENTER, UP, PI_2, true)), // For simulator only
+    [CENTER, UP, FRONT].map(v => v.add(LEFT.mul(2))),
+    [CENTER, RIGHT, FRONT].map(v => v.add(UP.mul(2))),
+    [CENTER, RIGHT, DOWN].map(v => v.add(FRONT.mul(2))),
   ];
+
+  let trySingleMove = (mv: any): { pieces: Piece[], u: Vector3D, ang: number } | null => {
+    let moveId = mv[0]; // 2
+    let turns = mv[1]; // 3
+    const pts1 = planes[moveId];
+    const u = Vector3D.cross(pts1[0], pts1[1], pts1[2]).unit();
+    const mu = u.mul(-1);
+    const ang = PI_6 * turns;
+
+    let pcs = [];
+
+    for (let i = 0, maxi = pieces.length; i < maxi; i += 1) {
+      let d = pieces[i].direction1(pts1[0], u, false, (x: Sticker) => !/[xd]/.test(x.color));
+
+      if ( d === 0 ) {
+        console.log("Invalid move. Piece intersection detected.", "/UD"[moveId], turns, mv);
+        console.log("Piece: ", i, pieces[i], pts1);
+        return null;
+      }
+
+      if ( d > 0 ) {
+        pcs.push( pieces[i] );
+      }
+    }
+
+    return {
+      pieces: pcs,
+      u: mu,
+      ang
+    };
+  };
+
+  let updateReverse = (u: Vector3D, ang: number) => {
+    let dirs = pieces.slice(-2).map((p: Piece) => p.stickers.find(s => s.name === 'side-equator')!.getOrientation());
+    let dirs1 = pieces.slice(-2).map((p: Piece) => p.stickers.find(s => s.name === 'small-equator')!.getOrientation());
+    let id = dirs[0].dot(LEFT) > 0 ? 0 : 1;
+    let pu = Vector3D.cross(planes[0][0], planes[0][1], planes[0][2]);
+
+    planes[0].forEach(p => p.rotate(CENTER, u, ang, true));
+
+    if ( dirs1[ id ].dot(FRONT) < 0 ) {
+      id = 1 - id;
+    }
+
+    if ( pu.dot(u) > 0 ){
+      planes[0].reverse();
+    }
+  };
 
   sq1.move = function(moves: any[]) {
     for (let m = 0, maxm = moves.length; m < maxm; m += 1) {
       let mv = moves[m];
-      let moveId = mv[0]; // 2
-      let turns = mv[1]; // 3
-      const pts1 = planes[moveId];
-      const u = Vector3D.cross(pts1[0], pts1[1], pts1[2]).unit();
-      const mu = u.mul(-1);
-      const ang = PI_6 * turns;
+      let pcs = trySingleMove(mv);  
 
-      let buff = [];
-
-      for (let i = 0, maxi = pieces.length; i < maxi; i += 1) {
-        let d = pieces[i].direction(pts1[0], pts1[1], pts1[2], false, (x: Sticker) => x.color != 'x' && x.color != 'd');
-
-        if ( d === 0 ) {
-          console.log("Invalid move. Piece intersection detected.", m, "/UD"[moveId], turns, mv);
-          console.log("Piece: ", i, pieces[i], pts1);
-          return false;
-        }
-
-        if ( d > 0 ) {
-          buff.push( pieces[i] );
-          // pieces[i].stickers.map(s => s.rotate(CENTER, mu, ang, true));
-        }
+      if ( !pcs ) {
+        return false;
       }
+      
+      let { u, ang } = pcs;
+      pcs.pieces.forEach(p => p.rotate(CENTER, u, ang, true));
 
-      buff.forEach(p => p.stickers.map(s => s.rotate(CENTER, mu, ang, true)));
+      if ( mv[0] > 3 ) {
+        updateReverse(u, ang);
+      }
     }
     return true;
   };
@@ -221,6 +259,39 @@ export function SQUARE1(): PuzzleInterface {
   sq1.scramble = function() {
     let scramble = ScrambleParser.parseSquare1( square1SolverGetRandomScramble() );
     sq1.move(scramble);
+  };
+
+  sq1.applySequence = function(seq: string[]) {
+    let moves = seq.reduce((acc: number[][], mv) => [...acc, ...ScrambleParser.parseSquare1( mv )], []);
+    let res: { u: Vector3D, ang: number, pieces: string[] }[] = [];
+
+    for (let i = 0, maxi = moves.length; i < maxi; i += 1) {
+      let pcs;
+      let mv = moves[i];
+      
+      try {
+        pcs = trySingleMove(mv);
+      } catch(e) {
+        console.log("ERROR: ", seq[i], mv, e);
+      }
+
+      if ( !pcs ) {
+        continue;
+      }
+
+      let { u, ang } = pcs;
+      
+      res.push({ u, ang, pieces: pcs.pieces.map(p => p.id) });
+
+      pcs.pieces.forEach(p => p.rotate(CENTER, u, ang, true));
+      
+      if ( mv[0] > 3 ) {
+        updateReverse(u, ang);
+      }
+
+    }
+
+    return res;
   };
 
   sq1.faceVectors = [

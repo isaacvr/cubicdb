@@ -14,7 +14,7 @@
   let innerText = '<br>';
   let dispatch = createEventDispatcher();
   let textarea: HTMLTextAreaElement;
-  let cedit: HTMLDivElement;
+  let cedit: HTMLPreElement;
 
   export function getTextArea() {
     return textarea;
@@ -66,10 +66,10 @@
 
 <div class="relative {cClass || ""}" on:focus={ focusTextArea }>
   <!-- lesp bg-white text-black p-2 border-none outline-none pointer-events-none -->
-  <div on:focus={ focusTextArea } bind:this={ cedit }
+  <pre on:focus={ focusTextArea } bind:this={ cedit }
     class={`lesp bg-transparent outline-none p-2 pointer-events-none border-4 border-transparent `
       + ( cl || "bg-gray-600 text-gray-300" ) }
-    bind:innerHTML={ innerText } contenteditable="true" { spellcheck }></div>
+    bind:innerHTML={ innerText } contenteditable="false" { spellcheck }></pre>
   <textarea
     on:keyup={ keyup } on:keydown={ keydown } on:focus={ focus } on:blur={ blur } on:click={ click }
     on:scroll={ handleScroll } { placeholder } bind:this={ textarea } { spellcheck }

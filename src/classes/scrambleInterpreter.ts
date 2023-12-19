@@ -39,17 +39,19 @@ const SquareOneSpec = [
   [ /^[\s\n\r\t]+/, 'SPACE' ],
 
   // Comments:
-  [ /^- */, 'COMMENT' ],
+  [ /^-[^\d].*/, 'COMMENT' ],
 
   // Conmutator separator:
   [ /^,/, ',' ],
   [ /^:/, ':' ],
 
   // Move:
-  [/\((-?\d),(-?\d)\)/, 'MOVE'],
-  [/(-?\d),(-?\d)/, 'MOVE'],
-  [/(-?\d)(-?\d)/, 'MOVE'],
-  [/(-?\d)/, 'MOVE'],
+  [/^\//, 'MOVE'],
+  [/^\(\s*(-?\d),\s*(-?\d)\s*\)/, 'MOVE'],
+  [/^(-?\d),\s*(-?\d)/, 'MOVE'],
+  [/^(-?\d)(-?\d)/, 'MOVE'],
+  [/^(-?\d)/, 'MOVE'],
+  [ /^([xyz])2/, 'MOVE' ],
 ] as const;
 
 type InterpreterNode = 'Program' | 'Expression' | 'Space' | 'Comment' | 'ParentesizedExpression' | 'ConmutatorExpression' | 'Move';
@@ -311,6 +313,7 @@ export class Interpreter {
   private _lookahead: TToken | null;
   private throwErrors: boolean;
   private moveCursor: number = 0;
+  // private tokenizerType: PuzzleType;
 
   constructor(throwErrors: boolean = true, tokenizerType: PuzzleType = 'rubik') {
     // this._tokenizer = (tokenizerType in tokenizerMap) ? new tokenizerMap[tokenizerType] : new RubikTokenizer(throwErrors);
@@ -318,6 +321,7 @@ export class Interpreter {
     this._solver = new Solver();
     this._lookahead = null;
     this.throwErrors = throwErrors;
+    // this.tokenizerType = tokenizerType;
   }
 
   input(string: string) {
