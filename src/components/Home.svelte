@@ -1,11 +1,12 @@
 <script lang="ts">
-  import { Link } from "svelte-routing";
+  import { Link, navigate } from "svelte-routing";
   import { generateCubeBundle } from "@helpers/cube-draw";
   import { globalLang } from "@stores/language.service";
   import { getLanguage } from "@lang/index";
   import type { Card } from "@interfaces";
   import type { Puzzle } from "@classes/puzzle/puzzle";
   import { DataService } from "@stores/data.service";
+    import Button from "./material/Button.svelte";
   
   let cards: Card[] = [];
   const isMobile = DataService.getInstance().isMobile;
@@ -131,6 +132,8 @@
       </li>
     {/each}
   </ul>
+
+  <Button on:click={ () => navigate(encodeURI("/reconstructions?puzzle=square1&scramble=/ 3 / 1 / ")) }>Reconstruction</Button>
 </main>
 
 <style lang="postcss">

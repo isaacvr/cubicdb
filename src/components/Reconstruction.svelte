@@ -16,9 +16,12 @@
   import Select from "./material/Select.svelte";
   import type { PuzzleType } from "@interfaces";
   import { ScrambleParser } from "@classes/scramble-parser";
-  import Input from "./material/Input.svelte";
+  import { useLocation } from "svelte-routing";
+    import type { I } from "chart.js/dist/chunks/helpers.core";
 
   type IToken = ReturnType< Interpreter['getTree'] >['program'];
+
+  const location = useLocation();
 
   const iconSize = '1.3rem';
   const PUZZLES: { puzzle: PuzzleType, name: string, order: number }[] = [
@@ -28,36 +31,47 @@
     { puzzle: 'rubik', name: "5x5x5", order: 5 },
     { puzzle: 'rubik', name: "6x6x6", order: 6 },
     { puzzle: 'rubik', name: "7x7x7", order: 7 },
+    { puzzle: 'rubik', name: "8x8x8", order: 8 },
     { puzzle: 'square1', name: "Square-1", order: -1 },
     { puzzle: 'pyraminx', name: "Pyraminx", order: 3 },
     { puzzle: 'skewb', name: "Skewb", order: -1 },
   ];
 
-  let puzzle = PUZZLES[6];
+  let puzzle = PUZZLES[0];
   
   let simulator: Simulator;
   let textarea: TextArea;
 
   let showBackFace = true;
   let title = "";
-  let scramble = "(0,-1) / (-3,-3) / (1,-2) / (-1,-4) / (4,-5) / (-4,0) / (6,-3) / (2,-3) / (-2,0) / (2,0) / (-1,-2) / (2,0)";
-  let reconstruction = `z2 - inspection
-(0, -2) / ( 1,2 ) / ( 0, -2 ) / (   -4, 1   ) / (0,3) / - cubeshape
-(1,0) / (-3,0) / (-3,0) / - CO
-(6,0) / (3,0) / (3,0) / (-1,-1) / (-3,0) / (-3,0) / - EO
-/ (3,-3) / (-3,3) / - CP
-(1,1) / (3,0) / (-1,-1) / (3,0) / (-3,0) / (1,1) / (3,0) / (6,0) / (-4,3) - EP`;
+  let scramble = `U L2 l' f2 B2 D' b2 R' U2 F' l2 d' b' L' R2 u2 L r B2 l2 L' r2 R2 U B b' f' d L' f' u2 L F2 d' B' U d B u f2 B' F' r2 B r' b2 D d F' u2 F r' d D' r R2 F r l' B'`;
+  let reconstruction = `y' // inspection centers
+
+D' r2' l F r U 3r U 3r' D r' // yellow
+y U' r U' r' z' U' r z y r U r' x' y' U r 3r' l' R2 u' R2' u // white
+x' D x r U' 3r' r U' x2' r' U' U' 3l' U U r U' r' // red
+x2' r U r' 3r2 U' U' 3r2' D 3r U' 3r' 3l' U r' F F r2 // YR/green
+r' x' F r U' U' r' F r U' U' r U r' U' r U' r' // orange/blue edges
+
+3u' y 4d' L' U L u' y' F R' F' R u' u' // YB
+U' R U' R' U 4d U U' L' U L z2' d' U U R U' R' U 3d u d // YG
+L' U L d' // YO
+R U' R' u u x' x' U u U' d' L' U L d // WB
+U R U' R' u u d // WG
+U' R U' R' d R U R' F R' F' R u' d' // WO
+U' 4d' L' U L u z' x z' R U R' F R' F' R U' d // RB
+L' U L u' y' R U R' F R' F' R 3d // WR
+U' R U' R' U U d R U' R' z' r' // RG/OG/OB
+
+// 3x3x3
+x U' z' D' L' D' y' R' U' F' D D // cross
+y y R U R' D' L' U L D // 1st pair
+U' R U R' y U R U' R' // 2nd pair
+y D D U' R U' R' D D // 3rd pair
+U' R U' U' R' U R' F R F' // 4th pair
+U' U' U' R' F R U R' U' F' U R // OLL(CP)
+U R' U R' U' R' U' R' U R U R2 U' // EPLL`;
   
-//   reconstruction = `z2 - inspection
-// (0,-2) - / (1,2) / (0,-2) / (-4,1) / (0,3) / - cubeshape
-// - (1,0) / (-3,0) / (-3,0) / - CO
-// - (6,0) / (3,0) / (3,0) / (-1,-1) / (-3,0) / (-3,0) / - EO
-// - / (3,-3) / (-3,3) / - CP
-// - (1,1) / (3,0) / (-1,-1) / (3,0) / (-3,0) / (1,1) / (3,0) / (6,0) / (4,3) - EP`;
-
-  // scramble = '';
-  // reconstruction = '';
-
   let errorCursor = -1;
   let sequence: string[] = [];
   let sequenceIndex: number[] = [];
@@ -272,6 +286,7 @@
       let allMoves = textarea.getContentEdit().querySelectorAll('.move:not(.silent)');
       allMoves.forEach(mv => mv.classList.remove('current'));
       allMoves[id].classList.add('current');
+      allMoves[id].scrollIntoView({ block: 'nearest' });
       lastId = id;
     }
   }
@@ -325,13 +340,39 @@
   async function resetPuzzle() {
     await tick();
     simulator.handleSequence(sequence, scramble);
-    // finalAlpha = getMoveLength();
+    textarea.updateInnerText();
+  }
+
+  function handleLocation(loc: any) {
+    let map = new URL(loc.href).searchParams;
+    let p = map.get('puzzle');
+    let o = parseInt( map.get('order') || '-1' );
+    let s = map.get('scramble') || '';
+    let r = map.get('reconstruction') || '';
+
+    for (let i = 0, maxi = PUZZLES.length; i < maxi; i += 1) {
+      let pz = PUZZLES[i];
+
+      if ( pz.puzzle === p ) {
+        if ( pz.order === -1 || (pz.order > 0 && pz.order === o ) ) {
+          puzzle = pz;
+          scramble = s;
+          reconstruction = r;
+          return;
+        }
+      }
+    }
+
+    puzzle = PUZZLES[1];
+    scramble = '';
+    reconstruction = '';
   }
 
   onMount(() => mounted = true);
 
   $: recomputeTimeBounds(speed);
   $: handleSequenceAlpha(sequenceAlpha);
+  $: handleLocation($location);
 </script>
 
 <svelte:window on:keyup={ handleKeyup }/>
@@ -345,6 +386,7 @@
       bind:showBackFace
       bind:useScramble={ scramble }
       bind:sequenceAlpha
+      enableKeyboard={ false }
     />
 
     <div class="controls  bg-gray-600 h-[4rem] absolute bottom-0 w-full">
@@ -388,13 +430,13 @@
 
     <div>
       <h2>Scramble</h2>
-      <Input bind:value={ scramble } class="bg-transparent rounded-none w-full border-none monospaced"/>
+      <TextArea bind:value={ scramble } getInnerText={ parseReconstruction } class="bg-transparent rounded-none w-full border-none monaco overflow-auto" cClass="h-[10vh]"/>
     </div>
 
     <div>
       <h2>Reconstruction</h2>
-      <TextArea class="rounded-none border-none absolute inset-0 overflow-auto monospaced break-words whitespace-pre-wrap" placeholder="[Type your reconstruction here]"
-        bind:value={ reconstruction } cClass="h-[30vh] overflow-clip" getInnerText={ parseReconstruction } bind:this={ textarea }
+      <TextArea class="rounded-none border-none absolute inset-0 overflow-auto monaco" placeholder="[Type your reconstruction here]"
+        bind:value={ reconstruction } cClass="h-[30vh]" getInnerText={ parseReconstruction } bind:this={ textarea }
       />
     </div>
 
@@ -469,16 +511,16 @@
   }
 
   :global(.move) {
-    color: #cbd375;
+    color: #b5cea8;
   }
 
   :global(.move.current) {
-    background-color: #0065ff;
+    background-color: #3f69df;
     color: white;
   }
 
   :global(.comment) {
-    color: #508661;
+    color: #59966d;
     display: inline;
   }
 
@@ -487,6 +529,6 @@
   }
 
   :global(.operator) {
-    color: #a0b3fb;
+    color: #ce70d6;
   }
 </style>

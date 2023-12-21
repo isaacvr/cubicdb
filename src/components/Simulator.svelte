@@ -52,7 +52,7 @@
   export let showBackFace = false;
   export let sequence: string[] = [];
   export let sequenceAlpha = 0;
-  export let useScramble = '';
+  export let useScramble = "";
 
   let localLang: Readable<Language> = derived(globalLang, ($lang) =>
     getLanguage($lang),
@@ -131,7 +131,13 @@
     return false;
   }
 
-  function dataFromGroup(pc: any, best: Vector3D, vv: Vector3D, dir: number, fp = findPiece) {
+  function dataFromGroup(
+    pc: any,
+    best: Vector3D,
+    vv: Vector3D,
+    dir: number,
+    fp = findPiece,
+  ) {
     let animationBuffer: Object3D[][] = [];
     let userData: any[][] = [];
     let angs: number[] = [];
@@ -154,7 +160,7 @@
       let subUserData: any[] = [];
 
       group.children.forEach((p: Object3D, pos: number) => {
-        if ( fp(<Piece>p.userData, pieces) ) {
+        if (fp(<Piece>p.userData, pieces)) {
           subUserData.push(p.userData);
           subBuffer.push(p);
 
@@ -185,95 +191,100 @@
     let nc: Puzzle;
 
     try {
-      resetPuzzle('', false, scr);
-  
+      resetPuzzle("", false, scr);
+
       nc = Puzzle.fromSequence(scr, {
         type: selectedPuzzle,
         view: "trans",
         order: Array.isArray(order) ? order : [order, order, order],
         mode: CubeMode.NORMAL,
       });
-    } catch(err) {
-      console.log("ERROR: ", err);
-      return;
-    }
 
-    let cubeIDs = cube.p.pieces.map((p) => p.id);
-    let ncIDs = nc.p.pieces.map((p) => p.id);
-    let idMap: Map<string, string> = new Map(ncIDs.map((id, pos) => [ id, cubeIDs[pos] ]));
+      let cubeIDs = cube.p.pieces.map((p) => p.id);
+      let ncIDs = nc.p.pieces.map((p) => p.id);
+      let idMap: Map<string, string> = new Map(
+        ncIDs.map((id, pos) => [id, cubeIDs[pos]]),
+      );
 
-    states.length = 0;
-    stateAngle.length = 0;
-    stateCenter.length = 0;
-    stateDir.length = 0;
-    stateFilter.length = 0;
+      states.length = 0;
+      stateAngle.length = 0;
+      stateCenter.length = 0;
+      stateDir.length = 0;
+      stateFilter.length = 0;
 
-    if (nc.p.applySequence) {
-      let seq = nc.p.applySequence(s);
+      if (nc.p.applySequence) {
+        let seq = nc.p.applySequence(s);
 
-      let getMatrices = (data: Object3D[]) => {
-        return data.map(d => d.matrixWorld.clone());
-      };
+        let getMatrices = (data: Object3D[]) => {
+          return data.map((d) => d.matrixWorld.clone());
+        };
 
-      let allObjects = [ ...group.children, ...backFace.children ];
+        let allObjects = [...group.children, ...backFace.children];
 
-      states.push( getMatrices(allObjects) );
+        states.push(getMatrices(allObjects));
 
-      for (let i = 0, maxi = seq.length; i < maxi; i += 1) {
-        let s = seq[i];
-        let nu = new Vector3(s.u.x, s.u.y, s.u.z).normalize();
-        let ang = s.ang;
-        let ids = s.pieces;
-        let center = cube.p.center;
-        let c = new Vector3(center.x, center.y, center.z);
+        for (let i = 0, maxi = seq.length; i < maxi; i += 1) {
+          let s = seq[i];
+          let nu = new Vector3(s.u.x, s.u.y, s.u.z).normalize();
+          let ang = s.ang;
+          let ids = s.pieces;
+          let center = cube.p.center;
+          let c = new Vector3(center.x, center.y, center.z);
 
-        stateFilter.push( allObjects.map(d => {
-          if ( !ids.some(id => idMap.get(id) === (d.userData as Piece).id) ) {
-            return false;
-          }
-          // if (p.hasCallback) {
-          //   p.callback(d, new Vector3(0, 0, 0), u, ang, true, Vector3);
-          // } else {
+          stateFilter.push(
+            allObjects.map((d) => {
+              if (
+                !ids.some((id) => idMap.get(id) === (d.userData as Piece).id)
+              ) {
+                return false;
+              }
+              // if (p.hasCallback) {
+              //   p.callback(d, new Vector3(0, 0, 0), u, ang, true, Vector3);
+              // } else {
 
-          d.parent?.localToWorld(d.position);
-          d.position.sub(c);
-          d.position.applyAxisAngle(nu, ang);
-          d.position.add(c);
-          d.parent?.worldToLocal(d.position);
-          d.rotateOnWorldAxis(nu, ang);
-          d.updateMatrixWorld();
+              d.parent?.localToWorld(d.position);
+              d.position.sub(c);
+              d.position.applyAxisAngle(nu, ang);
+              d.position.add(c);
+              d.parent?.worldToLocal(d.position);
+              d.rotateOnWorldAxis(nu, ang);
+              d.updateMatrixWorld();
 
-          // }
+              // }
 
-          return true;
-        }));
+              return true;
+            }),
+          );
 
-        states.push( getMatrices(allObjects) );
-        stateAngle.push(ang);
-        stateCenter.push( center.clone() );
-        stateDir.push( s.u.clone() );
+          states.push(getMatrices(allObjects));
+          stateAngle.push(ang);
+          stateCenter.push(center.clone());
+          stateDir.push(s.u.clone());
+        }
+
+        allObjects.forEach((d, idx) => {
+          d.rotation.setFromRotationMatrix(states[0][idx]);
+          d.position.setFromMatrixPosition(states[0][idx]);
+        });
+
+        stateAngle.push(0);
+        stateCenter.push(CENTER);
+        stateDir.push(CENTER);
+        stateFilter.push([]);
+
+        sequenceAlpha = 0;
       }
-
-      allObjects.forEach((d, idx) => {
-        d.rotation.setFromRotationMatrix(states[0][idx]);
-        d.position.setFromMatrixPosition(states[0][idx]);
-      });
-
-      stateAngle.push(0);
-      stateCenter.push( CENTER );
-      stateDir.push( CENTER );
-      stateFilter.push( [] );
-
-      sequenceAlpha = 0;
+    } catch (err) {
+      console.log("ERROR: ", err);
     }
   }
 
   function handleAlpha(a: number) {
-    if ( !mounted ) return;
-    if ( a < 0 || a >= states.length ) return;
-    
+    if (!mounted) return;
+    if (a < 0 || a >= states.length) return;
+
     let id = ~~a;
-    let alpha = ((n: number) => n > 0.9 ? 1 : n / 0.9 )(a - id);
+    let alpha = ((n: number) => (n > 0.9 ? 1 : n / 0.9))(a - id);
 
     let state = states[id];
     let ang = stateAngle[id];
@@ -283,14 +294,14 @@
     let c = new Vector3(center.x, center.y, center.z);
     let nu = new Vector3(u.x, u.y, u.z);
 
-    let allObjects = [ ...group.children, ...backFace.children ];
+    let allObjects = [...group.children, ...backFace.children];
 
     allObjects.forEach((d, idx) => {
-      d.rotation.setFromRotationMatrix( state[idx] );
-      d.position.setFromMatrixPosition( state[idx] );
+      d.rotation.setFromRotationMatrix(state[idx]);
+      d.position.setFromMatrixPosition(state[idx]);
 
-      if ( !filter[idx] ) return;
-      
+      if (!filter[idx]) return;
+
       d.parent?.localToWorld(d.position);
       d.position.sub(c);
       d.position.applyAxisAngle(nu, ang * alpha);
@@ -361,7 +372,7 @@
     camera.updateProjectionMatrix();
   }
 
-  function resetPuzzle(facelet?: string, scramble = false, useScr = '') {
+  function resetPuzzle(facelet?: string, scramble = false, useScr = "") {
     resettingPuzzle = true;
 
     let children = scene.children;
@@ -713,6 +724,8 @@
   }
 
   function keyDownHandler(e: KeyboardEvent) {
+    if ( !enableKeyboard ) return;
+    
     let mc = new Vector2(mcx, mcy);
 
     switch (e.code) {
@@ -794,7 +807,7 @@
     controls.maxDistance = 12;
 
     resetPuzzle();
-    
+
     handleSequence(sequence, useScramble);
     handleAlpha(sequenceAlpha);
 

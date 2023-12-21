@@ -22,13 +22,13 @@ export class ScrambleParser {
 			if (f > 14) {
 				p = "2'".indexOf(m[5] || 'X') + 2;
 				f = [0, 4, 5][f % 3];
-				moveseq.push([moveMap.indexOf("FRUBLD".charAt(f)), 2, p]);
-				moveseq.push([moveMap.indexOf("FRUBLD".charAt(f)), 1, 4-p]);
+				moveseq.push([moveMap.indexOf("FRUBLD".charAt(f)), 2, p, 1]);
+				// moveseq.push([moveMap.indexOf("FRUBLD".charAt(f)), 1, 4-p]);
 				continue;
 			}
 			w = f < 12 ? (~~m[1] || ~~m[4] || ((m[3] == "w" || f > 5) && 2) || 1) : -1;
 			p = (f < 12 ? 1 : -1) * ("2'".indexOf(m[5] || 'X') + 2);
-			moveseq.push([moveMap.indexOf("FRUBLD".charAt(f % 6)), w, p]);
+			moveseq.push([moveMap.indexOf("FRUBLD".charAt(f % 6)), w, p, 0]);
 		}
 		return moveseq;
 	}
@@ -42,12 +42,19 @@ export class ScrambleParser {
     
     for (let i = 0, maxi = moves.length; i < maxi; i += 1) {
       if (moves[i][1] > 0) {
-        res.push([moves[i][1], MOVE_MAP.charAt(moves[i][0]), [1, 2, -1][moves[i][2] - 1]]);
+        res.push([
+          moves[i][3] ? order - 1 : moves[i][1],
+          MOVE_MAP.charAt(moves[i][0]),
+          [1, 2, -1][moves[i][2] - 1],
+          moves[i][3] ? order - 2 : undefined
+        ]);
       } else {
-        res.push([order, MOVE_MAP.charAt(moves[i][0]), [1, 2, -1][-moves[i][2] - 1]]);
+        res.push([order, MOVE_MAP.charAt(moves[i][0]), [1, 2, -1][-moves[i][2] - 1], moves[i][3]]);
       }
     }
 
+    
+  
     return res;
   }
 

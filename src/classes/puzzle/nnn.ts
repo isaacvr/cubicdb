@@ -110,16 +110,18 @@ export function RUBIK(_a: number, _b:number, _c:number): PuzzleInterface {
     let moveId = MOVE_MAP.indexOf( mv[1] );
     let layers = mv[0] === a ? mv[0] + 1 : mv[0];
     let turns = mv[2];
+    let span = mv[3];
     const pts1 = planes[moveId];
     const u = Vector3D.cross(pts1[0], pts1[1], pts1[2]).unit();
     const mu = u.mul(-1);
     const pts2 = pts1.map(p => p.add( mu.mul(len * layers) ));
+    const pts3 = pts2.map(p => p.add( u.mul(len * span) ));
     const ang = Math.PI / 2 * turns;
 
     let pcs = [];
 
     for (let i = 0, maxi = pieces.length; i < maxi; i += 1) {
-      let d = pieces[i].direction(pts2[0], pts2[1], pts2[2], true);
+      let d = pieces[i].direction1(pts2[0], u, true);
 
       if ( d === 0 ) {
         console.log("Invalid move. Piece intersection detected.", "URFDLB"[moveId], turns, mv);
@@ -127,7 +129,13 @@ export function RUBIK(_a: number, _b:number, _c:number): PuzzleInterface {
         return null;
       }
 
-      if ( d > 0 ) {
+      if ( span ) {
+        let d1 = pieces[i].direction1(pts3[0], u, true);
+
+        if ( d * d1 < 0 ) {
+          pcs.push( pieces[i] );  
+        }
+      } else if ( d > 0 ) {
         pcs.push( pieces[i] );
       }
     }
