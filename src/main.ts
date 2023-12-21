@@ -1,5 +1,5 @@
 import './App.css'
-import './cubedb-premium/premium.css';
+// import './cubedb-premium/premium.css';
 import App from './App.svelte'
 import { DataService } from '@stores/data.service';
 

@@ -27,8 +27,8 @@
   import Tools from '@components/tools/Tools.svelte';
 
   // Premium Stuff
-  import Contest from '@pcomponents/Contest.svelte';
-    import Reconstruction from '@components/Reconstruction.svelte';
+  // import Contest from '@pcomponents/Contest.svelte';
+  import Reconstruction from '@components/Reconstruction.svelte';
   // import Particles from '@pcomponents/Particles.svelte';
   // import Space from '@pcomponents/Space.svelte';
 
@@ -75,7 +75,7 @@
     <Route path="/battle" component={ Battle }/>
     <Route path="/pll-trainer" component={ PllRecognition }/>
     <Route path="/simulator" component={ Simulator }/>
-    <Route path="/contest" component={ Contest }/>
+    <!-- <Route path="/contest" component={ Contest }/> -->
     <Route path="/import-export" component={ ImportExport }/>
     <Route path="/settings" component={ Settings }/>
     <Route path="/cubedb" component={ CubeDb }/>
