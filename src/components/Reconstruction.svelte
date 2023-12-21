@@ -216,9 +216,16 @@
     if ( !playing ) return;
 
     let t = performance.now();
-    let a = map(t, initTime, finalTime, initAlpha, finalAlpha);
+    let a = map(t, initTime, finalTime, map(dir, -1, 1, finalAlpha, initAlpha), map(dir, -1, 1, initAlpha, finalAlpha));
 
-    sequenceAlpha = minmax(a, 0, finalAlpha);
+    if ( limit >= 0 ) {
+      if ( (a - limit) * dir > 0 ) {
+        a = limit;
+        playing = false;
+      }
+    }
+
+    sequenceAlpha = minmax(a, initAlpha, finalAlpha);
 
     if ( a < initAlpha || a > finalAlpha ) {
       playing = false;
@@ -228,7 +235,7 @@
   }
 
   function recomputeTimeBounds(s: number, inv = false) {
-    let percent = sequenceAlpha / (finalAlpha - initAlpha);
+    let percent = (sequenceAlpha - initAlpha) / (finalAlpha - initAlpha);
     let total = finalAlpha  * 1000 / s;
 
     finalTime = performance.now() + total * (1 - (inv ? 1 - percent : percent));
@@ -246,6 +253,8 @@
       }
 
       playing = true;
+      limit = -1;
+      dir = 1;
       recomputeTimeBounds(speed);
       play();
     }
@@ -269,29 +278,14 @@
     playing = false;
   }
 
-  function stepBack() {
-    if ( playing ) {
-      playing = false;
-    }
-
-    let id = ~~sequenceAlpha;
-    sequenceAlpha = minmax(id - 1, initAlpha, finalAlpha);
-  }
-  
-  function stepForward() {
-    if ( playing ) {
-      playing = false;
-    }
-
-    let id = ~~sequenceAlpha;
-    limit = id + 1;
-    dir = 1;
-    recomputeTimeBounds(speed);
+  function step(d: 1 | -1) {
+    limit = d === 1 ? ~~sequenceAlpha + 1 : Math.ceil(sequenceAlpha) - 1;
+    dir = d;
+    recomputeTimeBounds(speed * 2, d === -1);
     playing = true;
     play();
-    // sequenceAlpha = minmax(id + 1, 0, sequence.length);
   }
-
+  
   function handleKeyup(ev: KeyboardEvent) {
     switch( ev.code ) {
       case 'KeyP': {
@@ -300,12 +294,12 @@
       }
 
       case 'ArrowLeft': {
-        ev.ctrlKey && stepBack();
+        ev.ctrlKey && step(-1);
         break;
       }
 
       case 'ArrowRight': {
-        ev.ctrlKey && stepForward();
+        ev.ctrlKey && step(1);
         break;
       }
     }
@@ -338,8 +332,8 @@
     }
 
     puzzle = PUZZLES[1];
-    scramble = '';
-    reconstruction = '';
+    scramble = `R U R' U'`;
+    reconstruction = `[U, R]`;
   }
 
   onMount(() => mounted = true);
@@ -370,7 +364,7 @@
 
       <div class="flex justify-evenly">
         <Tooltip position="top" text="Step back [Ctrl + Left]" class="!w-full" hasKeybinding>
-          <Button class="w-full rounded-none shadow-none hover:bg-purple-600" on:click={ stepBack }>
+          <Button class="w-full rounded-none shadow-none hover:bg-purple-600" on:click={ () => step(-1) }>
             <StepBackIcon size={ iconSize }/>
           </Button>
         </Tooltip>
@@ -390,7 +384,7 @@
         </Tooltip>
 
         <Tooltip position="top" text="Step forward [Ctrl + Right]" class="!w-full" hasKeybinding>
-          <Button class="w-full rounded-none shadow-none hover:bg-purple-600" on:click={ stepForward }>
+          <Button class="w-full rounded-none shadow-none hover:bg-purple-600" on:click={ () => step(1) }>
             <StepForwardIcon size={ iconSize }/>
           </Button>
         </Tooltip>
