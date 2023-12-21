@@ -17,7 +17,6 @@
   import type { PuzzleType } from "@interfaces";
   import { ScrambleParser } from "@classes/scramble-parser";
   import { useLocation } from "svelte-routing";
-    import type { I } from "chart.js/dist/chunks/helpers.core";
 
   type IToken = ReturnType< Interpreter['getTree'] >['program'];
 
@@ -44,33 +43,8 @@
 
   let showBackFace = true;
   let title = "";
-  let scramble = `U L2 l' f2 B2 D' b2 R' U2 F' l2 d' b' L' R2 u2 L r B2 l2 L' r2 R2 U B b' f' d L' f' u2 L F2 d' B' U d B u f2 B' F' r2 B r' b2 D d F' u2 F r' d D' r R2 F r l' B'`;
-  let reconstruction = `y' // inspection centers
-
-D' r2' l F r U 3r U 3r' D r' // yellow
-y U' r U' r' z' U' r z y r U r' x' y' U r 3r' l' R2 u' R2' u // white
-x' D x r U' 3r' r U' x2' r' U' U' 3l' U U r U' r' // red
-x2' r U r' 3r2 U' U' 3r2' D 3r U' 3r' 3l' U r' F F r2 // YR/green
-r' x' F r U' U' r' F r U' U' r U r' U' r U' r' // orange/blue edges
-
-3u' y 4d' L' U L u' y' F R' F' R u' u' // YB
-U' R U' R' U 4d U U' L' U L z2' d' U U R U' R' U 3d u d // YG
-L' U L d' // YO
-R U' R' u u x' x' U u U' d' L' U L d // WB
-U R U' R' u u d // WG
-U' R U' R' d R U R' F R' F' R u' d' // WO
-U' 4d' L' U L u z' x z' R U R' F R' F' R U' d // RB
-L' U L u' y' R U R' F R' F' R 3d // WR
-U' R U' R' U U d R U' R' z' r' // RG/OG/OB
-
-// 3x3x3
-x U' z' D' L' D' y' R' U' F' D D // cross
-y y R U R' D' L' U L D // 1st pair
-U' R U R' y U R U' R' // 2nd pair
-y D D U' R U' R' D D // 3rd pair
-U' R U' U' R' U R' F R F' // 4th pair
-U' U' U' R' F R U R' U' F' U R // OLL(CP)
-U R' U R' U' R' U' R' U R U R2 U' // EPLL`;
+  let scramble = ``;
+  let reconstruction = ``;
   
   let errorCursor = -1;
   let sequence: string[] = [];
