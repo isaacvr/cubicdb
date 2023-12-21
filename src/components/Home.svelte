@@ -133,7 +133,7 @@
     {/each}
   </ul>
 
-  <Button on:click={ () => navigate(encodeURI("/reconstructions?puzzle=square1&scramble=/ 3 / 1 / ")) }>Reconstruction</Button>
+  <!-- <Button on:click={ () => navigate(encodeURI("/reconstructions?puzzle=square1&scramble=/ 3 / 1 / ")) }>Reconstruction</Button> -->
 </main>
 
 <style lang="postcss">
