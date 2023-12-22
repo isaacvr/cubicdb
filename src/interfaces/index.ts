@@ -606,6 +606,7 @@ export interface Language {
     scramble: string;
     search: string;
     toScramble: string;
+    reconstruction: string;
   }
   NAVBAR: {
     home: string;
@@ -879,3 +880,10 @@ export const MetricList: { 0: string, 1: TurnMetric }[] = [
   [ 'OBTM', 'OBTM' ],
   [ 'STM', 'STM' ],
 ];
+
+export interface IReconstruction {
+  sequence: string[];
+  sequenceIndex: number[];
+  finalAlpha: number;
+  result: string;
+}

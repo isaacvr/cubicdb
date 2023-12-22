@@ -34,9 +34,10 @@
   import { getLanguage } from "@lang/index";
   import { tick } from "svelte";
   import Select from "@components/material/Select.svelte";
-  import { copyToClipboard, randomUUID } from "@helpers/strings";
+  import { copyToClipboard, defaultInner, parseReconstruction, randomUUID } from "@helpers/strings";
   import { calcPercents } from "@helpers/math";
     import { startViewTransition } from "@helpers/DOM";
+    import { navigate } from "svelte-routing";
 
   let localLang: Readable<Language> = derived(globalLang, ($lang) => getLanguage( $lang ));
 
@@ -65,6 +66,7 @@
   let solveSteps: number[] = [];
   let fComment = false;
   let collapsed = false;
+  let reconstructionError = true;
   
   function closeHandler(s?: Solve) {
     if ( s ) {
@@ -297,6 +299,36 @@
     showContextMenu = false;
   }
 
+  function checkReconstruction() {
+    let o = options.get(sSolve.mode || '333')!;
+    
+    modal.close(sSolve);
+
+    let params = [
+      [ 'puzzle', o.type ],
+      [ 'order', o.order ? o.order[0] : -1 ],
+      [ 'scramble', sSolve.scramble ],
+      [ 'reconstruction', sSolve.comments ],
+      [ 'returnTo', '/timer' ]
+    ];
+
+    navigate( '/reconstructions?' + params.map(p => encodeURI(p[0] + '=' + p[1])).join("&") );
+  }
+
+  function parse(s: string) {
+    let o = options.get(sSolve.mode || '333');
+
+    reconstructionError = true;
+
+    if ( o ) {
+      let res = parseReconstruction(s, o.type, o.order ? o.order[0] : -1);
+      reconstructionError = res.finalAlpha === 0;
+      return res.result;
+    }
+
+    return defaultInner(s, true);
+  }
+
   $: updatePaginator($solves);
   $: $selected, updatePageFromSelected();
   $: $tab != 1 && $selected && selectNone();
@@ -448,29 +480,36 @@
 
       <CommentIcon />
       
-      <TextArea blurOnEscape
-        on:focus={ () => fComment = true }
-        on:blur={ () => fComment = false }
-        cClass={fComment ? "max-h-[30ch]" : 'max-h-[20ch]'} bind:value={ sSolve.comments } placeholder={ $localLang.TIMER.comment }/>
+      <TextArea blurOnEscape on:focus={ () => fComment = true } on:blur={ () => fComment = false }
+        cClass={fComment ? "max-h-[30ch]" : 'max-h-[20ch]'} getInnerText={ parse } class="border border-gray-400 text-sm"
+        bind:value={ sSolve.comments } placeholder={ $localLang.TIMER.comment }/>
     </div>
-    <div class="mt-2 flex justify-between gap-1">
+    <div class="mt-2 flex justify-evenly gap-1">
       <Button ariaLabel={ $localLang.global.delete } flat
-        class="text-red-500 border border-red-500 hover:text-gray-200 hover:bg-red-700"
+        class="text-red-500 hover:text-gray-200 hover:bg-red-800 text-sm !p-1"
         on:click={ () => { _delete([ sSolve ]); modal.close()} }>
         <DeleteIcon /> { $localLang.global.delete }
       </Button>
       
       <Button ariaLabel={ $localLang.global.cancel } flat
         on:click={ () => modal.close() }
-        class="border border-gray-400 text-gray-400 hover:bg-gray-900 hover:text-gray-200">
+        class="text-gray-400 hover:bg-gray-900 hover:text-gray-200 text-sm !p-1">
         <CloseIcon /> { $localLang.global.cancel }
       </Button>
       
       <Button ariaLabel={ $localLang.global.save } flat
         on:click={ () => modal.close(sSolve) }
-        class="border border-purple-400 text-purple-400 hover:bg-purple-900 hover:text-gray-200 mr-2">
+        class="text-purple-400 hover:bg-purple-900 hover:text-gray-200 mr-2 text-sm !p-1">
         <SendIcon /> { $localLang.global.save }
       </Button>
+
+      {#if !reconstructionError}
+        <Button ariaLabel={ $localLang.global.save } flat
+          on:click={ checkReconstruction }
+          class="text-green-400 hover:bg-green-900 hover:text-gray-200 mr-2 text-sm !p-1">
+          { $localLang.global.reconstruction }
+        </Button>
+      {/if}
 
       <Select items={[
           { label: $localLang.TIMER.noPenalty, penalty: Penalty.NONE },

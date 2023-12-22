@@ -33,7 +33,7 @@
 </script>
 
 <button {tabindex} class={`
-  px-4 py-2 rounded-md shadow-md flex items-center justify-center overflow-hidden
+  px-2 py-1 rounded-md shadow-md flex items-center justify-center overflow-hidden
   relative uppercase font-bold transition-all duration-100 content
 
   hover:shadow-lg
