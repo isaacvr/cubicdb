@@ -25,6 +25,7 @@ export const Spanish: Language = {
     scramble: 'Mezcla',
     search: 'Buscar',
     toScramble: 'Mezclar cubo',
+    reconstruction: 'Reconstrucción'
   },
   NAVBAR: {
     home: 'Inicio',

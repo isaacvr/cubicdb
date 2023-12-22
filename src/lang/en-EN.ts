@@ -25,6 +25,7 @@ export const English: Language = {
     scramble: 'Scramble',
     search: 'Search',
     toScramble: 'Scramble puzzle',
+    reconstruction: 'Reconstruction',
   },
   NAVBAR: {
     home: 'Home',

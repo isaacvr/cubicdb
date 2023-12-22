@@ -180,6 +180,33 @@ mark {
   border-bottom: none;
 }
 
+/* Reconstructions */
+pre .space {
+  width: 1ch;
+}
+
+pre .move {
+  color: #b5cea8;
+}
+
+pre .move.current {
+  background-color: #3f69df;
+  color: white;
+}
+
+pre .comment {
+  color: #59966d;
+  display: inline;
+}
+
+pre .error {
+  color: #e04a4a;
+}
+
+pre .operator {
+  color: #ce70d6;
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: .7rem;

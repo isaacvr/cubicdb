@@ -3,22 +3,21 @@
   import Button from "./material/Button.svelte";
   import Slider from "./material/Slider.svelte";
   import TextArea from "./material/TextArea.svelte";
-  import { Interpreter } from "@classes/scrambleInterpreter";
   import PlayIcon from 'svelte-material-icons/Play.svelte';
   import RestartIcon from 'svelte-material-icons/Restart.svelte';
   import PauseIcon from 'svelte-material-icons/Pause.svelte';
   import StepBackIcon from 'svelte-material-icons/ChevronLeft.svelte';
   import StepForwardIcon from 'svelte-material-icons/ChevronRight.svelte';  
+  import BackIcon from 'svelte-material-icons/History.svelte';
   import { map, minmax } from "@helpers/math";
   import { onMount, tick } from "svelte";
   import Tooltip from "./material/Tooltip.svelte";
   import Checkbox from "./material/Checkbox.svelte";
   import Select from "./material/Select.svelte";
   import type { PuzzleType } from "@interfaces";
-  import { ScrambleParser } from "@classes/scramble-parser";
-  import { useLocation } from "svelte-routing";
+  import { navigate, useLocation } from "svelte-routing";
+  import { parseReconstruction } from "@helpers/strings";
 
-  type IToken = ReturnType< Interpreter['getTree'] >['program'];
 
   const location = useLocation();
 
@@ -34,6 +33,7 @@
     { puzzle: 'square1', name: "Square-1", order: -1 },
     { puzzle: 'pyraminx', name: "Pyraminx", order: 3 },
     { puzzle: 'skewb', name: "Skewb", order: -1 },
+    // { puzzle: 'megaminx', name: "Megaminx", order: 3 },
   ];
 
   let puzzle = PUZZLES[0];
@@ -42,11 +42,11 @@
   let textarea: TextArea;
 
   let showBackFace = true;
-  let title = "";
-  let scramble = ``;
-  let reconstruction = ``;
+  let title = '';
+  let scramble = '';
+  let reconstruction = '';
+  let backURL = '';
   
-  let errorCursor = -1;
   let sequence: string[] = [];
   let sequenceIndex: number[] = [];
   let sequenceAlpha = 0;
@@ -61,155 +61,12 @@
   let limit = -1;
   let dir: 1 | -1 = 1;
 
-  function getMoveLength(): number {
-    let s = sequence.join(' ');
-    try {
-      switch ( puzzle.puzzle ) {
-        case 'rubik': {
-          return sequence.reduce((acc: any[], e) => [...acc, ...ScrambleParser.parseNNN(e, puzzle.order)], []).length;
-        }
-  
-        case 'skewb': {
-          return sequence.reduce((acc: any[], e) => [...acc, ...ScrambleParser.parseSkewb(e)], []).length;
-        }
-  
-        case 'square1': {
-          return sequence.reduce((acc: any[], e) => [...acc, ...ScrambleParser.parseSquare1(e)], []).length;
-        }
-      }
-    } catch {}
-
-    return 0;
-  }
-
-  function defaultInner(s: string, withSuffix = true) {
-    return s.replace(/\n/g, '<br>') + (withSuffix ? '<br>' : '');
-  }
-
-  function getTreeString(token: IToken): string {
-    let { value } = token;
-
-    switch( token.type ) {
-      case 'Move': {
-        if ( puzzle.puzzle === 'square1' && token.value != '/' ) {
-          let regs = [/^(\()(\s*)(-?\d)(,)(\s*)(-?\d)(\s*)(\))/, /^(-?\d)(,)(\s*)(-?\d)/, /^(-?\d)(-?\d)/, /^(-?\d)/];
-          let operators = /^[\(\,\)]$/;
-
-          for (let i = 0, maxi = regs.length; i < maxi; i += 1) {
-            let m = regs[i].exec(value);
-
-            if ( m ) {
-              return m.slice(1).map(s =>
-                operators.test(s)
-                  ? `<span class="operator">${ s }</span>`
-                  : /\d$/.test(s)
-                    ? s === '0' ? `<span class="move silent">${ s }</span>` : `<span class="move">${ s }</span>`
-                    : defaultInner(s, false)
-              ).join('');
-            }
-          }
-        }
-        return `<span class="move">${ defaultInner(value, false) }</span>`;
-      }
-      
-      case 'Comment': {
-        return `<span class="comment">${ defaultInner(value, false) }</span>`;
-      }
-
-      case 'Space': {
-        return defaultInner(value, false);
-      }
-
-      case 'Expression': {
-        return (value as IToken[]).map(getTreeString).join('');
-      }
-      
-      case 'ParentesizedExpression': {
-        return '<span class="operator">(</span>'
-          + getTreeString(value.expr)
-          + '<span class="operator">)</span>'
-          + ((value.cant != 1 || value.explicit) ? `<span class="operator">${value.cant}</span>` : '');
-      }
-
-      case 'ConmutatorExpression': {
-        if ( value.setup ) {
-          return '<span class="operator">[</span>'
-            + getTreeString(value.setup)
-            + '<span class="operator">:</span>'
-            + getTreeString(value.conmutator)
-            + '<span class="operator">]</span>'
-            + ((value.cant != 1 || value.explicit) ? `<span class="operator">${value.cant}</span>` : '');
-        }
-        return '<span class="operator">[</span>'
-          + getTreeString(value.expr1)
-          + '<span class="operator">,</span>'
-          + getTreeString(value.expr2)
-          + '<span class="operator">]</span>'
-          + ((value.cant != 1 || value.explicit) ? `<span class="operator">${value.cant}</span>` : '');
-      }
-    }
-
-    return '';
-  }
-
-  function parseReconstruction(s: string) {
-    let itp = new Interpreter(false, puzzle.puzzle);
-    
-    errorCursor = -1;
-    sequence.length = 0;
-    finalAlpha = 0;
-
-    try {
-      let tree = itp.getTree(s);
-
-      // console.log("TREE: ", tree);
-
-      if ( tree.error ) {
-        // console.log("ERROR: ", tree.error, tree.cursor);
-        if ( typeof tree.cursor === 'number' ) {
-          errorCursor = tree.cursor;
-        } else {
-          errorCursor = 0;
-        }
-      } else {
-        let program = itp.getFlat( tree.program );
-        let flat = program.filter(token => token.cursor >= 0);
-        
-        sequence = flat.map(token => token.value);
-
-        finalAlpha = getMoveLength();
-
-        switch ( puzzle.puzzle ) {
-          case 'square1': {
-            sequenceIndex = (new Array(finalAlpha).fill(0)).map((_, i) => i);
-            break;
-          }
-
-          default: {
-            sequenceIndex = flat.map(token => token.cursor);
-          }
-        }
-
-        return getTreeString(tree.program.value) + "<br>";
-      }
-    } catch(e) {
-      if ( typeof e === 'number' ) {
-        errorCursor = e;
-      }
-    }
-
-    if ( errorCursor != -1 ) {
-      let pref = defaultInner(s.slice(0, errorCursor), false);
-      let middle = '';
-      let match = /^([^\s\n]+)/.exec( s.slice(errorCursor) );
-
-      if ( match ) {
-        middle = `<span class="error">${ match[0] }</span>`;
-        return pref + middle + defaultInner(s.slice( errorCursor + match[0].length ));
-      }
-    }
-
-    return defaultInner(s);
+  function parse(s: string) {
+    let rec = parseReconstruction(s, puzzle.puzzle, puzzle.order);
+    finalAlpha = rec.finalAlpha;
+    sequence = rec.sequence;
+    sequenceIndex = rec.sequenceIndex;
+    return rec.result;
   }
 
   function play() {
@@ -317,6 +174,8 @@
     let o = parseInt( map.get('order') || '-1' );
     let s = map.get('scramble') || '';
     let r = map.get('reconstruction') || '';
+    
+    backURL = (map.get('returnTo') || '').trim();
 
     for (let i = 0, maxi = PUZZLES.length; i < maxi; i += 1) {
       let pz = PUZZLES[i];
@@ -332,8 +191,8 @@
     }
 
     puzzle = PUZZLES[1];
-    scramble = `R U R' U'`;
-    reconstruction = `[U, R]`;
+    scramble = ``;
+    reconstruction = ``;
   }
 
   onMount(() => mounted = true);
@@ -357,20 +216,20 @@
       enableKeyboard={ false }
     />
 
-    <div class="controls  bg-gray-600 h-[4rem] absolute bottom-0 w-full">
+    <div class="grid bg-gray-600 h-[4rem] absolute bottom-0 w-full">
       <div class="flex px-3">
         <Slider class="text-white" bind:value={ sequenceAlpha } min={ initAlpha } max={ finalAlpha } on:mousedown={ pause }/>
       </div>
 
       <div class="flex justify-evenly">
         <Tooltip position="top" text="Step back [Ctrl + Left]" class="!w-full" hasKeybinding>
-          <Button class="w-full rounded-none shadow-none hover:bg-purple-600" on:click={ () => step(-1) }>
+          <Button class="w-full h-full rounded-none shadow-none hover:bg-purple-600" on:click={ () => step(-1) }>
             <StepBackIcon size={ iconSize }/>
           </Button>
         </Tooltip>
 
         <Tooltip position="top" text="Play/Pause [Ctrl + P]" class="!w-full" hasKeybinding>
-          <Button class="w-full rounded-none shadow-none hover:bg-green-600" on:click={ handlePlay }>
+          <Button class="w-full h-full rounded-none shadow-none hover:bg-green-600" on:click={ handlePlay }>
             {#if playing}
               <PauseIcon size={ iconSize }/>
             {:else}
@@ -384,7 +243,7 @@
         </Tooltip>
 
         <Tooltip position="top" text="Step forward [Ctrl + Right]" class="!w-full" hasKeybinding>
-          <Button class="w-full rounded-none shadow-none hover:bg-purple-600" on:click={ () => step(1) }>
+          <Button class="w-full h-full rounded-none shadow-none hover:bg-purple-600" on:click={ () => step(1) }>
             <StepForwardIcon size={ iconSize }/>
           </Button>
         </Tooltip>
@@ -398,13 +257,13 @@
 
     <div>
       <h2>Scramble</h2>
-      <TextArea bind:value={ scramble } getInnerText={ parseReconstruction } class="bg-transparent rounded-none w-full border-none monaco overflow-auto" cClass="h-[10vh]"/>
+      <TextArea bind:value={ scramble } getInnerText={ parse } class="bg-transparent rounded-none w-full border-none" cClass="h-[10vh]"/>
     </div>
 
     <div>
       <h2>Reconstruction</h2>
-      <TextArea class="rounded-none border-none absolute inset-0 overflow-auto monaco" placeholder="[Type your reconstruction here]"
-        bind:value={ reconstruction } cClass="h-[30vh]" getInnerText={ parseReconstruction } bind:this={ textarea }
+      <TextArea class="rounded-none border-none absolute inset-0" placeholder="[Type your reconstruction here]"
+        bind:value={ reconstruction } cClass="h-[30vh]" getInnerText={ parse } bind:this={ textarea }
       />
     </div>
 
@@ -419,15 +278,17 @@
             <RestartIcon size={ iconSize }/> Reset camera
           </Button>
         </li>
+        {#if backURL}
+          <li>
+            <Button class="bg-blue-700 hover:bg-blue-600 gap-1" on:click={ () => navigate(backURL) }>
+              <BackIcon size={ iconSize }/> Return
+            </Button>
+          </li>
+        {/if}
+        <li class="w-full">
+          Speed: <Slider bind:value={ speed } min={ 0.1 } max={ 10 }/> <span>{ Math.floor(speed * 100) / 100 }x</span>
+        </li>
       </ul>
-    </div>
-
-    <div>
-      <h2>Playback options</h2>
-
-      <div class="flex px-3 py-1 gap-2">
-        Speed: <Slider bind:value={ speed } min={ 0.1 } max={ 10 }/> <span>{ Math.floor(speed * 100) / 100 }x</span>
-      </div>
     </div>
   </section>
 </main>
@@ -458,10 +319,10 @@
   }
 
   .setting-list {
-    width: 100%;
     min-height: 4rem;
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(10rem, max-content));
+    justify-content: space-evenly;
   }
 
   .setting-list li {
@@ -472,31 +333,5 @@
     border-radius: .3rem;
     box-shadow: 0px 0px .3rem #fff3;
     padding: .3rem;
-  }
-
-  :global(.space) {
-    width: 1ch;
-  }
-
-  :global(.move) {
-    color: #b5cea8;
-  }
-
-  :global(.move.current) {
-    background-color: #3f69df;
-    color: white;
-  }
-
-  :global(.comment) {
-    color: #59966d;
-    display: inline;
-  }
-
-  :global(.error) {
-    color: #e04a4a;
-  }
-
-  :global(.operator) {
-    color: #ce70d6;
   }
 </style>
