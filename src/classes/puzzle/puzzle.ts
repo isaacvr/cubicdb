@@ -343,19 +343,11 @@ export class Puzzle {
     let arr = sequence.trim().split(' ').map(e => e.trim()).filter(e => e != "");
     let res = [];
 
-    if ( type !== 'square1' ) {
-      for (let i = arr.length - 1; i >= 0; i -= 1) {
-        if ( arr[i].indexOf('2') > -1 ) {
-          res.push( arr[i].replace("'", "") );
-        } else if ( arr[i].indexOf("'") > -1 ) {
-          res.push( arr[i].replace("'", "") );
-        } else {
-          res.push( arr[i] + "'" );
-        }
-      }
-    } else {
+    if ( type === 'square1' ) {
       let sqre = /\s*\(?(-?\d+), *(-?\d+)\)?\s*/;
+      
       arr = sequence.replace(/\s+/g, '').split('/');
+      
       for (let i = arr.length - 1; i >= 0; i -= 1) {
         let m = arr[i].match(sqre);
         if ( m ) {
@@ -363,6 +355,35 @@ export class Puzzle {
         }
         if ( i > 0 ) {
           res.push('/');
+        }
+      }
+    } else if ( type === 'megaminx' ) {
+      for (let i = arr.length - 1; i >= 0; i -= 1) {
+        let mv = arr[i];
+
+        if ( /^([RD](\+|-){2})$/.test(mv) ) {
+          res.push(mv[0] + (mv[1] === '+' ? '-' : '+').repeat(2));
+        } else {
+          let turns1 = (parseInt(mv.replace(/\D*(\d+)\D*/g, '$1')) || 1) * Math.sign(mv.indexOf("'") + 0.2);
+          let turns = (5 - ((parseInt(mv.replace(/\D*(\d+)\D*/g, '$1')) || 1) * Math.sign(mv.indexOf("'") + 0.2)) % 5) % 5;
+
+          if ( /^([URFL]\d*'?)$/.test(mv) ) {
+            res.push(`${mv[0]}${turns === 1 || turns === -1 ? '' : Math.abs(turns)}${turns < 0 ? '' : "'"}`);
+          } else if ( /^([db][RL]\d*'?)$/.test(mv) ) {
+            res.push(`${mv.slice(0, 2)}${turns === 1 || turns === -1 ? '' : Math.abs(turns)}${turns < 0 ? '' : "'"}`);
+          } else {
+            res.push(`[${mv[1]}${turns === 1 || turns === -1 ? '' : Math.abs(turns)}${turns < 0 ? '' : "'"}]`);
+          }
+        }
+      }
+    } else {
+      for (let i = arr.length - 1; i >= 0; i -= 1) {
+        if ( arr[i].indexOf('2') > -1 ) {
+          res.push( arr[i].replace("'", "") );
+        } else if ( arr[i].indexOf("'") > -1 ) {
+          res.push( arr[i].replace("'", "") );
+        } else {
+          res.push( arr[i] + "'" );
         }
       }
     }
