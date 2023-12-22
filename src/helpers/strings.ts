@@ -130,6 +130,10 @@ function getMoveLength(sequence: string[], puzzle: PuzzleType, order: number): n
       case 'square1': {
         return sequence.reduce((acc: any[], e) => [...acc, ...ScrambleParser.parseSquare1(e)], []).length;
       }
+
+      case 'megaminx': {
+        return sequence.reduce((acc: any[], e) => [...acc, ...ScrambleParser.parseMegaminx(e)], []).length;
+      }
     }
   } catch {}
 

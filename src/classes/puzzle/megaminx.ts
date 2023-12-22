@@ -5,6 +5,7 @@ import { Piece } from './Piece';
 import { Sticker } from './Sticker';
 import { assignColors, getAllStickers, random } from './puzzleUtils';
 import { STANDARD_PALETTE } from '@constants';
+import { ScrambleParser } from '@classes/scramble-parser';
 
 export function MEGAMINX(_n: number, headless?: false): PuzzleInterface {
   // const n = Math.max(3, ~~(_n / 2) * 2 + 1);
@@ -153,37 +154,69 @@ export function MEGAMINX(_n: number, headless?: false): PuzzleInterface {
 
   let LDIST = Math.abs( corner.stickers[1].points[2].sub(anchors[0]).y );
 
-  let planes = [ center, midCenters[1] ].map(p => {
-    let s = p.stickers[0];
+  let getPointsFromSticker = (s: Sticker) => {
     let mc = s.getMassCenter();
     return s.points.map(p => p.add( mc.unit().mul(-LDIST) ))
-  });
+  };
+
+  let planes = [
+    getPointsFromSticker(center.stickers[0]), // U
+    getPointsFromSticker(midCenters[1].stickers[0]), // L
+    getPointsFromSticker(midCenters[2].stickers[0]), // F
+    getPointsFromSticker(midCenters[3].stickers[0]), // R
+    getPointsFromSticker(midCenters[6].stickers[0]), // dL
+    getPointsFromSticker(midCenters[7].stickers[0]), // dR
+    getPointsFromSticker(midCenters[0].stickers[0]), // bL
+    getPointsFromSticker(midCenters[4].stickers[0]), // bR
+    center.stickers[0].points.map(p => p.clone()), // [u]
+    midCenters[1].stickers[0].points.map(p => p.clone()), // [l]
+    midCenters[2].stickers[0].points.map(p => p.clone()), // [f]
+    midCenters[3].stickers[0].points.map(p => p.clone()), // [r]
+  ];
+
+  let trySingleMove = (mv: any): { pieces: Piece[], u: Vector3D, ang: number } | null => {
+    let moveId = mv[0];
+    let turns = mv[1];
+    const pts1 = planes[moveId].map(e => e.clone());
+    const u = Vector3D.cross(pts1[0], pts1[1], pts1[2]).unit();
+    const ang = INNER_ANG * turns;
+    
+    let pcs = [];
+
+    for (let i = 0, maxi = pieces.length; i < maxi; i += 1) {
+      let d = pieces[i].direction1(pts1[0], u, true);
+      
+      if ( d === 0 ) {
+        console.log("Invalid move. Piece intersection detected.", "URFDLB"[moveId], turns, mv);
+        console.log("Piece: ", i, pieces[i], pts1);
+        return null;
+      }
+      
+      if ( d * mv[2] > 0 ) {
+        pcs.push( pieces[i] );
+      }
+    }
+
+    return {
+      pieces: pcs,
+      u,
+      ang
+    };
+  };
 
   mega.move = function(moves: any[]) {
     for (let m = 0, maxm = moves.length; m < maxm; m += 1) {
       let mv = moves[m];
-      let moveId = mv[0];
-      let turns = mv[1];
-      const pts1 = planes[moveId].map(e => e.clone());
-      const u = Vector3D.cross(pts1[0], pts1[1], pts1[2]).unit();
-      const ang = INNER_ANG * turns;
-      
-      for (let i = 0, maxi = pieces.length; i < maxi; i += 1) {
-        let d = pieces[i].direction(pts1[0], pts1[1], pts1[2], true);
-        
-        if ( d === 0 ) {
-          console.log("Invalid move. Piece intersection detected.", "URFDLB"[moveId], turns, mv);
-          console.log("Piece: ", i, pieces[i], pts1);
-          return false;
-        }
-        
-        if ( d * mv[2] > 0 ) {
-          for(let j = 0, maxj = pieces[i].stickers.length; j < maxj; j += 1) {
-            pieces[i].stickers[j].rotate(CENTER, u, ang, true);
-          }
-        }
+      let pcs = trySingleMove(mv);
+
+      if ( !pcs ) {
+        return false;
       }
+      
+      let { u, ang } = pcs;
+      pcs.pieces.forEach(p => p.rotate(CENTER, u, ang, true));
     }
+    
     return true;
   };
 
@@ -211,6 +244,32 @@ export function MEGAMINX(_n: number, headless?: false): PuzzleInterface {
       let cant = 1 + random(3);
       pcs.pieces.forEach((p: Piece) => p.rotate(CENTER, vec, pcs.ang * cant, true));
     }
+  };
+
+  mega.applySequence = function(seq: string[]) {
+    let moves = seq.map( mv => ScrambleParser.parseMegaminx( mv )[0]);
+    let res: { u: Vector3D, ang: number, pieces: string[] }[] = [];
+
+    for (let i = 0, maxi = moves.length; i < maxi; i += 1) {
+      let pcs;
+      
+      try {
+        pcs = trySingleMove(moves[i]);
+      } catch(e) {
+        console.log("ERROR: ", seq[i], moves[i], e);
+      }
+
+      if ( !pcs ) {
+        console.log("NO PIECES");
+        continue;
+      }
+
+      let { u, ang } = pcs;
+      res.push({ u, ang, pieces: pcs.pieces.map(p => p.id) });
+      pcs.pieces.forEach(p => p.rotate(CENTER, u, ang, true));
+    }
+
+    return res;
   };
 
   mega.rotation = {

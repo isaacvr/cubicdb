@@ -3,35 +3,35 @@ import { Interpreter } from "./scrambleInterpreter";
 export const scrambleReg = /^([\d]+)?([FRUBLDfrubldzxySME])(?:([w])|&sup([\d]);)?([2'])?$/;
 
 export class ScrambleParser {
-  constructor() {}  
+  constructor() { }
 
-	static parseScramble(scramble: string, moveMap: string) {
-		let moveseq = [];
-		let moves = scramble.split(/\s+/g);
+  static parseScramble(scramble: string, moveMap: string) {
+    let moveseq = [];
+    let moves = scramble.split(/\s+/g);
     let m, w, f, p;
-    
-		for (let s = 0, maxs = moves.length; s < maxs; s += 1) {
+
+    for (let s = 0, maxs = moves.length; s < maxs; s += 1) {
       m = scrambleReg.exec(moves[s]);
-      
-			if (m == null) {
-				continue;
+
+      if (m == null) {
+        continue;
       }
-      
+
       f = "FRUBLDfrubldzxySME".indexOf(m[2]);
-      
-			if (f > 14) {
-				p = "2'".indexOf(m[5] || 'X') + 2;
-				f = [0, 4, 5][f % 3];
-				moveseq.push([moveMap.indexOf("FRUBLD".charAt(f)), 2, p, 1]);
-				// moveseq.push([moveMap.indexOf("FRUBLD".charAt(f)), 1, 4-p]);
-				continue;
-			}
-			w = f < 12 ? (~~m[1] || ~~m[4] || ((m[3] == "w" || f > 5) && 2) || 1) : -1;
-			p = (f < 12 ? 1 : -1) * ("2'".indexOf(m[5] || 'X') + 2);
-			moveseq.push([moveMap.indexOf("FRUBLD".charAt(f % 6)), w, p, 0]);
-		}
-		return moveseq;
-	}
+
+      if (f > 14) {
+        p = "2'".indexOf(m[5] || 'X') + 2;
+        f = [0, 4, 5][f % 3];
+        moveseq.push([moveMap.indexOf("FRUBLD".charAt(f)), 2, p, 1]);
+        // moveseq.push([moveMap.indexOf("FRUBLD".charAt(f)), 1, 4-p]);
+        continue;
+      }
+      w = f < 12 ? (~~m[1] || ~~m[4] || ((m[3] == "w" || f > 5) && 2) || 1) : -1;
+      p = (f < 12 ? 1 : -1) * ("2'".indexOf(m[5] || 'X') + 2);
+      moveseq.push([moveMap.indexOf("FRUBLD".charAt(f % 6)), w, p, 0]);
+    }
+    return moveseq;
+  }
 
   static parseNNN(scramble: string, order: number) {
     let scr = ScrambleParser.parseNNNString(scramble);
@@ -39,7 +39,7 @@ export class ScrambleParser {
     const MOVE_MAP = "URFDLB";
     let moves = ScrambleParser.parseScramble(scr, MOVE_MAP);
     let res = [];
-    
+
     for (let i = 0, maxi = moves.length; i < maxi; i += 1) {
       if (moves[i][1] > 0) {
         res.push([
@@ -53,24 +53,24 @@ export class ScrambleParser {
       }
     }
 
-    
-  
+
+
     return res;
   }
 
   static parseMegaminx(scramble: string) {
     let res: number[][] = [];
-    
+
     // Carrot Notation
-    if ( !/R|D/.test(scramble) ) {
+    if (/^(\s*(\+\+|\-\-|U|U'))*$/.test(scramble)) {
       let moves = scramble.match(/[+-]{2}|U'?/g);
-      
-      if ( !moves ) {
+
+      if (!moves) {
         return res;
       }
 
       for (let i = 0, maxi = moves.length; i < maxi; i += 1) {
-        switch(moves[i]) {
+        switch (moves[i]) {
           case "U":
             res.push([0, -1, 1]);
             break;
@@ -86,34 +86,31 @@ export class ScrambleParser {
             break;
         }
       }
-    } else if ( /(\+\+|\-\-)/.test(scramble) ) { // WCA Notation
-      let moves = scramble.match(/[RD](?:\+\+|--)|U'?/g) || [];
+    } else { // WCA Notation
+      let moves = scramble.match(/((\[[urfl]\d*'?\])|([RD](\+|-){2})|([URFL]\d*'?)|([db][RL]\d*'?))/g) || [];
+      let moveMap = "ULFR";
+
       for (let i = 0, maxi = moves.length; i < maxi; i += 1) {
-        switch (moves[i]) {
-          case "R++":
-            res.push([1, 2, -1]);
-            break;
-          case "R--":
-            res.push([1, -2, -1]);
-            break;
-          case "D++":
-            res.push([0, 2, -1]);
-            break;
-          case "D--":
-            res.push([0, -2, -1]);
-            break;
-          case "U":
-            res.push([0, -1, 1]);
-            break;
-          case "U'":
-            res.push([0, 1, 1]);
-            break;
+        let mv = moves[i];
+
+        if (/^([RD](\+|-){2})$/.test(mv)) {
+          if (['R++', 'R--'].indexOf(mv) > -1) {
+            res.push([1, mv.indexOf('+') * 2, -1]);
+          } else {
+            res.push([0, mv.indexOf('+') * 2, -1]);
+          }
+        } else {
+          let turns = (parseInt(mv.replace(/\D*(\d+)\D*/g, '$1')) || 1) * Math.sign(mv.indexOf("'") + 0.2);
+
+          if ( /^([URFL]\d*'?)$/.test(mv) ) {
+            res.push([moveMap.indexOf(mv[0]), turns, 1]);
+          } else if ( /^([db][RL]\d*'?)$/.test(mv) ) {
+            res.push([['dL', 'dR', 'bL', 'bR'].indexOf(mv.slice(0, 2)) + 4, turns, 1]);
+          } else {
+            res.push([moveMap.indexOf(mv[1].toUpperCase()) + 8, turns, -1]);
+          }
         }
       }
-    } else { // Old Style Notation
-      // U F L D B R
-      // DR BL BR DL
-      // DBL DBR
     }
 
     return res;
@@ -129,7 +126,7 @@ export class ScrambleParser {
   }
 
   static parseSkewb(scramble: string) {
-    let moves = ScrambleParser.parseScramble(scramble, "URLB");    
+    let moves = ScrambleParser.parseScramble(scramble, "URLB");
     let res = [];
     for (let i = 0, maxi = moves.length; i < maxi; i++) {
       res.push([moves[i][0], moves[i][2] - 2]);
@@ -139,13 +136,13 @@ export class ScrambleParser {
 
   static parseSquare1(scramble: string) {
     let newScramble = scramble.replace(/\s+/g, '').split('/');
-    let sqres = [ /^\((-?\d),(-?\d)\)$/, /^(-?\d),(-?\d)$/, /^(-?\d)(-?\d)$/, /^(-?\d)$/ ];
+    let sqres = [/^\((-?\d),(-?\d)\)$/, /^(-?\d),(-?\d)$/, /^(-?\d)(-?\d)$/, /^(-?\d)$/];
     let res = [];
 
     for (let i = 0, maxi = newScramble.length; i < maxi; i += 1) {
       let reg = sqres.find(reg => reg.exec(newScramble[i]));
-      
-      if ( reg ) {
+
+      if (reg) {
         let m = reg.exec(newScramble[i])!;
         let u = ~~m[1];
         let d = ~~m[2];
@@ -155,10 +152,10 @@ export class ScrambleParser {
         if (d != 0) {
           res.push([2, d]);
         }
-      } else if ( /^([xyz])2$/.test(newScramble[i]) ) {
-        res.push([ "xyz".indexOf(newScramble[i][0]) + 4, 6 ]);
+      } else if (/^([xyz])2$/.test(newScramble[i])) {
+        res.push(["xyz".indexOf(newScramble[i][0]) + 4, 6]);
       }
-      
+
       if (i != maxi - 1) {
         res.push([0, 6]);
       }
@@ -169,13 +166,13 @@ export class ScrambleParser {
   static parseClock(scramble: string) {
     let parts = scramble.replace('\\n', ' ').split(/\s+/g);
     let res: number[][] = [];
-    
-    if ( scramble.indexOf('/') > -1 ) { /// Concise notation
-      const pins = [ 0xc, 0x5, 0x3, 0xa, 0x7, 0xb, 0xe, 0xd, 0xf, 0x0, 0 ];
+
+    if (scramble.indexOf('/') > -1) { /// Concise notation
+      const pins = [0xc, 0x5, 0x3, 0xa, 0x7, 0xb, 0xe, 0xd, 0xf, 0x0, 0];
 
       let parts = scramble.replace(/\s+/g, '').split('/');
 
-      if ( parts.length != 11 ) return res;
+      if (parts.length != 11) return res;
 
       const BOTH_REG = /^\((-?\d),(-?\d)\)$/;
       const SINGLE_REG = /^\((-?\d)\)$/;
@@ -183,22 +180,22 @@ export class ScrambleParser {
       for (let i = 0, maxi = parts.length; i < maxi; i += 1) {
         let mv = parts[i];
 
-        if ( BOTH_REG.test(mv) && i < 4 ) {
+        if (BOTH_REG.test(mv) && i < 4) {
           let moves = mv.replace(BOTH_REG, '$1 $2').split(" ").map(Number);
 
-          res.push([ pins[i], moves[0], 0 ]);
-          res.push([ -1, -1, -1 ]);
-          res.push([ (i & 1) ? pins[i] : pins[(i + 2) & 3], -moves[1], 0 ]);
-          res.push([ -1, -1, -1 ]);
-        } else if ( SINGLE_REG.test(mv) ) {
+          res.push([pins[i], moves[0], 0]);
+          res.push([-1, -1, -1]);
+          res.push([(i & 1) ? pins[i] : pins[(i + 2) & 3], -moves[1], 0]);
+          res.push([-1, -1, -1]);
+        } else if (SINGLE_REG.test(mv)) {
           let move = +mv.replace(SINGLE_REG, '$1');
-          
+
           if (i === 9) {
             res.push([-1, -1, -1]);
-            res.push([ 0xf, -move, 0 ]);
+            res.push([0xf, -move, 0]);
             res.push([-1, -1, -1]);
           } else {
-            res.push([ pins[i], move, 0 ]);
+            res.push([pins[i], move, 0]);
           }
         } else {
           let pin = parseInt(mv.split('').map(s => s === 'U' ? 1 : 0).join(''), 2);
@@ -206,28 +203,28 @@ export class ScrambleParser {
         }
       }
 
-    } else if ( !/(u|d)/.test(scramble) ) { /// WCA notation
-      const letters = [ 'UL', 'UR', 'DL', 'DR', 'ALL', 'U', 'R', 'D', 'L' ];
-      const pins = [ 0x8, 0x4, 0x2, 0x1, 0xf, 0xc, 0x5, 0x3, 0xa ];
+    } else if (!/(u|d)/.test(scramble)) { /// WCA notation
+      const letters = ['UL', 'UR', 'DL', 'DR', 'ALL', 'U', 'R', 'D', 'L'];
+      const pins = [0x8, 0x4, 0x2, 0x1, 0xf, 0xc, 0x5, 0x3, 0xa];
       const up = 1;
 
       for (let i = 0, maxi = parts.length; i < maxi; i += 1) {
-        if ( parts[i] === 'y2' ) {
+        if (parts[i] === 'y2') {
           res.push([-1, -1, -1]);
         } else {
           let cmd = [0, 0, 0];
           for (let j = 0, maxj = letters.length; j < maxj; j += 1) {
-            if ( parts[i].startsWith(letters[j]) ) {
+            if (parts[i].startsWith(letters[j])) {
               let turns = parseInt(parts[i].slice(letters[j].length, letters[j].length + 1));
-              if ( parts[i].indexOf('-') > -1 ) {
+              if (parts[i].indexOf('-') > -1) {
                 turns = -turns;
               }
               cmd[0] = pins[j];
-              cmd[ up ] = turns;
+              cmd[up] = turns;
               break;
             }
           }
-          if ( cmd[1] != 0 || cmd[2] != 0 ) {
+          if (cmd[1] != 0 || cmd[2] != 0) {
             res.push(cmd);
           }
         }

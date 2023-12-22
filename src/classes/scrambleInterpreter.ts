@@ -8,9 +8,10 @@
 
 import { clone } from "@helpers/object";
 import type { PuzzleType } from "@interfaces";
+import { Puzzle } from "./puzzle/puzzle";
 
 /**
- * Tokenizer spec.
+ * Tokenizer specs.
  */
 const RubikSpec = [
   // Whitespaces:
@@ -54,6 +55,31 @@ const SquareOneSpec = [
   [ /^([xyz])2/, 'MOVE' ],
 ] as const;
 
+const MegaminxSpec = [
+  // Whitespaces:
+  [ /^[\s\n\r\t]+/, 'SPACE' ],
+
+  // Comments:
+  [ /^\/\/.*/, 'COMMENT' ],
+
+  // Conmutator separator:
+  [ /^,/, ',' ],
+  [ /^:/, ':' ],
+
+  // Move:
+  [ /^\[[urfl]\d*'?\]/, 'MOVE' ], // Rotation moves
+  [ /^[RD](\+|-){2}/, 'MOVE' ], // WCA moves
+  [ /^[db][RL]\d*'?/, 'MOVE' ], // Side faces move
+  [ /^[URFL]\d*'?/, 'MOVE' ], // Single moves
+
+  // Symbols-delimiters:
+  [ /^\(/, '(' ],
+  [ /^\)([1-9]\d{0,1})?/, ')' ],
+  [ /^\[/, '[' ],
+  [ /^\]([1-9]\d{0,1})?/, ']' ],
+  
+] as const;
+
 type InterpreterNode = 'Program' | 'Expression' | 'Space' | 'Comment' | 'ParentesizedExpression' | 'ConmutatorExpression' | 'Move';
 
 interface TToken {
@@ -78,7 +104,8 @@ interface Tokenizer {
 
 const SpecMap: any = {
   "rubik": RubikSpec,
-  "square1": SquareOneSpec
+  "square1": SquareOneSpec,
+  "megaminx": MegaminxSpec,
 };
 
 class BaseTokenizer implements Tokenizer {
@@ -115,7 +142,7 @@ class BaseTokenizer implements Tokenizer {
   isEOF() {
     return this._cursor === this._string.length;
   }
-    
+
   getNextToken(): TToken | null {
     if ( !this.hasMoreTokens() ) {
       return null;
@@ -147,34 +174,25 @@ class BaseTokenizer implements Tokenizer {
 }
 
 class Solver {
+  tokenizerType: PuzzleType;
+
+  constructor(tokenizerType: PuzzleType){
+    this.tokenizerType = tokenizerType;
+  }
+
   invert(seq: string[]): string[] {
-    let res: string[] = [];
-    for (let i = seq.length - 1; i >= 0; i -= 1) {
-      if ( seq[i].indexOf('2') > -1 ) {
-        res.push( seq[i].replace("'", "") );
-      } else if ( seq[i].indexOf("'") > -1 ) {
-        res.push( seq[i].replace("'", "") );
-      } else {
-        res.push( seq[i] + "'" );
-      }
-    }
-    return res;
+    return seq.map(s => Puzzle.inverse(this.tokenizerType, s));
   }
 
   invertFlat(seq: IToken[]): IToken[] {
     let res: IToken[] = [];
-
+    
     for (let i = seq.length - 1; i >= 0; i -= 1) {
       if ( seq[i].type === 'Move' ) {
         let cp = clone(seq[i]) as IToken;
-        let val = cp.value;
-
-        if ( val.indexOf('2') > -1 || val.indexOf("'") > -1 ) {
-          cp.value = val.replace("'", '');
-        } else {
-          cp.value = cp.value + "'";
-        }
-
+        console.log('VALUE: ', cp.value, this.tokenizerType);
+        cp.value = Puzzle.inverse(this.tokenizerType, cp.value);
+        console.log('INVERSE: ', cp.value);
         res.push( cp );
       } else {
         res.push( seq[i] );
@@ -303,25 +321,18 @@ class Solver {
   }
 }
 
-// const tokenizerMap: any = {
-//   'rubik': RubikTokenizer
-// };
-
 export class Interpreter {
   private _tokenizer: Tokenizer;
   private _solver: Solver;
   private _lookahead: TToken | null;
   private throwErrors: boolean;
   private moveCursor: number = 0;
-  // private tokenizerType: PuzzleType;
-
+  
   constructor(throwErrors: boolean = true, tokenizerType: PuzzleType = 'rubik') {
-    // this._tokenizer = (tokenizerType in tokenizerMap) ? new tokenizerMap[tokenizerType] : new RubikTokenizer(throwErrors);
     this._tokenizer = new BaseTokenizer(throwErrors, tokenizerType);
-    this._solver = new Solver();
+    this._solver = new Solver(tokenizerType);
     this._lookahead = null;
     this.throwErrors = throwErrors;
-    // this.tokenizerType = tokenizerType;
   }
 
   input(string: string) {
