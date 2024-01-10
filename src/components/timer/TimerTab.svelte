@@ -408,8 +408,6 @@
       inputMethod.disconnect();
     }
 
-    dataService.sleep( newClass === StackmatInput );
-
     if ( $session?.settings?.input === 'Manual' && !sameClass ) {
       inputMethod = new ManualInput();
     } else if ( $session?.settings?.input === 'StackMat' && !sameClass ) {
@@ -619,6 +617,7 @@
   $: $session && initInputHandler();
   $: $localLang, updateTexts();
   $: $scramble && cleanOnScramble && clean();
+  $: dataService.sleep( $state === TimerState.RUNNING  );
 </script>
 
 <svelte:window
@@ -921,7 +920,7 @@
     <Modal bind:this={ modal } bind:show={ show } onClose={ closeHandler }>
       <div class={"max-w-lg max-h-[30rem] " + (type === 'old-scrambles' ? 'overflow-scroll' : '')}>
         {#if type === 'edit-scramble'}
-          <TextArea on:keyup={ modalKeyupHandler } class="bg-gray-900 text-gray-200" bind:value={ modalData }/>
+          <TextArea on:keyup={ modalKeyupHandler } class="bg-gray-900 text-gray-200 border border-gray-600" bind:value={ modalData }/>
 
           <div class="flex w-full justify-center my-2 gap-2">
             <Button ariaLabel={ $localLang.global.cancel } on:click={() => modal.close()}>

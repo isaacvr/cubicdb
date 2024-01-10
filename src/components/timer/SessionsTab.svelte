@@ -36,8 +36,8 @@
   import Select from "@components/material/Select.svelte";
   import { copyToClipboard, defaultInner, parseReconstruction, randomUUID } from "@helpers/strings";
   import { calcPercents } from "@helpers/math";
-    import { startViewTransition } from "@helpers/DOM";
-    import { navigate } from "svelte-routing";
+  import { startViewTransition } from "@helpers/DOM";
+  import { navigate } from "svelte-routing";
 
   let localLang: Readable<Language> = derived(globalLang, ($lang) => getLanguage( $lang ));
 
@@ -69,6 +69,8 @@
   let reconstructionError = true;
   
   function closeHandler(s?: Solve) {
+    preview = "";
+
     if ( s ) {
       gSolve.comments = (s.comments || '').trim();
       gSolve.penalty = s.penalty;
@@ -116,7 +118,7 @@
       setTimeout(() => {
         if ( performance.now() - LAST_CLICK >= 200 ) {
           let target = ev.target as HTMLButtonElement;
-          
+
           target.classList.add('modal-transition');
 
           startViewTransition(async () => {
@@ -362,10 +364,10 @@
         on:click={ (ev) => handleClick(solve, ev) }
         on:contextmenu={ (e) => handleContextMenu(e, solve) }
         class:selected={ solve.selected }>
-          <div class="font-small absolute top-0 left-2">{ moment(solve.date).format('DD/MM') }</div>
-          <span class="text-center font-bold">{ sTimer(solve, true) }</span>
+          <div class="pointer-events-none font-small absolute top-0 left-2">{ moment(solve.date).format('DD/MM') }</div>
+          <span class="pointer-events-none time text-center">{ sTimer(solve, true) }</span>
 
-          <div class="absolute right-1 top-0 h-full flex flex-col items-center justify-evenly">
+          <div class="pointer-events-none absolute right-1 top-0 h-full flex flex-col items-center justify-evenly">
             {#if solve.penalty === Penalty.P2} <span class="font-small">+2</span> {/if}
             {#if solve.comments} <CommentPlusIcon width=".8rem"/> {/if}
           </div>
@@ -424,7 +426,7 @@
 
   <Modal bind:this={ modal } bind:show={ show } onClose={ closeHandler } class="w-[min(100%,36rem)]" transitionName="modal">
     <div class="flex justify-between items-center text-gray-400 m-2">
-      <h2 class="m-1 w-max">
+      <span class="view-time m-1 w-max">
         {#if sSolve.penalty === Penalty.NONE || sSolve.penalty === Penalty.P2}
           { sTimer(sSolve, true, true) }
         {/if}
@@ -437,7 +439,7 @@
         {#if sSolve.penalty === Penalty.DNS}
           <span class="font-small text-red-500">DNS</span>
         {/if}
-      </h2>
+      </span>
       <span class="flex items-center font-small">
         <CalendarIcon width="1.2rem" height="1.2rem"/>
         <span class="ml-2">
@@ -649,5 +651,9 @@
 
 .modal-transition {
   view-transition-name: modal;
+}
+
+.view-time {
+  view-transition-name: time;
 }
 </style>

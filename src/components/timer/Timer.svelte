@@ -693,7 +693,7 @@
         </Button>
       {/if}
 
-      <div class="grid gap-2 m-2 mt-4 max-h-[min(80vh,30rem)] overflow-scroll"
+      <div class="grid gap-2 m-2 mt-4 max-h-[min(80vh,30rem)]"
         style="grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr));">
         {#if creatingSession}
           <div class="grid col-span-full justify-center gap-4">

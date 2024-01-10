@@ -9,6 +9,7 @@
   import StepBackIcon from "svelte-material-icons/ChevronLeft.svelte";
   import StepForwardIcon from "svelte-material-icons/ChevronRight.svelte";
   import BackIcon from "svelte-material-icons/History.svelte";
+  import SearchIcon from "@icons/SearchWeb.svelte";
   import { map, minmax } from "@helpers/math";
   import { onMount, tick } from "svelte";
   import Tooltip from "./material/Tooltip.svelte";
@@ -17,6 +18,15 @@
   import type { PuzzleType } from "@interfaces";
   import { navigate, useLocation } from "svelte-routing";
   import { parseReconstruction } from "@helpers/strings";
+  import _recs from '../database/reconstructions.json';
+  import Input from "./material/Input.svelte";
+  import { errorIndex } from "./ReconstructionC";
+  import Modal from "./Modal.svelte";
+
+  const recs = _recs.slice(0, 4300).filter(r => errorIndex.indexOf(r.id) < 0);
+  let recIndex = 0;
+  let showRecSearch = false;
+  let recSearch = '';
 
   const location = useLocation();
 
@@ -38,7 +48,8 @@
   let puzzle = PUZZLES[0];
 
   let simulator: Simulator;
-  let textarea: TextArea;
+  let sTextarea: TextArea;
+  let rTextarea: TextArea;
 
   let showBackFace = true;
   let title = "";
@@ -60,11 +71,17 @@
   let limit = -1;
   let dir: 1 | -1 = 1;
 
-  function parse(s: string) {
+  function parse(s: string, saveResult = false) {
     let rec = parseReconstruction(s, puzzle.puzzle, puzzle.order);
-    finalAlpha = rec.finalAlpha;
-    sequence = rec.sequence;
-    sequenceIndex = rec.sequenceIndex;
+
+    if ( saveResult ) {
+      finalAlpha = rec.finalAlpha;
+      sequence = rec.sequence;
+      sequenceIndex = rec.sequenceIndex;
+      sequenceAlpha = 0;
+      // tick().then(() => sequenceAlpha = finalAlpha);
+    }
+
     return rec.result;
   }
 
@@ -128,7 +145,7 @@
     let id = sequenceIndex[~~a];
 
     if (lastId != id && id >= initAlpha && id < finalAlpha) {
-      let allMoves = textarea
+      let allMoves = rTextarea
         .getContentEdit()
         .querySelectorAll(".move:not(.silent)");
       allMoves.forEach((mv) => mv.classList.remove("current"));
@@ -164,6 +181,16 @@
         break;
       }
 
+      // case "Comma": {
+      //   ev.ctrlKey && (recIndex -= 1, setRecIndex());
+      //   break;
+      // }
+
+      // case "Period": {
+      //   ev.ctrlKey && (recIndex += 1, setRecIndex());
+      //   break;
+      // }
+
       case "ArrowLeft": {
         ev.ctrlKey && step(-1);
         break;
@@ -179,7 +206,8 @@
   async function resetPuzzle() {
     await tick();
     simulator.handleSequence(sequence, scramble);
-    textarea.updateInnerText();
+    sTextarea.updateInnerText();
+    rTextarea.updateInnerText();
   }
 
   function handleLocation(loc: any) {
@@ -204,12 +232,57 @@
       }
     }
 
-    puzzle = PUZZLES[1];
+    // puzzle = PUZZLES[1];
+    puzzle = PUZZLES[9];
     scramble = ``;
     reconstruction = ``;
 
   }
 
+  function setRecIndex() {
+    for (let i = 0, maxi = recs.length; i < maxi; i += 1){
+      if ( recs[i].id != recIndex ) continue;
+
+      title = recs[i].title;
+      scramble = recs[i].scramble;
+      reconstruction = recs[i].solution;
+  
+      for (let j = 0, maxj = PUZZLES.length; j < maxj; j += 1) {
+        if ( title.indexOf( PUZZLES[j].name ) > -1 || title.indexOf( PUZZLES[j].name.slice(0, 3) ) > -1 ){
+          puzzle = PUZZLES[j];
+        }
+      }
+
+      break;
+    }
+  }
+
+  // function saveToIndex() {
+  //   recs[recIndex].title = title;
+  //   recs[recIndex].scramble = scramble;
+  //   recs[recIndex].solution = reconstruction;
+  // }
+
+  // function downloadRecs() {
+  //   let a = document.createElement('a');
+  //   let b = new Blob([ JSON.stringify(recs) ], { type: 'application/json' });
+  //   a.href = URL.createObjectURL(b);
+  //   a.download = 'reconstructions.json';
+  //   document.body.appendChild( a );
+  //   a.click();
+  //   a.remove();
+  // }
+
+  function findReconstructions(inp: string) {
+    if ( !inp.trim() ) return [];
+
+    let parts = inp.split(/\s+/g).map(s => s.toLowerCase());
+
+    return recs.filter((r) => {
+      let t = r.title.toLowerCase();
+      return parts.every(p => t.includes( p ));
+    });
+  }
 
   onMount(() => (mounted = true));
 
@@ -303,17 +376,18 @@
     <TextArea
       bind:value={title}
       placeholder="[Title]"
-      class="rounded-none border-none bg-gray-800 px-2 py-1 border-t border-t-blue-800 text-3xl text-center"
+      class="rounded-none border-none bg-gray-800 px-2 py-1 border-t border-t-blue-800 text-xl text-center"
     />
 
     <div>
       <h2>Scramble</h2>
       <TextArea
-        bind:value={scramble}
-        getInnerText={parse}
+        bind:value={ scramble }
+        getInnerText={ (s) => parse(s, false) }
         placeholder="[Type your scramble here]"
         class="bg-transparent rounded-none w-full border-none"
         cClass="h-[10vh]"
+        bind:this={ sTextarea }
       />
     </div>
 
@@ -322,10 +396,10 @@
       <TextArea
         class="rounded-none border-none absolute inset-0"
         placeholder="[Type your reconstruction here]"
-        bind:value={reconstruction}
+        bind:value={ reconstruction }
         cClass="h-[30vh]"
-        getInnerText={parse}
-        bind:this={textarea}
+        getInnerText={ (s) => parse(s, true)}
+        bind:this={ rTextarea }
       />
     </div>
 
@@ -357,6 +431,17 @@
             <RestartIcon size={iconSize} /> Reset camera
           </Button>
         </li>
+        <li>
+          <Button
+            class="bg-blue-700 hover:bg-blue-600 gap-1"
+            on:click={() => showRecSearch = true}
+          >
+            <SearchIcon size={iconSize} /> Find reconstruction
+          </Button>
+        </li>
+        <li>
+          <Button class="bg-blue-700 hover:bg-blue-600" on:click={() => scramble = reconstruction = title = '' }> Clean </Button>
+        </li>
         {#if backURL}
           <li>
             <Button
@@ -372,9 +457,36 @@
           <span>{Math.floor(speed * 100) / 100}x</span>
         </li>
       </ul>
+
+      <!-- <div class="flex justify-evenly">
+        <Input type="number" class="max-w-[5rem]" bind:value={ recIndex } min={0} max={ recs.length - 1 }/>
+        <Button on:click={ () => { recIndex -= 1; setRecIndex()} }>&lt;</Button>
+        <Button on:click={ () => { recIndex += 1; setRecIndex()} }>&gt;</Button>
+        <Button on:click={ () => setRecIndex() }>Set</Button>
+        <Button on:click={ () => saveToIndex() }>Save</Button>
+        <Button on:click={ () => downloadRecs() }>Download</Button>
+      </div> -->
     </div>
   </section>
 </main>
+
+<Modal bind:show={ showRecSearch } onClose={ () => showRecSearch = false }>
+  <h2 class="text-xl">Find reconstruction</h2>
+  <span class="text-yellow-500 my-2">eg. 3x3 Max Park</span>
+  <Input bind:value={ recSearch }/>
+
+  <ul class="mt-4 max-h-[10rem] overflow-x-clip overflow-y-scroll pr-4" style="scrollbar-gutter: stable;">
+    {#each findReconstructions(recSearch) as rec}
+      <li>
+        <button
+          on:click={() => { recIndex = rec.id; setRecIndex(); showRecSearch = false; }}
+          class="cursor-pointer rounded-md p-1 hover:bg-blue-600 transition-all duration-200">
+          { rec.title }
+        </button>
+      </li>
+    {/each}
+  </ul>
+</Modal>
 
 <style lang="postcss">
   main {

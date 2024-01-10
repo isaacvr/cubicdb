@@ -134,6 +134,10 @@ function getMoveLength(sequence: string[], puzzle: PuzzleType, order: number): n
       case 'megaminx': {
         return sequence.reduce((acc: any[], e) => [...acc, ...ScrambleParser.parseMegaminx(e)], []).length;
       }
+
+      case 'pyraminx': {
+        return sequence.reduce((acc: any[], e) => [...acc, ...ScrambleParser.parsePyraminx(e)], []).length;
+      }
     }
   } catch {}
 

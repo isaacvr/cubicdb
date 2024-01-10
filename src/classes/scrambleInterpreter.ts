@@ -32,7 +32,7 @@ const RubikSpec = [
   [ /^\]([1-9]\d{0,1})?/, ']' ],
 
   // Move:
-  [ /^([\d]+)?([FRUBLDfrubldzxySME])(?:([w])|&sup([\d]);)?('|2'|2)?/, 'MOVE' ],
+  [ /^([\d]+)?([FRUBLDfrubldzxySME])(?:([w])|&sup([\d]);)?('|2'|2|3'|3)?/, 'MOVE' ],
 ] as const;
 
 const SquareOneSpec = [
@@ -47,11 +47,11 @@ const SquareOneSpec = [
   [ /^:/, ':' ],
 
   // Move:
-  [/^\//, 'MOVE'],
-  [/^\(\s*(-?\d),\s*(-?\d)\s*\)/, 'MOVE'],
-  [/^(-?\d),\s*(-?\d)/, 'MOVE'],
-  [/^(-?\d)(-?\d)/, 'MOVE'],
-  [/^(-?\d)/, 'MOVE'],
+  [ /^\//, 'MOVE' ],
+  [ /^\(\s*(-?\d),\s*(-?\d)\s*\)/, 'MOVE' ],
+  [ /^(-?\d),\s*(-?\d)/, 'MOVE' ],
+  [ /^(-?\d)(-?\d)/, 'MOVE' ],
+  [ /^(-?\d)/, 'MOVE' ],
   [ /^([xyz])2/, 'MOVE' ],
 ] as const;
 
@@ -80,6 +80,28 @@ const MegaminxSpec = [
   
 ] as const;
 
+const PyraminxSpec = [
+  // Whitespaces:
+  [ /^[\s\n\r\t]+/, 'SPACE' ],
+  [ /^\./, null ],
+
+  // Comments:
+  [ /^\/\/.*/, 'COMMENT' ],
+
+  // Conmutator separator:
+  [ /^,/, ',' ],
+  [ /^:/, ':' ],
+
+  // Symbols-delimiters:
+  [ /^\(/, '(' ],
+  [ /^\)([1-9]\d{0,1})?/, ')' ],
+  [ /^\[/, '[' ],
+  [ /^\]([1-9]\d{0,1})?/, ']' ],
+
+  // Moves
+  [ /^((o?[ULRB])|[urlbdyz])['2]?/, "MOVE" ]
+] as const;
+
 type InterpreterNode = 'Program' | 'Expression' | 'Space' | 'Comment' | 'ParentesizedExpression' | 'ConmutatorExpression' | 'Move';
 
 interface TToken {
@@ -106,6 +128,7 @@ const SpecMap: any = {
   "rubik": RubikSpec,
   "square1": SquareOneSpec,
   "megaminx": MegaminxSpec,
+  "pyraminx": PyraminxSpec,
 };
 
 class BaseTokenizer implements Tokenizer {
@@ -117,7 +140,6 @@ class BaseTokenizer implements Tokenizer {
   constructor(throwErrors = true, puzzle: PuzzleType) {
     this.throwErrors = throwErrors;
     this.spec = (puzzle in SpecMap) ? SpecMap[puzzle] : RubikSpec;
-    // console.log("Spec: ", this.spec);
   }
 
   private _throwCursor() {
@@ -190,9 +212,7 @@ class Solver {
     for (let i = seq.length - 1; i >= 0; i -= 1) {
       if ( seq[i].type === 'Move' ) {
         let cp = clone(seq[i]) as IToken;
-        console.log('VALUE: ', cp.value, this.tokenizerType);
         cp.value = Puzzle.inverse(this.tokenizerType, cp.value);
-        console.log('INVERSE: ', cp.value);
         res.push( cp );
       } else {
         res.push( seq[i] );
@@ -206,10 +226,10 @@ class Solver {
     let mp = new Map<number, string>();
     let mp1 = new Map<string, number>();
     mp.set(-3, ""); mp.set(-2, "2"); mp.set(-1, "'"); mp.set(1, ""); mp.set(2, "2"); mp.set(3, "'");
-    mp1.set("2", -2); mp1.set("'", -1); mp1.set("", 1); mp1.set("2", 2); mp1.set("2'", 2);
+    mp1.set("2", -2); mp1.set("'", -1); mp1.set("", 1); mp1.set("2", 2); mp1.set("2'", 2); mp1.set("3", -1); mp1.set("3'", 1);
 
     let s1 = seq.map(s => {
-      let p: any = s.replace(/^(\d*)([a-zA-Z]+)('|2'|2)?$/, '$1$2 $3').split(" ");
+      let p: any = s.replace(/^(\d*)([a-zA-Z]+)('|2'|2|3'|3)?$/, '$1$2 $3').split(" ");
       return [p[0], mp1.get(p[1])];
     });
 

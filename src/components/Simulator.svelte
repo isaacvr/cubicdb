@@ -27,6 +27,11 @@
     WebGLRenderer,
     type Intersection,
     FrontSide,
+    PlaneGeometry,
+    Mesh,
+    MeshBasicMaterial,
+    DoubleSide,
+    PCFSoftShadowMap,
   } from "three";
 
   // } from "three";
@@ -46,7 +51,7 @@
   export let enableRotation = true;
   export let gui = true;
   export let contained = false;
-  export let selectedPuzzle: PuzzleType = "rubik";
+  export let selectedPuzzle: PuzzleType = "clock";
   export let order = 3;
   export let animationTime = $isMobile ? 150 : 200; /// Default animation time: 200ms
   export let showBackFace = false;
@@ -66,7 +71,7 @@
   let H = 0;
 
   /// GUI
-  let excludedPuzzles: PuzzleType[] = ["clock", "icarry"];
+  let excludedPuzzles: PuzzleType[] = [ "icarry" ];
   let puzzles: any[] = [];
   let hasOrder = true;
   let GUIExpanded = false;
@@ -378,6 +383,21 @@
     let children = scene.children;
     scene.remove(...children);
 
+    // Scene preparation
+
+    let light = new PointLight("#ffffff", 3, 3, 1);
+    light.position.set(0, 2, 0);
+    light.castShadow = true;
+    scene.add(light);
+
+    // let plane = new Mesh(new PlaneGeometry(20, 20), new MeshBasicMaterial({ color: 0x888888, side: DoubleSide }));
+    // plane.lookAt( new Vector3(0, 1, 0) );
+    // plane.position.set(0, -1.5, 0);
+    // plane.receiveShadow = true;
+    // scene.add( plane );
+    
+    // Puzzle setup
+
     if (facelet) {
       cube = Puzzle.fromFacelet(facelet);
     } else {
@@ -422,17 +442,14 @@
     cube = ctt.nc;
     backFace = bfc.group;
 
+    group.castShadow = true;
+
     scene.add(group);
     scene.add(backFace);
 
     group.rotation.x = 0;
     group.rotation.y = 0;
     group.rotation.z = 0;
-
-    let light = new PointLight("#ffffff", 1, 2, 3);
-    light.position.set(2, 2, 2);
-
-    scene.add(light);
 
     resetCamera();
     resettingPuzzle = false;
@@ -777,6 +794,9 @@
       powerPreference: "high-performance",
       canvas,
     });
+
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = PCFSoftShadowMap;
 
     renderer.setPixelRatio(window.devicePixelRatio);
 

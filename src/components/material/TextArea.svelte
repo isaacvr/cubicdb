@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { defaultInner } from "@helpers/strings";
   import { createEventDispatcher } from "svelte";
 
   export let value = '';
@@ -6,7 +7,7 @@
   export let placeholder = '';
   export let blurOnEscape = false;
   export let spellcheck = false;
-  export let getInnerText = defaultInnerText;
+  export let getInnerText = defaultInner;
 
   let cl = '';
   export { cl as class };
@@ -52,10 +53,6 @@
     dispatch('click', e);
   }
 
-  function defaultInnerText(v: string) {
-    return v.replace(/\n/g, '<br>') + '<br>';
-  }
-
   function focusTextArea() {
     cedit.blur();
     textarea.focus();
@@ -71,7 +68,7 @@
 <div class="relative {cClass || ""}" on:focus={ focusTextArea }>
   <pre on:focus={ focusTextArea } bind:this={ cedit } on:scroll={ handleScrollFactory(textarea, cedit) }
     class={`lesp bg-transparent outline-none p-2 pointer-events-none rounded-md
-      h-full break-words whitespace-pre-wrap overflow-auto monaco `
+      h-full break-words whitespace-pre-wrap overflow-auto stable monaco `
       + ( cl || "bg-gray-600 text-gray-300" ) }
     bind:innerHTML={ innerText } contenteditable="false" { spellcheck }></pre>
   <textarea
@@ -79,12 +76,16 @@
     on:scroll={ handleScrollFactory(cedit, textarea) } { placeholder } bind:this={ textarea } { spellcheck }
     bind:value class={`lesp bg-transparent outline-none p-2 rounded-md text-transparent caret-white
        transition-all duration-200 absolute inset-0 w-full h-full resize-none
-        break-words whitespace-pre-wrap overflow-auto monaco `
+        break-words whitespace-pre-wrap overflow-auto stable monaco `
       + ( cl || "bg-gray-600 text-gray-300" )}></textarea>
 </div>
 
 <style>
   .lesp {
     letter-spacing: 1.1px;
+  }
+
+  .stable {
+    scrollbar-gutter: stable;
   }
 </style>

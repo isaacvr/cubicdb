@@ -195,18 +195,14 @@ export function SQUARE1(): PuzzleInterface {
   };
 
   let updateReverse = (u: Vector3D, ang: number) => {
+    planes[0].forEach(p => p.rotate(CENTER, u, ang, true));
+
     let dirs = pieces.slice(-2).map((p: Piece) => p.stickers.find(s => s.name === 'side-equator')!.getOrientation());
     let dirs1 = pieces.slice(-2).map((p: Piece) => p.stickers.find(s => s.name === 'small-equator')!.getOrientation());
     let id = dirs[0].dot(LEFT) > 0 ? 0 : 1;
     let pu = Vector3D.cross(planes[0][0], planes[0][1], planes[0][2]);
 
-    planes[0].forEach(p => p.rotate(CENTER, u, ang, true));
-
-    if ( dirs1[ id ].dot(FRONT) < 0 ) {
-      id = 1 - id;
-    }
-
-    if ( pu.dot(u) > 0 ){
+    if ( dirs1[ id ].dot(FRONT) * pu.dot( RIGHT ) < 0 ) {
       planes[0].reverse();
     }
   };
