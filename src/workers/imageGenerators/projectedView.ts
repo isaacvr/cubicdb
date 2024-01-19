@@ -67,13 +67,11 @@ export function projectedView(cube: Puzzle, DIM: number) {
     [ CENTER, UP, PI, RIGHT, FACTOR * 2 ],
   ];
   let SQ1_A1: Vector3D[] = [];
+  let SQ1_A2: Vector3D[] = [];
 
   for (let i = 0; i < 12; i += 1) {
-    SQ1_A1.push(
-      BACK.rotate(CENTER, UP, PI_6 * i + PI_6 / 2).mul(1.38036823524362),
-      BACK.rotate(CENTER, UP, PI_6 * i + PI_6 / 2).mul(1.88561808632825),
-    );
-    // SQ1_A2.push( BACK.rotate(CENTER, UP, PI_6 * i + PI_6 / 2).mul(1.88561808632825) );
+    SQ1_A1.push( BACK.rotate(CENTER, UP, PI_6 * i + PI_6 / 2).mul(1.38036823524362) );
+    SQ1_A2.push( BACK.rotate(CENTER, UP, PI_6 * i + PI_6 / 2).mul(1.88561808632825) );
   }
 
   if ( cube.type === 'pyraminx' ) {
@@ -152,8 +150,19 @@ export function projectedView(cube: Puzzle, DIM: number) {
             let ini = f > 0 ? 1 : 2;
 
             for (let j = ini; j <= ini + 1; j += 1) {
-              SQ1_A1.sort((a, b) => a.sub(points[j]).abs2() - b.sub(points[j]).abs2());
-              let closer = SQ1_A1[0];
+            // for (let j = 0, maxj = points.length; j < maxj; j += 1) {
+              let anchors = SQ1_A1;
+              
+              let pj = points[j].clone();
+              pj.y = 0;
+
+              if ( pj.abs() > 1.5) {
+                anchors = SQ1_A2;
+              }
+
+              anchors.sort((a, b) => a.sub(pj).abs() - b.sub(pj).abs());
+
+              let closer = anchors[0];
               points[j].x = closer.x;
               points[j].z = closer.z;
             }

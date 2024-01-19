@@ -17,7 +17,7 @@ export function RUBIK(_a: number, _b:number, _c:number): PuzzleInterface {
     pieces: [],
     palette: STANDARD_PALETTE,
     rotation: {},
-    center: new Vector3D(0, 0, 0),
+    center: new Vector3D(0, 0, 0, true),
     faceVectors: [],
     getAllStickers: () => [],
     dims,

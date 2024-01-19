@@ -2,9 +2,9 @@ import type { Language } from '@interfaces';
 import { English } from './en-EN';
 import { Spanish } from './es-ES';
 
-export let LANGUAGES: [RegExp, Language][] = [
-  [ /^en/i, English ],
-  [ /^es/i, Spanish ],
+export let LANGUAGES: [RegExp, Language, string][] = [
+  [ /^en/i, English, 'EN' ],
+  [ /^es/i, Spanish, 'ES' ],
 ];
 
 export function getLanguage(lang: string): Language {

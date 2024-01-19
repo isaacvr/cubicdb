@@ -1,5 +1,5 @@
 <script lang="ts">
-  import Chart, { type Plugin } from 'chart.js/auto';
+  import Chart, { type Plugin, Colors } from 'chart.js/auto';
   import zoomPlugin from 'chartjs-plugin-zoom';
   import { between, calcPercents, evalLine, rotatePoint } from '@helpers/math';
   import { getAverageS, trendLSV } from '@helpers/statistics';
@@ -11,18 +11,16 @@
   import { derived, type Readable } from 'svelte/store';
   import { globalLang } from '@stores/language.service';
   import { getLanguage } from '@lang/index';
-  import Button from '@components/material/Button.svelte';
   import { AON, STEP_COLORS } from '@constants';
-  import { DataService } from '@stores/data.service';
+  import { screen } from '@stores/screen.store';
+  import { Button } from 'flowbite-svelte';
 
   export let context: TimerContext;
   export let headless = false;
 
-  const isMobile = DataService.getInstance().isMobile;
-
   let localLang: Readable<Language> = derived(globalLang, ($lang) => getLanguage( $lang ));
     
-  let { solves, AoX, stats, session, STATS_WINDOW, selectSolveById } = context;
+  let { solves, stats, session, STATS_WINDOW, selectSolveById } = context;
 
   let chartElement: HTMLCanvasElement;
   let chartElement2: HTMLCanvasElement;
@@ -37,6 +35,17 @@
   let stepTimeChart: Chart;
   let stepPercentChart: Chart;
   let steps: number[] = [];
+  const BORDER_COLORS = [
+    'rgb(54, 162, 235)',
+    'rgb(255, 99, 132)',
+    'rgb(255, 159, 64)',
+    'rgb(255, 205, 86)',
+    'rgb(75, 192, 192)',
+    'rgb(153, 102, 255)',
+    'rgb(201, 203, 207)' // grey
+  ];
+  // Border colors with 50% transparency
+  const BACKGROUND_COLORS = /* #__PURE__ */ BORDER_COLORS.map((color)=>color.replace('rgb(', 'rgba(').replace(')', ', 0.5)'));
 
   const DAYS = [ "Sun", "Mon", "Tue", "Wen", "Thu", "Fri", "Sat" ];
 
@@ -63,19 +72,22 @@
   function updateChart(sv: Solve[]) {
     const len = sv.length - 1;
 
-    timeChart.data.datasets[0].data = sv.map((e, p) => ({
+    timeChart.data.datasets[6].data = sv.map((e, p) => ({
       x: p,
       y: infinitePenalty(sv[len - p]) ? null : sv[len - p].time
     } as any));
 
     // @ts-ignore
-    timeChart.options.plugins.zoom.limits.x.max = len + 1;
+    timeChart.options.plugins.zoom.limits.x.max = len;
     
-    let avgs = [ 5, 12, 50, $AoX ];
+    // @ts-ignore
+    timeChart.options.scales.x.max = len;
+    
+    let avgs = [ 5, 12, 50, 100 ];
 
     /// Ao5 to AoX
     avgs.forEach((e, i) => {
-      let dt = timeChart.data.datasets[i + 1];
+      let dt = timeChart.data.datasets[5 - i];
       dt.data.length = 0;
       let pos = $AON.indexOf(e);
       let Ao = (pos > -1 && $STATS_WINDOW) ? $STATS_WINDOW[ pos ] : getAverageS(e, sv, $session?.settings?.calcAoX || AverageSetting.SEQUENTIAL);
@@ -84,12 +96,15 @@
     });
     
     /// Best solves
-    timeChart.data.datasets[5].data = getBest(sv, true);
+    timeChart.data.datasets[1].data = getBest(sv, true);
 
     // Least square
-    const { m, n } = trendLSV(sv.map((s, p) => [len - p, s.time]));
-    
-    timeChart.data.datasets[6].data = [{ x: 0, y: n }, { x: len, y: m * len + n }];
+    if ( sv.filter(s => !infinitePenalty(s)).length > 2 ) {
+      const { m, n } = trendLSV(sv.map((s, p) => [len - p, s.time]));
+      timeChart.data.datasets[0].data = [{ x: 0, y: n }, { x: len, y: m * len + n }];
+    } else {
+      timeChart.data.datasets[0].data = [];
+    }
     
     timeChart.update();
     timeChart.resetZoom();
@@ -113,10 +128,6 @@
 
     weekChart.data.datasets[0].data = WData;
     weekChart.update();
-
-    if ( $session.settings?.sessionType === 'multi-step' ) {
-      
-    }
   }
 
   function updateStats() {
@@ -176,16 +187,12 @@
   }
 
   function updateChartText() {
-    const appFont = localStorage.getItem('app-font') || 'Ubuntu';
-
-    $localLang.TIMER.timeChartLabels.forEach((l, p) => {
-      timeChart.data.datasets[p].label = l;
+    $localLang.TIMER.timeChartLabels.forEach((l, p, a) => {
+      timeChart.data.datasets[p].label = a[ a.length - p - 1];
     });
 
     if ( timeChart.options.plugins?.title ) {
       timeChart.options.plugins.title.text = $localLang.TIMER.timeDistribution;
-      // @ts-ignore
-      timeChart.options.plugins.title.font.family = appFont;
     }
 
     timeChart.update();
@@ -236,8 +243,7 @@
   }
 
   function initGraphs(s: any, timerOnly = false) {
-    void s;
-
+    void s; // Just for $solves detection change
     timeChart && timeChart.destroy();
     !timerOnly && hourChart && hourChart.destroy();
     !timerOnly && weekChart && weekChart.destroy();
@@ -254,9 +260,9 @@
 
     const shadingArea: Plugin = {
       id: 'shadingArea',
-      beforeDatasetsDraw(ch) {
+      afterDatasetsDraw(ch) {
         const { ctx, scales: {y} } = ch;
-        const { data, hidden } = ch.getDatasetMeta(6);
+        const { data, hidden } = ch.getDatasetMeta(0);
 
         if ( data.length < 2 || hidden ) {
           return;
@@ -284,7 +290,7 @@
 
         ctx.save();
         ctx.beginPath();
-        ctx.fillStyle = 'rgba(255, 255, 255, .1)';
+        ctx.fillStyle = '#eefeee33';
         ctx.moveTo(pg1[0], pg1[1]);
         ctx.lineTo(pg2[0], pg2[1]);
         ctx.lineTo(pg3[0], pg3[1]);
@@ -299,13 +305,13 @@
     timeChart = new Chart(ctx as any, {
       data: {
         datasets: [
-          { data: [], type: 'line', label: 'Time', ...common, indexAxis: 'x' },
-          { data: [], type: 'line', hidden: true, label: 'Ao5', ...common, indexAxis: 'x' },
-          { data: [], type: 'line', hidden: true, label: 'Ao12', ...common, indexAxis: 'x' },
-          { data: [], type: 'line', hidden: true, label: 'Ao50', ...common, indexAxis: 'x' },
-          { data: [], type: 'line', hidden: true, label: 'AoX', ...common, indexAxis: 'x' },
-          { data: [], type: 'line', label: 'Best', borderDash: [5, 5], ...common, indexAxis: 'x' },
-          { data: [], type: 'line', label: 'Trend', borderDash: [5, 5], ...common, indexAxis: 'x' },
+          { data: [], type: 'line', label: 'Trend', borderDash: [5, 5], ...common, indexAxis: 'x', borderColor: BORDER_COLORS[6], backgroundColor: BACKGROUND_COLORS[6] },
+          { data: [], type: 'line', label: 'Best', borderDash: [5, 5], ...common, indexAxis: 'x', borderColor: BORDER_COLORS[5], backgroundColor: BACKGROUND_COLORS[5] },
+          { data: [], type: 'line', hidden: true, label: 'Ao100', ...common, indexAxis: 'x', borderColor: BORDER_COLORS[4], backgroundColor: BACKGROUND_COLORS[4] },
+          { data: [], type: 'line', hidden: true, label: 'Ao50', ...common, indexAxis: 'x', borderColor: BORDER_COLORS[3], backgroundColor: BACKGROUND_COLORS[3] },
+          { data: [], type: 'line', hidden: true, label: 'Ao12', ...common, indexAxis: 'x', borderColor: BORDER_COLORS[2], backgroundColor: BACKGROUND_COLORS[2] },
+          { data: [], type: 'line', hidden: true, label: 'Ao5', ...common, indexAxis: 'x', borderColor: BORDER_COLORS[1], backgroundColor: BACKGROUND_COLORS[1] },
+          { data: [], type: 'line', label: 'Time', ...common, indexAxis: 'x', borderColor: BORDER_COLORS[0], backgroundColor: BACKGROUND_COLORS[0] },
         ],
         labels: [],
       },
@@ -346,11 +352,9 @@
           zoom: {
             zoom: { wheel: { enabled: true }, mode: 'x', scaleMode: "x" },
             pan: { enabled: true, mode: "x", },
-            limits: { x: { min: -1 }, y: { min: 0 } },
+            limits: { x: { min: 0 }, y: { min: 0 } },
           },
-          title: { text: "Time distribution", display: !headless, font: {
-            size: $isMobile ? 20 : 30, family: "Raleway"
-          }, color: '#ddd' },
+          title: { text: "Time distribution", display: !headless, font: { size: $screen.isMobile ? 20 : 30 }, color: '#ddd' },
           decimation: {
             enabled: true,
             algorithm: 'lttb',
@@ -358,7 +362,7 @@
           },
           legend: {
             labels: {
-              boxWidth: $isMobile ? 20 : undefined,
+              boxWidth: $screen.isMobile ? 20 : undefined,
               filter: ({ datasetIndex }: any, { datasets }) => {
                 if ( datasetIndex > 0 && !datasets[ datasetIndex ].data.some((e: any) => !!e.y) ) {
                   return false;
@@ -366,7 +370,8 @@
 
                 return true;
               }
-            }
+            },
+            reverse: true
           }
         },
       },
@@ -393,7 +398,7 @@
         maintainAspectRatio: false,
         plugins: {
           legend: { display: false },
-          title: { text: "Hour distribution", display: true, font: { size: 30, family: "Raleway" }, color: '#ddd' },
+          title: { text: "Hour distribution", display: true, font: { size: 30 }, color: '#ddd' },
           tooltip: {
             mode: 'nearest',
             intersect: false,
@@ -438,9 +443,7 @@
             mode: 'nearest',
             intersect: false,
           },
-          title: { text: "Week distribution", display: true, font: {
-            size: 30, family: "Raleway"
-          }, color: '#ddd' }
+          title: { text: "Week distribution", display: true, font: { size: 30 }, color: '#ddd' }
         },
         scales: { y: { beginAtZero: true } }
       }
@@ -465,9 +468,7 @@
             mode: 'nearest',
             intersect: false,
           },
-          title: { text: "Histogram", display: true, font: {
-            size: 30, family: "Raleway"
-          }, color: '#ddd' }
+          title: { text: "Histogram", display: true, font: { size: 30 }, color: '#ddd' }
         },
         scales: { y: { beginAtZero: true } }
       }
@@ -549,9 +550,7 @@
               },
             }
           },
-          title: { text: $localLang.TIMER.stepsAverage, display: true, font: {
-            size: 30, family: "Raleway"
-          }, color: '#ddd' }
+          title: { text: $localLang.TIMER.stepsAverage, display: true, font: { size: 30 }, color: '#ddd' }
         },
       }
     });
@@ -588,9 +587,7 @@
               },
             }
           },
-          title: { text: $localLang.TIMER.stepsPercent, display: true, font: {
-            size: 30, family: "Raleway"
-          }, color: '#ddd' }
+          title: { text: $localLang.TIMER.stepsPercent, display: true, font: { size: 30 }, color: '#ddd' }
         },
       }
     });
@@ -599,12 +596,13 @@
   onMount(() => {
     Chart.register(zoomPlugin);
     Chart.defaults.color = '#bbbbbb';
+    Chart.defaults.font.family = localStorage.getItem('app-font') || 'Ubuntu';
     Chart.overrides.line.spanGaps = true;
 
     initGraphs([]);
   });
 
-  $: $AoX && timeChart && initGraphs($solves, true);
+  $: timeChart && initGraphs($solves, true);
   $: $stats && distChart && updateStats();
   $: $localLang, timeChart && updateChartText();
   $: updateMultiSteps($session);
@@ -613,7 +611,7 @@
 
 <svelte:window on:resize={ handleResize } />
 
-<main class:headless>
+<main class:headless class:multi={ $session.settings?.sessionType === 'multi-step' }>
   <div class={`canvas card grid place-items-center
     max-sm:col-span-1 max-sm:row-span-1 sm:row-span-1 col-span-2 md:row-span-2 bg-white bg-opacity-10 rounded-md `
     + (headless ? 'max-md:col-span-full' : '')}>
@@ -661,7 +659,7 @@
             }</span>
           <span>
             {#if $stats[ ao.key ].id}
-              <Button ariaLabel={ $localLang.TIMER.go } class="h-6 bg-green-700 hover:bg-green-600 text-gray-300 border-none" on:click={
+              <Button color="green" class="px-4 text-sm h-6" ariaLabel={ $localLang.TIMER.go } on:click={
                 () => selectSolveById($stats[ ao.key ].id || '', ao.select )
               }>{ $localLang.TIMER.go }</Button>
             {/if}
@@ -695,7 +693,11 @@
 </main>
 
 <style lang="postcss">
-  main { --rows: 5; }
+  main { --rows: 4; }
+  
+  main.multi {
+    --rows: 5;
+  }
   
   @media not all and (min-width: 640px) {
     main { --rows: 8; }

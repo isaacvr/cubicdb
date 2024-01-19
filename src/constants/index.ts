@@ -2,6 +2,8 @@ import { AverageSetting, type PuzzleOptions, type SessionSettings } from '@inter
 import { options } from '@cstimer/scramble/scramble';
 import { readable } from 'svelte/store';
 
+export const EPS = 1e-6;
+
 export enum CubeMode {
   NORMAL = 0, OLL, PLL, CMLL, F2L, COLL, WV, ELL, VLS, ZBLL, OLLCP, GRAY, CENTERS, CROSS, FL, YCROSS,
   CS, EO, CO
@@ -39,7 +41,7 @@ const COLORS = {
   "black": "rgb(0, 0, 0)",
   "gray": "rgb(80, 80, 80)",
   "darkgray": "rgb(50, 50, 50)",
-  "lightGray": "rgb(232, 232, 232)",
+  "lightGray": "rgb(211, 211, 211)",
   "violet": "rgb(138, 27, 255)",
   "pink": "rgb(237, 150, 161)",
   "lgreen": "rgb(74, 217, 49)",
@@ -60,7 +62,7 @@ const COLORS = {
   "plgreen": "rgb(74, 217, 49)",
   "plyellow": "rgb(255, 255, 183)",
   "plblue": "rgb(83, 177, 243)",
-} as const;
+};
 
 export declare type ColorName = keyof (typeof COLORS);
 
@@ -157,6 +159,28 @@ export const CLCK = [ "clkwca", "clk", "clkwca", "clko", "clkc", "clke" ];
 export const MEGA = [ "mgmp", "mgmc", "mgmo", "minx2g", "mlsll" ];
 export const KILO = [ "kilo" ];
 export const GIGA = [ "giga" ];
+
+export const ICONS = [
+  { icon: "222so", name: '2x2x2', scrambler: R222 },
+  { icon: "333fm", name: '3x3x3 FM', scrambler: '333fm' },
+  { icon: "333ni", name: '3x3x3 BF', scrambler: '333ni' },
+  { icon: "r3ni", name: '3x3x3 MBF', scrambler: 'r3ni' },
+  { icon: "333oh", name: '3x3x3 OH', scrambler: '333oh' },
+  { icon: "333", name: '3x3x3', scrambler: R333 },
+  { icon: "444bld", name: '4x4x4 BLD', scrambler: '444bld' },
+  { icon: "444wca", name: '4x4x4', scrambler: R444 },
+  { icon: "555bld", name: '5x5x5 BLD', scrambler: '555bld' },
+  { icon: "555wca", name: '5x5x5', scrambler: R555 },
+  { icon: "666wca", name: '6x6x6', scrambler: R666 },
+  { icon: "777wca", name: '7x7x7', scrambler: R777 },
+  { icon: "clkwca", name: 'Clock', scrambler: CLCK },
+  { icon: "mgmp", name: 'Megaminx', scrambler: MEGA },
+  { icon: "pyrso", name: 'Pyraminx', scrambler: PYRA },
+  { icon: "skbso", name: 'Skewb', scrambler: SKWB },
+  { icon: "sqrs", name: 'Square-1', scrambler: SQR1 },
+] as const;
+
+export const CubeDBICON = '/assets/logo-100.png';
 
 const OPTS: PuzzleOptions[] = [
   { type: 'rubik', order: [2] }, { type: 'rubik', order: [3] }, { type: 'rubik', order: [4] },

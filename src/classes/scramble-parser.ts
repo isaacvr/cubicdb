@@ -1,6 +1,6 @@
 import { Interpreter } from "./scrambleInterpreter";
 
-export const scrambleReg = /^([\d]+)?([FRUBLDfrubldzxySME])(?:([w])|&sup([\d]);)?([2'])?$/;
+export const scrambleReg = /^([\d]+)?([FRUBLDfrubldzxySME])(?:([w])|&sup([\d]);)?('|2'|2|3'|3)?$/;
 
 export class ScrambleParser {
   constructor() { }
@@ -18,17 +18,19 @@ export class ScrambleParser {
       }
 
       f = "FRUBLDfrubldzxySME".indexOf(m[2]);
+      
+      p = -(parseInt(m[5]) || 1) * Math.sign(moves[s].indexOf("'") + 0.2);
 
       if (f > 14) {
-        p = "2'".indexOf(m[5] || 'X') + 2;
+        // p = "2'".indexOf(m[5] || 'X') + 2;
         f = [0, 4, 5][f % 3];
-        moveseq.push([moveMap.indexOf("FRUBLD".charAt(f)), 2, p, 1]);
-        // moveseq.push([moveMap.indexOf("FRUBLD".charAt(f)), 1, 4-p]);
+        moveseq.push([moveMap.indexOf("FRUBLD".charAt(f)), 2, p, 1, 0]); 
         continue;
       }
+
       w = f < 12 ? (~~m[1] || ~~m[4] || ((m[3] == "w" || f > 5) && 2) || 1) : -1;
-      p = (f < 12 ? 1 : -1) * ("2'".indexOf(m[5] || 'X') + 2);
-      moveseq.push([moveMap.indexOf("FRUBLD".charAt(f % 6)), w, p, 0]);
+      // p = f < 12 ? turns : -("2'".indexOf(m[5] || 'X') + 2);
+      moveseq.push([moveMap.indexOf("FRUBLD".charAt(f % 6)), w, p, 0, (f < 12 ? 0 : 1)]); // Move Index, Face Index, Direction
     }
     return moveseq;
   }
@@ -41,19 +43,17 @@ export class ScrambleParser {
     let res = [];
 
     for (let i = 0, maxi = moves.length; i < maxi; i += 1) {
-      if (moves[i][1] > 0) {
+      if ( !moves[i][4] ) {
         res.push([
-          moves[i][3] ? order - 1 : moves[i][1],
-          MOVE_MAP.charAt(moves[i][0]),
-          [1, 2, -1][moves[i][2] - 1],
-          moves[i][3] ? order - 2 : undefined
+          moves[i][3] ? order - 1 : moves[i][1], // Face Index
+          MOVE_MAP.charAt(moves[i][0]), // Move Index
+          moves[i][2], // Direction
+          moves[i][3] ? order - 2 : undefined // Span
         ]);
       } else {
-        res.push([order, MOVE_MAP.charAt(moves[i][0]), [1, 2, -1][-moves[i][2] - 1], moves[i][3]]);
+        res.push([order, MOVE_MAP.charAt(moves[i][0]), moves[i][2], moves[i][3]]);
       }
     }
-
-
 
     return res;
   }
@@ -100,7 +100,7 @@ export class ScrambleParser {
             res.push([0, mv.indexOf('+') * 2, -1]);
           }
         } else {
-          let turns = (parseInt(mv.replace(/\D*(\d+)\D*/g, '$1')) || 1) * Math.sign(mv.indexOf("'") + 0.2);
+          let turns = (parseInt(mv.replace(/\D+(\d+)\D*/g, '$1')) || 1) * Math.sign(mv.indexOf("'") + 0.2);
 
           if ( /^([URFL]\d*'?)$/.test(mv) ) {
             res.push([moveMap.indexOf(mv[0]), turns, 1]);
@@ -117,20 +117,53 @@ export class ScrambleParser {
   }
 
   static parsePyraminx(scramble: string) {
-    let moves = ScrambleParser.parseScramble(scramble, 'URLB');
+    // MOVE_MAP = "URLB"
+    // MV = [ plane, turns, layers, direction ] ]
+
     let res = [];
+    let moveReg = /((o?[ULRB])|[urlbdyz])['2]?/g;
+    let moves = scramble.match(moveReg);
+    let moveMap = "URLB";
+
+    if ( !moves ) return [];
+
     for (let i = 0, maxi = moves.length; i < maxi; i += 1) {
-      res.push([moves[i][0], moves[i][2] - 2, -3, moves[i][1]]);
+      let mv = moves[i];
+
+      let turns = (parseInt(mv.replace(/\D+(\d+)\D*/g, '$1')) || 1) * Math.sign(mv.indexOf("'") + 0.2);
+
+      if ( mv.startsWith('o') ) {
+        res.push([ moveMap.indexOf(mv[1]), turns, 3, -1]);
+      } else if ( /^[yz]$/.test(mv[0]) ) {
+        res.push([ "y--z".indexOf(mv[0]), (mv[0] === 'z' ? -1 : 1) * turns, 3, -1 ]);
+      } else if ( mv[0] === 'd' ) {
+        res.push([ 0, -turns, 1, -1 ]);
+      } else {
+        let mmv = mv[0].toUpperCase();
+        res.push([ moveMap.indexOf(mmv), turns, (mmv === mv[0] ? 1 : 2), 1 ]);
+      }
     }
+    
     return res;
   }
 
   static parseSkewb(scramble: string) {
-    let moves = ScrambleParser.parseScramble(scramble, "URLB");
+    // MOVE_MAP = "URLB"
+    // MV = [ plane, turns ]
+
     let res = [];
-    for (let i = 0, maxi = moves.length; i < maxi; i++) {
-      res.push([moves[i][0], moves[i][2] - 2]);
+    let moveReg = /[FULRBrlxyz]['2]?/g;
+    let moves = scramble.match(moveReg);
+    let moveMap = "FURLBrlxyz";
+
+    if ( !moves ) return [];
+
+    for (let i = 0, maxi = moves.length; i < maxi; i += 1) {
+      let mv = moves[i];
+      let turns = (parseInt(mv.replace(/\D+(\d+)\D*/g, '$1')) || 1) * Math.sign(mv.indexOf("'") + 0.2);
+      res.push([ moveMap.indexOf(mv[0]), -turns ]);
     }
+    
     return res;
   }
 

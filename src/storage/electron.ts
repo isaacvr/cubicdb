@@ -145,6 +145,10 @@ export class ElectronAdaptor implements IPC {
   update(cmd: UpdateCommand) {
     return this.ipc.update(cmd);
   }
+  
+  cancelUpdate() {
+    return this.ipc.cancelUpdate();
+  }
 
   sleep(s: boolean) {
     return this.ipc.sleep(s);

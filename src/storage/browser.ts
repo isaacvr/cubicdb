@@ -1,7 +1,6 @@
 import { SessionDefaultSettings } from "@constants";
 import type { Algorithm, AlgorithmOptions, CubeEvent, IPC, ContestPDFOptions, Session, Sheet, Solve, Tutorial, UpdateCommand, PDFOptions } from "@interfaces";
 import algs from '../database/algs.json';
-import tuts from '../database/tutorials.json';
 import { randomUUID } from "@helpers/strings";
 import { clone } from "@helpers/object";
 
@@ -92,6 +91,7 @@ export class BrowserAdaptor implements IPC {
 
   // Update
   update(cmd: UpdateCommand) { return Promise.reject(); }
+  cancelUpdate() { return Promise.resolve(true); }
 
   // Power saving options
   sleep(s: boolean) { return Promise.resolve(); }

@@ -1,20 +1,17 @@
 <script lang="ts">
-  import { Link, navigate } from "svelte-routing";
-  import { generateCubeBundle } from "@helpers/cube-draw";
+  import { Link } from "svelte-routing";
   import { globalLang } from "@stores/language.service";
   import { getLanguage } from "@lang/index";
-  import type { Card } from "@interfaces";
-  import type { Puzzle } from "@classes/puzzle/puzzle";
+  import type { ICard } from "@interfaces";
+  import { screen } from "@stores/screen.store";
   import { DataService } from "@stores/data.service";
-    import Button from "./material/Button.svelte";
-  
-  let cards: Card[] = [];
-  const isMobile = DataService.getInstance().isMobile;
+
+  let cards: ICard[] = [];
 
   function updateTexts() {
     const HOME = getLanguage( $globalLang ).HOME;
 
-    const showPrivate = true;
+    const showPrivate = false;
 
     cards = [
       {
@@ -79,7 +76,7 @@
         title: HOME.importExport,
         route: '/import-export',
         cube: '/assets/import-export.png',
-        ready: !$isMobile,
+        ready: DataService.getInstance().isElectron,
         timer: false,
       }, {
         title: HOME.settings,
@@ -95,22 +92,6 @@
         timer: false,
       }
     ].filter(c => c.ready);
-
-    let cubes = cards.reduce((ac: Puzzle[], e) => {
-      if ( e.puzzle ) {
-        ac.push(e.puzzle);
-      }
-      return ac;
-    }, []);
-  
-    generateCubeBundle(cubes, undefined, false, true, undefined, true).then(gen => {
-      let subsc = gen.subscribe((c) => {
-        if ( c === null ) {
-          subsc();
-          cards = cards;
-        }
-      });
-    });
   };
 
   $: $globalLang, updateTexts();
@@ -118,7 +99,8 @@
 </script>
 
 <main class="container-mini">
-  <ul class="w-full grid place-items-center" class:isMobile={ $isMobile }>
+
+  <ul class="w-full grid place-items-center" class:isMobile={ $screen.isMobile }>
     {#each cards as card (card.route)}
       <li class={`text-center shadow-md rounded-md select-none cursor-pointer
       transition-all duration-200 py-3 px-3

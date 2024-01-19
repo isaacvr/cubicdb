@@ -1,11 +1,9 @@
 <script lang="ts">
   /// Svelte Stuff
   import { Route, Router } from 'svelte-routing';
-  import { AlgorithmSequence } from '@classes/AlgorithmSequence';
 
   /// Components
   import Frame from '@components/Frame.svelte';
-  import Navbar from '@components/Navbar.svelte';
   import Home from '@components/Home.svelte';
   import Tutorials from '@components/Tutorials.svelte';
   import Timer from '@components/timer/Timer.svelte';
@@ -27,43 +25,51 @@
   import Tools from '@components/tools/Tools.svelte';
 
   // Premium Stuff
-  import Contest from '@pcomponents/Contest.svelte';
-    import Reconstruction from '@components/Reconstruction.svelte';
+  // import Contest from '@pcomponents/Contest.svelte';
+  import Reconstruction from '@components/Reconstruction.svelte';
+  import { screen } from '@stores/screen.store';
   // import Particles from '@pcomponents/Particles.svelte';
   // import Space from '@pcomponents/Space.svelte';
 
   let notService = NotificationService.getInstance();
   let notifications: INotification[] = [];
   let nSub: Unsubscriber;
-  // let dialog: HTMLDialogElement | null = null;
+
+  function handleResize() {
+    $screen = {
+      width: window.innerWidth,
+      height: window.innerHeight,
+      isMobile: window.innerWidth < 768
+    };
+  }
 
   onMount(() => {
+    handleResize();
+    
     nSub = notService.notificationSub.subscribe((v) => {
       notifications = v;
     });
 
     let lang = localStorage.getItem('language') || 'en-EN';
     localStorage.setItem('language', lang);
-    
     globalLang.update(() => lang);
 
-    // @ts-ignore
-    window.algSequence = new AlgorithmSequence("L' U L2 U2 B2 D B2 U L2 U B2 R2 U2 F U F2 U L2 F U L'");
+    document.documentElement.style.setProperty('--app-font', localStorage.getItem('app-font') || 'Ubuntu');
+    document.documentElement.style.setProperty('--timer-font', localStorage.getItem('timer-font') || 'Ubuntu');
   });
 
-  onDestroy(() => {
-    nSub();
-  });
+  onDestroy(() => nSub());
 </script>
+
+<svelte:window on:resize={ handleResize }/>
 
 <Router>
   <!-- <Particles /> -->
   <!-- <Space /> -->
 
   <Frame />
-  <Navbar />
 
-  <main class="pt-16 absolute w-full h-full overflow-x-clip">
+  <!-- <main class="w-full overflow-x-clip"> -->
     <Route path="/" component={ Home }/>
     <Route path="/tutorials" component={ Tutorials }/>
     <Route path="/tutorials/:something" component={ Tutorials }/>
@@ -75,25 +81,33 @@
     <Route path="/battle" component={ Battle }/>
     <Route path="/pll-trainer" component={ PllRecognition }/>
     <Route path="/simulator" component={ Simulator }/>
-    <Route path="/contest" component={ Contest }/>
+    <!-- <Route path="/contest" component={ Contest }/> -->
     <Route path="/import-export" component={ ImportExport }/>
     <Route path="/settings" component={ Settings }/>
     <Route path="/cubedb" component={ CubeDb }/>
     <Route path="/tools" component={ Tools }/>
-  </main>
+  <!-- </main> -->
 
   <!-- Notifications -->
-  <dialog open={ false } class="notification-container mt-0 mr-0 h-full pr-2 overflow-hidden
-    flex flex-col gap-4 justify-center text-gray-400 bg-transparent outline-none pointer-events-none">
+  <div class="notification-container">
     {#each notifications as nt (nt.key)}
       <Notification {...nt} fixed={ nt.fixed }/>
     {/each}
-  </dialog>
+  </div>
 </Router>
 
 <style>
   .notification-container {
-    width: max-content;
     max-width: 25rem;
+    position: fixed;
+    right: 0;
+    top: 3rem;
+    height: calc(100% - 3rem);
+    width: 100%;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+    justify-content: center;
   }
 </style>

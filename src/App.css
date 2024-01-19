@@ -51,18 +51,37 @@
 	font-style: normal;
 }
 
+:root {
+  line-height: 1.5;
+  font-weight: 400;
+  font-size: 16px;
+  color-scheme: dark;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+  transition: all 200ms;
+}
+
+#app {
+  display: contents;
+}
+
 html {
-  --app-font: 'Ubuntu';
-  --timer-font: 'lcd4';
+  height: 100%;
 }
 
 body {
   @apply bg-background;
   margin: 0;
-  padding: 0;
+  display: flex;
+  min-width: 320px;
+  min-height: 100%;
+  position: relative;
+  display: flex;
+  flex-direction: column;
   font-family: var(--app-font);
-  min-height: 100vh;
-  min-height: 100dvh;
 }
 
 .ubuntu { font-family: 'Ubuntu'; }
@@ -121,63 +140,12 @@ body {
 }
 
 mark {
-  @apply bg-purple-600 p-1 text-slate-200 inline-flex items-center justify-center;
+  @apply bg-purple-700 bg-opacity-70 p-1 text-slate-300 inline-flex items-center justify-center my-1;
   border-radius: .25rem;
-}
-
-/* Tables */
-.table-wrapper table {
-  @apply text-center shadow-md rounded-md border-collapse;
-}
-
-.table-wrapper th, .table-wrapper td {
-  @apply p-2;
-}
-
-.table-wrapper table thead tr {
-  @apply bg-gray-800 text-gray-300;
-}
-
-.table-wrapper table.stripped tbody tr:nth-child(odd) {
-  @apply bg-gray-400 text-gray-700 hover:bg-gray-300;
-}
-
-.table-wrapper table.stripped tbody tr:nth-child(even) {
-  @apply bg-gray-700 hover:bg-gray-300 hover:text-gray-700;
 }
 
 .note {
   @apply bg-white bg-opacity-10 p-4 text-left border-l-8 border-l-blue-500 shadow-md rounded-sm;
-}
-
-/* Tooltip */
-.tooltip {
-  @apply fixed bg-neutral-600 px-3 py-2 rounded-sm flex
-    transition-all text-neutral-200 items-center justify-center text-center;
-  width: max-content;
-  max-width: 35ch;
-  transition-duration: var(--duration);
-  transition-delay: var(--delay);
-  left: var(--x);
-  top: var(--y);
-  z-index: 1000000;
-  font-size: 1rem;
-  filter: drop-shadow(0 0 0.2rem #222);
-}
-
-.tooltip:not(.visible) {
-  @apply opacity-0 pointer-events-none select-none;
-}
-
-.tooltip::before {
-  content: '';
-  @apply absolute w-2 h-2 bg-neutral-600
-    border border-gray-600;
-  left: var(--tx);
-  top: var(--ty);
-  transform: rotate( var(--tr) );
-  border-right: none;
-  border-bottom: none;
 }
 
 /* Reconstructions */

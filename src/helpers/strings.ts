@@ -134,6 +134,10 @@ function getMoveLength(sequence: string[], puzzle: PuzzleType, order: number): n
       case 'megaminx': {
         return sequence.reduce((acc: any[], e) => [...acc, ...ScrambleParser.parseMegaminx(e)], []).length;
       }
+
+      case 'pyraminx': {
+        return sequence.reduce((acc: any[], e) => [...acc, ...ScrambleParser.parsePyraminx(e)], []).length;
+      }
     }
   } catch {}
 
@@ -175,7 +179,8 @@ export function parseReconstruction(s: string, puzzle: PuzzleType, order: number
         result: getTreeString(tree.program.value, puzzle) + "<br>",
         finalAlpha,
         sequence,
-        sequenceIndex
+        sequenceIndex,
+        hasError: false
       };
     }
   } catch(e) {
@@ -195,7 +200,8 @@ export function parseReconstruction(s: string, puzzle: PuzzleType, order: number
         result: pref + middle + defaultInner(s.slice( errorCursor + match[0].length )),
         finalAlpha: 0,
         sequence: [],
-        sequenceIndex: []
+        sequenceIndex: [],
+        hasError: true,
       };
     }
   }
@@ -204,6 +210,7 @@ export function parseReconstruction(s: string, puzzle: PuzzleType, order: number
     result: defaultInner(s),
     finalAlpha: 0,
     sequence: [],
-    sequenceIndex: []
+    sequenceIndex: [],
+    hasError: false
   }
 }

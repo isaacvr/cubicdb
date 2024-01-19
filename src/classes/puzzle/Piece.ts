@@ -159,7 +159,6 @@ export class Piece {
         dirs[ d + 1 ] += 1;
 
         if ( !useMassCenter && d === 0 ) {
-          console.log("INTERSECTED: ", st[i]);
           return 0;
         }
         

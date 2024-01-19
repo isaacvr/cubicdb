@@ -2,10 +2,9 @@
   import { Link, navigate, useLocation } from "svelte-routing";
   import { derived, type Readable } from "svelte/store";
   import { Puzzle } from "@classes/puzzle/puzzle";
-  import { generateCubeBundle, pGenerateCubeBundle } from "@helpers/cube-draw";
-  import { nameToPuzzle, type Algorithm, type Card, type Language } from "@interfaces";
+  import { pGenerateCubeBundle } from "@helpers/cube-draw";
+  import { nameToPuzzle, type Algorithm, type ICard, type Language } from "@interfaces";
   import { DataService } from "@stores/data.service";
-  import Tooltip from "./material/Tooltip.svelte";
   import { copyToClipboard, getSearchParams, randomUUID } from "@helpers/strings";
   import { NotificationService } from "@stores/notification.service";
   import { globalLang } from "@stores/language.service";
@@ -13,8 +12,9 @@
   import type { RouteLocation } from "svelte-routing/types/Route";
   import ViewListIcon from '@icons/ViewList.svelte';
   import ViewGridIcon from '@icons/Grid.svelte';
-  import Button from "./material/Button.svelte";
-  import { sha1 } from "object-hash";
+  import { screen } from "@stores/screen.store";
+  import { Button, Li, List, Span, Spinner, Tooltip } from "flowbite-svelte";
+  import { CubeDBICON } from "@constants";
 
   const location = useLocation();
   
@@ -24,10 +24,9 @@
 
   const dataService = DataService.getInstance();
   const notification = NotificationService.getInstance();
-  const isMobile = dataService.isMobile;
 
   let lastUrl: string = '';
-  let cards: Card[] = [];
+  let cards: ICard[] = [];
   let cases: Algorithm[] = [];
   let type: number = 0;
   let selectedCase: Algorithm | null = null;
@@ -115,29 +114,6 @@
       cases = cases;
     })
     .catch(err => console.log("ERROR: ", err));
-
-    // generateCubeBundle(arr, 500, true, true, false, true).then(gen => {
-    //   let subsc = gen.subscribe((c) => {
-    //     if ( c === null ) {
-    //       cards = cards;
-    //       cases = cases;
-
-    //       cards.forEach(c => {
-    //         if ( c.puzzle ) {
-    //           dataService.cacheSaveImage(sha1(c.puzzle.options), c.puzzle.img);
-    //         }
-    //       });
-
-    //       cases.forEach(c => {
-    //         if ( c._puzzle ) {
-    //           dataService.cacheSaveImage(sha1(c._puzzle.options), c._puzzle.img);
-    //         }
-    //       });
-
-    //       subsc();
-    //     }
-    //   });
-    // });
   }
 
   function toggleListView() {
@@ -192,7 +168,8 @@
         key: randomUUID(),
         header: $localLang.global.done,
         text: $localLang.global.scrambleCopied,
-        timeout: 1000
+        timeout: 1000,
+        icon: CubeDBICON,
       });
     });
 
@@ -203,13 +180,17 @@
 
 <svelte:window on:keyup={ handlekeyUp }></svelte:window>
 
-<main class="container-mini overflow-hidden text-gray-400">
+<main class="container-mini overflow-hidden">
   {#if allSolutions}
     <div>
       <h1 class="text-gray-300 text-3xl font-bold text-center">{ selectedCase?.name }</h1>
       <button class="flex mx-auto items-center justify-center" on:click={ () => imgExpanded = !imgExpanded }>
-        <img src={ selectedCase?._puzzle?.img } class="puzzle-img object-contain"
-          class:expanded={ imgExpanded } alt="">
+        {#if selectedCase?._puzzle?.img}
+          <img src={ selectedCase?._puzzle?.img } class="puzzle-img object-contain"
+            class:expanded={ imgExpanded } alt="">
+        {:else}
+          <Spinner size="6" color="white"/>
+        {/if}
       </button>
 
       <div class="grid grid-cols-6">
@@ -218,13 +199,16 @@
         <h2 class="max-sm:col-span-1 col-span-1 font-bold text-xl text-right text-gray-300">{ $localLang.ALGORITHMS.moves }</h2>
         <h2 class="max-sm:hidden col-span-1 font-bold text-xl"> </h2>
   
-        {#each (selectedCase?.solutions || []) as sol }
+        {#each (selectedCase?.solutions || []) as sol, i }
           <span class="max-sm:hidden col-span-1"></span>
-          <Tooltip position={ $isMobile ? "top" : "left" } text="Click to copy" class="max-sm:col-span-5 col-span-3">
-            <button role="link" tabindex="0"
-              on:click={ () => toClipboard(sol.moves) }
-              class="mt-2 cursor-pointer hover:text-gray-300 transition-all
-              duration-200 border-l-4 border-l-blue-500 pl-2">{ sol.moves }</button>
+          
+          <button role="link" tabindex="0"
+            on:click={ () => toClipboard(sol.moves) }
+            class="mt-2 cursor-pointer hover:text-gray-300 transition-all max-sm:col-span-5 col-span-3
+            text-left duration-200 border-l-4 border-l-blue-500 pl-2">{ sol.moves }</button>
+
+          <Tooltip placement={ $screen.isMobile ? "top" : "left" }>
+            { $localLang.global.clickToCopy }
           </Tooltip>
           <span class="max-sm:col-span-1 col-span-1 mt-2 text-right">{ sol.moves.split(" ").length }</span>
           <span class="max-sm:hidden col-span-1"></span>
@@ -233,51 +217,63 @@
     </div>
   {:else}
     {#if type < 2}
-      <ul class="w-full grid py-4">
+      <List class="w-full grid py-4">
         {#each cards as card }
-          <li class="max-w-[12rem] h-48 text-center shadow-md rounded-md select-none cursor-pointer
-          transition-all duration-200 flex flex-col items-center justify-between py-3
-          bg-backgroundLv1 text-gray-400
+          <Link to={ card.route } class="w-full">
+            <Li class="max-w-[12rem] h-48 text-center shadow-md rounded-md select-none cursor-pointer
+            transition-all duration-200 flex flex-col items-center justify-between py-3
+            bg-backgroundLv1
 
-          hover:rotate-3 hover:shadow-lg">
-            <Link to={ card.route } class="w-[fit-content]">
-              <img class="w-32 h-32 object-contain" src="{card?.puzzle?.img || ''}" alt={card.title}>
-              <h2>{card.title}</h2>
-            </Link>
-          </li>
+            hover:rotate-3 hover:shadow-lg">
+              {#if card?.puzzle?.img}
+                <img class="w-32 h-32 object-contain" src={card.puzzle.img} alt={card.title}>
+              {:else}
+                <Spinner size="6" color="white"/>
+              {/if}
+
+              <Span class="text-base">{ card.title }</Span>
+            </Li>
+          </Link>
         {/each}
-      </ul>
+      </List>
     {/if}
 
     {#if type === 2 || type >= 4 }
-      <div class={"fixed right-2 grid place-items-center " + ( $isMobile ? "bottom-16" : "top-16" )}>
-        <Tooltip position="left" text={ $localLang.ALGORITHMS.toggleView + '[Ctrl+L]' } hasKeybinding>
-          <Button class={`bg-purple-600 hover:bg-purple-500 text-gray-300
-            hover:text-gray-200 grid place-items-center !p-0 cursor-pointer `
-              + ($isMobile ? 'w-12 h-12 !rounded-full shadow-xl border border-black' : 'w-8 h-8')}
-            on:click={ toggleListView }>
-  
-            {#if listView}
-              <ViewListIcon size="1.2rem"/>
-            {:else}
-              <ViewGridIcon size="1.2rem"/>
-            {/if}
-          </Button>
+      <div class={"fixed right-2 grid place-items-center " + ( $screen.isMobile ? "bottom-16" : "top-16" )}>
+        <Button id="list-view" color="purple" class={`grid place-items-center !p-0 cursor-pointer `
+            + ($screen.isMobile ? 'w-12 h-12 !rounded-full shadow-xl border border-black' : 'w-8 h-8')}
+          on:click={ toggleListView }>
+
+          {#if listView}
+            <ViewListIcon size="1.2rem" class="pointer-events-none"/>
+          {:else}
+            <ViewGridIcon size="1.2rem" class="pointer-events-none"/>
+          {/if}
+        </Button>
+        <Tooltip reference="#list-view" placement="left" class="w-max">
+          <div class="flex items-center gap-2">
+            { $localLang.ALGORITHMS.toggleView } <div class="text-yellow-400">[Ctrl + L]</div>
+          </div>
         </Tooltip>
       </div>
-      <div class="cases grid text-gray-400" class:compact={ !listView }>
+      <div class="cases grid" class:compact={ !listView }>
         <div class="row">
           <span class="text-gray-300 font-bold">{ $localLang.ALGORITHMS.case }</span>
           <span class="text-gray-300 font-bold"></span>
           <span class="text-gray-300 font-bold">{ $localLang.ALGORITHMS.algorithms }</span>
         </div>
 
-        {#each cases as c, i}
+        {#each cases as c}
           <div class="row">
             <span class="font-bold">{ c.name }</span>
             <button class="flex items-center justify-center" on:click={ () => caseHandler(c) }>
-              <img class="puzzle-img hover:shadow-lg transition-all duration-200 cursor-pointer object-contain"
-                src={c?._puzzle?.img || ''} alt="">
+              {#if c?._puzzle?.img}
+                <img class="puzzle-img hover:shadow-lg transition-all duration-200 cursor-pointer object-contain"
+                  src={c._puzzle.img } alt="">
+              {:else}
+                <Spinner size="6" color="white"/>
+              {/if}
+              
             </button>
             <ul>
               {#each (c.solutions || []).slice(0, 4) as solution}
@@ -292,16 +288,11 @@
 </main>
 
 <style lang="postcss">
-  ul:not(.no-grid) {
+  :global(ul:not(.no-grid)) {
     grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr));
     row-gap: 2rem;
     column-gap: 1rem;
     grid-template-rows: max-content;
-  }
-
-  .container-mini > :not(.absolute) {
-    max-height: 100%;
-    overflow: scroll;
   }
 
   .cases .row {

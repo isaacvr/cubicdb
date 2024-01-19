@@ -1,6 +1,6 @@
 <script lang="ts">
   import { getStackingContext } from '@helpers/DOM';
-    import { minmax } from '@helpers/math';
+  import { minmax } from '@helpers/math';
   import { processKey } from '@helpers/strings';
   import { createEventDispatcher, onMount } from 'svelte';
 
@@ -8,8 +8,8 @@
 
   export let text = 'tooltip';
   export let position: Direction = 'right';
-  export let duration = 200;
-  export let delay = 200;
+  export let duration = 100;
+  export let delay = 0;
   export let hasKeybinding = false;
   let _class = '';
   export { _class as class };
@@ -68,7 +68,7 @@
   on:mouseenter={mouseenter}
   on:mouseleave={mouseleave}
   on:click={ clickHandler }
-  bind:this={ elem }
+  bind:this={ elem } tabindex="-1"
   style={
     '--duration: ' + duration + 'ms;\
     --delay: ' + delay + 'ms;\
@@ -94,6 +94,35 @@
 </button>
 
 <style lang="postcss">
+  .tooltip {
+    @apply fixed bg-gray-700 px-3 py-2 rounded-md flex
+      transition-all text-neutral-200 items-center justify-center text-center;
+    width: max-content;
+    max-width: 35ch;
+    transition-duration: var(--duration);
+    transition-delay: var(--delay);
+    left: var(--x);
+    top: var(--y);
+    z-index: 1000000;
+    font-size: 1rem;
+    filter: drop-shadow(0 0 0.2rem #222);
+  }
+
+  .tooltip:not(.visible) {
+    @apply opacity-0 pointer-events-none select-none;
+  }
+
+  .tooltip::before {
+    content: '';
+    @apply absolute w-2 h-2 bg-gray-700
+      border border-gray-600;
+    left: var(--tx);
+    top: var(--ty);
+    transform: rotate( var(--tr) );
+    border-right: none;
+    border-bottom: none;
+  }
+
   .wrapper {
     @apply w-fit h-fit;
     display: initial;

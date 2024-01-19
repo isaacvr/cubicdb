@@ -6,14 +6,11 @@
   import type { Language, PuzzleType } from "@interfaces";
   import { TrackballControls } from "three/examples/jsm/controls/TrackballControls";
   import { puzzleReg } from "@classes/puzzle/puzzleRegister";
-  import { onDestroy, onMount } from "svelte";
+  import { onDestroy, onMount, tick } from "svelte";
 
   import SettingsIcon from "@icons/Cog.svelte";
   import Refresh from "@icons/Refresh.svelte";
   import Tooltip from "@components/material/Tooltip.svelte";
-  import Modal from "@components/Modal.svelte";
-  import Select from "@components/material/Select.svelte";
-  import Button from "@components/material/Button.svelte";
   import Input from "@components/material/Input.svelte";
   import {
     Matrix4,
@@ -27,6 +24,7 @@
     WebGLRenderer,
     type Intersection,
     FrontSide,
+    PCFSoftShadowMap,
   } from "three";
 
   // } from "three";
@@ -35,11 +33,10 @@
   import { getLanguage } from "@lang/index";
   import { globalLang } from "@stores/language.service";
   import type { Sticker } from "@classes/puzzle/Sticker";
-  import { DataService } from "@stores/data.service";
-  import Toggle from "./material/Toggle.svelte";
   import { ImageSticker } from "@classes/puzzle/ImageSticker";
-
-  const isMobile = DataService.getInstance().isMobile;
+  import { screen } from "@stores/screen.store";
+  import { Button, Modal, Toggle } from "flowbite-svelte";
+  import Select from "./material/Select.svelte";
 
   export let enableKeyboard = true;
   export let enableDrag = true;
@@ -48,7 +45,7 @@
   export let contained = false;
   export let selectedPuzzle: PuzzleType = "rubik";
   export let order = 3;
-  export let animationTime = $isMobile ? 150 : 200; /// Default animation time: 200ms
+  export let animationTime = $screen.isMobile ? 150 : 200; /// Default animation time: 200ms
   export let showBackFace = false;
   export let sequence: string[] = [];
   export let sequenceAlpha = 0;
@@ -66,11 +63,10 @@
   let H = 0;
 
   /// GUI
-  let excludedPuzzles: PuzzleType[] = ["clock", "icarry"];
-  let puzzles: any[] = [];
+  let excludedPuzzles: PuzzleType[] = [ "icarry", 'clock' ];
+  let puzzles: { name: string, value: string, order: boolean }[] = [];
   let hasOrder = true;
   let GUIExpanded = false;
-  let resettingPuzzle = false;
   let mounted = false;
 
   for (let [key, value] of puzzleReg) {
@@ -185,13 +181,13 @@
     };
   }
 
-  export function handleSequence(s: string[], scr: string) {
+  export async function handleSequence(s: string[], scr: string) {
     if (!mounted) return;
 
     let nc: Puzzle;
 
     try {
-      resetPuzzle("", false, scr);
+      await resetPuzzle("", false, scr);
 
       nc = Puzzle.fromSequence(scr, {
         type: selectedPuzzle,
@@ -373,10 +369,23 @@
   }
 
   function resetPuzzle(facelet?: string, scramble = false, useScr = "") {
-    resettingPuzzle = true;
-
     let children = scene.children;
     scene.remove(...children);
+
+    // Scene preparation
+
+    let light = new PointLight("#ffffff", 3, 3, 1);
+    light.position.set(0, 2, 0);
+    light.castShadow = true;
+    scene.add(light);
+
+    // let plane = new Mesh(new PlaneGeometry(20, 20), new MeshBasicMaterial({ color: 0x888888, side: DoubleSide }));
+    // plane.lookAt( new Vector3(0, 1, 0) );
+    // plane.position.set(0, -1.5, 0);
+    // plane.receiveShadow = true;
+    // scene.add( plane );
+    
+    // Puzzle setup
 
     if (facelet) {
       cube = Puzzle.fromFacelet(facelet);
@@ -422,6 +431,8 @@
     cube = ctt.nc;
     backFace = bfc.group;
 
+    group.castShadow = true;
+
     scene.add(group);
     scene.add(backFace);
 
@@ -429,13 +440,7 @@
     group.rotation.y = 0;
     group.rotation.z = 0;
 
-    let light = new PointLight("#ffffff", 1, 2, 3);
-    light.position.set(2, 2, 2);
-
-    scene.add(light);
-
     resetCamera();
-    resettingPuzzle = false;
   }
 
   function scramble() {
@@ -769,14 +774,15 @@
   onMount(() => {
     mounted = true;
 
-    document.body.style.overflow = "hidden";
-
     renderer = new WebGLRenderer({
       antialias: true,
       alpha: true,
       powerPreference: "high-performance",
       canvas,
     });
+
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = PCFSoftShadowMap;
 
     renderer.setPixelRatio(window.devicePixelRatio);
 
@@ -821,12 +827,11 @@
     renderer.domElement.remove();
     renderer.dispose();
     controls.dispose();
-    document.body.style.overflow = "auto";
   });
 
   /// GUI
   function setOrder() {
-    hasOrder = puzzles.find((p) => p.value === selectedPuzzle).order;
+    hasOrder = puzzles.find((p) => p.value === selectedPuzzle)!.order;
   }
 
   function hideGUI() {
@@ -847,74 +852,52 @@
 <canvas bind:this={canvas} />
 
 {#if gui}
-  <Tooltip
-    hasKeybinding
-    text={$localLang.SIMULATOR.settings + "[Ctrl + ,]"}
-    position="left"
-    on:click={showGUI}
-    class="absolute right-[1rem] text-gray-400 z-20 hover:text-gray-300 transition-all duration-100 cursor-pointer"
-  >
-    <SettingsIcon width="1.2rem" height="1.2rem" />
-  </Tooltip>
-
-  <Tooltip
-    hasKeybinding
-    text={$localLang.SIMULATOR.showBackFace + "[Ctrl + B]"}
-    position="left"
-    class="absolute right-[1rem] mt-[2rem] text-gray-400 z-20 hover:text-gray-300 transition-all duration-100 cursor-pointer"
-  >
-    <Toggle bind:checked={showBackFace} />
-  </Tooltip>
-
-  {#if cube?.p.scramble}
-    <Tooltip
-      hasKeybinding
-      text={$localLang.global.toScramble + "[Ctrl + S]"}
-      position="left"
-      class="absolute right-[1rem] mt-[5rem] text-gray-400 z-20 hover:text-gray-300 transition-all duration-100 cursor-pointer"
-      on:click={scramble}
-    >
-      <Refresh size="1.2rem" />
+  <div class="absolute right-2 top-[5rem] flex flex-col gap-2 items-center ps-3">
+    <Tooltip hasKeybinding position="left" on:click={showGUI} text={$localLang.SIMULATOR.settings + "[Ctrl + ,]"}>
+      <Button color="alternative" class="h-8 w-8 p-0 me-3 rounded-full"><SettingsIcon size="1.2rem"/></Button>
     </Tooltip>
-  {/if}
 
-  <Modal bind:show={GUIExpanded}>
-    <h1 class="text-3xl text-gray-300 text-center m-4">
-      {$localLang.SIMULATOR.puzzleSettings}
-    </h1>
-    <div class="grid grid-cols-2 gap-4 place-items-center text-gray-400">
-      <span>{$localLang.SIMULATOR.puzzle}</span>
-      <Select
-        items={puzzles}
-        label={(e) => e.name}
-        bind:value={selectedPuzzle}
-        onChange={setOrder}
-        class="text-gray-400 w-full max-w-[unset]"
-      />
+    <Tooltip hasKeybinding position="left" text={$localLang.global.toScramble + "[Ctrl + S]"}>
+      <Button on:click={scramble} color="alternative" class="h-8 w-8 p-0 me-3 rounded-full"><Refresh size="1.2rem" /></Button>
+    </Tooltip>
 
-      {#if hasOrder}
-        <span>{$localLang.SIMULATOR.order}</span>
-        <Input
-          on:UENTER={() => {
-            resetPuzzle();
-            hideGUI();
-          }}
-          type="number"
-          min={1}
-          bind:value={order}
-          class="bg-white bg-opacity-10 text-gray-400"
-        />
-      {/if}
-
-      <Button on:click={hideGUI}>{$localLang.global.cancel}</Button>
-      <Button
-        loading={resettingPuzzle}
-        class="bg-green-700 hover:bg-green-600 text-gray-300"
-        on:click={() => {
-          resetPuzzle();
-          hideGUI();
-        }}>{$localLang.SIMULATOR.setPuzzle}</Button
-      >
-    </div>
-  </Modal>
+    {#if cube?.p.scramble}
+      <Tooltip hasKeybinding text={$localLang.SIMULATOR.showBackFace + "[Ctrl + B]"} position="left">
+        <Toggle class="cursor-pointer" bind:checked={showBackFace} />
+      </Tooltip>
+    {/if}
+  </div>
 {/if}
+
+<Modal bind:open={GUIExpanded} size="xs" title={ $localLang.SIMULATOR.puzzleSettings } outsideclose>
+  <div class="grid grid-cols-2 gap-4 place-items-center text-gray-400">
+    <span>{$localLang.SIMULATOR.puzzle}</span>
+    
+    <Select
+      items={puzzles}
+      label={(e) => e.name}
+      bind:value={selectedPuzzle}
+      onChange={setOrder}
+      class="text-gray-400 w-full max-w-[unset]"
+    />
+
+    {#if hasOrder}
+      <span>{$localLang.SIMULATOR.order}</span>
+      <Input on:UENTER={() => { resetPuzzle(); hideGUI(); }} type="number" min={1}
+        bind:value={order} class="bg-white bg-opacity-10 text-gray-400 !w-20"
+      />
+    {/if}
+  </div>
+
+  <svelte:fragment slot="footer">
+    <div class="flex flex-wrap items-center mx-auto gap-2">
+      <Button color="alternative" on:click={hideGUI}>{$localLang.global.cancel}</Button>
+      <Button color="green" on:click={() => {
+        resetPuzzle();
+        hideGUI();
+      }}>
+        {$localLang.SIMULATOR.setPuzzle}
+      </Button>
+    </div>
+  </svelte:fragment>
+</Modal>

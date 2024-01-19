@@ -4,13 +4,13 @@
   import { DataService } from "@stores/data.service";
   import { infinitePenalty, sTimer, timer } from "@helpers/timer";
   import Modal from "@components/Modal.svelte";
-  import Button from "@components/material/Button.svelte";
   import Tooltip from "@components/material/Tooltip.svelte";
   import TextArea from "@components/material/TextArea.svelte";
+
   import { Puzzle } from "@classes/puzzle/puzzle";
   import { pGenerateCubeBundle } from "@helpers/cube-draw";
   import { options } from "@cstimer/scramble/scramble";
-  import { PX_IMAGE, STEP_COLORS } from "@constants";
+  import { CubeDBICON, STEP_COLORS } from "@constants";
   import { Paginator } from "@classes/Paginator";
 
   /// ICONS
@@ -26,18 +26,23 @@
   import ChevronRightIcon from '@icons/ChevronRight.svelte';
   import ChevronDoubleLeftIcon from '@icons/ChevronDoubleLeft.svelte';
   import ChevronDoubleRightIcon from '@icons/ChevronDoubleRight.svelte';
+  import ChevronDown from '@icons/ChevronDown.svelte';
   import ShareIcon from '@icons/Share.svelte';
+  import EditIcon from '@icons/Pencil.svelte';
+  import SelectIcon from '@icons/Select.svelte';
+  import CopyIcon from '@icons/ClipboardOutline.svelte';
+
   import { getAverageS } from "@helpers/statistics";
   import { NotificationService } from "@stores/notification.service";
   import { derived, type Readable } from "svelte/store";
   import { globalLang } from "@stores/language.service";
   import { getLanguage } from "@lang/index";
   import { tick } from "svelte";
-  import Select from "@components/material/Select.svelte";
   import { copyToClipboard, defaultInner, parseReconstruction, randomUUID } from "@helpers/strings";
   import { calcPercents } from "@helpers/math";
-    import { startViewTransition } from "@helpers/DOM";
-    import { navigate } from "svelte-routing";
+  import { startViewTransition } from "@helpers/DOM";
+  import { navigate } from "svelte-routing";
+  import { Button, Dropdown, DropdownItem, Spinner } from "flowbite-svelte";
 
   let localLang: Readable<Language> = derived(globalLang, ($lang) => getLanguage( $lang ));
 
@@ -57,7 +62,7 @@
   let showDeleteAll = false;
   let sSolve: Solve;
   let gSolve: Solve;
-  let preview = PX_IMAGE;
+  let preview = "";
   let cube;
   let showContextMenu = false;
   let contextMenuElement: HTMLUListElement;
@@ -67,8 +72,17 @@
   let fComment = false;
   let collapsed = false;
   let reconstructionError = true;
+  let showDropdown = false;
+
+  const PENALTIES = [
+    { label: '+2', penalty: Penalty.P2 },
+    { label: 'DNF', penalty: Penalty.DNF },
+    { label: 'DNS', penalty: Penalty.DNS },
+  ];
   
   function closeHandler(s?: Solve) {
+    preview = "";
+
     if ( s ) {
       gSolve.comments = (s.comments || '').trim();
       gSolve.penalty = s.penalty;
@@ -116,7 +130,7 @@
       setTimeout(() => {
         if ( performance.now() - LAST_CLICK >= 200 ) {
           let target = ev.target as HTMLButtonElement;
-          
+
           target.classList.add('modal-transition');
 
           startViewTransition(async () => {
@@ -141,6 +155,8 @@
     if ( update ) {
       dataService.updateSolve(sSolve).then( handleUpdateSolve );
     }
+
+    showDropdown = false;
   }
 
   function deleteAll() {
@@ -234,7 +250,8 @@
         key: randomUUID(),
         header: $localLang.global.done,
         text: $localLang.global.copiedToClipboard,
-        timeout: 1000
+        timeout: 1000,
+        icon: CubeDBICON,
       });
     });
   }
@@ -339,7 +356,7 @@
   on:click={ globalHandleClick }></svelte:window>
 
 <main class="w-full h-full">
-  <ul class={"w-max flex justify-center mx-auto gap-2 text-gray-400 " + (pg.pages > 1 ? '' : 'hidden')}>
+  <ul class={"w-max flex justify-center no-grid gap-2 mx-auto text-gray-400 " + (pg.pages > 1 ? '' : 'hidden')}>
     <li class="paginator-item"> <button on:click={ () => setPage(1) }> <ChevronDoubleLeftIcon /> </button> </li>
     <li class="paginator-item"> <button on:click={ () => setPage(-2) }> <ChevronLeftIcon /> </button> </li>
     {#each pg.labels as lb}
@@ -351,21 +368,21 @@
     <li class="paginator-item"> <button on:click={ () => setPage(Infinity) }> <ChevronDoubleRightIcon /> </button> </li>
   </ul>
 
-  <div id="grid" class="text-gray-400 ml-8 mt-4 grid h-max-[100%] overflow-scroll" bind:this={ solvesElement }>
+  <div id="grid" class="text-gray-400 ml-8 mt-4 grid overflow-scroll" bind:this={ solvesElement }>
     {#each pSolves as solve (solve._id)}
       <button
         class="shadow-md w-full h-full min-h-[3rem] rounded-md p-1 bg-backgroundLv1 relative
           flex items-center justify-center transition-all duration-200 select-none cursor-pointer
 
-          hover:shadow-lg hover:bg-opacity-20
+          hover:shadow-lg hover:bg-opacity-70
         "
         on:click={ (ev) => handleClick(solve, ev) }
         on:contextmenu={ (e) => handleContextMenu(e, solve) }
         class:selected={ solve.selected }>
-          <div class="font-small absolute top-0 left-2">{ moment(solve.date).format('DD/MM') }</div>
-          <span class="text-center font-bold">{ sTimer(solve, true) }</span>
+          <div class="pointer-events-none font-small absolute top-0 left-2">{ moment(solve.date).format('DD/MM') }</div>
+          <span class="pointer-events-none time text-center">{ sTimer(solve, true) }</span>
 
-          <div class="absolute right-1 top-0 h-full flex flex-col items-center justify-evenly">
+          <div class="pointer-events-none absolute right-1 top-0 h-full flex flex-col items-center justify-evenly">
             {#if solve.penalty === Penalty.P2} <span class="font-small">+2</span> {/if}
             {#if solve.comments} <CommentPlusIcon width=".8rem"/> {/if}
           </div>
@@ -394,29 +411,29 @@
   </div>
 
   <div class:isVisible={ $selected }
-    class="fixed rounded-md p-2 top-0 opacity-0 pointer-events-none
-    transition-all duration-300 bg-gray-700 shadow-md flex flex-wrap w-max max-w-full actions z-20">
-    <Button ariaLabel={ $localLang.TIMER.selectAll } class="hover:text-white text-gray-400 hover:bg-white hover:bg-opacity-10"
+    class="fixed rounded-md p-2 top-0 opacity-0 pointer-events-none w-[min(90%,56rem)] justify-center
+    transition-all duration-300 bg-gray-700 shadow-md flex flex-wrap max-w-full actions z-20">
+    <Button ariaLabel={ $localLang.TIMER.selectAll } color="none" class="hover:bg-white hover:bg-opacity-10"
       tabindex={ $selected ? 0 : -1 } flat on:click={() => selectAll()}>
       { $localLang.TIMER.selectAll } &nbsp; <span class="flex ml-auto text-yellow-400">[A]</span>
     </Button>
     
-    <Button ariaLabel={ $localLang.TIMER.selectInterval } class="hover:text-white text-gray-400 hover:bg-white hover:bg-opacity-10"
+    <Button ariaLabel={ $localLang.TIMER.selectInterval } color="none" class="hover:bg-white hover:bg-opacity-10"
       tabindex={ $selected ? 0 : -1 } flat on:click={() => selectInterval()}>
       { $localLang.TIMER.selectInterval } &nbsp; <span class="flex ml-auto text-yellow-400">[T]</span>
     </Button>
     
-    <Button ariaLabel={ $localLang.TIMER.invertSelection } class="hover:text-white text-gray-400 hover:bg-white hover:bg-opacity-10"
+    <Button ariaLabel={ $localLang.TIMER.invertSelection } color="none" class="hover:bg-white hover:bg-opacity-10"
       tabindex={ $selected ? 0 : -1 } flat on:click={() => selectInvert()}>
       { $localLang.TIMER.invertSelection } &nbsp; <span class="flex ml-auto text-yellow-400">[V]</span>
     </Button>
     
-    <Button ariaLabel={ $localLang.global.cancel } class="hover:text-white text-gray-400 hover:bg-white hover:bg-opacity-10"
+    <Button ariaLabel={ $localLang.global.cancel } color="none" class="hover:bg-white hover:bg-opacity-10"
       tabindex={ $selected ? 0 : -1 } flat on:click={() => selectNone()}>
       { $localLang.global.cancel } &nbsp; <span class="flex ml-auto text-yellow-400">[Esc]</span>
     </Button>
 
-    <Button ariaLabel={ $localLang.global.delete } class="hover:text-white text-gray-400 hover:bg-white hover:bg-opacity-10"
+    <Button ariaLabel={ $localLang.global.delete } color="none" class="hover:bg-white hover:bg-opacity-10"
       tabindex={ $selected ? 0 : -1 } flat on:click={() => deleteSelected()}>
       { $localLang.global.delete } &nbsp; <span class="flex ml-auto text-yellow-400">[D]</span>
     </Button>
@@ -424,7 +441,7 @@
 
   <Modal bind:this={ modal } bind:show={ show } onClose={ closeHandler } class="w-[min(100%,36rem)]" transitionName="modal">
     <div class="flex justify-between items-center text-gray-400 m-2">
-      <h2 class="m-1 w-max">
+      <span class="view-time m-1 w-max">
         {#if sSolve.penalty === Penalty.NONE || sSolve.penalty === Penalty.P2}
           { sTimer(sSolve, true, true) }
         {/if}
@@ -437,7 +454,7 @@
         {#if sSolve.penalty === Penalty.DNS}
           <span class="font-small text-red-500">DNS</span>
         {/if}
-      </h2>
+      </span>
       <span class="flex items-center font-small">
         <CalendarIcon width="1.2rem" height="1.2rem"/>
         <span class="ml-2">
@@ -450,7 +467,11 @@
       <Dice5Icon /> <span bind:innerHTML={ sSolve.scramble } contenteditable="false" class="text-center"></span>
       
       <button class="preview col-span-2 mb-2 mt-2 mx-auto overflow-hidden" on:click={ () => collapsed = !collapsed }>
-        <img class="w-full h-full object-contain" src={ preview } alt="">
+        {#if preview}
+          <img class="w-full h-full object-contain" src={ preview } alt="">
+        {:else}
+          <Spinner size="20"/>
+        {/if}
       </button>
 
       {#if sSolve.steps }
@@ -485,53 +506,57 @@
         bind:value={ sSolve.comments } placeholder={ $localLang.TIMER.comment }/>
     </div>
     <div class="mt-2 flex justify-evenly gap-1">
-      <Button ariaLabel={ $localLang.global.delete } flat
-        class="text-red-500 hover:text-gray-200 hover:bg-red-800 text-sm !p-1"
+      <Button color="none" ariaLabel={ $localLang.global.delete } flat
+        class="text-red-500 hover:text-gray-200 hover:bg-red-800 text-sm gap-1"
         on:click={ () => { _delete([ sSolve ]); modal.close()} }>
         <DeleteIcon /> { $localLang.global.delete }
       </Button>
       
-      <Button ariaLabel={ $localLang.global.cancel } flat
+      <Button color="none" ariaLabel={ $localLang.global.cancel } flat
         on:click={ () => modal.close() }
-        class="text-gray-400 hover:bg-gray-900 hover:text-gray-200 text-sm !p-1">
+        class="text-gray-400 hover:bg-gray-900 hover:text-gray-200 text-sm gap-1">
         <CloseIcon /> { $localLang.global.cancel }
       </Button>
       
-      <Button ariaLabel={ $localLang.global.save } flat
+      <Button color="none" ariaLabel={ $localLang.global.save } flat
         on:click={ () => modal.close(sSolve) }
-        class="text-purple-400 hover:bg-purple-900 hover:text-gray-200 mr-2 text-sm !p-1">
+        class="text-purple-400 hover:bg-purple-900 hover:text-gray-200 mr-2 text-sm gap-1">
         <SendIcon /> { $localLang.global.save }
       </Button>
 
       {#if !reconstructionError}
-        <Button ariaLabel={ $localLang.global.save } flat
+        <Button color="none" ariaLabel={ $localLang.global.save } flat
           on:click={ checkReconstruction }
-          class="text-green-400 hover:bg-green-900 hover:text-gray-200 mr-2 text-sm !p-1">
+          class="text-green-400 hover:bg-green-900 hover:text-gray-200 mr-2 text-sm">
           { $localLang.global.reconstruction }
         </Button>
       {/if}
 
-      <Select items={[
-          { label: $localLang.TIMER.noPenalty, penalty: Penalty.NONE },
-          { label: '+2', penalty: Penalty.P2 },
-          { label: 'DNF', penalty: Penalty.DNF },
-          { label: 'DNS', penalty: Penalty.DNS },
-        ]} onChange={ (p) => setPenalty(p.penalty) }
-        label={ (v) => v.label } transform={ (v) => v.penalty } value={ sSolve.penalty }/>
+      <Button color="none">
+        {
+          [{ label: $localLang.TIMER.noPenalty, penalty: Penalty.NONE }, ...PENALTIES]
+            .find(p => p.penalty === sSolve.penalty)?.label || $localLang.TIMER.noPenalty
+        }
+
+        <ChevronDown size="1.2rem"/>
+      </Button>
+      <Dropdown bind:open={ showDropdown }>
+        {#each [{ label: $localLang.TIMER.noPenalty, penalty: Penalty.NONE }, ...PENALTIES] as p}
+          <DropdownItem on:click={() => setPenalty(p.penalty)}>{ p.label }</DropdownItem>
+        {/each}
+      </Dropdown>
     </div>
   </Modal>
 
   <Modal bind:this={ deleteAllModal } bind:show={ showDeleteAll } onClose={ deleteAllHandler }>
     <h1 class="text-gray-400 mb-4 text-lg">{ $localLang.TIMER.removeAllSolves }</h1>
     <div class="flex justify-evenly">
-      <Button ariaLabel={ $localLang.global.cancel }
+      <Button color="alternative" ariaLabel={ $localLang.global.cancel }
         on:click={ () => deleteAllModal.close() }>
         { $localLang.global.cancel }
       </Button>
       
-      <Button ariaLabel={ $localLang.global.delete }
-        class="bg-red-800 hover:bg-red-700 text-gray-400"
-        on:click={ () => deleteAllModal.close(true) }>
+      <Button color="red" ariaLabel={ $localLang.global.delete } on:click={ () => deleteAllModal.close(true) }>
         { $localLang.global.delete }
       </Button>
     </div>
@@ -543,17 +568,33 @@
     class="context-menu"
     class:active={ showContextMenu }
     bind:this={ contextMenuElement }>
-    <li> <button on:click={ () => editSolve(sSolve) }>{ $localLang.TIMER.edit }</button> </li>
-    <li> <button on:click={ () => selectSolve(sSolve) }>{ $localLang.TIMER.select }</button> </li>
-    <li> <button on:click={ () => toClipboard(sSolve.scramble) }>{ $localLang.TIMER.copyScramble }</button> </li>
-    <li> <button on:click={ () => _delete([sSolve]) }>{ $localLang.global.delete }</button> </li>
+    <li>
+      <button on:click={ () => editSolve(sSolve) }>
+        <EditIcon /> { $localLang.TIMER.edit }
+      </button>
+    </li>
+    <li>
+      <button on:click={ () => selectSolve(sSolve) }>
+        <SelectIcon /> { $localLang.TIMER.select }
+      </button>
+    </li>
+    <li>
+      <button on:click={ () => toClipboard(sSolve.scramble) }>
+        <CopyIcon /> { $localLang.TIMER.copyScramble }
+      </button>
+    </li>
+    <li>
+      <button on:click={ () => _delete([sSolve]) }>
+        <DeleteIcon /> { $localLang.global.delete }
+      </button>
+    </li>
   </ul>
 </main>
 
 <style lang="postcss">
 #grid {
   grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));
-  max-height: calc(100vh - 10rem);
+  max-height: calc(100% - 3rem);
   gap: .5rem;
   padding-bottom: 2rem;
   padding-right: .5rem;
@@ -584,7 +625,11 @@
 }
 
 .isVisible {
-  @apply top-12 opacity-100 pointer-events-auto;
+  @apply top-14 opacity-100 pointer-events-auto;
+}
+
+.paginator-item {
+  @apply rounded-md;
 }
 
 .paginator-item button {
@@ -600,7 +645,7 @@
 
 .context-menu {
   @apply w-max p-2 rounded-md shadow-md fixed top-8 left-28 bg-gray-600
-    border border-blue-800 text-gray-300 grid gap-1;
+    text-gray-300 grid gap-1;
 }
 
 .context-menu:not(.active) {
@@ -613,7 +658,7 @@
 
 .context-menu li button {
   @apply pointer-events-auto pr-2 hover:pl-2 hover:pr-1 p-1 rounded-md transition-all duration-200 cursor-pointer
-     hover:bg-gray-800 w-full text-left;
+    hover:bg-gray-800 w-full flex gap-2 justify-start items-center;
 }
 
 .step-part {
@@ -649,5 +694,9 @@
 
 .modal-transition {
   view-transition-name: modal;
+}
+
+.view-time {
+  view-transition-name: time;
 }
 </style>

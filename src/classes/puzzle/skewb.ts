@@ -81,33 +81,32 @@ export function SKEWB(): PuzzleInterface {
   let pieces = skewb.pieces;
 
   let planes = [
-    [ LEFT.add(UP), BACK.add(UP), BACK.add(RIGHT) ],
-    [ RIGHT.add(UP), FRONT.add(UP), FRONT.add(LEFT) ],
-    [ BACK.add(UP), RIGHT.add(FRONT), RIGHT.add(UP) ],
-    [ RIGHT.add(FRONT), LEFT.add(UP), UP.add(FRONT) ],
-    [ LEFT.add(UP), RIGHT.add(BACK), BACK.add(UP) ],
+    [ FRONT.add(LEFT), FRONT.add(UP), RIGHT.add(UP) ],    // F
+    [ RIGHT.add(UP), FRONT.add(UP), FRONT.add(LEFT) ],    // U
+    [ BACK.add(UP), RIGHT.add(FRONT), RIGHT.add(UP) ],    // R
+    [ RIGHT.add(FRONT), LEFT.add(UP), UP.add(FRONT) ],    // L
+    [ LEFT.add(UP), RIGHT.add(BACK), BACK.add(UP) ],      // B
+    [ FRONT.add(RIGHT), FRONT.add(UP), LEFT.add(UP) ],    // r
+    [ RIGHT.add(UP), FRONT.add(RIGHT), FRONT.add(DOWN) ], // l
+
+    [ BACK, UP, FRONT ].map(e => e.add(RIGHT.mul(2))),    // x
+    [ RIGHT, BACK, LEFT ].map(e => e.add(UP.mul(2))),     // y
+    [ RIGHT, UP, LEFT ].map(e => e.add(FRONT.mul(2))),    // z
   ];
 
   let trySingleMove = (mv: any): { pieces: Piece[], u: Vector3D, ang: number } | null => {
     let moveId = mv[0];
     let turns = mv[1];
+    let pts1 = planes[moveId];
 
-    let pts1 = planes[moveId + 1];
-
-    if ( Math.abs(turns) > 2 ) {
-      pts1 = [
-        [RIGHT, UP, LEFT].map(e => e.add(FRONT.mul(2))), // z
-        [RIGHT, BACK, LEFT].map(e => e.add(UP.mul(2))), // y
-        [BACK, UP, FRONT].map(e => e.add(RIGHT.mul(2))), // x
-      ][moveId + 1];
-
-      turns = (-turns - 2) * 3 / 4;
+    if ( moveId > 6 ) {
+      turns = -turns * 3 / 4;
     }
 
     const u = Vector3D.cross(pts1[0], pts1[1], pts1[2]).unit();
 
     const mu = u.mul(-1);
-    const ang = 2 * PI_3 * turns;
+    const ang = -2 * PI_3 * turns;
 
     let pcs = [];
 
@@ -132,8 +131,6 @@ export function SKEWB(): PuzzleInterface {
   };
 
   skewb.move = function(moves: any[]) {
-    console.log("MOVES: ", moves);
-    
     for (let m = 0, maxm = moves.length; m < maxm; m += 1) {
       let mv = moves[m];
       let pcs = trySingleMove(mv);

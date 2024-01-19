@@ -43,6 +43,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // Update
   update: async (cmd) => await ipc.invoke('update', cmd),
+  cancelUpdate: async () => await ipc.invoke('cancel-update'),
   addDownloadProgressListener: (cb) => ipc.on('download-progress', cb),
   addDownloadDoneListener: (cb) => ipc.on('update-downloaded', cb),
 

@@ -182,7 +182,7 @@ export function MIRROR(n: number): PuzzleInterface {
   ];
 
   mirror.faceColors = mirror.faceVectors.map(() => 'lightGray');
-
+  
   assignColors(mirror, mirror.faceColors);
   // roundCorners(mirror, null, null, null, null, (s: Sticker) => s.color != 'x');
   // roundCorners(mirror);
