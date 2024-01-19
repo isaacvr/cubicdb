@@ -91,6 +91,7 @@ export class BrowserAdaptor implements IPC {
 
   // Update
   update(cmd: UpdateCommand) { return Promise.reject(); }
+  cancelUpdate() { return Promise.resolve(true); }
 
   // Power saving options
   sleep(s: boolean) { return Promise.resolve(); }

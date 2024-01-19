@@ -1,7 +1,6 @@
 <script lang="ts">
   /// Types
-  import { Penalty, TimerState, TIMER_INPUT, type InputContext, type Language,
-    type Solve, type TimerContext, type TimerInputHandler, DIALOG_MODES } from '@interfaces';
+  import { Penalty, TimerState, TIMER_INPUT, type InputContext, type Language, type Solve, type TimerContext, type TimerInputHandler, DIALOG_MODES } from '@interfaces';
 
   /// Icons
   import Close from '@icons/Close.svelte';
@@ -13,7 +12,7 @@
   import Copy from '@icons/ContentCopy.svelte';
   import Settings from '@icons/Cog.svelte';
   import LightBulb from '@icons/LightbulbOn.svelte';
-  import NoteIcon from '@icons/NoteEdit.svelte';
+  // import NoteIcon from '@icons/NoteEdit.svelte';
   import WatchOnIcon from '@icons/Wifi.svelte';
   import WatchOffIcon from '@icons/WifiOff.svelte';
   import CommentIcon from '@icons/CommentPlusOutline.svelte';
@@ -22,9 +21,8 @@
   import TuneIcon from '@icons/Tune.svelte';
 
   /// Components
-  import Tooltip from '@material/Tooltip.svelte';
-  import Modal from '@components/Modal.svelte';
-  import Button from '@components/material/Button.svelte';
+  // import Modal from '@components/Modal.svelte';
+  // import Button from '@components/material/Button.svelte';
   import TextArea from '@components/material/TextArea.svelte';
   import Checkbox from '@components/material/Checkbox.svelte';
   import Input from '@components/material/Input.svelte';
@@ -49,6 +47,12 @@
   import { QiYiSmartTimerInput } from './input-handlers/QY-Timer';
   import { statsReplaceId } from '@helpers/statistics';
   import StatsProgress from './StatsProgress.svelte';
+  import { screen } from '@stores/screen.store';
+  import { Button, Modal, Popover, Radio, Range, Spinner } from 'flowbite-svelte';
+  import Tooltip from '@components/material/Tooltip.svelte';
+  import { CubeDBICON, STEP_COLORS } from '@constants';
+
+  type TModal = '' | 'edit-scramble' | 'old-scrambles' | 'settings';
 
   export let context: TimerContext;
   export let battle = false;
@@ -121,7 +125,6 @@
   let prob = -1;
   let prevExpanded: boolean = false;
   let stackmatStatus = writable(false);
-  let isMobile = dataService.isMobile;
 
   // BLUETOOTH
   let bluetoothStatus = writable(false);
@@ -154,7 +157,7 @@
   /// MODAL
   let modal: any = null;
   let show = false;
-  let type = '';
+  let type: TModal = '';
   let modalData: any = null;
   let closeHandler: Function = () => {};
 
@@ -168,7 +171,7 @@
     return true;
   };
 
-  let openDialog = (ev: string, dt: any, fn: Function) => {
+  let openDialog = (ev: TModal, dt: any, fn: Function) => {
     if ( !canOpenDialog(ev) ) return;
 
     type = ev; modalData = dt; closeHandler = fn; show = true;
@@ -188,7 +191,7 @@
       openDialog('old-scrambles', null, () => {});
     } },
     { text: "Copy scramble [Ctrl + C]", icon: Copy, handler: () => toClipboard() },
-    { text: "Notes [Ctrl + N]", icon: NoteIcon, handler: () => showNotes = true },
+    // { text: "Notes [Ctrl + N]", icon: NoteIcon, handler: () => showNotes = true },
     { text: "Settings", icon: Settings, handler: () => {
       let initialCalc = $session?.settings?.calcAoX;
     
@@ -316,7 +319,7 @@
       } else if ( code === 'KeyS' && event.ctrlKey ) {
         initScrambler();
       } else if ( code === 'Comma' && event.ctrlKey ) {
-        options[5].handler();
+        options[4].handler();
       }
     }
   }
@@ -327,7 +330,8 @@
         key: randomUUID(),
         header: $localLang.global.done,
         text: $localLang.global.scrambleCopied,
-        timeout: 1000
+        timeout: 1000,
+        icon: CubeDBICON,
       });
     });
   }
@@ -335,17 +339,19 @@
   function modalKeyupHandler(e: CustomEvent) {
     let kevent: KeyboardEvent = e.detail;
     kevent.stopPropagation();
-    show = (kevent.code === 'Escape' ? modal.close() : show);
+    show = (kevent.code === 'Escape' ? closeHandler() : show);
 
     if ( kevent.code === 'Enter' && kevent.ctrlKey ) {
-      modal.close( modalData.trim() );
+      closeHandler( modalData.trim() );
+      show = false;
     }
   }
 
   function select(s: Solve) {
     setConfigFromSolve(s);
     initScrambler(s.scramble);
-    modal.close();
+    closeHandler();
+    show = false;
   }
 
   let mx = 0, my = 0, cx = notesL, cy = notesT, dragging = false;
@@ -483,8 +489,9 @@
     options[1].text = `${ $localLang.TIMER.edit } [Ctrl + E]`;
     options[2].text = `${ $localLang.TIMER.useOldScramble } [Ctrl + O]`;
     options[3].text = `${ $localLang.TIMER.copyScramble } [Ctrl + C]`;
-    options[4].text = `${ $localLang.TIMER.notes } [Ctrl + N]`;
-    options[5].text = `${ $localLang.TIMER.settings } [Ctrl + ,]`;
+    options[4].text = `${ $localLang.TIMER.settings } [Ctrl + ,]`;
+    // options[4].text = `${ $localLang.TIMER.notes } [Ctrl + N]`;
+    // options[5].text = `${ $localLang.TIMER.settings } [Ctrl + ,]`;
   }
 
   function searchBluetooth() {
@@ -530,7 +537,7 @@
   function showBluetoothData() {
     notification.addNotification({
       key: randomUUID(),
-      header: 'GAN Cube info',
+      header: 'GAN Cube',
       text: '',
       html: $bluetoothStatus ? `
         <ul>
@@ -542,7 +549,8 @@
           <li>Battery: ${ bluetoothBattery || '--' }%</li>
         </ul>` : `Disconnected`,
       fixed: true,
-      actions: [ { text: 'Ok', callback: () => {} } ]
+      actions: [ { text: 'Ok', callback: () => {} } ],
+      icon: CubeDBICON,
     });
   }
 
@@ -628,7 +636,7 @@
 ></svelte:window>
 
 <div
-  class="w-full h-full text-gray-400 { (timerOnly || scrambleOnly) ? 'mt-8' : '' }"
+  class="w-full h-[calc(100%-3rem)] { (timerOnly || scrambleOnly) ? 'mt-8' : '' }"
   >
   {#if !timerOnly }
     <!-- Scramble -->
@@ -660,44 +668,44 @@
 
       <!-- Options -->
       {#if !scrambleOnly }
-        <div class={`absolute md:top-1 md:right-4 md:w-[2rem] md:items-center md:flex md:flex-col
-          max-md:left-1/2 max-md:-translate-x-[50%] max-md:w-max ` + (
-            $session.settings.input === 'GAN Cube' ? "top-[4rem] bg-white bg-opacity-5 rounded-md " : "max-md:top-[min(11rem,24vh)]"
+        <div class={`absolute md:top-1 md:right-4 md:w-[2rem] md:items-center flex md:flex-col
+          max-md:left-1/2 max-md:-translate-x-[50%] max-md:w-max bg-white bg-opacity-10 rounded-md ` + (
+            $session.settings.input === 'GAN Cube' ? "top-[4rem] " : "max-md:top-[min(11rem,24vh)]"
           )
           } class:hide={ $isRunning }>
-          {#each options.filter((e, p) => !battle ? true : p === 3 || p === 5) as option}
-            {#if !$isMobile}
+          {#each options.filter((e, p) => !battle ? true : p === 3 || p === 5) as option, i}
+            {#if !$screen.isMobile}
               <Tooltip class="cursor-pointer" position="left" text={ option.text } hasKeybinding>
-                <button aria-label={ option.text } tabindex="0" class="my-3 mx-1 w-5 h-5 text-gray-400"
+                <Button aria-label={ option.text } color="none" class="my-3 mx-1 w-5 h-5 p-0"
                   on:click={ option.handler } on:keydown={ (e) => e.code === 'Space' ? e.preventDefault() : null }>
-                  <svelte:component this={option.icon} width="100%" height="100%"/>
-                </button>
+                  <svelte:component this={option.icon} width="100%" height="100%" class="pointer-events-none"/>
+                </Button>
               </Tooltip>
             {:else}
-              <button aria-label={ option.text } tabindex="0" class="my-3 mx-2 w-5 h-5 text-gray-400"
+              <Button aria-label={ option.text } color="none" class="my-3 mx-2 w-5 h-5 p-0"
                 on:click={ option.handler } on:keydown={ (e) => e.code === 'Space' ? e.preventDefault() : null }>
-                <svelte:component this={option.icon} width="100%" height="100%"/>
-              </button>
+                <svelte:component this={option.icon} width="100%" height="100%" />
+              </Button>
             {/if}
           {/each}
 
-          {#if $isMobile}
-            <button on:click={ editSessions } class="cursor-pointer"><TuneIcon size="1.2rem"/> </button>
+          {#if $screen.isMobile}
+            <Button color="none" on:click={ editSessions } class="cursor-pointer p-2"><TuneIcon size="1.2rem"/> </Button>
           {/if}
 
           {#if $session?.settings?.input === 'GAN Cube'}
-            {#if !$isMobile}
-              <Tooltip class="cursor-pointer" position="left" text={ 'GAN Cube' } hasKeybinding>
-                <button aria-label={ 'GAN Cube' } tabindex="0" class="my-3 mx-1 w-5 h-5 { $bluetoothStatus ? 'text-blue-600' : 'text-gray-400' }"
+            {#if !$screen.isMobile}
+              <Tooltip position="left" text="GAN Cube">
+                <Button aria-label={ 'GAN Cube' } color="none" class="my-3 mx-1 w-5 h-5 p-0 { $bluetoothStatus ? 'text-blue-500' : 'text-gray-400' }"
                   on:click={ showBluetoothData } on:keydown={ (e) => e.code === 'Space' ? e.preventDefault() : null }>
                   <svelte:component this={ $bluetoothStatus ? BluetoothOnIcon : BluetoothOffIcon } width="100%" height="100%"/>
-                </button>
+                </Button>
               </Tooltip>
             {:else}
-              <button aria-label={ 'GAN Cube' } tabindex="0" class="my-3 mx-1 w-5 h-5 { $bluetoothStatus ? 'text-blue-600' : 'text-gray-400' }"
+              <Button aria-label={ 'GAN Cube' } color="none" class="my-3 mx-1 w-5 h-5 p-0 { $bluetoothStatus ? 'text-blue-600' : 'text-gray-400' }"
                 on:click={ showBluetoothData } on:keydown={ (e) => e.code === 'Space' ? e.preventDefault() : null }>
                 <svelte:component this={ $bluetoothStatus ? BluetoothOnIcon : BluetoothOffIcon } width="100%" height="100%"/>
-              </button>
+              </Button>
             {/if}
           {/if}
         </div>
@@ -705,14 +713,14 @@
     </div>
 
     <!-- Notes -->
-    {#if showNotes && !battle}
+    <!-- {#if showNotes && !battle}
       <div id="notes" class="fixed z-10 w-56 h-56 bg-violet-400 rounded-md" style="
         --left: { notesL }px;
         --top: { notesT }px;
         --width: { notesW }px;
         --height: calc({ notesH }px + 1.5rem);
       ">
-        <!-- svelte-ignore a11y-no-static-element-interactions -->
+        <! -- svelte-ignore a11y-no-static-element-interactions - ->
         <div class="relative w-full h-6 cursor-move flex items-center" on:mousedown={ handleMouseDown }>
           <button class="ml-auto mr-2 cursor-pointer text-gray-700" on:click={ () => showNotes = false }>
             <Close width="1.2rem" height="1.2rem"/>
@@ -720,15 +728,15 @@
         </div>
         <TextArea bind:value={ noteContent } cClass="w-full h-full" class="bg-gray-600 text-gray-300 p-4"></TextArea>
       </div>
-    {/if}
+    {/if} -->
   {:else}
     <div class="absolute top-1/3 right-12 flex flex-col" class:hide={ $isRunning }>
       {#each options.filter((e, p) => p === 5) as option}
-        <Tooltip class="cursor-pointer" position="left" text={ option.text } hasKeybinding>
-          <button aria-label={ option.text } tabindex="0" class="my-3 mx-1 w-5 h-5 text-gray-400"
+        <Tooltip position="left" text={ option.text }>
+          <Button aria-label={ option.text } color="none" class="my-3 mx-1 w-5 h-5 p-0 text-gray-400"
             on:click={ option.handler } on:keydown={ (e) => e.code === 'Space' ? e.preventDefault() : null }>
             <svelte:component this={option.icon} width="100%" height="100%"/>
-          </button>
+          </Button>
         </Tooltip>
       {/each}
     </div>
@@ -769,7 +777,7 @@
         </div>
       {:else}
         <span
-          class="timer text-gray-400 max-sm:text-7xl max-sm:[line-height:8rem]"
+          class="timer text-gray-300 max-sm:text-7xl max-sm:[line-height:8rem]"
           class:prevention={ $state === TimerState.PREVENTION }
           class:ready={$ready}
           hidden={$state === TimerState.RUNNING && !$session.settings.showElapsedTime}>
@@ -805,10 +813,10 @@
             class:show={$state === TimerState.STOPPED}>
           {#each solveControl.slice(Number(battle), solveControl.length) as control}
             <Tooltip class="cursor-pointer" position="top" text={ control.text }>
-              <button class="flex my-3 mx-1 w-5 h-5 { control.highlight($solves[0] || {}) ? 'text-red-500' : '' }"
+              <Button color="none" class="flex my-3 mx-1 w-5 h-5 p-0 { control.highlight($solves[0] || {}) ? 'text-red-500' : '' }"
                 on:click={ control.handler }>
                 <svelte:component this={control.icon} width="100%" height="100%"/>
-              </button>
+              </Button>
             </Tooltip>
           {/each}
         </div>
@@ -817,19 +825,25 @@
   {/if}
 
   <!-- Hints -->
-  {#if !(battle || timerOnly || scrambleOnly) }
+  {#if !(battle || timerOnly || scrambleOnly) && ($cross || $xcross || $Ao5) }
     <div id="hints"
       class="bg-backgroundLv1 w-max p-2 text-gray-400 rounded-md
         shadow-md absolute select-none left-0 max-md:hidden md:top-1/4 transition-all duration-1000"
       class:isVisible={$hintDialog && !$isRunning}>
 
       <table class="inline-block align-middle transition-all duration-300" class:nshow={!$hint}>
-        <tr><td>{ $localLang.TIMER.cross }</td> <td class="text-yellow-500">{$cross}</td></tr>
-        <tr><td>XCross</td> <td class="text-yellow-500">{$xcross}</td></tr>
+        {#if $cross}
+          <tr><td>{ $localLang.TIMER.cross }</td> <td class="text-yellow-500">{$cross}</td></tr>
+        {/if}
+
+        {#if $xcross}
+          <tr><td>XCross</td> <td class="text-yellow-500">{$xcross}</td></tr>
+        {/if}
+
         {#if $Ao5}
           <tr>
             <td>{ $localLang.TIMER.nextAo5 }</td>
-            <td class="text-yellow-500">[{ timer($Ao5[0], false, true) }, { timer($Ao5[1], false, true) }]</td>
+            <td class="text-yellow-500">[{ timer($Ao5[0], true, true) }, { timer($Ao5[1], true, true) }]</td>
           </tr>
         {/if}
       </table>
@@ -914,158 +928,166 @@
         src={ $preview } alt="">
     </button>
   {/if}
-
-  <!-- Modal -->
-  <!-- {#if !timerOnly} -->
-    <Modal bind:this={ modal } bind:show={ show } onClose={ closeHandler }>
-      <div class={"max-w-lg max-h-[30rem] " + (type === 'old-scrambles' ? 'overflow-scroll' : '')}>
-        {#if type === 'edit-scramble'}
-          <TextArea on:keyup={ modalKeyupHandler } class="bg-gray-900 text-gray-200 border border-gray-600" bind:value={ modalData }/>
-
-          <div class="flex w-full justify-center my-2 gap-2">
-            <Button ariaLabel={ $localLang.global.cancel } on:click={() => modal.close()}>
-              { $localLang.global.cancel }
-            </Button>
-            <Button class="bg-purple-800 hover:bg-purple-700 text-gray-300"
-              ariaLabel={ $localLang.global.save } on:click={() => modal.close( modalData.trim() )}>
-              { $localLang.global.save }
-            </Button>
-          </div>
-        {/if}
-
-        {#if type === 'old-scrambles'}
-          <div class="grid grid-cols-4 w-full text-center">
-            <h2 class="col-span-3">{ $localLang.TIMER.scramble }</h2>
-            <h2 class="col-span-1">{ $localLang.TIMER.time }</h2>
-            {#each $solves as s }
-              <button aria-label={ $localLang.TIMER.scramble } tabindex="0" class="
-                col-span-3 cursor-pointer hover:text-blue-400 my-2 text-left
-                text-ellipsis overflow-hidden whitespace-nowrap
-              " on:click={ () => select(s) }>{ s.scramble }</button>
-              <span class="col-span-1 flex items-center justify-center">{ timer(s.time, true, true) }</span>
-            {/each}
-          </div>
-        {/if}
-
-        {#if type === 'settings'}
-          {#if !(timerOnly || $session.settings.sessionType === 'multi-step') }
-            <section class="flex gap-4 items-center mb-4">
-              { $localLang.TIMER.inputMethod }: <Select bind:value={ modalData.settings.input } items={ $timerInput } transform={ (e) => e }/>
-            </section>
-          {/if}
-
-          {#if $session.settings.sessionType === 'multi-step' }
-            <section class="flex mb-4 w-max px-2 py-1 rounded-md shadow-md mx-auto my-2 border border-gray-600 cursor-default">
-              { $localLang.global.steps }: { $session.settings.steps }
-            </section>
-          {/if}
-
-          {#if modalData.settings.input === 'StackMat'}
-            <section class="mb-4"> { $localLang.TIMER.device }: <Select class="max-w-full"
-              bind:value={ deviceID } items={ deviceList }
-              label={ e => e[1] } transform={e => e[0]}/>
-            </section>
-          {/if}
-
-          {#if modalData.settings.input === 'Keyboard'}
-            <section class="flex gap-4 items-center">
-              <Checkbox
-              bind:checked={ modalData.settings.hasInspection }
-              class="w-5 h-5" label={ $localLang.TIMER.inspection }/>
-              
-              <Input type="number" class="mt-2 bg-gray-700 hidden-markers { modalData.settings.hasInspection ? 'text-gray-200' : '' }"
-              disabled={ !modalData.settings.hasInspection } bind:value={ modalData.settings.inspection }
-              min={5} max={60} step={5}/>
-            </section>
-
-            <section class="my-2">
-              <Checkbox
-                bind:checked={ modalData.settings.withoutPrevention }
-                class="w-5 h-5" label={ $localLang.TIMER.withoutPrevention }/>
-
-              <i class="text-sm text-yellow-500">({ $localLang.TIMER.withoutPreventionDescription })</i>
-            </section>
-            
-            <section>
-              <Checkbox bind:checked={ modalData.settings.showElapsedTime } class="w-5 h-5 my-2" label={ $localLang.TIMER.showTime }/>
-            </section>
-          {/if}
-
-          {#if modalData.settings.input === 'GAN Cube' || modalData.settings.input === 'QY-Timer' }
-            <section class="bg-white bg-opacity-10 p-2 shadow-md rounded-md">
-              <div class="flex justify-center mb-4 gap-2">
-                <Button class="bg-purple-600 text-gray-300" on:click={ searchBluetooth } loading={ isSearching }>
-                  { $localLang.global.search }
-                </Button>
-
-                {#if isSearching}
-                  <Button on:click={ cancelSearch }>
-                    { $localLang.global.cancel }
-                  </Button>
-                {/if}
-              </div>
-
-              <ul>
-                {#each $bluetoothList as { deviceId, deviceName } (deviceId)}
-                  <li class="flex items-center justify-between mb-2 pl-4 bg-white bg-opacity-10 rounded-md">
-                    { deviceName }
-                    <Button class={"text-gray-300 " + ( deviceId === deviceID ? 'bg-red-600' : 'bg-green-600' )}
-                      loading={ isConnecting } on:click={ () => connectBluetooth(deviceId)}>
-                      { deviceId === deviceID ? 'Disconnect' : 'Connect'}
-                    </Button>
-                  </li>
-                {/each}
-              </ul>
-            </section>
-          {/if}
-
-          {#if modalData.settings.input === 'GAN Cube'}
-            <section>
-              <Checkbox
-                bind:checked={ modalData.settings.showBackFace } on:change={ (e) => $session = $session }
-                class="w-5 h-5" label={ 'Show back face' }/>
-            </section>
-          {/if}
-          
-          {#if modalData.settings.input != 'Manual' && !timerOnly}
-            <section class="mt-2">
-              <Checkbox bind:checked={ modalData.settings.scrambleAfterCancel }
-              class="w-5 h-5 my-2" label={ $localLang.TIMER.refreshScramble }/>
-            </section>
-          {/if}
-
-          {#if !timerOnly}
-            <section>
-              <Checkbox bind:checked={ modalData.settings.genImage } class="w-5 h-5 my-2" label={ $localLang.TIMER.genImage }/>
-              <i class="text-sm text-yellow-500">({ $localLang.TIMER.canHurtPerformance })</i>
-            </section>
-
-            <section>
-              <Checkbox bind:checked={ modalData.settings.recordCelebration }
-                class="w-5 h-5 my-2" label={ $localLang.TIMER.recordCelebration }/>
-            </section>
-            <section class="mt-4 flex gap-4">
-              { $localLang.TIMER.aoxCalculation }:
-              <div class="flex gap-2 items-center">
-                <Toggle checked={ !!modalData.settings.calcAoX } on:change={ (v) => modalData.settings.calcAoX = ~~v.detail.value }/>
-                <span class="ml-3">{ [$localLang.TIMER.sequential, $localLang.TIMER.groupOfX ][ ~~modalData?.settings?.calcAoX ] }</span>
-              </div>
-            </section>
-          {/if}
-
-          <section class="flex mt-4">
-            <Button ariaLabel={ $localLang.global.cancel } flat on:click={ () => modal.close() }>
-              { $localLang.global.cancel }
-            </Button>
-            <Button ariaLabel={ $localLang.global.save } flat on:click={ () => modal.close(true) }>
-              { $localLang.global.save }
-            </Button>
-          </section>
-        {/if}
-      </div>
-    </Modal>
-  <!-- {/if} -->
 </div>
+
+<Modal bind:this={ modal } bind:open={ show } size="xs" outsideclose
+  title={ $localLang.TIMER.modal[type || 'settings'] } bodyClass="space-y-2">
+  {#if type === 'edit-scramble'}
+    <TextArea on:keyup={ modalKeyupHandler } class="bg-gray-900 text-gray-200 border border-gray-600" bind:value={ modalData }/>
+  {/if}
+
+  {#if type === 'old-scrambles'}
+    <div class="grid grid-cols-4 w-full text-center max-h-[calc(100vh-16rem)]">
+      <h2 class="col-span-3">{ $localLang.TIMER.scramble }</h2>
+      <h2 class="col-span-1">{ $localLang.TIMER.time }</h2>
+      {#each $solves.slice(0, 500) as s }
+        <Button color="none" aria-label={ $localLang.TIMER.scramble } tabindex="0" class="
+          col-span-3 cursor-pointer hover:text-blue-400 my-2 justify-start p-0 rounded-none
+          text-ellipsis overflow-hidden whitespace-nowrap
+        " on:click={ () => select(s) }>{ s.scramble }</Button>
+        <span class="col-span-1 flex items-center justify-center">{ timer(s.time, true, true) }</span>
+      {/each}
+    </div>
+  {/if}
+
+  {#if type === 'settings'}
+    {#if !(timerOnly || $session.settings.sessionType === 'multi-step') }
+      <section class="flex gap-4 items-center">
+        { $localLang.TIMER.inputMethod }: <Select bind:value={ modalData.settings.input } items={ $timerInput } transform={ (e) => e }/>
+      </section>
+    {/if}
+
+    {#if $session.settings.sessionType === 'multi-step' }
+      <section class="flex w-max px-2 py-1 rounded-md shadow-md mx-auto my-2 border border-gray-600 cursor-default">
+        { $localLang.global.steps }: { $session.settings.steps }
+      </section>
+      <Popover>
+        <div class="flex flex-wrap gap-2">
+          {#each ($session.settings.stepNames || []) as st, p}
+            <Button class="pointer-events-none text-black" color="none" style={`background-color: ${STEP_COLORS[p]}`}>{ st }</Button>
+          {/each}
+        </div>
+      </Popover>
+    {/if}
+
+    {#if modalData.settings.input === 'StackMat'}
+      <section > { $localLang.TIMER.device }: <Select class="max-w-full"
+        bind:value={ deviceID } items={ deviceList }
+        label={ e => e[1] } transform={e => e[0]}/>
+      </section>
+    {/if}
+
+    {#if modalData.settings.input === 'Keyboard'}
+      <section class="flex flex-wrap gap-4 items-center">
+        <Checkbox
+          bind:checked={ modalData.settings.hasInspection }
+          class="w-5 h-5" label={
+            $localLang.TIMER.inspection + (modalData.settings.hasInspection ? ` (${modalData.settings.inspection})s` : '' )
+          }/>
+        
+        {#if modalData.settings.hasInspection}
+          <Range class="dark:w-52 mx-auto" bind:value={ modalData.settings.inspection } min={5} max={60} step="5"/>
+        {/if}
+      </section>
+
+      <section>
+        <Checkbox
+          bind:checked={ modalData.settings.withoutPrevention }
+          class="w-5 h-5" label={ $localLang.TIMER.withoutPrevention }/>
+
+        <i class="text-sm text-yellow-500">({ $localLang.TIMER.withoutPreventionDescription })</i>
+      </section>
+      
+      <section>
+        <Checkbox bind:checked={ modalData.settings.showElapsedTime } class="w-5 h-5 my-2" label={ $localLang.TIMER.showTime }/>
+      </section>
+    {/if}
+
+    {#if modalData.settings.input === 'GAN Cube' || modalData.settings.input === 'QY-Timer' }
+      <section class="bg-white bg-opacity-10 p-2 shadow-md rounded-md">
+        <div class="flex justify-center gap-2">
+          <Button color="purple" on:click={ () => !isSearching && searchBluetooth() }>
+            {#if isSearching }
+              <Spinner size="4" color="white"/>
+            {:else}
+              { $localLang.global.search }
+            {/if}
+          </Button>
+
+          {#if isSearching}
+            <Button color="alternative" on:click={ cancelSearch }>
+              { $localLang.global.cancel }
+            </Button>
+          {/if}
+        </div>
+
+        <ul class="mt-4">
+          {#each $bluetoothList as { deviceId, deviceName } (deviceId)}
+            <li class="flex items-center justify-between pl-4 bg-white bg-opacity-10 rounded-md">
+              { deviceName }
+              <Button color={( deviceId === deviceID ? 'red' : 'green' )}
+                loading={ isConnecting } on:click={ () => connectBluetooth(deviceId)}>
+                { deviceId === deviceID ? $localLang.TIMER.disconnect : $localLang.TIMER.connect }
+              </Button>
+            </li>
+          {/each}
+        </ul>
+      </section>
+    {/if}
+
+    {#if modalData.settings.input === 'GAN Cube'}
+      <section>
+        <Checkbox
+          bind:checked={ modalData.settings.showBackFace } on:change={ (e) => $session = $session }
+          class="w-5 h-5" label={ 'Show back face' }/>
+      </section>
+    {/if}
+    
+    {#if modalData.settings.input != 'Manual' && !timerOnly}
+      <section class="mt-2">
+        <Checkbox bind:checked={ modalData.settings.scrambleAfterCancel }
+        class="w-5 h-5 my-2" label={ $localLang.TIMER.refreshScramble }/>
+      </section>
+    {/if}
+
+    {#if !timerOnly}
+      <section>
+        <Checkbox bind:checked={ modalData.settings.genImage } class="w-5 h-5 my-2" label={ $localLang.TIMER.genImage }/>
+        <!-- <i class="text-sm text-yellow-500">({ $localLang.TIMER.canHurtPerformance })</i> -->
+      </section>
+
+      <section>
+        <Checkbox bind:checked={ modalData.settings.recordCelebration }
+          class="w-5 h-5 my-2" label={ $localLang.TIMER.recordCelebration }/>
+      </section>
+      <section class="flex flex-wrap gap-4 items-center">
+        { $localLang.TIMER.aoxCalculation }:
+
+        <Select
+          value={ ~~modalData.settings.calcAoX }
+          items={ [$localLang.TIMER.sequential, $localLang.TIMER.groupOfX ] }
+          transform={ (_, p) => p }
+          label={ e => e }
+          onChange={ (_, p) => modalData.settings.calcAoX = p }
+        />
+      </section>
+    {/if}
+  {/if}
+
+  <svelte:fragment slot="footer">
+    <div class="flex w-full justify-center gap-2">
+      <Button ariaLabel={ $localLang.global.cancel } color="alternative" on:click={ () => show = false }>
+        { $localLang.global.cancel }
+      </Button>
+      {#if type === 'edit-scramble' || type === 'settings'}
+        <Button color="purple" ariaLabel={ $localLang.global.save }
+          on:click={() => { closeHandler( type === 'settings' ? true : modalData.trim() ); show = false; }}>
+          { $localLang.global.save }
+        </Button>
+      {/if}
+    </div>
+  </svelte:fragment>
+</Modal>
 
 <style lang="postcss">
   @keyframes bump {
@@ -1088,7 +1110,7 @@
     @apply md:ml-16 md:mr-10 mx-4 inline-block text-center md:w-[calc(100%-15rem)]
       max-md:max-h-[min(10rem,21vh)] md:max-h-[16rem];
     font-size: 1.5em;
-    line-height: 1.5rem;
+    line-height: 1.3;
     word-spacing: .5rem;
     overflow: hidden auto;
   }
@@ -1108,7 +1130,7 @@
     width: 30rem;
   }
 
-  #notes {
+  /* #notes {
     left: var(--left, 0px);
     top: var(--top, 0px);
     width: var(--width, 100px);
@@ -1117,7 +1139,7 @@
     grid-template-rows: 1.5rem 1fr;
     resize: both;
     overflow: hidden;
-  }
+  } */
 
   table.nshow {
     margin: 0;
@@ -1172,7 +1194,7 @@
   }
 
   #preview-container.expanded {
-    height: 98%;
+    height: calc(100% - 4rem);
     background-color: rgba(0, 0, 0, 0.4);
   }
 
@@ -1188,7 +1210,7 @@
   .cube-3d {
     @apply bg-white bg-opacity-20 overflow-hidden shadow-md rounded-md
     w-[calc(100vw-20rem)] max-md:w-[calc(100vw-3rem)]
-    h-[calc(100vh-22rem)] max-md:h-[calc(100vh-25rem)];
+    h-[calc(100vh-23rem)] max-md:h-[calc(100vh-25rem)];
     
     /* height: calc(100vh - 25rem); */
   }

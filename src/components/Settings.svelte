@@ -1,18 +1,23 @@
 <script lang="ts">
   import type { Language } from "@interfaces";
-  import { getLanguage, LANGUAGES } from "@lang/index";
+  import { getLanguage } from "@lang/index";
   import { globalLang } from "@stores/language.service";
   import { NotificationService } from "@stores/notification.service";
   import { onDestroy, onMount } from "svelte";
-  import { derived, type Readable, type Unsubscriber } from "svelte/store";
-  import Button from "@material/Button.svelte";
+  import { derived, type Readable } from "svelte/store";
   import Select from "@material/Select.svelte";
   import { DataService } from "@stores/data.service";
   import { version } from "@stores/version.store";
   import { randomUUID } from "@helpers/strings";
   import { timer } from "@helpers/timer";
   import type { Display } from "electron";
+  import { CubeDBICON } from "@constants";
+  import { Button, Card, Heading, Spinner, TabItem, Tabs } from "flowbite-svelte";
+  
+  // ICONS
   import ScreenIcon from '@icons/Monitor.svelte';
+  import TextIcon from '@icons/Text.svelte';
+  import UpdateIcon from '@icons/Update.svelte';
 
   const notService = NotificationService.getInstance();
 
@@ -59,6 +64,7 @@
       header: $localLang.SETTINGS.saved,
       text: $localLang.SETTINGS.settingsSaved,
       timeout: 2000,
+      icon: CubeDBICON,
     });
 
   }
@@ -78,7 +84,22 @@
     dataService.update('check').then(res => {
       if ( !res ) return;
 
-      if ( $version === res ) {
+      let p1 = $version.split(".").map(Number);
+      let p2 = res.split(".").map(Number);
+
+      let cmp = (a: number[], b: number[]) => {
+        if ( a.length < b.length ) return -1;
+        if ( a.length > b.length ) return 1;
+
+        for (let i = 0, maxi = a.length; i < maxi; i += 1){
+          if ( a[i] < b[i] ) return -1;
+          if ( a[i] > b[i] ) return 1;
+        }
+
+        return 0;
+      };
+
+      if ( cmp(p2, p1) <= 0 ) {
         notService.addNotification({
           header: $localLang.SETTINGS.alreadyUpdated,
           text: $localLang.SETTINGS.alreadyUpdatedText,
@@ -87,6 +108,7 @@
             { text: $localLang.global.accept, callback: () => {} }
           ],
           key: randomUUID(),
+          icon: CubeDBICON,
         });
       } else {
         notService.addNotification({
@@ -98,6 +120,7 @@
             { text: $localLang.global.update, callback: updateNow },
           ],
           key: randomUUID(),
+          icon: CubeDBICON,
         });
       }
     }).catch((err) => {
@@ -106,6 +129,7 @@
         text: $localLang.SETTINGS.updateErrorText,
         timeout: 2000,
         key: randomUUID(),
+        icon: CubeDBICON,
       });
 
       console.dir(err);
@@ -125,7 +149,7 @@
   function updateDisplays() {
     dataService.getAllDisplays().then(res => {
       let cnt = 1;
-      
+
       displays = res.sort((a, b) => a.label < b.label ? -1 : 1).map(s => {
         s.label = s.label || ($localLang.SETTINGS.screen + ' ' + (cnt++));
         return s;
@@ -139,8 +163,6 @@
   }
 
   onMount(() => {
-    updateDisplays();
-
     itv = setInterval(() => {
       dTime = Math.random() * 20000;
     }, 2000);
@@ -152,80 +174,94 @@
   }); 
 </script>
 
-<main class="container-mini text-gray-400 bg-white bg-opacity-10 m-4 p-4 rounded-md">
-  <h1 class="text-center text-gray-300 text-3xl">{ $localLang.SETTINGS.title }</h1>
-  <hr/>
-
-  <!-- Language -->
-  <h2 class="text-center text-yellow-300 text-2xl mb-4 mt-4">{ $localLang.SETTINGS.language }</h2>
-  <div class="flex items-center justify-center gap-4">
-    <Select items={ LANGUAGES } bind:value={ language }
-      label={(e) => e[1].name}
-      transform={(e) => e[1].code}
-      onChange={ setLanguage }/>
-  </div>
-  <hr/>
-
-  <!-- App font -->
-  <h2 class="text-center text-green-300 text-2xl mb-4 mt-4">{ $localLang.SETTINGS.appFont }</h2>
-  <div class="flex items-center justify-center gap-4">
-    <Select items={ FONTS } bind:value={ appFont } label={(e) => e.name}/>
-    <p
-      style="font-family: { appFont };"
-      class="text-base bg-black bg-opacity-60 p-2 rounded-md text-gray-300">R U R F Dw2 L'</p>
-  </div>
-  <hr/>
-
-  <!-- Timer font -->
-  <h2 class="text-center text-blue-300 text-2xl mb-4 mt-4">{ $localLang.SETTINGS.timerFont }</h2>
-  <div class="flex items-center justify-center gap-4">
-    <Select items={ FONTS } bind:value={ timerFont } label={(e) => e.name}/>
-    <p
-      style="font-family: { timerFont };"
-      class="bg-black bg-opacity-60 p-2 rounded-md text-gray-300 text-6xl">{ timer(dTime, true) }</p>
-  </div>
-  <hr/>
-
-  <!-- Displays -->
-  <h2 class="text-center text-blue-300 text-2xl mb-4 mt-4">{ $localLang.SETTINGS.screen }</h2>
-  <div class="flex flex-col items-center justify-center gap-4">
-    <div class="flex justify-center gap-2">
-      {#each displays as display}
-        <Button class="flex items-center gap-2 bg-emerald-700 text-gray-300" on:click={ () => useDisplay(display.id) }>
-          <ScreenIcon size="1.2rem"/>
-          { display.label }
-        </Button>
-      {/each}
-    </div>
-
-    <div>
-      <Button class="bg-blue-700 text-gray-300" on:click={ updateDisplays }>{ $localLang.global.update }</Button>
-    </div>
-  </div>
-  <hr/>
-
-  <!-- Updates -->
-  <h2 class="text-center text-violet-300 text-2xl mb-4 mt-4">{ $localLang.SETTINGS.update }</h2>
-  <div class="flex items-center justify-center gap-4">
-    <div class="flex items-center justify-center gap-2">
-      { $localLang.SETTINGS.version }: <mark>{ $version }</mark>
-      <Button class="bg-blue-700 text-gray-300 grid justify-center relative"
-        on:click={ () => canCheckUpdate && checkUpdate() } loading={ !canCheckUpdate }>
-        { $localLang.SETTINGS.checkUpdate }
-      </Button>
-    </div>
-  </div>
-  <hr/>
+<Card class="mx-auto w-full max-w-4xl mt-8">
+  <Heading tag="h2" class="text-center text-3xl">{ $localLang.SETTINGS.title }</Heading>
   
+  <Tabs divider>
+    <TabItem open activeClasses="text-yellow-500 p-4 border-b-2 border-b-yellow-500">
+      <div slot="title" class="flex items-center gap-2">
+        <TextIcon size="1.2rem"/> { $localLang.SETTINGS.appFont }
+      </div>
+
+      <div class="flex flex-wrap justify-around">
+        <div>
+          <!-- App font -->
+          <Heading tag="h3" class="text-center text-green-300 text-2xl mb-4 mt-4">{ $localLang.SETTINGS.appFont }</Heading>
+          <div class="flex items-center justify-center gap-4">
+            <Select items={ FONTS } bind:value={ appFont } label={(e) => e.name}/>
+            <p
+              style="font-family: { appFont };"
+              class="text-base bg-black bg-opacity-60 p-2 rounded-md text-gray-300">R U R F Dw2 L'</p>
+          </div>
+        </div>
+  
+        <div>
+          <!-- Timer font -->
+          <Heading tag="h3" class="text-center text-blue-300 text-2xl mb-4 mt-4">{ $localLang.SETTINGS.timerFont }</Heading>
+          <div class="flex items-center justify-center gap-4">
+            <Select items={ FONTS } bind:value={ timerFont } label={(e) => e.name}/>
+            <p
+              style="font-family: { timerFont };"
+              class="bg-black bg-opacity-60 p-2 rounded-md text-gray-300 text-4xl">{ timer(dTime, true) }</p>
+          </div>
+        </div>
+      </div>
+    </TabItem>
+
+    <TabItem activeClasses="text-yellow-500 p-4 border-b-2 border-b-yellow-500">
+      <div slot="title" class="flex items-center gap-2">
+        <ScreenIcon size="1.2rem"/> { $localLang.SETTINGS.screen }
+      </div>
+
+      <!-- Displays -->
+      <div class="flex flex-col items-center justify-center gap-4">
+        <div class="flex justify-center gap-2">
+          {#each displays as display}
+            <Button color="alternative" class="gap-2" on:click={ () => useDisplay(display.id) }>
+              <ScreenIcon size="1.2rem"/>
+              { display.label }
+            </Button>
+          {/each}
+        </div>
+    
+        <div>
+          <Button on:click={ updateDisplays }>{ $localLang.global.update }</Button>
+        </div>
+      </div>
+    </TabItem>
+
+    <TabItem activeClasses="text-yellow-500 p-4 border-b-2 border-b-yellow-500">
+      <div slot="title" class="flex items-center gap-2">
+        <UpdateIcon size="1.2rem"/> { $localLang.SETTINGS.update }
+      </div>
+
+      <!-- Updates -->
+      <div class="flex items-center justify-center gap-4">
+        <div class="flex items-center justify-center gap-2">
+          { $localLang.SETTINGS.version }: <mark>{ $version }</mark>
+          <Button on:click={ () => canCheckUpdate && checkUpdate() }>
+            {#if !canCheckUpdate}
+              <Spinner size="4" color="white"/>
+            {:else}
+              { $localLang.SETTINGS.checkUpdate }
+            {/if}
+          </Button>
+        </div>
+      </div>
+    </TabItem>
+  </Tabs>
+
+  <hr />
+
   <!-- Actions -->
   <div class="actions flex gap-4 items-center justify-center mt-8">
-    <Button class="text-gray-300 bg-green-700" on:click={ save }>{ $localLang.global.save }</Button>
-    <Button class="text-gray-300 bg-orange-700" on:click={ reset }>{ $localLang.global.reset }</Button>
+    <Button color="green" on:click={ save }>{ $localLang.global.save }</Button>
+    <Button color="purple" on:click={ reset }>{ $localLang.global.reset }</Button>
   </div>
-</main>
+</Card>
 
 <style lang="postcss">
   hr {
-    @apply w-full h-px bg-gray-400 border-none mt-6;
+    @apply w-full h-px bg-gray-700 border-none mt-6;
   }
 </style>

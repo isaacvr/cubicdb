@@ -21,7 +21,8 @@ export class DataService {
   private emitter: Emitter;
   private ipc: IPC;
   private static _instance: DataService;
-  private _isMobile = writable(false);
+  private _isElectron: boolean;
+  private _SyncWorker: typeof import("*?worker") | null = null;
 
   private constructor() {
     this.emitter = new Emitter();
@@ -29,17 +30,26 @@ export class DataService {
     // @ts-ignore
     if ( window.electronAPI ) {
       this.ipc = new ElectronAdaptor();
+      this._isElectron = true;
     } else {
       // this.ipc = new NoopAdaptor();
       this.ipc = new BrowserAdaptor();
+      this._isElectron = false;
     }
 
     this.setIpc();
+  }
 
-    this._isMobile.set(window.innerWidth <= 768);
+  get isElectron() {
+    return this._isElectron;
+  }
 
-    window.addEventListener('resize', () => {
-      this._isMobile.set(window.innerWidth <= 768);
+  get SyncWorker() {
+    return new Promise<typeof import("*?worker")>((res) => {
+      if ( !this._SyncWorker ) {
+        return import('@workers/imageWorker?worker').then(w => this._SyncWorker = w).then(res);
+      }
+      res(this._SyncWorker);
     });
   }
 
@@ -49,11 +59,7 @@ export class DataService {
     }
     return DataService._instance = new DataService();
   }
-
-  get isMobile() {
-    return this._isMobile;
-  }
-
+  
   setIpc() {
     this.ipc.addDownloadProgressListener((_, progress: number) => {
       this.emitter.emit('download-progress', progress);
@@ -216,6 +222,10 @@ export class DataService {
 
   update(cmd: UpdateCommand) {
     return this.ipc.update(cmd);
+  }
+
+  cancelUpdate() {
+    return this.ipc.cancelUpdate();
   }
 
   sleep(s: boolean) {

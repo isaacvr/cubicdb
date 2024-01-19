@@ -3,8 +3,6 @@
   import { getPLLScramble, pllfilter } from "@cstimer/scramble/scramble_333";
   import { pGenerateCubeBundle } from "@helpers/cube-draw";
   import Select from "@components/material/Select.svelte";
-  import Button from "@components/material/Button.svelte";
-  import Modal from "@components/Modal.svelte";
   
   import CheckIcon from '@icons/Check.svelte';
   import { timer } from "@helpers/timer";
@@ -12,13 +10,21 @@
   import type { Language } from "@interfaces";
   import { globalLang } from "@stores/language.service";
   import { getLanguage } from "@lang/index";
-  import { DataService } from "@stores/data.service";
+  import { screen } from "@stores/screen.store";
+  import { Button, Card, Heading, Modal, Span, Table, TableBody, TableBodyCell, TableBodyRow, TableHead, TableHeadCell } from "flowbite-svelte";
+
+  interface IBundle {
+    id: number;
+    expected: string;
+    answer: string;
+    img: string;
+    time: number;
+  }
 
   let localLang: Readable<Language> = derived(globalLang, ($lang) => getLanguage( $lang ));
-  const isMobile = DataService.getInstance().isMobile;
 
   let TOP_FACE = [
-    { value: 'random', label: 'Color neutral' },
+    { value: 'random', label: 'Neutral' },
     { value: '',       label: 'White' },
     { value: 'x2',     label: 'Yellow' },
     { value: "z'",     label: 'Red' },
@@ -41,7 +47,7 @@
   let answers: string[] = [];
   let filters: string[] = pllfilter.slice().sort();
   let times: number[] = [];
-  let bundle: any[] = [];
+  let bundle: IBundle[] = [];
 
   let showAnswer: boolean = false;
   let lastAnswer: string = '';
@@ -166,21 +172,16 @@
 
 <svelte:window on:keyup={ handleKeyUp }></svelte:window>
 
-<div
-  class="text-gray-400 container-mini bg-white bg-opacity-10 w-4/5 mx-auto rounded-md
-    flex flex-col items-center px-4 py-8 cnt relative
-  ">
-  <h1 class="text-center text-3xl mb-4 text-gray-300 font-bold">{ $localLang.PLL.title }</h1>
+<Card class="flex flex-col relative items-center mt-4 max-w-2xl w-[calc(100%-2rem)] max-h-[calc(100vh-6rem)] mx-auto mb-8">
+  <Heading class="text-center text-3xl mb-4 text-gray-300 font-bold">{ $localLang.PLL.title }</Heading>
 
-  {#if !$isMobile}
-    <button class="absolute right-4 top-4 bg-gray-500 text-gray-200 w-6 h-6 flex items-center justify-center
-      cursor-pointer rounded-full shadow-md hover:shadow-lg hover:bg-gray-400 font-bold
-      transition-all duration-200
-    " on:click={ () => showModal = true }>?</button>
+  {#if !$screen.isMobile}
+    <Button color="dark" class="absolute right-4 top-4 w-6 h-6 rounded-full p-3.5 border border-gray-500"
+      on:click={ () => showModal = true }>?</Button>
   {/if}
 
   {#if stage === 0}
-    <div class={"grid items-center mx-auto " + (!$isMobile ? 'grid-cols-2' : '')}>
+    <div class={"grid items-center mx-auto sm:grid-cols-2"}>
       <span class="my-2">{ $localLang.PLL.topFace }</span>
       <Select items={ TOP_FACE } label={ e => e.label  } bind:value={ topFace }/>
       
@@ -188,20 +189,18 @@
       <Select items={ CASES } transform={ e => e } bind:value={ cases }/>
     </div>
 
-    <Button
-      on:click={ next }
-      class="bg-green-700 hover:bg-green-600 text-gray-300 mx-auto my-4">{ $localLang.PLL.next }</Button>
+    <Button on:click={ next } color="green" class="mt-2">{ $localLang.PLL.next }</Button>
   {/if}
 
   {#if stage === 1}
     <h3>{ $localLang.PLL.case } {idx + 1} / {cases}</h3>
-    <img src={ images[ idx ] } class={"puzzle-img " + ($isMobile ? '' : '!w-60 !h-60')} alt="">
+    <img src={ images[ idx ] } class={"puzzle-img " + ($screen.isMobile ? '' : '!w-60 !h-60')} alt="">
 
-    <div class="answer-container grid gap-2 my-4 w-full max-w-2xl" class:isMobile={ $isMobile }> 
+    <div class="answer-container grid gap-2 my-4 w-full max-w-2xl" class:isMobile={ $screen.isMobile }> 
       {#each filters as f}
         <button
           class="answer border border-gray-300 flex items-center justify-center outline-none rounded-md "
-          class:isMobile={ $isMobile }
+          class:isMobile={ $screen.isMobile }
           class:right={ f === caseName[idx] && showAnswer }
           class:wrong={ f != caseName[idx] && f === lastAnswer && showAnswer }
           on:click={ () => addAnswer(f) }
@@ -211,46 +210,74 @@
   {/if}
 
   {#if stage === 2}
-    <div class="flex items-center text-gray-400 font-bold">
+    <div class="flex items-center text-gray-400 font-bold mb-8">
       <span class="mr-1">{ $localLang.PLL.completed }: {correct} / {cases}</span>
-      {#if correct === cases} <CheckIcon width="1.2rem" height="1.2rem"/> {/if}
-      <Button on:click={ next } class="ml-12 bg-green-700 hover:bg-green-600 text-gray-300">{ $localLang.PLL.tryAgain }</Button>
+      {#if correct === cases} <CheckIcon width="1.2rem" height="1.2rem" class="text-green-500"/> {/if}
+      <Button on:click={ next } color="green" class="ml-12">{ $localLang.PLL.tryAgain }</Button>
     </div>
 
-    <div class="grid grid-cols-5 mt-8 text-center w-full overflow-scroll place-items-center">
-      {#each columns as c}
-        <strong>{ c }</strong>
-      {/each}
+    <Table shadow divClass="w-full relative overflow-x-auto">
+      <TableHead>
+        {#each columns as c, i}
+          {#if ($screen.width < 640 && i) || $screen.width >= 640}
+            <TableHeadCell padding="px-2 py-3">{ c }</TableHeadCell>
+          {/if}
+        {/each}
+      </TableHead>
 
-      {#each bundle as b}
-        <span class="{ b.expected === b.answer ? 'text-green-400' : '' }">{ b.id }</span>
-        <img src={ b.img } alt="" class="puzzle-img flex mx-auto">
-        <span class="{ b.expected === b.answer ? 'text-green-400' : '' }">{ b.expected }</span>
-        <span class="{ b.expected === b.answer ? 'text-green-400' : '' }">{ b.answer }</span>
-        <span class="{ b.expected === b.answer ? 'text-green-400' : '' }">{ timer(b.time, false, true) }</span>
-      {/each}
-    </div>
+      <TableBody>
+        {#each bundle as b}
+          <TableBodyRow>
+            {#if $screen.width >= 640}
+              <TableBodyCell tdClass="p-0 whitespace-nowrap font-medium text-center"
+                class={ b.expected === b.answer ? '!text-green-400' : '' }>
+                { b.id }
+              </TableBodyCell>
+            {/if}
+
+            <TableBodyCell tdClass="p-0 whitespace-nowrap font-medium text-center">
+              <img src={ b.img } alt="" class="puzzle-img object-contain flex mx-auto">
+            </TableBodyCell>
+            
+            <TableBodyCell tdClass="p-0 whitespace-nowrap font-medium text-center"
+              class={ b.expected === b.answer ? '!text-green-400' : '' }>
+              { b.expected }
+            </TableBodyCell>
+            
+            <TableBodyCell tdClass="p-0 whitespace-nowrap font-medium text-center"
+              class={ b.expected === b.answer ? '!text-green-400' : '' }>
+              { b.answer }
+            </TableBodyCell>
+
+            <TableBodyCell tdClass="p-0 whitespace-nowrap font-medium text-center"
+              class={ b.expected === b.answer ? '!text-green-400' : '' }>
+              { timer(b.time, true, true) }
+            </TableBodyCell>
+          </TableBodyRow>
+        {/each}
+      </TableBody>
+    </Table>
   {/if}
+</Card>
 
-  <Modal class="max-w-[70ch] text-justify" bind:show={ showModal }>
-    <h1>{ $localLang.PLL.keyBindings }</h1>
-
-    <h2>{ $localLang.PLL.singleLetter }</h2>
+<Modal class="max-w-[70ch] text-justify" bind:open={ showModal } autoclose outsideclose title={ $localLang.PLL.keyBindings }>
+  <div class="space-y-2">
+    <Heading tag="h2" class="text-xl text-center dark:text-gray-300">{ $localLang.PLL.singleLetter }</Heading>
     <blockquote bind:innerHTML={ $localLang.PLL.singleLetterBlock } contenteditable="false"></blockquote>
-    
-    <h2>{ $localLang.PLL.twoVariant }</h2>
+  </div>
+  
+  <div class="space-y-2">
+    <Heading tag="h2" class="text-xl text-center dark:text-gray-300">{ $localLang.PLL.twoVariant }</Heading>
     <blockquote bind:innerHTML={ $localLang.PLL.twoVariantBlock } contenteditable="false"></blockquote>
-
-    <h2>{ $localLang.PLL.gPerms }</h2>
+  </div>
+    
+  <div class="space-y-2">
+    <Heading tag="h2" class="text-xl text-center dark:text-gray-300">{ $localLang.PLL.gPerms }</Heading>
     <blockquote bind:innerHTML={ $localLang.PLL.gPermsBlock } contenteditable="false"></blockquote>
-  </Modal>
-</div>
+  </div>
+</Modal>
 
 <style lang="postcss">
-  .cnt {
-    max-height: 80vh;
-  }
-
   .grid {
     max-height: 30rem;
   }
@@ -279,11 +306,7 @@
     padding: .5rem;
   }
 
-  h1 {
-    @apply text-2xl font-bold text-gray-300 text-center;
-  }
-
-  h2 {
-    @apply text-xl font-bold text-gray-300 mt-4;
+  blockquote {
+    @apply border-l-4 border-l-primary-600 p-2 bg-black bg-opacity-20;
   }
 </style>

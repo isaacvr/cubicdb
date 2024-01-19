@@ -4,10 +4,11 @@
 
 <script lang="ts">
   import type { Tab } from '@interfaces';
+  import { Button } from 'flowbite-svelte';
 
   import { setContext } from 'svelte';
   import { writable } from 'svelte/store';
-  import Button from './Button.svelte';
+  // import Button from './Button.svelte';
 
   const selectedTab = writable(0);
 
@@ -59,7 +60,7 @@
   </section>
   <footer class="flex mt-auto border-t-2 border-t-gray-700">
     {#each tabs as tab}
-      <Button ariaLabel={ tab.ariaLabel }
+      <Button color="none" ariaLabel={ tab.ariaLabel }
         class="rounded-none w-full border border-gray-400 border-l-transparent first:border-l-gray-400 
         { tab.index === $selectedTab
           ? 'bg-blue-400 text-black hover:bg-blue-500 hover:bg-opacity-100'

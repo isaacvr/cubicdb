@@ -1,4 +1,52 @@
+import { EPS } from '@constants';
 import { Quaternion } from './quaternion';
+import { Vector3 } from 'three';
+
+const PI = Math.PI;
+const TAU = PI * 2;
+const R1_2 = Math.SQRT1_2;
+
+function fixedSin(ang: number): number {
+  let rAng = ((ang % TAU) + TAU) % TAU;
+  let sinTable = [
+    [PI / 6, 0.5],
+    [PI * 5 / 6, 0.5],
+    [PI * 7 / 6, -0.5],
+    [PI * 11 / 6, -0.5],
+    [PI / 4, R1_2],
+    [PI, 0],
+    [TAU - PI / 4, -R1_2],
+  ];
+
+  for (let i = 0, maxi = sinTable.length; i < maxi; i += 1) {
+    if ( Math.abs(sinTable[i][0] - rAng) < 1e-6 ) {
+      return sinTable[i][1];
+    }
+  }
+
+  return Math.sin(ang);
+}
+
+function fixedCos(ang: number): number {
+  let rAng = ((ang % TAU) + TAU) % TAU;
+  let cosTable = [
+    [PI / 2, 0],
+    [PI * 3 / 4, R1_2],
+    [PI * 5 / 4, -R1_2],
+    [PI * 2 / 3, -0.5],
+    [PI / 3, 0.5],
+    [PI * 4 / 3, -0.5],
+    [PI * 5 / 3, 0.5],
+  ];
+
+  for (let i = 0, maxi = cosTable.length; i < maxi; i += 1) {
+    if ( Math.abs(cosTable[i][0] - rAng) < 1e-6 ) {
+      return cosTable[i][1];
+    }
+  }
+
+  return Math.cos(ang);
+}
 
 export class Vector3D {
   x: number;
@@ -135,8 +183,53 @@ export class Vector3D {
       throw new TypeError('Constant vector does not allow modification');
     }
 
-    const CA = Math.cos(ang / 2);
-    const SA = Math.sin(ang / 2);
+    // let nu = new Vector3(u.x, u.y, u.z).setLength(1);
+
+    // let v3 = new Vector3(this.x - O.x, this.y - O.y, this.z - O.z);
+    // v3.applyAxisAngle(nu, ang).add( new Vector3(O.x, O.y, O.z) );
+
+    // if ( self ) {
+    //   this.x = v3.x;
+    //   this.y = v3.y;
+    //   this.z = v3.z;
+    //   return this;
+    // }
+
+    // return new Vector3D(v3.x, v3.y, v3.z);
+
+    const vecs = [0, 1, 2].map(n => [[RIGHT, UP, FRONT][n], n]);
+    const fAngs = [0, 1, 2, 3].map(n => [n * PI / 2, n]);
+    const rAng = ((ang % TAU) + TAU) % TAU;
+
+    if ( O.abs() < EPS && vecs.some(v => (v[0] as Vector3D).cross(u).abs() < EPS) && fAngs.some(a => Math.abs(a[0] - rAng) < EPS) ) {
+      let idx = [
+        (vt: Vector3D) => new Vector3D(vt.x, -vt.z, vt.y), // RIGHT => (x, y, z) => (x, -z, y)
+        (vt: Vector3D) => new Vector3D(vt.z, vt.y, -vt.x), // UP    => (x, y, z) => (z, y, -x)
+        (vt: Vector3D) => new Vector3D(-vt.y, vt.x, vt.z), // FRONT => (x, y, z) => (-y, x, z)
+      ];
+
+      let aIndex = fAngs.filter(a => Math.abs(a[0] - rAng) < EPS)[0][1];
+      let vIndex = vecs.filter(v => (v[0] as Vector3D).cross(u).abs() < EPS)[0][1] as number;
+      let cant = (vecs[vIndex][0] as Vector3D).dot(u) > 0 ? aIndex : (4 - aIndex) % 4;
+      let vt = this.clone();
+
+      for (let i = 1; i <= cant; i += 1) {
+        vt = idx[vIndex](vt);
+      }
+
+      if ( self ) {
+        this.x = vt.x;
+        this.y = vt.y;
+        this.z = vt.z;
+        return this;
+      }
+
+      return vt;
+    }
+
+    const CA = fixedCos(ang / 2);
+    const SA = fixedSin(ang / 2);
+
     let U = u.unit();
 
     let p = new Quaternion(0, (this.x - O.x), (this.y - O.y), (this.z - O.z));
@@ -161,7 +254,6 @@ export class Vector3D {
       qp.y + O.y,
       qp.z + O.z,
     );
-
   }
 
   clone(): Vector3D {

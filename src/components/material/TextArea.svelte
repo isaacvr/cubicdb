@@ -67,15 +67,15 @@
 
 <div class="relative {cClass || ""}" on:focus={ focusTextArea }>
   <pre on:focus={ focusTextArea } bind:this={ cedit } on:scroll={ handleScrollFactory(textarea, cedit) }
-    class={`lesp bg-transparent outline-none p-2 pointer-events-none rounded-md
+    class={`lesp bg-transparent outline-none p-2 pointer-events-none rounded-md text-start
       h-full break-words whitespace-pre-wrap overflow-auto stable monaco `
       + ( cl || "bg-gray-600 text-gray-300" ) }
     bind:innerHTML={ innerText } contenteditable="false" { spellcheck }></pre>
   <textarea
     on:keyup={ keyup } on:keydown={ keydown } on:focus={ focus } on:blur={ blur } on:click={ click }
     on:scroll={ handleScrollFactory(cedit, textarea) } { placeholder } bind:this={ textarea } { spellcheck }
-    bind:value class={`lesp bg-transparent outline-none p-2 rounded-md text-transparent caret-white
-       transition-all duration-200 absolute inset-0 w-full h-full resize-none
+    bind:value class={`lesp bg-transparent outline-none p-2 rounded-md text-start text-transparent
+    caret-white transition-all duration-200 absolute inset-0 w-full h-full resize-none
         break-words whitespace-pre-wrap overflow-auto stable monaco `
       + ( cl || "bg-gray-600 text-gray-300" )}></textarea>
 </div>

@@ -184,7 +184,7 @@ export function MIXUP(): PuzzleInterface {
   mixup.scramble = function() {
     if ( !mixup.toMove ) return;
 
-    const MOVES = 100;
+    const MOVES = 50;
 
     for (let i = 0; i < MOVES; i += 1) {
       let p = random( pieces ) as Piece;

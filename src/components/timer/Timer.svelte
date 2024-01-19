@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { createEventDispatcher, onMount } from 'svelte';
+  import { createEventDispatcher, onMount, tick } from 'svelte';
   import { pGenerateCubeBundle } from '@helpers/cube-draw';
   import { derived, writable, type Readable } from 'svelte/store';
   
@@ -9,7 +9,7 @@
   import JSConfetti from 'js-confetti';
   
   /// Data
-  import { isNNN, SessionDefaultSettings, type SCRAMBLE_MENU, AON, R222, R333, R444, R555, R666, R777, CLCK, MEGA, PYRA, SKWB, SQR1 } from '@constants';
+  import { isNNN, SessionDefaultSettings, type SCRAMBLE_MENU, AON, ICONS, CubeDBICON, STEP_COLORS } from '@constants';
   import { DataService } from '@stores/data.service';
 
   /// Components
@@ -18,22 +18,9 @@
   import TimerTab from './TimerTab.svelte';
   import SessionsTab from './SessionsTab.svelte';
   import StatsTab from './StatsTab.svelte';
-  import Tooltip from '@components/material/Tooltip.svelte';
-  import Modal from '@components/Modal.svelte';
-  import Button from '@components/material/Button.svelte';
-  import Input from '@components/material/Input.svelte';
+  // import Modal from '@components/Modal.svelte';
   import Select from '@components/material/Select.svelte';
 
-  /// Icons
-  import TimerIcon from '@icons/Timer.svelte';
-  import ListIcon from '@icons/FormatListBulleted.svelte';
-  import ChartIcon from '@icons/ChartLineVariant.svelte';
-  import TuneIcon from '@icons/Tune.svelte';
-  import PlusIcon from '@icons/Plus.svelte';
-  import CheckIcon from '@icons/Check.svelte';
-  import CloseIcon from '@icons/Close.svelte';
-  import DeleteIcon from '@icons/Delete.svelte';
-  
   /// Types
   import { TimerState, type Solve, type Session,  type Statistics, type TimerContext, type PuzzleOptions, type Language, type BluetoothDeviceData, SESSION_TYPE, type SessionType, DIALOG_MODES } from '@interfaces';
   import { Puzzle } from '@classes/puzzle/puzzle';
@@ -46,45 +33,20 @@
   import { NotificationService } from '@stores/notification.service';
   import { randomUUID } from '@helpers/strings';
   import { binSearch } from '@helpers/object';
-
+  
   // ICONS
-  import Icon333 from '@components/wca/333.svelte';
-  import Icon222 from '@components/wca/222.svelte';
-  import Icon333fm from '@components/wca/333fm.svelte';
-  import Icon333mbf from '@components/wca/333mbf.svelte';
-  import Icon333ni from '@components/wca/333ni.svelte';
-  import Icon333oh from '@components/wca/333oh.svelte';
-  import Icon444bld from '@components/wca/444bld.svelte';
-  import Icon444wca from '@components/wca/444wca.svelte';
-  import Icon555bld from '@components/wca/555bld.svelte';
-  import Icon555wca from '@components/wca/555wca.svelte';
-  import Icon666wca from '@components/wca/666wca.svelte';
-  import Icon777wca from '@components/wca/777wca.svelte';
-  import Iconclkwca from '@components/wca/clkwca.svelte';
-  import Iconmgmp from '@components/wca/mgmp.svelte';
-  import Iconpyrso from '@components/wca/pyrso.svelte';
-  import Iconskbso from '@components/wca/skbso.svelte';
-  import Iconsqrs from '@components/wca/sqrs.svelte';
-
-  const ICONS = [
-    { icon: Icon222, name: '2x2x2', scrambler: R222 },
-    { icon: Icon333, name: '3x3x3', scrambler: R333 },
-    { icon: Icon333fm, name: '3x3x3 FM', scrambler: '333fm' },
-    { icon: Icon333ni, name: '3x3x3 BF', scrambler: '333ni' },
-    { icon: Icon333mbf, name: '3x3x3 MBF', scrambler: '333mbf' },
-    { icon: Icon333oh, name: '3x3x3 OH', scrambler: '333oh' },
-    { icon: Icon444wca, name: '4x4x4', scrambler: R444 },
-    { icon: Icon444bld, name: '4x4x4 BLD', scrambler: '444bld' },
-    { icon: Icon555wca, name: '5x5x5', scrambler: R555 },
-    { icon: Icon555bld, name: '5x5x5 BLD', scrambler: '555bld' },
-    { icon: Icon666wca, name: '6x6x6', scrambler: R666 },
-    { icon: Icon777wca, name: '7x7x7', scrambler: R777 },
-    { icon: Iconclkwca, name: 'Clock', scrambler: CLCK },
-    { icon: Iconmgmp, name: 'Megaminx', scrambler: MEGA },
-    { icon: Iconpyrso, name: 'Pyraminx', scrambler: PYRA },
-    { icon: Iconskbso, name: 'Skewb', scrambler: SKWB },
-    { icon: Iconsqrs, name: 'Square-1', scrambler: SQR1 },
-  ];
+  import TimerIcon from '@icons/Timer.svelte';
+  import ListIcon from '@icons/FormatListBulleted.svelte';
+  import ChartIcon from '@icons/ChartLineVariant.svelte';
+  import TuneIcon from '@icons/Tune.svelte';
+  import PlusIcon from '@icons/Plus.svelte';
+  import CheckIcon from '@icons/Check.svelte';
+  import CloseIcon from '@icons/Close.svelte';
+  import DeleteIcon from '@icons/Delete.svelte';
+  import { screen } from '@stores/screen.store';
+  import { Button, Input, Modal, Tooltip } from 'flowbite-svelte';
+  import WcaCategory from '@components/wca/WCACategory.svelte';
+  import { isBetween } from '@helpers/math';
 
   let MENU: SCRAMBLE_MENU[] = getLanguage($globalLang).MENU;
   
@@ -118,12 +80,12 @@
   let filters: string[] = [];
   let sessions: Session[] = [];  
   let tabs: TabGroup;
-  let deleteSessionModal: Modal;
+  // let deleteSessionModal: Modal;
+  let deleteSessionModal = false;
   let showDeleteSession = false;
   let dispatch = createEventDispatcher();
   let sessionsTab: SessionsTab;
   let mounted = false;
-  let isMobile = dataService.isMobile;
   
   /// MODAL
   let openEdit = false;
@@ -150,7 +112,6 @@
     tName: '',
   });
   let Ao5 = writable<number[]>();
-  let AoX = writable<number>(100);
   let stats = writable<Statistics>(INITIAL_STATISTICS);
   let scramble = writable<string>();
   let group = writable<number>();
@@ -224,7 +185,7 @@
     for (let e of Object.entries($stats)) {
       if ( e[1].better ) {
         bestList.push({
-          name: e[0],
+          name: e[0] === 'best' ? $localLang.TIMER.best : e[0],
           prev: e[1].prev || 0,
           now: e[1].best || 0,
         })
@@ -238,6 +199,7 @@
         html: bestList.map(o => `${o.name}: ${ timer(o.now, true) } (${ $localLang.TIMER.from } ${ timer(o.prev, true) })`).join('<br>'),
         timeout: 5000,
         key: randomUUID(),
+        icon: CubeDBICON,
       });
 
       confetti.addConfetti({
@@ -307,11 +269,9 @@
     }
   }
 
-  function handleInputKeyUp(ce: any) {
+  function handleInputKeyUp(e: KeyboardEvent) {
     if ( !enableKeyboard ) return;
    
-    const e = ce.detail;
-
     if ( e.key === 'Enter' ) {
       newSession();
     } else if ( e.key === 'Escape' ) {
@@ -393,7 +353,7 @@
   }
 
   function selectedGroup(rescramble = true) {
-    if ( !MENU.length || !$group ) return;
+    if ( !isBetween($group + 0.1, 0, MENU.length - 1, true) ) return;
 
     modes = MENU[ $group ][1];
     $mode = modes[0];
@@ -603,7 +563,7 @@
   });
 
   let context: TimerContext = {
-    state, ready, tab, solves, allSolves, session, Ao5, AoX, stats, scramble, decimals,
+    state, ready, tab, solves, allSolves, session, Ao5, stats, scramble, decimals,
     group, mode, hintDialog, hint, cross, xcross, preview, prob, isRunning, selected,
     bluetoothList, bluetoothStatus, STATS_WINDOW,
     setSolves, sortSolves, updateSolves, handleUpdateSession, handleUpdateSolve, updateStatistics,
@@ -618,7 +578,7 @@
 
 <svelte:window on:keyup={ handleKeyUp }></svelte:window>
 
-<main class={"w-full pt-8 " + (scrambleOnly || timerOnly ? 'h-auto' : 'h-full')}>
+<main class={"w-full pt-14 " + (scrambleOnly || timerOnly ? 'h-auto' : 'h-[calc(100vh-3rem)]')}>
   {#if timerOnly || scrambleOnly }
     <TimerTab { timerOnly } { scrambleOnly } { context } { battle } { enableKeyboard } />
   {:else if battle}
@@ -628,12 +588,11 @@
     />
   {:else}
     <div class="fixed w-max -translate-x-1/2 left-1/2 z-10 grid grid-flow-col
-      gap-2 top-12 items-center justify-center text-gray-400">
+      gap-2 top-14 items-center justify-center text-gray-400">
       
-      {#if !$isMobile}
-        <Tooltip text={ $localLang.TIMER.manageSessions }>
-          <button on:click={ editSessions } class="cursor-pointer"><TuneIcon width="1.2rem" height="1.2rem"/> </button>
-        </Tooltip>
+      {#if !$screen.isMobile}
+        <button on:click={ editSessions } class="cursor-pointer"><TuneIcon width="1.2rem" height="1.2rem"/> </button>
+        <Tooltip placement="left"> { $localLang.TIMER.manageSessions } </Tooltip>
       {/if}
       
       <Select
@@ -650,10 +609,10 @@
         />
 
         <Select
-          placeholder={[ $localLang.TIMER.selectMode ]}
+          placeholder={ $localLang.TIMER.selectMode }
           value={ $mode } items={ modes } label={ e => e[0] } transform={ e => e }
-          onChange={ (g) => { $mode = g; selectedMode(); } }
-          />
+          onChange={ (g) => { $mode = g; selectedMode(); } } hasIcon={ groups[$group] === "WCA" ? (v) => v[1] : null }
+        />
       {/if}
 
       {#if filters.length > 0 && $tab === 0}
@@ -662,12 +621,6 @@
           value={ $prob } items={ filters } label={ e => e.toUpperCase() } transform={ (i, p) => p }
           onChange={ (i, p) => { $prob = p || 0; selectedFilter(); } }
         />
-      {/if}
-      
-      {#if $tab === 2}
-        <Input min={3} max={1000}
-          class="hidden-markers bg-gray-700 rounded-md"
-          type="number" bind:value={ $AoX } on:keyup={ e => e.detail.stopPropagation() }/>
       {/if}
     </div>
 
@@ -685,87 +638,78 @@
   {/if}
 
   {#if !timerOnly}
-    <Modal show={ openEdit } onClose={ handleClose } class="w-[min(40rem,100%)]">
-      {#if !creatingSession}
-        <Button ariaLabel={ $localLang.TIMER.addNewSession }
-          on:click={ openAddSession } class="mx-auto bg-blue-700 hover:bg-blue-600 text-gray-300">
-          <PlusIcon /> { $localLang.TIMER.addNewSession }
-        </Button>
-      {/if}
+    <Modal bind:open={ openEdit } on:close={ handleClose } outsideclose
+      title={ $localLang.TIMER.manageSessions } size="md" class="max-w-2xl grid">
 
-      <div class="grid gap-2 m-2 mt-4 max-h-[min(80vh,30rem)]"
-        style="grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr));">
-        {#if creatingSession}
-          <div class="grid col-span-full justify-center gap-4">
-            <Select
-              items={ SESSION_TYPE }
-              label={ e => $localLang.TIMER.sessionTypeMap[e] }
-              transform={ e => e }
-              bind:value={ newSessionType }
-              class="m-auto"
-            />
+      {#if creatingSession}
+        <div class="flex flex-col items-center min-h-[12rem] gap-4">
+          <Select
+            items={ SESSION_TYPE }
+            label={ e => $localLang.TIMER.sessionTypeMap[e] }
+            transform={ e => e }
+            bind:value={ newSessionType }
+            class="mx-auto"
+          />
 
-            <i class="note text-gray-300">{ $localLang.TIMER.sessionTypeDescription[newSessionType] }</i>
+          <i class="note text-gray-300">{ $localLang.TIMER.sessionTypeDescription[newSessionType] }</i>
 
-            {#if newSessionType != 'mixed'}
-              <div class="flex flex-wrap gap-2 justify-center">
-                <Select class="min-w-[8rem]"
-                  placeholder={ $localLang.TIMER.selectGroup }
-                  bind:value={ newSessionGroup } items={ groups } transform={ (_, p) => p }
-                />
-    
-                <Select class="min-w-[8rem]"
-                  placeholder={[ $localLang.TIMER.selectMode ]}
-                  bind:value={ newSessionMode } items={ MENU[newSessionGroup][1] }
-                  label={ e => e[0] } transform={ (_, p) => p }
-                />
-              </div>
-            {/if}
-            
+          {#if newSessionType != 'mixed'}
             <div class="flex flex-wrap gap-2 justify-center">
-              <div class="flex items-center justify-center gap-2">
-                <span>{ $localLang.global.name }</span>
+              <Select class="min-w-[8rem]"
+                placeholder={ $localLang.TIMER.selectGroup }
+                bind:value={ newSessionGroup } items={ groups } transform={ (_, p) => p }
+              />
+  
+              <Select class="min-w-[8rem]"
+                placeholder={ $localLang.TIMER.selectMode }
+                bind:value={ newSessionMode } items={ MENU[newSessionGroup][1] }
+                label={ e => e[0] } transform={ (_, p) => p }
+              />
+            </div>
+          {/if}
+          
+          <div class="flex flex-wrap gap-2 justify-center">
+            <div class="flex items-center justify-center gap-2">
+              <span>{ $localLang.global.name }</span>
 
-                <Input
-                  focus={ creatingSession }
-                  class="bg-gray-600 text-gray-200 flex-1 max-w-[20ch]"
-                  bind:value={ newSessionName } on:keyup={ (e) => handleInputKeyUp(e) }/>
-              </div>
-
-              {#if newSessionType === 'multi-step'}
-                <div class="flex items-center justify-center gap-2">
-                  <span>{ $localLang.global.steps }</span>
-
-                  <Input
-                    class="bg-gray-600 text-gray-200 flex-1 max-w-[10ch]"
-                    inpClass="text-center" type="number" min={2} max={10}
-                    bind:value={ newSessionSteps } on:keyup={ (e) => handleInputKeyUp(e) }
-                    on:change={ ev => stepNames = [ ...stepNames, ...(new Array(newSessionSteps).fill('')) ].slice(0, newSessionSteps) }
-                    />
-                </div>
-              {/if}
+              <Input
+                focus={ creatingSession }
+                class="bg-gray-600 text-gray-200 flex-1 max-w-[20ch]"
+                bind:value={ newSessionName } on:keyup={ handleInputKeyUp }/>
             </div>
 
             {#if newSessionType === 'multi-step'}
-              <div class="flex flex-wrap flex-col gap-2 justify-center">
-                <h2 class="text-xl text-gray-300 text-center">{ $localLang.TIMER.stepNames }</h2>
-                
-                <ul class="flex justify-center items-center gap-2">
-                  {#each stepNames as sn, p (p)}
-                    <li class="w-20"> <Input bind:value={ sn }/> </li>
-                  {/each}
-                </ul>
+              <div class="flex items-center justify-center gap-2">
+                <span>{ $localLang.global.steps }</span>
+
+                <Input
+                  class="bg-gray-600 text-gray-200 flex-1 max-w-[10ch]"
+                  inpClass="text-center" type="number" min={2} max={10}
+                  bind:value={ newSessionSteps } on:keyup={ handleInputKeyUp }
+                  on:change={ _ => stepNames = [ ...stepNames, ...(new Array(newSessionSteps).fill('')) ].slice(0, newSessionSteps) }
+                  />
               </div>
             {/if}
-
-            <div class="flex justify-center gap-2 mt-8">
-              <Button on:click={ closeAddSession }>{ $localLang.global.cancel }</Button>
-              <Button on:click={ newSession } class="bg-blue-700 hover:bg-blue-600 text-gray-300">
-                { $localLang.global.save }
-              </Button>
-            </div>
           </div>
-        {:else}
+
+          {#if newSessionType === 'multi-step'}
+            <div class="flex flex-col gap-2 justify-center">
+              <h2 class="text-xl text-gray-300 text-center">{ $localLang.TIMER.stepNames }</h2>
+              
+              <ul class="flex flex-wrap justify-center items-center gap-2">
+                {#each stepNames as sn, p (p)}
+                  <li class="w-20">
+                    <Input style={`border-color: ${STEP_COLORS[p]}; border-width: .15rem;`}
+                      placeholder={ $localLang.global.step + ' ' + (p + 1) } bind:value={ sn }/>
+                  </li>
+                {/each}
+              </ul>
+            </div>
+          {/if}
+        </div>
+      {:else}
+        <div class="grid gap-2 m-2 mt-4"
+          style="grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr));">
           {#each sessions as s}
             <button class={"grid h-max border border-gray-400 rounded-md relative " + (s.icon ? 'pl-8' : '')} on:click={() => {
               sessions.forEach(s1 => s1.editing = false);
@@ -775,39 +719,37 @@
               {#if s.icon}
                 <span class="absolute bg-purple-700 p-[.05rem] rounded-sm text-white
                   left-[.5rem] top-1/2 -translate-y-1/2">
-                  <svelte:component this={ s.icon.icon }/>
+                  <WcaCategory icon={ s.icon.icon } size="1rem" buttonClass="!p-[.1rem]"/>
                 </span>
               {/if}
 
               <Input
-                disabled={ !s.editing }
-                class="bg-transparent text-gray-400 flex-1 { !s.editing ? 'border-transparent' : '' }"
-                inpClass="text-center text-ellipsis" 
-                bind:value={ s.tName } focus={ s.editing } on:keyup={ (e) => {
-                  switch ( e.detail.code ) {
+                class="!bg-transparent text-center text-ellipsis w-full rounded-none flex-1 { !s.editing ? 'border-transparent' : '' }"
+                bind:value={ s.tName } focus={ s.editing } on:keydown={ (e) => {
+                  switch ( e.code ) {
                     case 'Enter': {
-                      s.editing = false;
-                      renameSession(s);
+                      s.editing = false; renameSession(s);
                       break;
                     }
                     case 'Escape': {
-                      e.detail.stopPropagation();
-                      s.editing = false;
+                      s.editing = false; e.stopPropagation();
+                      // @ts-ignore
+                      e.target.blur();
                       break;
                     }
                   }
                 }}/>
               <div class="flex items-center justify-center">
                 {#if s.editing && !creatingSession}
-                  <button tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer hover:text-blue-500"
+                  <button tabindex="0" class="text-gray-400 w-full h-8 cursor-pointer hover:text-blue-500"
                     on:click|stopPropagation={ (ev) => renameSession(s) }>
                     <CheckIcon size="1.2rem"/>
                   </button>
-                  <button tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer hover:text-blue-500"
+                  <button tabindex="0" class="text-gray-400 w-full h-8 cursor-pointer hover:text-blue-500"
                     on:click|stopPropagation={() => s.editing = false}>
                     <CloseIcon size="1.2rem"/>
                   </button>
-                  <button tabindex="0" class="text-gray-400 w-8 h-8 cursor-pointer hover:text-blue-500" on:click|stopPropagation={() => {
+                  <button tabindex="0" class="text-gray-400 w-full h-8 cursor-pointer hover:text-blue-500" on:click|stopPropagation={() => {
                     sSession = s;
                     showDeleteSession = true;
                   }}>
@@ -817,22 +759,36 @@
               </div>
             </button>
           {/each}
+        </div>
+      {/if}
+
+      <svelte:fragment slot="footer">
+        {#if creatingSession}
+          <div class="flex justify-center gap-2 mx-auto">
+            <Button color="alternative" on:click={ closeAddSession }>{ $localLang.global.cancel }</Button>
+            <Button on:click={ newSession }>
+              { $localLang.global.save }
+            </Button>
+          </div>
+        {:else}
+          <Button type="button" ariaLabel={ $localLang.TIMER.addNewSession }
+            on:click={ openAddSession } class="mx-auto flex">
+            <PlusIcon /> { $localLang.TIMER.addNewSession }
+          </Button>
         {/if}
-      </div>
+      </svelte:fragment>
     </Modal>
   {/if}
 
-  <Modal bind:this={ deleteSessionModal } bind:show={ showDeleteSession } onClose={ deleteSessionHandler }>
+  <Modal bind:open={ showDeleteSession } size="xs" autoclose outsideclose>
     <h1 class="text-gray-400 mb-4 text-lg">{ $localLang.TIMER.removeSession }</h1>
     <div class="flex justify-evenly">
-      <Button ariaLabel={ $localLang.global.cancel }
-        on:click={ () => deleteSessionModal.close(false) }>
+      <Button color="alternative" ariaLabel={ $localLang.global.cancel }>
         { $localLang.global.cancel }
       </Button>
       
-      <Button ariaLabel={ $localLang.global.delete }
-        class="bg-red-800 hover:bg-red-700 text-gray-400"
-        on:click={ () => deleteSessionModal.close(true) }>
+      <Button color="red" ariaLabel={ $localLang.global.delete }
+        on:click={ () => deleteSessionHandler(true) }>
         { $localLang.global.delete }
       </Button>
     </div>

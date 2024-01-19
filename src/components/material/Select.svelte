@@ -1,18 +1,24 @@
 <script lang="ts">
+  import WcaCategory from '@components/wca/WCACategory.svelte';
+  import { minmax } from '@helpers/math';
   import ExpandIcon from '@icons/ChevronDown.svelte';
-  import { tick } from 'svelte';
+  
+  import { Button, Dropdown, DropdownDivider, DropdownItem } from "flowbite-svelte";
 
   let cl = '';
   export { cl as class };
-  export let placeholder: any = 'Select';
+  export let placeholder: string = '';
   export let value: any = placeholder;
   export let items: any[];
   export let onChange = (item?: any, pos?: number, arr?: any[]) => {};
   export let label = (item?: any) => (item || "");
   export let transform = (item: any, pos?: number, arr?: any[]) => item.value;
+  export let hasIcon: null | ((v: any) => any) = null;
+
+  const selectID = "00000000".split("").map(_ => (10 + minmax(~~(Math.random() * 6), 0, 5)).toString(16)).join('');
 
   let showOptions = false;
-  let optionList: HTMLDivElement;
+  // let optionList: HTMLDivElement;
 
   function findValuePosition() {
     for (let i = 0, maxi = items.length; i < maxi; i += 1) {
@@ -24,122 +30,43 @@
     return -1;
   }
 
-  function handleClick(e: MouseEvent) {
-    let rect = optionList.getBoundingClientRect();
-    let { x, y, width, height } = rect;
-    let W = window.innerWidth;
-    let H = window.innerHeight;
+  function handleClick() {
+    let list = document.querySelector(`#${ selectID }`);
 
-    if ( x + width > W ) {
-      optionList.style.marginLeft = `${W - width - x}px`;
-    }
-
-    if ( y + height > H ) {
-      optionList.style.marginTop = `${H - height - y}px`;
-    }
-
-    optionList
+    if ( !list ) return;
 
     let pos = findValuePosition();
 
     if ( pos > -1 ) {
-      optionList.children[pos * 2].scrollIntoView({ inline: 'nearest', block: 'nearest' });
-      tick().then(() => {
-        (optionList.firstElementChild as HTMLButtonElement)?.focus();
-      });
-    }
-
-    showOptions = true;
-
-  }
-
-  function focusHandler(e: KeyboardEvent) {
-    let focused = document.activeElement;
-
-    let prev = (el: Element) => el.previousElementSibling;
-    let next = (el: Element) => el.nextElementSibling;
-
-    if ( e.code === 'ArrowDown' || e.code === 'ArrowUp' ) {
-      while( focused ) {
-        focused = e.code === 'ArrowDown' ? next(focused) : prev(focused);
-        if ( focused && focused.tagName === 'BUTTON' ) {
-          tick().then(() => (focused as HTMLButtonElement).focus());
-          break;
-        }
-      }  
+      list.children[0].children[pos * 2].scrollIntoView({ block: 'center' });
     }
   }
 </script>
 
-<svelte:window on:click|capture={() => showOptions = false}></svelte:window>
+<Button color="alternative" class={'gap-1 ' + cl} on:click={ handleClick }>{
+  items.some((a, p, i) => transform(a, p, i) === value)
+    ? label( items.find((e, p, i) => transform(e, p, i) === value) )
+    : placeholder
+  }
+  <ExpandIcon size="1.2rem" class="ml-auto"/>
+</Button>
 
-<main class={`select-container relative cursor-pointer border border-solid
-  bg-gray-700 border-gray-400 h-max-10 rounded-md ` + (cl || '')}>
-  <button tabindex="0"
-    on:click|self|stopPropagation={handleClick}
-    class="
-      bg-gray-700 text-gray-200 p-2 flex items-center rounded-md select-none
-      whitespace-nowrap text-ellipsis w-full h-full text-left overflow-hidden pr-6">{
-    items.some((a, p, i) => transform(a, p, i) === value)
-      ? label( items.find((e, p, i) => transform(e, p, i) === value) )
-      : placeholder
-  }</button>
-  <div class="expand w-5 h-full absolute right-[.1rem] top-0 flex my-auto pointer-events-none">
-    <ExpandIcon size="100%"/>
-  </div>
-  <!-- svelte-ignore a11y-no-static-element-interactions -->
-  <div class="options w-max max-w-[10rem]
-    bg-gray-700 bg-opacity-100 p-2 rounded-md border border-solid border-gray-400
-    absolute z-10 grid grid-cols-1 max-h-72 overflow-x-hidden overflow-y-scroll"
-    class:visible={ showOptions } bind:this={ optionList }
-    on:keydown={ focusHandler }
-    >
-    {#each items as item, pos}
-      {#if pos}
-        <hr class="h-0 w-full border-0 border-t border-gray-500">
+<Dropdown bind:open={ showOptions } id={ selectID } class="max-h-[20rem] overflow-y-scroll">
+  {#each items as item, pos}
+    {#if pos} <DropdownDivider /> {/if}
+    
+    <DropdownItem class={
+        `flex items-center gap-2
+        ` + (transform(item, pos, items) === value ? 'bg-primary-600 text-white dark:hover:bg-primary-400' : '')
+      } on:click={ () => {
+      showOptions = false;
+      value = transform(item, pos, items);
+      onChange(item, pos, items);
+    }}>
+      {#if hasIcon }
+        <WcaCategory icon={ hasIcon(item) } noFallback size="1.1rem"/>
       {/if}
-      <button
-        class="option text-gray-300 text-left transition-all duration-200 hover:bg-gray-800 p-1 rounded-md"
-        class:selected={ transform(item, pos, items) === value }
-        on:click|stopPropagation={ () => {
-          showOptions = false;
-          value = transform(item, pos, items);
-          onChange(item, pos, items);
-        } }>{ label(item) }</button>
-    {/each}
-  </div>
-</main>
-
-<style lang="postcss">
-  .select-container {
-    max-width: 13rem;
-  }
-
-  .options.visible {
-    opacity: 1;
-    visibility: visible;
-  }
-
-  .options:not(.visible) {
-    opacity: 0;
-    pointer-events: none;
-    visibility: hidden;
-  }
-
-  .option {
-    position: relative;
-    scroll-padding-top: .25rem;
-  }
-
-  .option.selected {
-    @apply bg-blue-600 text-gray-100 hover:bg-blue-400;
-  }
-
-  .option:not(:first-child) {
-    margin-top: .4rem;
-  }
-
-  .option:not(:last-child) {
-    margin-bottom: .4rem;
-  }
-</style>
+      { label(item) }
+    </DropdownItem>
+  {/each}
+</Dropdown>

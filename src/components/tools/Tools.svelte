@@ -6,10 +6,8 @@
   import { Penalty, type Language, type Solve, type TimerContext, type Session, type Statistics, MetricList, type TurnMetric } from "@interfaces";
   import { globalLang } from "@stores/language.service";
   import { getLanguage } from "@lang/index";
-  import { STANDARD_PALETTE, SessionDefaultSettings, type SCRAMBLE_MENU, AON, PRINTABLE_PALETTE } from "@constants";
+  import { STANDARD_PALETTE, SessionDefaultSettings, type SCRAMBLE_MENU, AON, CubeDBICON } from "@constants";
   import * as all from "@cstimer/scramble";
-  import Button from "@material/Button.svelte";
-  import Input from "@material/Input.svelte";
   import Tooltip from "@material/Tooltip.svelte";
   import CopyIcon from "@icons/ContentCopy.svelte";
   import DownArrowIcon from "@icons/ArrowDown.svelte";
@@ -21,6 +19,9 @@
   import TextArea from "@material/TextArea.svelte";
   import { solvFacelet } from "@cstimer/scramble/scramble_333";
   import Mosaic from "./Mosaic.svelte";
+  import { isBetween } from "@helpers/math";
+  import { Button } from "flowbite-svelte";
+  import Input from "@components/material/Input.svelte";
 
   let MENU: SCRAMBLE_MENU[] = getLanguage($globalLang).MENU;
   let groups: string[] = [];
@@ -93,6 +94,7 @@
   let md = false;
 
   function selectedGroup() {
+    if ( !isBetween($group + 0.1, 0, MENU.length - 1, true) ) return;
     modes = MENU[ $group ][1];
     $mode = modes[0];
     selectedMode();
@@ -101,6 +103,11 @@
   function selectedMode() {
     filters = all.pScramble.filters.get( $mode[1] ) || [];
     $prob = -1;
+    selectedFilter();
+  }
+
+  function selectedFilter() {
+    timer?.initScrambler();
   }
 
   function checkMode(s: string, list: string[]) {
@@ -116,7 +123,7 @@
           .apply(null, [
             $mode[1],
             Math.abs( $mode[2] ),
-            $prob < 0 ? undefined : prob,
+            $prob < 0 ? undefined : $prob,
           ])
           .replace(/\\n/g, "<br>")
           .trim()
@@ -135,6 +142,7 @@
         header: $localLang.global.done,
         text: $localLang.global.scrambleCopied,
         timeout: 1000,
+        icon: CubeDBICON,
       });
     });
   }
@@ -249,7 +257,8 @@
       `,
       text: '',
       fixed: true,
-      actions: [{ text: $localLang.global.done, callback: () => {} }]
+      actions: [{ text: $localLang.global.done, color: 'green', callback: () => {} }],
+      icon: CubeDBICON,
     });
   }
 
@@ -298,7 +307,7 @@
 <svelte:window on:keyup={ handleKeyup } on:mousedown={ () => md = true } on:mouseup={ () => md = false }/>
 
 <!-- Selection -->
-<div class="flex flex-wrap items-center justify-center gap-2">
+<div class="flex flex-wrap items-center justify-center gap-2 mt-2">
   <Select
     items={[
       [$localLang.TOOLS.timerOnly, "timer-only"],
@@ -316,41 +325,22 @@
 
   {#if checkMode(selectedOption, ["scramble-only", "scramble-batch"])}
     <Select
-      class="min-w-[8rem]"
-      placeholder={$localLang.TIMER.selectGroup}
-      value={groups[$group]}
-      items={groups}
-      transform={(e) => e}
-      onChange={(g, p) => {
-        $group = p || 0;
-        selectedGroup();
-      }}
+      placeholder={ $localLang.TIMER.selectGroup }
+      value={ groups[$group] } items={ groups } transform={ e => e }
+      onChange={ (g, p) => { $group = p || 0; selectedGroup(); } }
     />
-
+  
     <Select
-      class="min-w-[8rem]"
-      placeholder={[$localLang.TIMER.selectMode]}
-      value={ $mode }
-      items={ modes }
-      label={(e) => e[0]}
-      transform={(e) => e}
-      onChange={(g) => {
-        $mode = g;
-        selectedMode();
-      }}
+      placeholder={ $localLang.TIMER.selectMode }
+      value={ $mode } items={ modes } label={ e => e[0] } transform={ e => e }
+      onChange={ (g) => { $mode = g; selectedMode(); } } hasIcon={ groups[$group] === "WCA" ? (v) => v[1] : null }
     />
 
     {#if filters.length > 0}
       <Select
-        class="min-w-[8rem]"
-        placeholder={$localLang.TIMER.selectFilter}
-        value={prob}
-        items={filters}
-        label={(e) => e.toUpperCase()}
-        transform={(i, p) => p}
-        onChange={(i, p) => {
-          $prob = p || 0;
-        }}
+        placeholder={ $localLang.TIMER.selectFilter }
+        value={ $prob } items={ filters } label={ e => e.toUpperCase() } transform={ (i, p) => p }
+        onChange={ (i, p) => { $prob = p || 0; selectedFilter(); } }
       />
     {/if}
   {/if}
@@ -361,7 +351,7 @@
 
   <!-- Refresh scramble -->
   {#if checkMode(selectedOption, ['scramble-only'])}
-    <Button class="bg-purple-700 text-gray-300" on:click={ () => timer?.initScrambler() }>
+    <Button color="purple" on:click={ () => timer?.initScrambler() }>
       { $localLang.global.refresh }
     </Button>
   {/if}
@@ -382,21 +372,20 @@
       class="container-mini bg-white bg-opacity-10 mx-auto max-w-[calc(min(100%-2rem,100ch))] mt-4
         w-max mb-0 p-4 rounded-md shadow-md text-center"
     >
-      <ul class="text-gray-400 grid gap-2 max-h-[calc(100vh-25rem)] overflow-auto">
+      <ul class="text-gray-400 flex flex-col gap-2 max-h-[calc(100vh-25rem)] overflow-auto">
         {#each scrambleBatch as scr, pos}
           <li>{pos + 1}- {scr}</li>
         {/each}
       </ul>
 
-      <div class="flex gap-2 items-center justify-center">
+      <div class="flex gap-2 items-center justify-center pt-4">
         <Tooltip
           class="cursor-pointer transition-all duration-200
         hover:text-purple-300 text-gray-400"
           position="bottom"
-          text="Copy"
-          on:click={toClipboard}
+          text={ $localLang.global.clickToCopy }
         >
-          <CopyIcon size="1.2rem" />
+          <Button color="alternative" class="h-8 w-8 p-0 me-3 rounded-full" on:click={ toClipboard }><CopyIcon size="1.2rem" /></Button>
         </Tooltip>
       </div>
     </div>
@@ -404,9 +393,7 @@
 
   <div class="flex items-center justify-center gap-2 mt-8">
     <Input type="number" class="!w-20" bind:value={batch} min={1} on:UENTER={generateBatch} />
-    <Button class="bg-purple-700 text-gray-300" on:click={generateBatch}
-      >{ $localLang.global.generate }</Button
-    >
+    <Button color="purple" on:click={generateBatch}>{ $localLang.global.generate }</Button>
   </div>
 {:else if checkMode(selectedOption, ["statistics"])}
 
@@ -444,8 +431,8 @@
           focus-within:shadow-black"
         inpClass="text-center"
       />
-      <Button class="h-min bg-purple-700 text-gray-300" on:click={ addTimeString }>{ $localLang.global.add }</Button>
-      <Button class="h-min bg-red-700 text-gray-300" on:click={ clear }>{ $localLang.global.clear }</Button>
+      <Button color="purple" class="h-min" on:click={ addTimeString }>{ $localLang.global.add }</Button>
+      <Button color="red" class="h-min" on:click={ clear }>{ $localLang.global.clear }</Button>
     </div>
   </div>
 {:else if checkMode(selectedOption, ['metrics'])}
@@ -468,16 +455,20 @@
   </div>
 {:else if checkMode(selectedOption, ['solver'])}
   <h2 class="text-2xl text-center mt-4">{ $localLang.TOOLS.colors }</h2>
-  <div class="colors">
-    {#each fColors as f, p}
-      <Tooltip position="bottom" text={ keys[p] } hasKeybinding>
-        <button class="color" on:click={ () => color = p } class:selected={ p === color } style={ `background-color: ${f}` }></button>
-      </Tooltip>
-    {/each}
 
-    <Button on:click={ solve } class="ml-4 bg-purple-700 text-gray-300">{ $localLang.TOOLS.solve }</Button>
-    <Button on:click={ clearCube } class="bg-red-700 text-gray-300">{ $localLang.global.clear }</Button>
-  </div>  
+  <div class="flex flex-wrap justify-center items-center gap-2">
+    <div class="colors">
+      {#each fColors as f, p}
+        <Tooltip position="bottom" text={ keys[p] } hasKeybinding>
+          <button class="color" on:click={ () => color = p } class:selected={ p === color } style={ `background-color: ${f}` }></button>
+        </Tooltip>
+      {/each}
+    </div>  
+    <div class="flex gap-2 h-10 items-center">
+      <Button color="purple" on:click={ solve } class="ml-4">{ $localLang.TOOLS.solve }</Button>
+      <Button color="red" on:click={ clearCube }>{ $localLang.global.clear }</Button>
+    </div>
+  </div>
   
   <h2 class="text-2xl text-center mt-4">{ $localLang.TOOLS.stickers }</h2>
 
@@ -504,7 +495,6 @@
 
   .colors {
     display: flex;
-    margin: 1rem auto;
     gap: .5rem;
     justify-content: center;
     cursor: pointer;
@@ -529,6 +519,7 @@
       "l f r b"
       ". d . .";
     max-width: 40rem;
+    width: calc(100% - 2rem);
     margin: 1rem auto;
     gap: 1rem;
   }

@@ -1,5 +1,5 @@
 const { app, BrowserWindow, ipcMain, shell, powerSaveBlocker, screen } = require('electron');
-const { autoUpdater } = require('electron-updater');
+const { autoUpdater, CancellationToken } = require('electron-updater');
 const { join, resolve } = require('path');
 const { existsSync, mkdirSync, writeFileSync, unlinkSync, createWriteStream, copyFileSync } = require('fs');
 const { tmpdir } = require('os');
@@ -587,6 +587,8 @@ function createWindow() {
     win.webContents.send('bluetooth', ['pairing-request', details]);
   });
 
+  let cancellationToken = null;
+
   // Update
   ipcMain.handle('update', async (ev, cmd) => {
     return await new Promise((res, rej) => {
@@ -600,6 +602,12 @@ function createWindow() {
           })
           .catch(rej);
       } else if ( cmd === 'download' ) {
+        if ( cancellationToken ) {
+          throw new Error(`Already downloading`);
+        }
+
+        cancellationToken = new CancellationToken();
+
         autoUpdater.on('download-progress', (dp) => {
           win.webContents.send('download-progress', dp.percent );
           console.log("PERCENT: ", dp.percent);
@@ -608,14 +616,23 @@ function createWindow() {
         autoUpdater.on('update-downloaded', () => {
           win.webContents.send('update-downloaded');
           console.log("DOWNLOADED!");
+          cancellationToken = null;
         });
 
-        autoUpdater.checkForUpdates()
+        autoUpdater.downloadUpdate(cancellationToken)
           .then((r) => { console.log(r); res(null); })
-          .catch(rej);
+          .catch((err) => {
+            cancellationToken = null;
+            rej(err);
+          });
       }
-    });
-  
+    });  
+  });
+
+  ipcMain.handle('cancel-update', async () => {
+    cancellationToken?.cancel();
+    cancellationToken = null;
+    return true;
   });
 
   // Second screen

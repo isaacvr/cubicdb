@@ -5,7 +5,7 @@ export const English: Language = {
   code: 'en-EN',
   global: {
     // Notification
-    done: 'Done!',
+    done: 'Done',
     scrambleCopied: 'Scramble copied to clipboard',
     copiedToClipboard: 'Copied to clipboard',
     accept: 'Accept',
@@ -18,7 +18,7 @@ export const English: Language = {
     clear: 'Clear',
     reset: 'Reset',
     generate: 'Generate',
-    restartNow: 'Restart now',
+    restart: 'Restart',
     name: 'Name',
     steps: 'Steps',
     step: 'Step',
@@ -26,16 +26,29 @@ export const English: Language = {
     search: 'Search',
     toScramble: 'Scramble puzzle',
     reconstruction: 'Reconstruction',
+    clickToCopy: 'Click to copy',
+    settings: 'Settings',
+    downloading: 'Downloading',
   },
   NAVBAR: {
     home: 'Home',
     routeMap: (r: string) => {
       let mp: [RegExp, string][] = [
+        [/tutorials/i, 'Tutorials'],
+        [/algorithms/i, 'Algorithms'],
+        [/timer/i, 'Timer'],
+        [/battle/i, 'Battle'],
         [/pll-trainer/i, 'PLL Recognition'],
+        [/simulator/i, 'Simulator'],
+        [/contest/i, 'Contests'],
+        [/import-export/i, 'Import-Export'],
+        [/settings/i, 'Settings'],
+        [/tools/i, 'Tools'],
+        [/reconstructions/i, 'Reconstructions'],
       ];
 
       for (let i = 0, maxi = mp.length; i < maxi; i += 1) {
-        if (mp[i][0].test(r)) {
+        if ( mp[i][0].test( r ) ) {
           return mp[i][1];
         }
       }
@@ -59,7 +72,7 @@ export const English: Language = {
   SETTINGS: {
     title: 'Settings',
     language: 'Language',
-    appFont: 'Application font',
+    appFont: 'General font',
     timerFont: 'Timer font',
     screen: 'Screen',
 
@@ -106,6 +119,7 @@ export const English: Language = {
     stackmatAvailableHeader: 'Stackmat available',
     stackmatAvailableText: 'Do you want to connect?',
     connect: 'Connect',
+    disconnect: 'Disconnect',
 
     scramble: 'Scramble',
     time: 'Time',
@@ -179,16 +193,14 @@ export const English: Language = {
     clean: 'Clean',
     solve: 'Solve',
     timeDistribution: 'Time distribution',
-    timeChartLabels: ['Time', 'Ao5', 'A012', 'Ao50', 'AoX', 'Best', 'Trend'],
+    timeChartLabels: ['Time', 'Ao5', 'A012', 'Ao50', 'Ao100', 'Best', 'Trend'],
 
     solves: 'Solves',
     hourDistribution: 'Hour distribution',
     weekDistribution: 'Week distribution',
     histogram: 'Histogram',
     days: [ "Sun", "Mon", "Tue", "Wen", "Thu", "Fri", "Sat" ],
-    stepsAverage: 'Steps average',
-    stepsPercent: 'Steps percent',
-
+    
     // Best section
     bestMarks: 'Best marks',
     go: 'Go',
@@ -203,7 +215,29 @@ export const English: Language = {
       { title: 'Best Ao500', key: 'Ao500', select: 1 },
       { title: 'Best Ao1k', key: 'Ao1k', select: 1 },
       { title: 'Best Ao2k', key: 'Ao2k', select: 1 },
-    ]
+    ],
+    stepsAverage: 'Steps average',
+    stepsPercent: 'Steps percent',
+
+    // Modal
+    modal: {
+      "edit-scramble": 'Edit scramble',
+      "old-scrambles": 'Old scramble',
+      settings: 'Settings',
+    }
+  },
+  RECONSTRUCTIONS: {
+    stepBack: 'Step back',
+    playPause: 'Play/Pause',
+    stepForward: 'Step forward',
+    title: '[Title]',
+    scramble: '[Type your scramble here]',
+    reconstruction: '[Type your reconstruction here]',
+    puzzle: 'Puzzle',
+    resetCamera: 'Reset camera',
+    findReconstruction: 'Find reconstruction',
+    return: 'Return',
+    speed: 'Speed',
   },
   PLL: {
     title: 'PLL Recognition Trainer',

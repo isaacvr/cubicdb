@@ -1,30 +1,32 @@
 <script lang="ts">
-  import Button from '@material/Button.svelte';
   import { onMount } from 'svelte';
   import type { NotificationAction } from '@interfaces';
-  import SettingsIcon from '@icons/Cog.svelte';
-  import CloseIcon from '@icons/Close.svelte';
   import { NotificationService } from '@stores/notification.service';
+  import { Avatar, Button, Toast } from 'flowbite-svelte';
+  import { fly } from 'svelte/transition';
   
   export let key: string;
   export let timeout = 5000;
   export let header = 'Header';
   export let text = 'Text';
   export let html = '';
+  export let icon: any = '';
   export let fixed = false;
   export let actions: NotificationAction[] = [];
   
-  let closed = false;
+  let open = true;
   let tm: NodeJS.Timer;
   let notService = NotificationService.getInstance();
 
   function close () {
-    if ( closed ) return;
-
-    closed = true;
+    if ( !open ) return;
+    
     !fixed && clearTimeout(tm);
-
-    setTimeout(() => notService.removeNotification(key), 300);
+    open = false;
+    
+    setTimeout(() => {
+      notService.removeNotification(key);
+    }, 100);
   }
 
   onMount(() => {
@@ -39,49 +41,28 @@
   });
 </script>
 
-<div
-  class="notification relative rounded-md shadow-md p-2 grid bg-gray-800 text-gray-300 right-0
-    transition-all duration-300 pointer-events-auto
-  "
-  class:closed={ closed }>
-  <div id="icon">
-    <slot name="icon"> <SettingsIcon size="1.2rem"/> </slot>
-  </div>
-  
-  {#if !fixed}
-    <button class="w-max absolute top-2 right-2" on:click={ close }> <CloseIcon size="1.2rem"/> </button>
+<Toast transition={fly} params={{ x: 200 }} class="relative pointer-events-auto bottom-0 end-0 ml-auto mr-4"
+  contentClass="flex items-center" bind:open dismissable={ fixed } position="bottom-right" on:close={ close }>
+
+  {#if icon}
+    {#if typeof icon === 'string'}
+      <Avatar slot="icon" src={ icon }/>
+    {:else}
+      <svelte:component this={ icon } slot="icon" size="1.2rem"/>
+    {/if}
   {/if}
 
-  <div id="content">
-    <div id="header">{ header }</div>
-    <div id="text"> { text } </div>
-    <div id="html" bind:innerHTML={ html } contenteditable="false"></div>
-    <div id="actions">
-      {#each actions || [] as action}
-        <Button flat on:click={ (e) => { action.callback(e); close(); }}>{ action.text }</Button>
-      {/each}
-    </div>
+  <div class="ms-3 text-sm font-normal">
+    <span class="mb-1 text-base font-semibold dark:text-white">{ header }</span>
+    <div class="mb-2 text-sm font-normal">{ text }</div>
+    <div bind:innerHTML={ html } contenteditable="false"></div>
+
+    {#if (actions || []).length}
+      <div class="flex gap-2 mt-4">
+        {#each actions || [] as action}
+          <Button color={ action.color } on:click={ (e) => { action.callback(e); close(); }}>{ action.text }</Button>
+        {/each}
+      </div>
+    {/if}
   </div>
-</div>
-
-<style lang="postcss">
-  .notification {
-    grid-template-columns: 3rem 1fr;
-  }
-
-  .notification.closed {
-    @apply opacity-100 -right-72;
-  }
-
-  #icon {
-    @apply flex items-center justify-center;
-  }
-
-  #header {
-    @apply font-bold text-lg;
-  }
-
-  #actions {
-    @apply flex gap-2;
-  }
-</style>
+</Toast>

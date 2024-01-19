@@ -4,14 +4,19 @@
   import Close from 'svelte-material-icons/Close.svelte';
   import { onDestroy, onMount } from 'svelte';
   import { DataService } from '@stores/data.service';
-  import Select from './material/Select.svelte';
+  import { Breadcrumb, BreadcrumbItem, Button, Dropdown, DropdownItem, NavHamburger, NavUl, Navbar, Popover, Span, Progressbar } from 'flowbite-svelte';
   import { LANGUAGES, getLanguage } from '@lang/index';
   import { globalLang } from '@stores/language.service';
   import { derived, type Readable } from 'svelte/store';
   import { NotificationService } from '@stores/notification.service';
   import type { Language } from '@interfaces';
   import { randomUUID } from '@helpers/strings';
-  import { navigate } from 'svelte-routing';
+  import { Link, navigate, useLocation } from 'svelte-routing';
+  import ChevronIcon from '@icons/ChevronDown.svelte';
+  import { screen } from '@stores/screen.store';
+  import type { RouteLocation } from 'svelte-routing/types/Route';
+  import { CubeDBICON } from '@constants';
+  import FlagIcon from './FlagIcon.svelte';
 
   let localLang: Readable<Language> = derived(globalLang, ($lang, set) => {
     set( getLanguage( $lang ) );
@@ -19,10 +24,12 @@
 
   const dataService = DataService.getInstance();
   const notService = NotificationService.getInstance();
-  const isElectron = !!(window as any).electronAPI;
+  const loc = useLocation();
 
   let date: string, itv: NodeJS.Timer;
   let progress = 0;
+  let languageSelector = false;
+  let parts: { link: string, name: string }[] = [];
 
   function handleProgress(p: number) {
     progress = Math.round(p * 100) / 100;
@@ -33,12 +40,52 @@
       header: $localLang.SETTINGS.update,
       text: $localLang.SETTINGS.updateCompleted,
       actions: [
-        { text: $localLang.global.accept, callback: () => {} },
-        { text: $localLang.global.restartNow, callback: () => dataService.close() },
+        { text: $localLang.global.accept, callback: () => {}, color: "alternative" },
+        { text: $localLang.global.restart, callback: () => dataService.close(), color: 'purple' },
       ],
-      timeout: 5000,
+      fixed: true,
       key: randomUUID(),
+      icon: CubeDBICON,
     });
+  }
+
+  function cancelUpdate() {
+    dataService.cancelUpdate()
+      .then(() => {
+        progress = 0;
+      })
+      .catch((err) => {
+        console.log("ERROR: ", err);
+      });
+  }
+
+  function minimize() {
+    dataService.minimize();
+  }
+
+  function close() {
+    dataService.close();
+  }
+
+  function updateLang(code: string) {
+    $globalLang = code;
+    localStorage.setItem('language', $globalLang);
+  }
+
+  function updateParts(rt: RouteLocation) {
+    parts.length = 0;
+
+    if ( !rt ) {
+      navigate("/");
+      return;
+    }
+
+    let arr = rt.pathname.split('/').filter(s => s);
+
+    parts = arr.map((e: string, p: number) => ({
+      link: "/" + arr.slice(0, p + 1).join('/'),
+      name: $localLang.NAVBAR.routeMap(e)
+    }));
   }
 
   onMount(() => {
@@ -58,41 +105,75 @@
     dataService.off('update-downloaded', handleDone);
   });
 
-  function minimize() {
-    dataService.minimize();
-  }
-
-  function close() {
-    dataService.close();
-  }
-
-  function updateLang() {
-    localStorage.setItem('language', $globalLang);
-  }
+  $: $localLang, updateParts( $loc );
 </script>
 
-<section class="w-full h-8 shadow-sm bg-backgroundLv1 text-gray-400 fixed z-50 mb-3 select-none flex items-center">
-  <button on:click={ () => navigate('/') }>
-    <img draggable="false" src="/assets/logo-100.png" alt="" width="100%" height="100%" class="ml-1 w-8 flex my-auto">
-  </button>
-  
-  <h4 class="ml-1 max-sm:hidden">CubeDB</h4>
+<div class="relative py-6 bg-red-200">
+  <Navbar let:hidden let:toggle class="justify-between fixed top-0 left-0 w-full z-50 border-b p-2">
+    <Link to="/">
+      <div class="flex">
+        <img draggable="false" src={ CubeDBICON } alt="" width="100%" height="100%" class="ml-1 w-8 flex my-auto">
+        <Span class="self-center whitespace-nowrap text-base font-semibold ml-2">CubeDB</Span>
+      </div>
+    </Link>
 
-  <div class="absolute right-0 top-0 flex h-8 items-center">
-    {#if progress} <span class="mr-2 text-yellow-500"> { progress + "%" } </span> {/if}
+    {#if parts.length }
+      {#if !$screen.isMobile && !hidden && Boolean(toggle())} &nbsp; {/if}
 
-    <Select class="h-[2rem] mr-4"
-      items={ LANGUAGES } label={e => e[1].name } bind:value={ $globalLang } transform={e => e[1].code} onChange={ updateLang }/>
-      
-    {#if isElectron}
-      <span>{date}</span>
-      
-      <button class="ml-2 cursor-pointer" on:click={ minimize }>
-        <Minus />
-      </button>
-      <button class="ml-2 mr-1 cursor-pointer" on:click={ close }>
-        <Close height="100%"/>
-      </button>
+      <NavUl key="path-list" {hidden} class="order-2 md:order-1" ulClass="md:p-0 max-md:p-4">
+        <Breadcrumb>
+          <Link to="/" class="inline-flex -mr-4" on:click={ () => !hidden && toggle() }>
+            <BreadcrumbItem home></BreadcrumbItem>
+          </Link>
+          {#each parts as part}
+            <Link to={ part.link } class="inline-flex" on:click={ () => !hidden && toggle() }>
+              <BreadcrumbItem>{ part.name.toUpperCase() }</BreadcrumbItem>
+            </Link>
+          {/each}
+        </Breadcrumb>
+      </NavUl>
     {/if}
-  </div>
-</section>
+
+    <div class="flex order-1 md:order-2">
+      <div {hidden} class="flex ml-auto items-center">
+        {#if progress}
+          <span class="mr-2 text-yellow-500 cursor-default"> { progress + "%" } </span>
+          <Popover>
+            <Span class="flex justify-center">{ $localLang.global.downloading }</Span>
+            <Progressbar { progress } divClass="w-[10rem] my-3"/>
+            <Button color="red" class="py-2 w-full" on:click={ cancelUpdate }>{ $localLang.global.cancel }</Button>
+          </Popover>
+        {/if}
+    
+        <Button class="py-1 border border-primary-100 rounded-md mr-2 gap-2 px-2" color="none">
+          <FlagIcon icon={ LANGUAGES.find(l => l[1].code === $globalLang)?.[2] || '' } size="1.2rem"/>
+          { LANGUAGES.find(l => l[1].code === $globalLang)?.[1].name || 'English' }
+          <ChevronIcon />
+        </Button>
+          
+        <Dropdown color="dark" bind:open={ languageSelector }>
+          {#each LANGUAGES as lg}
+            <DropdownItem on:click={() => { updateLang(lg[1].code); languageSelector = false; }}>
+              <div class="flex items-center gap-2">
+                <FlagIcon icon={ lg[2] } size="1.2rem"/> { lg[1].name }
+              </div>
+            </DropdownItem>
+          {/each}
+        </Dropdown>
+          
+        {#if dataService.isElectron && $screen.width > 640}
+          <span>{date}</span>
+          
+          <Button color="none" class="ml-2 cursor-pointer rounded-sm hover:bg-primary-600 hover:text-white" on:click={ minimize }>
+            <Minus />
+          </Button>
+          <Button color="none" class="cursor-pointer rounded-sm hover:bg-red-600 hover:text-white" on:click={ close }>
+            <Close height="100%"/>
+          </Button>
+        {/if}
+      </div>
+
+      <NavHamburger on:click={toggle} />
+    </div>
+  </Navbar>
+</div>

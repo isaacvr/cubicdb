@@ -1,55 +1,18 @@
 <script lang="ts">
   import type { CubeDBData, Language, Session, Solve } from "@interfaces";
-  import Button from "@components/material/Button.svelte";
   import Select from "@components/material/Select.svelte";
   import { onMount } from "svelte";
   import Adaptors from "./adaptors";
-  import { CLCK, MEGA, PYRA, R222, R333, R444, R555, R666, R777, SKWB, SQR1, getModeMap } from "@constants";
   import { timer } from "@helpers/timer";
   import { DataService } from "@stores/data.service";
   import { derived, type Readable } from "svelte/store";
   import Checkbox from "@components/material/Checkbox.svelte";
   import { globalLang } from "@stores/language.service";
   import { getLanguage } from "@lang/index";
-
-  // ICONS
-  import Icon333 from '@components/wca/333.svelte';
-  import Icon222 from '@components/wca/222.svelte';
-  import Icon333fm from '@components/wca/333fm.svelte';
-  import Icon333mbf from '@components/wca/333mbf.svelte';
-  import Icon333ni from '@components/wca/333ni.svelte';
-  import Icon333oh from '@components/wca/333oh.svelte';
-  import Icon444bld from '@components/wca/444bld.svelte';
-  import Icon444wca from '@components/wca/444wca.svelte';
-  import Icon555bld from '@components/wca/555bld.svelte';
-  import Icon555wca from '@components/wca/555wca.svelte';
-  import Icon666wca from '@components/wca/666wca.svelte';
-  import Icon777wca from '@components/wca/777wca.svelte';
-  import Iconclkwca from '@components/wca/clkwca.svelte';
-  import Iconmgmp from '@components/wca/mgmp.svelte';
-  import Iconpyrso from '@components/wca/pyrso.svelte';
-  import Iconskbso from '@components/wca/skbso.svelte';
-  import Iconsqrs from '@components/wca/sqrs.svelte';
-
-  const ICONS = [
-    { icon: Icon222, name: '2x2x2', scrambler: R222 },
-    { icon: Icon333, name: '3x3x3', scrambler: R333 },
-    { icon: Icon333fm, name: '3x3x3 FM', scrambler: '333fm' },
-    { icon: Icon333ni, name: '3x3x3 BF', scrambler: '333ni' },
-    { icon: Icon333mbf, name: '3x3x3 MBF', scrambler: '333mbf' },
-    { icon: Icon333oh, name: '3x3x3 OH', scrambler: '333oh' },
-    { icon: Icon444wca, name: '4x4x4', scrambler: R444 },
-    { icon: Icon444bld, name: '4x4x4 BLD', scrambler: '444bld' },
-    { icon: Icon555wca, name: '5x5x5', scrambler: R555 },
-    { icon: Icon555bld, name: '5x5x5 BLD', scrambler: '555bld' },
-    { icon: Icon666wca, name: '6x6x6', scrambler: R666 },
-    { icon: Icon777wca, name: '7x7x7', scrambler: R777 },
-    { icon: Iconclkwca, name: 'Clock', scrambler: CLCK },
-    { icon: Iconmgmp, name: 'Megaminx', scrambler: MEGA },
-    { icon: Iconpyrso, name: 'Pyraminx', scrambler: PYRA },
-    { icon: Iconskbso, name: 'Skewb', scrambler: SKWB },
-    { icon: Iconsqrs, name: 'Square-1', scrambler: SQR1 },
-  ];
+  import { ICONS, getModeMap } from "@constants";
+  import { Card, Heading } from "flowbite-svelte";
+  import Button from "@components/material/Button.svelte";
+  import WcaCategory from '@components/wca/WCACategory.svelte';
 
   let MODE_MAP: Map<string, string>;
 
@@ -86,14 +49,14 @@
         let { sessions } = cubeData;
 
         for (let i = 0, maxi = sessions.length; i < maxi; i += 1) {
-          if ( sessions[i].settings?.sessionType != 'mixed' ) {
+          if ( sessions[i].settings.sessionType != 'mixed' ) {
             for (let j = 0, maxj = ICONS.length; j < maxj; j += 1) {
               if ( Array.isArray(ICONS[j].scrambler) ) {
-                if ( (ICONS[j].scrambler as string[]).some(s => s === sessions[i].settings?.mode ) ) {
+                if ( (ICONS[j].scrambler as string[]).some(s => s === sessions[i].settings.mode ) ) {
                   sessions[i].icon = ICONS[j];
                   break;
                 }
-              } else if ( ICONS[j].scrambler === sessions[i].settings?.mode ) {
+              } else if ( ICONS[j].scrambler === sessions[i].settings.mode ) {
                 sessions[i].icon = ICONS[j];
                 break;
               }
@@ -148,6 +111,16 @@
     cubeData?.sessions.forEach(s => s.editing = false);
     cubeData = cubeData;
   }
+  
+  function selectAllOwn() {
+    ownData?.sessions.forEach(s => s.editing = true);
+    ownData = ownData;
+  }
+
+  function selectNoneOwn() {
+    ownData?.sessions.forEach(s => s.editing = false);
+    ownData = ownData;
+  }
 
   function exportData() {
     let dt: CubeDBData = {
@@ -189,12 +162,15 @@
 
 </script>
 
-<main class="container-mini mx-auto max-w-4xl bg-white bg-opacity-10 rounded-md text-gray-400 p-4">
-  <h1 class="text-center text-3xl text-gray-300">{ $localLang.IMPORT_EXPORT.title }</h1>
+<Card class="mx-auto mt-8 w-full max-w-3xl">
+  <Heading tag="h3" class="text-center">{ $localLang.IMPORT_EXPORT.title }</Heading>
   <section class="flex items-center gap-2 justify-center my-4">
-    <Button on:click={ () => isImport = true } class="bg-{ isImport ? "green" : "gray"}-800 text-gray-300">{ $localLang.IMPORT_EXPORT.import }</Button>
-    <Button on:click={ () => isImport = false } class="bg-{ !isImport ? "green" : "gray"}-800 text-gray-300">{ $localLang.IMPORT_EXPORT.export }</Button>
-    {#if !isImport}
+    <Button on:click={ () => isImport = true } class="bg-{ isImport ? "green" : "gray"}-700 text-gray-300">{ $localLang.IMPORT_EXPORT.import }</Button>
+    <Button on:click={ () => isImport = false } class="bg-{ !isImport ? "green" : "gray"}-700 text-gray-300">{ $localLang.IMPORT_EXPORT.export }</Button>
+    
+    {#if !isImport && ownData}
+      <Button on:click={ selectAllOwn } class="bg-orange-800 text-gray-300">{ $localLang.IMPORT_EXPORT.selectAll }</Button>
+      <Button on:click={ selectNoneOwn } class="bg-orange-800 text-gray-300">{ $localLang.IMPORT_EXPORT.selectNone }</Button>
       <Button on:click={ exportData } class="bg-purple-800 text-gray-300">{ $localLang.global.save }</Button>
     {/if}
   </section>
@@ -226,13 +202,12 @@
             <Checkbox bind:checked={ s.editing }/>
             <Button on:click={ () => sSession = s }
               class="p-2 bg-blue-700 bg-opacity-40 text-gray-300 rounded-md font-bold shadow-md cursor-pointer
-              { s === sSession ? "bg-opacity-100 underline" : "" } {s.icon ? 'pl-8' : ''}
-              "
+              { s === sSession ? "bg-opacity-100 underline" : "" } { s.icon ? ' pl-8' : '' }"
             >
               {#if s.icon}
                 <span class="absolute bg-purple-700 p-[.05rem] rounded-sm text-white
                   left-[.5rem] top-1/2 -translate-y-1/2">
-                  <svelte:component this={ s.icon.icon }/>
+                    <WcaCategory icon={ s.icon.icon } size="1rem" buttonClass="!p-[.1rem]"/>
                 </span>
               {/if} {s.name}
             </Button>
@@ -282,4 +257,4 @@
       </ul>
     {/if}
   {/if}
-</main>
+</Card>

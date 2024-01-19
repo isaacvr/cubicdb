@@ -14,6 +14,8 @@
   import { globalLang } from '@stores/language.service';
   import { getLanguage } from '@lang/index';
   import { DataService } from '@stores/data.service';
+    import { Card } from 'flowbite-svelte';
+    import { CubeDBICON } from '@constants';
 
   let localLang: Readable<Language> = derived(globalLang, ($lang, set) => {
     set( getLanguage( $lang ) );
@@ -50,9 +52,9 @@
     },
     {
       logo: '/assets/ETH.png',
-      address: '0x3C40129375a2EC230B59fBa89C95058321241313',
+      address: '0xbcAEb3Ce55f76890EF10CB3d1C037086Dd7c9B63',
       qr: '',
-      qrText: 'ethereum:0x3C40129375a2EC230B59fBa89C95058321241313@1',
+      qrText: 'ethereum:0xbcAEb3Ce55f76890EF10CB3d1C037086Dd7c9B63@1',
       cubaOnly: false,
       currency: 'ETH + Tokens'
     },
@@ -82,15 +84,14 @@
         key: randomUUID(),
         header: $localLang.global.done,
         text: $localLang.global.copiedToClipboard,
-        timeout: 1000
+        timeout: 1000,
+        icon: CubeDBICON
       });
     });
   }
 </script>
 
-<main class="container-mini text-gray-400 bg-white bg-opacity-10 m-4 p-4
-  rounded-md flex flex-col items-center gap-2 mb-20">
-
+<Card class="mx-auto w-full max-w-3xl mt-8 flex flex-col gap-2 items-center mb-8">
   <!-- Logo -->
   <section>
     <img src="/assets/logo-500.png" alt="" class="puzzle-img">
@@ -164,7 +165,7 @@
       {/each}
     </ul>
   </section>
-</main>
+</Card>
 
 <style lang="postcss">
   hr {

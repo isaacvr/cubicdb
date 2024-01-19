@@ -62,7 +62,7 @@ export enum AverageSetting {
   GROUP = 1
 }
 
-export interface Card {
+export interface ICard {
   title: string;
   cube: string;
   ready: boolean;
@@ -294,7 +294,6 @@ export interface TimerContext {
   allSolves: Writable<Solve[]>;
   session: Writable<Session>;
   Ao5: Writable<number[]>;
-  AoX: Writable<number>;
   stats: Writable<Statistics>;
   scramble: Writable<string>;
   group: Writable<number>;
@@ -463,6 +462,7 @@ export interface IPC {
   revealFile: (f: string) => Promise<void>;
   
   update: (cmd: UpdateCommand) => Promise<string | null>;
+  cancelUpdate: () => Promise<boolean>;
   
   sleep: (s: boolean) => Promise<void>;
 
@@ -533,13 +533,15 @@ export interface StackmatState {
 
 export interface NotificationAction {
   text: string;
-  callback: (e: CustomEvent<any>) => void;
+  color?: "red" | "yellow" | "green" | "purple" | "blue" | "light" | "dark" | "primary" | "none" | "alternative" | undefined;
+  callback: (e: MouseEvent) => void;
 }
 
 export interface INotification {
   key: string;
   header: string;
   text: string;
+  icon?: any;
   html?: string;
   fixed?: boolean;
   timeout?: number;
@@ -599,7 +601,7 @@ export interface Language {
     clear: string;
     reset: string;
     generate: string;
-    restartNow: string;
+    restart: string;
     name: string;
     steps: string;
     step: string;
@@ -607,6 +609,9 @@ export interface Language {
     search: string;
     toScramble: string;
     reconstruction: string;
+    clickToCopy: string;
+    settings: string;
+    downloading: string;
   }
   NAVBAR: {
     home: string;
@@ -676,6 +681,7 @@ export interface Language {
     stackmatAvailableHeader: string;
     stackmatAvailableText: string;
     connect: string;
+    disconnect: string;
 
     scramble: string;
     time: string;
@@ -755,7 +761,27 @@ export interface Language {
     bestList: {title: string, key: string, select: number }[];
     stepsAverage: string;
     stepsPercent: string;
+
+    // Modal
+    modal: {
+      "edit-scramble": string;
+      "old-scrambles": string;
+      settings: string;
+    }
     // ['Ao5', 'Ao12', 'Ao50', 'Ao100', 'Ao200', 'Ao500', 'Ao1k', 'Ao2k' ]
+  },
+  RECONSTRUCTIONS: {
+    stepBack: string;
+    playPause: string;
+    stepForward: string;
+    title: string;
+    scramble: string;
+    reconstruction: string;
+    puzzle: string;
+    resetCamera: string;
+    findReconstruction: string;
+    return: string;
+    speed: string;
   },
   PLL: {
     title: string;
@@ -886,4 +912,8 @@ export interface IReconstruction {
   sequenceIndex: number[];
   finalAlpha: number;
   result: string;
+  hasError: boolean;
 }
+
+export type Scrambler = '222so' | '333' | '333fm' | '333ni' | 'r3ni' | '333oh' | '444bld' | '444wca'
+  | '555wca' | '555bld' | '666wca' | '777wca' | 'clkwca' | 'mgmp' | 'pyrso' | 'skbso' | 'sqrs';

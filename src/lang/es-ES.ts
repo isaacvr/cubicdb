@@ -5,7 +5,7 @@ export const Spanish: Language = {
   code: 'es-ES',
   global: {
     // Notification
-    done: 'Hecho!',
+    done: 'Hecho',
     scrambleCopied: 'Mezcla copiada al portapapeles',
     copiedToClipboard: 'Copiado al portapapeles',
     accept: 'Aceptar',
@@ -18,14 +18,17 @@ export const Spanish: Language = {
     clear: 'Limpiar',
     reset: 'Reiniciar',
     generate: 'Generar',
-    restartNow: 'Reiniciar ahora',
+    restart: 'Reiniciar',
     name: 'Nombre',
     steps: 'Pasos',
     step: 'Paso',
     scramble: 'Mezcla',
     search: 'Buscar',
     toScramble: 'Mezclar cubo',
-    reconstruction: 'Reconstrucción'
+    reconstruction: 'Reconstrucción',
+    clickToCopy: 'Click para copiar',
+    settings: 'Configuración',
+    downloading: 'Descargando',
   },
   NAVBAR: {
     home: 'Inicio',
@@ -41,6 +44,7 @@ export const Spanish: Language = {
         [/import-export/i, 'Importar-Exportar'],
         [/settings/i, 'Configuración'],
         [/tools/i, 'Herramientas'],
+        [/reconstructions/i, 'Reconstrucciones'],
       ];
 
       for (let i = 0, maxi = mp.length; i < maxi; i += 1) {
@@ -68,7 +72,7 @@ export const Spanish: Language = {
   SETTINGS: {
     title: 'Configuración',
     language: 'Idioma',
-    appFont: 'Fuente',
+    appFont: 'Fuente general',
     timerFont: 'Fuente del timer',
     screen: 'Pantalla',
 
@@ -115,6 +119,7 @@ export const Spanish: Language = {
     stackmatAvailableHeader: 'Stackmat disponible',
     stackmatAvailableText: '¿Desea conectarlo?',
     connect: 'Conectar',
+    disconnect: 'Desconectar',
 
     scramble: 'Mezcla',
     time: 'Tiempo',
@@ -188,16 +193,14 @@ export const Spanish: Language = {
     clean: 'Limpios',
     solve: 'Resolución',
     timeDistribution: 'Distribución de tiempos',
-    timeChartLabels: [ 'Tiempo', 'Ao5', 'A012', 'Ao50', 'AoX', 'Mejor', 'Tendencia' ],
+    timeChartLabels: [ 'Tiempo', 'Ao5', 'A012', 'Ao50', 'Ao100', 'Mejor', 'Tendencia' ],
     
     solves: 'Tiempos',
     hourDistribution: 'Distribución por horas',
     weekDistribution: 'Distribución semanal',
     histogram: 'Histograma',
     days: [ "Dom", "Lun", "Mar", "Mie", "Jue", "Vie", "Sab" ],
-    stepsAverage: 'Promedio de pasos',
-    stepsPercent: '% de pasos',
-
+    
     // Best section
     bestMarks: 'Mejores marcas',
     go: 'Ir',
@@ -212,7 +215,29 @@ export const Spanish: Language = {
       { title: 'Mejor Ao500', key: 'Ao500', select: 1 },
       { title: 'Mejor Ao1k', key: 'Ao1k', select: 1 },
       { title: 'Mejor Ao2k', key: 'Ao2k', select: 1 },
-    ]
+    ],
+    stepsAverage: 'Promedio de pasos',
+    stepsPercent: '% de pasos',
+
+    // Modal
+    modal: {
+      "edit-scramble": 'Editar mezcla',
+      "old-scrambles": 'Mezcla anterior',
+      settings: 'Configuración',
+    }
+  },
+  RECONSTRUCTIONS: {
+    stepBack: 'Paso atrás',
+    playPause: 'Reproducir/Pausar',
+    stepForward: 'Paso adelante',
+    title: '[Título]',
+    scramble: '[Escriba la mezcla aquí]',
+    reconstruction: '[Escriba la reconstrucción aquí]',
+    puzzle: 'Puzzle',
+    resetCamera: 'Reiniciar cámara',
+    findReconstruction: 'Buscar reconstrucción',
+    return: 'Retornar',
+    speed: 'Velocidad',
   },
   PLL: {
     title: 'Reconocimiento de PLL',
