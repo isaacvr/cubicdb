@@ -346,6 +346,10 @@
     return defaultInner(s, true);
   }
 
+  async function focusTextArea(f: boolean) {
+    setTimeout(() => fComment = f, 100);
+  }
+
   $: updatePaginator($solves);
   $: $selected, updatePageFromSelected();
   $: $tab != 1 && $selected && selectNone();
@@ -501,7 +505,7 @@
 
       <CommentIcon />
       
-      <TextArea blurOnEscape on:focus={ () => fComment = true } on:blur={ () => fComment = false }
+      <TextArea blurOnEscape on:focus={ () => focusTextArea(true) } on:blur={ () => focusTextArea(false) }
         cClass={fComment ? "max-h-[30ch]" : 'max-h-[20ch]'} getInnerText={ parse } class="border border-gray-400 text-sm"
         bind:value={ sSolve.comments } placeholder={ $localLang.TIMER.comment }/>
     </div>

@@ -131,20 +131,27 @@ export function projectedView(cube: Puzzle, DIM: number) {
           return Math.abs(p.y) >= 1 - 1e-6;
         });
 
+        
         if ( pts.length > 0 ) {
           if ( !SPECIAL_SQ1.some(m => cube.mode === m) ) {
-
-            let pt = st._generator.points.find(p => {
-              return Math.abs(p.y) < 1;
-            });
-    
-            let f = st._generator.name === 'side-corner' ?
-              -Math.sign( st.getOrientation().dot(Vector3D.cross(pts[0], pts[1], pt!)) ) : 1;
+            
+            // let pt = st._generator.points.find(p => {
+            //   return Math.abs(p.y) < 1;
+            // });
+            
+            // let f = st._generator.name === 'side-corner' ?
+            //   -Math.sign( st.getOrientation().dot(Vector3D.cross(pts[0], pts[1], pt!)) ) : 1;
 
             let st1 = st._generator.clone();
             st1.points.map(p => p.y = (p.y + pts[0].y) / 2);
             st1.updateMassCenter();
-            st1.rotate(pts[0], pts[0].sub(pts[1]), PI_2 * f, true);
+            st1.rotate(pts[0], pts[0].sub(pts[1]), PI_2 * 1, true);
+
+            let f = st1.points[0].y * st1.getOrientation().dot(UP) ;
+
+            if ( f < 0 ){
+              st1.rotate(pts[0], pts[0].sub(pts[1]), PI_2 * 2, true);
+            }
 
             let points = st1.points;
             let ini = f > 0 ? 1 : 2;

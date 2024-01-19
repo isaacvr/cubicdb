@@ -48,6 +48,31 @@ function fixedCos(ang: number): number {
   return Math.cos(ang);
 }
 
+function getCanonical(v: Vector3D) {
+  let dirs = [ UP, RIGHT, FRONT, DOWN, LEFT, BACK ];
+
+  for (let i = 0, maxi = dirs.length; i < maxi; i += 1) {
+    if ( dirs[i].sub(v).abs() < EPS ) {
+      return dirs[i].clone();
+    }
+  }
+
+  let cmps = [ v.x, v.y, v.z ];
+
+  cmps = cmps
+    .map(n => Math.abs(n - Math.round(n)) < EPS ? Math.round(n) : n)
+    .map(n => {
+      for (let i = 2; i <= 100; i += 1) {
+        if ( Math.abs(n * i - Math.round(n * i)) < EPS * i ) {
+          return Math.round(n * i) / i;
+        }
+      }
+      return n;
+    });
+
+  return new Vector3D(cmps[0], cmps[1], cmps[2]);
+}
+
 export class Vector3D {
   x: number;
   y: number;
@@ -70,7 +95,7 @@ export class Vector3D {
   static crossValue(a: Vector3D, b: Vector3D, c: Vector3D): number {
     return a.x * ( b.y * c.z - c.y * b.z ) - 
            a.y * ( b.x * c.z - c.x * b.z ) +
-           a.x * ( b.x * c.y - c.x * b.y );
+           a.z * ( b.x * c.y - c.x * b.y );
   }
 
   static direction(a: Vector3D, b: Vector3D, c: Vector3D, d: Vector3D): -1 | 0 | 1 {
@@ -119,11 +144,11 @@ export class Vector3D {
   }
 
   cross(v: Vector3D): Vector3D {
-    return new Vector3D(
+    return getCanonical(new Vector3D(
       this.y * v.z - this.z * v.y,
       this.z * v.x - this.x * v.z,
       this.x * v.y - this.y * v.x
-    );
+    ));
   }
 
   dot(v: Vector3D): number {
@@ -271,7 +296,7 @@ export class Vector3D {
   unit(): Vector3D {
     let len = this.abs();
     if ( len != 0 ) {
-      return this.div(len);
+      return getCanonical( this.div(len) );
     }
     return new Vector3D(0, 0, 0);
   }

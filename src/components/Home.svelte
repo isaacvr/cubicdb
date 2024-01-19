@@ -95,7 +95,6 @@
   };
 
   $: $globalLang, updateTexts();
-
 </script>
 
 <main class="container-mini">
@@ -112,7 +111,7 @@
           <h2 class="text-sm">{card.title}</h2>
         </Link>
       </li>
-    {/each}
+      {/each}
   </ul>
 
   <!-- <Button on:click={ () => navigate(encodeURI("/reconstructions?puzzle=square1&scramble=/ 3 / 1 / ")) }>Reconstruction</Button> -->
