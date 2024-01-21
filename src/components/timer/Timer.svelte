@@ -538,6 +538,7 @@
 
     if ( !(battle || timerOnly || scrambleOnly) ) {
       dataService.getSessions().then((_sessions) => {
+        console.log("SESSIONS: ", _sessions);
         sessions = _sessions.map(s => { s.tName = s.name; return s; });
 
         if ( sessions.length === 0 ) {

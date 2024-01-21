@@ -1,26 +1,20 @@
 <script lang="ts">
   import { Link, navigate, useLocation } from "svelte-routing";
-  import { derived, type Readable } from "svelte/store";
   import { Puzzle } from "@classes/puzzle/puzzle";
   import { pGenerateCubeBundle } from "@helpers/cube-draw";
-  import { nameToPuzzle, type Algorithm, type ICard, type Language } from "@interfaces";
+  import { nameToPuzzle, type Algorithm, type ICard } from "@interfaces";
   import { DataService } from "@stores/data.service";
   import { copyToClipboard, getSearchParams, randomUUID } from "@helpers/strings";
   import { NotificationService } from "@stores/notification.service";
-  import { globalLang } from "@stores/language.service";
-  import { getLanguage } from "@lang/index";
   import type { RouteLocation } from "svelte-routing/types/Route";
   import ViewListIcon from '@icons/ViewList.svelte';
   import ViewGridIcon from '@icons/Grid.svelte';
   import { screen } from "@stores/screen.store";
   import { Button, Li, List, Span, Spinner, Tooltip } from "flowbite-svelte";
   import { CubeDBICON } from "@constants";
+    import { localLang } from "@stores/language.service";
 
   const location = useLocation();
-  
-  let localLang: Readable<Language> = derived(globalLang, ($lang, set) => {
-    set( getLanguage( $lang ) );
-  });
 
   const dataService = DataService.getInstance();
   const notification = NotificationService.getInstance();

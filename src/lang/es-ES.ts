@@ -29,6 +29,7 @@ export const Spanish: Language = {
     clickToCopy: 'Click para copiar',
     settings: 'Configuración',
     downloading: 'Descargando',
+    fullScreen: 'Pantalla completa',
   },
   NAVBAR: {
     home: 'Inicio',

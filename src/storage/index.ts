@@ -1,7 +1,7 @@
-import { BrowserAdaptor } from "./browser";
+import { IndexedDBAdaptor } from "./indexedDB";
 import { ElectronAdaptor } from "./electron";
 
 export {
-  BrowserAdaptor,
+  IndexedDBAdaptor,
   ElectronAdaptor
 }

@@ -9,17 +9,10 @@
   import CopyIcon from '@icons/ContentCopy.svelte';
   import { copyToClipboard, randomUUID } from '@helpers/strings';
   import { NotificationService } from '@stores/notification.service';
-  import { derived, type Readable } from 'svelte/store';
-  import type { Language } from '@interfaces';
-  import { globalLang } from '@stores/language.service';
-  import { getLanguage } from '@lang/index';
   import { DataService } from '@stores/data.service';
-    import { Card } from 'flowbite-svelte';
-    import { CubeDBICON } from '@constants';
-
-  let localLang: Readable<Language> = derived(globalLang, ($lang, set) => {
-    set( getLanguage( $lang ) );
-  });
+  import { Card } from 'flowbite-svelte';
+  import { CubeDBICON } from '@constants';
+  import { localLang } from '@stores/language.service';
 
   const notification = NotificationService.getInstance();
   const dataService = DataService.getInstance();

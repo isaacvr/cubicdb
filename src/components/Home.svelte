@@ -76,7 +76,8 @@
         title: HOME.importExport,
         route: '/import-export',
         cube: '/assets/import-export.png',
-        ready: DataService.getInstance().isElectron,
+        // ready: DataService.getInstance().isElectron,
+        ready: true,
         timer: false,
       }, {
         title: HOME.settings,
@@ -98,7 +99,6 @@
 </script>
 
 <main class="container-mini">
-
   <ul class="w-full grid place-items-center" class:isMobile={ $screen.isMobile }>
     {#each cards as card (card.route)}
       <li class={`text-center shadow-md rounded-md select-none cursor-pointer

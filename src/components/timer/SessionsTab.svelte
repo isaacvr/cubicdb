@@ -283,6 +283,7 @@
 
   function handleContextMenu(e: MouseEvent, s: Solve) {
     e.stopPropagation();
+    e.preventDefault();
     contextMenuElement.style.left = e.clientX + 'px';
     contextMenuElement.style.top = e.clientY + 'px';
     sSolve = s;

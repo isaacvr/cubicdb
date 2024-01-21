@@ -6,12 +6,9 @@
   
   import CheckIcon from '@icons/Check.svelte';
   import { timer } from "@helpers/timer";
-  import { derived, type Readable } from "svelte/store";
-  import type { Language } from "@interfaces";
-  import { globalLang } from "@stores/language.service";
-  import { getLanguage } from "@lang/index";
   import { screen } from "@stores/screen.store";
-  import { Button, Card, Heading, Modal, Span, Table, TableBody, TableBodyCell, TableBodyRow, TableHead, TableHeadCell } from "flowbite-svelte";
+  import { Button, Card, Heading, Modal, Table, TableBody, TableBodyCell, TableBodyRow, TableHead, TableHeadCell } from "flowbite-svelte";
+  import { localLang } from "@stores/language.service";
 
   interface IBundle {
     id: number;
@@ -20,8 +17,6 @@
     img: string;
     time: number;
   }
-
-  let localLang: Readable<Language> = derived(globalLang, ($lang) => getLanguage( $lang ));
 
   let TOP_FACE = [
     { value: 'random', label: 'Neutral' },
