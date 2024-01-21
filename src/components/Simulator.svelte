@@ -29,9 +29,7 @@
 
   // } from "three";
   import { cubeToThree, piecesToTree } from "@helpers/cubeToThree";
-  import { derived, type Readable } from "svelte/store";
-  import { getLanguage } from "@lang/index";
-  import { globalLang } from "@stores/language.service";
+  import { localLang } from "@stores/language.service";
   import type { Sticker } from "@classes/puzzle/Sticker";
   import { ImageSticker } from "@classes/puzzle/ImageSticker";
   import { screen } from "@stores/screen.store";
@@ -50,10 +48,6 @@
   export let sequence: string[] = [];
   export let sequenceAlpha = 0;
   export let useScramble = "";
-
-  let localLang: Readable<Language> = derived(globalLang, ($lang) =>
-    getLanguage($lang),
-  );
 
   let cube: Puzzle;
   let dragging = false;

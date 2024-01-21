@@ -23,14 +23,8 @@
   import BackIcon from "@icons/History.svelte";
   import SearchIcon from "@icons/SearchWeb.svelte";
   import ChevronLeft from '@icons/ChevronLeft.svelte';
-  import { derived, type Readable } from "svelte/store";
-  import { globalLang } from "@stores/language.service";
-  import { getLanguage } from "@lang/index";
-    import WcaCategory from "./wca/WCACategory.svelte";
-
-  let localLang: Readable<Language> = derived(globalLang, ($lang) =>
-    getLanguage($lang),
-  );
+  import WcaCategory from "./wca/WCACategory.svelte";
+  import { localLang } from "@stores/language.service";
 
   const recs = _recs.slice(0, 4300).filter(r => errorIndex.indexOf(r.id) < 0);
   let recIndex = 0;

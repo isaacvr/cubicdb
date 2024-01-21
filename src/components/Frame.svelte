@@ -4,12 +4,10 @@
   import Close from 'svelte-material-icons/Close.svelte';
   import { onDestroy, onMount } from 'svelte';
   import { DataService } from '@stores/data.service';
-  import { Breadcrumb, BreadcrumbItem, Button, Dropdown, DropdownItem, NavHamburger, NavUl, Navbar, Popover, Span, Progressbar } from 'flowbite-svelte';
-  import { LANGUAGES, getLanguage } from '@lang/index';
-  import { globalLang } from '@stores/language.service';
-  import { derived, type Readable } from 'svelte/store';
+  import { Breadcrumb, BreadcrumbItem, Button, Dropdown, DropdownItem, NavHamburger, NavUl, Navbar, Popover, Span, Progressbar, Tooltip } from 'flowbite-svelte';
+  import { LANGUAGES } from '@lang/index';
+  import { globalLang, localLang } from '@stores/language.service';
   import { NotificationService } from '@stores/notification.service';
-  import type { Language } from '@interfaces';
   import { randomUUID } from '@helpers/strings';
   import { Link, navigate, useLocation } from 'svelte-routing';
   import ChevronIcon from '@icons/ChevronDown.svelte';
@@ -17,10 +15,7 @@
   import type { RouteLocation } from 'svelte-routing/types/Route';
   import { CubeDBICON } from '@constants';
   import FlagIcon from './FlagIcon.svelte';
-
-  let localLang: Readable<Language> = derived(globalLang, ($lang, set) => {
-    set( getLanguage( $lang ) );
-  });
+  import { ArrowUpRightDownLeftOutline } from 'flowbite-svelte-icons';
 
   const dataService = DataService.getInstance();
   const notService = NotificationService.getInstance();
@@ -86,6 +81,10 @@
       link: "/" + arr.slice(0, p + 1).join('/'),
       name: $localLang.NAVBAR.routeMap(e)
     }));
+  }
+
+  function fullScreen() {
+    document.documentElement.requestFullscreen();
   }
 
   onMount(() => {
@@ -170,10 +169,15 @@
           <Button color="none" class="cursor-pointer rounded-sm hover:bg-red-600 hover:text-white" on:click={ close }>
             <Close height="100%"/>
           </Button>
+        {:else if !document.fullscreenElement}
+          <Button color="alternative" class="p-2" on:click={ fullScreen }> <ArrowUpRightDownLeftOutline size="sm" /> </Button>
+          <Tooltip>{ $localLang.global.fullScreen }</Tooltip>
         {/if}
       </div>
 
-      <NavHamburger on:click={toggle} />
+      {#if parts.length}
+        <NavHamburger on:click={toggle} />
+      {/if}
     </div>
   </Navbar>
 </div>

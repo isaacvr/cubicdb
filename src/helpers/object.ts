@@ -71,6 +71,8 @@ export function clone(obj: any): any {
       return obj;
   }
 
+  if ( obj === null ) return obj;
+
   if ( typeof obj === 'bigint' ) {
     return BigInt(obj);
   }

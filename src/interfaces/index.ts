@@ -612,6 +612,7 @@ export interface Language {
     clickToCopy: string;
     settings: string;
     downloading: string;
+    fullScreen: string;
   }
   NAVBAR: {
     home: string;

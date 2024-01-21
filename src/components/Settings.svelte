@@ -1,10 +1,6 @@
 <script lang="ts">
-  import type { Language } from "@interfaces";
-  import { getLanguage } from "@lang/index";
-  import { globalLang } from "@stores/language.service";
   import { NotificationService } from "@stores/notification.service";
   import { onDestroy, onMount } from "svelte";
-  import { derived, type Readable } from "svelte/store";
   import Select from "@material/Select.svelte";
   import { DataService } from "@stores/data.service";
   import { version } from "@stores/version.store";
@@ -18,18 +14,11 @@
   import ScreenIcon from '@icons/Monitor.svelte';
   import TextIcon from '@icons/Text.svelte';
   import UpdateIcon from '@icons/Update.svelte';
+  import { localLang } from "@stores/language.service";
 
   const notService = NotificationService.getInstance();
 
-  let finalLang = $globalLang;
   let dataService = DataService.getInstance();
-  let language = $globalLang;
-
-  let localLang: Readable<Language> = derived(globalLang, ($lang, set) => {
-    language = $lang;
-    set( getLanguage( $lang ) );
-    updateDisplays();
-  });
 
   const FONTS = [
     { name: 'Ubuntu', value: 'Ubuntu' },
@@ -54,8 +43,6 @@
   function save() {
     localStorage.setItem('app-font', appFont);
     localStorage.setItem('timer-font', timerFont);
-    localStorage.setItem('language', language);
-    finalLang = language;
     document.documentElement.style.setProperty('--app-font', appFont);
     document.documentElement.style.setProperty('--timer-font', timerFont);
 
@@ -73,10 +60,6 @@
     appFont = DEFAULT_APP_FONT;
     timerFont = DEFAULT_TIMER_FONT;
     save();
-  }
-
-  function setLanguage() {
-    $globalLang = language;
   }
 
   function checkUpdate() {
@@ -116,8 +99,8 @@
           text: $localLang.SETTINGS.updateAvailableText,
           fixed: true,
           actions: [
-            { text: $localLang.global.cancel, callback: () => {} },
-            { text: $localLang.global.update, callback: updateNow },
+            { text: $localLang.global.cancel, callback: () => {}, color: 'alternative' },
+            { text: $localLang.global.update, callback: updateNow, color: 'purple' },
           ],
           key: randomUUID(),
           icon: CubeDBICON,
@@ -163,15 +146,17 @@
   }
 
   onMount(() => {
+    updateDisplays();
     itv = setInterval(() => {
       dTime = Math.random() * 20000;
     }, 2000);
   });    
 
   onDestroy(() => {
-    $globalLang = finalLang;
     clearInterval(itv);
-  }); 
+  });
+
+  $: $localLang && updateDisplays();
 </script>
 
 <Card class="mx-auto w-full max-w-4xl mt-8">
@@ -208,47 +193,49 @@
       </div>
     </TabItem>
 
-    <TabItem activeClasses="text-yellow-500 p-4 border-b-2 border-b-yellow-500">
-      <div slot="title" class="flex items-center gap-2">
-        <ScreenIcon size="1.2rem"/> { $localLang.SETTINGS.screen }
-      </div>
+    {#if dataService.isElectron }
+      <TabItem activeClasses="text-yellow-500 p-4 border-b-2 border-b-yellow-500">
+        <div slot="title" class="flex items-center gap-2">
+          <ScreenIcon size="1.2rem"/> { $localLang.SETTINGS.screen }
+        </div>
 
-      <!-- Displays -->
-      <div class="flex flex-col items-center justify-center gap-4">
-        <div class="flex justify-center gap-2">
-          {#each displays as display}
-            <Button color="alternative" class="gap-2" on:click={ () => useDisplay(display.id) }>
-              <ScreenIcon size="1.2rem"/>
-              { display.label }
+        <!-- Displays -->
+        <div class="flex flex-col items-center justify-center gap-4">
+          <div class="flex justify-center gap-2">
+            {#each displays as display}
+              <Button color="alternative" class="gap-2" on:click={ () => useDisplay(display.id) }>
+                <ScreenIcon size="1.2rem"/>
+                { display.label }
+              </Button>
+            {/each}
+          </div>
+      
+          <div>
+            <Button on:click={ updateDisplays }>{ $localLang.global.update }</Button>
+          </div>
+        </div>
+      </TabItem>
+
+      <TabItem activeClasses="text-yellow-500 p-4 border-b-2 border-b-yellow-500">
+        <div slot="title" class="flex items-center gap-2">
+          <UpdateIcon size="1.2rem"/> { $localLang.SETTINGS.update }
+        </div>
+
+        <!-- Updates -->
+        <div class="flex items-center justify-center gap-4">
+          <div class="flex items-center justify-center gap-2">
+            { $localLang.SETTINGS.version }: <mark>{ $version }</mark>
+            <Button on:click={ () => canCheckUpdate && checkUpdate() }>
+              {#if !canCheckUpdate}
+                <Spinner size="4" color="white"/>
+              {:else}
+                { $localLang.SETTINGS.checkUpdate }
+              {/if}
             </Button>
-          {/each}
+          </div>
         </div>
-    
-        <div>
-          <Button on:click={ updateDisplays }>{ $localLang.global.update }</Button>
-        </div>
-      </div>
-    </TabItem>
-
-    <TabItem activeClasses="text-yellow-500 p-4 border-b-2 border-b-yellow-500">
-      <div slot="title" class="flex items-center gap-2">
-        <UpdateIcon size="1.2rem"/> { $localLang.SETTINGS.update }
-      </div>
-
-      <!-- Updates -->
-      <div class="flex items-center justify-center gap-4">
-        <div class="flex items-center justify-center gap-2">
-          { $localLang.SETTINGS.version }: <mark>{ $version }</mark>
-          <Button on:click={ () => canCheckUpdate && checkUpdate() }>
-            {#if !canCheckUpdate}
-              <Spinner size="4" color="white"/>
-            {:else}
-              { $localLang.SETTINGS.checkUpdate }
-            {/if}
-          </Button>
-        </div>
-      </div>
-    </TabItem>
+      </TabItem>
+    {/if}
   </Tabs>
 
   <hr />

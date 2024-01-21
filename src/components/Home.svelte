@@ -76,7 +76,8 @@
         title: HOME.importExport,
         route: '/import-export',
         cube: '/assets/import-export.png',
-        ready: DataService.getInstance().isElectron,
+        // ready: DataService.getInstance().isElectron,
+        ready: true,
         timer: false,
       }, {
         title: HOME.settings,
@@ -95,11 +96,9 @@
   };
 
   $: $globalLang, updateTexts();
-
 </script>
 
 <main class="container-mini">
-
   <ul class="w-full grid place-items-center" class:isMobile={ $screen.isMobile }>
     {#each cards as card (card.route)}
       <li class={`text-center shadow-md rounded-md select-none cursor-pointer
@@ -112,7 +111,7 @@
           <h2 class="text-sm">{card.title}</h2>
         </Link>
       </li>
-    {/each}
+      {/each}
   </ul>
 
   <!-- <Button on:click={ () => navigate(encodeURI("/reconstructions?puzzle=square1&scramble=/ 3 / 1 / ")) }>Reconstruction</Button> -->

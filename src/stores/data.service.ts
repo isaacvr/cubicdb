@@ -4,9 +4,8 @@ import { Emitter } from '@classes/Emitter';
 import { GANInput } from '@components/timer/input-handlers/GAN';
 import { QiYiSmartTimerInput } from '@components/timer/input-handlers/QY-Timer';
 import type { Algorithm, Solve, Session, Tutorial, Sheet, CubeEvent, IPC, ContestPDFOptions, UpdateCommand, PDFOptions } from '@interfaces';
-import { ElectronAdaptor, BrowserAdaptor } from '@storage/index';
+import { ElectronAdaptor, IndexedDBAdaptor } from '@storage/index';
 import type { Display } from 'electron';
-import { writable } from 'svelte/store';
 
 type DownloadEvent = 'download-progress' | 'update-downloaded';
 type BluetoothEvent = 'bluetooth';
@@ -32,8 +31,7 @@ export class DataService {
       this.ipc = new ElectronAdaptor();
       this._isElectron = true;
     } else {
-      // this.ipc = new NoopAdaptor();
-      this.ipc = new BrowserAdaptor();
+      this.ipc = new IndexedDBAdaptor();
       this._isElectron = false;
     }
 
