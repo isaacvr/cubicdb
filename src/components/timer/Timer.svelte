@@ -548,7 +548,7 @@
         }
 
         let ss = localStorage.getItem('session');
-        let currentSession = sessions.find(s => s._id === ss);
+        let currentSession = sessions.find(s => s._id.toString() === ss);
         $session = currentSession || sessions[0];
 
         updateSessionsIcons();

@@ -2,8 +2,8 @@ import type { Algorithm, AlgorithmOptions, CubeEvent, IPC, ContestPDFOptions, Se
 import algs from '../database/algs.json';
 import { clone } from "@helpers/object";
 import { openDB, type IDBPDatabase } from "idb";
-import { randomUUID } from "@helpers/strings";
 
+const DBName = 'CubeDB-data';
 const AlgorithmStore = 'Algorithms';
 const TutorialStore = 'Tutorials';
 const SessionStore = 'Sessions';
@@ -14,38 +14,37 @@ const dbVersion = 1;
 const debug = true;
 
 interface ICacheImg {
-  _id: string;
+  hash: string;
   img: string;
+}
+
+interface DATABASE {
+
 }
 
 export class IndexedDBAdaptor implements IPC {
   cache: Map<string, string>;
-  algDB: IDBPDatabase<Algorithm> | null;
-  tutDB: IDBPDatabase<Tutorial> | null;
-  sesDB: IDBPDatabase<Session> | null;
-  solDB: IDBPDatabase<Solve> | null;
-  cntDB: IDBPDatabase<CubeEvent> | null;
-  cacheDB: IDBPDatabase<ICacheImg> | null;
+  DB: IDBPDatabase<DATABASE> | null;
+  // tutDB: IDBPDatabase<Tutorial> | null;
+  // sesDB: IDBPDatabase<Session> | null;
+  // solDB: IDBPDatabase<Solve> | null;
+  // cntDB: IDBPDatabase<CubeEvent> | null;
+  // cacheDB: IDBPDatabase<ICacheImg> | null;
   private initialized = false;
   private isInit = false;
-  private providePutKey = true;
+  // private providePutKey = false;
 
   constructor() {
     this.cache = new Map<string, string>();
-    this.algDB = null;
-    this.tutDB = null;
-    this.sesDB = null;
-    this.solDB = null;
-    this.cntDB = null;
-    this.cacheDB = null;
+    this.DB = null;
     
     // Check for the browser since they differ from indexedDB put implementation
-    const browsers = [ 'Firefox', 'Edg' ];
-    const UA = navigator.userAgent;
+    // const browsers = [ 'Firefox', 'Edg' ];
+    // const UA = navigator.userAgent;
 
-    if ( browsers.some(b => UA.includes(b)) ) {
-      this.providePutKey = false;
-    }
+    // if ( browsers.some(b => UA.includes(b)) ) {
+    //   this.providePutKey = false;
+    // }
 
     this.init();
   }
@@ -65,42 +64,47 @@ export class IndexedDBAdaptor implements IPC {
       });
       return;
     }
-    
-    // ALGS
-    try {
-      this.algDB = await openDB(AlgorithmStore, dbVersion, { upgrade(db) {
-        !db.objectStoreNames.contains(AlgorithmStore) && db.createObjectStore(AlgorithmStore, { keyPath: '_id', autoIncrement: false });
-        debug && console.log('OK: ', AlgorithmStore);
-      }});
-    } catch(err) {
-      console.log("ERROR: ", err);
-    }
 
-    // TUTS
     try {
-      this.tutDB = await openDB(TutorialStore, dbVersion, { upgrade(db) {
-        !db.objectStoreNames.contains(TutorialStore) && db.createObjectStore(TutorialStore, { keyPath: '_id', autoIncrement: false });
+      this.DB = await openDB(DBName, dbVersion, { upgrade: async db => {
+        // Tutorials
+        !db.objectStoreNames.contains(TutorialStore) && db.createObjectStore(TutorialStore, { keyPath: '_id', autoIncrement: true });
         debug && console.log('OK: ', TutorialStore);
-      }});
-    } catch(err) {
-      console.log("ERROR: ", err);
-    }
 
-    // SESS
-    try {
-      this.sesDB = await openDB(SessionStore, dbVersion, { upgrade(db) {
-        !db.objectStoreNames.contains(SessionStore) && db.createObjectStore(SessionStore, { keyPath: '_id', autoIncrement: false });
+        // Solves
+        !db.objectStoreNames.contains(SolveStore) && db.createObjectStore(SolveStore, { keyPath: '_id', autoIncrement: true });
+        debug && console.log('OK: ', SolveStore);
+
+        // Contests
+        !db.objectStoreNames.contains(ContestStore) && db.createObjectStore(ContestStore, { keyPath: '_id', autoIncrement: true });
+        debug && console.log('OK: ', ContestStore);
+
+        // Cache
+        !db.objectStoreNames.contains(CacheStore) && db.createObjectStore(CacheStore, { keyPath: '_id', autoIncrement: true });
+        debug && console.log('OK: ', CacheStore);
+
+        // Sessions
+        !db.objectStoreNames.contains(SessionStore) && db.createObjectStore(SessionStore, { keyPath: '_id', autoIncrement: true });
         debug && console.log('OK: ', SessionStore);
       }});
+    
+      // Load Cache to RAM
+      this.cache.clear();
+      let allRecords: ICacheImg[] = await this.DB.getAll(CacheStore);
+
+      for (let i = 0, maxi = allRecords.length; i < maxi; i += 1) {
+        let { hash, img } = allRecords[i];
+        this.cache.set( hash, img );
+      }
+
+      debug && console.log(`Loaded ${allRecords.length} records from cache`);
 
       // Ensure at least one session
-      if ( (await this.sesDB.getAll(SessionStore)).length === 0 ) {
-        const tx = this.sesDB.transaction(SessionStore, 'readwrite');
-        const id = randomUUID();
+      if ( (await this.DB.getAll(SessionStore)).length === 0 ) {
+        const tx = this.DB.transaction(SessionStore, 'readwrite');
 
-        await Promise.all([
+        let res = await Promise.all([
           tx.store.put(<Session>{
-            _id: id,
             name: "Session 1",
             settings: {
               hasInspection: true,
@@ -115,52 +119,10 @@ export class IndexedDBAdaptor implements IPC {
               showBackFace: false,
               sessionType: 'mixed'
             }
-          }, this.providePutKey ? id : undefined ),
+          }),
           tx.done
         ]);
       }
-    } catch(err) {
-      console.log("ERROR: ", err);
-    }
-
-    // SOLS
-    try {
-      this.solDB = await openDB(SolveStore, dbVersion, { upgrade(db) {
-        !db.objectStoreNames.contains(SolveStore) && db.createObjectStore(SolveStore, { keyPath: '_id', autoIncrement: false });
-        debug && console.log('OK: ', SolveStore);
-      }});
-    } catch(err) {
-      console.log("ERROR: ", err);
-    }
-
-    // CONT
-    try {
-      this.cntDB = await openDB(ContestStore, dbVersion, { upgrade(db) {
-        !db.objectStoreNames.contains(ContestStore) && db.createObjectStore(ContestStore, { keyPath: '_id', autoIncrement: false });
-        debug && console.log('OK: ', ContestStore);
-      }});
-    } catch(err) {
-      console.log("ERROR: ", err);
-    }
-    
-    // CACHE
-    try {
-      this.cacheDB = await openDB(CacheStore, dbVersion, { upgrade(db) {
-        !db.objectStoreNames.contains(CacheStore) && db.createObjectStore(CacheStore, { keyPath: '_id', autoIncrement: false });
-        debug && console.log('OK: ', CacheStore);
-      }});
-
-      this.cache.clear();
-
-      let allRecords: ICacheImg[] = await this.cacheDB.getAll(CacheStore);
-
-      for (let i = 0, maxi = allRecords.length; i < maxi; i += 1) {
-        let { _id, img } = allRecords[i];
-        this.cache.set( _id, img );
-      }
-
-      debug && console.log(`Loaded ${allRecords.length} records from cache`);
-
     } catch(err) {
       console.log("ERROR: ", err);
     }
@@ -200,63 +162,70 @@ export class IndexedDBAdaptor implements IPC {
   // Solves
   async getSolves() {
     await this.init();
-    if ( !this.solDB ) return [];
-    return this.solDB.getAll(SolveStore) as Promise<Solve[]>;
+    if ( !this.DB ) return [];
+    return this.DB.getAll(SolveStore) as Promise<Solve[]>;
   }
   
   async addSolve(s: Solve) {
     await this.init();
-    if ( !this.solDB ) return Promise.resolve(s);
+    if ( !this.DB ) return Promise.resolve(s);
 
-    const tx = this.solDB.transaction(SolveStore, 'readwrite');
+    const tx = this.DB.transaction(SolveStore, 'readwrite');
     const sv = clone(s);
-    sv._id = randomUUID();
+    delete sv._id;
 
-    await Promise.all([
-      tx.store.put(sv, this.providePutKey ? sv._id : undefined ),
+    let res = await Promise.all([
+      // tx.store.put(sv, this.providePutKey ? sv._id : undefined ),
+      tx.store.put(sv),
       tx.done
     ]);
+
+    sv._id = res[0];
 
     return sv;
   }
 
   async addSolves(s: Solve[]) {
     await this.init();
-    if ( !this.solDB ) return Promise.resolve(s);
+    if ( !this.DB ) return Promise.resolve(s);
 
     let ss = s.map(sv => {
-      const id = randomUUID();
-      
       const res: Solve = clone(sv);
-      res._id = id;
+      delete res._id;
+
       return res;
     });
 
-    const tx = this.solDB.transaction(SolveStore, 'readwrite');
+    const tx = this.DB.transaction(SolveStore, 'readwrite');
 
-    await Promise.all([
-      ...ss.map(sv => tx.store.put(sv, this.providePutKey ? sv._id : undefined )),
+    let res = await Promise.all([
+      // ...ss.map(sv => tx.store.put(sv, this.providePutKey ? sv._id : undefined )),
+      ...ss.map(sv => tx.store.put(sv)),
       tx.done
     ]);
+
+    res.pop();
+    res.forEach((id, p) => ss[p]._id = id);
 
     return ss;
   }
 
   async updateSolve(s: Solve) {
     await this.init();
-    if ( !this.solDB ) return Promise.resolve(s);
+    if ( !this.DB ) return Promise.resolve(s);
 
-    let rs: Solve | undefined = await this.solDB.get(SolveStore, s._id);
+    let rs: Solve | undefined = await this.DB.get(SolveStore, s._id);
 
     if ( rs ) {
       rs.comments = s.comments;
       rs.penalty = s.penalty;
       rs.time = s.time;
 
-      const tx = this.solDB.transaction(SolveStore, 'readwrite');
+      const tx = this.DB.transaction(SolveStore, 'readwrite');
       
       await Promise.all([
-        tx.store.put(rs, this.providePutKey ? rs._id : undefined ),
+        // tx.store.put(rs, this.providePutKey ? rs._id : undefined ),
+        tx.store.put(rs),
         tx.done
       ]);
 
@@ -268,9 +237,9 @@ export class IndexedDBAdaptor implements IPC {
 
   async removeSolves(s: Solve[]) {
     await this.init();
-    if ( !this.solDB ) return Promise.resolve(s);
+    if ( !this.DB ) return Promise.resolve(s);
 
-    const tx = this.solDB.transaction(SolveStore, 'readwrite');
+    const tx = this.DB.transaction(SolveStore, 'readwrite');
     
     await Promise.all([
       ...s.map(sv => tx.store.delete(sv._id)),
@@ -283,46 +252,47 @@ export class IndexedDBAdaptor implements IPC {
   // Sessions
   async getSessions() {
     await this.init();
-    if ( !this.sesDB ) return [];
+    if ( !this.DB ) return [];
 
-    return this.sesDB.getAll(SessionStore) as Promise<Session[]>;
+    return this.DB.getAll(SessionStore) as Promise<Session[]>;
   }
 
   async addSession(s: Session) {
     await this.init();
-    if ( !this.sesDB ) return Promise.resolve(s);
+    if ( !this.DB ) return Promise.resolve(s);
 
-    const tx = this.sesDB.transaction(SessionStore, 'readwrite');
-    const id = randomUUID();
+    const tx = this.DB.transaction(SessionStore, 'readwrite');
     
-    const ss: Session = {
-      _id: id,
+    const ss = {
       name: s.name,
       settings: s.settings,
       tName: s.tName || ''
     };
 
-    await Promise.all([
-      tx.store.put(ss, this.providePutKey ? id : undefined ),
+    let res = await Promise.all([
+      // tx.store.put(ss, this.providePutKey ? id : undefined ),
+      tx.store.put(ss),
       tx.done
     ]);
 
-    return ss;
+    s._id = res[0] as string;
+
+    return s;
   }
 
   async removeSession(s: Session) {
     await this.init();
-    if ( !this.sesDB || !this.solDB ) return Promise.resolve(s);
+    if ( !this.DB || !this.DB ) return Promise.resolve(s);
 
-    const allSolves = (await this.solDB.getAll(SolveStore)).filter((sv: Solve) => sv.session === s._id);
-    const stx = this.solDB.transaction(SolveStore, 'readwrite');
+    const allSolves = (await this.DB.getAll(SolveStore)).filter((sv: Solve) => sv.session === s._id);
+    const stx = this.DB.transaction(SolveStore, 'readwrite');
 
     await Promise.all([
       ...allSolves.map(sv => stx.store.delete(sv._id)),
       stx.done
     ]);
 
-    const tx = this.sesDB.transaction(SessionStore, 'readwrite');
+    const tx = this.DB.transaction(SessionStore, 'readwrite');
     
     await Promise.all([
       tx.store.delete(s._id),
@@ -334,17 +304,18 @@ export class IndexedDBAdaptor implements IPC {
   
   async renameSession(s: Session) {
     await this.init();
-    if ( !this.sesDB ) return Promise.resolve(s);
+    if ( !this.DB ) return Promise.resolve(s);
 
-    let rs: Session | undefined = await this.sesDB.get(SessionStore, s._id);
+    let rs: Session | undefined = await this.DB.get(SessionStore, s._id);
 
     if ( rs ) {
       rs.name = s.name;
 
-      const tx = this.sesDB.transaction(SessionStore, 'readwrite');
+      const tx = this.DB.transaction(SessionStore, 'readwrite');
       
       await Promise.all([
-        tx.store.put(rs, this.providePutKey ? rs._id : undefined ),
+        // tx.store.put(rs, this.providePutKey ? rs._id : undefined ),
+        tx.store.put(rs),
         tx.done
       ]);
 
@@ -356,18 +327,19 @@ export class IndexedDBAdaptor implements IPC {
   
   async updateSession(s: Session) {
     await this.init();
-    if ( !this.sesDB ) return Promise.resolve(s);
+    if ( !this.DB ) return Promise.resolve(s);
 
-    let rs: Session | undefined = await this.sesDB.get(SessionStore, s._id);
+    let rs: Session | undefined = await this.DB.get(SessionStore, s._id);
 
     if ( rs ) {
       rs.name = s.name;
       rs.settings = s.settings;
 
-      const tx = this.sesDB.transaction(SessionStore, 'readwrite');
+      const tx = this.DB.transaction(SessionStore, 'readwrite');
       
       await Promise.all([
-        tx.store.put(rs, this.providePutKey ? rs._id : undefined ),
+        // tx.store.put(rs, this.providePutKey ? rs._id : undefined ),
+        tx.store.put(rs),
         tx.done
       ]);
 
@@ -423,14 +395,15 @@ export class IndexedDBAdaptor implements IPC {
 
   async cacheSaveImage(hash: string, data: string): Promise<void> {
     await this.init();
-    if ( !this.cacheDB ) return;
+    if ( !this.DB ) return;
 
-    const tx = await this.cacheDB.transaction(CacheStore, 'readwrite');
+    const tx = this.DB.transaction(CacheStore, 'readwrite');
     
     await Promise.all([
       tx.store.put(<ICacheImg>{
-        _id: hash, img: data
-      }, this.providePutKey ? hash : undefined ),
+        hash, img: data
+      // }, this.providePutKey ? hash : undefined ),
+      }),
       tx.done
     ]);
     
