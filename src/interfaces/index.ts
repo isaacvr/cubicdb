@@ -317,7 +317,6 @@ export interface TimerContext {
   updateStatistics: (inc ?: boolean) => any;
   initScrambler: (scr?: string, _mode ?: string) => any;
   selectedGroup: () => any;
-  setConfigFromSolve: (s: Solve) => any;
   selectSolve: (s: Solve) => any;
   selectSolveById: (id: string, n: number) => any;
   editSolve: (s: Solve) => any;

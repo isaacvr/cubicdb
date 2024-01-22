@@ -297,9 +297,9 @@
     // fromFacelet('UBBLURBBRFDUURDDDLDUURFFFULRRBFDFLLDLURDLFFLDRRBLBBFBU');
   });
 
-  let context: TimerContext = {
+  let context = {
     solves, AoX, stats, session
-  } as TimerContext;
+  } as unknown as TimerContext;
 
   $: updateMetrics(metricString, selectedMetric);
 </script>
@@ -357,15 +357,10 @@
   {/if}
 </div>
 
-{#if checkMode(selectedOption, ["timer-only", "scramble-only"])}
-  <Timer
-    bind:this={timer}
-    timerOnly={selectedOption === "timer-only"}
-    scrambleOnly={selectedOption === "scramble-only"}
-    useMode={ $mode[1] }
-    useLen={ $mode[2] }
-    useProb={ $prob }
-  />
+{#if checkMode(selectedOption, ["timer-only"])}
+  <Timer bind:this={timer} timerOnly={ true } />
+{:else if checkMode(selectedOption, ["scramble-only"])}
+  <Timer bind:this={timer} scrambleOnly={true} useMode={ $mode[1] } useLen={ $mode[2] } useProb={ $prob } />
 {:else if checkMode(selectedOption, ["scramble-batch"])}
   {#if scrambleBatch.length}
     <div

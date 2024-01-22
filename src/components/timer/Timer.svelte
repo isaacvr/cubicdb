@@ -47,7 +47,6 @@
   import { Button, Input, Modal, Tooltip } from 'flowbite-svelte';
   import WcaCategory from '@components/wca/WCACategory.svelte';
   import { isBetween } from '@helpers/math';
-  import { identifyPuzzle } from '../import-export/common';
 
   let MENU: SCRAMBLE_MENU[] = getLanguage($globalLang).MENU;
   
@@ -121,7 +120,7 @@
   let hint = writable<boolean>();
   let cross = writable<string>();
   let xcross = writable<string>();
-  let preview = writable<string>(PX_IMAGE);
+  let preview = writable<string>();
   let prob = writable<number>();
   let isRunning = writable<boolean>(false);
   let selected = writable<number>(0);
@@ -135,10 +134,6 @@
   let confetti = new JSConfetti();
   
   $: $isRunning = $state === TimerState.INSPECTION || $state === TimerState.RUNNING;
-
-  function restartStats() {
-    $stats = INITIAL_STATISTICS;
-  }
 
   function selectSolve(s: Solve) {
     s.selected = !s.selected;
@@ -166,17 +161,7 @@
     }
   }
 
-  function setConfigFromSolve(s: Solve, rescramble: boolean = true) {
-    $group = s.group || 0;
-    let menu = MENU[ $group ];
-    modes = menu[1];
-    let fModes = modes.filter(m => m[1] === s.mode);
-    $mode = fModes.length ? fModes[0] : modes[0];
-    $prob = s.prob || -1;
-    rescramble && selectedFilter();
-  }
-
-  function updateStatistics(inc ?: boolean) {
+  async function updateStatistics(inc ?: boolean) {
     let st = getUpdatedStatistics($stats, $solves, $session, $AON, inc);
     $stats = st.stats;
     $STATS_WINDOW = st.window;
@@ -229,7 +214,7 @@
   function setSolves(rescramble: boolean = true) {
     sortSolves();
     updateStatistics(true);
-    rescramble && initScrambler();
+    rescramble && setTimeout(initScrambler, 10);
   }
 
   function editSessions() {
@@ -273,7 +258,7 @@
     e.stopPropagation();
   }
 
-  function setPreview(img: string, date: number, type: any) {
+  function setPreview(img: string, date: number) {
     if ( date > lastPreview ) {
       $preview = img;
       lastPreview = date;
@@ -288,7 +273,7 @@
     } as PuzzleOptions, false, false);
 
     let date = Date.now();
-    setPreview((await pGenerateCubeBundle([cb], 500))[0], date, cb.type);
+    setPreview((await pGenerateCubeBundle([cb], 500))[0], date);
   }
 
   // For testing only!!
@@ -316,47 +301,52 @@
   }
 
   export function initScrambler(scr?: string, _mode ?: string, _prob ?: number) {
-    if ( !mounted ) return;
+    setTimeout(async () => {
+      if ( !mounted ) return;
 
-    if ( !$mode ) {
-      $mode = MENU[ $group || 0 ][1][0];
-    }
+      if ( !$mode ) {
+        $mode = MENU[ $group || 0 ][1][0];
+      }
 
-    let md = useMode || _mode || $mode[1];
-    let len = useLen || $mode[2];
-    let s = useScramble || scr;
-    let pb = useProb != -1 ? useProb : (_prob != -1 && typeof _prob === 'number') ? _prob : $prob;
-    
-    if ( !genScramble ) {
-      $scramble = scr || useScramble;
-    } else {
-      $scramble = (s) ? s : (all.pScramble.scramblers.get(md) || (() => '')).apply(null, [
-        md, Math.abs(len), pb < 0 ? undefined : pb
-      ]).replace(/\\n/g, '<br>').trim();
-    }
+      $scramble = '';
 
-    if ( isNNN(md) ) {
-      $scramble = ScrambleParser.parseNNNString($scramble);
-    }
+      let md = useMode || _mode || $mode[1];
+      let len = useLen || $mode[2];
+      let s = useScramble || scr;
+      let pb = useProb != -1 ? useProb : (_prob != -1 && typeof _prob === 'number') ? _prob : $prob;
+      
+      if ( !genScramble ) {
+        $scramble = scr || useScramble;
+      } else {
+        $scramble = (s) ? s : (all.pScramble.scramblers.get(md) || (() => '')).apply(null, [
+          md, Math.abs(len), pb < 0 ? undefined : pb
+        ]).replace(/\\n/g, '<br>').trim();
+      }
 
-    if ( DIALOG_MODES.indexOf(md) > -1 ) {
-      $cross = solve_cross($scramble).map(e => e.map(e1 => e1.trim()).join(' '))[0];
-      $xcross = solve_xcross($scramble, 0).map(e => e.trim()).join(' ');
-      // $hintDialog = true;
-    } else {
-      $cross = "";
-      $xcross = "";
-      $hint = false;
-      // $hintDialog = false;
-    }
+      if ( isNNN(md) ) {
+        $scramble = ScrambleParser.parseNNNString($scramble);
+      }
 
-    dataService.scramble($scramble);
+      if ( DIALOG_MODES.indexOf(md) > -1 ) {
+        $cross = solve_cross($scramble).map(e => e.map(e1 => e1.trim()).join(' '))[0];
+        $xcross = solve_xcross($scramble, 0).map(e => e.trim()).join(' ');
+        // $hintDialog = true;
+      } else {
+        $cross = "";
+        $xcross = "";
+        $hint = false;
+        // $hintDialog = false;
+      }
 
-    if ( all.pScramble.options.has(md) && $session?.settings?.genImage ) {
-      updateImage(md);
-    } else {
-      setPreview(PX_IMAGE, Date.now(), '-');
-    }
+      // emit scramble for iCarry and other stuffs
+      dataService.scramble($scramble);
+
+      if ( all.pScramble.options.has(md) && $session?.settings?.genImage ) {
+        updateImage(md);
+      } else {
+        setPreview('', Date.now());
+      }
+    }, 10);
   }
 
   function selectedFilter(rescramble = true) {
@@ -384,7 +374,6 @@
   function selectedSession() {
     localStorage.setItem('session', $session._id);
     
-    // if ( $session.settings.sessionType != 'mixed' ) {
     let targetMode = $session.settings.mode || '333';
     let fnd = false;
 
@@ -401,9 +390,8 @@
     if ( !fnd ) {
       $mode = MENU[0][1][0];
     }
-    // }
 
-    restartStats();
+    $stats = INITIAL_STATISTICS;
     setSolves();
   }
 
@@ -571,13 +559,13 @@
         $session = currentSession || sessions[0];
 
         updateSessionsIcons();
-        selectedSession();
+        setTimeout(selectedSession, 10);
         sortSessions();
       });
 
       dataService.getSolves().then((sv) => {
         $allSolves = sv;
-        setSolves();
+        setSolves(false);
       });
     }
   });
@@ -587,13 +575,12 @@
     group, mode, hintDialog, hint, cross, xcross, preview, prob, isRunning, selected,
     bluetoothList, bluetoothStatus, STATS_WINDOW,
     setSolves, sortSolves, updateSolves, handleUpdateSession, handleUpdateSolve, updateStatistics,
-    initScrambler, selectedGroup, setConfigFromSolve, selectSolve, selectSolveById, editSolve,
+    initScrambler, selectedGroup, selectSolve, selectSolveById, editSolve,
     handleRemoveSolves, editSessions
   };
 
-  $: (useScramble || useMode || useProb) ? initScrambler(useScramble, useMode, useProb) : initScrambler();
-  $: enableKeyboard = !scrambleOnly;
-
+  $: { (useScramble || useMode || useProb != -1) && initScrambler(useScramble, useMode, useProb) }
+  $: { enableKeyboard = !scrambleOnly; }
 </script>
 
 <svelte:window on:keyup={ handleKeyUp }></svelte:window>
@@ -618,7 +605,7 @@
       <Select
         placeholder={ $localLang.TIMER.selectSession }
         value={ $session } items={ sessions } label={ (s) => (s || {}).name } transform={ e => e }
-        onChange={ (g) => { $session = g; selectedSession(); } }
+        onChange={ (g) => { $session = g; setTimeout(selectedSession, 10); } }
       />
 
       {#if $tab === 0 && ($session.settings.sessionType || 'mixed') === 'mixed'}

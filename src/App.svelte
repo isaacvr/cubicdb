@@ -85,7 +85,7 @@
 
   onMount(() => {
     handleResize();
-    checkUpdates();
+    // checkUpdates();
     
     nSub = notService.notificationSub.subscribe((v) => {
       notifications = v;

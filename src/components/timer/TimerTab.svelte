@@ -21,12 +21,9 @@
   import TuneIcon from '@icons/Tune.svelte';
 
   /// Components
-  // import Modal from '@components/Modal.svelte';
-  // import Button from '@components/material/Button.svelte';
   import TextArea from '@components/material/TextArea.svelte';
   import Checkbox from '@components/material/Checkbox.svelte';
   import Input from '@components/material/Input.svelte';
-  import Toggle from '@components/material/Toggle.svelte';
   import Select from '@components/material/Select.svelte';
 
   /// Helpers
@@ -48,7 +45,7 @@
   import { statsReplaceId } from '@helpers/statistics';
   import StatsProgress from './StatsProgress.svelte';
   import { screen } from '@stores/screen.store';
-  import { Button, Modal, Popover, Radio, Range, Spinner } from 'flowbite-svelte';
+  import { Button, Modal, Popover, Range, Spinner, TextPlaceholder } from 'flowbite-svelte';
   import Tooltip from '@components/material/Tooltip.svelte';
   import { CubeDBICON, STEP_COLORS } from '@constants';
 
@@ -67,8 +64,7 @@
     state, ready, tab, solves, allSolves, session, Ao5, stats, scramble, group, mode, hintDialog,
     hint, cross, xcross, preview, isRunning, decimals, bluetoothList,
     sortSolves, updateSolves, initScrambler, updateStatistics, selectedGroup,
-    setConfigFromSolve, editSolve, handleUpdateSession, handleUpdateSolve, handleRemoveSolves,
-    editSessions
+    editSolve, handleUpdateSolve, handleRemoveSolves, editSessions
   } = context;
 
   let timerInput = derived(session, ($s) => {
@@ -146,14 +142,6 @@
   let deviceList: string[][] = [];
   let autoConnectId: string[] = [];
 
-  /// NOTES
-  let showNotes = false;
-  let notesW = 250;
-  let notesH = 250;
-  let notesL = document.body.clientWidth - notesW - 50;
-  let notesT = (document.body.clientHeight - notesH) / 2;
-  let noteContent = "";
-
   /// MODAL
   let modal: any = null;
   let show = false;
@@ -162,7 +150,6 @@
   let closeHandler: Function = () => {};
 
   /// SCRAMBLE
-  let stateMessage: string = '...';
   let canOpenDialog = (ev: string): boolean => {
     if ( timerOnly ) {
       return [ 'settings' ].indexOf(ev) > -1;
@@ -314,8 +301,6 @@
         openDialog('old-scrambles', null, () => {});
       } else if ( code === 'KeyC' && event.ctrlKey ) {
         toClipboard();
-      } else if ( code === 'KeyN' && event.ctrlKey ) {
-        showNotes = true;
       } else if ( code === 'KeyS' && event.ctrlKey ) {
         initScrambler();
       } else if ( code === 'Comma' && event.ctrlKey ) {
@@ -348,31 +333,9 @@
   }
 
   function select(s: Solve) {
-    setConfigFromSolve(s);
     initScrambler(s.scramble);
     closeHandler();
     show = false;
-  }
-
-  let mx = 0, my = 0, cx = notesL, cy = notesT, dragging = false;
-
-  function handleMouseDown(e: MouseEvent) {
-    mx = e.clientX;
-    my = e.clientY;
-    cx = notesL;
-    cy = notesT;
-    dragging = true;
-  }
-
-  function handleMouseMove(e: MouseEvent) {
-    if ( dragging ) {
-      notesL = cx + e.clientX - mx;
-      notesT = cy + e.clientY - my;
-    }
-  }
-
-  function handleMouseUp() {
-    dragging = false;
   }
 
   function addTimeString() {
@@ -607,8 +570,8 @@
 
     navigator.mediaDevices?.addEventListener('devicechange', updateDevices);
     initInputHandler();
-    $group = 0;
-    selectedGroup();
+    // $group = 0;
+    // selectedGroup();
     updateDevices();
     dataService.on('bluetooth', bluetoothHandler);
   });
@@ -631,8 +594,6 @@
 <svelte:window
   on:keyup={ keyUp }
   on:keydown={ keyDown }
-  on:mousemove={ handleMouseMove }
-  on:mouseup={ handleMouseUp }
 ></svelte:window>
 
 <div
@@ -642,7 +603,7 @@
     <!-- Scramble -->
     <div id="scramble" class="transition-all duration-300 max-md:text-xs max-md:leading-5">
       {#if !$scramble}
-        <span> {stateMessage} </span>
+        <TextPlaceholder size="xl" class="w-full" divClass="grid gap-2 place-items-center max-h-12 overflow-hidden animate-pulse"/>
       {/if}
 
       {#if inputMethod instanceof GANInput }
@@ -653,7 +614,7 @@
             {"=> " + $recoverySequence}
           {:else}
             {#if $sequenceParts.length < 3 }
-              { stateMessage }
+              <TextPlaceholder size="xl" class="w-full" divClass="grid gap-2 place-items-center max-h-12 overflow-hidden animate-pulse"/>
             {:else}
               { $sequenceParts[0] } <mark>{ $sequenceParts[1] }</mark> { $sequenceParts[2] }
             {/if}
@@ -914,18 +875,23 @@
 
   <!-- Image -->
   {#if $session?.settings?.genImage || battle }
-    <!-- svelte-ignore a11y-no-static-element-interactions -->
     <button
       id="preview-container"
-      class="absolute bottom-2 flex items-center justify-center w-full transition-all duration-300
-        select-none bg-transparent"
+      class="absolute bottom-2 flex items-center justify-center w-full
+        transition-all duration-300 select-none bg-transparent"
       class:expanded={ prevExpanded }
       class:hide={ $isRunning || $session.settings.input === 'GAN Cube' || timerOnly }
-      on:click={() => prevExpanded = !prevExpanded }>
-      <img
-        on:dragstart|preventDefault
-        class="bottom-2 transition-all duration-300 cursor-pointer h-full object-contain"
-        src={ $preview } alt="">
+      on:click={() => prevExpanded = $preview ? !prevExpanded : false }>
+        {#if !$preview}
+          <div class="bottom-2 object-contain bg-gray-700 aspect-video h-full rounded grid place-items-center animate-pulse">
+            <svg width="48" height="48" class="text-gray-200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" fill="currentColor" viewBox="0 0 640 512">
+              <path d="M480 80C480 35.82 515.8 0 560 0C604.2 0 640 35.82 640 80C640 124.2 604.2 160 560 160C515.8 160 480 124.2 480 80zM0 456.1C0 445.6 2.964 435.3 8.551 426.4L225.3 81.01C231.9 70.42 243.5 64 256 64C268.5 64 280.1 70.42 286.8 81.01L412.7 281.7L460.9 202.7C464.1 196.1 472.2 192 480 192C487.8 192 495 196.1 499.1 202.7L631.1 419.1C636.9 428.6 640 439.7 640 450.9C640 484.6 612.6 512 578.9 512H55.91C25.03 512 .0006 486.1 .0006 456.1L0 456.1z" />
+            </svg>
+          </div>
+        {:else}
+          <img on:dragstart|preventDefault src={ $preview } alt=""
+            class="bottom-2 transition-all duration-300 cursor-pointer h-full object-contain">
+        {/if}
     </button>
   {/if}
 </div>
@@ -1103,7 +1069,7 @@
   }
   
   #scramble {
-    @apply flex items-center justify-center;
+    @apply grid place-items-center;
   }
 
   #scramble span {
@@ -1198,7 +1164,7 @@
     background-color: rgba(0, 0, 0, 0.4);
   }
 
-  #preview-container:not(.expanded) img {
+  #preview-container:not(.expanded) > :first-child {
     max-width: calc(100% - 13rem);
     margin-left: 2rem;
   }
