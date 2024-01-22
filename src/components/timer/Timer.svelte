@@ -458,6 +458,7 @@
   
         if ( ss._id === $session._id ) {
           $session = sessions[0];
+          selectedSession();
         }
 
         updateSessionsIcons();
