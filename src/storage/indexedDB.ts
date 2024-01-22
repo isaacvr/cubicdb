@@ -202,14 +202,16 @@ export class IndexedDBAdaptor implements IPC {
     return s;
   }
 
-  async removeSolves(s: Solve[]) {
+  async removeSolves(s: Solve[]): Promise<Solve[]> {
     await this.init();
-    if ( !this.DB ) return Promise.resolve(s);
+    
+    let res = s.map(s => clone(s));
+
+    if ( !this.DB ) return Promise.resolve(res);
 
     const tx = this.DB.transaction(SolveStore, 'readwrite');
-    
     await Promise.all([ ...s.map(sv => tx.store.delete(sv._id)), tx.done ]);
-    return s;
+    return res;
   }
   
   // Sessions

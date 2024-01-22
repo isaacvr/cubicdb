@@ -514,20 +514,17 @@
   }
 
   function handleRemoveSolves(ids: Solve[]) {
-    let ss = $solves;
-    let sl = ss.length;
-
-    let as = $allSolves;
+    let sl = $solves.length;
 
     for (let i = 0, maxi = ids.length; i < maxi; i += 1) {
-      let pos1 = binSearch < Solve > (ids[i], ss, (a: Solve, b: Solve) => b.date - a.date);
-      let pos2 = binSearch < Solve > (ids[i], as, (a: Solve, b: Solve) => b.date - a.date);
+      let pos1 = binSearch < Solve > (ids[i], $solves, (a: Solve, b: Solve) => b.date - a.date);
+      let pos2 = binSearch < Solve > (ids[i], $allSolves, (a: Solve, b: Solve) => b.date - a.date);
       
-      pos1 > -1 && ss.splice(pos1, 1);
-      pos2 > -1 && as.splice(pos2, 1);
+      pos1 > -1 && $solves.splice(pos1, 1);
+      pos2 > -1 && $allSolves.splice(pos2, 1);
     }
 
-    if (ss.length != sl) {
+    if ( $solves.length != sl ) {
       $stats = INITIAL_STATISTICS;
       setSolves();
     }
