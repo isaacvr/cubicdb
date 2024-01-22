@@ -229,14 +229,6 @@
   function setSolves(rescramble: boolean = true) {
     sortSolves();
     updateStatistics(true);
-
-    if ( $session.settings.sessionType === 'mixed' ) {
-      if ( $solves.length > 0 ) {
-        setConfigFromSolve($solves[0], rescramble);
-        return;
-      }
-    }
-
     rescramble && initScrambler();
   }
 
@@ -371,7 +363,11 @@
     rescramble && initScrambler();
   }
 
-  function selectedMode(rescramble = true) {
+  function selectedMode(rescramble = true, saveMode = false) {
+    if ( saveMode ) {
+      $session.settings.mode = $mode[1];
+      dataService.updateSession($session).then().catch();
+    }
     filters = all.pScramble.filters.get($mode[1]) || [];
     $prob = -1;
     selectedFilter(rescramble);
@@ -388,24 +384,24 @@
   function selectedSession() {
     localStorage.setItem('session', $session._id);
     
-    if ( $session.settings.sessionType != 'mixed' ) {
-      let targetMode = $session.settings.mode || '333';
-      let fnd = false;
+    // if ( $session.settings.sessionType != 'mixed' ) {
+    let targetMode = $session.settings.mode || '333';
+    let fnd = false;
 
-      for (let i = 0, maxi = MENU.length; i < maxi; i += 1) {
-        let md = MENU[i][1].find(m => m[1] === targetMode);
+    for (let i = 0, maxi = MENU.length; i < maxi; i += 1) {
+      let md = MENU[i][1].find(m => m[1] === targetMode);
 
-        if ( md ) {
-          $mode = md;
-          fnd = true;    
-          break;
-        }
-      }
-
-      if ( !fnd ) {
-        $mode = MENU[0][1][0];
+      if ( md ) {
+        $mode = md;
+        fnd = true;    
+        break;
       }
     }
+
+    if ( !fnd ) {
+      $mode = MENU[0][1][0];
+    }
+    // }
 
     restartStats();
     setSolves();
@@ -564,7 +560,6 @@
 
     if ( !(battle || timerOnly || scrambleOnly) ) {
       dataService.getSessions().then((_sessions) => {
-        console.log("SESSIONS: ", _sessions);
         sessions = _sessions.map(s => { s.tName = s.name; return s; });
 
         if ( sessions.length === 0 ) {
@@ -638,7 +633,7 @@
         <Select
           placeholder={ $localLang.TIMER.selectMode }
           value={ $mode } items={ modes } label={ e => e[0] } transform={ e => e }
-          onChange={ (g) => { $mode = g; selectedMode(); } } hasIcon={ groups[$group] === "WCA" ? (v) => v[1] : null }
+          onChange={ (g) => { $mode = g; selectedMode(true, true); } } hasIcon={ groups[$group] === "WCA" ? (v) => v[1] : null }
         />
       {/if}
 
