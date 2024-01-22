@@ -30,6 +30,12 @@ export const English: Language = {
     settings: 'Settings',
     downloading: 'Downloading',
     fullScreen: 'Fullscreen',
+    storage: 'Storage',
+    images: 'Images',
+    algorithms: 'Algorithms',
+    sessions: 'Sessions',
+    solves: 'Solves',
+    tutorials: 'Tutorials',
   },
   NAVBAR: {
     home: 'Home',

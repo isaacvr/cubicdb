@@ -84,8 +84,11 @@ function drawSingleClock(
   }
 }
 
-export function clockImage(cube: Puzzle, DIM: number) {
-  const canvas: any = new OffscreenCanvas(DIM * 2.2, DIM);
+export async function clockImage(cube: Puzzle, DIM: number): Promise<Blob> {
+  const canvas = document.createElement('canvas');
+  canvas.width = DIM * 2.2
+  canvas.height = DIM;
+
   const ctx: any = canvas.getContext('2d');
  
   const PINS1 = cube.p.raw[0];
@@ -99,6 +102,6 @@ export function clockImage(cube: Puzzle, DIM: number) {
 
   drawSingleClock(ctx, RAD, RAD, RAD, MAT[0], PINS2, BLACK, WHITE, GRAY);
   drawSingleClock(ctx, RAD, canvas.width - RAD, RAD, MAT[1], PINS1, WHITE, BLACK, GRAY);
-  
-  return canvas.convertToBlob();
+
+  return await new Promise((res) => canvas.toBlob(b => res(b || new Blob([])), 'image/jpg'));
 }

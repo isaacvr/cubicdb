@@ -12,7 +12,7 @@
   import { screen } from "@stores/screen.store";
   import { Button, Li, List, Span, Spinner, Tooltip } from "flowbite-svelte";
   import { CubeDBICON } from "@constants";
-    import { localLang } from "@stores/language.service";
+  import { localLang } from "@stores/language.service";
 
   const location = useLocation();
 
@@ -103,7 +103,7 @@
 
     let arr: Puzzle[] = type < 2 ? cards.map(e => e.puzzle as Puzzle ) : cases.map(e => e._puzzle as Puzzle);
 
-    pGenerateCubeBundle(arr, 500, true, true, false, true).then(res => {
+    pGenerateCubeBundle(arr, 500, true, true, false, true).then(_ => {
       cards = cards;
       cases = cases;
     })
@@ -222,7 +222,7 @@
               {#if card?.puzzle?.img}
                 <img class="w-32 h-32 object-contain" src={card.puzzle.img} alt={card.title}>
               {:else}
-                <Spinner size="6" color="white"/>
+                <Spinner size="10" color="yellow" class="m-auto"/>
               {/if}
 
               <Span class="text-base">{ card.title }</Span>
@@ -258,14 +258,14 @@
         </div>
 
         {#each cases as c}
-          <div class="row">
+          <div class="row min-h-[8rem]">
             <span class="font-bold">{ c.name }</span>
             <button class="flex items-center justify-center" on:click={ () => caseHandler(c) }>
               {#if c?._puzzle?.img}
                 <img class="puzzle-img hover:shadow-lg transition-all duration-200 cursor-pointer object-contain"
                   src={c._puzzle.img } alt="">
               {:else}
-                <Spinner size="6" color="white"/>
+                <Spinner size="10" color="white"/>
               {/if}
               
             </button>

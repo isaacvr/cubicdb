@@ -5,10 +5,12 @@ import { Vector2D } from "@classes/vector2-d";
 import { CENTER, RIGHT, UP, Vector3D } from "@classes/vector3d";
 import { map } from "@helpers/math";
 
-export function planView(cube: Puzzle, DIM: number) {
+export async function planView(cube: Puzzle, DIM: number): Promise<Blob> {
   // if ( [ 'rubik', 'skewb', 'ivy' ].indexOf(cube.type) > -1 ) {
   if ( [ 'rubik' ].indexOf(cube.type) > -1 ) {
-    let canvas: any = new OffscreenCanvas(DIM, DIM);
+    let canvas = document.createElement('canvas');
+    canvas.width = DIM;
+    canvas.height = DIM;
     let ctx: any = canvas.getContext('2d');
     const PI_2 = Math.PI / 2;
     const order = cube.order[0];
@@ -176,7 +178,7 @@ export function planView(cube: Puzzle, DIM: number) {
 
     }
 
-    return canvas.convertToBlob();
+    return await new Promise((res) => canvas.toBlob(b => res(b || new Blob([])), 'image/jpg'));
   }
 
   return new Blob([]);

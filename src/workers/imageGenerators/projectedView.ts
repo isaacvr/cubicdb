@@ -7,8 +7,8 @@ import { BACK, CENTER, DOWN, FRONT, LEFT, RIGHT, UP, Vector3D } from "@classes/v
 import { CubeMode } from "@constants";
 import { map } from "@helpers/math";
 
-export function projectedView(cube: Puzzle, DIM: number) {
-  const canvas: any = new OffscreenCanvas(DIM * 4 / 2, DIM * 3 / 2);
+export async function projectedView(cube: Puzzle, DIM: number): Promise<Blob> {
+  const canvas = document.createElement('canvas');
   const ctx: any = canvas.getContext('2d');
 
   let W = DIM * 4 / 2;
@@ -338,5 +338,5 @@ export function projectedView(cube: Puzzle, DIM: number) {
     ctx.fillText("F", LX, LY * 1.75);
   }
 
-  return canvas.convertToBlob();
+  return await new Promise((res) => canvas.toBlob(b => res(b || new Blob([])), 'image/jpg'));
 }

@@ -419,6 +419,14 @@ export interface AlgorithmOptions {
   path: string;
 }
 
+export interface IStorageInfo {
+  cache: number;
+  tutorials: number;
+  algorithms: number;
+  solves: number;
+  sessions: number;
+}
+
 export interface IPC {
   addDownloadProgressListener: (cb: AnyCallback) => any;
   addDownloadDoneListener: (cb: AnyCallback) => any;
@@ -474,6 +482,8 @@ export interface IPC {
   cacheGetImage: (hash: string) => Promise<string>;
   cacheGetImageBundle: (hashes: string[]) => Promise<string[]>;
   cacheSaveImage: (hash: string, data: string) => Promise<void>;
+  clearCache: (db: ICacheDB) => Promise<void>;
+  getStorageInfo: () => Promise<IStorageInfo>;
 
   getAllDisplays: () => Promise<Display[]>;
   useDisplay: (id: number) => Promise<void>;
@@ -613,6 +623,12 @@ export interface Language {
     settings: string;
     downloading: string;
     fullScreen: string;
+    storage: string;
+    images: string;
+    algorithms: string;
+    sessions: string;
+    solves: string;
+    tutorials: string;
   }
   NAVBAR: {
     home: string;
@@ -918,3 +934,5 @@ export interface IReconstruction {
 
 export type Scrambler = '222so' | '333' | '333fm' | '333ni' | 'r3ni' | '333oh' | '444bld' | '444wca'
   | '555wca' | '555bld' | '666wca' | '777wca' | 'clkwca' | 'mgmp' | 'pyrso' | 'skbso' | 'sqrs';
+
+export type ICacheDB = 'Cache' | 'Algorithms' | 'Sessions' | 'Solves' | 'Tutorials';

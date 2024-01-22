@@ -8,13 +8,16 @@
   import { timer } from "@helpers/timer";
   import type { Display } from "electron";
   import { CubeDBICON } from "@constants";
-  import { Button, Card, Heading, Spinner, TabItem, Tabs } from "flowbite-svelte";
+  import { Button, Card, Heading, Span, Spinner, TabItem, Table, TableBody, TableBodyCell, TableBodyRow, Tabs } from "flowbite-svelte";
+  import { localLang } from "@stores/language.service";
   
   // ICONS
   import ScreenIcon from '@icons/Monitor.svelte';
   import TextIcon from '@icons/Text.svelte';
   import UpdateIcon from '@icons/Update.svelte';
-  import { localLang } from "@stores/language.service";
+  import StorageIcon from '@icons/Harddisk.svelte';
+  import type { ICacheDB, IStorageInfo } from "@interfaces";
+  import { byteToString } from "@helpers/math";
 
   const notService = NotificationService.getInstance();
 
@@ -39,6 +42,9 @@
   let dTime = 10587;
   let itv: NodeJS.Timer;
   let displays: Display[] = [];
+  let storage: IStorageInfo = {
+    algorithms: 0, cache: 0, sessions: 0, solves: 0, tutorials: 0
+  };
   
   function save() {
     localStorage.setItem('app-font', appFont);
@@ -145,8 +151,23 @@
     dataService.useDisplay(id);
   }
 
+  async function updateStorage() {
+    try {
+      storage = await dataService.getStorageInfo();
+    } catch {}
+  }
+
+  async function clearCache(db: ICacheDB) {
+    try {
+      await dataService.clearCache(db);
+      await updateStorage();
+    } catch{}
+  }
+
   onMount(() => {
     updateDisplays();
+    updateStorage();
+
     itv = setInterval(() => {
       dTime = Math.random() * 20000;
     }, 2000);
@@ -236,6 +257,39 @@
         </div>
       </TabItem>
     {/if}
+
+   <TabItem activeClasses="text-yellow-500 p-4 border-b-2 border-b-yellow-500">
+      <div slot="title" class="flex items-center gap-2">
+        <StorageIcon size="1.2rem"/> { $localLang.global.storage }
+      </div>
+
+      <Span class="flex justify-center text-lg">
+        { $localLang.global.storage }: { byteToString( Object.entries(storage).reduce((acc, e) => acc + e[1], 0) ) }
+      </Span>
+
+      <Table striped shadow>
+        <TableBody>
+          {#each [
+            { name: $localLang.global.images, length: storage.cache, db: 'Cache' },
+            { name: $localLang.global.algorithms, length: storage.algorithms, db: 'Algorithms' },
+            { name: $localLang.global.sessions, length: storage.sessions, db: 'Sessions' },
+            { name: $localLang.global.solves, length: storage.solves, db: 'Solves' },
+            { name: $localLang.global.tutorials, length: storage.tutorials, db: 'Tutorials' },
+          ].filter(s => s.length) as st}
+            <TableBodyRow>
+              <TableBodyCell>{ st.name }</TableBodyCell>
+              <TableBodyCell>{ byteToString( st.length ) }</TableBodyCell>
+              <TableBodyCell>
+                <Button on:click={ () => {
+                    // @ts-ignore
+                    clearCache(st.db)
+                  }} color="alternative"> { $localLang.global.clear } </Button>
+              </TableBodyCell>
+            </TableBodyRow>
+          {/each}
+        </TableBody>
+      </Table>
+    </TabItem>
   </Tabs>
 
   <hr />

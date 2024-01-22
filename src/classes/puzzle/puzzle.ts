@@ -2,7 +2,7 @@ import { DOWN, UP, Vector3D } from './../vector3d';
 import type { Sticker } from './Sticker';
 import { Color } from './../Color';
 import { ScrambleParser } from './../scramble-parser';
-import { CubeMode, PX_IMAGE, strToHex } from '@constants';
+import { CubeMode, strToHex } from '@constants';
 import type { Piece } from './Piece';
 import type { PuzzleInterface, PuzzleOptions, PuzzleType, CubeView } from '@interfaces';
 import * as puzzles from './allPuzzles';
@@ -29,7 +29,7 @@ export class Puzzle {
     this.mode = options.mode || CubeMode.NORMAL;
     this.view = options.view || 'trans';
     this.headless = !!options.headless;
-    this.img = PX_IMAGE;
+    this.img = '';
     this.arrows = [];
 
     this.options.sequence = this.options.sequence || '';

@@ -1,5 +1,4 @@
 import { Color } from "@classes/Color";
-import { Matrix33 } from "@classes/matrix33";
 import { Vector2D } from "@classes/vector2-d";
 import { Vector3D } from "@classes/vector3d";
 
@@ -144,4 +143,19 @@ export function lineIntersection3D(a: Vector3D, ua: Vector3D, b: Vector3D, ub: V
   }
 
   return null;
+}
+
+export function byteToString(b: number): string {
+  const units = [ 'B', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB' ];
+  let nb = b;
+  let u = 0;
+
+  while ( nb >= 1000 && u < units.length - 1 ) {
+    nb /= 1024;
+    u += 1;
+  }
+
+  nb = Math.floor(nb * 100) / 100;
+
+  return nb + ' ' + units[u];
 }

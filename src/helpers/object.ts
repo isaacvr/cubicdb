@@ -116,3 +116,35 @@ export function binSearch<T>(elem: T, arr: T[], cmp: (a: T, b: T) => number) {
 
   return -1;
 }
+
+export function getByteSize(obj: any): number {
+  switch(typeof obj) {
+    case 'boolean': return 4;
+    case 'number': return 8;
+    case 'string': return obj.length * 2;
+    case 'undefined': return 4;
+    case 'function':
+      return JSON.stringify(obj).length;
+  }
+
+  if ( obj === null ) return 4;
+
+  if ( typeof obj === 'bigint' ) {
+    let b = BigInt(obj);
+    
+    if ( b < 0n ) b = b * -1n;
+
+    let s = b.toString();
+    let pot = s.length - 1;
+    let base = +(s[0] + '.' + (s.slice(1) || '0'));
+    return b === 0n ? 4 : (2 + Math.ceil(((Math.log10(base) + pot) / Math.log(2) + 1) / 64)) * 8
+  }
+
+  if ( Array.isArray(obj) ) {
+    return obj.reduce((acc, o) => acc + getByteSize(o), 0);
+  }
+  
+  return Object.entries(obj).reduce((acc: any, e) => {
+    return acc + getByteSize(e[0]) + getByteSize(e[1]);
+  }, 0);
+}

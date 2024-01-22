@@ -3,7 +3,7 @@
 import { Emitter } from '@classes/Emitter';
 import { GANInput } from '@components/timer/input-handlers/GAN';
 import { QiYiSmartTimerInput } from '@components/timer/input-handlers/QY-Timer';
-import type { Algorithm, Solve, Session, Tutorial, Sheet, CubeEvent, IPC, ContestPDFOptions, UpdateCommand, PDFOptions } from '@interfaces';
+import type { Algorithm, Solve, Session, Tutorial, Sheet, CubeEvent, IPC, ContestPDFOptions, UpdateCommand, PDFOptions, ICacheDB } from '@interfaces';
 import { ElectronAdaptor, IndexedDBAdaptor } from '@storage/index';
 import type { Display } from 'electron';
 
@@ -21,7 +21,6 @@ export class DataService {
   private ipc: IPC;
   private static _instance: DataService;
   private _isElectron: boolean;
-  private _SyncWorker: typeof import("*?worker") | null = null;
 
   private constructor() {
     this.emitter = new Emitter();
@@ -40,15 +39,6 @@ export class DataService {
 
   get isElectron() {
     return this._isElectron;
-  }
-
-  get SyncWorker() {
-    return new Promise<typeof import("*?worker")>((res) => {
-      if ( !this._SyncWorker ) {
-        return import('@workers/imageWorker?worker').then(w => this._SyncWorker = w).then(res);
-      }
-      res(this._SyncWorker);
-    });
   }
 
   static getInstance(): DataService {
@@ -271,6 +261,14 @@ export class DataService {
 
   cacheSaveImage(hash: string, data: string): Promise<void> {
     return this.ipc.cacheSaveImage(hash, data);
+  }
+
+  clearCache(db: ICacheDB) {
+    return this.ipc.clearCache(db);
+  }
+
+  getStorageInfo() {
+    return this.ipc.getStorageInfo();
   }
 
   getAllDisplays(): Promise<Display[]> {

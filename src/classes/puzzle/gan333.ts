@@ -8,7 +8,7 @@ import { assignColors, getAllStickers, random, scaleSticker } from './puzzleUtil
 import { getRandomScramble } from '@cstimer/scramble/scramble_333';
 import { ScrambleParser } from '@classes/scramble-parser';
 import { ImageSticker } from './ImageSticker';
-import GAN_LOGO from '../../assets/gan_logo.svg';
+import GAN_LOGO from '../../assets/gan_logo.svg?url';
 
 export function GAN333(): PuzzleInterface {
   const n = 3;

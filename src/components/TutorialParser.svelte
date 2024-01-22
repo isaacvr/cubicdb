@@ -1,7 +1,7 @@
 <script lang="ts">
   import { Puzzle } from "@classes/puzzle/puzzle";
   import { CubeMode } from "@constants";
-  import { generateCubeBundle, pGenerateCubeBundle } from "@helpers/cube-draw";
+  import { pGenerateCubeBundle } from "@helpers/cube-draw";
   import { getSearchParams } from "@helpers/strings";
   import type { BlockType, CubeType, Tutorial } from "@interfaces";
   import { DataService } from "@stores/data.service";
