@@ -47,6 +47,7 @@
   import { Button, Input, Modal, Tooltip } from 'flowbite-svelte';
   import WcaCategory from '@components/wca/WCACategory.svelte';
   import { isBetween } from '@helpers/math';
+  import { identifyPuzzle } from '../import-export/common';
 
   let MENU: SCRAMBLE_MENU[] = getLanguage($globalLang).MENU;
   
@@ -298,6 +299,30 @@
     setPreview((await pGenerateCubeBundle([cb], 500))[0], date, cb.type);
   }
 
+  // For testing only!!
+  function testPrediction() {
+    // let modes = [ "222so", "skbso", "pyrso", "333", "444wca", "555wca", "666wca", "777wca" ];
+    // let lens = [ 0, 0, 10, 0, 40, 60, 80, 100 ];
+
+    // for (let i = 0, maxi = modes.length; i < maxi; i += 1) {
+    //   let md = modes[i];
+    //   let len = lens[i];
+
+    //   for (let j = 0; j < 50; j += 1) {
+    //     let scr = (all.pScramble.scramblers.get(md) || (() => '')).apply(null, [
+    //       md, Math.abs(len)
+    //     ]).replace(/\\n/g, '<br>').trim();
+
+    //     let pred = identifyPuzzle(scr);
+
+    //     if ( md != pred.mode ) {
+    //       console.log(`F => CORRECT = "${md}"\nPRED = "${pred.mode}"\nSCR = "${scr}"\nLEN = ${scr.split(/\s+/).length}`);
+    //       throw new Error('F');
+    //     }
+    //   }
+    // }
+  }
+
   export function initScrambler(scr?: string, _mode ?: string, _prob ?: number) {
     if ( !mounted ) return;
 
@@ -530,6 +555,7 @@
   }
 
   onMount(() => {
+    testPrediction();
     mounted = true;
 
     if ( timerOnly && scrambleOnly ) {
