@@ -902,4 +902,6 @@ export class GANInput implements TimerInputHandler {
       return this.v2requestBattery();
     }).then(() => true);
   }
+
+  newRecord() {}
 }

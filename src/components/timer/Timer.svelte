@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { createEventDispatcher, onMount, tick } from 'svelte';
+  import { createEventDispatcher, onMount } from 'svelte';
   import { pGenerateCubeBundle } from '@helpers/cube-draw';
   import { derived, writable, type Readable } from 'svelte/store';
   
@@ -24,7 +24,6 @@
   /// Types
   import { TimerState, type Solve, type Session,  type Statistics, type TimerContext, type PuzzleOptions, type Language, type BluetoothDeviceData, SESSION_TYPE, type SessionType, DIALOG_MODES } from '@interfaces';
   import { Puzzle } from '@classes/puzzle/puzzle';
-  import { PX_IMAGE } from '@constants';
   import { ScrambleParser } from '@classes/scramble-parser';
   import { INITIAL_STATISTICS, getUpdatedStatistics } from '@helpers/statistics';
   import { infinitePenalty, timer } from '@helpers/timer';
@@ -80,8 +79,6 @@
   let filters: string[] = [];
   let sessions: Session[] = [];  
   let tabs: TabGroup;
-  // let deleteSessionModal: Modal;
-  let deleteSessionModal = false;
   let showDeleteSession = false;
   let dispatch = createEventDispatcher();
   let sessionsTab: SessionsTab;
@@ -179,6 +176,8 @@
     }
 
     if ( bestList.length && $session.settings.recordCelebration ) {
+      dataService.emit('new-record');
+      
       notService.addNotification({
         header: $localLang.TIMER.congrats,
         text: '',
@@ -382,6 +381,7 @@
 
       if ( md ) {
         $mode = md;
+        $group = i;
         fnd = true;    
         break;
       }

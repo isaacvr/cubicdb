@@ -378,4 +378,8 @@ export class IndexedDBAdaptor implements IPC {
 
   getAllDisplays() { return Promise.resolve([]); }
   useDisplay(id: number) { return Promise.resolve(); }
+
+  addExternalConnector() {}
+
+  external() {}
 }

@@ -175,10 +175,10 @@ export interface Solve {
   steps?: number[];
 }
 
-export type TimerInput = 'Keyboard' | 'Manual' | 'StackMat' | 'GAN Cube' | 'QY-Timer';
+export type TimerInput = 'Keyboard' | 'Manual' | 'StackMat' | 'GAN Cube' | 'QY-Timer' | 'ExternalTimer';
 export type SessionType = 'mixed' | 'single' | 'multi-step';
 
-export const TIMER_INPUT: TimerInput[] = [ 'Keyboard', 'Manual', 'StackMat', 'GAN Cube'/*, 'QY-Timer'*/ ];
+export const TIMER_INPUT: TimerInput[] = [ 'Keyboard', 'Manual', 'StackMat', 'GAN Cube'/*, 'QY-Timer'*/, 'ExternalTimer' ];
 export const SESSION_TYPE: SessionType[] = [ 'mixed', 'single', 'multi-step' ];
 
 export const DIALOG_MODES = ["333", "333fm" ,"333oh" ,"333o" ,"easyc" ,"333ft", "edges", "corners", "2gen", "2genl"];
@@ -486,6 +486,9 @@ export interface IPC {
 
   getAllDisplays: () => Promise<Display[]>;
   useDisplay: (id: number) => Promise<void>;
+
+  addExternalConnector: (cb: AnyCallback) => any;
+  external: (device: string, ...args: any[]) => any;
 }
 
 export interface PDFOptions {
@@ -540,9 +543,12 @@ export interface StackmatState {
   stackmatId: string;
 }
 
+export type IColor = "gray" | "red" | "yellow" | "green" | "purple" | "blue" | "primary" | undefined;
+export type INotColor = IColor | "light" | "dark" | "none" | "indigo" | "alternative";
+
 export interface NotificationAction {
   text: string;
-  color?: "red" | "yellow" | "green" | "purple" | "blue" | "light" | "dark" | "primary" | "none" | "alternative" | undefined;
+  color?: INotColor;
   callback: (e: MouseEvent) => void;
 }
 
@@ -575,6 +581,9 @@ export interface InputContext {
   initScrambler: (scr?: string, _mode ?: string) => void;
   addSolve: (time?: number, penalty?: Penalty) => void;
   createNewSolve: () => void;
+  handleRemoveSolves: (sv: Solve[]) => any;
+  handleUpdateSolve: (s: Solve) => any;
+  editSolve: (s: Solve) => any;
 }
 
 export interface KeyboardContext extends InputContext {
@@ -590,6 +599,7 @@ export interface TimerInputHandler {
   stopTimer: () => void;
   keyUpHandler: (e: KeyboardEvent) => void;
   keyDownHandler: (e: KeyboardEvent) => void;
+  newRecord: () => void;
 }
 
 export interface Language {
@@ -625,9 +635,11 @@ export interface Language {
     storage: string;
     images: string;
     algorithms: string;
+    session: string;
     sessions: string;
     solves: string;
     tutorials: string;
+    connected: string;
   }
   NAVBAR: {
     home: string;
@@ -865,7 +877,9 @@ export interface Language {
     statistics: string;
     metrics: string;
     solver: string;
-    mosaic: string,
+    mosaic: string;
+    remoteTimer: string;
+    portraitWarning: string;
 
     // Statistics
     writeYourTime: string;
@@ -902,6 +916,9 @@ export interface Language {
     cubeOrder: string;
     selectImage: string;
     generate: string;
+
+    // Remote Timer
+    clickToAuth: string;
   },
   MENU: SCRAMBLE_MENU[]
 }

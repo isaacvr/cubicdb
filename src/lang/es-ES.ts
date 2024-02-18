@@ -33,9 +33,11 @@ export const Spanish: Language = {
     storage: 'Almacenamiento',
     images: 'Imágenes',
     algorithms: 'Algoritmos',
+    session: 'Sesión',
     sessions: 'Sesiones',
     solves: 'Tiempos',
     tutorials: 'Tutorials',
+    connected: 'Conectado',
   },
   NAVBAR: {
     home: 'Inicio',
@@ -200,7 +202,7 @@ export const Spanish: Language = {
     clean: 'Limpios',
     solve: 'Resolución',
     timeDistribution: 'Distribución de tiempos',
-    timeChartLabels: [ 'Tiempo', 'Ao5', 'A012', 'Ao50', 'Ao100', 'Mejor', 'Tendencia' ],
+    timeChartLabels: [ 'Tiempo', 'Ao5', 'Ao12', 'Ao50', 'Ao100', 'Mejor', 'Tendencia' ],
     
     solves: 'Tiempos',
     hourDistribution: 'Distribución por horas',
@@ -214,17 +216,17 @@ export const Spanish: Language = {
     bestList: [
       { title: 'Mejor', key: 'best', select: 1 },
       { title: 'Peor', key: 'worst', select: 1 },
-      { title: 'Mejor Ao5', key: 'Ao5', select: 5 },
-      { title: 'Mejor Ao12', key: 'Ao12', select: 12 },
-      { title: 'Mejor Ao50', key: 'Ao50', select: 1 },
-      { title: 'Mejor Ao100', key: 'Ao100', select: 1 },
-      { title: 'Mejor Ao200', key: 'Ao200', select: 1 },
-      { title: 'Mejor Ao500', key: 'Ao500', select: 1 },
-      { title: 'Mejor Ao1k', key: 'Ao1k', select: 1 },
-      { title: 'Mejor Ao2k', key: 'Ao2k', select: 1 },
+      { title: 'Ao5', key: 'Ao5', select: 5 },
+      { title: 'Ao12', key: 'Ao12', select: 12 },
+      { title: 'Ao50', key: 'Ao50', select: 1 },
+      { title: 'Ao100', key: 'Ao100', select: 1 },
+      { title: 'Ao200', key: 'Ao200', select: 1 },
+      { title: 'Ao500', key: 'Ao500', select: 1 },
+      { title: 'Ao1k', key: 'Ao1k', select: 1 },
+      { title: 'Ao2k', key: 'Ao2k', select: 1 },
     ],
     stepsAverage: 'Promedio de pasos',
-    stepsPercent: '% de pasos',
+    stepsPercent: 'Porciento de pasos',
 
     // Modal
     modal: {
@@ -313,6 +315,8 @@ export const Spanish: Language = {
     metrics: 'Métricas',
     solver: 'Solucionador 3x3',
     mosaic: 'Mosaico',
+    remoteTimer: 'Temporizador remoto',
+    portraitWarning: 'Rota el teléfono y activa el modo de pantalla completa para una mejor experiencia.',
 
     // Statistics
     writeYourTime: 'Escribe tu tiempo aquí',
@@ -349,6 +353,9 @@ export const Spanish: Language = {
     cubeOrder: "Orden",
     generate: "Generar",
     selectImage: "Seleccionar imagen",
+    
+    // Remote timer
+    clickToAuth: 'El servidor usa un certificado de red autofirmado, entonces usted debe aceptarlo manualmente en el navegador, haciendo click en el enlace siguiente.',
   },
   MENU: [
     [

@@ -2,9 +2,9 @@
   "name": "CubeDB",
   "start_url": ".",
   "display": "standalone",
-  "background_color": "#212121",
+  "background_color": "#080a16",
   "description": "The definitive app for Speedcubing",
-  "theme_color": "#212121",
+  "theme_color": "#080a16",
   "categories": [
     "education",
     "entertainment",

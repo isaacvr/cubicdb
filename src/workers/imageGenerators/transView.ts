@@ -28,8 +28,6 @@ export async function transView(cube: Puzzle, width ?: number): Promise<Blob> {
   scene.add(ctt.group);
   renderer.render(scene, camera);
 
-  console.log("RENDERING");
-
   // clean up
   // scene.remove(ctt.group);
   scene.children.length = 0;

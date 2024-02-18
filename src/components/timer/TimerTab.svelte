@@ -12,7 +12,6 @@
   import Copy from '@icons/ContentCopy.svelte';
   import Settings from '@icons/Cog.svelte';
   import LightBulb from '@icons/LightbulbOn.svelte';
-  // import NoteIcon from '@icons/NoteEdit.svelte';
   import WatchOnIcon from '@icons/Wifi.svelte';
   import WatchOffIcon from '@icons/WifiOff.svelte';
   import CommentIcon from '@icons/CommentPlusOutline.svelte';
@@ -33,21 +32,26 @@
   import { NotificationService } from '@stores/notification.service';
   import { derived, writable, type Readable, type Writable } from 'svelte/store';
 
+  // Handlers
   import { StackmatInput } from './input-handlers/Stackmat';
   import { ManualInput } from './input-handlers/Manual';
+  import { GANInput } from './input-handlers/GAN';
+  import { KeyboardInput } from './input-handlers/Keyboard';
+  import { QiYiSmartTimerInput } from './input-handlers/QY-Timer';
+  import { ExternalTimerInput } from './input-handlers/ExternalTimer';
+
+  // Others
   import { globalLang } from '@stores/language.service';
   import { getLanguage } from '@lang/index';
   import { copyToClipboard, randomUUID } from '@helpers/strings';
-  import { GANInput } from './input-handlers/GAN';
   import Simulator from '@components/Simulator.svelte';
-  import { KeyboardInput } from './input-handlers/Keyboard';
-  import { QiYiSmartTimerInput } from './input-handlers/QY-Timer';
   import { statsReplaceId } from '@helpers/statistics';
   import StatsProgress from './StatsProgress.svelte';
   import { screen } from '@stores/screen.store';
-  import { Button, Modal, Popover, Range, Spinner, TextPlaceholder } from 'flowbite-svelte';
+  import { Button, Modal, Popover, Range, Spinner, StepIndicator, TextPlaceholder } from 'flowbite-svelte';
   import Tooltip from '@components/material/Tooltip.svelte';
   import { CubeDBICON, STEP_COLORS } from '@constants';
+    import { blur, scale } from 'svelte/transition';
 
   type TModal = '' | 'edit-scramble' | 'old-scrambles' | 'settings';
 
@@ -90,6 +94,10 @@
     }},
     { text: "DNF", icon: ThumbDown, highlight: (s: any) => s.penalty === Penalty.DNF, handler: () => {
       if ( $lastSolve ) {
+        if ( $lastSolve.penalty === Penalty.P2 ) {
+          $lastSolve.time -= 2000;
+        }
+
         $lastSolve.penalty = $lastSolve.penalty === Penalty.DNF ? Penalty.NONE : Penalty.DNF;
         $time = $lastSolve.penalty === Penalty.DNF ? Infinity : $lastSolve.time;
         battle ? dispatch('update', $lastSolve) : dataService.updateSolve($lastSolve).then( handleUpdateSolve );
@@ -97,6 +105,7 @@
     } },
     { text: "+2", icon: Flag, highlight: (s: any) => s.penalty === Penalty.P2, handler: () => {
       if ( $lastSolve ) {
+
         $lastSolve.penalty = $lastSolve.penalty === Penalty.P2 ? Penalty.NONE : Penalty.P2;
         $lastSolve.penalty === Penalty.P2 ? $lastSolve.time += 2000 : $lastSolve.time -= 2000;
         $time = $lastSolve.time;
@@ -122,7 +131,7 @@
   let prevExpanded: boolean = false;
   let stackmatStatus = writable(false);
 
-  // BLUETOOTH
+  // BLUETOOTH AND EXTERNAL
   let bluetoothStatus = writable(false);
   let bluetoothHardware: any = null;
   let bluetoothBattery: number = 0;
@@ -132,7 +141,8 @@
   // ---------------------------------------------------
   let inputContext: InputContext = {
     isRunning, lastSolve, ready, session, state, time, stackmatStatus, decimals, scramble,
-    sequenceParts, recoverySequence, bluetoothStatus, addSolve, initScrambler, reset, createNewSolve
+    sequenceParts, recoverySequence, bluetoothStatus, addSolve, initScrambler, reset, createNewSolve,
+    handleRemoveSolves, handleUpdateSolve, editSolve
   };
 
   let inputMethod: TimerInputHandler = new ManualInput();
@@ -142,8 +152,9 @@
   let deviceList: string[][] = [];
   let autoConnectId: string[] = [];
 
+  let externalTimers = dataService.externalTimers;
+
   /// MODAL
-  let modal: any = null;
   let show = false;
   let type: TModal = '';
   let modalData: any = null;
@@ -367,6 +378,7 @@
       "GAN Cube": GANInput,
       "QY-Timer": QiYiSmartTimerInput,
       "Keyboard": KeyboardInput,
+      "ExternalTimer": ExternalTimerInput,
     };
 
     let newClass = methodMap[$session?.settings?.input || 'Keyboard'];
@@ -397,6 +409,13 @@
       currentStep = ki.interpreter.machine.context.currentStep;
       totalSteps = ki.interpreter.machine.context.steps;
       inputMethod.init();
+    } else if ( $session?.settings?.input === 'ExternalTimer' ) {
+      if ( sameClass ) {
+        dataService.external(deviceID, { type: 'session', value: $session });
+      } else {
+        inputMethod = new ExternalTimerInput( inputContext );
+        inputMethod.init();
+      }
     }
   }
 
@@ -466,7 +485,7 @@
     $bluetoothList.length = 0;
 
     dataService.searchBluetooth(gn).then(mac => {
-      deviceID = mac;``
+      deviceID = mac;
       inputMethod.disconnect();
       inputMethod = gn;
     }).catch((err) => {
@@ -563,25 +582,44 @@
     }
   }
 
+  function selectExternalTimer(id: string) {
+    if ( id === deviceID ) {
+      deviceID = '';
+    } else {
+      deviceID = id;
+      
+      if ( !(inputMethod instanceof ExternalTimerInput) ) {
+        inputMethod.disconnect();
+        inputMethod = new ExternalTimerInput(inputContext);
+      }
+
+      (inputMethod as ExternalTimerInput).setExternal(id);
+      dataService.external(id, { type: 'session', value: $session });
+    }
+  }
+
+  function handleNewRecord() {
+    console.log('handleNewRecord');
+    inputMethod.newRecord();
+  }
+
   onMount(() => {
     if ( timerOnly || scrambleOnly ) {
       return;
     }
 
     navigator.mediaDevices?.addEventListener('devicechange', updateDevices);
-    initInputHandler();
-    // $group = 0;
-    // selectedGroup();
     updateDevices();
     dataService.on('bluetooth', bluetoothHandler);
+    dataService.on('new-record', handleNewRecord);
   });
 
   onDestroy(() => {
     inputMethod.disconnect();
     navigator.mediaDevices?.removeEventListener('devicechange', updateDevices);
-    // subs.forEach(s => s());
     document.querySelectorAll('#stackmat-signal').forEach(e => e.remove());
     dataService.off('bluetooth', bluetoothHandler);
+    dataService.off('new-record', handleNewRecord);
   });
 
   $: $solves.length === 0 && reset();
@@ -737,23 +775,27 @@
             inpClass="text-center"/>
         </div>
       {:else}
-        <span
-          class="timer text-gray-300 max-sm:text-7xl max-sm:[line-height:8rem]"
-          class:prevention={ $state === TimerState.PREVENTION }
-          class:ready={$ready}
-          hidden={$state === TimerState.RUNNING && !$session.settings.showElapsedTime}>
-            { $state === TimerState.STOPPED ? sTimer($lastSolve, $decimals, false) : timer($time, $decimals, false)}
-          </span>
+        {#if $state === TimerState.RUNNING}
+          <span
+            class="timer text-gray-300 max-sm:text-7xl max-sm:[line-height:8rem]" in:scale class:ready={$ready}
+            hidden={$state === TimerState.RUNNING && !$session.settings.showElapsedTime}>
+              { timer($time, $decimals, false)}
+            </span>
+        {:else}
+          <span
+            class="timer text-gray-300 max-sm:text-7xl max-sm:[line-height:8rem]"
+            class:prevention={ $state === TimerState.PREVENTION } class:ready={$ready}>
+              { $state === TimerState.STOPPED ? sTimer($lastSolve, $decimals, false) : timer($time, $decimals, false)}
+            </span>
+        {/if}
         
         {#if $session.settings.sessionType === 'multi-step' && $state === TimerState.RUNNING }
-          <div class="step-progress w-[min(100%,30rem)] text-base">
-            <StatsProgress value={ $currentStep } total={ $totalSteps }
-              title={ ($session.settings.stepNames || [])[$currentStep - 1] || '' }
-              label={ `${ $currentStep } / ${ $totalSteps }` }/>
+          <div class="step-progress w-[min(100%,30rem)] text-base" transition:scale>
+            <StepIndicator currentStep={ $currentStep } steps={ $session.settings.stepNames }/>
           </div>
         {/if}
 
-        {#if $session?.settings?.input === 'StackMat' }
+        {#if $session?.settings?.input === 'StackMat' || $session?.settings?.input === 'ExternalTimer' }
           <span class="text-2xl flex gap-2 items-center">
             { $localLang.TIMER.stackmatStatus }:
             
@@ -766,12 +808,13 @@
         {/if}
       {/if}
 
-      <span
+      <span transition:blur
         class="timer"
-        hidden={!($state === TimerState.RUNNING && !$session.settings.showElapsedTime)}>----</span> 
+        hidden={!($state === TimerState.RUNNING && !$session.settings.showElapsedTime)}>----</span>
+
       {#if !timerOnly && $state === TimerState.STOPPED}
         <div class={"flex justify-center w-full " + ( $session.settings.input === 'GAN Cube' ? '-my-4' : '' ) }
-            class:show={$state === TimerState.STOPPED}>
+            class:show={$state === TimerState.STOPPED} transition:blur>
           {#each solveControl.slice(Number(battle), solveControl.length) as control}
             <Tooltip class="cursor-pointer" position="top" text={ control.text }>
               <Button color="none" class="flex my-3 mx-1 w-5 h-5 p-0 { control.highlight($solves[0] || {}) ? 'text-red-500' : '' }"
@@ -896,7 +939,7 @@
   {/if}
 </div>
 
-<Modal bind:this={ modal } bind:open={ show } size="xs" outsideclose
+<Modal bind:open={ show } size="xs" outsideclose
   title={ $localLang.TIMER.modal[type || 'settings'] } bodyClass="space-y-2">
   {#if type === 'edit-scramble'}
     <TextArea on:keyup={ modalKeyupHandler } class="bg-gray-900 text-gray-200 border border-gray-600" bind:value={ modalData }/>
@@ -936,6 +979,22 @@
       </Popover>
     {/if}
 
+    {#if modalData.settings.input === 'ExternalTimer'}
+      <section class="bg-white bg-opacity-10 p-2 shadow-md rounded-md">
+        <ul class="mt-4">
+          {#each $externalTimers as { id, name } (id)}
+            <li class="flex items-center justify-between mt-2 pl-4 bg-white bg-opacity-10 rounded-md text-white">
+              { name }
+              <Button color={( id === deviceID ? 'red' : 'green' )}
+                loading={ isConnecting } on:click={ () => selectExternalTimer(id)}>
+                { id === deviceID ? $localLang.TIMER.disconnect : $localLang.TIMER.connect }
+              </Button>
+            </li>
+          {/each}
+        </ul>
+      </section>
+    {/if}
+
     {#if modalData.settings.input === 'StackMat'}
       <section > { $localLang.TIMER.device }: <Select class="max-w-full"
         bind:value={ deviceID } items={ deviceList }
@@ -943,7 +1002,7 @@
       </section>
     {/if}
 
-    {#if modalData.settings.input === 'Keyboard'}
+    {#if modalData.settings.input === 'Keyboard' || modalData.settings.input === 'ExternalTimer'}
       <section class="flex flex-wrap gap-4 items-center">
         <Checkbox
           bind:checked={ modalData.settings.hasInspection }

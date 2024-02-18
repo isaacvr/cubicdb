@@ -181,7 +181,7 @@
     let nc: Puzzle;
 
     try {
-      await resetPuzzle("", false, scr);
+      resetPuzzle("", false, scr);
 
       nc = Puzzle.fromSequence(scr, {
         type: selectedPuzzle,

@@ -250,4 +250,6 @@ export class KeyboardInput implements TimerInputHandler {
   stopTimer() {
     this.interpreter.send({ type: 'keydown', code: 'Escape' });
   }
+
+  newRecord() {}
 }

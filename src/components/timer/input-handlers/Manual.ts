@@ -6,4 +6,5 @@ export class ManualInput implements TimerInputHandler {
   keyUpHandler() {}
   keyDownHandler() {}
   stopTimer() {}
+  newRecord() {}
 }

@@ -25,8 +25,12 @@
   import ChevronLeft from '@icons/ChevronLeft.svelte';
   import WcaCategory from "./wca/WCACategory.svelte";
   import { localLang } from "@stores/language.service";
+  
+  let recs: any[] = [];
 
-  const recs = _recs.slice(0, 4300).filter(r => errorIndex.indexOf(r.id) < 0);
+  import('../database/reconstructions.json').then(res => {
+    recs = (res.default || []).slice(0, 4300).filter(r => errorIndex.indexOf(r.id) < 0);
+  })
   let recIndex = 0;
   let showRecSearch = false;
   let recSearch = '';

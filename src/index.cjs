@@ -2,16 +2,18 @@ const { app, BrowserWindow, ipcMain, shell, powerSaveBlocker, screen } = require
 const { autoUpdater, CancellationToken } = require('electron-updater');
 const { join, resolve } = require('path');
 const { existsSync, mkdirSync, writeFileSync, unlinkSync, createWriteStream, copyFileSync } = require('fs');
-const { tmpdir } = require('os');
+const { tmpdir, networkInterfaces } = require('os');
 const { exec } = require('child_process');
+const { Server } = require('socket.io');
 
 const NeDB = require('nedb');
 const electronReload = require('electron-reload');
 const archiver = require('archiver');
 const express = require('express');
-const eApp = express();
-const http = require('node:http');
-const fs = require('node:fs/promises');
+const cors = require('cors');
+const https = require('node:https');
+const fs = require('node:fs');
+const fsp = require('node:fs/promises');
 
 const args = process.argv.slice(1), serve = args.some(val => val === '--serve');
 
@@ -22,7 +24,7 @@ let dbFixedPath = join.apply(null, params);
 let dbPath = app.getPath('userData');
 let cachePath = join(dbPath, 'ImgCache');
 
-fs.mkdir(cachePath, { recursive: true })
+fsp.mkdir(cachePath, { recursive: true })
   .then(() => console.log('Cache path created!'))
   .catch((err) => console.log('CACHE ERROR: ', err));
 
@@ -44,14 +46,38 @@ let Contests = new NeDB({ filename: resolve(dbPath, 'contests.db'), autoload: tr
 let cache = new Map();
 
 (async function() {
-  let list = await fs.readdir(cachePath);
+  let list = await fsp.readdir(cachePath);
 
   for (let i = 0, maxi = list.length; i < maxi; i += 1) {
-    if ( (await fs.stat( join(cachePath, list[i]) )).isFile() ) {
-      cache.set(list[i], await fs.readFile( join(cachePath, list[i]), { encoding: 'utf8' } ));
+    if ( (await fsp.stat( join(cachePath, list[i]) )).isFile() ) {
+      cache.set(list[i], await fsp.readFile( join(cachePath, list[i]), { encoding: 'utf8' } ));
     }
   }
 }());
+
+// Servers
+/// For remote control apps
+const eApp = express();
+
+eApp.use( cors() );
+
+let server = https.createServer({
+  key: fs.readFileSync(join(__dirname, 'cert', 'key.pem')),
+  cert: fs.readFileSync(join(__dirname, 'cert', 'cert.pem')),
+}, eApp).listen(12345);
+
+let _port = server.address();
+let port = typeof _port === 'string' ? _port : _port ? _port.port : '';
+
+eApp.set('port', port);
+
+const io = new Server(server, {
+  cors: {
+    origin: '*'
+  }
+});
+
+ipcMain.on('get-port', (ev) => ev.returnValue = port);
 
 /// Algorithms handler
 ipcMain.handle('get-algorithms', async (_, arg) => {
@@ -478,7 +504,7 @@ ipcMain.handle('save-image', async (_, hash, data) => {
   }
 
   try {
-    await fs.writeFile( join(cachePath, hash), data );
+    await fsp.writeFile( join(cachePath, hash), data );
     cache.set(hash, data);
     return true;
   } catch(err) {
@@ -537,6 +563,10 @@ ipcMain.handle('sleep', async (_, sleep) => {
     powerSaveBlocker.isStarted(sleepId) && powerSaveBlocker.stop(sleepId);
   }
 });
+
+// JUST FOR DEV ONLY
+app.commandLine.appendSwitch('ignore-certificate-errors');
+app.commandLine.appendSwitch('allow-insecure-localhost', 'true');
 
 function createWindow() {
   let win = new BrowserWindow({
@@ -665,22 +695,97 @@ function createWindow() {
     }
   });
 
-  if ( serve ) {
+  let timerMap = new Map();
+
+  function sendList(type, map) {
+    win.webContents.send('external', ['', '', '', {
+      type: `__${type}_list`,
+      value: [ ...map.entries() ]
+    }]);
+  }
+
+  // Configure socketIO for external communication
+  io.on('connection', (socket) => {
+    console.log("CONNECTED: ", socket.id);
+    
+    socket.name = 'timer-' + socket.id.slice(0, 4); // Set temporal name
+    socket.registered = false;
+    
+    socket.emit('name', socket.name);
+
+    socket.on('register', (sData) => {
+      console.log('[register]: ', sData);
+
+      if ( socket.registered ) return;
+      if ( !sData ) return socket.disconnect();
+      if ( !['timer'].some(type => type === sData.type) ) return socket.disconnect();
+
+      socket.join( sData.type );
+      socket.name = sData.name || socket.name;
+      socket.registered = true;
+
+      if ( sData.type === 'timer' ) {
+        timerMap.set(socket.id, {
+          id: socket.id,
+          name: socket.name
+        });
+
+        sendList('timer', timerMap);
+      }
+    
+      console.log("Socket registered: ", socket.name);
+
+      socket.on('message', (mData) => {
+        console.log('[message]: ', socket.name, mData);
+        
+        if ( !mData ) return;
+        if ( !mData.type ) return;
+        
+        // Handle configuration
+        if ( mData.type === '__settings' && mData.name ) {
+          socket.name = mData.name;
+          let tData = timerMap.get(socket.id) || { id: socket.id, name: socket.name };
+          tData.name = socket.name;
+          timerMap.set(socket.id, tData);
+
+          sendList('timer', timerMap);
+        }
+
+        win.webContents.send('external', [socket.id, socket.name, sData.type, mData]);
+      });
+    });
+  
+    socket.on('disconnect', () => {
+      console.log("DISCONNECTED: ", socket.id);
+      socket.rooms.forEach(r => socket.leave(r));
+      timerMap.delete(socket.id);
+      sendList('timer', timerMap);
+      win.webContents.send('external', [socket.id, socket.name, '', { type: 'state', state: 'DISCONNECTED' }]);
+    });
+  });
+  
+  ipcMain.handle('external', (_, deviceId, ...args) => {
+    console.log("TO DEVICE: ", deviceId, " MESSAGE: ", ...args);
+    io.to(deviceId).emit('external', ...args);
+  });
+
+  console.log("PORT: ", port, serve, networkInterfaces());
+
+  if ( serve || !prod ) {
     win.webContents.openDevTools();
 
-    electronReload(__dirname, {
-      electron: join(__dirname, '../node_modules', '.bin', 'electron'),
-      awaitWriteFinish: true
+    // electronReload(__dirname, {
+    //   electron: join(__dirname, '../node_modules', 'electron', 'dist', 'electron.exe'),
+    //   awaitWriteFinish: true,
+    // });
+
+    win.loadURL( "http://localhost:5432/" );
+
+    eApp.listen(0, () => {
+      console.log("LISTENING ON PORT: ", eApp.get('port'));
     });
 
-    win.loadURL( process.env.ELECTRON_APP_URL || "http://localhost:5432/" );
-
   } else {
-    let server = http.createServer(eApp).listen();
-    let _port = server.address();
-    let port = typeof _port === 'string' ? _port : _port ? _port.port : '';
-
-    eApp.set('port', port);
     eApp.use( express.static( join(__dirname, '../dist') ) );
 
     // @ts-ignore
@@ -690,10 +795,7 @@ function createWindow() {
     
     eApp.listen(0, () => {
       win.loadURL(`http://localhost:${ eApp.get('port') }/`);
-      // console.log("URL PORT: ", eApp.get('port'));
     });
-
-    // win.loadFile( import.meta.env.ELECTRON_APP_URL );
   }
 
   Sessions.count({}, function(err, count) {

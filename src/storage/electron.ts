@@ -204,4 +204,12 @@ export class ElectronAdaptor implements IPC {
   useDisplay(id: number) {
     return this.ipc.useDisplay(id);
   }
+
+  addExternalConnector(cb: any) {
+    this.ipc.addExternalConnector(cb);
+  }
+
+  external(device: string, ...args: any[]) {
+    this.ipc.external(device, ...args);
+  }
 }

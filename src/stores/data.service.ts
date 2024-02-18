@@ -6,11 +6,18 @@ import { QiYiSmartTimerInput } from '@components/timer/input-handlers/QY-Timer';
 import type { Algorithm, Solve, Session, Tutorial, Sheet, CubeEvent, IPC, ContestPDFOptions, UpdateCommand, PDFOptions, ICacheDB } from '@interfaces';
 import { ElectronAdaptor, IndexedDBAdaptor } from '@storage/index';
 import type { Display } from 'electron';
+import { writable, type Writable } from 'svelte/store';
 
 type DownloadEvent = 'download-progress' | 'update-downloaded';
 type BluetoothEvent = 'bluetooth';
 type TimerEvent = 'scramble';
-type DataEvent = DownloadEvent | BluetoothEvent | TimerEvent;
+type ExternalEvent = 'external';
+type DataEvent = DownloadEvent | BluetoothEvent | TimerEvent | ExternalEvent | string & {};
+
+interface ExternalTimer {
+  id: string;
+  name: string;
+}
 
 function extractKey(obj: any, key: any): any {
   return { [key]: obj[key] };
@@ -21,9 +28,11 @@ export class DataService {
   private ipc: IPC;
   private static _instance: DataService;
   private _isElectron: boolean;
+  externalTimers: Writable<ExternalTimer[]>;
 
   private constructor() {
     this.emitter = new Emitter();
+    this.externalTimers = writable([]);
 
     // @ts-ignore
     if ( window.electronAPI ) {
@@ -62,6 +71,19 @@ export class DataService {
     this.ipc.addBluetoothListener((_, args) => {
       this.emitter.emit('bluetooth', ...args);
     });
+
+    this.ipc.addExternalConnector((_, args) => {
+      if (!Array.isArray(args)) return;
+      if (args.length != 4) return;
+
+      if ( args[3].type === '__timer_list' ) {
+        let data: { 0: any, 1: ExternalTimer}[] = args[3].value;
+        this.externalTimers.set( data.map((e: any) => e[1]) );
+        return;
+      }
+
+      this.emitter.emit('external', args);
+    });
   }
 
   on(ev: DataEvent, cb: (...args: any[]) => any) {
@@ -70,6 +92,10 @@ export class DataService {
 
   off(ev: DataEvent, cb: (...args: any[]) => any) {
     this.emitter.off(ev, cb);
+  }
+
+  emit(ev: string, ...args: any[]) {
+    this.emitter.emit(ev, ...args);
   }
 
   getAlgorithms(path: string, all?: boolean): Promise<Algorithm[]> {
@@ -281,6 +307,10 @@ export class DataService {
 
   emitBluetoothData(type: string, data: any) {
     this.emitter.emit('bluetooth', type, data);
+  }
+
+  external(device: string, ...args: any[]) {
+    this.ipc.external(device, ...args);
   }
 
   scramble(s: string) {
