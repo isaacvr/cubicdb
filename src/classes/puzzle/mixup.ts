@@ -1,7 +1,7 @@
 import { LEFT, UP, BACK, RIGHT, FRONT, DOWN, CENTER } from './../vector3d';
 import { Vector3D } from '../../classes/vector3d';
 import type { PuzzleInterface } from '@interfaces';
-import { STANDARD_PALETTE } from "@constants";
+import { EPS, STANDARD_PALETTE } from "@constants";
 import { Piece } from './Piece';
 import { Sticker } from './Sticker';
 import { assignColors, getAllStickers, random } from './puzzleUtils';
@@ -146,7 +146,7 @@ export function MIXUP(): PuzzleInterface {
     let type = piece.stickers.filter(s => !s.color.match(/^[xd]$/)).length;
     let mc = piece.updateMassCenter();
     let planes = piece.stickers.reduce((ac: Vector3D[][], s) => {
-      if ( s.color === 'x' && s.getOrientation().cross(dir).abs() < 1e-6 ) {
+      if ( s.color === 'x' && s.getOrientation().cross(dir).abs() < EPS ) {
         ac.push ( [ s._generator.points[0], s._generator.getOrientation() ] );
       }
       return ac;
@@ -189,7 +189,7 @@ export function MIXUP(): PuzzleInterface {
     for (let i = 0; i < MOVES; i += 1) {
       let p = random( pieces ) as Piece;
       let s = random(p.stickers.filter(s => !/^[xd]{1}$/.test(s.color))) as Sticker;
-      let vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > 1e-6));
+      let vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > EPS));
       let pcs = mixup.toMove(p, s, vec);
       let cant = 1 + random(3);
       pcs.pieces.forEach((p: Piece) => p.rotate(CENTER, vec, pcs.ang * cant, true));

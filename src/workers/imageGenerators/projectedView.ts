@@ -4,7 +4,7 @@ import type { Puzzle } from "@classes/puzzle/puzzle";
 import { roundStickerCorners } from "@classes/puzzle/puzzleUtils";
 import { Vector2D } from "@classes/vector2-d";
 import { BACK, CENTER, DOWN, FRONT, LEFT, RIGHT, UP, Vector3D } from "@classes/vector3d";
-import { CubeMode } from "@constants";
+import { CubeMode, EPS } from "@constants";
 import { map } from "@helpers/math";
 
 export async function projectedView(cube: Puzzle, DIM: number): Promise<Blob> {
@@ -22,7 +22,7 @@ export async function projectedView(cube: Puzzle, DIM: number): Promise<Blob> {
   const SPECIAL_SQ1 = [CubeMode.CS, CubeMode.EO, , CubeMode.CO];
 
   const getFactor = () => {
-    if ( cube.type === 'square1' && SPECIAL_SQ1.some(m => m === cube.mode) ) {
+    if ( (cube.type === 'square1' || cube.type === 'square2') && SPECIAL_SQ1.some(m => m === cube.mode) ) {
       return 1.6;
     }
 
@@ -31,7 +31,7 @@ export async function projectedView(cube: Puzzle, DIM: number): Promise<Blob> {
 
   if ( cube.type === 'pyraminx' ) {
     H = W / 1.1363636363636365;
-  } else if ( cube.type === 'square1' ) {
+  } else if ( cube.type === 'square1' || cube.type === 'square2' ) {
     W += H; // swap W and H
     H = W - H;
     W = W - H;
@@ -48,7 +48,7 @@ export async function projectedView(cube: Puzzle, DIM: number): Promise<Blob> {
 
   let colorFilter = [ 'd' ];
 
-  if ( cube.type === 'square1' || cube.mode === CubeMode.NORMAL ) {
+  if ( cube.type === 'square1' || cube.type === 'square2' || cube.mode === CubeMode.NORMAL ) {
     colorFilter.push('x');
   }
 
@@ -76,7 +76,7 @@ export async function projectedView(cube: Puzzle, DIM: number): Promise<Blob> {
 
   if ( cube.type === 'pyraminx' ) {
     faceName = [ 'F', 'R', 'D', 'L' ];
-  } else if ( cube.type === 'square1' ) {
+  } else if ( cube.type === 'square1' || cube.type === 'square2' ) {
     faceVectors = [ UP, DOWN, RIGHT.add(BACK).add(UP) ];
     faceName = [ 'U', 'D', 'M' ];
   } else if ( cube.type === 'megaminx' ) {
@@ -113,7 +113,7 @@ export async function projectedView(cube: Puzzle, DIM: number): Promise<Blob> {
     let uv = st.getOrientation();
     let ok = false;
     for (let j = 0, maxj = faceVectors.length; j < maxj && !ok; j += 1) {
-      if ( faceVectors[j].sub( uv ).abs() < 1e-6 ) {
+      if ( faceVectors[j].sub( uv ).abs() < EPS ) {
         if ( ['rubik', 'ivy', 'skewb', 'megaminx'].indexOf(cube.type) > -1 ) {
           sideStk[ faceName[j] ].push(
             st.rotate(fcTr[j][0], fcTr[j][1], fcTr[j][2]).add( fcTr[j][3].mul(fcTr[j][4]) )
@@ -125,10 +125,10 @@ export async function projectedView(cube: Puzzle, DIM: number): Promise<Blob> {
       }
     }
 
-    if ( !ok && cube.type === 'square1' ) {
+    if ( !ok && (cube.type === 'square1' || cube.type === 'square2') ) {
       if ( st.color != 'd' && st.color != 'x' ) {
         let pts = st._generator.points.filter(p => {
-          return Math.abs(p.y) >= 1 - 1e-6;
+          return Math.abs(p.y) >= 1 - EPS;
         });
 
         
@@ -220,7 +220,7 @@ export async function projectedView(cube: Puzzle, DIM: number): Promise<Blob> {
     sideStk.R = sideStk.R.map(s => s.add(cm1) );
     sideStk.D = sideStk.D.map(s => s.add(cm2) );
     sideStk.L = sideStk.L.map(s => s.add(cm3) );
-  } else if ( cube.type === 'square1' ) {
+  } else if ( cube.type === 'square1' || cube.type === 'square2' ) {
     sideStk.U = sideStk.U.map(st => st.rotate(CENTER, RIGHT, PI_2).add( UP.mul( getFactor() ) ));
     sideStk.D = sideStk.D.map(st => st.rotate(CENTER, RIGHT, -PI_2).add( DOWN.mul( getFactor() ) ));
   } else if ( cube.type === 'megaminx' ) {
@@ -237,7 +237,7 @@ export async function projectedView(cube: Puzzle, DIM: number): Promise<Blob> {
     // This type of piece is ensured to be inside the list
     let ac1 = (cube.p.pieces.find(p => {
       let st = p.stickers.filter(s => s.points.length === 5);
-      return st.length === 2 && st[0].getOrientation().sub(DOWN).abs() < 1e-6;
+      return st.length === 2 && st[0].getOrientation().sub(DOWN).abs() < EPS;
     }) as Piece).stickers[0].add(UP).mul(R / r).add(DOWN).points;
 
     let pts1: Vector3D[] = [];

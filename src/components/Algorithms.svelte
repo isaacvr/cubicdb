@@ -196,10 +196,13 @@
         {#each (selectedCase?.solutions || []) as sol, i }
           <span class="max-sm:hidden col-span-1"></span>
           
-          <button role="link" tabindex="0"
-            on:click={ () => toClipboard(sol.moves) }
-            class="mt-2 cursor-pointer hover:text-gray-300 transition-all max-sm:col-span-5 col-span-3
-            text-left duration-200 border-l-4 border-l-blue-500 pl-2">{ sol.moves }</button>
+          <div class="flex mt-2 max-sm:col-span-5 col-span-3">
+            <span class="w-6 pl-1 mr-2 text-right border-l-4 border-l-blue-500">{i + 1}:</span>
+            <button role="link" tabindex="0"
+              on:click={ () => toClipboard(sol.moves) }
+              class="cursor-pointer hover:text-gray-300 transition-all 
+              text-left duration-200 pl-2 underline underline-offset-4">{ sol.moves }</button>
+          </div>
 
           <Tooltip placement={ $screen.isMobile ? "top" : "left" }>
             { $localLang.global.clickToCopy }

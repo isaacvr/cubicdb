@@ -1,7 +1,7 @@
 import { LEFT, UP, BACK, RIGHT, FRONT, DOWN, CENTER } from './../vector3d';
 import { Vector3D } from '../../classes/vector3d';
 import type { PuzzleInterface } from '@interfaces';
-import { STANDARD_PALETTE } from "@constants";
+import { EPS, STANDARD_PALETTE } from "@constants";
 import { Piece } from './Piece';
 import { Sticker } from './Sticker';
 import { assignColors, getAllStickers, random } from './puzzleUtils';
@@ -143,7 +143,7 @@ export function MIRROR(n: number): PuzzleInterface {
   mirror.center.sub(c1, true).mul(len / n, true);
 
   mirror.toMove = function(piece: Piece, sticker: Sticker, dir: Vector3D) {
-    let st = piece.stickers.find(s => s.color === 'x' && s.normal().cross(dir).abs() < 1e-6);
+    let st = piece.stickers.find(s => s.color === 'x' && s.normal().cross(dir).abs() < EPS);
 
     if ( !st ) {
       return { pieces: [], ang: PI_2 };

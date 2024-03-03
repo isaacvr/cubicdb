@@ -1,7 +1,7 @@
 <script lang="ts">
   import { Piece } from "@classes/puzzle/Piece";
   import { CENTER, Vector3D } from "@classes/vector3d";
-  import { CubeMode } from "@constants";
+  import { CubeMode, EPS } from "@constants";
   import { Puzzle } from "@classes/puzzle/puzzle";
   import type { Language, PuzzleType } from "@interfaces";
   import { TrackballControls } from "three/examples/jsm/controls/TrackballControls";
@@ -315,7 +315,7 @@
     let pc = [piece.object.parent?.userData, piece.object.userData];
     let po = pc[1]?.getOrientation();
     let vecs: Vector3D[] = pc[1]?.vecs.filter(
-      (v: Vector3D) => v.cross(po).abs() > 1e-6,
+      (v: Vector3D) => v.cross(po).abs() > EPS,
     );
     let v = fin.clone().sub(ini);
     let vv = vec3 || new Vector3D(v.x, v.y, 0);

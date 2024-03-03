@@ -1,7 +1,7 @@
 import { LEFT, UP, BACK, RIGHT, FRONT, DOWN, CENTER } from './../vector3d';
 import { Vector3D } from '../../classes/vector3d';
 import type { PuzzleInterface } from '@interfaces';
-import { STANDARD_PALETTE } from "@constants";
+import { EPS, STANDARD_PALETTE } from "@constants";
 import { Piece } from './Piece';
 import { Sticker } from './Sticker';
 import { assignColors, getAllStickers, random } from './puzzleUtils';
@@ -216,8 +216,8 @@ export function DREIDEL(): PuzzleInterface {
   }
 
   dreidel.toMove = function(piece: Piece, sticker: Sticker, dir: Vector3D) {
-    let normalTurn = [ LEFT, UP, BACK ].reduce((ac, v) => ac || v.cross(dir).abs() < 1e-6, false);
-    let cornerTurn = CORNERS.reduce((ac, v) => ac || v.cross(dir).abs() < 1e-6, false);
+    let normalTurn = [ LEFT, UP, BACK ].reduce((ac, v) => ac || v.cross(dir).abs() < EPS, false);
+    let cornerTurn = CORNERS.reduce((ac, v) => ac || v.cross(dir).abs() < EPS, false);
     
     if ( !normalTurn && !cornerTurn ) {
       return {
@@ -244,7 +244,7 @@ export function DREIDEL(): PuzzleInterface {
       };
     }
     
-    let cmp = [ dir.x, dir.y, dir.z ].map(e => Math.abs(1 - Math.abs(e)) < 1e-6 ? Math.sign(e) : 0);
+    let cmp = [ dir.x, dir.y, dir.z ].map(e => Math.abs(1 - Math.abs(e)) < EPS ? Math.sign(e) : 0);
     let dir1 = new Vector3D(cmp[0], cmp[1], cmp[2]);
     let pcs = pieces.reduce((ac: Piece[][], p) => {
       let d = p.direction1(dir1.mul(1/3), dir1);
@@ -269,7 +269,7 @@ export function DREIDEL(): PuzzleInterface {
       let st = pc.stickers[0];
       let o = st.getOrientation();
 
-      if ( v.some(e => e.cross(o).abs() < 1e-6) ) {
+      if ( v.some(e => e.cross(o).abs() < EPS) ) {
         let pcs = dreidel.toMove!(pc, st, st.vecs[0]);
         let cant = random(3) * 2 + 1;
         pcs.pieces.forEach((p: Piece) => p.rotate(CENTER, st.vecs[0], pcs.ang * cant, true));
@@ -303,7 +303,7 @@ export function DREIDEL(): PuzzleInterface {
       let st = pc.stickers[0];
       let o = st.getOrientation();
 
-      if ( v.some(e => e.cross(o).abs() > 1e-6) ) {
+      if ( v.some(e => e.cross(o).abs() > EPS) ) {
         let pcs = dreidel.toMove!(pc, st, st.vecs[0]);
         pcs.pieces.forEach((p: Piece) => p.rotate(CENTER, st.vecs[0], pcs.ang, true));
       }

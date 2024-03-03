@@ -216,7 +216,7 @@ export class KeyboardInput implements TimerInputHandler {
 
   constructor(context: InputContext) {
     let ctx: KeyboardContext = {
-      steps: writable(get(context.session).settings.steps || 1),
+      steps: writable(+(get(context.session).settings.steps || '') || 1),
       stepsTime: writable([]),
       currentStep: writable(1),
       timeRef: writable(0),

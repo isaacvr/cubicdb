@@ -62,7 +62,7 @@
         title: HOME.contest,
         route: '/contest',
         cube: '/assets/logo-500.png',
-        ready: showPrivate,
+        ready: showPrivate && false,
       }, {
         title: HOME.tools,
         route: '/tools',
@@ -84,12 +84,12 @@
         title: 'CubeDB',
         route: '/cubedb',
         cube: '/assets/logo-500.png',
-        ready: true,
+        ready: false,
       }, {
         title: 'Remote',
         route: '/remote',
         cube: '/assets/logo-500.png',
-        ready: true,
+        ready: false,
       }
     ].filter(c => c.ready);
   };

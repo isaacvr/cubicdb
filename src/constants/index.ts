@@ -139,8 +139,6 @@ export const PRINTABLE_PALETTE = {
   lgreen:  getColorByName('plgreen'),
 } as const;
 
-export const PX_IMAGE = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQIW2NgAAIAAAUAAR4f7BQAAAAASUVORK5CYII=";
-
 export interface SCRAMBLE_MENU {
   0: string,
   1: { 0: string, 1: string, 2: number, 3?: number, 4?: number[] }[]
@@ -159,6 +157,7 @@ export const CLCK = [ "clkwca", "clk", "clkwca", "clko", "clkc", "clke" ];
 export const MEGA = [ "mgmp", "mgmc", "mgmo", "minx2g", "mlsll" ];
 export const KILO = [ "kilo" ];
 export const GIGA = [ "giga" ];
+export const MISC = [ "r3", "r3ni", "r234w", "r2345w", "r23456w", "r234567w", "r234", "r2345", "r23456", "r234567", "sq2" ];
 
 export const ICONS = [
   { icon: "222so", name: '2x2x2', scrambler: R222 },
@@ -186,16 +185,36 @@ const OPTS: PuzzleOptions[] = [
   { type: 'rubik', order: [2] }, { type: 'rubik', order: [3] }, { type: 'rubik', order: [4] },
   { type: 'rubik', order: [5] }, { type: 'rubik', order: [6] }, { type: 'rubik', order: [7] },
   { type: 'pyraminx', order: [3] }, { type: 'skewb' }, { type: 'square1' }, { type: 'clock' },
-  { type: 'megaminx', order: [3] }, { type: 'megaminx', order: [2] }, { type: 'megaminx', order: [4] }
+  { type: 'megaminx', order: [3] }, { type: 'megaminx', order: [2] }, { type: 'megaminx', order: [4] },
+];
+
+const OPTS_MISC: PuzzleOptions[][] = [
+  [ { type: 'rubik', order: [3] } ],
+  [ { type: 'rubik', order: [3] } ],
+  [2, 3, 4].map(n => ({ type: 'rubik', order: [n] })),
+  [2, 3, 4, 5].map(n => ({ type: 'rubik', order: [n] })),
+  [2, 3, 4, 5, 6].map(n => ({ type: 'rubik', order: [n] })),
+  [2, 3, 4, 5, 6, 7].map(n => ({ type: 'rubik', order: [n] })),
+  [2, 3, 4].map(n => ({ type: 'rubik', order: [n] })),
+  [2, 3, 4, 5].map(n => ({ type: 'rubik', order: [n] })),
+  [2, 3, 4, 5, 6].map(n => ({ type: 'rubik', order: [n] })),
+  [2, 3, 4, 5, 6, 7].map(n => ({ type: 'rubik', order: [n] })),
+  [ { type: 'square2' } ]
 ];
 
 const MODES = [ R222, R333, R444, R555, R666, R777, PYRA, SKWB, SQR1, CLCK, MEGA, KILO, GIGA ];
 
 for (let i = 0, maxi = MODES.length; i < maxi; i += 1) {
   OPTS[i].view = '2d';
+
   for (let j = 0, maxj = MODES[i].length; j < maxj; j += 1) {
     options.set(MODES[i][j], OPTS[i]);
   }
+}
+
+for (let i = 0, maxi = MISC.length; i < maxi; i += 1) {
+  OPTS_MISC[i].forEach(opt => opt.view = '2d');
+  options.set(MISC[i], OPTS_MISC[i]);
 }
 
 export function isNNN(mode: string): boolean {

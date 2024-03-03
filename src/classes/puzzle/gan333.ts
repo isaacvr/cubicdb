@@ -1,7 +1,7 @@
 import { LEFT, UP, BACK, RIGHT, FRONT, DOWN, CENTER } from '@classes/vector3d';
 import { Vector3D } from '@classes/vector3d';
 import type { PuzzleInterface } from '@interfaces';
-import { STANDARD_PALETTE } from "@constants";
+import { EPS, STANDARD_PALETTE } from "@constants";
 import { Piece } from './Piece';
 import { Sticker } from './Sticker';
 import { assignColors, getAllStickers, random, scaleSticker } from './puzzleUtils';
@@ -15,7 +15,7 @@ export function GAN333(): PuzzleInterface {
   const len = 2 / 3;
 
   const edgePoint = (p: Vector3D) => [p.x, p.y, p.z].reduce((acc, n) =>
-    [-1, 0, 1].some(d => Math.abs(d - n) < 1e-6) ? acc + 1 : acc, 0)
+    [-1, 0, 1].some(d => Math.abs(d - n) < EPS) ? acc + 1 : acc, 0)
 
   const gan: PuzzleInterface = {
     pieces: [],

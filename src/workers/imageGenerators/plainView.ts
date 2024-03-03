@@ -3,6 +3,7 @@ import type { Puzzle } from "@classes/puzzle/puzzle";
 import { roundCorners } from "@classes/puzzle/puzzleUtils";
 import { Vector2D } from "@classes/vector2-d";
 import { CENTER, RIGHT, UP, Vector3D } from "@classes/vector3d";
+import { EPS } from "@constants";
 import { map } from "@helpers/math";
 
 export async function planView(cube: Puzzle, DIM: number): Promise<Blob> {
@@ -31,13 +32,13 @@ export async function planView(cube: Puzzle, DIM: number): Promise<Blob> {
         }
         let p = s.points;
         let u = s.getOrientation();
-        return p[0].y >= 1 - 1e-6 && UP.sub(u).abs2() < 1e-4;
+        return p[0].y >= 1 - EPS && UP.sub(u).abs2() < 1e-4;
       })
       .map(s => s.rotate(CENTER, RIGHT, PI_2))
       .sort((a: Sticker, b: Sticker) => {
         let ca = a._generator.updateMassCenter(), cb = b._generator.updateMassCenter();
 
-        if ( Math.abs( ca.y - cb.y ) < 1e-6 ) {
+        if ( Math.abs( ca.y - cb.y ) < EPS ) {
           return ca.x - cb.x;
         }
 
@@ -89,7 +90,7 @@ export async function planView(cube: Puzzle, DIM: number): Promise<Blob> {
       let th = 1 - 2 / cube.order[0];
       let mc = s.getMassCenter();
 
-      return mc.y > th && ( Math.abs(mc.x) > 1 - 1e-6 || Math.abs(mc.z) > 1 - 1e-6 );
+      return mc.y > th && ( Math.abs(mc.x) > 1 - EPS || Math.abs(mc.z) > 1 - EPS );
     }).map(s => {
       let o = s.getOrientation();
       let ac = s._generator;

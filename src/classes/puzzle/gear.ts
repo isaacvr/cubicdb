@@ -1,7 +1,7 @@
 import { LEFT, UP, BACK, RIGHT, FRONT, DOWN, CENTER } from './../vector3d';
 import { Vector3D } from '../../classes/vector3d';
 import type { PuzzleInterface } from '@interfaces';
-import { STANDARD_PALETTE } from "@constants";
+import { EPS, STANDARD_PALETTE } from "@constants";
 import { Piece } from './Piece';
 import { Sticker } from './Sticker';
 import { assignColors, getAllStickers, random } from './puzzleUtils';
@@ -174,7 +174,7 @@ export function GEAR(): PuzzleInterface {
   pieces.push( centerPiece.rotate(CENTER, LEFT, PI_2) );
 
   gear.toMove = function(piece: Piece, sticker: Sticker, dir: Vector3D) {
-    if ( ![ RIGHT, UP, FRONT ].reduce((ac, v) => ac || v.cross(dir).abs() < 1e-6, false) ) {
+    if ( ![ RIGHT, UP, FRONT ].reduce((ac, v) => ac || v.cross(dir).abs() < EPS, false) ) {
       return [];
     }
 

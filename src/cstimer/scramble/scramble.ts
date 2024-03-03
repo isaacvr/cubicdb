@@ -34,7 +34,7 @@ export let filters: Map<string, string[]> = new Map<string, string[]>();
 
 export let probs: Map<string, number[]> = new Map<string, number[]>();
 
-export let options: Map<string, PuzzleOptions> = new Map<string, PuzzleOptions> ();
+export let options: Map<string, PuzzleOptions | PuzzleOptions[]> = new Map<string, PuzzleOptions | PuzzleOptions[]> ();
 
 export function regScrambler(mode: string | string[], callback: Function, filter_and_probs?: any) {
   if ( Array.isArray(mode) ) {

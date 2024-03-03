@@ -291,4 +291,29 @@ export class ScrambleParser {
   static parseNNNString(scramble: string): string {
     return (new Interpreter()).input(scramble) as string;
   }
+
+  static parseMisc(scramble: string, mode: string): string[] {
+    switch ( mode ) {
+      case 'r3':
+      case 'r3ni':
+      case 'r234w':
+      case 'r2345w':
+      case 'r23456w':
+      case 'r234567w':
+      case 'r234':
+      case 'r2345':
+      case 'r23456':
+      case 'r234567': {
+        return scramble.split("<br>").map(s => s.replace(/^\d+\)(.+)$/, "$1").trim());
+      }
+
+      case 'sq2': {
+        return [ scramble ];
+      }
+
+      default: {
+        return [];
+      }
+    }
+  }
 }

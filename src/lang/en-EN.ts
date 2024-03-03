@@ -664,14 +664,14 @@ export const English: Language = {
       'Relays',
       [
         ['Lots of 3x3x3s', "r3", 5],
+        ['234 Relay (WCA)', "r234w", 0],
+        ['2345 Relay (WCA)', "r2345w", 0],
+        ['23456 Relay (WCA)', "r23456w", 0],
+        ['234567 Relay (WCA)', "r234567w", 0],
         ['234 Relay', "r234", 0],
         ['2345 Relay', "r2345", 0],
         ['23456 Relay', "r23456", 0],
         ['234567 Relay', "r234567", 0],
-        ['234 Relay (WCA)', "r234w", 0],
-        ['2345 Relay (WCA)', "r2345w", 0],
-        ['23456 Relay (WCA)', "r23456w", 0],
-        ['234567 Relay (WCA)', "r234567w", 0]
       ]
     ],
     [

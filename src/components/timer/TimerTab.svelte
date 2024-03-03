@@ -44,14 +44,15 @@
   import { globalLang } from '@stores/language.service';
   import { getLanguage } from '@lang/index';
   import { copyToClipboard, randomUUID } from '@helpers/strings';
+  import { minmax } from '@helpers/math';
   import Simulator from '@components/Simulator.svelte';
   import { statsReplaceId } from '@helpers/statistics';
-  import StatsProgress from './StatsProgress.svelte';
   import { screen } from '@stores/screen.store';
   import { Button, Modal, Popover, Range, Spinner, StepIndicator, TextPlaceholder } from 'flowbite-svelte';
   import Tooltip from '@components/material/Tooltip.svelte';
   import { CubeDBICON, STEP_COLORS } from '@constants';
-    import { blur, scale } from 'svelte/transition';
+  import { blur, scale } from 'svelte/transition';
+  import { ChevronLeftSolid, ChevronRightSolid } from 'flowbite-svelte-icons';
 
   type TModal = '' | 'edit-scramble' | 'old-scrambles' | 'settings';
 
@@ -67,7 +68,7 @@
   const {
     state, ready, tab, solves, allSolves, session, Ao5, stats, scramble, group, mode, hintDialog,
     hint, cross, xcross, preview, isRunning, decimals, bluetoothList,
-    sortSolves, updateSolves, initScrambler, updateStatistics, selectedGroup,
+    sortSolves, updateSolves, initScrambler, updateStatistics,
     editSolve, handleUpdateSolve, handleRemoveSolves, editSessions
   } = context;
 
@@ -179,6 +180,7 @@
   let simulator: Simulator;
   let isSearching = false;
   let isConnecting = false;
+  let selectedImg = 0;
   
   let options = [
     { text: "Reload scramble [Ctrl + S]", icon: Refresh, handler: () => initScrambler() },
@@ -603,6 +605,11 @@
     inputMethod.newRecord();
   }
 
+  function step(ev: MouseEvent, v: number) {
+    ev.stopPropagation();
+    selectedImg = minmax(selectedImg + v, 0, $preview.length);
+  }
+
   onMount(() => {
     if ( timerOnly || scrambleOnly ) {
       return;
@@ -627,6 +634,7 @@
   $: $localLang, updateTexts();
   $: $scramble && cleanOnScramble && clean();
   $: dataService.sleep( $state === TimerState.RUNNING  );
+  $: $mode && (selectedImg = 0);
 </script>
 
 <svelte:window
@@ -634,9 +642,7 @@
   on:keydown={ keyDown }
 ></svelte:window>
 
-<div
-  class="w-full h-[calc(100%-3rem)] { (timerOnly || scrambleOnly) ? 'mt-8' : '' }"
-  >
+<div class:timerOnly class:scrambleOnly class="w-full h-[calc(100%-3rem)] { (timerOnly || scrambleOnly) ? 'mt-8' : '' }" >
   {#if !timerOnly }
     <!-- Scramble -->
     <div id="scramble" class="transition-all duration-300 max-md:text-xs max-md:leading-5">
@@ -920,20 +926,38 @@
   {#if $session?.settings?.genImage || battle }
     <button
       id="preview-container"
-      class="absolute bottom-2 flex items-center justify-center w-full
-        transition-all duration-300 select-none bg-transparent"
+      class="absolute bottom-2 flex items-center justify-center sm:w-[20rem] w-[calc(100%-14rem)]
+        h-[9rem] md:h-[12rem] transition-all duration-300 select-none left-1/2 translate-x-[calc(-50%+1rem)]"
       class:expanded={ prevExpanded }
       class:hide={ $isRunning || $session.settings.input === 'GAN Cube' || timerOnly }
       on:click={() => prevExpanded = $preview ? !prevExpanded : false }>
-        {#if !$preview}
-          <div class="bottom-2 object-contain bg-gray-700 aspect-video h-full rounded grid place-items-center animate-pulse">
+        {#if $preview.length === 0 }
+          <div class="bg-gray-700 w-full h-full rounded grid place-items-center animate-pulse">
             <svg width="48" height="48" class="text-gray-200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" fill="currentColor" viewBox="0 0 640 512">
               <path d="M480 80C480 35.82 515.8 0 560 0C604.2 0 640 35.82 640 80C640 124.2 604.2 160 560 160C515.8 160 480 124.2 480 80zM0 456.1C0 445.6 2.964 435.3 8.551 426.4L225.3 81.01C231.9 70.42 243.5 64 256 64C268.5 64 280.1 70.42 286.8 81.01L412.7 281.7L460.9 202.7C464.1 196.1 472.2 192 480 192C487.8 192 495 196.1 499.1 202.7L631.1 419.1C636.9 428.6 640 439.7 640 450.9C640 484.6 612.6 512 578.9 512H55.91C25.03 512 .0006 486.1 .0006 456.1L0 456.1z" />
             </svg>
           </div>
         {:else}
-          <img on:dragstart|preventDefault src={ $preview } alt=""
-            class="bottom-2 transition-all duration-300 cursor-pointer h-full object-contain">
+          <div class="w-full h-full flex items-center justify-center relative">
+            {#if !prevExpanded && $preview.length > 1}
+              <span class="absolute top-[-1.5rem] transition-all" out:blur>
+                {$localLang.global.scramble} {selectedImg + 1} / { $preview.length }
+              </span>
+            {/if}
+
+            <Button color="none" on:click={ (ev) => step(ev, -1) } disabled={ selectedImg === 0 }
+              class={"rounded-full w-[3rem] h-[3rem] " + ($preview.length < 2 ? 'opacity-0 pointer-events-none' : '')}>
+              <ChevronLeftSolid class="pointer-events-none"/>
+            </Button>
+  
+            <img on:dragstart|preventDefault src={ $preview[selectedImg].src } alt=""
+              class="transition-all duration-300 cursor-pointer h-full w-full object-contain">
+
+            <Button color="none" on:click={ (ev) => step(ev, 1) } disabled={ selectedImg + 1 === $preview.length }
+              class={"rounded-full w-[3rem] h-[3rem] " + ($preview.length < 2 ? 'opacity-0 pointer-events-none' : '')}>
+              <ChevronRightSolid class="pointer-events-none"/>
+            </Button>
+          </div>
         {/if}
     </button>
   {/if}
@@ -1213,19 +1237,21 @@
   }
 
   #preview-container {
-    @apply max-md:h-[20%] md:h-[25%];
     transition: all 400ms cubic-bezier(0.88, 0.33, 0.32, 1.19);
     transition-timing-function: cubic-bezier(0.88, 0.33, 0.32, 1.19);
   }
 
   #preview-container.expanded {
-    height: calc(100% - 4rem);
+    height: 100%;
     background-color: rgba(0, 0, 0, 0.4);
   }
 
-  #preview-container:not(.expanded) > :first-child {
-    max-width: calc(100% - 13rem);
-    margin-left: 2rem;
+  .scrambleOnly #preview-container.expanded {
+    height: calc(100% - 4rem);
+  }
+
+  #preview-container.expanded {
+    @apply w-full translate-x-[-50%] pt-4;
   }
 
   .hide {

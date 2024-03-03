@@ -3,7 +3,7 @@ import { Sticker } from './Sticker';
 import { Piece } from './Piece';
 import { assignColors, getAllStickers, random } from './puzzleUtils';
 import type { PuzzleInterface } from '@interfaces';
-import { STANDARD_PALETTE } from "@constants";
+import { EPS, STANDARD_PALETTE } from "@constants";
 import { ScrambleParser } from '@classes/scramble-parser';
 
 export function PYRAMINX(n: number): PuzzleInterface {
@@ -170,7 +170,7 @@ export function PYRAMINX(n: number): PuzzleInterface {
     for (let i = 0; i < MOVES; i += 1) {
       let p = random( pieces ) as Piece;
       let s = random(p.stickers.filter(s => /^[^xd]$/.test(s.color))) as Sticker;
-      let vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > 1e-6));
+      let vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > EPS));
       let pcs = pyra.toMove(p, s, vec);
       pcs.pieces.forEach((p: Piece) => p.rotate(CENTER, vec, pcs.ang, true));
     }
@@ -207,7 +207,7 @@ export function PYRAMINX(n: number): PuzzleInterface {
   for (let i = 0, maxi = pieces.length; i < maxi; i += 1) {
     let { stickers } = pieces[i];
 
-    stickers = stickers.filter(s => s.getOrientation().abs() > 1e-6);
+    stickers = stickers.filter(s => s.getOrientation().abs() > EPS);
   }
 
   assignColors(pyra, pyra.faceColors);

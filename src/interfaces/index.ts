@@ -5,6 +5,7 @@ import type { Vector3D } from '../classes/vector3d';
 import type { CubeMode, SCRAMBLE_MENU } from "../constants";
 import type { Writable } from 'svelte/store';
 import type { Display } from 'electron';
+import type { HTMLImgAttributes } from 'svelte/elements';
 
 export const PuzzleTypeName = [
   'rubik', 'icarry', 'skewb', 'square1', 'pyraminx', 'axis', 'fisher', 'ivy'
@@ -302,7 +303,7 @@ export interface TimerContext {
   hint: Writable<boolean>;
   cross: Writable<string>;
   xcross: Writable<string>;
-  preview: Writable<string>;
+  preview: Writable<HTMLImgAttributes[]>;
   prob: Writable<number>;
   isRunning: Writable<boolean>;
   selected: Writable<number>;

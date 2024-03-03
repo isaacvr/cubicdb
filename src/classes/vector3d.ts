@@ -1,6 +1,5 @@
 import { EPS } from '@constants';
 import { Quaternion } from './quaternion';
-import { Vector3 } from 'three';
 
 const PI = Math.PI;
 const TAU = PI * 2;
@@ -19,7 +18,7 @@ function fixedSin(ang: number): number {
   ];
 
   for (let i = 0, maxi = sinTable.length; i < maxi; i += 1) {
-    if ( Math.abs(sinTable[i][0] - rAng) < 1e-6 ) {
+    if ( Math.abs(sinTable[i][0] - rAng) < EPS ) {
       return sinTable[i][1];
     }
   }
@@ -40,7 +39,7 @@ function fixedCos(ang: number): number {
   ];
 
   for (let i = 0, maxi = cosTable.length; i < maxi; i += 1) {
-    if ( Math.abs(cosTable[i][0] - rAng) < 1e-6 ) {
+    if ( Math.abs(cosTable[i][0] - rAng) < EPS ) {
       return cosTable[i][1];
     }
   }
@@ -104,7 +103,7 @@ export class Vector3D {
 
   static direction1(anchor: Vector3D, u: Vector3D, pt: Vector3D): -1 | 0 | 1 {
     let dot = u.dot( pt.sub(anchor) );
-    if ( Math.abs(dot) < 1e-6 ) {
+    if ( Math.abs(dot) < EPS ) {
       return 0;
     }
     return <-1 | 0 | 1> Math.sign(dot);
@@ -314,7 +313,7 @@ export class Vector3D {
   }
 
   toNormal(): Vector3D {
-    let coords = [ this.x, this.y, this.z ].map(e => Math.abs(e) < 1e-6 ? 0 : Math.sign(e) );
+    let coords = [ this.x, this.y, this.z ].map(e => Math.abs(e) < EPS ? 0 : Math.sign(e) );
     this.x = coords[0];
     this.y = coords[1];
     this.z = coords[2];

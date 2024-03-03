@@ -9,7 +9,7 @@
   import JSConfetti from 'js-confetti';
   
   /// Data
-  import { isNNN, SessionDefaultSettings, type SCRAMBLE_MENU, AON, ICONS, CubeDBICON, STEP_COLORS } from '@constants';
+  import { isNNN, SessionDefaultSettings, type SCRAMBLE_MENU, AON, ICONS, CubeDBICON, STEP_COLORS, MISC } from '@constants';
   import { DataService } from '@stores/data.service';
 
   /// Components
@@ -46,6 +46,7 @@
   import { Button, Input, Modal, Tooltip } from 'flowbite-svelte';
   import WcaCategory from '@components/wca/WCACategory.svelte';
   import { isBetween } from '@helpers/math';
+    import type { HTMLImgAttributes } from 'svelte/elements';
 
   let MENU: SCRAMBLE_MENU[] = getLanguage($globalLang).MENU;
   
@@ -117,7 +118,7 @@
   let hint = writable<boolean>();
   let cross = writable<string>();
   let xcross = writable<string>();
-  let preview = writable<string>();
+  let preview = writable<HTMLImgAttributes[]>([]);
   let prob = writable<number>();
   let isRunning = writable<boolean>(false);
   let selected = writable<number>(0);
@@ -257,22 +258,37 @@
     e.stopPropagation();
   }
 
-  function setPreview(img: string, date: number) {
+  function setPreview(img: string[], date: number) {
     if ( date > lastPreview ) {
-      $preview = img;
+      $preview = img.map(src => ({ src, alt: '', title: '' }));
       lastPreview = date;
     }
   }
 
   async function updateImage(md: string) {
-    let cb = Puzzle.fromSequence( $scramble, {
-      ...all.pScramble.options.get(md),
-      rounded: true,
-      headless: true
-    } as PuzzleOptions, false, false);
+    let cb: Puzzle[] = [];
+
+    if ( MISC.find(mode => mode === md) ) {
+      let options: PuzzleOptions[] = all.pScramble.options.get(md)! as PuzzleOptions[];
+      
+      cb = ScrambleParser.parseMisc($scramble, md).map((scr, pos) => Puzzle.fromSequence(scr, {
+        ...options[pos % options.length],
+        rounded: true,
+        headless: true
+      }, false, false));
+
+    } else {
+      cb = [
+        Puzzle.fromSequence( $scramble, {
+          ...all.pScramble.options.get(md),
+          rounded: true,
+          headless: true
+        } as PuzzleOptions, false, false)
+      ]
+    }
 
     let date = Date.now();
-    setPreview((await pGenerateCubeBundle([cb], 500))[0], date);
+    setPreview((await pGenerateCubeBundle(cb, 500)), date);
   }
 
   // For testing only!!
@@ -329,21 +345,22 @@
       if ( DIALOG_MODES.indexOf(md) > -1 ) {
         $cross = solve_cross($scramble).map(e => e.map(e1 => e1.trim()).join(' '))[0];
         $xcross = solve_xcross($scramble, 0).map(e => e.trim()).join(' ');
-        // $hintDialog = true;
       } else {
         $cross = "";
         $xcross = "";
         $hint = false;
-        // $hintDialog = false;
       }
 
       // emit scramble for iCarry and other stuffs
       dataService.scramble($scramble);
 
+      console.log("MODE: ", md);
+
       if ( all.pScramble.options.has(md) && $session?.settings?.genImage ) {
+        console.log("HAS_MODE: ", md);
         updateImage(md);
       } else {
-        setPreview('', Date.now());
+        setPreview([], Date.now());
       }
     }, 10);
   }
@@ -363,11 +380,11 @@
   }
 
   function selectedGroup(rescramble = true) {
-    if ( !isBetween($group + 0.1, 0, MENU.length - 1, true) ) return;
-
+    if ( typeof $group === 'undefined' ) return;
+    
     modes = MENU[ $group ][1];
     $mode = modes[0];
-    selectedMode(rescramble);
+    selectedMode(rescramble, true);
   }
 
   function selectedSession() {
@@ -382,7 +399,9 @@
       if ( md ) {
         $mode = md;
         $group = i;
-        fnd = true;    
+        modes = MENU[ $group ][1];
+        selectedMode(false, false);
+        fnd = true;
         break;
       }
     }

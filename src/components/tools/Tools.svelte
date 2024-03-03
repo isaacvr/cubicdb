@@ -56,7 +56,7 @@
   // Timer and Scramble Only
   let modes: { 0: string; 1: string; 2: number }[] = [];
   let filters: string[] = [];
-  let option: ToolOption = "remote-timer";
+  let option: ToolOption = "solver";
   let timer: Timer;
 
   // Batch
@@ -89,7 +89,8 @@
   const DEFAULT_COLOR = colors.gray;
   let fColors = [ colors.w, colors.r, colors.g, colors.y, colors.o, colors.b ];
   let facelets: string[][] = [
-    ...[0, 1, 2, 3, 4, 5].map(n => [ '-', '-', '-', '-', fColors[n], '-', '-', '-', '-' ])
+    // ...[0, 1, 2, 3, 4, 5].map(n => [ '-', '-', '-', '-', fColors[n], '-', '-', '-', '-' ])
+    ...[0, 1, 2, 3, 4, 5].map(n => [ '-', '-', '-', '-', '-', '-', '-', '-', '-' ])
   ];
 
   let keys = [ "[W]", "[R]", "[G]", "[Y]", "[O]", "[B]" ];
@@ -132,7 +133,7 @@
 
   function toClipboard() {
     let str =
-      `${ $localLang.TOOLS.cubedbBatch } (${batch})\n\n` +
+      `${ $localLang.TOOLS.cubedbBatch } (${ $mode[0] }${ $prob > -1 ? ' > ' + filters[$prob] : '' })\n\n` +
       scrambleBatch.map((s, p) => `${p + 1}- ${s}`).join("\n\n");
 
     copyToClipboard(str).then(() => {
@@ -271,7 +272,8 @@
 
   function clearCube() {
     facelets = [
-      ...[0, 1, 2, 3, 4, 5].map(n => [ '-', '-', '-', '-', fColors[n], '-', '-', '-', '-' ])
+      // ...[0, 1, 2, 3, 4, 5].map(n => [ '-', '-', '-', '-', fColors[n], '-', '-', '-', '-' ])
+      ...[0, 1, 2, 3, 4, 5].map(n => [ '-', '-', '-', '-', '-', '-', '-', '-', '-' ])
     ];
   }
 
@@ -287,7 +289,7 @@
   }
 
   function assignColor(x: number, y: number) {
-    if ( y === 4 ) return;
+    // if ( y === 4 ) return;
     facelets[x][y] = fColors[ color ];
   }
 
@@ -312,7 +314,7 @@
       [$localLang.TOOLS.timerOnly, "timer-only"],
       [$localLang.TOOLS.scrambleOnly, "scramble-only"],
       [$localLang.TOOLS.batchScramble, "scramble-batch"],
-      [$localLang.TOOLS.statistics, "statistics"],
+      // [$localLang.TOOLS.statistics, "statistics"],
       [$localLang.TOOLS.metrics, "metrics"],
       [$localLang.TOOLS.solver, "solver"],
       [$localLang.TOOLS.mosaic, "mosaic"],

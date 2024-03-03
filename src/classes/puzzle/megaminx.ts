@@ -4,7 +4,7 @@ import type { PuzzleInterface } from '@interfaces';
 import { Piece } from './Piece';
 import { Sticker } from './Sticker';
 import { assignColors, getAllStickers, random } from './puzzleUtils';
-import { STANDARD_PALETTE } from '@constants';
+import { EPS, STANDARD_PALETTE } from '@constants';
 import { ScrambleParser } from '@classes/scramble-parser';
 
 export function MEGAMINX(_n: number, headless?: false): PuzzleInterface {
@@ -238,7 +238,7 @@ export function MEGAMINX(_n: number, headless?: false): PuzzleInterface {
       if ( !p ) { i -= 1; continue; }
       let s = random(p.stickers.filter(s => !/^[xd]{1}$/.test(s.color))) as Sticker;
       if ( !s ) { i -= 1; continue; }
-      let vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > 1e-6));
+      let vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > EPS));
       if ( !vec ) { i -= 1; continue; }
       let pcs = mega.toMove(p, s, vec);
       let cant = 1 + random(3);
