@@ -30,7 +30,7 @@
   import { globalLang } from '@stores/language.service';
   import { getLanguage } from '@lang/index';
   import { NotificationService } from '@stores/notification.service';
-  import { randomUUID } from '@helpers/strings';
+  import { prettyScramble, randomUUID } from '@helpers/strings';
   import { binSearch } from '@helpers/object';
   
   // ICONS
@@ -268,9 +268,9 @@
   async function updateImage(md: string) {
     let cb: Puzzle[] = [];
 
-    if ( MISC.find(mode => mode === md) ) {
+    if ( MISC.some(mode => typeof mode === 'string' ? mode === md : mode.indexOf(md) > -1) ) {
       let options: PuzzleOptions[] = all.pScramble.options.get(md)! as PuzzleOptions[];
-      
+
       cb = ScrambleParser.parseMisc($scramble, md).map((scr, pos) => Puzzle.fromSequence(scr, {
         ...options[pos % options.length],
         rounded: true,
@@ -341,7 +341,9 @@
       if ( isNNN(md) ) {
         $scramble = ScrambleParser.parseNNNString($scramble);
       }
-
+      
+      $scramble = prettyScramble($scramble);
+      
       if ( DIALOG_MODES.indexOf(md) > -1 ) {
         $cross = solve_cross($scramble).map(e => e.map(e1 => e1.trim()).join(' '))[0];
         $xcross = solve_xcross($scramble, 0).map(e => e.trim()).join(' ');

@@ -19,7 +19,7 @@ export async function projectedView(cube: Puzzle, DIM: number): Promise<Blob> {
   const PI_6 = PI / 6;
   const FACTOR = 2.1;
   let LW = DIM * 0.007;
-  const SPECIAL_SQ1 = [CubeMode.CS, CubeMode.EO, , CubeMode.CO];
+  const SPECIAL_SQ1 = [CubeMode.CS, CubeMode.EO, CubeMode.CO];
 
   const getFactor = () => {
     if ( (cube.type === 'square1' || cube.type === 'square2') && SPECIAL_SQ1.some(m => m === cube.mode) ) {
@@ -36,7 +36,6 @@ export async function projectedView(cube: Puzzle, DIM: number): Promise<Blob> {
     H = W - H;
     W = W - H;
     W *= 0.62;
-    // W = H / 2.5;
   } else if ( cube.type === 'megaminx' ) {
     W = H * 2;
     LW = H * 0.004;
@@ -112,9 +111,14 @@ export async function projectedView(cube: Puzzle, DIM: number): Promise<Blob> {
     let st = stickers[i];
     let uv = st.getOrientation();
     let ok = false;
+
+    if ( cube.type === 'gear' ) {
+      uv = [UP, FRONT, RIGHT, LEFT, BACK, DOWN].sort((a, b) => b.dot(uv) - a.dot(uv))[0];
+    }
+
     for (let j = 0, maxj = faceVectors.length; j < maxj && !ok; j += 1) {
       if ( faceVectors[j].sub( uv ).abs() < EPS ) {
-        if ( ['rubik', 'ivy', 'skewb', 'megaminx'].indexOf(cube.type) > -1 ) {
+        if ( ['rubik', 'bicube', 'gear', 'ivy', 'skewb', 'megaminx', 'redi'].indexOf(cube.type) > -1 ) {
           sideStk[ faceName[j] ].push(
             st.rotate(fcTr[j][0], fcTr[j][1], fcTr[j][2]).add( fcTr[j][3].mul(fcTr[j][4]) )
           );
@@ -134,14 +138,6 @@ export async function projectedView(cube: Puzzle, DIM: number): Promise<Blob> {
         
         if ( pts.length > 0 ) {
           if ( !SPECIAL_SQ1.some(m => cube.mode === m) ) {
-            
-            // let pt = st._generator.points.find(p => {
-            //   return Math.abs(p.y) < 1;
-            // });
-            
-            // let f = st._generator.name === 'side-corner' ?
-            //   -Math.sign( st.getOrientation().dot(Vector3D.cross(pts[0], pts[1], pt!)) ) : 1;
-
             let st1 = st._generator.clone();
             st1.points.map(p => p.y = (p.y + pts[0].y) / 2);
             st1.updateMassCenter();
@@ -157,7 +153,6 @@ export async function projectedView(cube: Puzzle, DIM: number): Promise<Blob> {
             let ini = f > 0 ? 1 : 2;
 
             for (let j = ini; j <= ini + 1; j += 1) {
-            // for (let j = 0, maxj = points.length; j < maxj; j += 1) {
               let anchors = SQ1_A1;
               
               let pj = points[j].clone();

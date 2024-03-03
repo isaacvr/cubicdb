@@ -650,10 +650,12 @@
         <TextPlaceholder size="xl" class="w-full" divClass="grid gap-2 place-items-center max-h-12 overflow-hidden animate-pulse"/>
       {/if}
 
-      {#if inputMethod instanceof GANInput }
-        <span
-          class:hide={ $isRunning }
-          class:battle={ battle }>
+      
+      <pre class="scramble-content"
+        class:hide={ $isRunning }
+        class:battle={ battle }>
+        
+        {#if inputMethod instanceof GANInput }
           {#if $recoverySequence }
             {"=> " + $recoverySequence}
           {:else}
@@ -663,14 +665,9 @@
               { $sequenceParts[0] } <mark>{ $sequenceParts[1] }</mark> { $sequenceParts[2] }
             {/if}
           {/if}
-        </span>
-      {:else}
-        <span
-          class:hide={ $isRunning }
-          class:battle={ battle }
-          contenteditable="false" bind:innerHTML={$scramble}></span>
-      {/if}
-
+        {:else} { $scramble ? $scramble : '' } {/if}
+      </pre>
+      
       <!-- Options -->
       {#if !scrambleOnly }
         <div class={`absolute md:top-1 md:right-4 md:w-[2rem] md:items-center flex md:flex-col
@@ -788,11 +785,28 @@
               { timer($time, $decimals, false)}
             </span>
         {:else}
-          <span
-            class="timer text-gray-300 max-sm:text-7xl max-sm:[line-height:8rem]"
-            class:prevention={ $state === TimerState.PREVENTION } class:ready={$ready}>
-              { $state === TimerState.STOPPED ? sTimer($lastSolve, $decimals, false) : timer($time, $decimals, false)}
-            </span>
+          <div class={ "transition-all duration-200 " + (prevExpanded &&
+            ($state === TimerState.STOPPED || $state === TimerState.CLEAN) ? 'opacity-0' : '')}>
+            <span
+              class="timer text-gray-300 max-sm:text-7xl max-sm:[line-height:8rem]"
+              class:prevention={ $state === TimerState.PREVENTION } class:ready={$ready}>
+                { $state === TimerState.STOPPED ? sTimer($lastSolve, $decimals, false) : timer($time, $decimals, false)}
+              </span>
+  
+              {#if !timerOnly && $state === TimerState.STOPPED}
+                <div class={"flex justify-center w-full " + ( $session.settings.input === 'GAN Cube' ? '-my-4' : '' ) }
+                    class:show={$state === TimerState.STOPPED} transition:blur>
+                  {#each solveControl.slice(Number(battle), solveControl.length) as control}
+                    <Tooltip class="cursor-pointer" position="top" text={ control.text }>
+                      <Button color="none" class="flex my-3 mx-1 w-5 h-5 p-0 { control.highlight($solves[0] || {}) ? 'text-red-500' : '' }"
+                        on:click={ control.handler }>
+                        <svelte:component this={control.icon} width="100%" height="100%"/>
+                      </Button>
+                    </Tooltip>
+                  {/each}
+                </div>
+              {/if}
+          </div>
         {/if}
         
         {#if $session.settings.sessionType === 'multi-step' && $state === TimerState.RUNNING }
@@ -817,20 +831,6 @@
       <span transition:blur
         class="timer"
         hidden={!($state === TimerState.RUNNING && !$session.settings.showElapsedTime)}>----</span>
-
-      {#if !timerOnly && $state === TimerState.STOPPED}
-        <div class={"flex justify-center w-full " + ( $session.settings.input === 'GAN Cube' ? '-my-4' : '' ) }
-            class:show={$state === TimerState.STOPPED} transition:blur>
-          {#each solveControl.slice(Number(battle), solveControl.length) as control}
-            <Tooltip class="cursor-pointer" position="top" text={ control.text }>
-              <Button color="none" class="flex my-3 mx-1 w-5 h-5 p-0 { control.highlight($solves[0] || {}) ? 'text-red-500' : '' }"
-                on:click={ control.handler }>
-                <svelte:component this={control.icon} width="100%" height="100%"/>
-              </Button>
-            </Tooltip>
-          {/each}
-        </div>
-      {/if}
     </div>
   {/if}
 
@@ -1155,16 +1155,19 @@
     @apply grid place-items-center;
   }
 
-  #scramble span {
+  #scramble .scramble-content {
     @apply md:ml-16 md:mr-10 mx-4 inline-block text-center md:w-[calc(100%-15rem)]
-      max-md:max-h-[min(10rem,21vh)] md:max-h-[16rem];
-    font-size: 1.5em;
+      max-md:max-h-[min(10rem,21vh)] md:max-h-[16rem] lg:text-xl md:text-lg sm:text-sm text-xs;
     line-height: 1.3;
-    word-spacing: .5rem;
     overflow: hidden auto;
+    overflow-wrap: break-word;
+    white-space: pre-wrap;
+    display: flex;
+    text-align: left;
+    justify-content: center;
   }
 
-  #scramble span.battle {
+  #scramble .scramble-content.battle {
     margin: 0;
     max-height: 9rem;
   }

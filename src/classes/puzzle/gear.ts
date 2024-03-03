@@ -218,8 +218,8 @@ export function GEAR(): PuzzleInterface {
     ];
   };
 
-  gear.scramble = function() {
-    let scr = generateGearScramble('gearo').trim().split(/\s+/g);
+  gear.move = function(scramble: string[]) {
+    let scr = scramble[0].trim().split(/\s+/g);
     let moves = [ UP, RIGHT, FRONT ];
     let _pieces = pieces.slice(0, 8);
 
@@ -229,8 +229,6 @@ export function GEAR(): PuzzleInterface {
       let dir = m.endsWith("'") ? -1 : 1;
       let cant = isNaN( parseInt(m.slice(1)) ) ? 1 : parseInt(m.slice(1));
       let fp = _pieces.filter(p => p.direction1(moves[pos].mul(0.8), moves[pos]) === 0);
-
-      console.log(m, pos, dir * cant);
 
       let p = random(fp) as Piece;
       let st = random(p.stickers.filter(s => s.color != 'd')) as Sticker;
@@ -247,7 +245,10 @@ export function GEAR(): PuzzleInterface {
         });
       });
     }
+  }
 
+  gear.scramble = function() {
+    gear.move([ generateGearScramble('gearo') ]);
   }
 
   gear.rotation = {

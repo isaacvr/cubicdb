@@ -157,7 +157,11 @@ export const CLCK = [ "clkwca", "clk", "clkwca", "clko", "clkc", "clke" ];
 export const MEGA = [ "mgmp", "mgmc", "mgmo", "minx2g", "mlsll" ];
 export const KILO = [ "kilo" ];
 export const GIGA = [ "giga" ];
-export const MISC = [ "r3", "r3ni", "r234w", "r2345w", "r23456w", "r234567w", "r234", "r2345", "r23456", "r234567", "sq2" ];
+export const MISC = [
+  ["r3", "r3ni"], "r234w", "r2345w", "r23456w", "r234567w", "r234", "r2345", "r23456", "r234567", "sq2", "bic",
+  ["gearso", "gearo", "gear"],
+  ["redim", "redi"],
+];
 
 export const ICONS = [
   { icon: "222so", name: '2x2x2', scrambler: R222 },
@@ -190,7 +194,6 @@ const OPTS: PuzzleOptions[] = [
 
 const OPTS_MISC: PuzzleOptions[][] = [
   [ { type: 'rubik', order: [3] } ],
-  [ { type: 'rubik', order: [3] } ],
   [2, 3, 4].map(n => ({ type: 'rubik', order: [n] })),
   [2, 3, 4, 5].map(n => ({ type: 'rubik', order: [n] })),
   [2, 3, 4, 5, 6].map(n => ({ type: 'rubik', order: [n] })),
@@ -199,7 +202,10 @@ const OPTS_MISC: PuzzleOptions[][] = [
   [2, 3, 4, 5].map(n => ({ type: 'rubik', order: [n] })),
   [2, 3, 4, 5, 6].map(n => ({ type: 'rubik', order: [n] })),
   [2, 3, 4, 5, 6, 7].map(n => ({ type: 'rubik', order: [n] })),
-  [ { type: 'square2' } ]
+  [ { type: 'square2' } ],
+  [ { type: 'bicube' } ],
+  [ { type: 'gear' } ],
+  [ { type: 'redi' } ],
 ];
 
 const MODES = [ R222, R333, R444, R555, R666, R777, PYRA, SKWB, SQR1, CLCK, MEGA, KILO, GIGA ];
@@ -214,7 +220,12 @@ for (let i = 0, maxi = MODES.length; i < maxi; i += 1) {
 
 for (let i = 0, maxi = MISC.length; i < maxi; i += 1) {
   OPTS_MISC[i].forEach(opt => opt.view = '2d');
-  options.set(MISC[i], OPTS_MISC[i]);
+
+  if ( typeof MISC[i] === 'string' ) {
+    options.set(MISC[i] as string, OPTS_MISC[i]);
+  } else {
+    (MISC[i] as string[]).forEach(m => options.set(m, OPTS_MISC[i]));
+  }
 }
 
 export function isNNN(mode: string): boolean {

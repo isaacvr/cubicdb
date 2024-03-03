@@ -80,10 +80,10 @@ export function BICUBE(): PuzzleInterface {
     };
   };
 
-  bic.scramble = function() {
+  bic.move = function(mv: string[]) {
     let moveMap = "URFDLB";
+    let scramble = mv[0].split(' ').filter(e => e);
     let moveVec = [ UP, RIGHT, FRONT, DOWN, LEFT, BACK ].map(v => v.div(2));
-    let scramble = bicube('', 30).split(' ').filter(e => e);
 
     for (let i = 0, maxi = scramble.length; i < maxi; i += 1) {
       let mv = scramble[i];
@@ -92,6 +92,10 @@ export function BICUBE(): PuzzleInterface {
       let pcs = pieces.filter(p => p.direction1(moveVec[pos], moveVec[pos]) === 0);
       pcs.forEach(p => p.rotate(CENTER, moveVec[pos], ang, true));
     }
+  };
+
+  bic.scramble = function() {
+    bic.move([bicube('', 30)]);
   };
 
   bic.rotation = {

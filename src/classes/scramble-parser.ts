@@ -1,3 +1,4 @@
+import { prettyScramble } from "@helpers/strings";
 import { Interpreter } from "./scrambleInterpreter";
 
 export const scrambleReg = /^([\d]+)?([FRUBLDfrubldzxySME])(?:([w])|&sup([\d]);)?('|2'|2|3'|3)?$/;
@@ -62,9 +63,9 @@ export class ScrambleParser {
     let res: number[][] = [];
 
     // Carrot Notation
-    if (/^(\s*(\+\+|\-\-|U|U'))*$/.test(scramble)) {
+    if ( scramble.split('\n').filter(e => e).every(e => /^(\s*([+-]{2}|U|U'))*$/.test(e))) {
       let moves = scramble.match(/[+-]{2}|U'?/g);
-
+      
       if (!moves) {
         return res;
       }
@@ -304,10 +305,16 @@ export class ScrambleParser {
       case 'r2345':
       case 'r23456':
       case 'r234567': {
-        return scramble.split("<br>").map(s => s.replace(/^\d+\)(.+)$/, "$1").trim());
+        return prettyScramble(scramble).split('\n').map(s => s.replace(/^\d+\)(.+)$/, "$1").trim());
       }
 
-      case 'sq2': {
+      case 'sq2':
+      case 'gearso':
+      case 'gearo':
+      case 'gear':
+      case 'redi':
+      case 'redim':
+      case 'bic': {
         return [ scramble ];
       }
 

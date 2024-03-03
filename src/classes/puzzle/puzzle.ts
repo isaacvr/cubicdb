@@ -478,6 +478,9 @@ export class Puzzle {
       moves = ScrambleParser.parseClock(seq);
     } else if ( this.type === 'megaminx' ) {
       moves = ScrambleParser.parseMegaminx(seq);
+    } else if ( this.type === 'bicube' || this.type === 'gear' || this.type === 'redi' ) {
+      console.log("ASDAS");
+      moves = [seq];
     } else {
       return;
     }
