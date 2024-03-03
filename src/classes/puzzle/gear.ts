@@ -1,7 +1,7 @@
 import { LEFT, UP, BACK, RIGHT, FRONT, DOWN, CENTER } from './../vector3d';
 import { Vector3D } from '../../classes/vector3d';
 import type { PuzzleInterface } from '@interfaces';
-import { STANDARD_PALETTE } from "@constants";
+import { EPS, STANDARD_PALETTE } from "@constants";
 import { Piece } from './Piece';
 import { Sticker } from './Sticker';
 import { assignColors, getAllStickers, random } from './puzzleUtils';
@@ -174,7 +174,7 @@ export function GEAR(): PuzzleInterface {
   pieces.push( centerPiece.rotate(CENTER, LEFT, PI_2) );
 
   gear.toMove = function(piece: Piece, sticker: Sticker, dir: Vector3D) {
-    if ( ![ RIGHT, UP, FRONT ].reduce((ac, v) => ac || v.cross(dir).abs() < 1e-6, false) ) {
+    if ( ![ RIGHT, UP, FRONT ].reduce((ac, v) => ac || v.cross(dir).abs() < EPS, false) ) {
       return [];
     }
 
@@ -218,8 +218,8 @@ export function GEAR(): PuzzleInterface {
     ];
   };
 
-  gear.scramble = function() {
-    let scr = generateGearScramble('gearo').trim().split(/\s+/g);
+  gear.move = function(scramble: string[]) {
+    let scr = scramble[0].trim().split(/\s+/g);
     let moves = [ UP, RIGHT, FRONT ];
     let _pieces = pieces.slice(0, 8);
 
@@ -229,8 +229,6 @@ export function GEAR(): PuzzleInterface {
       let dir = m.endsWith("'") ? -1 : 1;
       let cant = isNaN( parseInt(m.slice(1)) ) ? 1 : parseInt(m.slice(1));
       let fp = _pieces.filter(p => p.direction1(moves[pos].mul(0.8), moves[pos]) === 0);
-
-      console.log(m, pos, dir * cant);
 
       let p = random(fp) as Piece;
       let st = random(p.stickers.filter(s => s.color != 'd')) as Sticker;
@@ -247,7 +245,10 @@ export function GEAR(): PuzzleInterface {
         });
       });
     }
+  }
 
+  gear.scramble = function() {
+    gear.move([ generateGearScramble('gearo') ]);
   }
 
   gear.rotation = {

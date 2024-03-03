@@ -1,5 +1,5 @@
 <script lang="ts">
-  import Chart, { type Plugin, Colors } from 'chart.js/auto';
+  import Chart from 'chart.js/auto';
   import zoomPlugin from 'chartjs-plugin-zoom';
   import { between, calcPercents, evalLine, rotatePoint } from '@helpers/math';
   import { getAverageS, trendLSV } from '@helpers/statistics';
@@ -14,6 +14,8 @@
   import { AON, STEP_COLORS } from '@constants';
   import { screen } from '@stores/screen.store';
   import { Button } from 'flowbite-svelte';
+  import * as echarts from "echarts";
+  import ExternalIcon from '@icons/OpenInNew.svelte';
 
   export let context: TimerContext;
   export let headless = false;
@@ -22,34 +24,39 @@
     
   let { solves, stats, session, STATS_WINDOW, selectSolveById } = context;
 
-  let chartElement: HTMLCanvasElement;
-  let chartElement2: HTMLCanvasElement;
-  let chartElement3: HTMLCanvasElement;
-  let chartElement4: HTMLCanvasElement;
-  let chartElement5: HTMLCanvasElement;
-  let chartElement6: HTMLCanvasElement;
-  let timeChart: Chart;
-  let hourChart: Chart;
-  let weekChart: Chart;
-  let distChart: Chart;
-  let stepTimeChart: Chart;
-  let stepPercentChart: Chart;
-  let steps: number[] = [];
-  const BORDER_COLORS = [
-    'rgb(54, 162, 235)',
-    'rgb(255, 99, 132)',
-    'rgb(255, 159, 64)',
-    'rgb(255, 205, 86)',
-    'rgb(75, 192, 192)',
-    'rgb(153, 102, 255)',
-    'rgb(201, 203, 207)' // grey
-  ];
-  // Border colors with 50% transparency
-  const BACKGROUND_COLORS = /* #__PURE__ */ BORDER_COLORS.map((color)=>color.replace('rgb(', 'rgba(').replace(')', ', 0.5)'));
+  let timeSerie: HTMLDivElement;
+  let timeChart: echarts.ECharts;
+  
+  let hourSerie: HTMLDivElement;
+  let hourChart: echarts.ECharts;
 
+  let weekSerie: HTMLDivElement;
+  let weekChart: echarts.ECharts;
+
+  let distSerie: HTMLDivElement;
+  let distChart: echarts.ECharts;
+
+  let stepTimeSerie: HTMLDivElement;
+  let stepTimeChart: echarts.ECharts;
+
+  let stepPercentSerie: HTMLDivElement;
+  let stepPercentChart: echarts.ECharts;
+
+  const tooltipStyle: echarts.TooltipComponentOption = {
+    trigger: 'axis',
+    axisPointer: {
+      type: 'line',
+    },
+    textStyle: { color: '#a2a0a0' },
+    backgroundColor: '#1c1b2a'
+  };
+
+  const rendererType = 'svg';
   const DAYS = [ "Sun", "Mon", "Tue", "Wen", "Thu", "Fri", "Sat" ];
 
-  function getBest(arr: Solve[], rev?: boolean): {x: number; y: number}[] {
+  let steps: number[] = [];
+
+  function getBest(arr: Solve[], rev?: boolean): number[][] {
     let best = Infinity;
     let bests = [];
     let len = arr.length - 1;
@@ -62,7 +69,7 @@
       }
       if ( arr[ idx(i) ].time < best ) {
         best = arr[ idx(i) ].time;
-        bests.push({ x: i, y: best });
+        bests.push([i, best]);
       }
     }
 
@@ -71,54 +78,233 @@
 
   function updateChart(sv: Solve[]) {
     const len = sv.length - 1;
-
-    timeChart.data.datasets[6].data = sv.map((e, p) => ({
-      x: p,
-      y: infinitePenalty(sv[len - p]) ? null : sv[len - p].time
-    } as any));
-
-    // @ts-ignore
-    timeChart.options.plugins.zoom.limits.x.max = len;
-    
-    // @ts-ignore
-    timeChart.options.scales.x.max = len;
-    
     let avgs = [ 5, 12, 50, 100 ];
 
+    // Series
     /// Ao5 to AoX
-    avgs.forEach((e, i) => {
-      let dt = timeChart.data.datasets[5 - i];
-      dt.data.length = 0;
+    let avgSerie: echarts.SeriesOption[] = avgs.map((e, i) => {
       let pos = $AON.indexOf(e);
-      let Ao = (pos > -1 && $STATS_WINDOW) ? $STATS_WINDOW[ pos ] : getAverageS(e, sv, $session?.settings?.calcAoX || AverageSetting.SEQUENTIAL);
-      dt.data = Ao.map((e, p) => ({ x: p, y: e } as any));
-      dt.label = 'Ao' + e;
+      let data: any = (pos > -1 && $STATS_WINDOW) ? $STATS_WINDOW[ pos ] : getAverageS(e, sv, $session?.settings?.calcAoX || AverageSetting.SEQUENTIAL);
+      return { data, type: 'line', connectNulls: false, name: 'Ao' + e };
     });
-    
-    /// Best solves
-    timeChart.data.datasets[1].data = getBest(sv, true);
 
-    // Least square
-    if ( sv.filter(s => !infinitePenalty(s)).length > 2 ) {
+    // Best marks
+    let bestSerie: echarts.SeriesOption = {
+      data: getBest(sv, true),
+      type: 'line',
+      name: $localLang.TIMER.best,
+      clip: false,
+      coordinateSystem: 'cartesian2d',
+      lineStyle: {
+        type: 'dashed'
+      }
+    };
+
+    // Trend
+    let trendSerie: echarts.SeriesOption[] = (() => {
+      if ( sv.filter(s => !infinitePenalty(s)).length < 3 ) {
+        return [
+          { name: $localLang.TIMER.timeChartLabels.slice(-1)[0], data: [], type: 'line' },
+          { name: 'trend-low', data: [], type: 'line' },
+          { name: 'trend-high', data: [], type: 'line' },
+        ];
+      }
+
       const { m, n } = trendLSV(sv.map((s, p) => [len - p, s.time]));
-      timeChart.data.datasets[0].data = [{ x: 0, y: n }, { x: len, y: m * len + n }];
-    } else {
-      timeChart.data.datasets[0].data = [];
-    }
-    
-    timeChart.update();
-    timeChart.resetZoom();
+      const nn = $stats.dev.value;
+
+      return [{
+        name: $localLang.TIMER.timeChartLabels.slice(-1)[0],
+        data: sv.map((_, p) => [len - p, m * (len - p) + n]),
+        type: 'line',
+        showSymbol: false,
+        tooltip: { show: false },
+        lineStyle: { type: 'dashed', color: 'white' },
+      }, {
+        name: 'trend-low',
+        data: sv.map((_, p) => [len - p, m * (len - p) + n - nn / 2]),
+        type: 'line',
+        showSymbol: false,
+        stack: 'trend-band',
+        lineStyle: { opacity: 0 },
+        tooltip: { show: false }
+      }, {
+        name: 'trend-high',
+        data: sv.map((_, p) => [len - p, nn]),
+        type: 'line',
+        showSymbol: false,
+        stack: 'trend-band',
+        areaStyle: { color: '#fff4' },
+        lineStyle: { opacity: 0 },
+        tooltip: { show: false },
+      }];
+    })();
+
+    // All Series
+    let allSeries: echarts.SeriesOption[] = [
+      {
+        data: sv.map((_, p) => infinitePenalty(sv[len - p]) ? null as any : sv[len - p].time),
+        type: "line",
+        connectNulls: false,
+        name: $localLang.TIMER.timeChartLabels[0],
+        smooth: sv.length < 2000
+      },
+      ...avgSerie, bestSerie, ...trendSerie
+    ];
+
+    let options: echarts.EChartsOption = {
+      title: [{
+        text: $localLang.TIMER.timeDistribution,
+        left: 'center',
+        textStyle: { fontSize: $screen.isMobile ? 20 : 30 },
+      }],
+      xAxis: {
+        type: 'category',
+        data: sv.map((_, p) => p + 1),
+      },
+      yAxis: {
+        type: "value",  min: 'dataMin', max: 'dataMax',
+        axisLabel: {
+          formatter: (value) => timer(value)
+        }
+      },
+      grid: {
+        right: '1%'
+      },
+      legend: {
+        data: $localLang.TIMER.timeChartLabels,
+        top: '6%'
+      },
+      dataZoom: [{
+        type: "slider",
+        xAxisIndex: [0],
+      }, {
+        type: 'inside',
+        minSpan: 0,
+        maxSpan: 100
+      }],
+      series: allSeries,
+      backgroundColor: "transparent",
+      textStyle: {
+        fontFamily: localStorage.getItem('app-font') || 'Ubuntu'
+      },
+      tooltip: {
+        ...tooltipStyle,
+        axisPointer: {
+          type: 'cross',
+          label: {
+            color: tooltipStyle.textStyle?.color,
+            backgroundColor: tooltipStyle.backgroundColor,
+            borderColor: '#ddff',
+            borderWidth: 2,
+            formatter({ axisDimension, value }: any) {
+              return axisDimension === 'x' ? (+value.toString() + '') : timer(+value.toString(), true, true);
+            },
+          },
+          animation: false,
+          animationDurationUpdate: 0
+        },
+        formatter: function (params: any) {
+          let output = params[0].axisValueLabel + '<br/>';
+          let pos = +params[0].axisValueLabel;
+
+          output += '<table style="width: 100%;">';
+
+          params.forEach(function (param: any) {
+            const value = Array.isArray(param.data) ? param.data[1] : param.data;
+            const name: string = param.seriesName;
+            
+            if ( name.startsWith('Ao') && pos < +(name.slice(2)) ) {
+              return;
+            }
+
+            output += `<tr>
+              <td>${ param.marker}</td>
+              <td>${ name }</td>
+              <td style="text-align: right; font-weight: bold; padding-left: .5rem;">${ timer(+value, true, true) }</td>
+            </tr>`;
+          });
+
+          return output + '</table>';
+        },
+      },
+      animation: true,
+      animationDuration: 500,
+    };
+
+    timeChart.setOption(options);
+
+    timeChart.off('dataZoom');
+    timeChart.off('legendselectchanged');
+    timeChart.on('dataZoom', function (params: any) {
+      let start = Math.round((params.batch ? params.batch[0].start: params.start) * sv.length / 100);
+      let end = Math.round((params.batch ? params.batch[0].start: params.start) * sv.length / 100);
+
+      timeChart.setOption({
+        series: [{
+          smooth: Math.abs(end - start) <= 800
+        }, ...avgSerie.map(() => ({
+          smooth: Math.abs(end - start) <= 800
+        }))]
+      });
+    });
+
+    timeChart.on('legendselectchanged', function(ev: any) {
+      let trendName = $localLang.TIMER.timeChartLabels.slice(-1)[0];
+      let hTrend: echarts.LineSeriesOption = allSeries.filter(s => s.name === 'trend-high')[0] as any;
+
+      if ( !ev.selected[ trendName ] ) {
+        hTrend.areaStyle!.color = 'transparent';
+      } else {
+        hTrend.areaStyle!.color = '#fff4';
+      }
+
+      timeChart.setOption(options);
+    });
 
     if ( headless ) return;
 
     // HOUR CHART
     let HData = sv.reduce((acc, s) => {
-      acc[ moment(s.date).hour() ] += 1;
-      return acc;
+      acc[ moment(s.date).hour() ] += 1; return acc;
     }, new Array(24).fill(0));
 
-    hourChart.data.datasets[0].data = HData.map((e, p) => ({x: p, y: e}));    
-    hourChart.update();
+    let hourOptions: echarts.EChartsOption = {
+      title: [{
+        text: $localLang.TIMER.hourDistribution,
+        left: 'center',
+        textStyle: { fontSize: $screen.isMobile ? 20 : 30 },
+      }],
+      xAxis: {
+        type: 'category',
+        data: HData.map((_, p) => p),
+        axisLabel: { formatter(value) { return formatHour(+value) } }
+      },
+      yAxis: { type: "value",  min: 0, max: 'dataMax', scale: true },
+      grid: { right: '1%', bottom: '10%' },
+      series: [{
+        name: $localLang.TIMER.solves,
+        data: HData.map((e, p) => [p, e]),
+        type: 'line',
+        smooth: true,
+        areaStyle: { opacity: .2 },
+        color: '#36a2eb'
+      }],
+      backgroundColor: "transparent",
+      textStyle: { fontFamily: localStorage.getItem('app-font') || 'Ubuntu' },
+      tooltip: {
+        ...tooltipStyle,
+        axisPointer: {
+          label: {
+            formatter({ axisDimension, value }) {
+              return axisDimension === 'x' ? formatHour(+value.toString()) : value.toString();
+            },
+          }
+        },
+      }
+    };
+
+    hourChart.setOption(hourOptions);
 
     // WEEK CHART
     let WData: number[] = sv.reduce((acc, s) => {
@@ -126,8 +312,34 @@
       return acc;
     }, new Array(7).fill(0));
 
-    weekChart.data.datasets[0].data = WData;
-    weekChart.update();
+    let weekOptions: echarts.EChartsOption = {
+      title: [{
+        text: $localLang.TIMER.weekDistribution,
+        left: 'center',
+        textStyle: { fontSize: $screen.isMobile ? 20 : 30 },
+      }],
+      xAxis: {
+        type: 'category',
+        data: DAYS,
+      },
+      yAxis: { type: "value",  min: 0, max: 'dataMax', scale: true },
+      grid: { right: '1%', bottom: '10%' },
+      series: [{
+        name: $localLang.TIMER.solves,
+        data: WData,
+        type: 'line',
+        smooth: true,
+        areaStyle: { opacity: .2 },
+        color: '#40c883'
+      }],
+      backgroundColor: "transparent",
+      textStyle: { fontFamily: localStorage.getItem('app-font') || 'Ubuntu' },
+      tooltip: {
+        ...tooltipStyle
+      }
+    };
+
+    weekChart.setOption(weekOptions);
   }
 
   function updateStats() {
@@ -149,10 +361,32 @@
       return acc;
     }, new Array(splits).fill(0));
 
-    distChart.data.datasets[0].data = cants;
-    distChart.data.labels = itvs.map(a => `${ timer(a[0], true) } - ${ timer(a[1], true) }`);
+    let distOption: echarts.EChartsOption = {
+      title: [{
+        text: $localLang.TIMER.histogram, left: 'center',
+        textStyle: { fontSize: $screen.isMobile ? 20 : 30 },
+      }],
+      xAxis: {
+        type: 'category',
+        data: itvs.map(a => `${ timer(a[0], true) } - ${ timer(a[1], true) }`),
+      },
+      yAxis: { type: "value",  min: 0, max: 'dataMax', scale: true },
+      grid: { right: '1%', bottom: '10%' },
+      series: [{
+        name: $localLang.TIMER.solves,
+        data: cants,
+        type: 'bar',
+        color: '#cd69ff',
+        itemStyle: {
+          borderRadius: [10, 10, 0, 0],
+        },
+      }],
+      backgroundColor: "transparent",
+      textStyle: { fontFamily: localStorage.getItem('app-font') || 'Ubuntu' },
+      tooltip: { ...tooltipStyle }
+    };
 
-    distChart.update();
+    distChart.setOption(distOption);
 
     if ( !$session.settings || $session.settings.sessionType != 'multi-step' ) {
       return;
@@ -174,423 +408,179 @@
 
     steps = steps.map(e => nonPenalty ? e / nonPenalty : 0);
 
-    if ( !stepTimeChart || !stepPercentChart ) {
-      return;
-    }
-
-    stepTimeChart.data.datasets[0].data = steps;
-    stepTimeChart.update();
-
-    stepPercentChart.data.datasets[0].data = calcPercents(steps, $stats.avg.value);
-    stepPercentChart.update();
-
   }
 
   function updateChartText() {
-    $localLang.TIMER.timeChartLabels.forEach((l, p, a) => {
-      timeChart.data.datasets[p].label = a[ a.length - p - 1];
+    timeChart.setOption({
+      title: [{ text: $localLang.TIMER.timeDistribution }],
+      legend: { data: $localLang.TIMER.timeChartLabels },
+      series: $localLang.TIMER.timeChartLabels.map(s => ({ name: s }))
     });
-
-    if ( timeChart.options.plugins?.title ) {
-      timeChart.options.plugins.title.text = $localLang.TIMER.timeDistribution;
-    }
-
-    timeChart.update();
    
     if ( headless ) return;
-   
-    // @ts-ignore
-    hourChart.options.plugins.title.text = $localLang.TIMER.hourDistribution;
-    hourChart.data.datasets[0].label = $localLang.TIMER.solves;
-    hourChart.update();
 
-    // @ts-ignore
-    weekChart.options.plugins.title.text = $localLang.TIMER.weekDistribution;
-    weekChart.data.datasets[0].label = $localLang.TIMER.solves;
-    weekChart.data.labels = $localLang.TIMER.days;
-    weekChart.update();
+    hourChart.setOption({
+      title: [{ text: $localLang.TIMER.hourDistribution }],
+      series: [{ name: $localLang.TIMER.solves }]
+    });
 
-    // @ts-ignore
-    distChart.options.plugins.title.text = $localLang.TIMER.histogram;
-    distChart.data.datasets[0].label = $localLang.TIMER.solves;
-    distChart.update();
+    weekChart.setOption({
+      title: [{ text: $localLang.TIMER.weekDistribution }],
+      series: [{ name: $localLang.TIMER.solves }],
+      xAxis: { data: $localLang.TIMER.days },
+    });
+
+    distChart.setOption({
+      title: [{ text: $localLang.TIMER.histogram }],
+      series: [{ name: $localLang.TIMER.solves }],
+    });
+
 
     if ( !$session.settings || $session.settings.sessionType != 'multi-step' || !stepTimeChart || !stepPercentChart ) {
       return;
     }
 
-    stepTimeChart.data.labels = (new Array($session.settings.steps)).fill('').map((e, p) =>
-      ($session.settings.stepNames || [])[p] || `${ $localLang.global.step } ${p + 1}`
-    );
+    stepTimeChart.setOption({ title: { text: $localLang.TIMER.stepsAverage } });
+    stepPercentChart.setOption({ title: { text: $localLang.TIMER.stepsPercent } });
 
-    // @ts-ignore
-    stepTimeChart.options.plugins.title.text = $localLang.TIMER.stepsAverage;
-    stepTimeChart.data.datasets[0].label = $localLang.TIMER.average;
-
-    stepPercentChart.data.labels = (new Array($session.settings.steps)).fill('').map((e, p) =>
-      ($session.settings.stepNames || [])[p] || `${ $localLang.global.step } ${p + 1}`
-    );
-
-    // @ts-ignore
-    stepPercentChart.options.plugins.title.text = $localLang.TIMER.stepsPercent;
-
-    stepTimeChart.update();
-    stepPercentChart.update();
   }
 
   function handleResize() {
-    [timeChart, hourChart, weekChart].forEach(c => c?.resize());
+    [timeChart, hourChart, weekChart, distChart, stepTimeChart, stepPercentChart].forEach(c => c?.resize());
   }
 
   function initGraphs(s: any, timerOnly = false) {
     void s; // Just for $solves detection change
-    timeChart && timeChart.destroy();
-    !timerOnly && hourChart && hourChart.destroy();
-    !timerOnly && weekChart && weekChart.destroy();
-    !timerOnly && distChart && distChart.destroy();
 
-    const common = {
-      showLine: true,
-      fill: false,
-      tension: .1,
-      normalized: true,
-    };
-
-    let ctx = chartElement.getContext('2d');
-
-    const shadingArea: Plugin = {
-      id: 'shadingArea',
-      afterDatasetsDraw(ch) {
-        const { ctx, scales: {y} } = ch;
-        const { data, hidden } = ch.getDatasetMeta(0);
-
-        if ( data.length < 2 || hidden ) {
-          return;
-        }
-        
-        // Data coordinates
-        let pd1 = [data[0].x, data[0].y];
-        let pd2 = [data[1].x, data[1].y];
-        let dev = y.height * $stats.dev.value / (y.max - y.min);
-        let rv = rotatePoint(pd2[0] - pd1[0], pd2[1] - pd1[1], Math.PI / 2);
-        let norm = Math.sqrt( rv[0] ** 2 + rv[1] ** 2 );
-        rv = rv.map(e => e * dev / norm);
-
-        // Rectangle in data coordinates
-        let p1 = evalLine(pd1[0], pd1[0] + rv[0], pd1[1] + rv[1], pd2[0] + rv[0], pd2[1] + rv[1]);
-        let p2 = evalLine(pd2[0], pd1[0] + rv[0], pd1[1] + rv[1], pd2[0] + rv[0], pd2[1] + rv[1]);
-        let p3 = evalLine(pd2[0], pd1[0] - rv[0], pd1[1] - rv[1], pd2[0] - rv[0], pd2[1] - rv[1]);
-        let p4 = evalLine(pd1[0], pd1[0] - rv[0], pd1[1] - rv[1], pd2[0] - rv[0], pd2[1] - rv[1]);
-
-        // Rectangle in graphic coordinates
-        let pg1 = [ pd1[0], p1 ];
-        let pg2 = [ pd2[0], p2 ];
-        let pg3 = [ pd2[0], p3 ];
-        let pg4 = [ pd1[0], p4 ];
-
-        ctx.save();
-        ctx.beginPath();
-        ctx.fillStyle = '#eefeee33';
-        ctx.moveTo(pg1[0], pg1[1]);
-        ctx.lineTo(pg2[0], pg2[1]);
-        ctx.lineTo(pg3[0], pg3[1]);
-        ctx.lineTo(pg4[0], pg4[1]);
-        ctx.lineTo(pg1[0], pg1[1]);
-        ctx.fill();
-        ctx.restore();
-
-      }
-    };
-
-    timeChart = new Chart(ctx as any, {
-      data: {
-        datasets: [
-          { data: [], type: 'line', label: 'Trend', borderDash: [5, 5], ...common, indexAxis: 'x', borderColor: BORDER_COLORS[6], backgroundColor: BACKGROUND_COLORS[6] },
-          { data: [], type: 'line', label: 'Best', borderDash: [5, 5], ...common, indexAxis: 'x', borderColor: BORDER_COLORS[5], backgroundColor: BACKGROUND_COLORS[5] },
-          { data: [], type: 'line', hidden: true, label: 'Ao100', ...common, indexAxis: 'x', borderColor: BORDER_COLORS[4], backgroundColor: BACKGROUND_COLORS[4] },
-          { data: [], type: 'line', hidden: true, label: 'Ao50', ...common, indexAxis: 'x', borderColor: BORDER_COLORS[3], backgroundColor: BACKGROUND_COLORS[3] },
-          { data: [], type: 'line', hidden: true, label: 'Ao12', ...common, indexAxis: 'x', borderColor: BORDER_COLORS[2], backgroundColor: BACKGROUND_COLORS[2] },
-          { data: [], type: 'line', hidden: true, label: 'Ao5', ...common, indexAxis: 'x', borderColor: BORDER_COLORS[1], backgroundColor: BACKGROUND_COLORS[1] },
-          { data: [], type: 'line', label: 'Time', ...common, indexAxis: 'x', borderColor: BORDER_COLORS[0], backgroundColor: BACKGROUND_COLORS[0] },
-        ],
-        labels: [],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: true,
-        animation: false,
-        parsing: false,
-        scales: {
-          x:{
-            type: 'linear',
-            ticks: { display: false },
-            grid: { display: false },
-          },
-          y: {
-            type: 'linear',
-            position: 'left',
-            grid: { color: '#555' },
-            ticks: {
-              callback: (value: string | number) => timer(+value, true, true)
-            }
-          }
-        },
-        layout: { padding: { left: 10, right: 10 } },
-        plugins: {
-          tooltip: {
-            mode: 'nearest',
-            intersect: false,
-            callbacks: {
-              label: (context) => {
-                let label = context.dataset.label;
-                let yLabel = context.parsed.y;
-                return label + ": " + timer(+yLabel, true, true);
-              },
-              title: (items) => `${ $localLang.TIMER.solve } #${Math.round(items[0].parsed.x) + 1}`
-            }
-          },
-          zoom: {
-            zoom: { wheel: { enabled: true }, mode: 'x', scaleMode: "x" },
-            pan: { enabled: true, mode: "x", },
-            limits: { x: { min: 0 }, y: { min: 0 } },
-          },
-          title: { text: "Time distribution", display: !headless, font: { size: $screen.isMobile ? 20 : 30 }, color: '#ddd' },
-          decimation: {
-            enabled: true,
-            algorithm: 'lttb',
-            samples: 700,
-          },
-          legend: {
-            labels: {
-              boxWidth: $screen.isMobile ? 20 : undefined,
-              filter: ({ datasetIndex }: any, { datasets }) => {
-                if ( datasetIndex > 0 && !datasets[ datasetIndex ].data.some((e: any) => !!e.y) ) {
-                  return false;
-                }
-
-                return true;
-              }
-            },
-            reverse: true
-          }
-        },
-      },
-      plugins: [ shadingArea ]
-    });
+    if ( !timeChart ) {
+      timeChart = echarts.init(timeSerie, "dark", { renderer: rendererType });
+    }
 
     if ( headless || timerOnly ) {
       updateChart($solves);
       return;
     }
 
-    const colors = ['#36a2eb', '#40c883', '#cd69ff' ];
-    let ctx2 = chartElement2.getContext('2d') as CanvasRenderingContext2D;
-    
-    hourChart = new Chart(ctx2 as any, {
-      data: {
-        datasets: [{
-          data: [], label: "Solves", type: 'scatter', showLine: true, tension: .4, fill: true,
-          backgroundColor: colors[0] + '22', borderColor: colors[0]
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          title: { text: "Hour distribution", display: true, font: { size: 30 }, color: '#ddd' },
-          tooltip: {
-            mode: 'nearest',
-            intersect: false,
-            callbacks: {
-              label: (context) => {
-                let c = context.parsed;
-                return `${context.dataset.label}: ${c.y} (${ formatHour(c.x) })`;
-              }
-            }
-          },
-        },
-        scales: {
-          x: {
-            min: 0, max: 23,
-            ticks: {
-              callback: (val) => {
-                return formatHour(~~val);
-              }
-            }
-          },
-          y: { beginAtZero: true }
-        }
-      }
-    });
-
-    let ctx3 = chartElement3.getContext('2d');
-
-    weekChart = new Chart(ctx3 as any, {
-      data: {
-        datasets: [{
-          data: [], label: "Solves", type: 'line', ...common, tension: .4,
-          fill: true, backgroundColor: colors[1] + '22', borderColor: colors[1]
-        }],
-        labels: DAYS
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            mode: 'nearest',
-            intersect: false,
-          },
-          title: { text: "Week distribution", display: true, font: { size: 30 }, color: '#ddd' }
-        },
-        scales: { y: { beginAtZero: true } }
-      }
-    });
-    
-    let ctx4 = chartElement4.getContext('2d');
-
-    distChart = new Chart(ctx4 as any, {
-      data: {
-        datasets: [{
-          data: [1, 2, 3, 4, 5], label: "Solves", type: 'bar', backgroundColor: colors[2] + 'aa',
-          borderRadius: { topLeft: 7, topRight: 7 }
-        }],
-        labels: ["A", "B", "C", "D", "E"],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            mode: 'nearest',
-            intersect: false,
-          },
-          title: { text: "Histogram", display: true, font: { size: 30 }, color: '#ddd' }
-        },
-        scales: { y: { beginAtZero: true } }
-      }
-    });
-
-    if ( $session.settings?.sessionType != 'multi-step' ) {
-      return;
+    if ( !hourChart ) {
+      hourChart = echarts.init(hourSerie, "dark", { renderer: rendererType });
     }
     
+    if ( !weekChart ) {
+      weekChart = echarts.init(weekSerie, "dark", { renderer: rendererType });
+    }
+
+    if ( !distChart ) {
+      distChart = echarts.init(distSerie, "dark", { renderer: rendererType });
+    }
+  
     updateChart($solves);
   }
 
-  async function updateMultiSteps(s: Session) {
-    if ( !s.settings || s.settings.sessionType != 'multi-step' ) {
+  async function updateMultiSteps(ss: Session) {
+    if ( !ss.settings || ss.settings.sessionType != 'multi-step' ) {
+      stepTimeChart?.dispose();
+      stepPercentChart?.dispose();
       return;
     }
 
     await new Promise((res) => {
       let tm = setInterval(() => {
-        if ( chartElement5 && chartElement6 ) {
+        if ( stepPercentSerie && stepTimeSerie ) {
           clearInterval(tm);
           res(null);
         }
       }, 1000);
     });
 
-    if ( stepTimeChart && stepPercentChart ) {
-      stepTimeChart.data.datasets[0].data = steps;
-      stepTimeChart.data.labels = (new Array(s.settings.steps)).fill('').map((e, p) =>
-        (s.settings.stepNames || [])[p] || `${ $localLang.global.step } ${p + 1}`
-      );
+    if ( stepTimeChart && stepPercentChart && !stepTimeChart.isDisposed() && !stepPercentChart.isDisposed() ) {
+      stepTimeChart && !stepTimeChart.isDisposed() && stepTimeChart.setOption({
+        xAxis: { data: steps.map((_, p) => (ss.settings.stepNames || [])[p] || `${$localLang.global.step} ${p + 1}`) },
+        series: [{ data: steps.map((e, p )=> ({
+          value: e,
+          itemStyle: { color: STEP_COLORS[p % STEP_COLORS.length] }
+        })) }],
+      });
 
-      stepPercentChart.data.datasets[0].data = calcPercents(steps, $stats.avg.value);
-      stepPercentChart.data.labels = (new Array(s.settings.steps)).fill('').map((e, p) =>
-        (s.settings.stepNames || [])[p] || `${ $localLang.global.step } ${p + 1}`
-      );
+      console.log("NEW DATA", stepTimeChart && !stepTimeChart.isDisposed());
 
-      stepTimeChart.update();
-      stepPercentChart.update();
+      let percents = calcPercents(steps, $stats.avg.value)
+      
+      stepPercentChart && !stepPercentChart.isDisposed() && stepPercentChart.setOption({
+        series: [{ data: percents.map((e, p)=> ({
+          value: e,
+          name: (ss.settings.stepNames || [])[p] || `${$localLang.global.step} ${p + 1}`,
+          itemStyle: { color: STEP_COLORS[p % STEP_COLORS.length] },
+        }))}],
+      });
+
       return;
     }
 
-    let ctx5 = chartElement5.getContext('2d');
+    if ( !stepTimeChart || stepTimeChart.isDisposed() ) {
+      stepTimeChart = echarts.init(stepTimeSerie, 'dark', { renderer: rendererType });
 
-    stepTimeChart = new Chart(ctx5 as any, {
-      data: {
-        datasets: [{
-          data: steps, label: $localLang.TIMER.average, type: 'bar', backgroundColor: STEP_COLORS,
-          borderRadius: { topLeft: 7, topRight: 7 }
+      let stepOption: echarts.EChartsOption = {
+        title: [{
+          text: $localLang.TIMER.stepsAverage, left: 'center',
+          textStyle: { fontSize: $screen.isMobile ? 20 : 30 },
         }],
-        labels: (new Array(s.settings.steps)).fill('').map((e, p) =>
-          (s.settings.stepNames || [])[p] || `${ $localLang.global.step } ${p + 1}`
-        ),
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-          y: {
-            type: 'linear',
-            position: 'left',
-            grid: { color: '#555' },
-            beginAtZero: true,
-            ticks: {
-              callback: (value: string | number) => timer(+value, true, true)
-            }
-          }
+        xAxis: {
+          type: 'category',
+          data: steps.map((_, p) => (ss.settings.stepNames || [])[p] || `${$localLang.global.step} ${p + 1}`)
         },
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            mode: 'nearest',
-            intersect: false,
-            callbacks: {
-              label: (context) => {
-                let label = context.dataset.label;
-                let yLabel = context.parsed.y;
-                return label + ": " + timer(+yLabel, true, true);
-              },
-            }
+        yAxis: { type: "value",  min: 0, max: 'dataMax', scale: true, axisLabel: {
+          formatter(v) { return timer(+v.toString(), true); }
+        } },
+        grid: { right: '1%', bottom: '10%' },
+        series: [{
+          name: $localLang.global.step,
+          data: steps.map((e, p )=> ({
+            value: e,
+            itemStyle: { color: STEP_COLORS[p % STEP_COLORS.length] }
+          })),
+          type: 'bar',
+          color: '#cd69ff',
+          itemStyle: {
+            borderRadius: [10, 10, 0, 0],
           },
-          title: { text: $localLang.TIMER.stepsAverage, display: true, font: { size: 30 }, color: '#ddd' }
-        },
-      }
-    });
-
-    let ctx6 = chartElement6.getContext('2d');
-
-    let percents = calcPercents(steps, $stats.avg.value);
-
-    // @ts-ignore
-    stepPercentChart = new Chart(ctx6 as any, {
-      data: {
-        datasets: [{
-          data: percents, type: 'doughnut',
-          backgroundColor: STEP_COLORS,
-          borderColor: '#0004'
         }],
-        labels: (new Array(s.settings.steps)).fill('').map((e, p) =>
-          (s.settings.stepNames || [])[p] || `${ $localLang.global.step } ${p + 1}`
-        ),
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            mode: 'nearest',
-            intersect: false,
-            callbacks: {
-              label: (context) => {
-                let label = context.label;
-                let yLabel = context.parsed;
-                return `${label}: ${yLabel}%`;
-              },
-            }
-          },
-          title: { text: $localLang.TIMER.stepsPercent, display: true, font: { size: 30 }, color: '#ddd' }
-        },
-      }
-    });
+        backgroundColor: "transparent",
+        textStyle: { fontFamily: localStorage.getItem('app-font') || 'Ubuntu' },
+        tooltip: { ...tooltipStyle, valueFormatter(v) { return timer(+v.toString(), true, true); } }
+      };
+
+      stepTimeChart.setOption(stepOption);
+    }
+
+    if ( !stepPercentChart || stepPercentChart.isDisposed() ) {
+      stepPercentChart = echarts.init(stepPercentSerie, 'dark', { renderer: rendererType });
+
+      let percents = calcPercents(steps, $stats.avg.value);
+
+      let stepOption: echarts.EChartsOption = {
+        title: [{
+          text: $localLang.TIMER.stepsPercent, left: 'center',
+          textStyle: { fontSize: $screen.isMobile ? 20 : 30 },
+        }],
+        series: [{
+          name: $localLang.global.step,
+          data: percents.map((e, p)=> ({
+            value: e,
+            name: (ss.settings.stepNames || [])[p] || `${$localLang.global.step} ${p + 1}`,
+            itemStyle: { color: STEP_COLORS[p % STEP_COLORS.length] },
+          })),
+          type: 'pie',
+          radius: ['40%', '70%'],
+          itemStyle: { borderRadius: 10, borderWidth: 3, borderColor: '#fff1' },
+          top: '4%'
+        }],
+        backgroundColor: "transparent",
+        textStyle: { fontFamily: localStorage.getItem('app-font') || 'Ubuntu', fontSize: 17 },
+        tooltip: { ...tooltipStyle, trigger: 'item', valueFormatter(v) { return v.toString() + '%'; } }
+      };
+
+      stepPercentChart.setOption(stepOption);
+    }
   }
 
   onMount(() => {
@@ -602,7 +592,7 @@
     initGraphs([]);
   });
 
-  $: timeChart && initGraphs($solves, true);
+  $: timeSerie && initGraphs($solves, true);
   $: $stats && distChart && updateStats();
   $: $localLang, timeChart && updateChartText();
   $: updateMultiSteps($session);
@@ -613,18 +603,17 @@
 
 <main class:headless class:multi={ $session.settings?.sessionType === 'multi-step' }>
   <div class={`canvas card grid place-items-center
-    max-sm:col-span-1 max-sm:row-span-1 sm:row-span-1 col-span-2 md:row-span-2 bg-white bg-opacity-10 rounded-md `
-    + (headless ? 'max-md:col-span-full' : '')}>
-    <canvas bind:this={ chartElement }></canvas>
+    max-sm:col-span-1 col-span-2 row-span-2 bg-white bg-opacity-10 rounded-md `
+    + (headless ? 'max-md:col-span-full' : '')} bind:this={ timeSerie }>
   </div>
-  <div class={"stats flex card " + (headless ? 'max-md:hidden' : '')}>
+  <div class={"stats flex card " + (headless ? 'max-md:hidden' : '')}>    
     <StatsProgress
-      title={ $localLang.TIMER.best } pColor="bg-green-400"
+      title={ $localLang.TIMER.best } pColor="green"
       label={ timer($stats.best.value, true, true) }
       value={ $stats.best.value } total={ $stats.worst.value }/>
 
     <StatsProgress
-      title={ $localLang.TIMER.worst } pColor="bg-orange-400"
+      title={ $localLang.TIMER.worst } pColor="yellow"
       label={ timer($stats.worst.value, true, true) }
       value={ $stats.worst.value } total={ $stats.worst.value }/>
     
@@ -638,76 +627,69 @@
       label={ timer($stats.dev.value, true, true) }
       value={ $stats.dev.value } total={ $stats.worst.value }/>
     
-    <StatsProgress
-      title={ $localLang.TIMER.totalTime } bgColor="hidden"
-      label={ timer($stats.time.value, true, true) }/>
-    
+    <span class="my-1"></span>
+
     <StatsProgress title={ $localLang.TIMER.count } label={ $stats.count.value.toString() }
-      value={ $stats.count.value } total={ $stats.count.value }/>
+      hidebar value={ $stats.count.value } total={ $stats.count.value }/>
+
+    <StatsProgress
+      title={ $localLang.TIMER.totalTime } hidebar
+      label={ timer($stats.time.value, true, true) }/>
   </div>
 
   {#if !headless}
     <div class="card">
-      <h2 class="text-3xl text-gray-200 text-center">{ $localLang.TIMER.bestMarks }</h2>
+      <h2 class="text-3xl text-gray-200 text-center mb-4">{ $localLang.TIMER.bestMarks }</h2>
       <div id="best-marks">
-        {#each $localLang.TIMER.bestList as ao}  
-          <span>{ ao.title }</span>
-          <span>{
-            $stats[ ao.key ].id
-              ? timer( $stats[ ao.key ][ /^(best|worst)$/.test(ao.key) ? 'value' : 'best'] || 0, true, true )
-              : ':('
-            }</span>
-          <span>
-            {#if $stats[ ao.key ].id}
-              <Button color="green" class="px-4 text-sm h-6" ariaLabel={ $localLang.TIMER.go } on:click={
+        {#each $localLang.TIMER.bestList as ao}
+          {#if $stats[ ao.key ].id}
+            <span class="flex items-center justify-between px-1 bg-black bg-opacity-40">
+              { ao.title }:
+              
+              <Button color="none" class="px-1 text-sm h-6 hover:text-green-300" ariaLabel={ $localLang.TIMER.go } on:click={
                 () => selectSolveById($stats[ ao.key ].id || '', ao.select )
-              }>{ $localLang.TIMER.go }</Button>
-            {/if}
-          </span>
+              }>
+                { timer( $stats[ ao.key ][ /^(best|worst)$/.test(ao.key) ? 'value' : 'best'] || 0, true, true ) }
+                <ExternalIcon />
+              </Button>
+            </span>
+          {/if}
         {/each}
       </div>
     </div>
 
     {#if $session.settings?.sessionType === 'multi-step'}
-      <div class="steps-graph card">
-        <canvas bind:this={ chartElement5 }></canvas>
-      </div>
-
-      <div class="steps-percents card">
-        <canvas bind:this={ chartElement6 }></canvas>
-      </div>
+      <div class="steps-graph card" bind:this={ stepTimeSerie }></div>
+      <div class="steps-percents card" bind:this={ stepPercentSerie }></div>
     {/if}
 
-    <div class="hour-distribution card">
-      <canvas bind:this={ chartElement2 }></canvas>
-    </div>
-
-    <div class="week-distribution card">
-      <canvas bind:this={ chartElement3 }></canvas>
-    </div>
-
-    <div class="histogram card">
-      <canvas bind:this={ chartElement4 }></canvas>
-    </div>
+    <div class="hour-distribution card" bind:this={ hourSerie }></div>
+    <div class="week-distribution card" bind:this={ weekSerie }></div>
+    <div class="histogram card" bind:this={ distSerie }></div>
   {/if}
 </main>
 
 <style lang="postcss">
-  main { --rows: 4; }
-  
-  main.multi {
-    --rows: 5;
+  @media not all and (min-width: 640px) {
+    main { --rows: 7;}
+    main.multi { --rows: 9; }
   }
   
-  @media not all and (min-width: 640px) {
-    main { --rows: 8; }
+  @media (min-width: 640px) {
+    main { --rows: 5; }
+    main.multi { --rows: 6; }
+  }
+
+  @media (min-width: 1024px) {
+    main { --rows: 4; }
+    main.multi { --rows: 5; }
   }
 
   main:not(.headless) {
-    @apply w-full overflow-scroll p-4 grid gap-4 grid-rows-5 grid-cols-2
-      lg:grid-cols-3 lg:grid-rows-3 max-sm:grid-cols-1;
+    @apply w-full overflow-x-clip overflow-y-scroll p-4 grid gap-4 grid-cols-2
+      lg:grid-cols-3 max-sm:grid-cols-1;
     max-height: calc(100vh - 8rem);
-    grid-template-rows: repeat(var(--rows), minmax(22rem, 1fr));
+    grid-template-rows: repeat(var(--rows), minmax(17rem, 1fr));
   }
 
   main.headless {
@@ -734,9 +716,10 @@
 
   #best-marks {
     @apply grid gap-y-1;
-    grid-template-columns: 1fr 1fr auto;
-    width: min(100%, 20rem);
+    grid-template-columns: repeat(auto-fit, minmax(6rem, 1fr));
     margin: auto;
+    column-gap: 1rem;
+    row-gap: .5rem;
   }
 
   .steps-graph {
@@ -744,7 +727,7 @@
   }
 
   .steps-percents {
-    color: inherit;
+    @apply grid;
   }
 
   .hour-distribution {

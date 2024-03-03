@@ -12,7 +12,6 @@
   import Copy from '@icons/ContentCopy.svelte';
   import Settings from '@icons/Cog.svelte';
   import LightBulb from '@icons/LightbulbOn.svelte';
-  // import NoteIcon from '@icons/NoteEdit.svelte';
   import WatchOnIcon from '@icons/Wifi.svelte';
   import WatchOffIcon from '@icons/WifiOff.svelte';
   import CommentIcon from '@icons/CommentPlusOutline.svelte';
@@ -21,12 +20,9 @@
   import TuneIcon from '@icons/Tune.svelte';
 
   /// Components
-  // import Modal from '@components/Modal.svelte';
-  // import Button from '@components/material/Button.svelte';
   import TextArea from '@components/material/TextArea.svelte';
   import Checkbox from '@components/material/Checkbox.svelte';
   import Input from '@components/material/Input.svelte';
-  import Toggle from '@components/material/Toggle.svelte';
   import Select from '@components/material/Select.svelte';
 
   /// Helpers
@@ -36,21 +32,27 @@
   import { NotificationService } from '@stores/notification.service';
   import { derived, writable, type Readable, type Writable } from 'svelte/store';
 
+  // Handlers
   import { StackmatInput } from './input-handlers/Stackmat';
   import { ManualInput } from './input-handlers/Manual';
+  import { GANInput } from './input-handlers/GAN';
+  import { KeyboardInput } from './input-handlers/Keyboard';
+  import { QiYiSmartTimerInput } from './input-handlers/QY-Timer';
+  import { ExternalTimerInput } from './input-handlers/ExternalTimer';
+
+  // Others
   import { globalLang } from '@stores/language.service';
   import { getLanguage } from '@lang/index';
   import { copyToClipboard, randomUUID } from '@helpers/strings';
-  import { GANInput } from './input-handlers/GAN';
+  import { minmax } from '@helpers/math';
   import Simulator from '@components/Simulator.svelte';
-  import { KeyboardInput } from './input-handlers/Keyboard';
-  import { QiYiSmartTimerInput } from './input-handlers/QY-Timer';
   import { statsReplaceId } from '@helpers/statistics';
-  import StatsProgress from './StatsProgress.svelte';
   import { screen } from '@stores/screen.store';
-  import { Button, Modal, Popover, Radio, Range, Spinner } from 'flowbite-svelte';
+  import { Button, Modal, Popover, Range, Spinner, StepIndicator, TextPlaceholder } from 'flowbite-svelte';
   import Tooltip from '@components/material/Tooltip.svelte';
   import { CubeDBICON, STEP_COLORS } from '@constants';
+  import { blur, scale } from 'svelte/transition';
+  import { ChevronLeftSolid, ChevronRightSolid } from 'flowbite-svelte-icons';
 
   type TModal = '' | 'edit-scramble' | 'old-scrambles' | 'settings';
 
@@ -66,9 +68,8 @@
   const {
     state, ready, tab, solves, allSolves, session, Ao5, stats, scramble, group, mode, hintDialog,
     hint, cross, xcross, preview, isRunning, decimals, bluetoothList,
-    sortSolves, updateSolves, initScrambler, updateStatistics, selectedGroup,
-    setConfigFromSolve, editSolve, handleUpdateSession, handleUpdateSolve, handleRemoveSolves,
-    editSessions
+    sortSolves, updateSolves, initScrambler, updateStatistics,
+    editSolve, handleUpdateSolve, handleRemoveSolves, editSessions
   } = context;
 
   let timerInput = derived(session, ($s) => {
@@ -94,6 +95,10 @@
     }},
     { text: "DNF", icon: ThumbDown, highlight: (s: any) => s.penalty === Penalty.DNF, handler: () => {
       if ( $lastSolve ) {
+        if ( $lastSolve.penalty === Penalty.P2 ) {
+          $lastSolve.time -= 2000;
+        }
+
         $lastSolve.penalty = $lastSolve.penalty === Penalty.DNF ? Penalty.NONE : Penalty.DNF;
         $time = $lastSolve.penalty === Penalty.DNF ? Infinity : $lastSolve.time;
         battle ? dispatch('update', $lastSolve) : dataService.updateSolve($lastSolve).then( handleUpdateSolve );
@@ -101,6 +106,7 @@
     } },
     { text: "+2", icon: Flag, highlight: (s: any) => s.penalty === Penalty.P2, handler: () => {
       if ( $lastSolve ) {
+
         $lastSolve.penalty = $lastSolve.penalty === Penalty.P2 ? Penalty.NONE : Penalty.P2;
         $lastSolve.penalty === Penalty.P2 ? $lastSolve.time += 2000 : $lastSolve.time -= 2000;
         $time = $lastSolve.time;
@@ -126,7 +132,7 @@
   let prevExpanded: boolean = false;
   let stackmatStatus = writable(false);
 
-  // BLUETOOTH
+  // BLUETOOTH AND EXTERNAL
   let bluetoothStatus = writable(false);
   let bluetoothHardware: any = null;
   let bluetoothBattery: number = 0;
@@ -136,7 +142,8 @@
   // ---------------------------------------------------
   let inputContext: InputContext = {
     isRunning, lastSolve, ready, session, state, time, stackmatStatus, decimals, scramble,
-    sequenceParts, recoverySequence, bluetoothStatus, addSolve, initScrambler, reset, createNewSolve
+    sequenceParts, recoverySequence, bluetoothStatus, addSolve, initScrambler, reset, createNewSolve,
+    handleRemoveSolves, handleUpdateSolve, editSolve
   };
 
   let inputMethod: TimerInputHandler = new ManualInput();
@@ -146,23 +153,15 @@
   let deviceList: string[][] = [];
   let autoConnectId: string[] = [];
 
-  /// NOTES
-  let showNotes = false;
-  let notesW = 250;
-  let notesH = 250;
-  let notesL = document.body.clientWidth - notesW - 50;
-  let notesT = (document.body.clientHeight - notesH) / 2;
-  let noteContent = "";
+  let externalTimers = dataService.externalTimers;
 
   /// MODAL
-  let modal: any = null;
   let show = false;
   let type: TModal = '';
   let modalData: any = null;
   let closeHandler: Function = () => {};
 
   /// SCRAMBLE
-  let stateMessage: string = '...';
   let canOpenDialog = (ev: string): boolean => {
     if ( timerOnly ) {
       return [ 'settings' ].indexOf(ev) > -1;
@@ -181,6 +180,7 @@
   let simulator: Simulator;
   let isSearching = false;
   let isConnecting = false;
+  let selectedImg = 0;
   
   let options = [
     { text: "Reload scramble [Ctrl + S]", icon: Refresh, handler: () => initScrambler() },
@@ -314,8 +314,6 @@
         openDialog('old-scrambles', null, () => {});
       } else if ( code === 'KeyC' && event.ctrlKey ) {
         toClipboard();
-      } else if ( code === 'KeyN' && event.ctrlKey ) {
-        showNotes = true;
       } else if ( code === 'KeyS' && event.ctrlKey ) {
         initScrambler();
       } else if ( code === 'Comma' && event.ctrlKey ) {
@@ -348,31 +346,9 @@
   }
 
   function select(s: Solve) {
-    setConfigFromSolve(s);
     initScrambler(s.scramble);
     closeHandler();
     show = false;
-  }
-
-  let mx = 0, my = 0, cx = notesL, cy = notesT, dragging = false;
-
-  function handleMouseDown(e: MouseEvent) {
-    mx = e.clientX;
-    my = e.clientY;
-    cx = notesL;
-    cy = notesT;
-    dragging = true;
-  }
-
-  function handleMouseMove(e: MouseEvent) {
-    if ( dragging ) {
-      notesL = cx + e.clientX - mx;
-      notesT = cy + e.clientY - my;
-    }
-  }
-
-  function handleMouseUp() {
-    dragging = false;
   }
 
   function addTimeString() {
@@ -404,6 +380,7 @@
       "GAN Cube": GANInput,
       "QY-Timer": QiYiSmartTimerInput,
       "Keyboard": KeyboardInput,
+      "ExternalTimer": ExternalTimerInput,
     };
 
     let newClass = methodMap[$session?.settings?.input || 'Keyboard'];
@@ -434,6 +411,13 @@
       currentStep = ki.interpreter.machine.context.currentStep;
       totalSteps = ki.interpreter.machine.context.steps;
       inputMethod.init();
+    } else if ( $session?.settings?.input === 'ExternalTimer' ) {
+      if ( sameClass ) {
+        dataService.external(deviceID, { type: 'session', value: $session });
+      } else {
+        inputMethod = new ExternalTimerInput( inputContext );
+        inputMethod.init();
+      }
     }
   }
 
@@ -503,7 +487,7 @@
     $bluetoothList.length = 0;
 
     dataService.searchBluetooth(gn).then(mac => {
-      deviceID = mac;``
+      deviceID = mac;
       inputMethod.disconnect();
       inputMethod = gn;
     }).catch((err) => {
@@ -600,25 +584,49 @@
     }
   }
 
+  function selectExternalTimer(id: string) {
+    if ( id === deviceID ) {
+      deviceID = '';
+    } else {
+      deviceID = id;
+      
+      if ( !(inputMethod instanceof ExternalTimerInput) ) {
+        inputMethod.disconnect();
+        inputMethod = new ExternalTimerInput(inputContext);
+      }
+
+      (inputMethod as ExternalTimerInput).setExternal(id);
+      dataService.external(id, { type: 'session', value: $session });
+    }
+  }
+
+  function handleNewRecord() {
+    console.log('handleNewRecord');
+    inputMethod.newRecord();
+  }
+
+  function step(ev: MouseEvent, v: number) {
+    ev.stopPropagation();
+    selectedImg = minmax(selectedImg + v, 0, $preview.length);
+  }
+
   onMount(() => {
     if ( timerOnly || scrambleOnly ) {
       return;
     }
 
     navigator.mediaDevices?.addEventListener('devicechange', updateDevices);
-    initInputHandler();
-    $group = 0;
-    selectedGroup();
     updateDevices();
     dataService.on('bluetooth', bluetoothHandler);
+    dataService.on('new-record', handleNewRecord);
   });
 
   onDestroy(() => {
     inputMethod.disconnect();
     navigator.mediaDevices?.removeEventListener('devicechange', updateDevices);
-    // subs.forEach(s => s());
     document.querySelectorAll('#stackmat-signal').forEach(e => e.remove());
     dataService.off('bluetooth', bluetoothHandler);
+    dataService.off('new-record', handleNewRecord);
   });
 
   $: $solves.length === 0 && reset();
@@ -626,46 +634,40 @@
   $: $localLang, updateTexts();
   $: $scramble && cleanOnScramble && clean();
   $: dataService.sleep( $state === TimerState.RUNNING  );
+  $: $mode && (selectedImg = 0);
 </script>
 
 <svelte:window
   on:keyup={ keyUp }
   on:keydown={ keyDown }
-  on:mousemove={ handleMouseMove }
-  on:mouseup={ handleMouseUp }
 ></svelte:window>
 
-<div
-  class="w-full h-[calc(100%-3rem)] { (timerOnly || scrambleOnly) ? 'mt-8' : '' }"
-  >
+<div class:timerOnly class:scrambleOnly class="w-full h-[calc(100%-3rem)] { (timerOnly || scrambleOnly) ? 'mt-8' : '' }" >
   {#if !timerOnly }
     <!-- Scramble -->
     <div id="scramble" class="transition-all duration-300 max-md:text-xs max-md:leading-5">
       {#if !$scramble}
-        <span> {stateMessage} </span>
+        <TextPlaceholder size="xl" class="w-full" divClass="grid gap-2 place-items-center max-h-12 overflow-hidden animate-pulse"/>
       {/if}
 
-      {#if inputMethod instanceof GANInput }
-        <span
-          class:hide={ $isRunning }
-          class:battle={ battle }>
+      
+      <pre class="scramble-content"
+        class:hide={ $isRunning }
+        class:battle={ battle }>
+        
+        {#if inputMethod instanceof GANInput }
           {#if $recoverySequence }
             {"=> " + $recoverySequence}
           {:else}
             {#if $sequenceParts.length < 3 }
-              { stateMessage }
+              <TextPlaceholder size="xl" class="w-full" divClass="grid gap-2 place-items-center max-h-12 overflow-hidden animate-pulse"/>
             {:else}
               { $sequenceParts[0] } <mark>{ $sequenceParts[1] }</mark> { $sequenceParts[2] }
             {/if}
           {/if}
-        </span>
-      {:else}
-        <span
-          class:hide={ $isRunning }
-          class:battle={ battle }
-          contenteditable="false" bind:innerHTML={$scramble}></span>
-      {/if}
-
+        {:else} { $scramble ? $scramble : '' } {/if}
+      </pre>
+      
       <!-- Options -->
       {#if !scrambleOnly }
         <div class={`absolute md:top-1 md:right-4 md:w-[2rem] md:items-center flex md:flex-col
@@ -776,23 +778,44 @@
             inpClass="text-center"/>
         </div>
       {:else}
-        <span
-          class="timer text-gray-300 max-sm:text-7xl max-sm:[line-height:8rem]"
-          class:prevention={ $state === TimerState.PREVENTION }
-          class:ready={$ready}
-          hidden={$state === TimerState.RUNNING && !$session.settings.showElapsedTime}>
-            { $state === TimerState.STOPPED ? sTimer($lastSolve, $decimals, false) : timer($time, $decimals, false)}
-          </span>
+        {#if $state === TimerState.RUNNING}
+          <span
+            class="timer text-gray-300 max-sm:text-7xl max-sm:[line-height:8rem]" in:scale class:ready={$ready}
+            hidden={$state === TimerState.RUNNING && !$session.settings.showElapsedTime}>
+              { timer($time, $decimals, false)}
+            </span>
+        {:else}
+          <div class={ "transition-all duration-200 " + (prevExpanded &&
+            ($state === TimerState.STOPPED || $state === TimerState.CLEAN) ? 'opacity-0' : '')}>
+            <span
+              class="timer text-gray-300 max-sm:text-7xl max-sm:[line-height:8rem]"
+              class:prevention={ $state === TimerState.PREVENTION } class:ready={$ready}>
+                { $state === TimerState.STOPPED ? sTimer($lastSolve, $decimals, false) : timer($time, $decimals, false)}
+              </span>
+  
+              {#if !timerOnly && $state === TimerState.STOPPED}
+                <div class={"flex justify-center w-full " + ( $session.settings.input === 'GAN Cube' ? '-my-4' : '' ) }
+                    class:show={$state === TimerState.STOPPED} transition:blur>
+                  {#each solveControl.slice(Number(battle), solveControl.length) as control}
+                    <Tooltip class="cursor-pointer" position="top" text={ control.text }>
+                      <Button color="none" class="flex my-3 mx-1 w-5 h-5 p-0 { control.highlight($solves[0] || {}) ? 'text-red-500' : '' }"
+                        on:click={ control.handler }>
+                        <svelte:component this={control.icon} width="100%" height="100%"/>
+                      </Button>
+                    </Tooltip>
+                  {/each}
+                </div>
+              {/if}
+          </div>
+        {/if}
         
         {#if $session.settings.sessionType === 'multi-step' && $state === TimerState.RUNNING }
-          <div class="step-progress w-[min(100%,30rem)] text-base">
-            <StatsProgress value={ $currentStep } total={ $totalSteps }
-              title={ ($session.settings.stepNames || [])[$currentStep - 1] || '' }
-              label={ `${ $currentStep } / ${ $totalSteps }` }/>
+          <div class="step-progress w-[min(100%,30rem)] text-base" transition:scale>
+            <StepIndicator currentStep={ $currentStep } steps={ $session.settings.stepNames }/>
           </div>
         {/if}
 
-        {#if $session?.settings?.input === 'StackMat' }
+        {#if $session?.settings?.input === 'StackMat' || $session?.settings?.input === 'ExternalTimer' }
           <span class="text-2xl flex gap-2 items-center">
             { $localLang.TIMER.stackmatStatus }:
             
@@ -805,22 +828,9 @@
         {/if}
       {/if}
 
-      <span
+      <span transition:blur
         class="timer"
-        hidden={!($state === TimerState.RUNNING && !$session.settings.showElapsedTime)}>----</span> 
-      {#if !timerOnly && $state === TimerState.STOPPED}
-        <div class={"flex justify-center w-full " + ( $session.settings.input === 'GAN Cube' ? '-my-4' : '' ) }
-            class:show={$state === TimerState.STOPPED}>
-          {#each solveControl.slice(Number(battle), solveControl.length) as control}
-            <Tooltip class="cursor-pointer" position="top" text={ control.text }>
-              <Button color="none" class="flex my-3 mx-1 w-5 h-5 p-0 { control.highlight($solves[0] || {}) ? 'text-red-500' : '' }"
-                on:click={ control.handler }>
-                <svelte:component this={control.icon} width="100%" height="100%"/>
-              </Button>
-            </Tooltip>
-          {/each}
-        </div>
-      {/if}
+        hidden={!($state === TimerState.RUNNING && !$session.settings.showElapsedTime)}>----</span>
     </div>
   {/if}
 
@@ -914,23 +924,46 @@
 
   <!-- Image -->
   {#if $session?.settings?.genImage || battle }
-    <!-- svelte-ignore a11y-no-static-element-interactions -->
     <button
       id="preview-container"
-      class="absolute bottom-2 flex items-center justify-center w-full transition-all duration-300
-        select-none bg-transparent"
+      class="absolute bottom-2 flex items-center justify-center sm:w-[20rem] w-[calc(100%-14rem)]
+        h-[9rem] md:h-[12rem] transition-all duration-300 select-none left-1/2 translate-x-[calc(-50%+1rem)]"
       class:expanded={ prevExpanded }
       class:hide={ $isRunning || $session.settings.input === 'GAN Cube' || timerOnly }
-      on:click={() => prevExpanded = !prevExpanded }>
-      <img
-        on:dragstart|preventDefault
-        class="bottom-2 transition-all duration-300 cursor-pointer h-full object-contain"
-        src={ $preview } alt="">
+      on:click={() => prevExpanded = $preview ? !prevExpanded : false }>
+        {#if $preview.length === 0 }
+          <div class="bg-gray-700 w-full h-full rounded grid place-items-center animate-pulse">
+            <svg width="48" height="48" class="text-gray-200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" fill="currentColor" viewBox="0 0 640 512">
+              <path d="M480 80C480 35.82 515.8 0 560 0C604.2 0 640 35.82 640 80C640 124.2 604.2 160 560 160C515.8 160 480 124.2 480 80zM0 456.1C0 445.6 2.964 435.3 8.551 426.4L225.3 81.01C231.9 70.42 243.5 64 256 64C268.5 64 280.1 70.42 286.8 81.01L412.7 281.7L460.9 202.7C464.1 196.1 472.2 192 480 192C487.8 192 495 196.1 499.1 202.7L631.1 419.1C636.9 428.6 640 439.7 640 450.9C640 484.6 612.6 512 578.9 512H55.91C25.03 512 .0006 486.1 .0006 456.1L0 456.1z" />
+            </svg>
+          </div>
+        {:else}
+          <div class="w-full h-full flex items-center justify-center relative">
+            {#if !prevExpanded && $preview.length > 1}
+              <span class="absolute top-[-1.5rem] transition-all" out:blur>
+                {$localLang.global.scramble} {selectedImg + 1} / { $preview.length }
+              </span>
+            {/if}
+
+            <Button color="none" on:click={ (ev) => step(ev, -1) } disabled={ selectedImg === 0 }
+              class={"rounded-full w-[3rem] h-[3rem] " + ($preview.length < 2 ? 'opacity-0 pointer-events-none' : '')}>
+              <ChevronLeftSolid class="pointer-events-none"/>
+            </Button>
+  
+            <img on:dragstart|preventDefault src={ $preview[selectedImg].src } alt=""
+              class="transition-all duration-300 cursor-pointer h-full w-full object-contain">
+
+            <Button color="none" on:click={ (ev) => step(ev, 1) } disabled={ selectedImg + 1 === $preview.length }
+              class={"rounded-full w-[3rem] h-[3rem] " + ($preview.length < 2 ? 'opacity-0 pointer-events-none' : '')}>
+              <ChevronRightSolid class="pointer-events-none"/>
+            </Button>
+          </div>
+        {/if}
     </button>
   {/if}
 </div>
 
-<Modal bind:this={ modal } bind:open={ show } size="xs" outsideclose
+<Modal bind:open={ show } size="xs" outsideclose
   title={ $localLang.TIMER.modal[type || 'settings'] } bodyClass="space-y-2">
   {#if type === 'edit-scramble'}
     <TextArea on:keyup={ modalKeyupHandler } class="bg-gray-900 text-gray-200 border border-gray-600" bind:value={ modalData }/>
@@ -970,6 +1003,22 @@
       </Popover>
     {/if}
 
+    {#if modalData.settings.input === 'ExternalTimer'}
+      <section class="bg-white bg-opacity-10 p-2 shadow-md rounded-md">
+        <ul class="mt-4">
+          {#each $externalTimers as { id, name } (id)}
+            <li class="flex items-center justify-between mt-2 pl-4 bg-white bg-opacity-10 rounded-md text-white">
+              { name }
+              <Button color={( id === deviceID ? 'red' : 'green' )}
+                loading={ isConnecting } on:click={ () => selectExternalTimer(id)}>
+                { id === deviceID ? $localLang.TIMER.disconnect : $localLang.TIMER.connect }
+              </Button>
+            </li>
+          {/each}
+        </ul>
+      </section>
+    {/if}
+
     {#if modalData.settings.input === 'StackMat'}
       <section > { $localLang.TIMER.device }: <Select class="max-w-full"
         bind:value={ deviceID } items={ deviceList }
@@ -977,7 +1026,7 @@
       </section>
     {/if}
 
-    {#if modalData.settings.input === 'Keyboard'}
+    {#if modalData.settings.input === 'Keyboard' || modalData.settings.input === 'ExternalTimer'}
       <section class="flex flex-wrap gap-4 items-center">
         <Checkbox
           bind:checked={ modalData.settings.hasInspection }
@@ -1103,19 +1152,22 @@
   }
   
   #scramble {
-    @apply flex items-center justify-center;
+    @apply grid place-items-center;
   }
 
-  #scramble span {
+  #scramble .scramble-content {
     @apply md:ml-16 md:mr-10 mx-4 inline-block text-center md:w-[calc(100%-15rem)]
-      max-md:max-h-[min(10rem,21vh)] md:max-h-[16rem];
-    font-size: 1.5em;
+      max-md:max-h-[min(10rem,21vh)] md:max-h-[16rem] lg:text-xl md:text-lg sm:text-sm text-xs;
     line-height: 1.3;
-    word-spacing: .5rem;
     overflow: hidden auto;
+    overflow-wrap: break-word;
+    white-space: pre-wrap;
+    display: flex;
+    text-align: left;
+    justify-content: center;
   }
 
-  #scramble span.battle {
+  #scramble .scramble-content.battle {
     margin: 0;
     max-height: 9rem;
   }
@@ -1188,19 +1240,21 @@
   }
 
   #preview-container {
-    @apply max-md:h-[20%] md:h-[25%];
     transition: all 400ms cubic-bezier(0.88, 0.33, 0.32, 1.19);
     transition-timing-function: cubic-bezier(0.88, 0.33, 0.32, 1.19);
   }
 
   #preview-container.expanded {
-    height: calc(100% - 4rem);
+    height: 100%;
     background-color: rgba(0, 0, 0, 0.4);
   }
 
-  #preview-container:not(.expanded) img {
-    max-width: calc(100% - 13rem);
-    margin-left: 2rem;
+  .scrambleOnly #preview-container.expanded {
+    height: calc(100% - 4rem);
+  }
+
+  #preview-container.expanded {
+    @apply w-full translate-x-[-50%] pt-4;
   }
 
   .hide {

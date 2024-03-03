@@ -1,6 +1,7 @@
 import * as all from '@cstimer/scramble';
 
 onmessage = function(e) {
+  console.log("MESSAGE: ", e);
   let mode = e.data[0];
   let len = e.data[1];
   let cant = e.data[2] || 1;

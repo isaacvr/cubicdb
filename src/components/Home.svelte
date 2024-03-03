@@ -4,44 +4,43 @@
   import { getLanguage } from "@lang/index";
   import type { ICard } from "@interfaces";
   import { screen } from "@stores/screen.store";
-  import { DataService } from "@stores/data.service";
+  // import { Snow } from "@pclasses/Snow";
+  // import { onDestroy, onMount } from "svelte";
 
   let cards: ICard[] = [];
+  let canvas: HTMLCanvasElement;
+  // let snow = new Snow(100);
+  // let showSnow = true;
 
   function updateTexts() {
     const HOME = getLanguage( $globalLang ).HOME;
 
-    const showPrivate = false;
+    const showPrivate = true;
 
     cards = [
       {
         title: HOME.tutorials,
         route: "/tutorials",
         ready: false,
-        timer: false,
         cube: '/assets/tutorials.png',
       }, {
         title: HOME.algorithms,
         route: "/algorithms",
-        timer: false,
         ready: true,
         cube: '/assets/algorithms.png',
       }, {
         title: 'Algorithm Handler',
         route: "/algorithms-admin",
-        timer: false,
         ready: showPrivate,
         cube: '/assets/algorithms-admin.png',
       }, {
         title: HOME.timer,
         route: "/timer",
-        timer: true,
         ready: true,
         cube: '/assets/timer.png',
       }, {
         title: HOME.reconstructions,
         route: "/reconstructions",
-        timer: true,
         ready: true,
         cube: '/assets/reconstructions.png',
       }, {
@@ -52,53 +51,78 @@
       }, {
         title: HOME.pll_recognition,
         route: "/pll-trainer",
-        timer: true,
         ready: true,
         cube: '/assets/pll.png',
       }, {
         title: HOME.simulator,
         route: "/simulator",
-        timer: true,
         ready: true,
         cube: '/assets/megaminx.png',
       }, {
         title: HOME.contest,
         route: '/contest',
         cube: '/assets/logo-500.png',
-        ready: showPrivate,
+        ready: showPrivate && false,
       }, {
         title: HOME.tools,
         route: '/tools',
         cube: '/assets/tools.png',
         ready: true,
-        timer: false,
       }, {
         title: HOME.importExport,
         route: '/import-export',
         cube: '/assets/import-export.png',
         // ready: DataService.getInstance().isElectron,
         ready: true,
-        timer: false,
       }, {
         title: HOME.settings,
         route: "/settings",
-        timer: false,
         ready: true,
         cube: '/assets/settings.png'
-      }, {
+      },
+      {
         title: 'CubeDB',
         route: '/cubedb',
         cube: '/assets/logo-500.png',
-        ready: true,
-        timer: false,
+        ready: false,
+      }, {
+        title: 'Remote',
+        route: '/remote',
+        cube: '/assets/logo-500.png',
+        ready: false,
       }
     ].filter(c => c.ready);
   };
 
+  // function updateSnow() {
+  //   let ctx = canvas.getContext('2d');
+
+  //   if ( !showSnow || !ctx ) return;
+    
+  //   ctx.fillStyle = 'white';
+  //   ctx.strokeStyle = 'white';
+  //   ctx.clearRect(0, 0, canvas.width, canvas.height);
+  //   snow.draw( ctx );
+  //   requestAnimationFrame(updateSnow);
+  // }
+
+  // onMount(() => {
+  //   canvas.width = window.innerWidth;
+  //   canvas.height = window.innerHeight;
+
+  //   updateSnow();
+  // });
+
+  // onDestroy(() => {
+  //   showSnow = false;
+  // });
+
   $: $globalLang, updateTexts();
 </script>
 
-<main class="container-mini">
+<!-- <svelte:window on:resize={() => snow.reset()}/> -->
+
+<main class="container-mini relative">
   <ul class="w-full grid place-items-center" class:isMobile={ $screen.isMobile }>
     {#each cards as card (card.route)}
       <li class={`text-center shadow-md rounded-md select-none cursor-pointer
@@ -114,8 +138,9 @@
       {/each}
   </ul>
 
-  <!-- <Button on:click={ () => navigate(encodeURI("/reconstructions?puzzle=square1&scramble=/ 3 / 1 / ")) }>Reconstruction</Button> -->
 </main>
+
+<canvas bind:this={ canvas } class="absolute inset-0 pointer-events-none"/>
 
 <style lang="postcss">
   ul {

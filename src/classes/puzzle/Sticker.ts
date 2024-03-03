@@ -1,3 +1,4 @@
+import { EPS } from '@constants';
 import { Vector3D, CENTER } from './../vector3d';
 
 export class Sticker {
@@ -229,7 +230,7 @@ export class Sticker {
     }
 
     for (let i = 0, maxi = p1.length; i < maxi; i += 1) {
-      if ( p1[i].sub(p2[i]).abs() > 1e-6 ) {
+      if ( p1[i].sub(p2[i]).abs() > EPS ) {
         return false;
       }
     }
@@ -248,7 +249,7 @@ export class Sticker {
       let num = p0.sub(l0).dot(n);
       let den = l.dot(n);
 
-      if ( Math.abs(num) < 1e-6 || Math.abs(den) < 1e-6 ) {
+      if ( Math.abs(num) < EPS || Math.abs(den) < EPS ) {
         continue;
       }
 

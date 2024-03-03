@@ -35,7 +35,9 @@
     "dist/**/*",
     "public/assets/**/*",
     "src/index.cjs",
-    "src/preload.js"
+    "src/preload.js",
+    "src/cert/*",
+    "src/serverHandlers/*"
   ],
   "extraResources": [
     "src/database/algs.db",

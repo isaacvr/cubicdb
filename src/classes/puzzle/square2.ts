@@ -2,7 +2,7 @@ import { Piece } from './Piece';
 import { RIGHT, LEFT, BACK, UP, FRONT, DOWN } from './../vector3d';
 import { Vector3D, CENTER } from '../../classes/vector3d';
 import type { PuzzleInterface } from '@interfaces';
-import { STANDARD_PALETTE } from "@constants";
+import { EPS, STANDARD_PALETTE } from "@constants";
 import { Sticker } from './Sticker';
 import { assignColors, getAllStickers, random } from './puzzleUtils';
 
@@ -58,9 +58,8 @@ export function SQUARE2(): PuzzleInterface {
   let RBD = RB.add(DOWN);
   let LFU = LF.add(UP);
   let LFD = LF.add(DOWN);
-  let RFU = RF.add(UP);
-  let RFD = RF.add(DOWN);
 
+  // Generate anchor points for the top layer
   for (let i = 0; i < 3; i += 1) {
     PTS.push( its( CENTER, LB.rotate(CENTER, UP, PI_6 * i), 'x').add(UP) );
   }
@@ -139,11 +138,64 @@ export function SQUARE2(): PuzzleInterface {
   pieces.push(mid);
   pieces.push(mid.rotate(CENTER, UP, PI));
 
+  let planes = [
+    mid.stickers[2].clone().points, // /
+    pieces[0].stickers[1].clone().points.reverse(), // up
+    pieces[ PTS.length ].stickers[1].clone().points.reverse(), // down
+  ];
+
+  let trySingleMove = (mv: any): { pieces: Piece[], u: Vector3D, ang: number } | null => {
+    let moveId = mv[0]; // 2
+    let turns = mv[1]; // 3
+    const pts1 = planes[moveId];
+    const u = Vector3D.cross(pts1[0], pts1[1], pts1[2]).unit();
+    const mu = u.mul(-1);
+    const ang = PI_6 * turns;
+
+    let pcs = [];
+
+    for (let i = 0, maxi = pieces.length; i < maxi; i += 1) {
+      let d = pieces[i].direction1(pts1[0], u, false, (x: Sticker) => !/[xd]/.test(x.color));
+
+      if ( d === 0 ) {
+        console.log("Invalid move. Piece intersection detected.", "/UD"[moveId], turns, mv);
+        console.log("Piece: ", i, pieces[i], pts1);
+        return null;
+      }
+
+      if ( d > 0 ) {
+        pcs.push( pieces[i] );
+      }
+    }
+
+    return {
+      pieces: pcs,
+      u: mu,
+      ang
+    };
+  };
+
+  sq2.move = function(moves: any[]) {
+    for (let m = 0, maxm = moves.length; m < maxm; m += 1) {
+      let mv = moves[m];
+      let pcs = trySingleMove(mv);  
+
+      if ( !pcs ) {
+        return false;
+      }
+      
+      let { u, ang } = pcs;
+      pcs.pieces.forEach(p => p.rotate(CENTER, u, ang, true));
+
+    }
+    return true;
+  };
+
   sq2.toMove = function(piece: Piece, sticker: Sticker, dir: Vector3D) {
-    let ang = (sticker.vecs[0].cross( UP ).abs() < 1e-6) ? PI_6 : PI;
+    let ang = (sticker.vecs[0].cross( UP ).abs() < EPS) ? PI_6 : PI;
     let toMovePieces = [];
 
-    if ( ang > PI_6 && dir.cross(UP).abs() > 1e-6 ) {
+    if ( ang > PI_6 && dir.cross(UP).abs() > EPS ) {
       toMovePieces = pieces.filter(p => p.direction1(dir.mul(0.06), dir) === 0);
     } else {
       let mc = sticker.updateMassCenter();
@@ -171,8 +223,8 @@ export function SQUARE2(): PuzzleInterface {
       let pt = random( TOP_PIECES ) as Piece;
       let pb = random( BOTTOM_PIECES ) as Piece;
 
-      let s1 = random(pt.stickers.filter(s => !/^[xd]{1}$/.test(s.color) && s.getOrientation().cross(UP).abs() > 1e-6));
-      let s2 = random(pb.stickers.filter(s => !/^[xd]{1}$/.test(s.color) && s.getOrientation().cross(UP).abs() > 1e-6));
+      let s1 = random(pt.stickers.filter(s => !/^[xd]{1}$/.test(s.color) && s.getOrientation().cross(UP).abs() > EPS));
+      let s2 = random(pb.stickers.filter(s => !/^[xd]{1}$/.test(s.color) && s.getOrientation().cross(UP).abs() > EPS));
       
       let pcs1 = sq2.toMove(pt, s1, UP);
       let pcs2 = sq2.toMove(pb, s2, DOWN);

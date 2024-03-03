@@ -214,3 +214,7 @@ export function parseReconstruction(s: string, puzzle: PuzzleType, order: number
     hasError: false
   }
 }
+
+export function prettyScramble(scramble: string): string {
+  return scramble.trim().replace(/\s*<br>\s*/g, '\n').replace(/(\n\s+)/g, '\n');
+}

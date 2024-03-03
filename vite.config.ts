@@ -1,11 +1,65 @@
 import { defineConfig } from 'vite';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
+import { VitePWA } from 'vite-plugin-pwa';
 import { resolve } from 'path';
 
-// import basicSSL from '@vitejs/plugin-basic-ssl';
+import basicSSL from '@vitejs/plugin-basic-ssl';
 
 export default defineConfig((env) => ({
-  plugins: [ svelte(), /*basicSSL()*/ ],
+  plugins: [ svelte(), //basicSSL(),
+  //   VitePWA({
+  //   manifest: {
+  //     name: "CubeDB",
+  //     start_url: ".",
+  //     display: "standalone",
+  //     display_override: ['fullscreen', 'standalone'],
+  //     background_color: "#080a16",
+  //     description: "The definitive app for Speedcubing",
+  //     theme_color: "#080a16",
+  //     categories: [
+  //       "education",
+  //       "entertainment",
+  //       "games",
+  //       "sports"
+  //     ],
+  //     icons: [
+  //       {
+  //         src: "/assets/logo-100.png",
+  //         sizes: "100x100",
+  //         type: "image/png",
+  //         purpose: "any maskable"
+  //       },
+  //       {
+  //         src: "/assets/logo-200.png",
+  //         sizes: "200x200",
+  //         type: "image/png",
+  //         purpose: "any maskable"
+  //       },
+  //       {
+  //         src: "/assets/logo-500.png",
+  //         sizes: "500x500",
+  //         type: "image/png",
+  //         purpose: "any maskable"
+  //       },
+  //       {
+  //         src: "/assets/logo-512.png",
+  //         sizes: "512x512",
+  //         type: "image/png",
+  //         purpose: "any maskable"
+  //       },
+  //       {
+  //         src: "/assets/logo-1000.png",
+  //         sizes: "1000x1000",
+  //         type: "image/png",
+  //         purpose: "any maskable"
+  //       }
+  //     ]
+  //   },
+  //   workbox: {
+  //     maximumFileSizeToCacheInBytes: 3145728, // 3 MiB
+  //   }
+  // })
+],
   publicDir: 'public',
   base: env.mode === 'production' ? './' : '',
   server: {

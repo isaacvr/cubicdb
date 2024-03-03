@@ -2,7 +2,7 @@ import { Piece } from './Piece';
 import { RIGHT, LEFT, BACK, UP, FRONT, DOWN } from './../vector3d';
 import { Vector3D, CENTER } from '../../classes/vector3d';
 import type { PuzzleInterface } from '@interfaces';
-import { STANDARD_PALETTE } from "@constants";
+import { EPS, STANDARD_PALETTE } from "@constants";
 import { Sticker } from './Sticker';
 import { assignColors, getAllStickers } from './puzzleUtils';
 import { square1SolverGetRandomScramble } from '@cstimer/scramble/scramble_sq1';
@@ -10,7 +10,7 @@ import { ScrambleParser } from '@classes/scramble-parser';
 
 export function SQUARE1(): PuzzleInterface {
   const edgePoint = (p: Vector3D) => [p.x, p.y, p.z].reduce((acc, n) =>
-    [-1, 0, 1].some(d => Math.abs(d - n) < 1e-6) ? acc + 1 : acc, 0);
+    [-1, 0, 1].some(d => Math.abs(d - n) < EPS) ? acc + 1 : acc, 0);
 
   const sq1: PuzzleInterface = {
     pieces: [],
@@ -26,7 +26,7 @@ export function SQUARE1(): PuzzleInterface {
         let o = s.getOrientation();
         let acc = s.points.reduce((acc, v) => acc + (edgePoint(v) >= 2 ? 1 : 0), 0);
 
-        if ( o.cross(UP).abs() < 1e-6 ) {
+        if ( o.cross(UP).abs() < EPS ) {
           if ( s.points.length === 3 ) return i === 1 ? [0.25] : 0.11;
           return i === 2 ? [ 0.2 ] : 0.11;
         }
@@ -154,13 +154,13 @@ export function SQUARE1(): PuzzleInterface {
   pieces.push(mid.rotate(CENTER, UP, PI));
 
   let planes = [
-    mid.stickers[2].clone().points,
-    pieceBig.stickers[2].clone().points.reverse(),
-    mid.stickers[5].clone().points,
-    mid.stickers[2].clone().points.map(p => p.rotate(CENTER, UP, PI_2, true)), // For simulator only
-    [CENTER, UP, FRONT].map(v => v.add(LEFT.mul(2))),
-    [CENTER, RIGHT, FRONT].map(v => v.add(UP.mul(2))),
-    [CENTER, RIGHT, DOWN].map(v => v.add(FRONT.mul(2))),
+    mid.stickers[2].clone().points, // /
+    pieceBig.stickers[2].clone().points.reverse(), // up
+    mid.stickers[5].clone().points, // down
+    mid.stickers[2].clone().points.map(p => p.rotate(CENTER, UP, PI_2, true)), // For simulator only /
+    [CENTER, UP, FRONT].map(v => v.add(LEFT.mul(2))), // x
+    [CENTER, RIGHT, FRONT].map(v => v.add(UP.mul(2))), // y
+    [CENTER, RIGHT, DOWN].map(v => v.add(FRONT.mul(2))), // z
   ];
 
   let trySingleMove = (mv: any): { pieces: Piece[], u: Vector3D, ang: number } | null => {
@@ -208,6 +208,8 @@ export function SQUARE1(): PuzzleInterface {
   };
 
   sq1.move = function(moves: any[]) {
+    console.log("MOVES", moves);
+
     for (let m = 0, maxm = moves.length; m < maxm; m += 1) {
       let mv = moves[m];
       let pcs = trySingleMove(mv);  
@@ -227,10 +229,10 @@ export function SQUARE1(): PuzzleInterface {
   };
 
   sq1.toMove = function(piece: Piece, sticker: Sticker, dir: Vector3D) {
-    let ang = dir.cross( UP ).abs() < 1e-6 ? sticker.vecs.length > 1 ? PI / 2 : PI_6 : PI;
+    let ang = dir.cross( UP ).abs() < EPS ? sticker.vecs.length > 1 ? PI / 2 : PI_6 : PI;
     let toMovePieces: Piece[] = [];
 
-    if ( ang > PI_6 && dir.cross(UP).abs() > 1e-6 ) {
+    if ( ang > PI_6 && dir.cross(UP).abs() > EPS ) {
       if ( sq1.move( [ [0, 6] ] ) ) {
         sq1.move( [ [0, 6] ] );
         toMovePieces = pieces.filter(p => p.direction1(dir.mul(0.06), dir) === 0);

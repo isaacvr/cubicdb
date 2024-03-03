@@ -42,7 +42,12 @@ export class Emitter {
   }
 
   emit<T extends string>(eventName: T, ...args: any[]) {
-    if ( !this.callbackSet.has(eventName) ) return;
+    if ( !this.callbackSet.has(eventName) ) {
+      console.log(`Unknown event "${eventName}"`)
+      return;
+    }
+
+    console.log(`Found event "${eventName}"`)
 
     this.callBackObject[eventName].forEach(cb => cb.apply(null, args));
   }

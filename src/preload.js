@@ -65,4 +65,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Screens
   getAllDisplays: async () => await ipc.invoke('get-all-displays'),
   useDisplay: async (id) => await ipc.invoke('use-display', id),
+
+  // External
+  addExternalConnector: (cb) => ipc.on('external', cb),
+  external: async (deviceId, ...args) => await ipc.invoke('external', deviceId, ...args),
 });

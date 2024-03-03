@@ -1,4 +1,3 @@
-import { map } from '@helpers/math';
 import { randomUUID } from '@helpers/strings';
 import { TimerState, type InputContext, type StackmatCallback, type StackmatState, type TimerInputHandler } from '@interfaces';
 import { get } from 'svelte/store';
@@ -32,8 +31,6 @@ const enterStopped = ({ state, addSolve, time }: InputContext) => {
 }
 
 const isTurnedOn = ({ stackmatStatus }: InputContext, { state, lastState }: SMState) => {
-  // console.log('[isTurnedOn]: ', state);
-
   if ( !lastState?.on && state.on ) {
     stackmatStatus.set(true);
     return true;
@@ -348,5 +345,6 @@ export class StackmatInput implements TimerInputHandler {
 
   keyUpHandler() {}
   keyDownHandler() {}
-  stopTimer() {} 
+  stopTimer() {}
+  newRecord() {}
 }

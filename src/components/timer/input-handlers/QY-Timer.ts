@@ -137,4 +137,6 @@ export class QiYiSmartTimerInput implements TimerInputHandler {
     return '';
     //*/
   }
+
+  newRecord() {}
 }

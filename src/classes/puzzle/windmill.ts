@@ -1,6 +1,6 @@
 import { Sticker } from './Sticker';
 import { LEFT, UP, BACK, FRONT, RIGHT, CENTER, DOWN } from '../vector3d';
-import { STANDARD_PALETTE } from '@constants';
+import { EPS, STANDARD_PALETTE } from '@constants';
 import type { PuzzleInterface } from '@interfaces';
 import { Vector3D } from '../vector3d';
 import { Piece } from './Piece';
@@ -123,7 +123,7 @@ export function WINDMILL(): PuzzleInterface {
     for (let i = 0; i < MOVES; i += 1) {
       let p = random( pieces ) as Piece;
       let s = random(p.stickers.filter(s => !/^[xd]{1}$/.test(s.color))) as Sticker;
-      let vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > 1e-6));
+      let vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > EPS));
       let pcs = windmill.toMove(p, s, vec);
       pcs.pieces.forEach((p: Piece) => p.rotate(CENTER, vec, pcs.ang, true));
     }

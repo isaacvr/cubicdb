@@ -22,6 +22,9 @@
   import { isBetween } from "@helpers/math";
   import { Button } from "flowbite-svelte";
   import Input from "@components/material/Input.svelte";
+  import RemoteTimer from "./RemoteTimer.svelte";
+
+  type ToolOption = "timer-only" | "scramble-only" | "scramble-batch" | "statistics" | "metrics" | "solver" | "mosaic" | "remote-timer";
 
   let MENU: SCRAMBLE_MENU[] = getLanguage($globalLang).MENU;
   let groups: string[] = [];
@@ -53,7 +56,7 @@
   // Timer and Scramble Only
   let modes: { 0: string; 1: string; 2: number }[] = [];
   let filters: string[] = [];
-  let selectedOption = "timer-only";
+  let option: ToolOption = "solver";
   let timer: Timer;
 
   // Batch
@@ -86,7 +89,8 @@
   const DEFAULT_COLOR = colors.gray;
   let fColors = [ colors.w, colors.r, colors.g, colors.y, colors.o, colors.b ];
   let facelets: string[][] = [
-    ...[0, 1, 2, 3, 4, 5].map(n => [ '-', '-', '-', '-', fColors[n], '-', '-', '-', '-' ])
+    // ...[0, 1, 2, 3, 4, 5].map(n => [ '-', '-', '-', '-', fColors[n], '-', '-', '-', '-' ])
+    ...[0, 1, 2, 3, 4, 5].map(n => [ '-', '-', '-', '-', '-', '-', '-', '-', '-' ])
   ];
 
   let keys = [ "[W]", "[R]", "[G]", "[Y]", "[O]", "[B]" ];
@@ -110,10 +114,6 @@
     timer?.initScrambler();
   }
 
-  function checkMode(s: string, list: string[]) {
-    return list.some((l) => l === s);
-  }
-
   function generateBatch() {
     scrambleBatch.length = 0;
 
@@ -133,7 +133,7 @@
 
   function toClipboard() {
     let str =
-      `${ $localLang.TOOLS.cubedbBatch } (${batch})\n\n` +
+      `${ $localLang.TOOLS.cubedbBatch } (${ $mode[0] }${ $prob > -1 ? ' > ' + filters[$prob] : '' })\n\n` +
       scrambleBatch.map((s, p) => `${p + 1}- ${s}`).join("\n\n");
 
     copyToClipboard(str).then(() => {
@@ -272,12 +272,13 @@
 
   function clearCube() {
     facelets = [
-      ...[0, 1, 2, 3, 4, 5].map(n => [ '-', '-', '-', '-', fColors[n], '-', '-', '-', '-' ])
+      // ...[0, 1, 2, 3, 4, 5].map(n => [ '-', '-', '-', '-', fColors[n], '-', '-', '-', '-' ])
+      ...[0, 1, 2, 3, 4, 5].map(n => [ '-', '-', '-', '-', '-', '-', '-', '-', '-' ])
     ];
   }
 
   function handleKeyup(e: KeyboardEvent) {
-    if ( selectedOption === 'solver' ) {
+    if ( option === 'solver' ) {
       e.key === 'w' && (color = 0);
       e.key === 'r' && (color = 1);
       e.key === 'g' && (color = 2);
@@ -288,7 +289,7 @@
   }
 
   function assignColor(x: number, y: number) {
-    if ( y === 4 ) return;
+    // if ( y === 4 ) return;
     facelets[x][y] = fColors[ color ];
   }
 
@@ -297,9 +298,9 @@
     // fromFacelet('UBBLURBBRFDUURDDDLDUURFFFULRRBFDFLLDLURDLFFLDRRBLBBFBU');
   });
 
-  let context: TimerContext = {
+  let context = {
     solves, AoX, stats, session
-  } as TimerContext;
+  } as unknown as TimerContext;
 
   $: updateMetrics(metricString, selectedMetric);
 </script>
@@ -313,17 +314,18 @@
       [$localLang.TOOLS.timerOnly, "timer-only"],
       [$localLang.TOOLS.scrambleOnly, "scramble-only"],
       [$localLang.TOOLS.batchScramble, "scramble-batch"],
-      [$localLang.TOOLS.statistics, "statistics"],
+      // [$localLang.TOOLS.statistics, "statistics"],
       [$localLang.TOOLS.metrics, "metrics"],
       [$localLang.TOOLS.solver, "solver"],
       [$localLang.TOOLS.mosaic, "mosaic"],
+      [$localLang.TOOLS.remoteTimer, "remote-timer"],
     ]}
     label={(e) => e[0]}
     transform={(e) => e[1]}
-    bind:value={ selectedOption }
+    bind:value={ option }
   />
 
-  {#if checkMode(selectedOption, ["scramble-only", "scramble-batch"])}
+  {#if option === "scramble-only" || option === "scramble-batch" }
     <Select
       placeholder={ $localLang.TIMER.selectGroup }
       value={ groups[$group] } items={ groups } transform={ e => e }
@@ -345,28 +347,23 @@
     {/if}
   {/if}
 
-  {#if checkMode(selectedOption, ['metrics'])}
+  {#if option === 'metrics' }
     <Select items={ MetricList } label={ e => e[0] } transform={ e => e[1] } bind:value={ selectedMetric }/>
   {/if}
 
   <!-- Refresh scramble -->
-  {#if checkMode(selectedOption, ['scramble-only'])}
+  {#if option === 'scramble-only'}
     <Button color="purple" on:click={ () => timer?.initScrambler() }>
       { $localLang.global.refresh }
     </Button>
   {/if}
 </div>
 
-{#if checkMode(selectedOption, ["timer-only", "scramble-only"])}
-  <Timer
-    bind:this={timer}
-    timerOnly={selectedOption === "timer-only"}
-    scrambleOnly={selectedOption === "scramble-only"}
-    useMode={ $mode[1] }
-    useLen={ $mode[2] }
-    useProb={ $prob }
-  />
-{:else if checkMode(selectedOption, ["scramble-batch"])}
+{#if option === "timer-only"}
+  <Timer bind:this={timer} timerOnly={ true } />
+{:else if option === "scramble-only"}
+  <Timer bind:this={timer} scrambleOnly={true} useMode={ $mode[1] } useLen={ $mode[2] } useProb={ $prob } />
+{:else if option === "scramble-batch"}
   {#if scrambleBatch.length}
     <div
       class="container-mini bg-white bg-opacity-10 mx-auto max-w-[calc(min(100%-2rem,100ch))] mt-4
@@ -395,7 +392,7 @@
     <Input type="number" class="!w-20" bind:value={batch} min={1} on:UENTER={generateBatch} />
     <Button color="purple" on:click={generateBatch}>{ $localLang.global.generate }</Button>
   </div>
-{:else if checkMode(selectedOption, ["statistics"])}
+{:else if option === "statistics"}
 
   <div class="mt-4">
     <StatsTab { context } headless/>
@@ -435,7 +432,7 @@
       <Button color="red" class="h-min" on:click={ clear }>{ $localLang.global.clear }</Button>
     </div>
   </div>
-{:else if checkMode(selectedOption, ['metrics'])}
+{:else if option === 'metrics'}
   <div class="mt-8 grid text-center max-w-[50rem] mx-auto">
     <p class="note mb-8">{ getDescription($localLang.TOOLS, selectedMetric) }</p>
 
@@ -453,7 +450,7 @@
 
     <TextArea bind:value={ metricString } class="bg-white bg-opacity-10 w-full" />
   </div>
-{:else if checkMode(selectedOption, ['solver'])}
+{:else if option === 'solver'}
   <h2 class="text-2xl text-center mt-4">{ $localLang.TOOLS.colors }</h2>
 
   <div class="flex flex-wrap justify-center items-center gap-2">
@@ -484,8 +481,10 @@
       </div>
     {/each}
   </div>
-{:else if checkMode(selectedOption, ['mosaic'])}
+{:else if option === 'mosaic'}
   <Mosaic />
+{:else if option === 'remote-timer'}
+  <RemoteTimer />
 {/if}
 
 <style>

@@ -1,6 +1,6 @@
-import type { Algorithm, AlgorithmOptions, CubeEvent, IPC, ContestPDFOptions, Session, Sheet, Solve, Tutorial, UpdateCommand, PDFOptions } from "@interfaces";
+import type { Algorithm, AlgorithmOptions, CubeEvent, IPC, ContestPDFOptions, Session, Sheet, Solve, Tutorial, UpdateCommand, PDFOptions, IStorageInfo, ICacheDB } from "@interfaces";
 import algs from '../database/algs.json';
-import { clone } from "@helpers/object";
+import { clone, getByteSize } from "@helpers/object";
 import { openDB, type IDBPDatabase } from "idb";
 
 const DBName = 'CubeDB-data';
@@ -25,27 +25,12 @@ interface DATABASE {
 export class IndexedDBAdaptor implements IPC {
   cache: Map<string, string>;
   DB: IDBPDatabase<DATABASE> | null;
-  // tutDB: IDBPDatabase<Tutorial> | null;
-  // sesDB: IDBPDatabase<Session> | null;
-  // solDB: IDBPDatabase<Solve> | null;
-  // cntDB: IDBPDatabase<CubeEvent> | null;
-  // cacheDB: IDBPDatabase<ICacheImg> | null;
   private initialized = false;
   private isInit = false;
-  // private providePutKey = false;
 
   constructor() {
     this.cache = new Map<string, string>();
     this.DB = null;
-    
-    // Check for the browser since they differ from indexedDB put implementation
-    // const browsers = [ 'Firefox', 'Edg' ];
-    // const UA = navigator.userAgent;
-
-    // if ( browsers.some(b => UA.includes(b)) ) {
-    //   this.providePutKey = false;
-    // }
-
     this.init();
   }
 
@@ -173,15 +158,9 @@ export class IndexedDBAdaptor implements IPC {
     const tx = this.DB.transaction(SolveStore, 'readwrite');
     const sv = clone(s);
     delete sv._id;
-
-    let res = await Promise.all([
-      // tx.store.put(sv, this.providePutKey ? sv._id : undefined ),
-      tx.store.put(sv),
-      tx.done
-    ]);
-
+    
+    let res = await Promise.all([ tx.store.put(sv), tx.done ]);
     sv._id = res[0];
-
     return sv;
   }
 
@@ -192,17 +171,12 @@ export class IndexedDBAdaptor implements IPC {
     let ss = s.map(sv => {
       const res: Solve = clone(sv);
       delete res._id;
-
       return res;
     });
 
     const tx = this.DB.transaction(SolveStore, 'readwrite');
 
-    let res = await Promise.all([
-      // ...ss.map(sv => tx.store.put(sv, this.providePutKey ? sv._id : undefined )),
-      ...ss.map(sv => tx.store.put(sv)),
-      tx.done
-    ]);
+    let res = await Promise.all([ ...ss.map(sv => tx.store.put(sv)), tx.done ]);
 
     res.pop();
     res.forEach((id, p) => ss[p]._id = id);
@@ -220,33 +194,24 @@ export class IndexedDBAdaptor implements IPC {
       rs.comments = s.comments;
       rs.penalty = s.penalty;
       rs.time = s.time;
-
       const tx = this.DB.transaction(SolveStore, 'readwrite');
-      
-      await Promise.all([
-        // tx.store.put(rs, this.providePutKey ? rs._id : undefined ),
-        tx.store.put(rs),
-        tx.done
-      ]);
-
+      await Promise.all([ tx.store.put(rs), tx.done ]);
       return rs;
     }
 
     return s;
   }
 
-  async removeSolves(s: Solve[]) {
+  async removeSolves(s: Solve[]): Promise<Solve[]> {
     await this.init();
-    if ( !this.DB ) return Promise.resolve(s);
+    
+    let res = s.map(s => clone(s));
+
+    if ( !this.DB ) return Promise.resolve(res);
 
     const tx = this.DB.transaction(SolveStore, 'readwrite');
-    
-    await Promise.all([
-      ...s.map(sv => tx.store.delete(sv._id)),
-      tx.done
-    ]);
-
-    return s;
+    await Promise.all([ ...s.map(sv => tx.store.delete(sv._id)), tx.done ]);
+    return res;
   }
   
   // Sessions
@@ -269,14 +234,8 @@ export class IndexedDBAdaptor implements IPC {
       tName: s.tName || ''
     };
 
-    let res = await Promise.all([
-      // tx.store.put(ss, this.providePutKey ? id : undefined ),
-      tx.store.put(ss),
-      tx.done
-    ]);
-
+    let res = await Promise.all([ tx.store.put(ss), tx.done ]);
     s._id = res[0] as string;
-
     return s;
   }
 
@@ -286,19 +245,12 @@ export class IndexedDBAdaptor implements IPC {
 
     const allSolves = (await this.DB.getAll(SolveStore)).filter((sv: Solve) => sv.session === s._id);
     const stx = this.DB.transaction(SolveStore, 'readwrite');
-
-    await Promise.all([
-      ...allSolves.map(sv => stx.store.delete(sv._id)),
-      stx.done
-    ]);
-
+    
+    await Promise.all([ ...allSolves.map(sv => stx.store.delete(sv._id)), stx.done ]);
+    
     const tx = this.DB.transaction(SessionStore, 'readwrite');
     
-    await Promise.all([
-      tx.store.delete(s._id),
-      tx.done
-    ]);
-
+    await Promise.all([ tx.store.delete(s._id), tx.done ]);
     return s;
   }
   
@@ -310,15 +262,8 @@ export class IndexedDBAdaptor implements IPC {
 
     if ( rs ) {
       rs.name = s.name;
-
       const tx = this.DB.transaction(SessionStore, 'readwrite');
-      
-      await Promise.all([
-        // tx.store.put(rs, this.providePutKey ? rs._id : undefined ),
-        tx.store.put(rs),
-        tx.done
-      ]);
-
+      await Promise.all([ tx.store.put(rs), tx.done ]);
       return rs;
     }
 
@@ -334,15 +279,8 @@ export class IndexedDBAdaptor implements IPC {
     if ( rs ) {
       rs.name = s.name;
       rs.settings = s.settings;
-
       const tx = this.DB.transaction(SessionStore, 'readwrite');
-      
-      await Promise.all([
-        // tx.store.put(rs, this.providePutKey ? rs._id : undefined ),
-        tx.store.put(rs),
-        tx.done
-      ]);
-
+      await Promise.all([ tx.store.put(rs), tx.done ]);
       return rs;
     }
 
@@ -398,18 +336,50 @@ export class IndexedDBAdaptor implements IPC {
     if ( !this.DB ) return;
 
     const tx = this.DB.transaction(CacheStore, 'readwrite');
-    
-    await Promise.all([
-      tx.store.put(<ICacheImg>{
-        hash, img: data
-      // }, this.providePutKey ? hash : undefined ),
-      }),
-      tx.done
-    ]);
-    
+    await Promise.all([ tx.store.put(<ICacheImg>{ hash, img: data }), tx.done ]);
     this.cache.set(hash, data);
+  }
+
+  async clearCache(db: ICacheDB) {
+    await this.init();
+    if ( !this.DB ) return;
+
+    const store = db === 'Algorithms'
+    ? AlgorithmStore
+    : db === 'Cache'
+      ? CacheStore
+      : db === 'Sessions'
+        ? SessionStore
+        : db === 'Solves'
+          ? SolveStore
+          : TutorialStore;
+
+    const allCache = await this.DB.getAll(store);
+    const tx = this.DB.transaction(store, 'readwrite');
+    await Promise.all([ ...allCache.map(c => tx.store.delete(c._id)), tx.done ]);
+  }
+
+  async getStorageInfo(): Promise<IStorageInfo> {
+    await this.init();
+    if ( !this.DB ) return { algorithms: 0, cache: 0, sessions: 0, solves: 0, tutorials: 0 };
+
+    let cache = await this.DB.getAll(CacheStore);
+    let sessions = await this.DB.getAll(SessionStore);
+    let solves = await this.DB.getAll(SolveStore);
+
+    return {
+      algorithms: 0,
+      cache: getByteSize(cache),
+      sessions: getByteSize(sessions),
+      solves: getByteSize(solves),
+      tutorials: 0,
+    }
   }
 
   getAllDisplays() { return Promise.resolve([]); }
   useDisplay(id: number) { return Promise.resolve(); }
+
+  addExternalConnector() {}
+
+  external() {}
 }

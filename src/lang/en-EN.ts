@@ -30,6 +30,14 @@ export const English: Language = {
     settings: 'Settings',
     downloading: 'Downloading',
     fullScreen: 'Fullscreen',
+    storage: 'Storage',
+    images: 'Images',
+    algorithms: 'Algorithms',
+    session: 'Session',
+    sessions: 'Sessions',
+    solves: 'Solves',
+    tutorials: 'Tutorials',
+    connected: 'Connected',
   },
   NAVBAR: {
     home: 'Home',
@@ -194,7 +202,7 @@ export const English: Language = {
     clean: 'Clean',
     solve: 'Solve',
     timeDistribution: 'Time distribution',
-    timeChartLabels: ['Time', 'Ao5', 'A012', 'Ao50', 'Ao100', 'Best', 'Trend'],
+    timeChartLabels: ['Time', 'Ao5', 'Ao12', 'Ao50', 'Ao100', 'Best', 'Trend'],
 
     solves: 'Solves',
     hourDistribution: 'Hour distribution',
@@ -208,14 +216,14 @@ export const English: Language = {
     bestList: [
       { title: 'Best', key: 'best', select: 1 },
       { title: 'Worst', key: 'worst', select: 1 },
-      { title: 'Best Ao5', key: 'Ao5', select: 5 },
-      { title: 'Best Ao12', key: 'Ao12', select: 12 },
-      { title: 'Best Ao50', key: 'Ao50', select: 1 },
-      { title: 'Best Ao100', key: 'Ao100', select: 1 },
-      { title: 'Best Ao200', key: 'Ao200', select: 1 },
-      { title: 'Best Ao500', key: 'Ao500', select: 1 },
-      { title: 'Best Ao1k', key: 'Ao1k', select: 1 },
-      { title: 'Best Ao2k', key: 'Ao2k', select: 1 },
+      { title: 'Ao5', key: 'Ao5', select: 5 },
+      { title: 'Ao12', key: 'Ao12', select: 12 },
+      { title: 'Ao50', key: 'Ao50', select: 1 },
+      { title: 'Ao100', key: 'Ao100', select: 1 },
+      { title: 'Ao200', key: 'Ao200', select: 1 },
+      { title: 'Ao500', key: 'Ao500', select: 1 },
+      { title: 'Ao1k', key: 'Ao1k', select: 1 },
+      { title: 'Ao2k', key: 'Ao2k', select: 1 },
     ],
     stepsAverage: 'Steps average',
     stepsPercent: 'Steps percent',
@@ -307,6 +315,8 @@ export const English: Language = {
     metrics: 'Metrics',
     solver: 'Solver 3x3',
     mosaic: 'Mosaic',
+    remoteTimer: 'Remote timer',
+    portraitWarning: 'Rotate the phone and activate fullscreen mode to have a better experience.',
 
     // Statistics
     writeYourTime: 'Write your time here',
@@ -343,6 +353,9 @@ export const English: Language = {
     cubeOrder: "Cube order",
     generate: "Generate",
     selectImage: "Select image",
+
+    // Remote timer
+    clickToAuth: 'The server uses a self signed network certificate, so you need to manually accept it on the browser by clicking on the link below.',
   },
   MENU: [
     [
@@ -651,14 +664,14 @@ export const English: Language = {
       'Relays',
       [
         ['Lots of 3x3x3s', "r3", 5],
+        ['234 Relay (WCA)', "r234w", 0],
+        ['2345 Relay (WCA)', "r2345w", 0],
+        ['23456 Relay (WCA)', "r23456w", 0],
+        ['234567 Relay (WCA)', "r234567w", 0],
         ['234 Relay', "r234", 0],
         ['2345 Relay', "r2345", 0],
         ['23456 Relay', "r23456", 0],
         ['234567 Relay', "r234567", 0],
-        ['234 Relay (WCA)', "r234w", 0],
-        ['2345 Relay (WCA)', "r2345w", 0],
-        ['23456 Relay (WCA)', "r23456w", 0],
-        ['234567 Relay (WCA)', "r234567w", 0]
       ]
     ],
     [

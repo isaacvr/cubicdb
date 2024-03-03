@@ -2,7 +2,7 @@ import { DOWN, UP, Vector3D } from './../vector3d';
 import type { Sticker } from './Sticker';
 import { Color } from './../Color';
 import { ScrambleParser } from './../scramble-parser';
-import { CubeMode, PX_IMAGE, strToHex } from '@constants';
+import { CubeMode, EPS, strToHex } from '@constants';
 import type { Piece } from './Piece';
 import type { PuzzleInterface, PuzzleOptions, PuzzleType, CubeView } from '@interfaces';
 import * as puzzles from './allPuzzles';
@@ -29,7 +29,7 @@ export class Puzzle {
     this.mode = options.mode || CubeMode.NORMAL;
     this.view = options.view || 'trans';
     this.headless = !!options.headless;
-    this.img = PX_IMAGE;
+    this.img = '';
     this.arrows = [];
 
     this.options.sequence = this.options.sequence || '';
@@ -117,7 +117,7 @@ export class Puzzle {
       let u = allStickers[i].getOrientation();
 
       for (let j = 0, maxj = vecs.length; j < maxj; j += 1) {
-        if ( vecs[j].sub( u ).abs() < 1e-6 ) {
+        if ( vecs[j].sub( u ).abs() < EPS ) {
           stickers[j].push( allStickers[i] );
           break;
         }
@@ -171,7 +171,7 @@ export class Puzzle {
     for (let i = 0, maxi = pieces.length; i < maxi; i += 1) {
       let stickers = pieces[i].stickers.filter(s => 'xd'.indexOf(s.oColor) === -1 );
       let stLen = stickers.length;
-      let topLayer = stickers.reduce((ac, s) => ac || s.getOrientation().sub(UP).abs() < 1e-6, false);
+      let topLayer = stickers.reduce((ac, s) => ac || s.getOrientation().sub(UP).abs() < EPS, false);
       switch(this.mode) {
         case CubeMode.OLL: {
           for (let j = 0; j < stLen; j += 1) {
@@ -308,8 +308,8 @@ export class Puzzle {
             let o = stref.getOrientation();
 
             if ( stref.points.length === 3 ) {
-              if ( (stickers[i].oColor === TOP_COLOR && o.sub(UP).abs() < 1e-6) ||
-                (stickers[i].oColor === BOTTOM_COLOR && o.sub(DOWN).abs() < 1e-6) ) {
+              if ( (stickers[i].oColor === TOP_COLOR && o.sub(UP).abs() < EPS) ||
+                (stickers[i].oColor === BOTTOM_COLOR && o.sub(DOWN).abs() < EPS) ) {
                   stickers[i].color = 'k';
                 } else {
                   stickers[i].color = 'w';
@@ -442,7 +442,7 @@ export class Puzzle {
         let ok = false;
 
         for (let j = 0; j < fvLen; j += 1) {
-          if ( v.sub( fv[j] ).abs() < 1e-6 ) {
+          if ( v.sub( fv[j] ).abs() < EPS ) {
             if ( colors[j] === '-' ) {
               colors[j] = stickers[s].oColor;
             } else if ( colors[j] != stickers[s].oColor ) {
@@ -472,12 +472,15 @@ export class Puzzle {
       moves = ScrambleParser.parsePyraminx(seq);
     } else if ( this.type === 'skewb' ) {
       moves = ScrambleParser.parseSkewb(seq);
-    } else if ( this.type === 'square1' ) {
+    } else if ( this.type === 'square1' || this.type === 'square2' ) {
       moves = ScrambleParser.parseSquare1(seq);
     } else if ( this.type === 'clock' ) {
       moves = ScrambleParser.parseClock(seq);
     } else if ( this.type === 'megaminx' ) {
       moves = ScrambleParser.parseMegaminx(seq);
+    } else if ( this.type === 'bicube' || this.type === 'gear' || this.type === 'redi' ) {
+      console.log("ASDAS");
+      moves = [seq];
     } else {
       return;
     }

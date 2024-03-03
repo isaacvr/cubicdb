@@ -1,4 +1,4 @@
-import type { Algorithm, AlgorithmOptions, CubeEvent, IPC, ContestPDFOptions, Session, Sheet, Solve, Tutorial, UpdateCommand, PDFOptions } from "@interfaces";
+import type { Algorithm, AlgorithmOptions, CubeEvent, IPC, ContestPDFOptions, Session, Sheet, Solve, Tutorial, UpdateCommand, PDFOptions, IStorageInfo, ICacheDB } from "@interfaces";
 
 export class ElectronAdaptor implements IPC {
   private ipc: IPC;
@@ -182,11 +182,34 @@ export class ElectronAdaptor implements IPC {
     return this.ipc.cacheSaveImage(hash, data);
   }
 
+  clearCache(db: ICacheDB) {
+    // Implement this
+    return Promise.resolve();
+  }
+
+  getStorageInfo(): Promise<IStorageInfo> {
+    return Promise.resolve({
+      algorithms: 0,
+      cache: 0,
+      sessions: 0,
+      solves: 0,
+      tutorials: 0
+    });
+  }
+
   getAllDisplays() {
     return this.ipc.getAllDisplays();
   }
 
   useDisplay(id: number) {
     return this.ipc.useDisplay(id);
+  }
+
+  addExternalConnector(cb: any) {
+    this.ipc.addExternalConnector(cb);
+  }
+
+  external(device: string, ...args: any[]) {
+    this.ipc.external(device, ...args);
   }
 }

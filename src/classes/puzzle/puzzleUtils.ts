@@ -4,6 +4,7 @@ import type { PuzzleInterface } from '@interfaces';
 import { FaceSticker } from './FaceSticker';
 import { lineIntersection3D } from '@helpers/math';
 import { ImageSticker } from './ImageSticker';
+import { EPS } from '@constants';
 
 export function assignColors(p: PuzzleInterface, cols ?: string[]) {
   let colors = cols || [ 'y', 'o', 'g', 'w', 'r', 'b' ];
@@ -17,13 +18,13 @@ export function assignColors(p: PuzzleInterface, cols ?: string[]) {
     let points = sticker.points;
     for (let j = 0, maxj = points.length; j < maxj; j += 1) {
       for (let k = -1; k <= 1; k += 1) {
-        if ( Math.abs( points[j].x - k ) < 1e-6 ) {
+        if ( Math.abs( points[j].x - k ) < EPS ) {
           points[j].x = k;
         }
-        if ( Math.abs( points[j].y - k ) < 1e-6 ) {
+        if ( Math.abs( points[j].y - k ) < EPS ) {
           points[j].y = k;
         }
-        if ( Math.abs( points[j].z - k ) < 1e-6 ) {
+        if ( Math.abs( points[j].z - k ) < EPS ) {
           points[j].z = k;
         }
       }
@@ -54,7 +55,7 @@ export function assignColors(p: PuzzleInterface, cols ?: string[]) {
     if ( !ok ) {
       if ( dirs[0] > 0 ) {
         for (let j = 0, maxj = colors.length; j < maxj; j += 1) {
-          if ( u.sub( p.faceVectors[j] ).abs() < 1e-6 ) {
+          if ( u.sub( p.faceVectors[j] ).abs() < EPS ) {
             sticker.color = colors[j];
             sticker.oColor = colors[j];
             break;
@@ -126,7 +127,7 @@ export function roundStickerCorners(s: Sticker, rd?: number | Function, scale?: 
     
     let u = Vector3D.cross(P[0], P[1], P[2]).unit();
 
-    if ( isCircle && Math.abs(v1.abs() - v2.abs()) < 1e-6 ) {
+    if ( isCircle && Math.abs(v1.abs() - v2.abs()) < EPS ) {
       let center = lineIntersection3D(P[0], v1.rotate(CENTER, u, PI_2), P[2], v2.rotate(CENTER, u, PI_2));
       
       if ( center ) {

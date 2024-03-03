@@ -630,7 +630,7 @@
 }
 
 .isVisible {
-  @apply top-14 opacity-100 pointer-events-auto;
+  @apply top-4 z-50 opacity-100 pointer-events-auto;
 }
 
 .paginator-item {

@@ -35,13 +35,13 @@
   ],
   "main": "src/index.cjs",
   "scripts": {
-    "start": "concurrently \"yarn dev\" \"electron-forge start -- --serve\"",
+    "dev": "concurrently \"yarn web\" \"electron-forge start -- --serve\"",
     "package": "electron-forge package",
     "make": "electron-forge make",
     "publish": "electron-forge publish",
     "lint": "echo \"No linting configured\"",
     "build": "vite build",
-    "dev": "vite",
+    "web": "vite",
     "preview": "vite preview",
     "builder": "electron-builder build",
     "buildWorker": "esbuild ./src/workers/imageWorker.ts --bundle --minify --outfile=./public/assets/imageWorker.js"
@@ -81,6 +81,7 @@
     "axios": "1.3.4",
     "chart.js": "4.0.1",
     "chartjs-plugin-zoom": "2.0.1",
+    "cors": "^2.8.5",
     "electron-reload": "1.5.0",
     "electron-updater": "5.3.0",
     "eruda": "3.0.1",
@@ -95,6 +96,7 @@
     "node-machine-id": "1.1.12",
     "object-hash": "3.0.0",
     "qrcode": "1.5.3",
+    "socket.io": "^4.7.4",
     "socket.io-client": "4.7.2",
     "svelte-chartjs": "3.1.2",
     "svelte-easy-crop": "2.0.1",
@@ -115,6 +117,7 @@
     "@types/archiver": "5.3.1",
     "@types/audioworklet": "0.0.50",
     "@types/axios": "0.14.0",
+    "@types/echarts": "^4.9.22",
     "@types/nedb": "1.8.12",
     "@types/object-hash": "3.0.4",
     "@types/qrcode": "1.5.2",
@@ -122,6 +125,7 @@
     "@vitejs/plugin-basic-ssl": "1.0.1",
     "autoprefixer": "10.4.16",
     "concurrently": "5.1.0",
+    "echarts": "^5.4.3",
     "electron": "27.0.0",
     "electron-builder": "24.6.4",
     "esbuild": "0.19.4",
@@ -136,6 +140,8 @@
     "tailwindcss": "3.3.3",
     "tslib": "2.6.2",
     "typescript": "5.2.2",
-    "vite": "4.4.11"
+    "vite": "4.4.11",
+    "vite-plugin-pwa": "^0.17.5",
+    "workbox-cli": "^7.0.0"
   }
 }
