@@ -161,6 +161,7 @@ export const MISC = [
   ["r3", "r3ni"], "r234w", "r2345w", "r23456w", "r234567w", "r234", "r2345", "r23456", "r234567", "sq2", "bic",
   ["gearso", "gearo", "gear"],
   ["redim", "redi"],
+  ["ivy", "ivyo", "ivyso"],
 ];
 
 export const ICONS = [
@@ -206,6 +207,7 @@ const OPTS_MISC: PuzzleOptions[][] = [
   [ { type: 'bicube' } ],
   [ { type: 'gear' } ],
   [ { type: 'redi' } ],
+  [ { type: 'ivy' } ],
 ];
 
 const MODES = [ R222, R333, R444, R555, R666, R777, PYRA, SKWB, SQR1, CLCK, MEGA, KILO, GIGA ];

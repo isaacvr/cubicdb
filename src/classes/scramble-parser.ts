@@ -314,7 +314,10 @@ export class ScrambleParser {
       case 'gear':
       case 'redi':
       case 'redim':
-      case 'bic': {
+      case 'bic':
+      case 'ivy':
+      case 'ivyo':
+      case 'ivyso': {
         return [ scramble ];
       }
 
