@@ -97,8 +97,8 @@ export class Vector3D {
            a.z * ( b.x * c.y - c.x * b.y );
   }
 
-  static direction(a: Vector3D, b: Vector3D, c: Vector3D, d: Vector3D): -1 | 0 | 1 {
-    return Vector3D.direction1(a, Vector3D.cross(a, b, c), d);
+  static direction(p1: Vector3D, p2: Vector3D, p3: Vector3D, vec: Vector3D): -1 | 0 | 1 {
+    return Vector3D.direction1(p1, Vector3D.cross(p1, p2, p3), vec);
   }
 
   static direction1(anchor: Vector3D, u: Vector3D, pt: Vector3D): -1 | 0 | 1 {

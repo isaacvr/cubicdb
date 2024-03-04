@@ -385,7 +385,7 @@ export const Spanish: Language = {
       [
         ["WCA", "333", 0],
         ['Aleatorio', "333o", 25],
-        ['3x3 para nuevos', "333noob", 25],
+        // ['3x3 para nuevos', "333noob", 25],
         ['Solo aristas', "edges", 0],
         ['Solo Esquinas', "corners", 0],
         // ['Asistente BLD', "nocache_333bldspec", 0], // new

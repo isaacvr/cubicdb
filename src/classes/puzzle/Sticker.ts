@@ -122,6 +122,10 @@ export class Sticker {
   }
 
   rotate(ref: Vector3D, dir: Vector3D, ang: number, self?: boolean, col?: string): Sticker {
+    if ( Math.abs(ang % (Math.PI * 2)) < EPS ) {
+      return self ? this : this.clone();
+    }
+
     if ( self ) {
       this.points.forEach(e => e.rotate(ref, dir, ang, true));
       this._cached_mass_center.rotate(ref, dir, ang, true);

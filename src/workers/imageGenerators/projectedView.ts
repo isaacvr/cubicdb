@@ -221,54 +221,49 @@ export async function projectedView(cube: Puzzle, DIM: number): Promise<Blob> {
   } else if ( cube.type === 'megaminx' ) {
     let raw = cube.p.raw;
     let FACE_ANG = raw[1];
-    let F = raw[2];
-    let R = raw[3];
-    let SIDE = raw[4];
-    let alpha = 2 * PI / 5;
-    let beta = (PI - alpha) / 2;
-    let D = SIDE * F * Math.sin(alpha) / Math.sin(beta);
-    let r = R - D;
 
-    // This type of piece is ensured to be inside the list
-    let ac1 = (cube.p.pieces.find(p => {
-      let st = p.stickers.filter(s => s.points.length === 5);
-      return st.length === 2 && st[0].getOrientation().sub(DOWN).abs() < EPS;
-    }) as Piece).stickers[0].add(UP).mul(R / r).add(DOWN).points;
-
-    let pts1: Vector3D[] = [];
-    let pts2: Vector3D[] = [];
     for (let i = 0; i < 6; i += 1) {
-      sideStk[ faceName[i] ] = sideStk[ faceName[i] ].map(s => {
-        let newS = s.rotate(CENTER, RIGHT, PI_2);
-        pts1.push(...s.points);
-        return newS;
-      });
+      sideStk[ faceName[i] ].forEach(s => s.rotate(CENTER, RIGHT, PI_2, true));
     }
+
+    // Get points of the bottom center
+    const downPts = cube.p.pieces.filter(p => {
+      if ( p.stickers.length < 2 ) return false;
+      let st = p.stickers[1];
+      return st.name === 'center' && st.getOrientation().sub(DOWN).abs() < EPS;
+    })[0].stickers[1].points;
+
+    const vec = new Vector3D(3.53, -.38, 0);
+
     for (let i = 6; i < 12; i += 1) {
-      let pts = sideStk[ faceName[i] ][0].points;
-      for (let j = 0, j1 = 1; j < 5 && i < 11; j += 1) {
-        if ( Vector3D.direction(pts[0], pts[1], pts[2], ac1[j]) === 0 &&
-             Vector3D.direction(pts[0], pts[1], pts[2], ac1[j1]) === 0) {
-          sideStk[ faceName[i] ] = sideStk[ faceName[i] ].map(s => {
-            return s.rotate(ac1[j], ac1[j1].sub(ac1[j]), FACE_ANG - PI);
-          });
+      let stickers = sideStk[ faceName[i] ];
+      let o = stickers[0].getOrientation();
+
+      if ( o.sub(DOWN).abs() < EPS ) {
+        stickers.forEach(s => s
+          .rotate(CENTER, FRONT, PI, true)
+          .rotate(CENTER, RIGHT, PI_2, true)
+          .add(vec, true)
+        );
+
+        continue;
+      }
+
+      for (let j = 0, maxj = downPts.length; j < maxj; j += 1) {
+        let v = downPts[(j + 1) % maxj].sub( downPts[j] );
+
+        if ( Math.abs( v.dot(o) ) < EPS ) {
+          let anchor = stickers.map(s => s.points.filter(p => p.y <= downPts[j].y)).filter(l => l.length)[0][0].clone();
+
+          stickers.forEach(s => s
+            .rotate(anchor, v, FACE_ANG - PI, true)
+            .rotate(CENTER, FRONT, PI, true)
+            .rotate(CENTER, RIGHT, PI_2, true)
+            .add(vec, true)
+          )
           break;
         }
-        j1 = (j1 + 1) % 5;
       }
-      sideStk[ faceName[i] ] = sideStk[ faceName[i] ].map(s => {
-        let newS = s.rotate(CENTER, FRONT, PI).rotate(CENTER, RIGHT, PI_2);
-        pts2.push(...newS.points);
-        return newS;
-      });
-    }
-    pts1.sort((p1, p2) => p2.x - p1.x);
-    pts2.sort((p1, p2) => p1.x - p2.x);
-    let vec = pts1[5].sub(pts2[0]);
-    vec.y *= -1;
-    vec.z = 0;
-    for (let j = 6; j < 12; j += 1) {
-      sideStk[ faceName[j] ] = sideStk[ faceName[j] ].map(s => s.add(vec));
     }
   }
 
@@ -321,7 +316,7 @@ export async function projectedView(cube: Puzzle, DIM: number): Promise<Blob> {
   }
 
   if ( cube.type === 'megaminx' ) {
-    let LX = W * 0.251;
+    let LX = W * 0.255;
     let LY = H * 0.457;
     let fontWeight = W * 0.05;
 

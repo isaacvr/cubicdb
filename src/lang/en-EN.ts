@@ -385,7 +385,7 @@ export const English: Language = {
       [
         ["WCA", "333", 0],
         ['Random Move', "333o", 25],
-        ['3x3 for noobs', "333noob", 25],
+        // ['3x3 for noobs', "333noob", 25],
         ['Edges only', "edges", 0],
         ['Corners only', "corners", 0],
         // ['BLD Helper', "nocache_333bldspec", 0], // new
