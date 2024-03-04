@@ -317,7 +317,8 @@ export class ScrambleParser {
       case 'bic':
       case 'ivy':
       case 'ivyo':
-      case 'ivyso': {
+      case 'ivyso':
+      case 'prcp': {
         return [ scramble ];
       }
 

@@ -36,7 +36,7 @@ export async function projectedView(cube: Puzzle, DIM: number): Promise<Blob> {
     H = W - H;
     W = W - H;
     W *= 0.62;
-  } else if ( cube.type === 'megaminx' ) {
+  } else if ( cube.type === 'megaminx' || cube.type === 'pyraminxCrystal' ) {
     W = H * 2;
     LW = H * 0.004;
   }
@@ -78,7 +78,7 @@ export async function projectedView(cube: Puzzle, DIM: number): Promise<Blob> {
   } else if ( cube.type === 'square1' || cube.type === 'square2' ) {
     faceVectors = [ UP, DOWN, RIGHT.add(BACK).add(UP) ];
     faceName = [ 'U', 'D', 'M' ];
-  } else if ( cube.type === 'megaminx' ) {
+  } else if ( cube.type === 'megaminx' || cube.type === 'pyraminxCrystal' ) {
     let raw = cube.p.raw;
     let ac = raw[0];
     let FACE_ANG = raw[1];
@@ -118,7 +118,7 @@ export async function projectedView(cube: Puzzle, DIM: number): Promise<Blob> {
 
     for (let j = 0, maxj = faceVectors.length; j < maxj && !ok; j += 1) {
       if ( faceVectors[j].sub( uv ).abs() < EPS ) {
-        if ( ['rubik', 'bicube', 'gear', 'ivy', 'skewb', 'megaminx', 'redi'].indexOf(cube.type) > -1 ) {
+        if ( ['rubik', 'bicube', 'gear', 'ivy', 'skewb', 'megaminx', 'pyraminxCrystal', 'redi'].indexOf(cube.type) > -1 ) {
           sideStk[ faceName[j] ].push(
             st.rotate(fcTr[j][0], fcTr[j][1], fcTr[j][2]).add( fcTr[j][3].mul(fcTr[j][4]) )
           );
@@ -218,7 +218,7 @@ export async function projectedView(cube: Puzzle, DIM: number): Promise<Blob> {
   } else if ( cube.type === 'square1' || cube.type === 'square2' ) {
     sideStk.U = sideStk.U.map(st => st.rotate(CENTER, RIGHT, PI_2).add( UP.mul( getFactor() ) ));
     sideStk.D = sideStk.D.map(st => st.rotate(CENTER, RIGHT, -PI_2).add( DOWN.mul( getFactor() ) ));
-  } else if ( cube.type === 'megaminx' ) {
+  } else if ( cube.type === 'megaminx' || cube.type === 'pyraminxCrystal' ) {
     let raw = cube.p.raw;
     let FACE_ANG = raw[1];
 
@@ -227,11 +227,11 @@ export async function projectedView(cube: Puzzle, DIM: number): Promise<Blob> {
     }
 
     // Get points of the bottom center
-    const downPts = cube.p.pieces.filter(p => {
+    const downPts: Vector3D[] = cube.type === 'megaminx' ? cube.p.pieces.filter(p => {
       if ( p.stickers.length < 2 ) return false;
       let st = p.stickers[1];
       return st.name === 'center' && st.getOrientation().sub(DOWN).abs() < EPS;
-    })[0].stickers[1].points;
+    })[0].stickers[1].points : raw[5];
 
     const vec = new Vector3D(3.53, -.38, 0);
 
@@ -253,7 +253,9 @@ export async function projectedView(cube: Puzzle, DIM: number): Promise<Blob> {
         let v = downPts[(j + 1) % maxj].sub( downPts[j] );
 
         if ( Math.abs( v.dot(o) ) < EPS ) {
-          let anchor = stickers.map(s => s.points.filter(p => p.y <= downPts[j].y)).filter(l => l.length)[0][0].clone();
+          let anchor = stickers.reduce((acc: Vector3D[], s) => [...acc, ...s.points], []).sort((a, b) => {
+            return a.y - b.y;
+          })[0].clone();
 
           stickers.forEach(s => s
             .rotate(anchor, v, FACE_ANG - PI, true)

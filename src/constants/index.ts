@@ -162,6 +162,7 @@ export const MISC = [
   ["gearso", "gearo", "gear"],
   ["redim", "redi"],
   ["ivy", "ivyo", "ivyso"],
+  "prcp"
 ];
 
 export const ICONS = [
@@ -208,6 +209,7 @@ const OPTS_MISC: PuzzleOptions[][] = [
   [ { type: 'gear' } ],
   [ { type: 'redi' } ],
   [ { type: 'ivy' } ],
+  [ { type: 'pyraminxCrystal' } ],
 ];
 
 const MODES = [ R222, R333, R444, R555, R666, R777, PYRA, SKWB, SQR1, CLCK, MEGA, KILO, GIGA ];

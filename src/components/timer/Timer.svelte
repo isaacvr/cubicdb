@@ -343,13 +343,6 @@
       }
       
       $scramble = prettyScramble($scramble);
-//       $scramble = `-- +- -- ++ +- U'
-// +- -+ -- ++ ++ U
-// ++ ++ +- -+ +- U
-// -- ++ +- +- +- U
-// -+ -+ -+ +- -+ U'
-// -- -+ ++ ++ -- U'
-// +- ++ -- -- ++ U'`;
       
       if ( DIALOG_MODES.indexOf(md) > -1 ) {
         $cross = solve_cross($scramble).map(e => e.map(e1 => e1.trim()).join(' '))[0];

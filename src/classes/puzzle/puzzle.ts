@@ -464,7 +464,7 @@ export class Puzzle {
   }
 
   move(seq: string): void {
-    console.log("MOVE: ", seq, this.type);
+    // console.log("SEQ: ", seq, this.type);
     let moves: any[]; 
 
     if ( ['rubik', 'axis', 'fisher' ].indexOf(this.type) > -1 ) {
@@ -477,15 +477,13 @@ export class Puzzle {
       moves = ScrambleParser.parseSquare1(seq);
     } else if ( this.type === 'clock' ) {
       moves = ScrambleParser.parseClock(seq);
-    } else if ( this.type === 'megaminx' ) {
+    } else if ( this.type === 'megaminx' || this.type === 'pyraminxCrystal' ) {
       moves = ScrambleParser.parseMegaminx(seq);
     } else if ( this.type === 'bicube' || this.type === 'gear' || this.type === 'redi' || this.type === 'ivy' ) {
       moves = [seq];
     } else {
       return;
     }
-
-    console.log("MOVES: ", moves);
 
     this.p.move(moves);
     this.adjustColors();

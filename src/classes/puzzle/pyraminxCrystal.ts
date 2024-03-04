@@ -33,6 +33,7 @@ export function PYRAMINX_CRYSTAL(): PuzzleInterface {
   const ANG = 2 * PI / 3;
   const RATIO = 0.276393202250021;
   const PLANE_NORM = 0.4472135954999585;
+  const FACE_ANG = PI - Math.acos(Math.tan(18 * PI / 180) * Math.tan(54 * PI / 180));
   
   let anchors: Vector3D[] = [];
   let getRatio = (from: Vector3D, to: Vector3D) => from.add(to.sub(from).mul(RATIO));
@@ -43,17 +44,9 @@ export function PYRAMINX_CRYSTAL(): PuzzleInterface {
 
   // Helper to find the RATIO and PLANE_NORM
   let topFace = new Sticker(anchors);
-  // let sideFace = topFace.rotate(CENTER, anchors[3], ANG);
-
   let topCenter = topFace.getMassCenter();
-  // let sideCenter = sideFace.getMassCenter();
-  // let inters = planeLineIntersection(sideCenter, UP, sideFace.points[2], sideFace.points[2].sub(sideFace.points[3]));
-
-  // console.log("LENGHTS", inters.sub(sideFace.points[2]).abs(), inters.sub(sideFace.points[3]).abs());
-  // console.log("PLANE_NORM", topCenter.rotate(CENTER, anchors[0], ANG));
 
   pCrystal.getAllStickers = getAllStickers.bind(pCrystal);
-
 
   let pieces = pCrystal.pieces;
   let vdir = [
@@ -77,7 +70,13 @@ export function PYRAMINX_CRYSTAL(): PuzzleInterface {
     UP, ...topCorners.map(c => c.stickers[2].getOrientation())
   ];
 
-  fv.push( ...pCrystal.faceVectors.slice().map(v => v.rotate(CENTER, RIGHT, PI)) );
+  let fv1 = pCrystal.faceVectors.slice().map(v => v.rotate(CENTER, RIGHT, PI));
+
+  for (let i = 1; i <= 3; i += 1) {
+    fv1.splice(1, 0, fv1.pop()!);
+  }
+
+  fv.push( ...fv1.reverse() );
 
   pieces.push(...topCorners);
   pieces.push(...topCorners.map(c => c.rotate(CENTER, RIGHT, PI)));
@@ -120,6 +119,77 @@ export function PYRAMINX_CRYSTAL(): PuzzleInterface {
 
   assignColors(pCrystal, pCrystal.faceColors);
 
+  let getPointsFromSticker = (s: Sticker) => {
+    let mc = s.getMassCenter();
+    return s.points.map(p => p.add(mc.unit().mul(-0.5)))
+  };
+
+  let planes = [
+    getPointsFromSticker(topEdge.stickers[0]), // U
+    getPointsFromSticker(midTopEdges[6].stickers[0]), // L
+    getPointsFromSticker(midTopEdges[9].stickers[0]), // F
+    getPointsFromSticker(midTopEdges[12].stickers[0]), // R
+    getPointsFromSticker(midTopEdges[5].stickers[0]), // dL
+    getPointsFromSticker(midTopEdges[8].stickers[0]), // dR
+    getPointsFromSticker(midTopEdges[3].stickers[0]), // bL
+    getPointsFromSticker(midTopEdges[0].stickers[0]), // bR
+    topEdge.stickers[0].points.map(p => p.clone()), // [u]
+    midTopEdges[6].stickers[0].points.map(p => p.clone()), // [l]
+    midTopEdges[9].stickers[0].points.map(p => p.clone()), // [f]
+    midTopEdges[12].stickers[0].points.map(p => p.clone()), // [r]
+  ];
+
+  let trySingleMove = (mv: any): { pieces: Piece[], u: Vector3D, ang: number } | null => {
+    let moveId = mv[0];
+
+    if ( moveId >= planes.length ) {
+      return null;
+    }
+
+    let turns = mv[1];
+    const pts1 = planes[moveId].map(e => e.clone());
+    const u = Vector3D.cross(pts1[0], pts1[1], pts1[2]).unit();
+    const ang = INNER_ANG * turns;
+
+    let pcs = [];
+
+    for (let i = 0, maxi = pieces.length; i < maxi; i += 1) {
+      let d = pieces[i].direction1(pts1[0], u, true);
+
+      // if (d === 0) {
+      //   console.log("Invalid move. Piece intersection detected.", "URFDLB"[moveId], turns, mv);
+      //   console.log("Piece: ", i, pieces[i], pts1);
+      //   return null;
+      // }
+
+      if (d * mv[2] >= 0) {
+        pcs.push(pieces[i]);
+      }
+    }
+
+    return {
+      pieces: pcs,
+      u,
+      ang
+    };
+  };
+
+  pCrystal.move = function (moves: any[]) {
+    for (let m = 0, maxm = moves.length; m < maxm; m += 1) {
+      let mv = moves[m];
+      let pcs = trySingleMove(mv);
+
+      if (!pcs) {
+        return false;
+      }
+
+      let { u, ang } = pcs;
+      pcs.pieces.forEach(p => p.rotate(CENTER, u, ang, true));
+    }
+
+    return true;
+  };
+
   pCrystal.toMove = function(piece: Piece, sticker: Sticker, dir: Vector3D) {;
     // let mc = sticker.updateMassCenter();
     let mc = dir.unit().mul( PLANE_NORM );
@@ -152,7 +222,7 @@ export function PYRAMINX_CRYSTAL(): PuzzleInterface {
     z: 0,
   };
 
-  
+  pCrystal.raw = [anchors, FACE_ANG, 2 / 5, RAD, SIDE, anchors.map(a => a.rotate(CENTER, RIGHT, PI))];
  
   return pCrystal;
 
