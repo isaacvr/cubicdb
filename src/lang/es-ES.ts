@@ -523,7 +523,7 @@ export const Spanish: Language = {
         ['Old Style', "mgmo", 70],
         ['2-gen R,U', "minx2g", 30],
         ['Última Capa (LL)', "mgmll", 0],
-        ['Último Par + LL', "mlsll", 0],
+        ['Último Par + LL', "mlsll", 40],
         ['PLL', "mgmpll", 0],
       ]
     ],

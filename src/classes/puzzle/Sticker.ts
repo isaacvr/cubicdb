@@ -129,8 +129,8 @@ export class Sticker {
     if ( self ) {
       this.points.forEach(e => e.rotate(ref, dir, ang, true));
       this._cached_mass_center.rotate(ref, dir, ang, true);
-      this.color = col || this.color;
       this.vecs.forEach(v => v.rotate(CENTER, dir, ang, true));
+      this.color = col || this.color;
       // this.computeBoundingBox();
       return this;
     }
@@ -145,12 +145,10 @@ export class Sticker {
   }
 
   clone(excludePoints?: boolean): Sticker {
-    let s = new Sticker(excludePoints ? [] : this.points, this.color);
+    let s = new Sticker(excludePoints ? [] : this.points, this.color, this.vecs, this.nonInteractive, this.name);
     s.color = this.color;
     s.oColor = this.oColor;
     s._cached_mass_center = this._cached_mass_center.clone();
-    s.vecs = this.vecs.map(e => e.clone());
-    s.nonInteractive = this.nonInteractive;
     s.name = this.name;
     return s;
   }
@@ -164,10 +162,12 @@ export class Sticker {
       dirs[ Vector3D.direction1(anchor, u, pts[i]) + 1 ] += 1;
       
       if ( dirs[0] > 0 && dirs[2] > 0 ) {
+        // console.log('   [direction1] 1: ', dirs);
         return 0;
       }
     }
 
+    // dirs[1] === len && console.log('   [direction1] 2: ', dirs, len);
     return dirs[1] === len ? 0 : dirs[0] ? -1 : 1;
   }
 

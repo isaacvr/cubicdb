@@ -9,7 +9,7 @@ import { map } from "@helpers/math";
 
 export async function projectedView(cube: Puzzle, DIM: number): Promise<Blob> {
   const canvas = document.createElement('canvas');
-  const ctx: any = canvas.getContext('2d');
+  const ctx = canvas.getContext('2d')!;
 
   let W = DIM * 4 / 2;
   let H = DIM * 3 / 2;
@@ -318,15 +318,19 @@ export async function projectedView(cube: Puzzle, DIM: number): Promise<Blob> {
   }
 
   if ( cube.type === 'megaminx' ) {
-    let LX = W * 0.255;
+    let LX = W * 0.258;
     let LY = H * 0.457;
     let fontWeight = W * 0.05;
 
+    let upColor = ctx.getImageData(LX, LY, 1, 1).data;
+    let frontColor = ctx.getImageData(LX, LY * 1.75, 1, 1).data;
+
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillStyle = 'black';
+    ctx.fillStyle = `rgb(${ 255 - upColor[0] }, ${ 255 - upColor[1] }, ${ 255 - upColor[2]})`;
     ctx.font = fontWeight + "px verdana, sans-serif";
     ctx.fillText("U", LX, LY);
+    ctx.fillStyle = `rgb(${ 255 - frontColor[0] }, ${ 255 - frontColor[1] }, ${ 255 - frontColor[2]})`;
     ctx.fillText("F", LX, LY * 1.75);
   }
 

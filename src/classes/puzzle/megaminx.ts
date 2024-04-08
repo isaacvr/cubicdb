@@ -8,7 +8,6 @@ import { EPS, STANDARD_PALETTE } from '@constants';
 import { ScrambleParser } from '@classes/scramble-parser';
 
 export function MEGAMINX(_n: number, headless?: false): PuzzleInterface {
-  // const n = Math.max(3, ~~(_n / 2) * 2 + 1);
   const n = Math.max(2, ~~_n);
   const n_2 = ~~(n / 2);
 
@@ -22,7 +21,20 @@ export function MEGAMINX(_n: number, headless?: false): PuzzleInterface {
     dims: [],
     faceColors: ["white", "yellow", "violet", "green", "red", "blue", "orange", "lblue", "lyellow", "pink", "lgreen", "gray"],
     move: () => false,
-    roundParams: [],
+    roundParams: [(s: Sticker, i: number) => {
+      if (s.color === 'd' || s.name === 'center') return null;
+      if (s.name === 'star' && n % 2 === 0 ) {
+        s.color = 'd';
+        return null;
+      }
+
+      if (s._generator.points.length === 5 && s.color != 'x' && n % 2 === 0) {
+        s.color = 'darkGray';
+        return [0.5];
+      }
+
+      return 0.11;
+    }],
   };
 
   mega.getAllStickers = getAllStickers.bind(mega);
@@ -51,43 +63,80 @@ export function MEGAMINX(_n: number, headless?: false): PuzzleInterface {
   const V11: Vector3D = V1.rotate(CENTER, anchors[0], -PI23);
   const V2: Vector3D = anchors[4].sub(anchors[0]).mul(FACTOR);
   const V3: Vector3D = anchors[2].sub(anchors[1]).mul(FACTOR);
-  const V4: Vector3D = anchors[0].sub(anchors[1]).mul(FACTOR);
+  const V4: Vector3D = V1.rotate(CENTER, anchors[0], -PI23);
+  const V5: Vector3D = V3.rotate(CENTER, anchors[1], -PI23);
 
-  let topFace: Piece[] = [];
-  let n1 = UP.rotate(CENTER, anchors[0], PI23);
-  let n2 = UP.rotate(CENTER, anchors[0], -PI23);
+  let midUpFace: Piece[] = [];
+  let n1 = UP.rotate(CENTER, anchors[0].unit(), PI23);
+  let n2 = UP.rotate(CENTER, anchors[0].unit(), -PI23);
 
-  /// Generate stickers without the central star
-  for (let i = 0; i <= n_2; i += 1) {
+  // Corner
+  let cornerSticker = new Sticker([
+    anchors[0].add(V1.mul(0)).add(V2.mul(0)),
+    anchors[0].add(V1.mul(1)).add(V2.mul(0)),
+    anchors[0].add(V1.mul(1)).add(V2.mul(1)),
+    anchors[0].add(V1.mul(0)).add(V2.mul(1)),
+  ], '', [UP, n1, n2]);
+
+  let cornerPiece = new Piece([0, 1, 2].map(n => cornerSticker.rotate(CENTER, anchors[0], PI23 * n)));
+
+  // Generate little pieces around the corners
+  for (let i = 0; i < n_2; i += 1) {
     for (let j = 0; j < n_2; j += 1) {
-      if (i < n_2) {
-        let st = new Sticker([
-          anchors[0].add(V1.mul(i)).add(V2.mul(j)),
-          anchors[0].add(V1.mul(i + 1)).add(V2.mul(j)),
-          anchors[0].add(V1.mul(i + 1)).add(V2.mul(j + 1)),
-          anchors[0].add(V1.mul(i)).add(V2.mul(j + 1)),
-        ], '', [UP, n1, n2]);
+      for (let k = 0; k < n_2; k += 1) {
+        if (i && j && k) break;
 
-        topFace.push(new Piece([
-          st,
-          st.add(V11),
-        ]));
-      }
-      if (i == n_2) {
-        let st = new Sticker([
-          anchors[0].add(V1.mul(n_2)).add(V2.mul(j)),
-          anchors[1].add(V4.mul(n_2)).add(V3.mul(j)),
-          anchors[1].add(V4.mul(n_2)).add(V3.mul(j + 1)),
-          anchors[0].add(V1.mul(n_2)).add(V2.mul(j + 1)),
-        ], '', [UP, n2]);
-        topFace.push(new Piece([
-          st,
-          st.sub(st.getMassCenter()).div(2).add(st.getMassCenter().add(V11.proj(DOWN))),
-        ]));
+        midUpFace.push(cornerPiece.add(V1.mul(i).add(V2.mul(j)).add(V11.mul(k))));
       }
     }
   }
 
+  // Spread little pieces
+  for (let i = 0, maxi = midUpFace.length; i < maxi; i += 1) {
+    midUpFace.push(...[0, 1, 2, 3, 4].map(n => midUpFace[i].rotate(CENTER, UP, INNER_ANG * n)));
+    let mp = midUpFace[i].rotate(CENTER, midUpFace[i].stickers[2].getOrientation(), INNER_ANG);
+    midUpFace.push(...[0, 1, 2, 3, 4].map(n => mp.rotate(CENTER, UP, INNER_ANG * n)));
+  }
+
+  // Star pieces
+  for (let i = 0; i < n_2; i += 1) {
+    let starSticker = new Sticker([
+      anchors[0].add(V1.mul(n_2)).add(V2.mul(i)),
+      anchors[1].sub(V1.mul(n_2)).add(V3.mul(i)),
+      anchors[1].sub(V1.mul(n_2)).add(V3.mul(i + 1)),
+      anchors[0].add(V1.mul(n_2)).add(V2.mul(i + 1)),
+    ], '', [], false, 'star');
+
+    let starStickerBack = new Sticker([
+      anchors[1].sub(V1.mul(n_2)).add(V3.mul(i + 1)),
+      anchors[0].add(V1.mul(n_2)).add(V2.mul(i + 1)),
+      anchors[1].sub(V1.mul(n_2)).add(V2.mul(i + 1)).add(V4),
+      anchors[0].add(V1.mul(n_2)).add(V3.mul(i + 1)).add(V5),
+    ]);
+
+    starSticker.vecs = [starStickerBack.getOrientation()];
+
+    if ( n % 2 === 0 ) {
+      i === 0 && starSticker.points.shift();
+      i === 0 && starStickerBack.points.shift();
+    }
+
+    let starPiece = new Piece([
+      starSticker, starStickerBack
+    ]);
+
+    for (let j = 0; j < 5; j += 1) {
+      let p = starPiece.rotate(CENTER, UP, INNER_ANG * j);
+      midUpFace.push(p);
+
+      for (let k = 0; k < 5; k += 1) {
+        midUpFace.push(p.rotate(anchors[k], anchors[k], PI23));
+      }
+    }
+
+  }
+
+  // Center
   let topCenter = [
     anchors[0].add(V1.add(V2).mul(n_2))
   ];
@@ -96,28 +145,17 @@ export function MEGAMINX(_n: number, headless?: false): PuzzleInterface {
     topCenter.push(topCenter[0].rotate(CENTER, UP, INNER_ANG * i));
   }
 
-  for (let j = 1; j < 5; j += 1) {
-    for (let i = 0, maxi = n_2 * (n_2 + 1); i < maxi; i += 1) {
-      topFace.push(topFace[i].rotate(CENTER, UP, j * INNER_ANG));
-    }
-  }
-
   let center = new Piece([
-    new Sticker(topCenter, 'b'),
+    new Sticker(topCenter),
     new Sticker(topCenter).add(new Vector3D(0, V11.y, 0))
   ]);
 
   center.stickers[1].name = 'center';
 
-  topFace.push(center);
-
-  let midUpFace: Piece[] = [...topFace];
+  midUpFace.push(center);
 
   for (let i = 0; i < 5; i += 1) {
-    let c = anchors[i];
-    for (let j = 0, maxj = topFace.length; j < maxj; j += 1) {
-      midUpFace.push(topFace[j].rotate(c, c, PI23));
-    }
+    midUpFace.push(center.rotate(anchors[i], anchors[i], PI23));
   }
 
   let midDownFace: Piece[] = midUpFace.map(p =>
@@ -129,7 +167,7 @@ export function MEGAMINX(_n: number, headless?: false): PuzzleInterface {
 
   let st_corner = new Sticker([
     anchors[0], anchors[0].add(V1), anchors[0].add(V1.add(V2)), anchors[0].add(V2),
-  ], 'white');
+  ]);
 
   let corner = new Piece([
     st_corner,
@@ -166,10 +204,14 @@ export function MEGAMINX(_n: number, headless?: false): PuzzleInterface {
     getPointsFromSticker(midCenters[1].stickers[0]), // L
     getPointsFromSticker(midCenters[2].stickers[0]), // F
     getPointsFromSticker(midCenters[3].stickers[0]), // R
+    getPointsFromSticker(midCenters[9].stickers[0]), // B
+    getPointsFromSticker(center.rotate(CENTER, RIGHT, PI).stickers[0]), // D
     getPointsFromSticker(midCenters[6].stickers[0]), // dL
     getPointsFromSticker(midCenters[7].stickers[0]), // dR
     getPointsFromSticker(midCenters[0].stickers[0]), // bL
     getPointsFromSticker(midCenters[4].stickers[0]), // bR
+    getPointsFromSticker(midCenters[5].stickers[0]), // DBL
+    getPointsFromSticker(midCenters[8].stickers[0]), // DBR
     center.stickers[0].points.map(p => p.clone()), // [u]
     midCenters[1].stickers[0].points.map(p => p.clone()), // [l]
     midCenters[2].stickers[0].points.map(p => p.clone()), // [f]
@@ -189,7 +231,7 @@ export function MEGAMINX(_n: number, headless?: false): PuzzleInterface {
       let d = pieces[i].direction1(pts1[0], u, true);
 
       if (d === 0) {
-        console.log("Invalid move. Piece intersection detected.", "URFDLB"[moveId], turns, mv);
+        console.log("Invalid move. Piece intersection detected.", mv, turns, mv);
         console.log("Piece: ", i, pieces[i], pts1);
         return null;
       }
@@ -223,9 +265,15 @@ export function MEGAMINX(_n: number, headless?: false): PuzzleInterface {
   };
 
   mega.toMove = function (pc: Piece, st: Sticker, u: Vector3D) {
-    let mc = st.getMassCenter();
+    let mc = st.updateMassCenter();
+    let pcs = pieces.filter(p => p.direction1(mc, u) === 0);
+
+    // console.log('VECS: ', mega.faceVectors.filter(v => v.sub(u).abs() < EPS));
+    // console.log( st.vecs.map(v => v.toString()).join('\n'), u.toString(), st.vecs.indexOf(u) );
+    // console.log("toMove: ", mc.toString(), u.toString(), pieces.map(p => p.direction1(mc, u)));
+
     return {
-      pieces: pieces.filter(p => p.direction1(mc, u) == 0),
+      pieces: pcs,
       ang: INNER_ANG,
     };
   };
@@ -281,35 +329,8 @@ export function MEGAMINX(_n: number, headless?: false): PuzzleInterface {
   };
 
   assignColors(mega, mega.faceColors);
-  // roundCorners(mega);
 
   mega.raw = [anchors, FACE_ANG, FACTOR, RAD, SIDE];
-
-  let isCenter = (p: Piece) => {
-    let st = p.stickers.filter(s => s.points.length === 5);
-    return st.length === 2;
-  };
-
-  for (let i = 0, maxi = pieces.length; i < maxi; i += 1) {
-    let p = pieces[i];
-
-    if (isCenter(p)) continue;
-
-    for (let j = 0, maxj = p.stickers.length; j < maxj; j += 1) {
-      let s = p.stickers[j];
-      if (headless && (s.color === 'x' || s.color === 'd')) {
-        p.stickers.splice(j, 1);
-        j -= 1; maxj -= 1;
-      } else {
-        s.color = (s.color === 'x') ? 'd' : s.color;
-      }
-    }
-
-    if (p.stickers.length === 0) {
-      pieces.splice(i, 1);
-      i -= 1; maxi -= 1;
-    }
-  }
 
   return mega;
 

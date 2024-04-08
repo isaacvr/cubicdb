@@ -40,7 +40,7 @@ const COLORS = {
   "white": "rgb(230, 230, 230)",
   "black": "rgb(0, 0, 0)",
   "gray": "rgb(80, 80, 80)",
-  "darkgray": "rgb(50, 50, 50)",
+  "darkGray": "rgb(50, 50, 50)",
   "lightGray": "rgb(211, 211, 211)",
   "violet": "rgb(138, 27, 255)",
   "pink": "rgb(237, 150, 161)",
@@ -104,6 +104,7 @@ export const STANDARD_PALETTE = {
   green:     getColorByName('green'),
   white:     getColorByName('white'),
   gray:      getColorByName('gray'),
+  darkGray: getColorByName('darkGray'),
   lightGray: getColorByName('lightGray'),
   black:     getColorByName('black'),
   violet:    getColorByName('violet'),
@@ -154,15 +155,15 @@ export const PYRA = [ "pyrso", "pyro", "pyrm", "pyrl4e", "pyr4c", "pyrnb" ];
 export const SKWB = [ "skbso", "skbo", "skb", "skbnb" ];
 export const SQR1 = [ "sqrs", "sqrcsp", "sq1h", "sq1t" ];
 export const CLCK = [ "clkwca", "clk", "clkwca", "clko", "clkc", "clke" ];
-export const MEGA = [ "mgmp", "mgmc", "mgmo", "minx2g", "mlsll" ];
-export const KILO = [ "kilo" ];
+export const MEGA = [ "mgmp", "mgmc", "mgmo", "minx2g", "mlsll", "mgmll", "mgmpll" ];
+export const KILO = [ "klmso", "klmp" ];
 export const GIGA = [ "giga" ];
 export const MISC = [
   ["r3", "r3ni"], "r234w", "r2345w", "r23456w", "r234567w", "r234", "r2345", "r23456", "r234567", "sq2", "bic",
   ["gearso", "gearo", "gear"],
   ["redim", "redi"],
   ["ivy", "ivyo", "ivyso"],
-  "prcp"
+  ["prcp", "prco"]
 ];
 
 export const ICONS = [
@@ -191,7 +192,7 @@ const OPTS: PuzzleOptions[] = [
   { type: 'rubik', order: [2] }, { type: 'rubik', order: [3] }, { type: 'rubik', order: [4] },
   { type: 'rubik', order: [5] }, { type: 'rubik', order: [6] }, { type: 'rubik', order: [7] },
   { type: 'pyraminx', order: [3] }, { type: 'skewb' }, { type: 'square1' }, { type: 'clock' },
-  { type: 'megaminx', order: [3] }, { type: 'megaminx', order: [2] }, { type: 'megaminx', order: [4] },
+  { type: 'megaminx', order: [3] }, { type: 'megaminx', order: [2] }, { type: 'megaminx', order: [5] },
 ];
 
 const OPTS_MISC: PuzzleOptions[][] = [

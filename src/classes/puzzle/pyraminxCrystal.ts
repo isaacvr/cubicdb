@@ -129,10 +129,14 @@ export function PYRAMINX_CRYSTAL(): PuzzleInterface {
     getPointsFromSticker(midTopEdges[6].stickers[0]), // L
     getPointsFromSticker(midTopEdges[9].stickers[0]), // F
     getPointsFromSticker(midTopEdges[12].stickers[0]), // R
+    getPointsFromSticker(midTopEdges[1].stickers[0]), // B
+    getPointsFromSticker(topEdge.rotate(CENTER, RIGHT, PI).stickers[0]), // D
     getPointsFromSticker(midTopEdges[5].stickers[0]), // dL
     getPointsFromSticker(midTopEdges[8].stickers[0]), // dR
     getPointsFromSticker(midTopEdges[3].stickers[0]), // bL
     getPointsFromSticker(midTopEdges[0].stickers[0]), // bR
+    getPointsFromSticker(midTopEdges[2].stickers[0]), // DBL
+    getPointsFromSticker(midTopEdges[11].stickers[0]), // DBR
     topEdge.stickers[0].points.map(p => p.clone()), // [u]
     midTopEdges[6].stickers[0].points.map(p => p.clone()), // [l]
     midTopEdges[9].stickers[0].points.map(p => p.clone()), // [f]

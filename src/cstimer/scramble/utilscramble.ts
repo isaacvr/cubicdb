@@ -399,6 +399,7 @@ function utilscramble(type: string, len: number) {
 			return gigascramble(len);
 		case "mgmo": // Megaminx (old style)
 			return adjScramble(["F", "B", "U", "D", "L", "DBR", "DL", "BR", "DR", "BL", "R", "DBL"], [0x554, 0xaa8, 0x691, 0x962, 0xa45, 0x58a, 0x919, 0x626, 0x469, 0x896, 0x1a5, 0x25a], len);
+		case "klmp": // Kilominx (Pochmann)
 		case "mgmp": // Megaminx (Pochmann)
 			return pochscramble(10, Math.ceil(len / 10));
 		case "mgmc": // Megaminx (Carrot)
@@ -479,6 +480,6 @@ function utilscramble(type: string, len: number) {
 
 regScrambler([
 	'15p', '15pm', '15pat', 'clkwca', 'clk', 'clkc', 'clke', 'giga', 'mgmo',
-	'mgmp', 'mgmc', 'kilo', 'heli', 'redi', 'redim', 'pyrm', 'prcp', 'mpyr', 'r3',
+	'mgmp', 'mgmc', 'kilo', 'klmp', 'heli', 'redi', 'redim', 'pyrm', 'prcp', 'mpyr', 'r3',
 	'r3ni', 'sq1h', 'sq1t', 'sq2', 'ssq1t', 'bsq', '-1', '333noob', 'lol'
 	], utilscramble);

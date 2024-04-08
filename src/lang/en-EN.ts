@@ -523,7 +523,7 @@ export const English: Language = {
         ['Old Style', "mgmo", 70],
         ['2-generator R,U', "minx2g", 30],
         ['Last Layer (LL)', "mgmll", 0],
-        ['Last Slot + LL', "mlsll", 0],
+        ['Last Slot + LL', "mlsll", 40],
         ['PLL', "mgmpll", 0],
       ]
     ],

@@ -159,14 +159,18 @@ export class Piece {
         dirs[ d + 1 ] += 1;
 
         if ( !useMassCenter && d === 0 ) {
+          // console.log('[direction1] 1: ', dirs, d, i, maxi);
           return 0;
         }
         
         if (dirs[0] > 0 && dirs[2] > 0) {
+          // console.log('[direction1] 2: ', dirs, i, maxi);
           return 0;
         }
       }
     }
+
+    // dirs[1] === len && console.log('[direction1] 3: ', dirs, len);
 
     return dirs[1] === len ? 0 : dirs[0] ? -1 : 1;
   }

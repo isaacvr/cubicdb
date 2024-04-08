@@ -1,6 +1,4 @@
 <script lang="ts">
-  import Chart from 'chart.js/auto';
-  import zoomPlugin from 'chartjs-plugin-zoom';
   import { between, calcPercents, evalLine, rotatePoint } from '@helpers/math';
   import { getAverageS, trendLSV } from '@helpers/statistics';
   import { formatHour, infinitePenalty, timer } from '@helpers/timer';
@@ -546,7 +544,7 @@
         }],
         backgroundColor: "transparent",
         textStyle: { fontFamily: localStorage.getItem('app-font') || 'Ubuntu' },
-        tooltip: { ...tooltipStyle, valueFormatter(v) { return timer(+v.toString(), true, true); } }
+        tooltip: { ...tooltipStyle, valueFormatter(v) { return timer(+(v || '').toString(), true, true); } }
       };
 
       stepTimeChart.setOption(stepOption);
@@ -576,7 +574,7 @@
         }],
         backgroundColor: "transparent",
         textStyle: { fontFamily: localStorage.getItem('app-font') || 'Ubuntu', fontSize: 17 },
-        tooltip: { ...tooltipStyle, trigger: 'item', valueFormatter(v) { return v.toString() + '%'; } }
+        tooltip: { ...tooltipStyle, trigger: 'item', valueFormatter(v) { return (v || '').toString() + '%'; } }
       };
 
       stepPercentChart.setOption(stepOption);
@@ -584,11 +582,6 @@
   }
 
   onMount(() => {
-    Chart.register(zoomPlugin);
-    Chart.defaults.color = '#bbbbbb';
-    Chart.defaults.font.family = localStorage.getItem('app-font') || 'Ubuntu';
-    Chart.overrides.line.spanGaps = true;
-
     initGraphs([]);
   });
 
