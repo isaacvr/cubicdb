@@ -195,8 +195,9 @@ export function MEGAMINX(_n: number, headless?: false): PuzzleInterface {
   let LDIST = Math.abs(corner.stickers[1].points[2].sub(anchors[0]).y);
 
   let getPointsFromSticker = (s: Sticker) => {
-    let mc = s.getMassCenter();
-    return s.points.map(p => p.add(mc.unit().mul(-LDIST)))
+    // let mc = s.getMassCenter();
+    let u = s.getOrientation();
+    return s.points.map(p => p.add(u.mul(-LDIST)))
   };
 
   let planes = [
@@ -223,12 +224,13 @@ export function MEGAMINX(_n: number, headless?: false): PuzzleInterface {
     let turns = mv[1];
     const pts1 = planes[moveId].map(e => e.clone());
     const u = Vector3D.cross(pts1[0], pts1[1], pts1[2]).unit();
+    const anc = pts1[0].add(u.mul(-(mv[3] || 0) * LDIST));
     const ang = INNER_ANG * turns;
 
     let pcs = [];
 
     for (let i = 0, maxi = pieces.length; i < maxi; i += 1) {
-      let d = pieces[i].direction1(pts1[0], u, true);
+      let d = pieces[i].direction1(anc, u, true);
 
       if (d === 0) {
         console.log("Invalid move. Piece intersection detected.", mv, turns, mv);
@@ -249,6 +251,8 @@ export function MEGAMINX(_n: number, headless?: false): PuzzleInterface {
   };
 
   mega.move = function (moves: any[]) {
+    console.log("MOVES", moves);
+    
     for (let m = 0, maxm = moves.length; m < maxm; m += 1) {
       let mv = moves[m];
       let pcs = trySingleMove(mv);

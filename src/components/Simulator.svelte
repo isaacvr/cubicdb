@@ -45,8 +45,8 @@
   export let enableRotation = true;
   export let gui = true;
   export let contained = false;
-  export let selectedPuzzle: PuzzleType = "megaminx";
-  export let order = 4;
+  export let selectedPuzzle: PuzzleType = "rubik";
+  export let order = 3;
   export let animationTime = $screen.isMobile ? 150 : 200; /// Default animation time: 200ms
   export let showBackFace = false;
   export let sequence: string[] = [];
