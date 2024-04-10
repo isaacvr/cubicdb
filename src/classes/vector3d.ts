@@ -1,5 +1,6 @@
 import { EPS } from '@constants';
 import { Quaternion } from './quaternion';
+import { Vector3 } from 'three';
 
 const PI = Math.PI;
 const TAU = PI * 2;
@@ -207,20 +208,6 @@ export class Vector3D {
       throw new TypeError('Constant vector does not allow modification');
     }
 
-    // let nu = new Vector3(u.x, u.y, u.z).setLength(1);
-
-    // let v3 = new Vector3(this.x - O.x, this.y - O.y, this.z - O.z);
-    // v3.applyAxisAngle(nu, ang).add( new Vector3(O.x, O.y, O.z) );
-
-    // if ( self ) {
-    //   this.x = v3.x;
-    //   this.y = v3.y;
-    //   this.z = v3.z;
-    //   return this;
-    // }
-
-    // return new Vector3D(v3.x, v3.y, v3.z);
-
     const vecs = [0, 1, 2].map(n => [[RIGHT, UP, FRONT][n], n]);
     const fAngs = [0, 1, 2, 3].map(n => [n * PI / 2, n]);
     const rAng = ((ang % TAU) + TAU) % TAU;
@@ -251,33 +238,19 @@ export class Vector3D {
       return vt;
     }
 
-    const CA = fixedCos(ang / 2);
-    const SA = fixedSin(ang / 2);
+    let nu = new Vector3(u.x, u.y, u.z).setLength(1);
 
-    let U = u.unit();
-
-    let p = new Quaternion(0, (this.x - O.x), (this.y - O.y), (this.z - O.z));
-    let h = new Quaternion(
-      CA,
-      SA * U.x,
-      SA * U.y,
-      SA * U.z,
-    )
-
-    let qp = h.multiply( p ).multiply( h.conjugate() );
+    let v3 = new Vector3(this.x - O.x, this.y - O.y, this.z - O.z);
+    v3.applyAxisAngle(nu, ang).add( new Vector3(O.x, O.y, O.z) );
 
     if ( self ) {
-      this.x = qp.x + O.x;
-      this.y = qp.y + O.y;
-      this.z = qp.z + O.z;
+      this.x = v3.x;
+      this.y = v3.y;
+      this.z = v3.z;
       return this;
     }
 
-    return new Vector3D(
-      qp.x + O.x,
-      qp.y + O.y,
-      qp.z + O.z,
-    );
+    return new Vector3D(v3.x, v3.y, v3.z);
   }
 
   clone(): Vector3D {
@@ -318,6 +291,12 @@ export class Vector3D {
     this.y = coords[1];
     this.z = coords[2];
     return this;
+  }
+
+  setCoords(x: number, y: number, z: number) {
+    this.x = x;
+    this.y = y;
+    this.z = z;
   }
 
 }

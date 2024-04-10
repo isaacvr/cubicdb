@@ -357,10 +357,7 @@
       // emit scramble for iCarry and other stuffs
       dataService.scramble($scramble);
 
-      console.log("MODE: ", md);
-
       if ( all.pScramble.options.has(md) && $session?.settings?.genImage ) {
-        console.log("HAS_MODE: ", md);
         updateImage(md);
       } else {
         setPreview([], Date.now());

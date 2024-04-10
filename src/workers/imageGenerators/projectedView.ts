@@ -9,7 +9,7 @@ import { map } from "@helpers/math";
 
 export async function projectedView(cube: Puzzle, DIM: number): Promise<Blob> {
   const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d')!;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
 
   let W = DIM * 4 / 2;
   let H = DIM * 3 / 2;

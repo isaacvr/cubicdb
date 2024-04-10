@@ -1,5 +1,7 @@
 import { EPS } from '@constants';
 import { Vector3D, CENTER } from './../vector3d';
+import { BufferGeometry, Group, Matrix4, Points, PointsMaterial, Vector3 } from 'three';
+import { rotateBundle } from '@helpers/math';
 
 export class Sticker {
   points: Vector3D[];
@@ -13,7 +15,7 @@ export class Sticker {
   nonInteractive: boolean;
   name: string;
 
-  constructor(pts?: Vector3D[], color?: string, vecs ?: Vector3D[], nonInteractive = false, name = "") {
+  constructor(pts?: Vector3D[], color?: string, vecs?: Vector3D[], nonInteractive = false, name = "") {
     this.points = (pts || []).map(e => e.clone());
     this.oColor = color || 'w';
     this.color = this.oColor;
@@ -33,7 +35,7 @@ export class Sticker {
         Math.min(ac[0], p.x), Math.min(ac[1], p.y), Math.min(ac[2], p.z),
         Math.max(ac[3], p.x), Math.max(ac[4], p.y), Math.max(ac[5], p.z),
       ]
-    }, [ Infinity, Infinity, Infinity, -Infinity, -Infinity, -Infinity ]);
+    }, [Infinity, Infinity, Infinity, -Infinity, -Infinity, -Infinity]);
 
     return this.boundingBox = [
       new Vector3D(box[0], box[1], box[2]),
@@ -51,8 +53,8 @@ export class Sticker {
     return this._cached_mass_center;
   }
 
-  add(ref: Vector3D, self ?: boolean): Sticker {
-    if ( self ) {
+  add(ref: Vector3D, self?: boolean): Sticker {
+    if (self) {
       this.points.forEach(p => p.add(ref, true));
       // this.boundingBox.forEach(p => p.add(ref, true));
       this._cached_mass_center.add(ref, true);
@@ -65,8 +67,8 @@ export class Sticker {
     return cp;
   }
 
-  sub(ref: Vector3D, self ?: boolean): Sticker {
-    if ( self ) {
+  sub(ref: Vector3D, self?: boolean): Sticker {
+    if (self) {
       this.points.forEach(p => p.sub(ref, true));
       // this.boundingBox.forEach(p => p.sub(ref, true));
       this._cached_mass_center.sub(ref, true);
@@ -79,8 +81,8 @@ export class Sticker {
     return cp;
   }
 
-  mul(f: number, self ?: boolean): Sticker {
-    if ( self ) {
+  mul(f: number, self?: boolean): Sticker {
+    if (self) {
       this.points.forEach(p => p.mul(f, true));
       // this.boundingBox.forEach(p => p.mul(f, true));
       this._cached_mass_center.mul(f, true);
@@ -93,8 +95,8 @@ export class Sticker {
     return cp;
   }
 
-  div(f: number, self ?: boolean): Sticker {
-    if ( self ) {
+  div(f: number, self?: boolean): Sticker {
+    if (self) {
       this.points.forEach(p => p.div(f, true));
       // this.boundingBox.forEach(p => p.div(f, true));
       this._cached_mass_center.div(f, true);
@@ -114,7 +116,7 @@ export class Sticker {
   getOrientation(): Vector3D {
     let n = this.points.length;
     let i = [0, 1, 2].map(e => Math.round((e / 3) * n));
-    return Vector3D.cross( this.points[ i[0] ], this.points[ i[1] ], this.points[ i[2] ] ).unit();
+    return Vector3D.cross(this.points[i[0]], this.points[i[1]], this.points[i[2]]).unit();
   }
 
   normal(): Vector3D {
@@ -122,11 +124,11 @@ export class Sticker {
   }
 
   rotate(ref: Vector3D, dir: Vector3D, ang: number, self?: boolean, col?: string): Sticker {
-    if ( Math.abs(ang % (Math.PI * 2)) < EPS ) {
+    if (Math.abs(ang % (Math.PI * 2)) < EPS) {
       return self ? this : this.clone();
     }
 
-    if ( self ) {
+    if (self) {
       this.points.forEach(e => e.rotate(ref, dir, ang, true));
       this._cached_mass_center.rotate(ref, dir, ang, true);
       this.vecs.forEach(v => v.rotate(CENTER, dir, ang, true));
@@ -134,13 +136,55 @@ export class Sticker {
       // this.computeBoundingBox();
       return this;
     }
-    
+
     let res = this.clone(true);
     res.points = this.points.map(e => e.rotate(ref, dir, ang));
     res._cached_mass_center = this._cached_mass_center.rotate(ref, dir, ang);
     res.color = col || res.color;
     res.vecs.map(v => v.rotate(CENTER, dir, ang, true));
     // res.computeBoundingBox();
+    return res;
+  }
+
+  partialRotation(ref: Vector3D, dir: Vector3D, ang: number, self?: boolean, col?: string): Sticker {
+    if (Math.abs(ang % (Math.PI * 2)) < EPS) {
+      return self ? this : this.clone();
+    }
+
+    if (self) {
+      this._cached_mass_center.rotate(ref, dir, ang, true);
+      this.vecs.forEach(v => v.rotate(CENTER, dir, ang, true));
+      this.color = col || this.color;
+      return this;
+    }
+
+    let res = this.clone(true);
+    res._cached_mass_center = this._cached_mass_center.rotate(ref, dir, ang);
+    res.color = col || res.color;
+    res.vecs.map(v => v.rotate(CENTER, dir, ang, true));
+    return res;
+  }
+
+  rotateBundle(ref: Vector3D, dir: Vector3D, ang: number, self?: boolean, col?: string): Sticker {
+    if (Math.abs(ang % (Math.PI * 2)) < EPS) {
+      return self ? this : this.clone();
+    }
+
+    const points = rotateBundle(this.points, ref, dir, ang);
+
+    if (self) {
+      this.points.forEach((e, p) => e.setCoords(points[p].x, points[p].y, points[p].z));
+      this._cached_mass_center.rotate(ref, dir, ang, true);
+      this.vecs.forEach(v => v.rotate(CENTER, dir, ang, true));
+      this.color = col || this.color;
+      return this;
+    }
+
+    let res = this.clone(true);
+    res.points = points;
+    res._cached_mass_center = this._cached_mass_center.rotate(ref, dir, ang);
+    res.color = col || res.color;
+    res.vecs.map(v => v.rotate(CENTER, dir, ang, true));
     return res;
   }
 
@@ -157,11 +201,11 @@ export class Sticker {
     let dirs = [0, 0, 0];
     let pts = (useMc) ? [this.getMassCenter()] : this.points;
     let len = pts.length;
-    
+
     for (let i = 0; i < len; i += 1) {
-      dirs[ Vector3D.direction1(anchor, u, pts[i]) + 1 ] += 1;
-      
-      if ( dirs[0] > 0 && dirs[2] > 0 ) {
+      dirs[Vector3D.direction1(anchor, u, pts[i]) + 1] += 1;
+
+      if (dirs[0] > 0 && dirs[2] > 0) {
         // console.log('   [direction1] 1: ', dirs);
         return 0;
       }
@@ -176,33 +220,33 @@ export class Sticker {
   }
 
   reflect(p1: Vector3D, p2: Vector3D, p3: Vector3D, preserveOrientation?: boolean): Sticker {
-    return this.reflect1( p1, Vector3D.cross(p1, p2, p3), preserveOrientation );
+    return this.reflect1(p1, Vector3D.cross(p1, p2, p3), preserveOrientation);
   }
 
   reflect1(a: Vector3D, _u: Vector3D, preserveOrientation?: boolean): Sticker {
     let u = _u.unit();
-    let s = this.clone(true);    
+    let s = this.clone(true);
     let dist = (p: Vector3D) => p.sub(a).dot(u);
 
-    s.points = this.points.map(p => p.add( u.mul( -2 * dist(p) ) ));
-    if ( preserveOrientation ) {
+    s.points = this.points.map(p => p.add(u.mul(-2 * dist(p))));
+    if (preserveOrientation) {
       s.reverse(true);
     }
-    s._cached_mass_center = s._cached_mass_center.add( u.mul( -2 * dist(s._cached_mass_center) ) );
-    s.vecs = s.vecs.map(v => v.add( u.mul( -2 * v.dot(u) ) ));
+    s._cached_mass_center = s._cached_mass_center.add(u.mul(-2 * dist(s._cached_mass_center)));
+    s.vecs = s.vecs.map(v => v.add(u.mul(-2 * v.dot(u))));
     return s;
   }
 
-  reverse(self ?: boolean): Sticker {
-    if ( self ) {
+  reverse(self?: boolean): Sticker {
+    if (self) {
       this.points.reverse();
-      this.points.unshift( this.points[ this.points.length - 1 ] );
+      this.points.unshift(this.points[this.points.length - 1]);
       this.points.pop();
       return this;
     }
     let s = this.clone(true);
     s.points = this.points.map(p => p.clone()).reverse();
-    s.points.unshift( s.points[ s.points.length - 1 ] );
+    s.points.unshift(s.points[s.points.length - 1]);
     s.points.pop();
     return s;
   }
@@ -213,7 +257,7 @@ export class Sticker {
     let product: Vector3D;
 
     for (const v of this.points) {
-      product = u.sub(v).cross( u.sub(p) );
+      product = u.sub(v).cross(u.sub(p));
       if ((zProduct < 0 && product.z > 0) || (zProduct > 0 && product.z < 0)) {
         return false;
       } else if (product.z !== 0) {
@@ -221,20 +265,20 @@ export class Sticker {
       }
       u = v;
     }
-    
+
     return true;
   }
 
   equal(s: Sticker): boolean {
     let p1 = this.points;
     let p2 = s.points;
-    
-    if ( this.color != s.color || p1.length != p2.length ) {
+
+    if (this.color != s.color || p1.length != p2.length) {
       return false;
     }
 
     for (let i = 0, maxi = p1.length; i < maxi; i += 1) {
-      if ( p1[i].sub(p2[i]).abs() > EPS ) {
+      if (p1[i].sub(p2[i]).abs() > EPS) {
         return false;
       }
     }
@@ -248,17 +292,17 @@ export class Sticker {
 
     for (let i = 0, maxi = p.length; i < maxi; i += 1) {
       let l0 = p[i];
-      let l = p[ (i + 1) % maxi ].sub(l0);
-      
+      let l = p[(i + 1) % maxi].sub(l0);
+
       let num = p0.sub(l0).dot(n);
       let den = l.dot(n);
 
-      if ( Math.abs(num) < EPS || Math.abs(den) < EPS ) {
+      if (Math.abs(num) < EPS || Math.abs(den) < EPS) {
         continue;
       }
 
       let d = num / den;
-      inters.push( l0.add( l.mul(d) ) );
+      inters.push(l0.add(l.mul(d)));
     }
 
     return {
@@ -276,7 +320,7 @@ export class Sticker {
   // scaleX(c: Vector3D, factor: number, self: boolean = false) {
   //   let res = self ? this : this.clone();
   //   res.sub(c, true);
-    
+
   //   res.points.forEach(p => { p.x *= factor; });
   //   res._cached_mass_center.x *= factor;
   //   res.add(c, true);
@@ -287,11 +331,11 @@ export class Sticker {
   // scaleY(c: Vector3D, factor: number, self: boolean = false) {
   //   let res = self ? this : this.clone();
   //   res.sub(c, true);
-    
+
   //   res.points.forEach(p => { p.y *= factor; });
   //   res._cached_mass_center.y *= factor;
   //   res.add(c, true);
-    
+
   //   return res;
   // }
 }

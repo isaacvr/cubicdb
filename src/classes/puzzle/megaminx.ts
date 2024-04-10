@@ -22,7 +22,7 @@ export function MEGAMINX(_n: number, headless?: false): PuzzleInterface {
     faceColors: ["white", "yellow", "violet", "green", "red", "blue", "orange", "lblue", "lyellow", "pink", "lgreen", "gray"],
     move: () => false,
     roundParams: [(s: Sticker, i: number) => {
-      if (s.color === 'd' || s.name === 'center') return null;
+      if (s.color === 'd' || s.color === 'x' || s.name === 'center') return null;
       if (s.name === 'star' && n % 2 === 0 ) {
         s.color = 'd';
         return null;
@@ -195,7 +195,6 @@ export function MEGAMINX(_n: number, headless?: false): PuzzleInterface {
   let LDIST = Math.abs(corner.stickers[1].points[2].sub(anchors[0]).y);
 
   let getPointsFromSticker = (s: Sticker) => {
-    // let mc = s.getMassCenter();
     let u = s.getOrientation();
     return s.points.map(p => p.add(u.mul(-LDIST)))
   };
@@ -251,8 +250,6 @@ export function MEGAMINX(_n: number, headless?: false): PuzzleInterface {
   };
 
   mega.move = function (moves: any[]) {
-    console.log("MOVES", moves);
-    
     for (let m = 0, maxm = moves.length; m < maxm; m += 1) {
       let mv = moves[m];
       let pcs = trySingleMove(mv);
@@ -264,17 +261,12 @@ export function MEGAMINX(_n: number, headless?: false): PuzzleInterface {
       let { u, ang } = pcs;
       pcs.pieces.forEach(p => p.rotate(CENTER, u, ang, true));
     }
-
     return true;
   };
 
   mega.toMove = function (pc: Piece, st: Sticker, u: Vector3D) {
     let mc = st.updateMassCenter();
     let pcs = pieces.filter(p => p.direction1(mc, u) === 0);
-
-    // console.log('VECS: ', mega.faceVectors.filter(v => v.sub(u).abs() < EPS));
-    // console.log( st.vecs.map(v => v.toString()).join('\n'), u.toString(), st.vecs.indexOf(u) );
-    // console.log("toMove: ", mc.toString(), u.toString(), pieces.map(p => p.direction1(mc, u)));
 
     return {
       pieces: pcs,
@@ -314,7 +306,6 @@ export function MEGAMINX(_n: number, headless?: false): PuzzleInterface {
       }
 
       if (!pcs) {
-        console.log("NO PIECES");
         continue;
       }
 
