@@ -15,7 +15,7 @@ export function IVY(): PuzzleInterface {
     center: new Vector3D(0, 0, 0),
     faceVectors: [],
     getAllStickers: () => [],
-    faceColors: [ 'y', 'o', 'g', 'w', 'r', 'b' ],
+    faceColors: [ 'w', 'r', 'g', 'y', 'o', 'b' ],
     move: () => true,
     roundParams: [],
   };
@@ -27,9 +27,11 @@ export function IVY(): PuzzleInterface {
   const ANG = 2 * PI / 3;
 
   let p1 = LEFT.add(UP).add(BACK);
-  // let p2 = LEFT.add(UP).add(FRONT);
+  let p2 = LEFT.add(UP).add(FRONT);
   let p3 = RIGHT.add(UP).add(FRONT);
-  // let p4 = RIGHT.add(UP).add(BACK);
+  let p4 = RIGHT.add(UP).add(BACK);
+  let p5 = RIGHT.add(DOWN).add(FRONT);
+  let p6 = LEFT.add(DOWN).add(BACK);
 
   let cornerSticker = new Sticker([
     p1,
@@ -80,6 +82,45 @@ export function IVY(): PuzzleInterface {
     centerPiece.rotate(CENTER, UP, PI_2).rotate(CENTER, BACK, PI_2),
     centerPiece.rotate(CENTER, UP, PI).rotate(CENTER, RIGHT, PI),
   );
+
+  // Fix Ivy orientation to match real cube
+  pieces.forEach(p => p.rotate(CENTER, UP, PI_2, true));
+
+  const moveMap = "RLDBxyz";
+
+  let planes = [
+    [0, 1, 2].map(n => p3.rotate(CENTER, p4, ANG * n)), // R
+    [0, 1, 2].map(n => p3.rotate(CENTER, p2, ANG * n)), // L
+    [0, 1, 2].map(n => p3.rotate(CENTER, p5, ANG * n)), // D
+    [0, 1, 2].map(n => p1.rotate(CENTER, p6, ANG * n)), // B
+    [ CENTER, UP, FRONT ].map(v => v.add(LEFT.mul(2))), // x
+    [ CENTER, FRONT, RIGHT ].map(v => v.add(DOWN.mul(2))), // y
+    [ CENTER, UP, LEFT ].map(v => v.add(BACK.mul(2))), // z
+  ];
+
+  ivy.move = function(scramble: string[]) {
+    let moves = scramble[0].match(new RegExp(`[${moveMap}]'?`, 'g'));
+
+    if ( moves ) {
+      for (let i = 0, maxi = moves.length; i < maxi; i += 1) {
+        let mv = moves[i];
+        let moveId = moveMap.indexOf(mv[0]);
+        let plane = planes[moveId];
+        let u = Vector3D.cross(plane[0], plane[1], plane[2]).unit();
+        let pcs = pieces.filter(p => p.direction1(plane[0], u) >= 0);
+        let ang = Math.sign(mv.indexOf("'") + .1) * ANG;
+
+        // Accept only double movements on x, y and z.
+        if ( moveId > 3 ) {
+          ang = ANG * 3 / 2;
+        }
+
+        pcs.forEach(p => p.rotate(CENTER, u, ang, true));
+      }
+    }
+
+    return true;
+  };
   
   ivy.toMove = function(piece: Piece, sticker: Sticker, dir: Vector3D) {
     let mc = sticker.updateMassCenter();

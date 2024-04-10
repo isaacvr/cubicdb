@@ -25,6 +25,10 @@
     type Intersection,
     FrontSide,
     PCFSoftShadowMap,
+    PlaneGeometry,
+    MeshBasicMaterial,
+    DoubleSide,
+    Mesh,
   } from "three";
 
   // } from "three";
@@ -41,7 +45,7 @@
   export let enableRotation = true;
   export let gui = true;
   export let contained = false;
-  export let selectedPuzzle: PuzzleType = "rubik";
+  export let selectedPuzzle: PuzzleType = "megaminx";
   export let order = 3;
   export let animationTime = $screen.isMobile ? 150 : 200; /// Default animation time: 200ms
   export let showBackFace = false;
@@ -139,7 +143,7 @@
     let u: any = best;
 
     groupToMove.forEach((g) => {
-      if (g.dir) {
+      if ( 'dir' in g ) {
         let cr = vv.cross(vectorsFromCamera([g.dir], camera)[0]);
         dir = -Math.sign(cr.z);
         u = g.dir;
@@ -305,22 +309,21 @@
     piece: Intersection,
     ini: Vector2,
     fin: Vector2,
-    camera: PerspectiveCamera,
-    vec3?: Vector3D,
+    camera: PerspectiveCamera
   ) {
     camera.updateMatrix();
     camera.updateMatrixWorld();
     camera.updateProjectionMatrix();
 
-    let pc = [piece.object.parent?.userData, piece.object.userData];
-    let po = pc[1]?.getOrientation();
-    let vecs: Vector3D[] = pc[1]?.vecs.filter(
-      (v: Vector3D) => v.cross(po).abs() > EPS,
+    let pc = [piece.object.parent!.userData, piece.object.userData!];
+    let po = pc[1].getOrientation();
+    let vecs: Vector3D[] = pc[1].vecs.filter(
+      (v: Vector3D) => v.sub(po).abs() > EPS,
     );
     let v = fin.clone().sub(ini);
-    let vv = vec3 || new Vector3D(v.x, v.y, 0);
+    let vv = new Vector3D(v.x, v.y, 0);
 
-    let faceVectors = vec3 ? vecs : vectorsFromCamera(vecs, camera);
+    let faceVectors = vectorsFromCamera(vecs, camera);
 
     let dir: number = 0;
     let best: Vector3D = new Vector3D(0, 0, 0);
@@ -362,6 +365,10 @@
     camera.updateProjectionMatrix();
   }
 
+  const planeGeometry = new PlaneGeometry(2, 2);
+  const planeMaterial = new MeshBasicMaterial({ color: 0xffffff, side: DoubleSide });
+  const planeMesh = new Mesh(planeGeometry, planeMaterial); 
+
   function resetPuzzle(facelet?: string, scramble = false, useScr = "") {
     let children = scene.children;
     scene.remove(...children);
@@ -378,6 +385,7 @@
     // plane.position.set(0, -1.5, 0);
     // plane.receiveShadow = true;
     // scene.add( plane );
+    // scene.add(planeMesh);
     
     // Puzzle setup
 
@@ -708,10 +716,22 @@
 
     piece = null;
 
+    let pos;
+
     if (intersects.length > 0) {
-      if ((<any>intersects[0].object).material.color.getHex()) {
-        piece = intersects[0];
+      for (let i = 0, maxi = intersects.length; i < maxi; i += 1) {
+        if ((intersects[i].object.userData as Sticker).nonInteractive) {
+          continue;
+        }
+
+        if ((<any>intersects[i].object).material.color.getHex()) {
+          piece = intersects[i];
+          pos = intersects[i].point;
+        } else {
+          break;
+        }
       }
+
       controls.enabled = false;
     }
 
@@ -719,7 +739,12 @@
 
     let data: any = drag(piece, new Vector2(mcx, mcy), vec, camera);
 
-    data && prepareFromDrag(data);
+    if ( data && pos ) {
+      let dg = prepareFromDrag(data);
+      
+      planeMesh.position.set(pos.x, pos.y, pos.z);
+      planeMesh.lookAt(pos.x + dg.u.x, pos.y + dg.u.y, pos.z + dg.u.z);
+    }
   }
 
   function keyDownHandler(e: KeyboardEvent) {

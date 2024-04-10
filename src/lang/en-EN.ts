@@ -385,7 +385,7 @@ export const English: Language = {
       [
         ["WCA", "333", 0],
         ['Random Move', "333o", 25],
-        ['3x3 for noobs', "333noob", 25],
+        // ['3x3 for noobs', "333noob", 25],
         ['Edges only', "edges", 0],
         ['Corners only', "corners", 0],
         // ['BLD Helper', "nocache_333bldspec", 0], // new
@@ -523,7 +523,7 @@ export const English: Language = {
         ['Old Style', "mgmo", 70],
         ['2-generator R,U', "minx2g", 30],
         ['Last Layer (LL)', "mgmll", 0],
-        ['Last Slot + LL', "mlsll", 0],
+        ['Last Slot + LL', "mlsll", 40],
         ['PLL', "mgmpll", 0],
       ]
     ],

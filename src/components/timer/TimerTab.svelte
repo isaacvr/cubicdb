@@ -785,8 +785,7 @@
               { timer($time, $decimals, false)}
             </span>
         {:else}
-          <div class={ "transition-all duration-200 " + (prevExpanded &&
-            ($state === TimerState.STOPPED || $state === TimerState.CLEAN) ? 'opacity-0' : '')}>
+          <div class="transition-all duration-200">
             <span
               class="timer text-gray-300 max-sm:text-7xl max-sm:[line-height:8rem]"
               class:prevention={ $state === TimerState.PREVENTION } class:ready={$ready}>
@@ -939,14 +938,14 @@
           </div>
         {:else}
           <div class="w-full h-full flex items-center justify-center relative">
-            {#if !prevExpanded && $preview.length > 1}
+            {#if $preview.length > 1}
               <span class="absolute top-[-1.5rem] transition-all" out:blur>
                 {$localLang.global.scramble} {selectedImg + 1} / { $preview.length }
               </span>
             {/if}
 
             <Button color="none" on:click={ (ev) => step(ev, -1) } disabled={ selectedImg === 0 }
-              class={"rounded-full w-[3rem] h-[3rem] " + ($preview.length < 2 ? 'opacity-0 pointer-events-none' : '')}>
+              class={"rounded-full w-[3rem] h-[3rem] " + ($preview.length < 2 ? 'hidden' : '')}>
               <ChevronLeftSolid class="pointer-events-none"/>
             </Button>
   
@@ -954,7 +953,7 @@
               class="transition-all duration-300 cursor-pointer h-full w-full object-contain">
 
             <Button color="none" on:click={ (ev) => step(ev, 1) } disabled={ selectedImg + 1 === $preview.length }
-              class={"rounded-full w-[3rem] h-[3rem] " + ($preview.length < 2 ? 'opacity-0 pointer-events-none' : '')}>
+              class={"rounded-full w-[3rem] h-[3rem] " + ($preview.length < 2 ? 'hidden' : '')}>
               <ChevronRightSolid class="pointer-events-none"/>
             </Button>
           </div>
@@ -1246,7 +1245,7 @@
 
   #preview-container.expanded {
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.4);
+    background-color: rgba(0, 0, 0, 1);
   }
 
   .scrambleOnly #preview-container.expanded {

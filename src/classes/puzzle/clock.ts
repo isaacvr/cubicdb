@@ -18,7 +18,7 @@ export function CLOCK(): PuzzleInterface {
       black: '#181818',
       white: '#aaa',
       gray: '#7f7f7f',
-      darkgray: '#1e1e1e',
+      darkGray: '#1e1e1e',
       red: '#ff0000',
     },
     pieces: [],
@@ -136,7 +136,7 @@ export function CLOCK(): PuzzleInterface {
     const R_PIN = circles.points[0].x * 2.3;
 
     if ( extrude ) {
-      pushExtrudedCircle(X, Y, RAD, WHITE, 'darkgray', 0, CROSS_LAYER);
+      pushExtrudedCircle(X, Y, RAD, WHITE, 'darkGray', 0, CROSS_LAYER);
     } else {
       pieces.push( f( circle(X, Y, RAD, WHITE, 0) ) );
     }
@@ -144,7 +144,7 @@ export function CLOCK(): PuzzleInterface {
     for (let i = -1; i < 2; i += 2) {
       for (let j = -1; j < 2; j += 2) {
         if ( extrude ) {
-          pushExtrudedCircle(X + W * i, Y + W * j, RAD_CLOCK + BORDER + BORDER1, WHITE, 'darkgray', 0, CROSS_LAYER);
+          pushExtrudedCircle(X + W * i, Y + W * j, RAD_CLOCK + BORDER + BORDER1, WHITE, 'darkGray', 0, CROSS_LAYER);
         } else {
           pieces.push( f( circle(X + W * i, Y + W * j, RAD_CLOCK + BORDER + BORDER1, WHITE, 0)) );
         }

@@ -9,7 +9,7 @@ import { map } from "@helpers/math";
 
 export async function projectedView(cube: Puzzle, DIM: number): Promise<Blob> {
   const canvas = document.createElement('canvas');
-  const ctx: any = canvas.getContext('2d');
+  const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
 
   let W = DIM * 4 / 2;
   let H = DIM * 3 / 2;
@@ -36,7 +36,7 @@ export async function projectedView(cube: Puzzle, DIM: number): Promise<Blob> {
     H = W - H;
     W = W - H;
     W *= 0.62;
-  } else if ( cube.type === 'megaminx' ) {
+  } else if ( cube.type === 'megaminx' || cube.type === 'pyraminxCrystal' ) {
     W = H * 2;
     LW = H * 0.004;
   }
@@ -78,7 +78,7 @@ export async function projectedView(cube: Puzzle, DIM: number): Promise<Blob> {
   } else if ( cube.type === 'square1' || cube.type === 'square2' ) {
     faceVectors = [ UP, DOWN, RIGHT.add(BACK).add(UP) ];
     faceName = [ 'U', 'D', 'M' ];
-  } else if ( cube.type === 'megaminx' ) {
+  } else if ( cube.type === 'megaminx' || cube.type === 'pyraminxCrystal' ) {
     let raw = cube.p.raw;
     let ac = raw[0];
     let FACE_ANG = raw[1];
@@ -118,7 +118,7 @@ export async function projectedView(cube: Puzzle, DIM: number): Promise<Blob> {
 
     for (let j = 0, maxj = faceVectors.length; j < maxj && !ok; j += 1) {
       if ( faceVectors[j].sub( uv ).abs() < EPS ) {
-        if ( ['rubik', 'bicube', 'gear', 'ivy', 'skewb', 'megaminx', 'redi'].indexOf(cube.type) > -1 ) {
+        if ( ['rubik', 'bicube', 'gear', 'ivy', 'skewb', 'megaminx', 'pyraminxCrystal', 'redi'].indexOf(cube.type) > -1 ) {
           sideStk[ faceName[j] ].push(
             st.rotate(fcTr[j][0], fcTr[j][1], fcTr[j][2]).add( fcTr[j][3].mul(fcTr[j][4]) )
           );
@@ -218,57 +218,54 @@ export async function projectedView(cube: Puzzle, DIM: number): Promise<Blob> {
   } else if ( cube.type === 'square1' || cube.type === 'square2' ) {
     sideStk.U = sideStk.U.map(st => st.rotate(CENTER, RIGHT, PI_2).add( UP.mul( getFactor() ) ));
     sideStk.D = sideStk.D.map(st => st.rotate(CENTER, RIGHT, -PI_2).add( DOWN.mul( getFactor() ) ));
-  } else if ( cube.type === 'megaminx' ) {
+  } else if ( cube.type === 'megaminx' || cube.type === 'pyraminxCrystal' ) {
     let raw = cube.p.raw;
     let FACE_ANG = raw[1];
-    let F = raw[2];
-    let R = raw[3];
-    let SIDE = raw[4];
-    let alpha = 2 * PI / 5;
-    let beta = (PI - alpha) / 2;
-    let D = SIDE * F * Math.sin(alpha) / Math.sin(beta);
-    let r = R - D;
 
-    // This type of piece is ensured to be inside the list
-    let ac1 = (cube.p.pieces.find(p => {
-      let st = p.stickers.filter(s => s.points.length === 5);
-      return st.length === 2 && st[0].getOrientation().sub(DOWN).abs() < EPS;
-    }) as Piece).stickers[0].add(UP).mul(R / r).add(DOWN).points;
-
-    let pts1: Vector3D[] = [];
-    let pts2: Vector3D[] = [];
     for (let i = 0; i < 6; i += 1) {
-      sideStk[ faceName[i] ] = sideStk[ faceName[i] ].map(s => {
-        let newS = s.rotate(CENTER, RIGHT, PI_2);
-        pts1.push(...s.points);
-        return newS;
-      });
+      sideStk[ faceName[i] ].forEach(s => s.rotate(CENTER, RIGHT, PI_2, true));
     }
+
+    // Get points of the bottom center
+    const downPts: Vector3D[] = cube.type === 'megaminx' ? cube.p.pieces.filter(p => {
+      if ( p.stickers.length < 2 ) return false;
+      let st = p.stickers[1];
+      return st.name === 'center' && st.getOrientation().sub(DOWN).abs() < EPS;
+    })[0].stickers[1].points : raw[5];
+
+    const vec = new Vector3D(3.53, -.38, 0);
+
     for (let i = 6; i < 12; i += 1) {
-      let pts = sideStk[ faceName[i] ][0].points;
-      for (let j = 0, j1 = 1; j < 5 && i < 11; j += 1) {
-        if ( Vector3D.direction(pts[0], pts[1], pts[2], ac1[j]) === 0 &&
-             Vector3D.direction(pts[0], pts[1], pts[2], ac1[j1]) === 0) {
-          sideStk[ faceName[i] ] = sideStk[ faceName[i] ].map(s => {
-            return s.rotate(ac1[j], ac1[j1].sub(ac1[j]), FACE_ANG - PI);
-          });
+      let stickers = sideStk[ faceName[i] ];
+      let o = stickers[0].getOrientation();
+
+      if ( o.sub(DOWN).abs() < EPS ) {
+        stickers.forEach(s => s
+          .rotate(CENTER, FRONT, PI, true)
+          .rotate(CENTER, RIGHT, PI_2, true)
+          .add(vec, true)
+        );
+
+        continue;
+      }
+
+      for (let j = 0, maxj = downPts.length; j < maxj; j += 1) {
+        let v = downPts[(j + 1) % maxj].sub( downPts[j] );
+
+        if ( Math.abs( v.dot(o) ) < EPS ) {
+          let anchor = stickers.reduce((acc: Vector3D[], s) => [...acc, ...s.points], []).sort((a, b) => {
+            return a.y - b.y;
+          })[0].clone();
+
+          stickers.forEach(s => s
+            .rotate(anchor, v, FACE_ANG - PI, true)
+            .rotate(CENTER, FRONT, PI, true)
+            .rotate(CENTER, RIGHT, PI_2, true)
+            .add(vec, true)
+          )
           break;
         }
-        j1 = (j1 + 1) % 5;
       }
-      sideStk[ faceName[i] ] = sideStk[ faceName[i] ].map(s => {
-        let newS = s.rotate(CENTER, FRONT, PI).rotate(CENTER, RIGHT, PI_2);
-        pts2.push(...newS.points);
-        return newS;
-      });
-    }
-    pts1.sort((p1, p2) => p2.x - p1.x);
-    pts2.sort((p1, p2) => p1.x - p2.x);
-    let vec = pts1[5].sub(pts2[0]);
-    vec.y *= -1;
-    vec.z = 0;
-    for (let j = 6; j < 12; j += 1) {
-      sideStk[ faceName[j] ] = sideStk[ faceName[j] ].map(s => s.add(vec));
     }
   }
 
@@ -321,15 +318,19 @@ export async function projectedView(cube: Puzzle, DIM: number): Promise<Blob> {
   }
 
   if ( cube.type === 'megaminx' ) {
-    let LX = W * 0.251;
+    let LX = W * 0.258;
     let LY = H * 0.457;
     let fontWeight = W * 0.05;
 
+    let upColor = ctx.getImageData(LX, LY, 1, 1).data;
+    let frontColor = ctx.getImageData(LX, LY * 1.75, 1, 1).data;
+
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillStyle = 'black';
+    ctx.fillStyle = `rgb(${ 255 - upColor[0] }, ${ 255 - upColor[1] }, ${ 255 - upColor[2]})`;
     ctx.font = fontWeight + "px verdana, sans-serif";
     ctx.fillText("U", LX, LY);
+    ctx.fillStyle = `rgb(${ 255 - frontColor[0] }, ${ 255 - frontColor[1] }, ${ 255 - frontColor[2]})`;
     ctx.fillText("F", LX, LY * 1.75);
   }
 

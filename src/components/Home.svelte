@@ -21,7 +21,7 @@
       {
         title: HOME.tutorials,
         route: "/tutorials",
-        ready: false,
+        ready: showPrivate,
         cube: '/assets/tutorials.png',
       }, {
         title: HOME.algorithms,
@@ -62,7 +62,7 @@
         title: HOME.contest,
         route: '/contest',
         cube: '/assets/logo-500.png',
-        ready: showPrivate && false,
+        ready: showPrivate,
       }, {
         title: HOME.tools,
         route: '/tools',

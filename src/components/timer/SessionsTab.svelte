@@ -320,17 +320,19 @@
   function checkReconstruction() {
     let o = options.get(sSolve.mode || '333')!;
     
-    modal.close(sSolve);
-
-    let params = [
-      [ 'puzzle', o.type ],
-      [ 'order', o.order ? o.order[0] : -1 ],
-      [ 'scramble', sSolve.scramble ],
-      [ 'reconstruction', sSolve.comments ],
-      [ 'returnTo', '/timer' ]
-    ];
-
-    navigate( '/reconstructions?' + params.map(p => encodeURI(p[0] + '=' + p[1])).join("&") );
+    if ( o && !Array.isArray(o) ) {
+      modal.close(sSolve);
+  
+      let params = [
+        [ 'puzzle', o.type ],
+        [ 'order', o.order ? o.order[0] : -1 ],
+        [ 'scramble', sSolve.scramble ],
+        [ 'reconstruction', sSolve.comments ],
+        [ 'returnTo', '/timer' ]
+      ];
+  
+      navigate( '/reconstructions?' + params.map(p => encodeURI(p[0] + '=' + p[1])).join("&") );
+    }
   }
 
   function parse(s: string) {
@@ -338,7 +340,7 @@
 
     reconstructionError = true;
 
-    if ( o ) {
+    if ( o && !Array.isArray(o) ) {
       let res = parseReconstruction(s, o.type, o.order ? o.order[0] : -1);
       reconstructionError = res.finalAlpha === 0;
       return res.result;
@@ -599,7 +601,7 @@
 <style lang="postcss">
 #grid {
   grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));
-  max-height: calc(100% - 3rem);
+  max-height: 100%;
   gap: .5rem;
   padding-bottom: 2rem;
   padding-right: .5rem;

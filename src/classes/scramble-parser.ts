@@ -88,27 +88,32 @@ export class ScrambleParser {
         }
       }
     } else { // WCA Notation
-      let moves = scramble.match(/((\[[urfl]\d*'?\])|([RD](\+|-){2})|([URFL]\d*'?)|([db][RL]\d*'?))/g) || [];
-      let moveMap = "ULFR";
+      let moves = scramble.match(/((DB[RL]\d*'?)|([dbDB][RL]\d*'?)|(\[[ulfrbd]\d*'?\])|([RDrd](\+|-){1,2})|([ULFRBDy]\d*'?))/g) || [];
+      let moveMap = "ULFRBD";
 
       for (let i = 0, maxi = moves.length; i < maxi; i += 1) {
         let mv = moves[i];
 
-        if (/^([RD](\+|-){2})$/.test(mv)) {
-          if (['R++', 'R--'].indexOf(mv) > -1) {
-            res.push([1, mv.indexOf('+') * 2, -1]);
-          } else {
-            res.push([0, mv.indexOf('+') * 2, -1]);
-          }
+        if (/^([RDrd](\+|-){1,2})$/.test(mv)) {
+          let type = mv[0] === 'R' || mv[0] === 'r' ? 1 : 0;
+          let turns = mv.indexOf('+') * (mv.length - 1);
+          res.push([type, turns, -1, mv[0] === mv[0].toLowerCase() ? 1 : 0]);
         } else {
           let turns = (parseInt(mv.replace(/\D+(\d+)\D*/g, '$1')) || 1) * Math.sign(mv.indexOf("'") + 0.2);
 
-          if ( /^([URFL]\d*'?)$/.test(mv) ) {
-            res.push([moveMap.indexOf(mv[0]), turns, 1]);
-          } else if ( /^([db][RL]\d*'?)$/.test(mv) ) {
-            res.push([['dL', 'dR', 'bL', 'bR'].indexOf(mv.slice(0, 2)) + 4, turns, 1]);
+          if ( /^([ULFRBDy]\d*'?)$/.test(mv) ) {
+            if ( mv[0] === 'y' ) {
+              res.push([0, turns, 1]);
+              res.push([0, turns, -1]);
+            } else {
+              res.push([moveMap.indexOf(mv[0]), turns, 1]);
+            }
+          } else if ( /^([dbDB][RL]\d*'?)$/.test(mv) ) {
+            res.push([['dl', 'dr', 'bl', 'br'].indexOf(mv.slice(0, 2).toLowerCase()) + 6, turns, 1]);
+          } else if ( /^(DB[RL]\d*'?)$/.test(mv) ) {
+            res.push([['DBL', 'DBR'].indexOf(mv.slice(0, 3)) + 10, turns, 1]);
           } else {
-            res.push([moveMap.indexOf(mv[1].toUpperCase()) + 8, turns, -1]);
+            res.push([moveMap.indexOf(mv[1].toUpperCase()) + 12, turns, -1]);
           }
         }
       }
@@ -314,7 +319,12 @@ export class ScrambleParser {
       case 'gear':
       case 'redi':
       case 'redim':
-      case 'bic': {
+      case 'bic':
+      case 'ivy':
+      case 'ivyo':
+      case 'ivyso':
+      case 'prcp':
+      case 'prco': {
         return [ scramble ];
       }
 

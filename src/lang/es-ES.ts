@@ -385,7 +385,7 @@ export const Spanish: Language = {
       [
         ["WCA", "333", 0],
         ['Aleatorio', "333o", 25],
-        ['3x3 para nuevos', "333noob", 25],
+        // ['3x3 para nuevos', "333noob", 25],
         ['Solo aristas', "edges", 0],
         ['Solo Esquinas', "corners", 0],
         // ['Asistente BLD', "nocache_333bldspec", 0], // new
@@ -523,7 +523,7 @@ export const Spanish: Language = {
         ['Old Style', "mgmo", 70],
         ['2-gen R,U', "minx2g", 30],
         ['Última Capa (LL)', "mgmll", 0],
-        ['Último Par + LL', "mlsll", 0],
+        ['Último Par + LL', "mlsll", 40],
         ['PLL', "mgmpll", 0],
       ]
     ],
