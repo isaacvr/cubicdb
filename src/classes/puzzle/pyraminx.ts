@@ -103,27 +103,20 @@ export function PYRAMINX(n: number): PuzzleInterface {
   pieces.forEach(p => p.stickers.forEach(s => s.vecs = pyra.faceVectors.map(v => v.clone())));
   
   let trySingleMove = (mv: any): { pieces: Piece[], u: Vector3D, ang: number } | null => {
-    // MV = [ plane, turns, layers, direction ]
     let moveId = mv[0];
-    let layers = mv[2];
     let turns = mv[1];
+    let layers = mv[2];
     let direction = mv[3];
     const pts1 = planes[moveId];
     const u = Vector3D.cross(pts1[0], pts1[1], pts1[2]).unit();
     const mu = u.mul(-1);
-    const pts2 = pts1.map(p => p.add( mu.mul(len * layers) ));
+    const pts2 = pts1.map(p => p.add( mu.mul(len * (n - layers)) ));
     const ang = 2 * Math.PI / 3 * turns;
 
     let pcs = [];
 
     for (let i = 0, maxi = pieces.length; i < maxi; i += 1) {
       let d = pieces[i].direction1(pts2[0], u, false, (s: Sticker) => !/^[xd]$/.test(s.color));
-
-      if ( d === 0 ) {
-        console.log("Invalid move. Piece intersection detected.", MOVE_MAP[moveId], turns, mv);
-        console.log("Piece: ", i, pieces[i], pts2);
-        return null;
-      }
 
       if ( d * direction < 0 ) {
         pcs.push( pieces[i] );

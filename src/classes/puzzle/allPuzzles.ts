@@ -27,6 +27,7 @@ import { TETRAMINX } from './tetraminx';
 import { MEIER_HALPERN_PYRAMIND } from './meierHalpernPyramind';
 import { SQUARE1_STAR } from './square1Star';
 import { GAN333 } from './gan333';
+import { HELICOPTER } from './helicopter';
 
 registerPuzzle("rubik", "Rubik", RUBIK, true);
 registerPuzzle("icarry", "GAN iCarry", GAN333, false);
@@ -56,3 +57,4 @@ registerPuzzle("pyraminxCrystal", "Pyraminx Crystal", PYRAMINX_CRYSTAL, false);
 registerPuzzle("tetraminx", "Tetraminx", TETRAMINX, false);
 registerPuzzle("meierHalpernPyramid", "Meier-Halpern Pyramid", MEIER_HALPERN_PYRAMIND, false);
 registerPuzzle("sq1Star", "Square-1 Star", SQUARE1_STAR, false);
+registerPuzzle("helicopter", "Helicopter", HELICOPTER, false);

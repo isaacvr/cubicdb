@@ -19,13 +19,13 @@ export class ScrambleParser {
       }
 
       f = "FRUBLDfrubldzxySME".indexOf(m[2]);
-      
+
       p = -(parseInt(m[5]) || 1) * Math.sign(moves[s].indexOf("'") + 0.2);
 
       if (f > 14) {
         // p = "2'".indexOf(m[5] || 'X') + 2;
         f = [0, 4, 5][f % 3];
-        moveseq.push([moveMap.indexOf("FRUBLD".charAt(f)), 2, p, 1, 0]); 
+        moveseq.push([moveMap.indexOf("FRUBLD".charAt(f)), 2, p, 1, 0]);
         continue;
       }
 
@@ -44,7 +44,7 @@ export class ScrambleParser {
     let res = [];
 
     for (let i = 0, maxi = moves.length; i < maxi; i += 1) {
-      if ( !moves[i][4] ) {
+      if (!moves[i][4]) {
         res.push([
           moves[i][3] ? order - 1 : moves[i][1], // Face Index
           MOVE_MAP.charAt(moves[i][0]), // Move Index
@@ -63,9 +63,9 @@ export class ScrambleParser {
     let res: number[][] = [];
 
     // Carrot Notation
-    if ( scramble.split('\n').filter(e => e).every(e => /^(\s*([+-]{2}|U|U'))*$/.test(e))) {
+    if (scramble.split('\n').filter(e => e).every(e => /^(\s*([+-]{2}|U|U'))*$/.test(e))) {
       let moves = scramble.match(/[+-]{2}|U'?/g);
-      
+
       if (!moves) {
         return res;
       }
@@ -101,16 +101,16 @@ export class ScrambleParser {
         } else {
           let turns = (parseInt(mv.replace(/\D+(\d+)\D*/g, '$1')) || 1) * Math.sign(mv.indexOf("'") + 0.2);
 
-          if ( /^([ULFRBDy]\d*'?)$/.test(mv) ) {
-            if ( mv[0] === 'y' ) {
+          if (/^([ULFRBDy]\d*'?)$/.test(mv)) {
+            if (mv[0] === 'y') {
               res.push([0, turns, 1]);
               res.push([0, turns, -1]);
             } else {
               res.push([moveMap.indexOf(mv[0]), turns, 1]);
             }
-          } else if ( /^([dbDB][RL]\d*'?)$/.test(mv) ) {
+          } else if (/^([dbDB][RL]\d*'?)$/.test(mv)) {
             res.push([['dl', 'dr', 'bl', 'br'].indexOf(mv.slice(0, 2).toLowerCase()) + 6, turns, 1]);
-          } else if ( /^(DB[RL]\d*'?)$/.test(mv) ) {
+          } else if (/^(DB[RL]\d*'?)$/.test(mv)) {
             res.push([['DBL', 'DBR'].indexOf(mv.slice(0, 3)) + 10, turns, 1]);
           } else {
             res.push([moveMap.indexOf(mv[1].toUpperCase()) + 12, turns, -1]);
@@ -127,29 +127,29 @@ export class ScrambleParser {
     // MV = [ plane, turns, layers, direction ] ]
 
     let res = [];
-    let moveReg = /((o?[ULRB])|[urlbdyz])['2]?/g;
+    let moveReg = /(([ULRB]w?)|(o?[ULRB])|[urlbdyz])['2]?/g;
     let moves = scramble.match(moveReg);
     let moveMap = "URLB";
 
-    if ( !moves ) return [];
+    if (!moves) return [];
 
     for (let i = 0, maxi = moves.length; i < maxi; i += 1) {
       let mv = moves[i];
 
       let turns = (parseInt(mv.replace(/\D+(\d+)\D*/g, '$1')) || 1) * Math.sign(mv.indexOf("'") + 0.2);
 
-      if ( mv.startsWith('o') ) {
-        res.push([ moveMap.indexOf(mv[1]), turns, 3, -1]);
-      } else if ( /^[yz]$/.test(mv[0]) ) {
-        res.push([ "y--z".indexOf(mv[0]), (mv[0] === 'z' ? -1 : 1) * turns, 3, -1 ]);
-      } else if ( mv[0] === 'd' ) {
-        res.push([ 0, -turns, 1, -1 ]);
+      if (mv.startsWith('o')) {
+        res.push([moveMap.indexOf(mv[1]), turns, 0, -1]);
+      } else if (/^[yz]$/.test(mv[0])) {
+        res.push(["y--z".indexOf(mv[0]), (mv[0] === 'z' ? -1 : 1) * turns, 0, -1]);
+      } else if (mv[0] === 'd') {
+        res.push([0, -turns, 2, -1]);
       } else {
         let mmv = mv[0].toUpperCase();
-        res.push([ moveMap.indexOf(mmv), turns, (mmv === mv[0] ? 1 : 2), 1 ]);
+        res.push([moveMap.indexOf(mmv), turns, (mv.indexOf('w') > -1 ? 3 : mmv === mv[0] ? 2 : 1), 1]);
       }
     }
-    
+
     return res;
   }
 
@@ -162,14 +162,14 @@ export class ScrambleParser {
     let moves = scramble.match(moveReg);
     let moveMap = "FURLBrlxyz";
 
-    if ( !moves ) return [];
+    if (!moves) return [];
 
     for (let i = 0, maxi = moves.length; i < maxi; i += 1) {
       let mv = moves[i];
       let turns = (parseInt(mv.replace(/\D+(\d+)\D*/g, '$1')) || 1) * Math.sign(mv.indexOf("'") + 0.2);
-      res.push([ moveMap.indexOf(mv[0]), -turns ]);
+      res.push([moveMap.indexOf(mv[0]), -turns]);
     }
-    
+
     return res;
   }
 
@@ -299,33 +299,17 @@ export class ScrambleParser {
   }
 
   static parseMisc(scramble: string, mode: string): string[] {
-    switch ( mode ) {
-      case 'r3':
-      case 'r3ni':
-      case 'r234w':
-      case 'r2345w':
-      case 'r23456w':
-      case 'r234567w':
-      case 'r234':
-      case 'r2345':
-      case 'r23456':
-      case 'r234567': {
+    switch (mode) {
+      case 'r3': case 'r3ni': case 'r234w': case 'r2345w': case 'r23456w':
+      case 'r234567w': case 'r234': case 'r2345': case 'r23456': case 'r234567': {
         return prettyScramble(scramble).split('\n').map(s => s.replace(/^\d+\)(.+)$/, "$1").trim());
       }
 
-      case 'sq2':
-      case 'gearso':
-      case 'gearo':
-      case 'gear':
-      case 'redi':
-      case 'redim':
-      case 'bic':
-      case 'ivy':
-      case 'ivyo':
-      case 'ivyso':
-      case 'prcp':
-      case 'prco': {
-        return [ scramble ];
+      case 'sq2': case 'gearso': case 'gearo': case 'gear': case 'redi': case 'redim':
+      case 'bic': case 'ivy': case 'ivyo': case 'ivyso': case 'prcp': case 'prco':
+      case 'heli': case '888': case '999': case '101010': case '111111': case 'mpyr':
+      case '223': case '233': case '334': case '336': {
+        return [scramble];
       }
 
       default: {
