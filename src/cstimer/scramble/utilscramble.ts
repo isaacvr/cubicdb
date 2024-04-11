@@ -367,7 +367,7 @@ function addPyrTips(scramble, moveLen) {
 	return scramble.substr(0, scramble.length - moveLen * cnt) + " " + rnd.join("");
 }
 
-function utilscramble(type: string, len: number) {
+export function utilscramble(type: string, len: number) {
 
 	let ret = "";
 	

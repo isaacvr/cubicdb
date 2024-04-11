@@ -99,7 +99,29 @@ const PyraminxSpec = [
   [ /^\]([1-9]\d{0,1})?/, ']' ],
 
   // Moves
-  [ /^((o?[ULRB])|[urlbdyz])['2]?/, "MOVE" ]
+  [ /^(([ULRB]w?)|(o?[ULRB])|[urlbdyz])['2]?/, "MOVE" ]
+] as const;
+
+const HelicopterSpec = [
+  // Whitespaces:
+  [ /^[\s\n\r\t]+/, 'SPACE' ],
+  [ /^\./, null ],
+
+  // Comments:
+  [ /^\/\/.*/, 'COMMENT' ],
+
+  // Conmutator separator:
+  [ /^,/, ',' ],
+  [ /^:/, ':' ],
+
+  // Symbols-delimiters:
+  [ /^\(/, '(' ],
+  [ /^\)([1-9]\d{0,1})?/, ')' ],
+  [ /^\[/, '[' ],
+  [ /^\]([1-9]\d{0,1})?/, ']' ],
+
+  // Moves
+  [ /^(UR|UF|UL|UB|DR|DF|DL|DB|FR|FL|BL|BR)/, "MOVE" ]
 ] as const;
 
 type InterpreterNode = 'Program' | 'Expression' | 'Space' | 'Comment' | 'ParentesizedExpression' | 'ConmutatorExpression' | 'Move';
@@ -129,6 +151,7 @@ const SpecMap: any = {
   "square1": SquareOneSpec,
   "megaminx": MegaminxSpec,
   "pyraminx": PyraminxSpec,
+  "helicopter": HelicopterSpec,
 };
 
 class BaseTokenizer implements Tokenizer {

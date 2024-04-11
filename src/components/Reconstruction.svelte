@@ -39,6 +39,7 @@
 
   const iconSize = "1.3rem";
   const PUZZLES: { puzzle: PuzzleType; name: string; order: number, scrambler: Scrambler | '' }[] = [
+    // { puzzle: "helicopter", name: "Helicopter", order: -1, scrambler: '' },       // 0
     { puzzle: "rubik", name: "2x2x2", order: 2, scrambler: '222so' },       // 0
     { puzzle: "rubik", name: "3x3x3", order: 3, scrambler: '333' },         // 1
     { puzzle: "rubik", name: "4x4x4", order: 4, scrambler: '444wca' },      // 2
@@ -97,7 +98,6 @@
       sequence = rec.sequence;
       sequenceIndex = rec.sequenceIndex;
       sequenceAlpha = 0;
-      // tick().then(() => sequenceAlpha = finalAlpha);
     }
 
     return rec.result;

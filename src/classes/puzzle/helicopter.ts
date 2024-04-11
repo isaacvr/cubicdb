@@ -6,6 +6,7 @@ import { Sticker } from './Sticker';
 import { assignColors, getAllStickers, random, scaleSticker } from './puzzleUtils';
 import { EPS, STANDARD_PALETTE } from '@constants';
 import { ScrambleParser } from '@classes/scramble-parser';
+import { utilscramble } from '@cstimer/scramble/utilscramble';
 
 export function HELICOPTER(): PuzzleInterface {
   const helic: PuzzleInterface = {
@@ -101,21 +102,34 @@ export function HELICOPTER(): PuzzleInterface {
     [BACK, RIGHT, RIGHT.add(DOWN)], // BR
   ];
 
+  let trySingleMove = (mv: string): { pieces: Piece[], u: Vector3D, ang: number } | null => {
+    const moveMap = ['UR', 'UF', 'UL', 'UB', 'DR', 'DF', 'DL', 'DB', 'FR', 'FL', 'BL', 'BR'];
+
+    let moveId = moveMap.indexOf(mv);
+    let plane = planes[moveId];
+    let u = Vector3D.cross(plane[0], plane[1], plane[2]).unit();
+    let pcs = pieces.filter(p => p.direction1(plane[0], u) >= 0);
+
+    return {
+      pieces: pcs,
+      u,
+      ang: PI
+    };
+  };
+
   helic.move = function (scramble: any[]) {
     let moves = scramble[0].match(/(UR|UF|UL|UB|DR|DF|DL|DB|FR|FL|BL|BR)/g);
 
     if ( moves ) {
-      const moveMap = ['UR', 'UF', 'UL', 'UB', 'DR', 'DF', 'DL', 'DB', 'FR', 'FL', 'BL', 'BR'];
-
       for (let i = 0, maxi = moves.length; i < maxi; i += 1) {
-        let mv = moves[i];
-        let moveId = moveMap.indexOf(mv);
-        let plane = planes[moveId];
-        let u = Vector3D.cross(plane[0], plane[1], plane[2]).unit();
-        let pcs = pieces.filter(p => p.direction1(plane[0], u) >= 0);
-        let ang = PI;
+        const pcs = trySingleMove(moves[i]);
 
-        pcs.forEach(p => p.rotate(CENTER, u, ang, true));
+        if ( !pcs ) {
+          return false;
+        }
+  
+        let { u, ang } = pcs;
+        pcs.pieces.forEach(p => p.rotate(CENTER, u, ang, true));
       }
     }
 
@@ -132,48 +146,35 @@ export function HELICOPTER(): PuzzleInterface {
     };
   };
 
-  // helic.scramble = function () {
-    // if (!helic.toMove) return;
+  helic.scramble = function () {
+    if (!helic.toMove) return;
+    let scr = utilscramble('heli', 40)!;
+    helic.move([scr]);
+  };
 
-    // const MOVES = n >= 2 ? (n - 2) * 50 + 10 : 0;
+  helic.applySequence = function (moves: string[]) {
+    let res: { u: Vector3D, ang: number, pieces: string[] }[] = [];
 
-    // for (let i = 0; i < MOVES; i += 1) {
-    //   let p = random(pieces) as Piece;
-    //   if (!p) { i -= 1; continue; }
-    //   let s = random(p.stickers.filter(s => !/^[xd]{1}$/.test(s.color))) as Sticker;
-    //   if (!s) { i -= 1; continue; }
-    //   let vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > EPS));
-    //   if (!vec) { i -= 1; continue; }
-    //   let pcs = helic.toMove(p, s, vec);
-    //   let cant = 1 + random(3);
-    //   pcs.pieces.forEach((p: Piece) => p.rotate(CENTER, vec, pcs.ang * cant, true));
-    // }
-  // };
+    for (let i = 0, maxi = moves.length; i < maxi; i += 1) {
+      let pcs;
 
-  // helic.applySequence = function (seq: string[]) {
-  //   let moves = seq.map(mv => ScrambleParser.parseMegaminx(mv)[0]);
-  //   let res: { u: Vector3D, ang: number, pieces: string[] }[] = [];
+      try {
+        pcs = trySingleMove(moves[i]);
+      } catch (e) {
+        console.log("ERROR: ", moves[i], e);
+      }
 
-  //   for (let i = 0, maxi = moves.length; i < maxi; i += 1) {
-  //     let pcs;
+      if (!pcs) {
+        continue;
+      }
 
-  //     try {
-  //       pcs = trySingleMove(moves[i]);
-  //     } catch (e) {
-  //       console.log("ERROR: ", seq[i], moves[i], e);
-  //     }
+      let { u, ang } = pcs;
+      res.push({ u, ang, pieces: pcs.pieces.map(p => p.id) });
+      pcs.pieces.forEach(p => p.rotate(CENTER, u, ang, true));
+    }
 
-  //     if (!pcs) {
-  //       continue;
-  //     }
-
-  //     let { u, ang } = pcs;
-  //     res.push({ u, ang, pieces: pcs.pieces.map(p => p.id) });
-  //     pcs.pieces.forEach(p => p.rotate(CENTER, u, ang, true));
-  //   }
-
-  //   return res;
-  // };
+    return res;
+  };
 
   helic.rotation = {
     x: PI / 6,
