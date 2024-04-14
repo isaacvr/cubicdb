@@ -8,7 +8,8 @@ import { assignColors, getAllStickers, random } from './puzzleUtils';
 import { ScrambleParser } from '@classes/scramble-parser';
 
 export function RUBIK(_a: number, _b:number, _c:number): PuzzleInterface {
-  const dims = [_a, _b, _c].sort();
+  // const dims = [_a, _b, _c].sort();
+  const dims = [_a, _b, _c];
   const a = dims[0], b = dims[1], c = dims[2];
   const isCube = a == b && b == c;
   const len = dims.reduce((m, e) => Math.min(m, 2 / e), 2);
@@ -108,12 +109,20 @@ export function RUBIK(_a: number, _b:number, _c:number): PuzzleInterface {
 
   let trySingleMove = (mv: any): { pieces: Piece[], u: Vector3D, ang: number } | null => {
     let moveId = MOVE_MAP.indexOf( mv[1] );
-    let layers = mv[0] === a ? mv[0] + 1 : mv[0];
+    let layers = mv[0];
     let turns = mv[2];
     let span = mv[3];
     const pts1 = planes[moveId];
     const u = Vector3D.cross(pts1[0], pts1[1], pts1[2]).unit();
     const mu = u.mul(-1);
+
+    // Check if the move involves the whole cube
+    [[a, RIGHT], [b, FRONT], [c, UP]].forEach((e: any) => {
+      if ( Math.abs(u.dot(e[1])) > EPS ) {
+        layers = layers === e[0] ? e[0] + 1 : layers;
+      }
+    });
+
     const pts2 = pts1.map(p => p.add( mu.mul(len * layers) ));
     const pts3 = pts2.map(p => p.add( u.mul(len * span) ));
     const ang = Math.PI / 2 * turns;

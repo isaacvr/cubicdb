@@ -479,7 +479,9 @@ export class Puzzle {
       moves = ScrambleParser.parseClock(seq);
     } else if ( this.type === 'megaminx' || this.type === 'pyraminxCrystal' ) {
       moves = ScrambleParser.parseMegaminx(seq);
-    } else if ( this.type === 'bicube' || this.type === 'gear' || this.type === 'redi' || this.type === 'ivy' ) {
+    } else if ( this.type === 'bicube' || this.type === 'gear' || this.type === 'redi' || this.type === 'ivy' ||
+      this.type === 'helicopter'
+     ) {
       moves = [seq];
     } else {
       return;

@@ -45,7 +45,7 @@
   export let enableRotation = true;
   export let gui = true;
   export let contained = false;
-  export let selectedPuzzle: PuzzleType = "megaminx";
+  export let selectedPuzzle: PuzzleType = "rubik";
   export let order = 3;
   export let animationTime = $screen.isMobile ? 150 : 200; /// Default animation time: 200ms
   export let showBackFace = false;
@@ -876,15 +876,15 @@
       <Button color="alternative" class="h-8 w-8 p-0 me-3 rounded-full"><SettingsIcon size="1.2rem"/></Button>
     </Tooltip>
 
-    <Tooltip hasKeybinding position="left" text={$localLang.global.toScramble + "[Ctrl + S]"}>
-      <Button on:click={scramble} color="alternative" class="h-8 w-8 p-0 me-3 rounded-full"><Refresh size="1.2rem" /></Button>
-    </Tooltip>
-
     {#if cube?.p.scramble}
-      <Tooltip hasKeybinding text={$localLang.SIMULATOR.showBackFace + "[Ctrl + B]"} position="left">
-        <Toggle class="cursor-pointer" bind:checked={showBackFace} />
+      <Tooltip hasKeybinding position="left" text={$localLang.global.toScramble + "[Ctrl + S]"}>
+        <Button on:click={scramble} color="alternative" class="h-8 w-8 p-0 me-3 rounded-full"><Refresh size="1.2rem" /></Button>
       </Tooltip>
     {/if}
+
+    <Tooltip hasKeybinding text={$localLang.SIMULATOR.showBackFace + "[Ctrl + B]"} position="left">
+      <Toggle class="cursor-pointer" bind:checked={showBackFace} />
+    </Tooltip>
   </div>
 {/if}
 

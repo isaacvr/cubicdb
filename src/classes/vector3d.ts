@@ -1,52 +1,8 @@
 import { EPS } from '@constants';
-import { Quaternion } from './quaternion';
 import { Vector3 } from 'three';
 
 const PI = Math.PI;
 const TAU = PI * 2;
-const R1_2 = Math.SQRT1_2;
-
-function fixedSin(ang: number): number {
-  let rAng = ((ang % TAU) + TAU) % TAU;
-  let sinTable = [
-    [PI / 6, 0.5],
-    [PI * 5 / 6, 0.5],
-    [PI * 7 / 6, -0.5],
-    [PI * 11 / 6, -0.5],
-    [PI / 4, R1_2],
-    [PI, 0],
-    [TAU - PI / 4, -R1_2],
-  ];
-
-  for (let i = 0, maxi = sinTable.length; i < maxi; i += 1) {
-    if ( Math.abs(sinTable[i][0] - rAng) < EPS ) {
-      return sinTable[i][1];
-    }
-  }
-
-  return Math.sin(ang);
-}
-
-function fixedCos(ang: number): number {
-  let rAng = ((ang % TAU) + TAU) % TAU;
-  let cosTable = [
-    [PI / 2, 0],
-    [PI * 3 / 4, R1_2],
-    [PI * 5 / 4, -R1_2],
-    [PI * 2 / 3, -0.5],
-    [PI / 3, 0.5],
-    [PI * 4 / 3, -0.5],
-    [PI * 5 / 3, 0.5],
-  ];
-
-  for (let i = 0, maxi = cosTable.length; i < maxi; i += 1) {
-    if ( Math.abs(cosTable[i][0] - rAng) < EPS ) {
-      return cosTable[i][1];
-    }
-  }
-
-  return Math.cos(ang);
-}
 
 function getCanonical(v: Vector3D) {
   let dirs = [ UP, RIGHT, FRONT, DOWN, LEFT, BACK ];
@@ -120,6 +76,10 @@ export class Vector3D {
     return pt.add( u.mul(-dist) );
   }
 
+  setConstant(cnt: boolean) {
+    this.isConstant = cnt;
+  }
+
   project(a: Vector3D, b: Vector3D, c: Vector3D): Vector3D {
     return this.project1(a, Vector3D.cross(a, b, c).unit());
   }
@@ -130,14 +90,16 @@ export class Vector3D {
 
   reflect(a: Vector3D, b: Vector3D, c: Vector3D, self?: boolean): Vector3D {
     if ( self && this.isConstant ) {
-      throw new TypeError('Constant vector does not allow modification');
+      console.log("Trying to modify a constant vector");
+      return this;
     }
     return this.reflect1(a, Vector3D.cross(a, b, c).unit(), self);
   }
 
   reflect1(a: Vector3D, u: Vector3D, self?: boolean): Vector3D {
     if ( self && this.isConstant ) {
-      throw new TypeError('Constant vector does not allow modification');
+      console.log("Trying to modify a constant vector");
+      return this;
     }
 
     return this.add( u.mul( -2 * this.sub(a).dot(u) ), self );
@@ -157,7 +119,8 @@ export class Vector3D {
 
   add(v: Vector3D, self ?: boolean): Vector3D {
     if ( self && this.isConstant ) {
-      throw new TypeError('Constant vector does not allow modification');
+      console.log("Trying to modify a constant vector");
+      return this;
     }
 
     if ( self ) {
@@ -169,7 +132,8 @@ export class Vector3D {
 
   sub(v: Vector3D, self ?: boolean): Vector3D {
     if ( self && this.isConstant ) {
-      throw new TypeError('Constant vector does not allow modification');
+      console.log("Trying to modify a constant vector");
+      return this;
     }
 
     if ( self ) {
@@ -181,7 +145,8 @@ export class Vector3D {
 
   mul(f: number, self ?: boolean): Vector3D {
     if ( self && this.isConstant ) {
-      throw new TypeError('Constant vector does not allow modification');
+      console.log("Trying to modify a constant vector");
+      return this;
     }
 
     if ( self ) {
@@ -193,7 +158,8 @@ export class Vector3D {
 
   div(f: number, self ?: boolean): Vector3D {
     if ( self && this.isConstant ) {
-      throw new TypeError('Constant vector does not allow modification');
+      console.log("Trying to modify a constant vector");
+      return this;
     }
 
     if ( self ) {
@@ -205,7 +171,8 @@ export class Vector3D {
 
   rotate(O: Vector3D, u: Vector3D, ang: number, self ?: boolean): Vector3D {
     if ( self && this.isConstant ) {
-      throw new TypeError('Constant vector does not allow modification');
+      console.log("Trying to modify a constant vector");
+      return this;
     }
 
     const vecs = [0, 1, 2].map(n => [[RIGHT, UP, FRONT][n], n]);

@@ -10,25 +10,25 @@ export enum CubeMode {
 };
 
 export const CubeModeMap = [
-  [ 'Normal', CubeMode.NORMAL ],
-  [ 'OLL', CubeMode.OLL ],
-  [ 'PLL', CubeMode.PLL ],
-  [ 'CMLL', CubeMode.CMLL ],
-  [ 'F2L', CubeMode.F2L ],
-  [ 'COLL', CubeMode.COLL ],
-  [ 'WV', CubeMode.WV ],
-  [ 'ELL', CubeMode.ELL ],
-  [ 'VLS', CubeMode.VLS ],
-  [ 'ZBLL', CubeMode.ZBLL ],
-  [ 'OLLCP', CubeMode.OLLCP ],
-  [ 'Gray', CubeMode.GRAY ],
-  [ 'Centers', CubeMode.CENTERS ],
-  [ 'Cross', CubeMode.CROSS ],
-  [ 'First Layer', CubeMode.FL ],
-  [ 'Yellow Cross', CubeMode.YCROSS ],
-  [ 'Cube Shape', CubeMode.CS ],
-  [ 'Edge Orientation', CubeMode.EO ],
-  [ 'Corner Orientation', CubeMode.CO ],
+  ['Normal', CubeMode.NORMAL],
+  ['OLL', CubeMode.OLL],
+  ['PLL', CubeMode.PLL],
+  ['CMLL', CubeMode.CMLL],
+  ['F2L', CubeMode.F2L],
+  ['COLL', CubeMode.COLL],
+  ['WV', CubeMode.WV],
+  ['ELL', CubeMode.ELL],
+  ['VLS', CubeMode.VLS],
+  ['ZBLL', CubeMode.ZBLL],
+  ['OLLCP', CubeMode.OLLCP],
+  ['Gray', CubeMode.GRAY],
+  ['Centers', CubeMode.CENTERS],
+  ['Cross', CubeMode.CROSS],
+  ['First Layer', CubeMode.FL],
+  ['Yellow Cross', CubeMode.YCROSS],
+  ['Cube Shape', CubeMode.CS],
+  ['Edge Orientation', CubeMode.EO],
+  ['Corner Orientation', CubeMode.CO],
 ];
 
 const COLORS = {
@@ -47,7 +47,7 @@ const COLORS = {
   "lgreen": "rgb(74, 217, 49)",
   "lyellow": "rgb(220, 211, 165)",
   "lblue": "rgb(83, 177, 243)",
-  
+
   /// Printable
   "pgreen": "rgb(16, 162, 4)",
   "pred": "rgb(213, 0, 0)",
@@ -67,13 +67,13 @@ const COLORS = {
 export declare type ColorName = keyof (typeof COLORS);
 
 export function getColorByName(colorName: ColorName) {
-  return COLORS[ colorName ] || (colorName as string);
+  return COLORS[colorName] || (colorName as string);
 }
 
 export function getNameByColor(color: string): ColorName {
   let et = Object.entries(COLORS);
   for (let i = 0, maxi = et.length; i < maxi; i += 1) {
-    if ( et[i][1] === color ) {
+    if (et[i][1] === color) {
       return et[i][0] as ColorName;
     }
   }
@@ -97,21 +97,21 @@ export const STANDARD_PALETTE = {
   v: getColorByName('violet'),
   k: getColorByName('yellow'),
 
-  yellow:    getColorByName('yellow'),
-  red:       getColorByName('red'),
-  orange:    getColorByName('orange'),
-  blue:      getColorByName('blue'),
-  green:     getColorByName('green'),
-  white:     getColorByName('white'),
-  gray:      getColorByName('gray'),
+  yellow: getColorByName('yellow'),
+  red: getColorByName('red'),
+  orange: getColorByName('orange'),
+  blue: getColorByName('blue'),
+  green: getColorByName('green'),
+  white: getColorByName('white'),
+  gray: getColorByName('gray'),
   darkGray: getColorByName('darkGray'),
   lightGray: getColorByName('lightGray'),
-  black:     getColorByName('black'),
-  violet:    getColorByName('violet'),
-  pink:      getColorByName('pink'),
-  lblue:     getColorByName('lblue'),
-  lyellow:   getColorByName('lyellow'),
-  lgreen:    getColorByName('lgreen'),
+  black: getColorByName('black'),
+  violet: getColorByName('violet'),
+  pink: getColorByName('pink'),
+  lblue: getColorByName('lblue'),
+  lyellow: getColorByName('lyellow'),
+  lgreen: getColorByName('lgreen'),
 } as const;
 
 export const PRINTABLE_PALETTE = {
@@ -125,19 +125,19 @@ export const PRINTABLE_PALETTE = {
   d: getColorByName('pblack'),
   v: getColorByName('pviolet'),
 
-  yellow:  getColorByName('pyellow'),
-  red:     getColorByName('pred'),
-  orange:  getColorByName('porange'),
-  blue:    getColorByName('pblue'),
-  green:   getColorByName('pgreen'),
-  white:   getColorByName('pwhite'),
-  gray:    getColorByName('pgray'),
-  black:   getColorByName('pblack'),
-  violet:  getColorByName('pviolet'),
-  pink:    getColorByName('ppink'),
-  lblue:   getColorByName('plblue'),
+  yellow: getColorByName('pyellow'),
+  red: getColorByName('pred'),
+  orange: getColorByName('porange'),
+  blue: getColorByName('pblue'),
+  green: getColorByName('pgreen'),
+  white: getColorByName('pwhite'),
+  gray: getColorByName('pgray'),
+  black: getColorByName('pblack'),
+  violet: getColorByName('pviolet'),
+  pink: getColorByName('ppink'),
+  lblue: getColorByName('plblue'),
   lyellow: getColorByName('plyellow'),
-  lgreen:  getColorByName('plgreen'),
+  lgreen: getColorByName('plgreen'),
 } as const;
 
 export interface SCRAMBLE_MENU {
@@ -145,25 +145,35 @@ export interface SCRAMBLE_MENU {
   1: { 0: string, 1: string, 2: number, 3?: number, 4?: number[] }[]
 }
 
-export const R222 = [ "222so", "222o", "2223", "2226", "222eg", "222eg0", "222eg1", "222eg2", "222nb", "222tcp", "222tcn", "222lsall" ];
-export const R333 = [ "333", "333ni", "333fm", "333oh", "333o", "edges", "corners", "ll", "zbll", "cll", "ell", "lse", "lsemu", "cmll", "f2l", "lsll2", "2gll", "zbls", "zzll", "oll", "pll", "eoline", "easyc", "333ft", "333custom", "2gen", "2genl", "roux", "3gen_F", "3gen_L", "RrU", "half", "lsll", "coll", "eols", "wvls", "vls", "easyxc", "sbrx", "mt3qb", "mteole", "mttdr", "mt6cp", "mtcdrll", "mtl5ep", "ttll" ];
-export const R444 = [ "444wca", "444bld", "444m", "444", "444yj", "4edge", "RrUu" ];
-export const R555 = [ "555wca", "555bld", "555", "5edge" ];
-export const R666 = [ "666wca", "666si", "666p", "666s", "6edge" ];
-export const R777 = [ "777wca", "777si", "777p", "777s", "7edge" ];
-export const PYRA = [ "pyrso", "pyro", "pyrm", "pyrl4e", "pyr4c", "pyrnb" ];
-export const SKWB = [ "skbso", "skbo", "skb", "skbnb" ];
-export const SQR1 = [ "sqrs", "sqrcsp", "sq1h", "sq1t" ];
-export const CLCK = [ "clkwca", "clk", "clkwca", "clko", "clkc", "clke" ];
-export const MEGA = [ "mgmp", "mgmc", "mgmo", "minx2g", "mlsll", "mgmll", "mgmpll" ];
-export const KILO = [ "klmso", "klmp" ];
-export const GIGA = [ "giga" ];
+export const R222 = ["222so", "222o", "2223", "2226", "222eg", "222eg0", "222eg1", "222eg2", "222nb", "222tcp", "222tcn", "222lsall"];
+export const R333 = ["333", "333ni", "333fm", "333oh", "333o", "edges", "corners", "ll", "zbll", "cll", "ell", "lse", "lsemu", "cmll", "f2l", "lsll2", "2gll", "zbls", "zzll", "oll", "pll", "eoline", "easyc", "333ft", "333custom", "2gen", "2genl", "roux", "3gen_F", "3gen_L", "RrU", "half", "lsll", "coll", "eols", "wvls", "vls", "easyxc", "sbrx", "mt3qb", "mteole", "mttdr", "mt6cp", "mtcdrll", "mtl5ep", "ttll"];
+export const R444 = ["444wca", "444bld", "444m", "444", "444yj", "4edge", "RrUu"];
+export const R555 = ["555wca", "555bld", "555", "5edge"];
+export const R666 = ["666wca", "666si", "666p", "666s", "6edge"];
+export const R777 = ["777wca", "777si", "777p", "777s", "7edge"];
+export const PYRA = ["pyrso", "pyro", "pyrm", "pyrl4e", "pyr4c", "pyrnb"];
+export const SKWB = ["skbso", "skbo", "skb", "skbnb"];
+export const SQR1 = ["sqrs", "sqrcsp", "sq1h", "sq1t"];
+export const CLCK = ["clkwca", "clk", "clkwca", "clko", "clkc", "clke"];
+export const MEGA = ["mgmp", "mgmc", "mgmo", "minx2g", "mlsll", "mgmll", "mgmpll"];
+export const KILO = ["klmso", "klmp"];
+export const GIGA = ["giga"];
 export const MISC = [
   ["r3", "r3ni"], "r234w", "r2345w", "r23456w", "r234567w", "r234", "r2345", "r23456", "r234567", "sq2", "bic",
   ["gearso", "gearo", "gear"],
   ["redim", "redi"],
   ["ivy", "ivyo", "ivyso"],
-  ["prcp", "prco"]
+  ["prcp", "prco"],
+  ["heli"],
+  ['888'],
+  ['999'],
+  ['101010'],
+  ['111111'],
+  ['mpyr'],
+  ['223'],
+  ['233'],
+  ['334'],
+  ['336'],
 ];
 
 export const ICONS = [
@@ -196,7 +206,7 @@ const OPTS: PuzzleOptions[] = [
 ];
 
 const OPTS_MISC: PuzzleOptions[][] = [
-  [ { type: 'rubik', order: [3] } ],
+  [{ type: 'rubik', order: [3] }],
   [2, 3, 4].map(n => ({ type: 'rubik', order: [n] })),
   [2, 3, 4, 5].map(n => ({ type: 'rubik', order: [n] })),
   [2, 3, 4, 5, 6].map(n => ({ type: 'rubik', order: [n] })),
@@ -205,15 +215,25 @@ const OPTS_MISC: PuzzleOptions[][] = [
   [2, 3, 4, 5].map(n => ({ type: 'rubik', order: [n] })),
   [2, 3, 4, 5, 6].map(n => ({ type: 'rubik', order: [n] })),
   [2, 3, 4, 5, 6, 7].map(n => ({ type: 'rubik', order: [n] })),
-  [ { type: 'square2' } ],
-  [ { type: 'bicube' } ],
-  [ { type: 'gear' } ],
-  [ { type: 'redi' } ],
-  [ { type: 'ivy' } ],
-  [ { type: 'pyraminxCrystal' } ],
+  [{ type: 'square2' }],
+  [{ type: 'bicube' }],
+  [{ type: 'gear' }],
+  [{ type: 'redi' }],
+  [{ type: 'ivy' }],
+  [{ type: 'pyraminxCrystal' }],
+  [{ type: 'helicopter' }],
+  [{ type: 'rubik', order: [8] }],
+  [{ type: 'rubik', order: [9] }],
+  [{ type: 'rubik', order: [10] }],
+  [{ type: 'rubik', order: [11] }],
+  [{ type: 'pyraminx', order: [4] }],
+  [{ type: 'rubik', order: [2, 2, 3] }],
+  [{ type: 'rubik', order: [3, 3, 2] }],
+  [{ type: 'rubik', order: [3, 3, 4] }],
+  [{ type: 'rubik', order: [3, 3, 6] }],
 ];
 
-const MODES = [ R222, R333, R444, R555, R666, R777, PYRA, SKWB, SQR1, CLCK, MEGA, KILO, GIGA ];
+const MODES = [R222, R333, R444, R555, R666, R777, PYRA, SKWB, SQR1, CLCK, MEGA, KILO, GIGA];
 
 for (let i = 0, maxi = MODES.length; i < maxi; i += 1) {
   OPTS[i].view = '2d';
@@ -226,7 +246,7 @@ for (let i = 0, maxi = MODES.length; i < maxi; i += 1) {
 for (let i = 0, maxi = MISC.length; i < maxi; i += 1) {
   OPTS_MISC[i].forEach(opt => opt.view = '2d');
 
-  if ( typeof MISC[i] === 'string' ) {
+  if (typeof MISC[i] === 'string') {
     options.set(MISC[i] as string, OPTS_MISC[i]);
   } else {
     (MISC[i] as string[]).forEach(m => options.set(m, OPTS_MISC[i]));
@@ -261,7 +281,7 @@ export const SessionDefaultSettings: SessionSettings = {
   sessionType: 'mixed'
 };
 
-export const AON = readable([ 3, 5, 12, 50, 100, 200, 500, 1000, 2000 ]);
+export const AON = readable([3, 5, 12, 50, 100, 200, 500, 1000, 2000]);
 
 export const STEP_COLORS = [
   "#2196F3",

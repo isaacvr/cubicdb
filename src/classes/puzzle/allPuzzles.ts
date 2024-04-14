@@ -27,32 +27,50 @@ import { TETRAMINX } from './tetraminx';
 import { MEIER_HALPERN_PYRAMIND } from './meierHalpernPyramind';
 import { SQUARE1_STAR } from './square1Star';
 import { GAN333 } from './gan333';
+import { HELICOPTER } from './helicopter';
+import { SUPER_SQUARE1 } from './superSquare1';
 
+// NxN, Pyraminx, Megaminx, Skewb, Square-1, Clock
 registerPuzzle("rubik", "Rubik", RUBIK, true);
-registerPuzzle("icarry", "GAN iCarry", GAN333, false);
-registerPuzzle("mirror", "Mirror", MIRROR, true);
-registerPuzzle("windmill", "Windmill", WINDMILL, false);
 registerPuzzle("pyraminx", "Pyraminx", PYRAMINX, true);
 registerPuzzle("megaminx", "Megaminx", MEGAMINX, true);
 registerPuzzle("skewb", "Skewb", SKEWB, false);
 registerPuzzle("square1", "Square One", SQUARE1, false);
-registerPuzzle("square2", "Square Two", SQUARE2, false);
-registerPuzzle("axis", "Axis", AXIS, false);
-registerPuzzle("fisher", "Fisher", FISHER, false);
-registerPuzzle("ivy", "Ivy", IVY, false);
 registerPuzzle("clock", "Rubik's clock", CLOCK, false);
-registerPuzzle("dino", "Dino", DINO, false);
-registerPuzzle("rex", "Rex", REX, false);
-registerPuzzle("redi", "Redi", REDI, false);
+
+// NxN Mods
+registerPuzzle("icarry", "GAN iCarry", GAN333, false);
+registerPuzzle("mirror", "Mirror", MIRROR, true);
+registerPuzzle("windmill", "Windmill", WINDMILL, false);
+registerPuzzle("fisher", "Fisher", FISHER, false);
+registerPuzzle("axis", "Axis", AXIS, false);
+registerPuzzle("pandora", "Pandora", PANDORA, false);
 registerPuzzle("mixup", "Mixup", MIXUP, false);
-registerPuzzle("pyramorphix", "Pyramorphix", PYRAMORPHIX, false);
 registerPuzzle("gear", "Gear", GEAR, false);
 registerPuzzle("dreidel", "Dreidel", DREIDEL, false);
 registerPuzzle("bandaged222", "Bandaged 2x2x2", BDG, false);
 registerPuzzle("bicube", "Bicube", BICUBE, false);
-registerPuzzle("pandora", "Pandora", PANDORA, false);
-registerPuzzle("ultimateSkewb", "Ultimate Skewb", ULTIMATE_SKEWB, false);
-registerPuzzle("pyraminxCrystal", "Pyraminx Crystal", PYRAMINX_CRYSTAL, false);
+
+// Pyraminx Mods
+registerPuzzle("pyramorphix", "Pyramorphix", PYRAMORPHIX, false);
 registerPuzzle("tetraminx", "Tetraminx", TETRAMINX, false);
 registerPuzzle("meierHalpernPyramid", "Meier-Halpern Pyramid", MEIER_HALPERN_PYRAMIND, false);
+
+// Megaminx Mods
+registerPuzzle("pyraminxCrystal", "Pyraminx Crystal", PYRAMINX_CRYSTAL, false);
+
+// Skewb Mods
+registerPuzzle("ultimateSkewb", "Ultimate Skewb", ULTIMATE_SKEWB, false);
+
+// Square-1 Mods
+registerPuzzle("square2", "Square Two", SQUARE2, false);
+registerPuzzle("supersquare1", "Super Square-1", SUPER_SQUARE1, false);
 registerPuzzle("sq1Star", "Square-1 Star", SQUARE1_STAR, false);
+
+// Clock Mods
+// Others
+registerPuzzle("ivy", "Ivy", IVY, false);
+registerPuzzle("dino", "Dino", DINO, false);
+registerPuzzle("rex", "Rex", REX, false);
+registerPuzzle("redi", "Redi", REDI, false);
+registerPuzzle("helicopter", "Helicopter", HELICOPTER, false);

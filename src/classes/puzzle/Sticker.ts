@@ -24,7 +24,7 @@ export class Sticker {
     this.updateMassCenter();
     this._generator = this;
     this._generated = this;
-    this.vecs = (vecs || []).map(v => v.clone());
+    this.vecs = (vecs || []).map(v => v.unit());
     this.nonInteractive = nonInteractive;
     this.name = name;
   }
