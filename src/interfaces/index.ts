@@ -11,7 +11,7 @@ export const PuzzleTypeName = [
   'rubik', 'icarry', 'skewb', 'square1', 'pyraminx', 'axis', 'fisher', 'ivy'
  , 'clock', 'megaminx', 'mirror', 'dino', 'rex', 'redi', 'mixup', 'pyramorphix', 'gear', 'dreidel'
  , 'bandaged222', 'bicube', 'square2', 'pandora', 'ultimateSkewb', 'pyraminxCrystal', 'tetraminx'
- , 'meierHalpernPyramid', 'sq1Star', 'windmill', 'helicopter'
+ , 'meierHalpernPyramid', 'sq1Star', 'windmill', 'helicopter', 'supersquare1'
 ] as const;
 
 export declare type PuzzleType = (typeof PuzzleTypeName)[number];
