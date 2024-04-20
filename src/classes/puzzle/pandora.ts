@@ -86,7 +86,7 @@ export function PANDORA(): PuzzleInterface {
 
   pandora.toMove = function(piece: Piece, sticker: Sticker, dir: Vector3D) {;
     let mc = sticker.updateMassCenter();
-    let toMovePieces = pieces.filter(p => p.direction1(mc, dir, true) === 0);
+    let toMovePieces = pieces.filter(p => p.direction1(mc, dir) === 0);
     return {
       pieces: toMovePieces,
       ang: ANG

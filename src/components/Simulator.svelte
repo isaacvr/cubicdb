@@ -45,7 +45,7 @@
   export let enableRotation = true;
   export let gui = true;
   export let contained = false;
-  export let selectedPuzzle: PuzzleType = "supersquare1";
+  export let selectedPuzzle: PuzzleType = "rubik";
   export let order = 3;
   export let animationTime = $screen.isMobile ? 150 : 200; /// Default animation time: 200ms
   export let showBackFace = false;
@@ -318,7 +318,7 @@
     let pc = [piece.object.parent!.userData, piece.object.userData!];
     let po = pc[1].getOrientation();
     let vecs: Vector3D[] = pc[1].vecs.filter(
-      (v: Vector3D) => v.sub(po).abs() > EPS,
+      (v: Vector3D) => v.cross(po).abs() > EPS,
     );
     let v = fin.clone().sub(ini);
     let vv = new Vector3D(v.x, v.y, 0);
@@ -744,6 +744,8 @@
       
       planeMesh.position.set(pos.x, pos.y, pos.z);
       planeMesh.lookAt(pos.x + dg.u.x, pos.y + dg.u.y, pos.z + dg.u.z);
+      setAnimationData();
+      animating = true;
     }
   }
 
