@@ -174,6 +174,7 @@ export const MISC = [
   ['233'],
   ['334'],
   ['336'],
+  ['ssq1t'],
 ];
 
 export const ICONS = [
@@ -231,6 +232,7 @@ const OPTS_MISC: PuzzleOptions[][] = [
   [{ type: 'rubik', order: [3, 3, 2] }],
   [{ type: 'rubik', order: [3, 3, 4] }],
   [{ type: 'rubik', order: [3, 3, 6] }],
+  [{ type: 'supersquare1' }],
 ];
 
 const MODES = [R222, R333, R444, R555, R666, R777, PYRA, SKWB, SQR1, CLCK, MEGA, KILO, GIGA];

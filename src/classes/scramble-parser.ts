@@ -202,6 +202,28 @@ export class ScrambleParser {
     return res;
   }
 
+  static parseSuperSquare1(scramble: string) {
+    let newScramble = scramble.replace(/\s+/g, '').split('/');
+    let sqres = /^\((-?\d),(-?\d),(-?\d),(-?\d)\)$/;
+    let res = [];
+
+    for (let i = 0, maxi = newScramble.length; i < maxi; i += 1) {
+      let m = sqres.exec(newScramble[i]);
+
+      if (m) {
+        for (let n = 1; n <= 4; n += 1) {
+          let mv = ~~m[n];
+          mv && res.push([n, mv]);
+        }
+      }
+
+      if (i != maxi - 1) {
+        res.push([0, 6]);
+      }
+    }
+    return res;
+  }
+
   static parseClock(scramble: string) {
     let parts = scramble.replace('\\n', ' ').split(/\s+/g);
     let res: number[][] = [];
@@ -308,7 +330,7 @@ export class ScrambleParser {
       case 'sq2': case 'gearso': case 'gearo': case 'gear': case 'redi': case 'redim':
       case 'bic': case 'ivy': case 'ivyo': case 'ivyso': case 'prcp': case 'prco':
       case 'heli': case '888': case '999': case '101010': case '111111': case 'mpyr':
-      case '223': case '233': case '334': case '336': {
+      case '223': case '233': case '334': case '336': case 'ssq1t': {
         return [scramble];
       }
 

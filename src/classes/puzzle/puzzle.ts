@@ -483,6 +483,8 @@ export class Puzzle {
       this.type === 'helicopter'
      ) {
       moves = [seq];
+    } else if ( this.type === 'supersquare1' ) {
+      moves = ScrambleParser.parseSuperSquare1(seq);
     } else {
       return;
     }

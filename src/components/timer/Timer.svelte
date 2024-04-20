@@ -343,7 +343,7 @@
       }
       
       $scramble = prettyScramble($scramble);
-      // $scramble = "U";
+      // $scramble = "/";
       
       if ( DIALOG_MODES.indexOf(md) > -1 ) {
         $cross = solve_cross($scramble).map(e => e.map(e1 => e1.trim()).join(' '))[0];
@@ -359,6 +359,7 @@
 
       console.log("MODE: ", md);
       if ( all.pScramble.options.has(md) && $session?.settings?.genImage ) {
+        console.log("HAS", md);
         updateImage(md);
       } else {
         setPreview([], Date.now());

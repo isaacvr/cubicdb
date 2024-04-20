@@ -265,7 +265,6 @@ export class Vector3D {
     this.y = y;
     this.z = z;
   }
-
 }
 
 export const CENTER = new Vector3D(0, 0, 0, true);

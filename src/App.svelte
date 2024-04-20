@@ -111,6 +111,8 @@
 
   <Frame />
   <Route path="/" component={ Home }/>
+  <Route path="/tutorials" let:params> <Lazy component={ import('@components/Tutorials.svelte') } {params}/> </Route>
+  <Route path="/tutorials/*" let:params> <Lazy component={ import('@components/TutorialParser.svelte') } {params}/> </Route>
   <Route path="/algorithms/*" let:params> <Lazy component={ import('@components/Algorithms.svelte') } {params}/> </Route>
   <Route path="/algorithms-admin" let:params> <Lazy component={ import('@components/AlgorithmsAdmin.svelte') } {params}/> </Route>
   <Route path="/timer" let:params> <Lazy component={ import('@components/timer/Timer.svelte') } {params}/> </Route>

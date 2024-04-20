@@ -256,26 +256,6 @@
     }
   }
 
-  function keyDown(event: KeyboardEvent) {
-    const { code } = event;
-
-    if ( !enableKeyboard ) return;
-    
-    switch( $tab ) {
-      case 0: {
-        inputMethod.keyDownHandler(event);
-        prevExpanded = false;
-        break;
-      }
-      case 1: {
-        if ( code === 'Escape' && selected ) {
-          selectNone();
-        }
-        break;
-      }
-    }
-  }
-
   function createNewSolve() {
     $lastSolve = {
       date: Date.now(),
@@ -314,10 +294,33 @@
         openDialog('old-scrambles', null, () => {});
       } else if ( code === 'KeyC' && event.ctrlKey ) {
         toClipboard();
-      } else if ( code === 'KeyS' && event.ctrlKey ) {
-        initScrambler();
       } else if ( code === 'Comma' && event.ctrlKey ) {
         options[4].handler();
+      }
+    }
+  }
+
+  function keyDown(event: KeyboardEvent) {
+    const { code } = event;
+
+    if ( !enableKeyboard ) return;
+    
+    switch( $tab ) {
+      case 0: {
+        inputMethod.keyDownHandler(event);
+        prevExpanded = false;
+
+        if ( code === 'KeyS' && event.ctrlKey ) {
+          initScrambler();
+        }
+
+        break;
+      }
+      case 1: {
+        if ( code === 'Escape' && selected ) {
+          selectNone();
+        }
+        break;
       }
     }
   }

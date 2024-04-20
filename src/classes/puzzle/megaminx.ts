@@ -33,7 +33,7 @@ export function MEGAMINX(_n: number, headless?: false): PuzzleInterface {
         return [0.5];
       }
 
-      return 0.11;
+      return 0.2;
     }],
   };
 
@@ -221,7 +221,7 @@ export function MEGAMINX(_n: number, headless?: false): PuzzleInterface {
   let trySingleMove = (mv: any): { pieces: Piece[], u: Vector3D, ang: number } | null => {
     let moveId = mv[0];
     let turns = mv[1];
-    const pts1 = planes[moveId].map(e => e.clone());
+    const pts1 = planes[moveId];
     const u = Vector3D.cross(pts1[0], pts1[1], pts1[2]).unit();
     const anc = pts1[0].add(u.mul(-(mv[3] || 0) * LDIST));
     const ang = INNER_ANG * turns;
@@ -250,17 +250,25 @@ export function MEGAMINX(_n: number, headless?: false): PuzzleInterface {
   };
 
   mega.move = function (moves: any[]) {
+    console.time('scramble');
     for (let m = 0, maxm = moves.length; m < maxm; m += 1) {
       let mv = moves[m];
       let pcs = trySingleMove(mv);
 
       if (!pcs) {
+        console.timeEnd('scramble');
         return false;
       }
 
       let { u, ang } = pcs;
-      pcs.pieces.forEach(p => p.rotate(CENTER, u, ang, true));
+      let p = pcs.pieces;
+
+      for (let i = 0, maxi = p.length; i < maxi; i += 1) {
+        p[i].rotate(CENTER, u, ang, true);
+      }
+      // pcs.pieces.forEach(p => p.rotate(CENTER, u, ang, true));
     }
+    console.timeEnd('scramble');
     return true;
   };
 
@@ -275,8 +283,6 @@ export function MEGAMINX(_n: number, headless?: false): PuzzleInterface {
   };
 
   mega.scramble = function () {
-    if (!mega.toMove) return;
-
     const MOVES = n >= 2 ? (n - 2) * 50 + 10 : 0;
 
     for (let i = 0; i < MOVES; i += 1) {
@@ -286,7 +292,7 @@ export function MEGAMINX(_n: number, headless?: false): PuzzleInterface {
       if (!s) { i -= 1; continue; }
       let vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > EPS));
       if (!vec) { i -= 1; continue; }
-      let pcs = mega.toMove(p, s, vec);
+      let pcs = mega.toMove!(p, s, vec);
       let cant = 1 + random(3);
       pcs.pieces.forEach((p: Piece) => p.rotate(CENTER, vec, pcs.ang * cant, true));
     }
