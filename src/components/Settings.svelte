@@ -40,7 +40,7 @@
   let timerFont = localStorage.getItem('timer-font') || DEFAULT_TIMER_FONT;
   let canCheckUpdate = true;
   let dTime = 10587;
-  let itv: NodeJS.Timer;
+  let itv: NodeJS.Timeout;
   let displays: Display[] = [];
   let storage: IStorageInfo = {
     algorithms: 0, cache: 0, sessions: 0, solves: 0, tutorials: 0

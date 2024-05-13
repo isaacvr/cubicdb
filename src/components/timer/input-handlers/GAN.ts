@@ -1,5 +1,6 @@
 import { AES128 } from "@classes/AES128";
 import { AlgorithmSequence } from "@classes/AlgorithmSequence";
+import { CFOP } from "@classes/reconstructors/CFOP";
 import { CubieCube, SOLVED_FACELET, valuedArray } from "@cstimer/lib/mathlib";
 import { isEscape } from "@helpers/stateMachine";
 import { TimerState, type InputContext, type TimerInputHandler, type Solve, Penalty } from "@interfaces";
@@ -8,7 +9,7 @@ import { decompressFromBase64 } from "async-lz-string";
 import { get, type Writable } from "svelte/store";
 import { InterpreterStatus, createMachine, interpret, type Sender } from "xstate";
 
-const debug = true;
+const debug = false;
 
 function matchUUID(uuid1: string, uuid2: string) {
   return uuid1.toUpperCase() == uuid2.toUpperCase();
@@ -28,6 +29,7 @@ interface GANContext {
   input: InputContext;
   sequencer: AlgorithmSequence;
   moves: string[];
+  cfop: CFOP
 }
 
 // Guards
@@ -55,14 +57,18 @@ const isScrambleReady = (ctx: GANContext) => {
 }
 
 // Flow control
-const enterConnected = ({ input: { bluetoothStatus, state, time, decimals, sequenceParts, recoverySequence }, moves, sequencer }: GANContext, ev: any) => {
+const enterConnected = ({ input: {
+  bluetoothStatus, state, time, decimals, scramble, sequenceParts, recoverySequence
+}, moves, sequencer, cfop }: GANContext, ev: any) => {
   sequencer.clear();
   moves.length = 0;
-  sequencer.setScramble(ev.data.scramble);
-
+  
+  let scr = ev?.data?.scramble || get(scramble);
+  sequencer.setScramble(scr);
+  cfop.setSequence(scr);
   updateSequence(sequencer, sequenceParts, recoverySequence);
   
-  debug && console.log('[enterConnected]: ', ev, ev.data.scramble);
+  debug && console.log('[enterConnected]: ', ev, scr);
 
   bluetoothStatus.set(true);
   state.set(TimerState.CLEAN);
@@ -114,7 +120,7 @@ const setTimerInspection = ({ input: { time, lastSolve, session, addSolve, state
   });
 
   return () => { clearInterval(itv); };
-}
+};
 
 const setTimerRunner = ({ input: { decimals, time, lastSolve, state } }: GANContext) => {
   decimals.set(true);
@@ -128,19 +134,25 @@ const setTimerRunner = ({ input: { decimals, time, lastSolve, state } }: GANCont
     clearInterval(itv);
     time.set(p - ref);
   };
-}
+};
 
-const saveSolve = ({ input: { time, state, lastSolve, addSolve, initScrambler }, sequencer }: GANContext) => {
+const saveSolve = ({ input: { time, state, lastSolve, addSolve, initScrambler }, sequencer, cfop }: GANContext) => {
+  let t = get(time);
+  cfop.getAnalysis(t).then(res => DataService.getInstance().emitBluetoothData('reconstructor', res));
   state.set(TimerState.STOPPED);
   sequencer.clear();
   initScrambler();
 
-  let t = get(time);
   let ls = get(lastSolve) as Solve;
   
   t > 0 && addSolve(t, ls?.penalty);
   time.set(0);
-}
+};
+
+const handleOwnEntry = ({ input }: GANContext) => {
+  input.sequenceParts.set(['', 'On your own', '']);
+  input.recoverySequence.set('');
+};
 
 const GANMachine = createMachine<GANContext>({
   predictableActionArguments: true,
@@ -230,12 +242,23 @@ const GANMachine = createMachine<GANContext>({
     },
 
     OWN: {
+      entry: handleOwnEntry,
       on: {
         MOVE: {
-          target: 'CONNECTED',
+          target: 'AFTEROWN',
           cond: isCompleteCube
         }
       }
+    },
+
+    AFTEROWN: {
+      entry: ({ input, sequencer }) => {
+        input.initScrambler();
+        input.time.set(0);
+        input.state.set(TimerState.CLEAN);
+        sequencer.clear();
+      },
+      always: 'CONNECTED'
     }
   },
   on: {
@@ -282,7 +305,8 @@ export class GANInput implements TimerInputHandler {
     this.context = {
       input: context,
       moves: this.moves,
-      sequencer: this.sequencer
+      sequencer: this.sequencer,
+      cfop: new CFOP
     };
     
     this.interpreter = interpret( GANMachine.withContext( this.context ) );
@@ -434,6 +458,7 @@ export class GANInput implements TimerInputHandler {
   private handleScramble(s: string) {
     let ctx = this.context;
     ctx.sequencer.setScramble(s);
+    ctx.cfop.setSequence(s);
     updateSequence(ctx.sequencer, ctx.input.sequenceParts, ctx.input.recoverySequence);
   }
 
@@ -619,6 +644,7 @@ export class GANInput implements TimerInputHandler {
     if ( this.decoder == null ) {
       return;
     }
+
     this.parseV2Data(value);
   }
 
@@ -631,7 +657,7 @@ export class GANInput implements TimerInputHandler {
     this.prevMoveCnt = this.moveCnt;
   }
 
-  private updateMoveTimes(locTime: number, isV2: boolean) {
+  private updateMoveTimes(locTime: number) {
     let moveDiff = (this.moveCnt - this.prevMoveCnt) & 0xff;
     
     moveDiff > 1 && debug && console.log('[gancube]', 'bluetooth event was lost, moveDiff = ' + moveDiff);
@@ -676,6 +702,12 @@ export class GANInput implements TimerInputHandler {
           facelet: this.prevCubie.toFaceCube()
         }
       });
+
+      let st = this.interpreter.getSnapshot().value.toString();
+
+      if ( st === 'RUNNING' || st === 'STOPPED' ) {
+        this.context.cfop.addMove(this.prevMoves[i]);
+      }
       
       this.emit('move', [ this.prevMoves[i], this.timeOffs[i] ]);
     }
@@ -726,7 +758,7 @@ export class GANInput implements TimerInputHandler {
       this.keyCheck += keyChkInc;
       
       if ( keyChkInc == 0 ) {
-        this.updateMoveTimes(locTime, true);
+        this.updateMoveTimes(locTime);
       }
     } else if (mode == 4) { // cube state
       debug && console.log('[gancube]', 'v2 received facelets event');
@@ -861,7 +893,7 @@ export class GANInput implements TimerInputHandler {
     return [key, iv];
   }
 
-  private v2init(ver: any): Promise<boolean> {
+  private async v2init(ver: any): Promise<boolean> {
     debug && console.log('[gancube] v2init start');
     this.keyCheck = 0;
 
@@ -876,7 +908,7 @@ export class GANInput implements TimerInputHandler {
       
       for (let i = 0; i < chrcts.length; i++) {
         let chrct = chrcts[i]
-        debug && console.log('[gancube] v2init find chrct', chrct.uuid);
+        debug && console.log('[gancube] v2init find chrct', chrct);
         if (matchUUID(chrct.uuid, GANInput.CHRCT_UUID_V2READ)) {
           this.chrct_v2read = chrct;
         } else if (matchUUID(chrct.uuid, GANInput.CHRCT_UUID_V2WRITE)) {

@@ -1,4 +1,5 @@
 import { Penalty, type Solve } from "@interfaces";
+import { toInt } from "./math";
 
 export function timer(val: number, dec?: boolean, suff?: boolean): string {
   if ( val === Infinity ) return "DNF";
@@ -55,8 +56,8 @@ export function timerToMilli(n: number): number {
   return res + n * 86_400_000; // Add days
 }
 
-export function adjustMillis(n: number): number {
-  return Math.floor(n / 10) * 10;
+export function adjustMillis(n: number, round = false): number {
+  return !round ? toInt(n, 1) : Math.round(n / 10) * 10;
 }
 
 export function formatHour(n: number, long?: boolean): string {

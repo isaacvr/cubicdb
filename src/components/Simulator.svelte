@@ -52,6 +52,10 @@
   export let sequence: string[] = [];
   export let sequenceAlpha = 0;
   export let useScramble = "";
+  
+  let _cl = "";
+
+  export { _cl as class };
 
   let cube: Puzzle;
   let dragging = false;
@@ -388,9 +392,9 @@
     // scene.add(planeMesh);
     
     // Puzzle setup
-
     if (facelet) {
-      cube = Puzzle.fromFacelet(facelet);
+      cube = Puzzle.fromFacelet(facelet, selectedPuzzle);
+      cube.move('F');
     } else {
       cube = Puzzle.fromSequence(useScr, {
         type: selectedPuzzle,
@@ -446,7 +450,8 @@
   }
 
   function scramble() {
-    resetPuzzle(undefined, true);
+    // resetPuzzle(undefined, true);
+    resetPuzzle('BRUUUUULLUFFRRRRRRLUFFFFFFFDDDDDDDDDRBBLLLLLLRUUBBBBBB');
   }
 
   let piece: Intersection | null = null;
@@ -612,7 +617,7 @@
     let dir = m[1] === "'" ? 1 : -1;
     let u: any = mc[pos];
     let piece = cube.pieces.find(
-      (p) => p.direction1(u, u, true) === 0 && p.stickers.length > 4,
+      (p) => p.direction1(u, u) === 0 && p.stickers.length > 4,
     );
     let sticker = piece?.stickers.find((s) => s.vecs.length === 3);
 
@@ -693,7 +698,7 @@
   };
 
   export function applyMove(m: string, t: number) {
-    if (cube.type != "rubik") return;
+    if (cube.type != "icarry" && cube.type != "rubik") return;
     moveQueue.push([m, t]);
   }
 
@@ -870,7 +875,7 @@
 
 <svelte:window on:resize={resizeHandler} on:keydown={keyDownHandler} />
 
-<canvas bind:this={canvas} />
+<canvas bind:this={canvas} class={_cl || ""}/>
 
 {#if gui}
   <div class="absolute right-2 top-[5rem] flex flex-col gap-2 items-center ps-3">

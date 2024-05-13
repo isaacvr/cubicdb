@@ -33,6 +33,8 @@
   import { version } from '@stores/version.store';
   import { randomUUID } from '@helpers/strings';
   import { CubeDBICON } from '@constants';
+    import { CFOP } from '@classes/reconstructors/CFOP';
+    import { Puzzle } from '@classes/puzzle/puzzle';
   // import Particles from '@pcomponents/Particles.svelte';
   // import Space from '@pcomponents/Space.svelte';
 
@@ -84,7 +86,7 @@
     }).catch(() => {});
   }
 
-  onMount(() => {
+  onMount(async () => {
     handleResize();
     // checkUpdates();
     
@@ -98,6 +100,23 @@
 
     document.documentElement.style.setProperty('--app-font', localStorage.getItem('app-font') || 'Ubuntu');
     document.documentElement.style.setProperty('--timer-font', localStorage.getItem('timer-font') || 'Ubuntu');
+
+    // let cfop = new CFOP(Puzzle.fromSequence("F2 B2 L U' R2 L2 U2 R D2 L' R' U' L B U' R' F U' L2 U2 x2 y'", {type: 'rubik', order: [3, 3, 3]}).toFacelet());
+
+    // "D l' U L y L2' U L2' z' U L' U' z U l U z' U L' U' y L' U L U L U L' R U' R' U' R U R' U2 R U' R' U l' U l y L' U' L' U L U L U L' U L' U' L' U L U' L' U' L2' U L U".split(" ").forEach(mv => {
+    //   cfop.feed(mv);
+    // });
+
+    
+    // console.log(cfop.getTimeline());
+    // console.log(await cfop.getAnalysis());
+
+    // --------------------------------------------------------------------------------------------------------------
+    // let v1 = Puzzle.fromSequence("R' U R' d' R' F' R2 U' R' U R' F R F", { type: 'rubik' }, true).toFacelet();
+    // let v2 = Puzzle.fromSequence("z D' R2 D R2 U R' D' R U' R U R' D R U'", { type: 'rubik' }, true).toFacelet();
+
+    // console.log("V1: ", v1);
+    // console.log("V2: ", v2);
   });
 
   onDestroy(() => nSub());

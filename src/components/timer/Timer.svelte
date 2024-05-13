@@ -47,6 +47,7 @@
   import WcaCategory from '@components/wca/WCACategory.svelte';
   import { isBetween } from '@helpers/math';
     import type { HTMLImgAttributes } from 'svelte/elements';
+    import { CFOP } from '@classes/reconstructors/CFOP';
 
   let MENU: SCRAMBLE_MENU[] = getLanguage($globalLang).MENU;
   
@@ -343,7 +344,6 @@
       }
       
       $scramble = prettyScramble($scramble);
-      // $scramble = "/";
       
       if ( DIALOG_MODES.indexOf(md) > -1 ) {
         $cross = solve_cross($scramble).map(e => e.map(e1 => e1.trim()).join(' '))[0];
@@ -357,9 +357,14 @@
       // emit scramble for iCarry and other stuffs
       dataService.scramble($scramble);
 
-      console.log("MODE: ", md);
+      // console.log("SCRAMBLE: ", $scramble);
+      
+      // let cfop = new CFOP(Puzzle.fromSequence($scramble, { type: 'rubik' }).toFacelet());
+      // cfop.getAnalysis();
+
+      // console.log("MODE: ", md);
       if ( all.pScramble.options.has(md) && $session?.settings?.genImage ) {
-        console.log("HAS", md);
+        // console.log("HAS", md);
         updateImage(md);
       } else {
         setPreview([], Date.now());

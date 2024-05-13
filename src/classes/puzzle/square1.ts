@@ -208,8 +208,6 @@ export function SQUARE1(): PuzzleInterface {
   };
 
   sq1.move = function(moves: any[]) {
-    console.log("MOVES", moves);
-
     for (let m = 0, maxm = moves.length; m < maxm; m += 1) {
       let mv = moves[m];
       let pcs = trySingleMove(mv);  

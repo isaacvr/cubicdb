@@ -169,3 +169,12 @@ export function rotateBundle(points: Vector3D[], O: Vector3D, u: Vector3D, ang: 
     return new Vector3D(p1.x + O.x, p1.y + O.y, p1.z + O.z);
   });
 }
+
+export function sum(arr: number[]): number {
+  return arr.reduce((a, b) => a + b, 0);
+}
+
+export function toInt(n: number, d: number): number {
+  let pot = 10 ** d;
+  return Math.floor(n / pot) * pot;
+}

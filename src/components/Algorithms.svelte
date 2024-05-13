@@ -13,6 +13,7 @@
   import { Button, Li, List, Span, Spinner, Tooltip } from "flowbite-svelte";
   import { CubeDBICON } from "@constants";
   import { localLang } from "@stores/language.service";
+    import { algorithmToPuzzle } from "@helpers/object";
 
   const location = useLocation();
 
@@ -68,19 +69,7 @@
       return A.length < B.length ? -1 : 1;
     });
     
-    let cubes = list.map(e => {
-      let args = nameToPuzzle(e.puzzle || "");
-      let seq = e.scramble + " z2";
-      return Puzzle.fromSequence(seq, {
-        type: args[0],
-        order: args.slice(1, args.length),
-        mode: e.mode,
-        view: e.view,
-        tips: e.tips,
-        headless: true,
-        rounded: true
-      }, true, false);
-    });
+    let cubes = list.map(algorithmToPuzzle);
     
     for (let i = 0, maxi = list.length; i < maxi; i += 1) {
       let e = list[i];

@@ -104,7 +104,7 @@ export function bundleAverageS(N: number[], BEST: number[], BEST_IDS: string[], 
   let sums: number[] = new Array(N.length).fill(0);
   
   let getIndex = (i: number) => len - i;
-  let getTime = (s: Solve) => infinitePenalty(s) ? Infinity : s.time;
+  let getTime = (s: Solve) => infinitePenalty(s) ? Infinity : adjustMillis(s.time);
 
   for (let i = 0, maxi = arr.length; i < maxi; i += 1) {
     let ip = getIndex(i);
@@ -132,7 +132,7 @@ export function bundleAverageS(N: number[], BEST: number[], BEST_IDS: string[], 
           let av = s / (N[j] - 2 * d);
 
           if ( av < BEST[j] ) {
-            BEST[j] = adjustMillis(av);
+            BEST[j] = adjustMillis(av, true);
             BEST_IDS[j] = arr[ip]._id;
             IS_BEST[j] = PREV_BEST[j] != Infinity;
           }

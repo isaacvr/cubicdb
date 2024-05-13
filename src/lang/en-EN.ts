@@ -38,6 +38,7 @@ export const English: Language = {
     solves: 'Solves',
     tutorials: 'Tutorials',
     connected: 'Connected',
+    summary: 'Summary',
   },
   NAVBAR: {
     home: 'Home',

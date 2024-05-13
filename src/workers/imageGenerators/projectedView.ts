@@ -175,8 +175,8 @@ export async function projectedView(cube: Puzzle, DIM: number): Promise<Blob> {
     let uv = st.getOrientation();
     let mc = st.getMassCenter();
     let ok = false;
-    let off1 = new Vector3D(-2.3, 1.8, 0);
-    let off2 = new Vector3D(2.3, 1.8, 0);
+    let off1 = new Vector3D(-2, 2, 0);
+    let off2 = new Vector3D(2, 2, 0);
 
     if (cube.type === 'supersquare1') {
       if (mc.y > 0.7) {
@@ -186,7 +186,7 @@ export async function projectedView(cube: Puzzle, DIM: number): Promise<Blob> {
         if (!(st.color != 'x' || (st.color === 'x' && uv.y > 0))) continue;
 
         let newst = UP.dot(uv) < EPS ? getRoundedSQ1Sticker(cube, st, SQ1_A1, SQ1_A2, 0.5) : st;
-        sideStk['U1'].push(newst.rotate(CENTER, RIGHT, PI_2).add(off2.rotate(CENTER, FRONT, PI)));
+        sideStk['U1'].push(newst.rotate(CENTER, RIGHT, PI_2).add(off2));
       } else if (mc.y < -0.6) {
         let newst = DOWN.dot(uv) < EPS ? getRoundedSQ1Sticker(cube, st, SQ1_A1, SQ1_A2) : st;
         sideStk['D'].push(newst.rotate(CENTER, RIGHT, PI_2).add(off1.rotate(CENTER, FRONT, PI)));
@@ -194,7 +194,7 @@ export async function projectedView(cube: Puzzle, DIM: number): Promise<Blob> {
         if (!(st.color != 'x' || (st.color === 'x' && uv.y < 0))) continue;
 
         let newst = DOWN.dot(uv) < EPS ? getRoundedSQ1Sticker(cube, st, SQ1_A1, SQ1_A2, 0.5) : st;
-        sideStk['D1'].push(newst.rotate(CENTER, RIGHT, PI_2).add(off2));
+        sideStk['D1'].push(newst.rotate(CENTER, RIGHT, PI_2).add(off2.rotate(CENTER, FRONT, PI)));
       }//*/
 
       continue;
@@ -354,12 +354,23 @@ export async function projectedView(cube: Puzzle, DIM: number): Promise<Blob> {
   let offset = new Vector2D(W / 2, H / 2).sub(new Vector2D(vdif.x / 2, vdif.y / 2));
 
   if (cube.type === 'supersquare1') {
-    ctx.moveTo(W / 2, H * 0.2);
-    ctx.lineTo(W / 2, H * (1 - 0.2));
+    let x1 = map(-2, limits[0], limits[1], 0, vdif.x) + offset.x;
+    let x2 = map(2, limits[0], limits[1], 0, vdif.x) + offset.x;
+    let y = map(0, limits[2], limits[3], 0, vdif.y) + offset.y;
+    
+    ctx.moveTo(x1, H - y);
+    ctx.lineTo(x2, H - y);
     ctx.strokeStyle = "white";
     ctx.stroke();
     ctx.strokeStyle = "black";
   }
+
+  allStickers.sort((a, b) => {
+    let za = a.points.reduce((acc, e) => acc.z > e.z ? acc : e, new Vector3D(0, 0, -1000));
+    let zb = b.points.reduce((acc, e) => acc.z > e.z ? acc : e, new Vector3D(0, 0, -1000));
+
+    return za.z - zb.z;
+  })
 
   for (let i = 0, maxi = allStickers.length; i < maxi; i += 1) {
     ctx.fillStyle = cube.getHexStrColor(allStickers[i].color);

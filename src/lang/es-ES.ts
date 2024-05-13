@@ -38,6 +38,7 @@ export const Spanish: Language = {
     solves: 'Tiempos',
     tutorials: 'Tutorials',
     connected: 'Conectado',
+    summary: 'Resumen',
   },
   NAVBAR: {
     home: 'Inicio',

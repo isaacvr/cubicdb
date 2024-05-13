@@ -49,6 +49,7 @@ export async function pGenerateCubeBundle(
 
       if ( !cubes[i].img ) {
         const opt = cubes[i].options;
+        // const cube = cubes[i].clone();
         const cube = Puzzle.fromSequence(opt.sequence || '', opt);
     
         if ( printable ) cube.p.palette = PRINTABLE_PALETTE;

@@ -100,6 +100,7 @@ export interface Algorithm {
   puzzle?: string;
   solutions?: Solution[];
   mode: CubeMode;
+  baseColor?: string;
   cube ?: string;
   ready: boolean;
   tips ?: number[];
@@ -641,6 +642,7 @@ export interface Language {
     solves: string;
     tutorials: string;
     connected: string;
+    summary: string;
   }
   NAVBAR: {
     home: string;
@@ -953,3 +955,13 @@ export type Scrambler = '222so' | '333' | '333fm' | '333ni' | 'r3ni' | '333oh' |
   | '555wca' | '555bld' | '666wca' | '777wca' | 'clkwca' | 'mgmp' | 'pyrso' | 'skbso' | 'sqrs';
 
 export type ICacheDB = 'Cache' | 'Algorithms' | 'Sessions' | 'Solves' | 'Tutorials';
+
+export interface ReconstructorStep {
+  name: string;
+  case: Algorithm | null;
+  substeps: ReconstructorStep[];
+  moves: number;
+  time: number;
+  skip: boolean;
+  percent: number; // Int percent
+}

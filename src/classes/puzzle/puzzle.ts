@@ -7,6 +7,8 @@ import type { Piece } from './Piece';
 import type { PuzzleInterface, PuzzleOptions, PuzzleType, CubeView } from '@interfaces';
 import * as puzzles from './allPuzzles';
 import { puzzleReg } from './puzzleRegister';
+import { ImageSticker } from './ImageSticker';
+import { solvFacelet } from '@cstimer/scramble/scramble_333';
 
 void puzzles;
 
@@ -84,7 +86,7 @@ export class Puzzle {
 
     this.adjustColors();
 
-    if ( this.options.facelet && this.type === 'rubik' ) {
+    if ( this.options.facelet && (this.type === 'rubik' || this.type === 'icarry') ) {
       this.applyFacelet( this.options.facelet );
     }
 
@@ -95,7 +97,7 @@ export class Puzzle {
     let fColors = facelet.split("");
     let vecs = this.p.faceVectors;
     let cols = this.p.faceColors;
-    let allStickers = this.p.getAllStickers();
+    let allStickers = this.p.getAllStickers().filter(st => !(st instanceof ImageSticker));
     let stickers: Sticker[][] = vecs.map(_ => []);
     let getSort = (k1: keyof Vector3D, k2: keyof Vector3D, d1: number, d2: number) => {
       return (s1: Sticker, s2: Sticker) => {
@@ -140,16 +142,16 @@ export class Puzzle {
     }
   }
 
-  private adjustColors() {
+  adjustColors(topColor = '', bottomColor = '') {
     const typeFilter: PuzzleType[] = ['rubik', 'square1'];
     const modeFilter: CubeMode[] = [ CubeMode.NORMAL, CubeMode.CS, CubeMode.EO, CubeMode.CO ];
 
     if ( !typeFilter.some( e => e === this.type ) ) {
-      return;
+      return this;
     }
 
     if ( this.type === 'square1' && !modeFilter.some( m => m === this.mode ) ) {
-      return;
+      return this;
     }
     
     let pieces = this.p.pieces;
@@ -162,16 +164,19 @@ export class Puzzle {
           stickers[j].color = stickers[j].oColor;
         }
       }
-      return;
+      return this;
     }
     
-    let TOP_COLOR = this.p.faceColors[3];
-    let BOTTOM_COLOR = this.p.faceColors[ (this.p.faceColors.indexOf(TOP_COLOR) + 3) % 6 ];
+    let TOP_COLOR = topColor || this.p.faceColors[3];
+    let BOTTOM_COLOR = bottomColor || this.p.faceColors[ (this.p.faceColors.indexOf(TOP_COLOR) + 3) % 6 ];
+
+    console.log("TOP_COLOR, BOTTOM_COLOR: ", TOP_COLOR, BOTTOM_COLOR, this.mode === CubeMode.CROSS);
     
     for (let i = 0, maxi = pieces.length; i < maxi; i += 1) {
       let stickers = pieces[i].stickers.filter(s => 'xd'.indexOf(s.oColor) === -1 );
       let stLen = stickers.length;
-      let topLayer = stickers.reduce((ac, s) => ac || s.getOrientation().sub(UP).abs() < EPS, false);
+      let topLayer = pieces[i].contains(TOP_COLOR);
+
       switch(this.mode) {
         case CubeMode.OLL: {
           for (let j = 0; j < stLen; j += 1) {
@@ -276,9 +281,9 @@ export class Puzzle {
           break;
         }
         case CubeMode.CROSS: {
-          let cnd = stLen > 2 || (stLen === 2 && !pieces[i].contains(BOTTOM_COLOR));
+          let cnd = pieces[i].contains(BOTTOM_COLOR);
           for (let j = 0; j < stLen; j += 1) {
-            stickers[j].color = cnd ? 'x' : stickers[j].oColor;
+            stickers[j].color = cnd ? stickers[j].oColor : 'x';
           }
           break;
         }
@@ -337,6 +342,8 @@ export class Puzzle {
         }
       }
     }
+
+    return this;
   }
 
   static inverse(type: PuzzleType, sequence: string): string {
@@ -399,21 +406,88 @@ export class Puzzle {
     return p;
   }
 
-  static fromFacelet(facelet: string): Puzzle {
+  static fromFacelet(facelet: string, type: PuzzleType): Puzzle {
     if ( !/^[UDLRFB]+$/.test(facelet) || facelet.length % 6 != 0 ) {
       return Puzzle.fromSequence('', { type: 'rubik' });
     }
 
     let order = ~~Math.sqrt( facelet.length / 6);
 
-    let cube = new Puzzle({
-      type: 'rubik',
+    if ( order === 3 ) {
+      let sol: string = solvFacelet(facelet);
+      if ( !sol.startsWith("Error") ) {
+        return Puzzle.fromSequence(sol, { type, order: [3, 3, 3], view: 'trans' }, true, true);
+      }
+    }
+
+    return new Puzzle({
+      type,
       order: [ order, order, order ],
       view: 'trans',
       facelet
     });
+  }
 
-    return cube;
+  toFacelet(): string {
+    if ( !(this.type === 'rubik' || this.type === 'icarry') ) return '';
+
+    let colors = "URFDLB";
+    let vecs = this.p.faceVectors;
+    let cols = this.p.faceColors;
+    let allStickers = this.p.getAllStickers().filter(st => !(st instanceof ImageSticker));
+    let stickers: Sticker[][] = vecs.map(_ => []);
+    let getSort = (k1: keyof Vector3D, k2: keyof Vector3D, d1: number, d2: number) => {
+      return (s1: Sticker, s2: Sticker) => {
+        let m1: any = s1.getMassCenter();
+        let m2: any = s2.getMassCenter();
+
+        if ( Math.abs(m1[k1] - m2[k1]) > EPS ) {
+          return m1[k1] < m2[k1] ? d1 : -d1;
+        }
+        return m1[k2] < m2[k2] ? d2 : -d2;
+      };
+    };
+
+    for (let i = 0, maxi = allStickers.length; i < maxi; i += 1) {
+      if ( cols.indexOf( allStickers[i].color ) < 0 ) {
+        continue;
+      }
+
+      let u = allStickers[i].getOrientation();
+
+      for (let j = 0, maxj = vecs.length; j < maxj; j += 1) {
+        if ( vecs[j].sub( u ).abs() < EPS ) {
+          stickers[j].push( allStickers[i] );
+          break;
+        }
+      }
+    }
+
+    stickers[0].sort( getSort('z', 'x', -1, -1) );
+    stickers[1].sort( getSort('y', 'z', 1, 1) );
+    stickers[2].sort( getSort('y', 'x', 1, -1) );
+    stickers[3].sort( getSort('z', 'x', 1, -1) );
+    stickers[4].sort( getSort('y', 'z', 1, -1) );
+    stickers[5].sort( getSort('y', 'x', 1, 1) );
+
+    let sortedStickers = stickers.reduce((acc, e) => {
+      return acc.concat(e);
+    }, []);
+
+    let res = [];
+
+    for (let i = 0, maxi = sortedStickers.length; i < maxi; i += 1) {
+      let st = sortedStickers[i];
+
+      for (let j = 0, maxj = cols.length; j < maxj; j += 1) {
+        if ( st.color === cols[j] ) {
+          res.push(colors[j]);
+          break;
+        }
+      }
+    }
+
+    return res.join("");
   }
 
   setTips(tips: number[]) {
@@ -463,8 +537,7 @@ export class Puzzle {
     return true;
   }
 
-  move(seq: string): void {
-    // console.log("SEQ: ", seq, this.type);
+  move(seq: string) {
     let moves: any[]; 
 
     if ( ['rubik', 'axis', 'fisher' ].indexOf(this.type) > -1 ) {
@@ -486,12 +559,12 @@ export class Puzzle {
     } else if ( this.type === 'supersquare1' ) {
       moves = ScrambleParser.parseSuperSquare1(seq);
     } else {
-      return;
+      return this;
     }
 
     this.p.move(moves);
     this.adjustColors();
-
+    return this;
   }
 
   getColor(face: string): string {

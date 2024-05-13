@@ -601,7 +601,7 @@
 <style lang="postcss">
 #grid {
   grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));
-  max-height: 100%;
+  max-height: calc(100% - 2rem);
   gap: .5rem;
   padding-bottom: 2rem;
   padding-right: .5rem;

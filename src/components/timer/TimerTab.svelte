@@ -1,6 +1,6 @@
 <script lang="ts">
   /// Types
-  import { Penalty, TimerState, TIMER_INPUT, type InputContext, type Language, type Solve, type TimerContext, type TimerInputHandler, DIALOG_MODES } from '@interfaces';
+  import { Penalty, TimerState, TIMER_INPUT, type InputContext, type Language, type Solve, type TimerContext, type TimerInputHandler, DIALOG_MODES, type ReconstructorStep } from '@interfaces';
 
   /// Icons
   import Close from '@icons/Close.svelte';
@@ -44,15 +44,19 @@
   import { globalLang } from '@stores/language.service';
   import { getLanguage } from '@lang/index';
   import { copyToClipboard, randomUUID } from '@helpers/strings';
-  import { minmax } from '@helpers/math';
+  import { minmax, sum, toInt } from '@helpers/math';
   import Simulator from '@components/Simulator.svelte';
   import { statsReplaceId } from '@helpers/statistics';
   import { screen } from '@stores/screen.store';
-  import { Button, Modal, Popover, Range, Spinner, StepIndicator, TextPlaceholder } from 'flowbite-svelte';
+  import { Accordion, AccordionItem, Badge, Button, Modal, Popover, Range, Spinner, StepIndicator, TabItem, Tabs, TextPlaceholder } from 'flowbite-svelte';
   import Tooltip from '@components/material/Tooltip.svelte';
-  import { CubeDBICON, STEP_COLORS } from '@constants';
+  import { CubeDBICON, CubeMode, STEP_COLORS } from '@constants';
   import { blur, scale } from 'svelte/transition';
   import { ChevronLeftSolid, ChevronRightSolid } from 'flowbite-svelte-icons';
+  import { Flip } from '@classes/Flip';
+    import Reconstructor from './Reconstructor.svelte';
+    import { solvFacelet } from '@cstimer/scramble/scramble_333';
+    import { RIGHT } from '@classes/vector3d';
 
   type TModal = '' | 'edit-scramble' | 'old-scrambles' | 'settings';
 
@@ -181,6 +185,22 @@
   let isSearching = false;
   let isConnecting = false;
   let selectedImg = 0;
+  let reconstructor: ReconstructorStep[] = [];
+  // let reconstructor: ReconstructorStep[] = [
+  //   { name: 'Cross', moves: 5, percent: 10, skip: false, substeps: [], time: 14234, case: {
+  //     name: '',
+  //     shortName: '',
+  //     order: 3,
+  //     mode: CubeMode.NORMAL,
+  //     baseColor: 'r',
+  //     ready: true,
+  //     scramble: 'R',
+  //     view: '2d'
+  //   } },
+  //   { name: 'F2L', moves: 5, percent: 10, skip: false, substeps: [], time: 14234, case: null },
+  //   { name: 'OLL', moves: 5, percent: 10, skip: false, substeps: [], time: 14234, case: null },
+  //   { name: 'PLL', moves: 5, percent: 10, skip: false, substeps: [], time: 14234, case: null },
+  // ];
   
   let options = [
     { text: "Reload scramble [Ctrl + S]", icon: Refresh, handler: () => initScrambler() },
@@ -488,10 +508,14 @@
 
     isSearching = true;
     $bluetoothList.length = 0;
-
+    
     dataService.searchBluetooth(gn).then(mac => {
       deviceID = mac;
-      inputMethod.disconnect();
+      
+      if ( inputMethod instanceof GANInput && inputMethod.connected ) {
+        inputMethod.disconnect();
+      }
+
       inputMethod = gn;
     }).catch((err) => {
       // notification.addNotification({
@@ -551,6 +575,11 @@
     switch( type ) {
       case 'move': {
         simulator.applyMove( data[0], data[1] );
+        
+        if ( reconstructor.length ) {
+          reconstructor = [];
+        }
+
         break;
       }
 
@@ -582,6 +611,11 @@
 
       case 'device-list': {
         $bluetoothList = data;
+        break;
+      }
+
+      case 'reconstructor': {
+        reconstructor = data;
         break;
       }
     }
@@ -645,202 +679,284 @@
   on:keydown={ keyDown }
 ></svelte:window>
 
-<div class:timerOnly class:scrambleOnly class="w-full h-[calc(100%-3rem)] { (timerOnly || scrambleOnly) ? 'mt-8' : '' }" >
-  {#if !timerOnly }
-    <!-- Scramble -->
-    <div id="scramble" class="transition-all duration-300 max-md:text-xs max-md:leading-5">
-      {#if !$scramble}
-        <TextPlaceholder size="xl" class="w-full" divClass="grid gap-2 place-items-center max-h-12 overflow-hidden animate-pulse"/>
+<div class:timerOnly class:scrambleOnly class="timer-tab w-full h-full { (timerOnly || scrambleOnly) ? 'mt-8' : '' }"
+  class:smart_cube={ $session.settings.input === 'GAN Cube' }>
+  <!-- <div style="grid-area: timer;" class="bg-red-500"></div> -->
+  <!-- <div style="grid-area: scramble;" class="bg-blue-500"></div> -->
+  <!-- <div style="grid-area: leftStats;" class="bg-green-500"></div> -->
+  <!-- <div style="grid-area: rightStats;" class="bg-green-500"></div> -->
+  <!-- <div style="grid-area: image;" class="bg-purple-500"></div> -->
+
+  <!-- Timer -->
+  <div id="timer" class="text-9xl grid place-items-center w-full h-full">
+    {#if $session?.settings?.input === 'Manual'}
+      <div id="manual-inp">
+        <div class="text-xl w-full text-center text-primary-300">{
+          timeStr.trim()
+            ? TIMER_DNF.test(timeStr)
+              ? timeStr.toUpperCase()
+              : timer(timerToMilli(+timeStr), true, true)
+            : "" }
+        </div>
+        <Input
+          bind:value={ timeStr } stopKeyupPropagation
+          on:UENTER={ addTimeString }
+          class="w-full max-md:w-[min(90%,20rem)] mx-auto h-36 text-center {
+            validTimeStr(timeStr) ? '' :  'border-red-400 border-2' }
+            focus-within:shadow-black"
+          inpClass="text-center"/>
+      </div>
+    {:else}
+      {#if $state === TimerState.RUNNING}
+        <span
+          class="timer text-gray-300 max-sm:text-7xl max-sm:[line-height:8rem]" in:scale class:ready={$ready}
+          hidden={$state === TimerState.RUNNING && !$session.settings.showElapsedTime}>
+            { timer($time, $decimals, false)}
+          </span>
+      {:else}
+        <div class="flex flex-col transition-all duration-200 mx-auto">
+          <span
+            class="timer text-gray-300 max-sm:text-7xl max-sm:[line-height:8rem]"
+            class:prevention={ $state === TimerState.PREVENTION } class:ready={$ready}>
+              { $state === TimerState.STOPPED ? sTimer($lastSolve, $decimals, false) : timer($time, $decimals, false)}
+            </span>
+
+            {#if !timerOnly && $state === TimerState.STOPPED }
+              <div class="flex justify-center w-full"
+                  class:show={$state === TimerState.STOPPED} transition:blur>
+                {#each solveControl.slice(Number(battle), solveControl.length) as control}
+                  <Tooltip class="cursor-pointer" position="top" text={ control.text }>
+                    <Button color="none" class="flex mx-1 w-5 h-5 p-0 { control.highlight($solves[0] || {}) ? 'text-red-500' : '' }"
+                      on:click={ control.handler }>
+                      <svelte:component this={control.icon} width="100%" height="100%"/>
+                    </Button>
+                  </Tooltip>
+                {/each}
+              </div>
+            {/if}
+        </div>
+      {/if}
+      
+      {#if $session.settings.sessionType === 'multi-step' && $state === TimerState.RUNNING }
+        <div class="step-progress w-[min(100%,30rem)] text-base" transition:scale>
+          <StepIndicator currentStep={ $currentStep } steps={ $session.settings.stepNames }/>
+        </div>
       {/if}
 
-      
-      <pre class="scramble-content"
-        class:hide={ $isRunning }
-        class:battle={ battle }>
-        
-        {#if inputMethod instanceof GANInput }
-          {#if $recoverySequence }
-            {"=> " + $recoverySequence}
+      {#if $session?.settings?.input === 'StackMat' || $session?.settings?.input === 'ExternalTimer' }
+        <span class="text-2xl flex gap-2 items-center">
+          { $localLang.TIMER.stackmatStatus }:
+          
+          <span class={ $stackmatStatus ? 'text-green-600' : 'text-red-600' }>
+            <svelte:component this={ $stackmatStatus ? WatchOnIcon : WatchOffIcon }/>
+          </span>
+
+          <br />
+        </span>
+      {/if}
+    {/if}
+
+    <span transition:blur
+      class="timer"
+      hidden={!($state === TimerState.RUNNING && !$session.settings.showElapsedTime)}>----</span>
+  </div>
+
+  <!-- Statistics -->
+  {#if !(battle || timerOnly || scrambleOnly) && ($cross || $xcross || $Ao5) }
+    <!-- Left Statistics -->
+    <div id="left-stats"
+      class="text-gray-400 transition-all duration-300 max-md:text-xs"
+      class:hide={ $isRunning }>
+
+      <table class="ml-3">
+        <tr class:better={$stats.best.better && $stats.counter.value > 0 && $stats.best.value > -1}>
+          <td>{ $localLang.TIMER.best }:</td>
+          {#if !$stats.best.value} <td>N/A</td> {/if}
+          {#if $stats.best.value} <td>{ timer($stats.best.value, true, true) }</td> {/if}
+        </tr>
+        <tr>
+          <td>{ $localLang.TIMER.worst }:</td>
+          {#if !$stats.worst.value} <td>N/A</td> {/if}
+          {#if $stats.worst.value} <td>{ timer($stats.worst.value, true, true) }</td> {/if}
+        </tr>
+        <tr class:better={$stats.avg.better && $stats.counter.value > 0}>
+          <td>{ $localLang.TIMER.average }:</td>
+          {#if !$stats.avg.value} <td>N/A</td> {/if}
+          {#if $stats.avg.value} <td>{ timer($stats.avg.value, true, true) }</td> {/if}
+        </tr>
+        <tr>
+          <td>{ $localLang.TIMER.deviation }:</td>
+          {#if !$stats.dev.value} <td>N/A</td> {/if}
+          {#if $stats.dev.value} <td>{ timer($stats.dev.value, true, true) }</td> {/if}
+        </tr>
+        <tr>
+          <td>{ $localLang.TIMER.count }:</td>
+          <td>{ $stats.count.value }</td>
+        </tr>
+        <tr class:better={$stats.Mo3.better && $stats.counter.value > 0 && $stats.Mo3.value > -1}>
+          <td>Mo3:</td>
+          {#if !($stats.Mo3.value > -1)} <td>N/A</td> {/if}
+          {#if ($stats.Mo3.value > -1)} <td>{ timer($stats.Mo3.value, true, true) }</td> {/if}
+        </tr>
+        <tr class:better={$stats.Ao5.better && $stats.counter.value > 0 && $stats.Ao5.value > -1}>
+          <td>Ao5:</td>
+          {#if !($stats.Ao5.value > -1)} <td>N/A</td> {/if}
+          {#if ($stats.Ao5.value > -1)} <td>{ timer($stats.Ao5.value, true, true) }</td> {/if}
+        </tr>
+      </table>
+    </div>
+
+    <!-- Right Statistics -->
+    <div id="right-stats"
+      class="text-gray-400 transition-all duration-300 max-md:text-xs"
+      class:hide={ $isRunning }>
+      <table class="mr-3">
+        {#each [ "Ao12", "Ao50", "Ao100", "Ao200", "Ao500", "Ao1k", "Ao2k" ] as stat}
+          <tr class:better={$stats[stat].better && $stats.counter.value > 0 && $stats[stat].value > -1}>
+            <td>{stat}:</td>
+            {#if !($stats[stat].value > -1)} <td>N/A</td> {/if}
+            {#if ($stats[stat].value > -1)} <td>{ timer($stats[stat].value, true, true) }</td> {/if}
+          </tr>
+        {/each}
+      </table>
+    </div>
+  {/if}
+
+  <!-- Image -->
+  <div id="preview-container" class:expanded={ prevExpanded } class={ prevExpanded ? '' : 'relative' }>
+    <!-- Cube3D -->
+    {#if $session?.settings?.input === 'GAN Cube'}
+      <section class="relative cube-3d">
+        <Simulator
+          class={ $bluetoothStatus ? "" : "z-0 opacity-20" }
+          selectedPuzzle={ 'icarry' }
+          enableDrag={ false }
+          enableKeyboard={ false }
+          gui={ false }
+          contained={ true }
+          showBackFace={ $session?.settings?.showBackFace }
+          bind:this={ simulator }
+        />
+        <svelte:component this={ BluetoothOffIcon } class={ $bluetoothStatus ? "hidden" : "absolute text-blue-500 animate-pulse"} width="100%" height="100%"/>
+      </section>
+    {:else if $session?.settings?.genImage || battle }
+      <button
+        class={`flex absolute items-center bottom-0 h-full max-w-[90%] left-1/2 translate-x-[-50%] mx-auto aspect-video z-10
+          justify-center transition-all duration-300 select-none` +
+            (prevExpanded ? " bg-black w-full max-w-none" : '')}
+        class:hide={ $isRunning || timerOnly }
+        on:click={() => {
+          prevExpanded = $preview ? !prevExpanded : false;
+          new Flip('#preview-container > button').flip({ duration: 200 });
+        }}>
+          {#if $preview.length === 0 }
+            <div class="bg-gray-700 w-full h-full rounded grid place-items-center animate-pulse">
+              <svg width="48" height="48" class="text-gray-200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" fill="currentColor" viewBox="0 0 640 512">
+                <path d="M480 80C480 35.82 515.8 0 560 0C604.2 0 640 35.82 640 80C640 124.2 604.2 160 560 160C515.8 160 480 124.2 480 80zM0 456.1C0 445.6 2.964 435.3 8.551 426.4L225.3 81.01C231.9 70.42 243.5 64 256 64C268.5 64 280.1 70.42 286.8 81.01L412.7 281.7L460.9 202.7C464.1 196.1 472.2 192 480 192C487.8 192 495 196.1 499.1 202.7L631.1 419.1C636.9 428.6 640 439.7 640 450.9C640 484.6 612.6 512 578.9 512H55.91C25.03 512 .0006 486.1 .0006 456.1L0 456.1z" />
+              </svg>
+            </div>
           {:else}
-            {#if $sequenceParts.length < 3 }
-              <TextPlaceholder size="xl" class="w-full" divClass="grid gap-2 place-items-center max-h-12 overflow-hidden animate-pulse"/>
-            {:else}
-              { $sequenceParts[0] } <mark>{ $sequenceParts[1] }</mark> { $sequenceParts[2] }
-            {/if}
-          {/if}
-        {:else} { $scramble ? $scramble : '' } {/if}
-      </pre>
-      
-      <!-- Options -->
-      {#if !scrambleOnly }
-        <div class={`absolute md:top-1 md:right-4 md:w-[2rem] md:items-center flex md:flex-col
-          max-md:left-1/2 max-md:-translate-x-[50%] max-md:w-max bg-white bg-opacity-10 rounded-md ` + (
-            $session.settings.input === 'GAN Cube' ? "top-[4rem] " : "max-md:top-[min(11rem,24vh)]"
-          )
-          } class:hide={ $isRunning }>
-          {#each options.filter((e, p) => !battle ? true : p === 3 || p === 5) as option, i}
-            {#if !$screen.isMobile}
-              <Tooltip class="cursor-pointer" position="left" text={ option.text } hasKeybinding>
-                <Button aria-label={ option.text } color="none" class="my-3 mx-1 w-5 h-5 p-0"
-                  on:click={ option.handler } on:keydown={ (e) => e.code === 'Space' ? e.preventDefault() : null }>
-                  <svelte:component this={option.icon} width="100%" height="100%" class="pointer-events-none"/>
-                </Button>
-              </Tooltip>
-            {:else}
-              <Button aria-label={ option.text } color="none" class="my-3 mx-2 w-5 h-5 p-0"
-                on:click={ option.handler } on:keydown={ (e) => e.code === 'Space' ? e.preventDefault() : null }>
-                <svelte:component this={option.icon} width="100%" height="100%" />
+            <div class="w-full h-full flex items-center justify-center relative">
+              {#if $preview.length > 1}
+                <span class="absolute top-[-1.5rem] transition-all" out:blur>
+                  {$localLang.global.scramble} {selectedImg + 1} / { $preview.length }
+                </span>
+              {/if}
+
+              <Button color="none" on:click={ (ev) => step(ev, -1) } disabled={ selectedImg === 0 }
+                class={"rounded-full w-[3rem] h-[3rem] " + ($preview.length < 2 ? 'hidden' : '')}>
+                <ChevronLeftSolid class="pointer-events-none"/>
               </Button>
-            {/if}
-          {/each}
 
-          {#if $screen.isMobile}
-            <Button color="none" on:click={ editSessions } class="cursor-pointer p-2"><TuneIcon size="1.2rem"/> </Button>
+              <img on:dragstart|preventDefault src={ $preview[selectedImg].src } alt=""
+                class="transition-all duration-300 cursor-pointer h-full w-full object-contain">
+
+              <Button color="none" on:click={ (ev) => step(ev, 1) } disabled={ selectedImg + 1 === $preview.length }
+                class={"rounded-full w-[3rem] h-[3rem] " + ($preview.length < 2 ? 'hidden' : '')}>
+                <ChevronRightSolid class="pointer-events-none"/>
+              </Button>
+            </div>
           {/if}
+      </button>
+    {/if}
+  </div>
 
-          {#if $session?.settings?.input === 'GAN Cube'}
-            {#if !$screen.isMobile}
-              <Tooltip position="left" text="GAN Cube">
-                <Button aria-label={ 'GAN Cube' } color="none" class="my-3 mx-1 w-5 h-5 p-0 { $bluetoothStatus ? 'text-blue-500' : 'text-gray-400' }"
-                  on:click={ showBluetoothData } on:keydown={ (e) => e.code === 'Space' ? e.preventDefault() : null }>
-                  <svelte:component this={ $bluetoothStatus ? BluetoothOnIcon : BluetoothOffIcon } width="100%" height="100%"/>
-                </Button>
-              </Tooltip>
-            {:else}
-              <Button aria-label={ 'GAN Cube' } color="none" class="my-3 mx-1 w-5 h-5 p-0 { $bluetoothStatus ? 'text-blue-600' : 'text-gray-400' }"
+  <!-- Scramble -->
+  <div id="scramble" class="transition-all duration-300 max-md:text-xs max-md:leading-5">
+    <pre class="scramble-content"
+      class:hide={ $isRunning }
+      class:battle={ battle }>
+      
+      {#if inputMethod instanceof GANInput }
+        {#if $recoverySequence }
+          {"=> " + $recoverySequence}
+        {:else}
+          {#if $sequenceParts.length < 3 }
+            <TextPlaceholder size="xl" class="w-full" divClass="grid gap-2 place-items-center max-h-12 overflow-hidden animate-pulse"/>
+          {:else}
+            { $sequenceParts[0] } <mark>{ $sequenceParts[1] }</mark> { $sequenceParts[2] }
+          {/if}
+        {/if}
+      {:else}
+        {#if !$scramble}
+          <TextPlaceholder size="xl" class="w-full" divClass="grid gap-2 place-items-center max-h-12 overflow-hidden animate-pulse"/>
+        {:else}
+          { $scramble }
+        {/if}
+      {/if}
+    </pre>
+
+    <!-- Options -->
+    {#if !scrambleOnly }
+      <div class={`absolute md:top-1 md:right-4 md:w-[2rem] md:items-center flex md:flex-col
+        max-md:left-1/2 max-md:-translate-x-[50%] max-md:w-max bg-white bg-opacity-10 rounded-md ` + (
+          $session.settings.input === 'GAN Cube' ? "top-[4rem] " : "max-md:top-[min(11rem,24vh)]"
+        )
+        } class:hide={ $isRunning }>
+        {#each options.filter((e, p) => !battle ? true : p === 3 || p === 5) as option, i}
+          {#if !$screen.isMobile}
+            <Tooltip class="cursor-pointer" position="left" text={ option.text } hasKeybinding>
+              <Button aria-label={ option.text } color="none" class="my-3 mx-1 w-5 h-5 p-0"
+                on:click={ option.handler } on:keydown={ (e) => e.code === 'Space' ? e.preventDefault() : null }>
+                <svelte:component this={option.icon} width="100%" height="100%" class="pointer-events-none"/>
+              </Button>
+            </Tooltip>
+          {:else}
+            <Button aria-label={ option.text } color="none" class="my-3 mx-2 w-5 h-5 p-0"
+              on:click={ option.handler } on:keydown={ (e) => e.code === 'Space' ? e.preventDefault() : null }>
+              <svelte:component this={option.icon} width="100%" height="100%" />
+            </Button>
+          {/if}
+        {/each}
+
+        {#if $screen.isMobile}
+          <Button color="none" on:click={ editSessions } class="cursor-pointer p-2"><TuneIcon size="1.2rem"/> </Button>
+        {/if}
+
+        {#if $session?.settings?.input === 'GAN Cube'}
+          {#if !$screen.isMobile}
+            <Tooltip position="left" text="GAN Cube">
+              <Button aria-label={ 'GAN Cube' } color="none" class="my-3 mx-1 w-5 h-5 p-0 { $bluetoothStatus ? 'text-blue-500' : 'text-gray-400' }"
                 on:click={ showBluetoothData } on:keydown={ (e) => e.code === 'Space' ? e.preventDefault() : null }>
                 <svelte:component this={ $bluetoothStatus ? BluetoothOnIcon : BluetoothOffIcon } width="100%" height="100%"/>
               </Button>
-            {/if}
+            </Tooltip>
+          {:else}
+            <Button aria-label={ 'GAN Cube' } color="none" class="my-3 mx-1 w-5 h-5 p-0 { $bluetoothStatus ? 'text-blue-600' : 'text-gray-400' }"
+              on:click={ showBluetoothData } on:keydown={ (e) => e.code === 'Space' ? e.preventDefault() : null }>
+              <svelte:component this={ $bluetoothStatus ? BluetoothOnIcon : BluetoothOffIcon } width="100%" height="100%"/>
+            </Button>
           {/if}
-        </div>
-      {/if}
-    </div>
-
-    <!-- Notes -->
-    <!-- {#if showNotes && !battle}
-      <div id="notes" class="fixed z-10 w-56 h-56 bg-violet-400 rounded-md" style="
-        --left: { notesL }px;
-        --top: { notesT }px;
-        --width: { notesW }px;
-        --height: calc({ notesH }px + 1.5rem);
-      ">
-        <! -- svelte-ignore a11y-no-static-element-interactions - ->
-        <div class="relative w-full h-6 cursor-move flex items-center" on:mousedown={ handleMouseDown }>
-          <button class="ml-auto mr-2 cursor-pointer text-gray-700" on:click={ () => showNotes = false }>
-            <Close width="1.2rem" height="1.2rem"/>
-          </button>
-        </div>
-        <TextArea bind:value={ noteContent } cClass="w-full h-full" class="bg-gray-600 text-gray-300 p-4"></TextArea>
+        {/if}
       </div>
-    {/if} -->
-  {:else}
-    <div class="absolute top-1/3 right-12 flex flex-col" class:hide={ $isRunning }>
-      {#each options.filter((e, p) => p === 5) as option}
-        <Tooltip position="left" text={ option.text }>
-          <Button aria-label={ option.text } color="none" class="my-3 mx-1 w-5 h-5 p-0 text-gray-400"
-            on:click={ option.handler } on:keydown={ (e) => e.code === 'Space' ? e.preventDefault() : null }>
-            <svelte:component this={option.icon} width="100%" height="100%"/>
-          </Button>
-        </Tooltip>
-      {/each}
-    </div>
-  {/if}
-
-  <!-- Timer -->
-  {#if !scrambleOnly}
-    <div id="timer" class={ "absolute text-9xl flex flex-col items-center justify-center " + 
-      ($session?.settings?.input === 'GAN Cube'
-        ? ( $state === TimerState.RUNNING ? ' bottom-16' : ' bottom-4' ) + ' h-auto'
-        : 'top-[40%] h-32'
-      ) }>
-
-      <!-- Cube3D -->
-      {#if $session?.settings?.input === 'GAN Cube'}
-        <section class="relative cube-3d">
-          <Simulator
-            selectedPuzzle={ 'icarry' }
-            enableDrag={ false }
-            enableKeyboard={ false }
-            gui={ false }
-            contained={ true }
-            showBackFace={ $session?.settings?.showBackFace }
-            bind:this={ simulator }
-          />
-        </section>
-      {/if}
-
-      {#if $session?.settings?.input === 'Manual'}
-        <div id="manual-inp">
-          <Input
-            bind:value={ timeStr } stopKeyupPropagation
-            on:UENTER={ addTimeString }
-            class="w-full max-md:w-[min(90%,20rem)] mx-auto h-36 text-center mt-16 {
-              validTimeStr(timeStr) ? '' :  'border-red-400 border-2' }
-              focus-within:shadow-black"
-            inpClass="text-center"/>
-        </div>
-      {:else}
-        {#if $state === TimerState.RUNNING}
-          <span
-            class="timer text-gray-300 max-sm:text-7xl max-sm:[line-height:8rem]" in:scale class:ready={$ready}
-            hidden={$state === TimerState.RUNNING && !$session.settings.showElapsedTime}>
-              { timer($time, $decimals, false)}
-            </span>
-        {:else}
-          <div class="transition-all duration-200">
-            <span
-              class="timer text-gray-300 max-sm:text-7xl max-sm:[line-height:8rem]"
-              class:prevention={ $state === TimerState.PREVENTION } class:ready={$ready}>
-                { $state === TimerState.STOPPED ? sTimer($lastSolve, $decimals, false) : timer($time, $decimals, false)}
-              </span>
-  
-              {#if !timerOnly && $state === TimerState.STOPPED}
-                <div class={"flex justify-center w-full " + ( $session.settings.input === 'GAN Cube' ? '-my-4' : '' ) }
-                    class:show={$state === TimerState.STOPPED} transition:blur>
-                  {#each solveControl.slice(Number(battle), solveControl.length) as control}
-                    <Tooltip class="cursor-pointer" position="top" text={ control.text }>
-                      <Button color="none" class="flex my-3 mx-1 w-5 h-5 p-0 { control.highlight($solves[0] || {}) ? 'text-red-500' : '' }"
-                        on:click={ control.handler }>
-                        <svelte:component this={control.icon} width="100%" height="100%"/>
-                      </Button>
-                    </Tooltip>
-                  {/each}
-                </div>
-              {/if}
-          </div>
-        {/if}
-        
-        {#if $session.settings.sessionType === 'multi-step' && $state === TimerState.RUNNING }
-          <div class="step-progress w-[min(100%,30rem)] text-base" transition:scale>
-            <StepIndicator currentStep={ $currentStep } steps={ $session.settings.stepNames }/>
-          </div>
-        {/if}
-
-        {#if $session?.settings?.input === 'StackMat' || $session?.settings?.input === 'ExternalTimer' }
-          <span class="text-2xl flex gap-2 items-center">
-            { $localLang.TIMER.stackmatStatus }:
-            
-            <span class={ $stackmatStatus ? 'text-green-600' : 'text-red-600' }>
-              <svelte:component this={ $stackmatStatus ? WatchOnIcon : WatchOffIcon }/>
-            </span>
-
-            <br />
-          </span>
-        {/if}
-      {/if}
-
-      <span transition:blur
-        class="timer"
-        hidden={!($state === TimerState.RUNNING && !$session.settings.showElapsedTime)}>----</span>
-    </div>
-  {/if}
+    {/if}
+  </div>
 
   <!-- Hints -->
   {#if !(battle || timerOnly || scrambleOnly) && ($cross || $xcross || $Ao5) }
     <div id="hints"
-      class="bg-backgroundLv1 w-max p-2 text-gray-400 rounded-md
-        shadow-md absolute select-none left-0 max-md:hidden md:top-1/4 transition-all duration-1000"
+      class="bg-backgroundLv1 w-max p-2 text-gray-400 rounded-md flex items-center
+      shadow-md absolute select-none left-0 max-md:hidden md:top-1/4 transition-all duration-1000"
       class:isVisible={$hintDialog && !$isRunning}>
 
       <table class="inline-block align-middle transition-all duration-300" class:nshow={!$hint}>
@@ -866,102 +982,6 @@
         <LightBulb width="100%" height="100%"/>
       </button>
     </div>
-
-    <!-- Statistics -->
-    <div id="statistics"
-      class="text-gray-400 pointer-events-none transition-all duration-300 max-md:text-xs"
-      class:hide={ $isRunning }>
-
-      <div class="left absolute select-none bottom-0 left-0 ">
-        <table class="ml-3">
-          <tr class:better={$stats.best.better && $stats.counter.value > 0 && $stats.best.value > -1}>
-            <td>{ $localLang.TIMER.best }:</td>
-            {#if !$stats.best.value} <td>N/A</td> {/if}
-            {#if $stats.best.value} <td>{ timer($stats.best.value, true, true) }</td> {/if}
-          </tr>
-          <tr>
-            <td>{ $localLang.TIMER.worst }:</td>
-            {#if !$stats.worst.value} <td>N/A</td> {/if}
-            {#if $stats.worst.value} <td>{ timer($stats.worst.value, true, true) }</td> {/if}
-          </tr>
-          <tr class:better={$stats.avg.better && $stats.counter.value > 0}>
-            <td>{ $localLang.TIMER.average }:</td>
-            {#if !$stats.avg.value} <td>N/A</td> {/if}
-            {#if $stats.avg.value} <td>{ timer($stats.avg.value, true, true) }</td> {/if}
-          </tr>
-          <tr>
-            <td>{ $localLang.TIMER.deviation }:</td>
-            {#if !$stats.dev.value} <td>N/A</td> {/if}
-            {#if $stats.dev.value} <td>{ timer($stats.dev.value, true, true) }</td> {/if}
-          </tr>
-          <tr>
-            <td>{ $localLang.TIMER.count }:</td>
-            <td>{ $stats.count.value }</td>
-          </tr>
-          <tr class:better={$stats.Mo3.better && $stats.counter.value > 0 && $stats.Mo3.value > -1}>
-            <td>Mo3:</td>
-            {#if !($stats.Mo3.value > -1)} <td>N/A</td> {/if}
-            {#if ($stats.Mo3.value > -1)} <td>{ timer($stats.Mo3.value, true, true) }</td> {/if}
-          </tr>
-          <tr class:better={$stats.Ao5.better && $stats.counter.value > 0 && $stats.Ao5.value > -1}>
-            <td>Ao5:</td>
-            {#if !($stats.Ao5.value > -1)} <td>N/A</td> {/if}
-            {#if ($stats.Ao5.value > -1)} <td>{ timer($stats.Ao5.value, true, true) }</td> {/if}
-          </tr>
-        </table>
-      </div>
-      <div class="right absolute select-none bottom-0 right-0">
-        <table class="mr-3">
-          {#each [ "Ao12", "Ao50", "Ao100", "Ao200", "Ao500", "Ao1k", "Ao2k" ] as stat}
-            <tr class:better={$stats[stat].better && $stats.counter.value > 0 && $stats[stat].value > -1}>
-              <td>{stat}:</td>
-              {#if !($stats[stat].value > -1)} <td>N/A</td> {/if}
-              {#if ($stats[stat].value > -1)} <td>{ timer($stats[stat].value, true, true) }</td> {/if}
-            </tr>
-          {/each}
-        </table>
-      </div>
-    </div>
-  {/if}
-
-  <!-- Image -->
-  {#if $session?.settings?.genImage || battle }
-    <button
-      id="preview-container"
-      class="absolute bottom-2 flex items-center justify-center sm:w-[20rem] w-[calc(100%-14rem)]
-        h-[9rem] md:h-[12rem] transition-all duration-300 select-none left-1/2 translate-x-[calc(-50%+1rem)]"
-      class:expanded={ prevExpanded }
-      class:hide={ $isRunning || $session.settings.input === 'GAN Cube' || timerOnly }
-      on:click={() => prevExpanded = $preview ? !prevExpanded : false }>
-        {#if $preview.length === 0 }
-          <div class="bg-gray-700 w-full h-full rounded grid place-items-center animate-pulse">
-            <svg width="48" height="48" class="text-gray-200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" fill="currentColor" viewBox="0 0 640 512">
-              <path d="M480 80C480 35.82 515.8 0 560 0C604.2 0 640 35.82 640 80C640 124.2 604.2 160 560 160C515.8 160 480 124.2 480 80zM0 456.1C0 445.6 2.964 435.3 8.551 426.4L225.3 81.01C231.9 70.42 243.5 64 256 64C268.5 64 280.1 70.42 286.8 81.01L412.7 281.7L460.9 202.7C464.1 196.1 472.2 192 480 192C487.8 192 495 196.1 499.1 202.7L631.1 419.1C636.9 428.6 640 439.7 640 450.9C640 484.6 612.6 512 578.9 512H55.91C25.03 512 .0006 486.1 .0006 456.1L0 456.1z" />
-            </svg>
-          </div>
-        {:else}
-          <div class="w-full h-full flex items-center justify-center relative">
-            {#if $preview.length > 1}
-              <span class="absolute top-[-1.5rem] transition-all" out:blur>
-                {$localLang.global.scramble} {selectedImg + 1} / { $preview.length }
-              </span>
-            {/if}
-
-            <Button color="none" on:click={ (ev) => step(ev, -1) } disabled={ selectedImg === 0 }
-              class={"rounded-full w-[3rem] h-[3rem] " + ($preview.length < 2 ? 'hidden' : '')}>
-              <ChevronLeftSolid class="pointer-events-none"/>
-            </Button>
-  
-            <img on:dragstart|preventDefault src={ $preview[selectedImg].src } alt=""
-              class="transition-all duration-300 cursor-pointer h-full w-full object-contain">
-
-            <Button color="none" on:click={ (ev) => step(ev, 1) } disabled={ selectedImg + 1 === $preview.length }
-              class={"rounded-full w-[3rem] h-[3rem] " + ($preview.length < 2 ? 'hidden' : '')}>
-              <ChevronRightSolid class="pointer-events-none"/>
-            </Button>
-          </div>
-        {/if}
-    </button>
   {/if}
 </div>
 
@@ -1140,6 +1160,11 @@
   </svelte:fragment>
 </Modal>
 
+<!-- Result -->
+<Modal open={reconstructor.length > 0} on:close={() => reconstructor.length = 0}>
+  <Reconstructor {reconstructor} {lastSolve}/>
+</Modal>
+
 <style lang="postcss">
   @keyframes bump {
     0% {
@@ -1153,20 +1178,42 @@
     }
   }
   
+  .timer-tab {
+    display: grid;
+    height: 100%;
+    grid-template-columns: auto 1fr auto;
+    grid-template-rows: minmax(0rem, 1fr) 1fr min-content;
+    grid-template-areas:
+      "scramble scramble scramble"
+      "timer timer timer"
+      "leftStats image rightStats";
+  }
+
+  .timer-tab.smart_cube {
+    grid-template-areas:
+      "scramble scramble scramble"
+      "image image image"
+      "leftStats timer rightStats";
+  }
+
+  #left-stats {
+    grid-area: leftStats;
+  }
+
+  #right-stats {
+    grid-area: rightStats;
+  }
+
   #scramble {
-    @apply grid place-items-center;
+    @apply grid h-full;
+    grid-area: scramble;
   }
 
   #scramble .scramble-content {
-    @apply md:ml-16 md:mr-10 mx-4 inline-block text-center md:w-[calc(100%-15rem)]
-      max-md:max-h-[min(10rem,21vh)] md:max-h-[16rem] lg:text-xl md:text-lg sm:text-sm text-xs;
+    @apply max-w-[calc(100%-2rem)] md:w-[min(calc(100%-10rem),50rem)] mx-auto break-words whitespace-pre-wrap
+      flex text-left justify-center items-baseline h-[min(100%,15rem)];
     line-height: 1.3;
     overflow: hidden auto;
-    overflow-wrap: break-word;
-    white-space: pre-wrap;
-    display: flex;
-    text-align: left;
-    justify-content: center;
   }
 
   #scramble .scramble-content.battle {
@@ -1174,26 +1221,17 @@
     max-height: 9rem;
   }
 
+  #scramble .scramble-content mark {
+    @apply mr-2;
+  }
+
   #timer {
-    width: max-content;
-    margin-left: 50%;
-    transform: translateX(-50%);
+    grid-area: timer;
   }
 
   #manual-inp {
     width: 30rem;
   }
-
-  /* #notes {
-    left: var(--left, 0px);
-    top: var(--top, 0px);
-    width: var(--width, 100px);
-    height: var(--height, 100px);
-    display: grid;
-    grid-template-rows: 1.5rem 1fr;
-    resize: both;
-    overflow: hidden;
-  } */
 
   table.nshow {
     margin: 0;
@@ -1218,13 +1256,9 @@
     @apply ml-0 text-amber-300;
   }
 
-  #statistics tr.better {
+  #left-stats tr.better, #right-stats tr.better {
     text-decoration: underline;
     font-weight: bold;
-  }
-
-  .left table, .right table {
-    @apply p-0 mb-4;
   }
 
   .timer {
@@ -1242,21 +1276,8 @@
   }
 
   #preview-container {
-    transition: all 400ms cubic-bezier(0.88, 0.33, 0.32, 1.19);
-    transition-timing-function: cubic-bezier(0.88, 0.33, 0.32, 1.19);
-  }
-
-  #preview-container.expanded {
-    height: 100%;
-    background-color: rgba(0, 0, 0, 1);
-  }
-
-  .scrambleOnly #preview-container.expanded {
-    height: calc(100% - 4rem);
-  }
-
-  #preview-container.expanded {
-    @apply w-full translate-x-[-50%] pt-4;
+    @apply mx-auto w-full;
+    grid-area: image;
   }
 
   .hide {
@@ -1264,9 +1285,9 @@
   }
 
   .cube-3d {
-    @apply bg-white bg-opacity-20 overflow-hidden shadow-md rounded-md
+    @apply bg-white bg-opacity-20 overflow-hidden shadow-md rounded-md mx-auto
     w-[calc(100vw-20rem)] max-md:w-[calc(100vw-3rem)]
-    h-[calc(100vh-23rem)] max-md:h-[calc(100vh-25rem)];
+    h-[45vh] max-md:h-[calc(100vh-25rem)];
     
     /* height: calc(100vh - 25rem); */
   }
