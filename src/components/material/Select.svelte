@@ -1,21 +1,26 @@
 <script lang="ts">
   import WcaCategory from '@components/wca/WCACategory.svelte';
-  import { minmax } from '@helpers/math';
+  import { weakRandomUUID } from '@helpers/strings';
   import ExpandIcon from '@icons/ChevronDown.svelte';
   
   import { Button, Dropdown, DropdownDivider, DropdownItem } from "flowbite-svelte";
+
+  type Side = 'top' | 'right' | 'bottom' | 'left';
+  type Alignment = 'start' | 'end';
+  type Placement = `${Side}-${Alignment}`;
 
   let cl = '';
   export { cl as class };
   export let placeholder: string = '';
   export let value: any = placeholder;
   export let items: any[];
-  export let onChange = (item?: any, pos?: number, arr?: any[]) => {};
+  export let onChange = (item: any, pos: number, arr: any[]) => {};
   export let label = (item?: any) => (item || "");
   export let transform = (item: any, pos?: number, arr?: any[]) => item.value;
   export let hasIcon: null | ((v: any) => any) = null;
+  export let placement: Side | Placement = 'bottom';
 
-  const selectID = "00000000".split("").map(_ => (10 + minmax(~~(Math.random() * 6), 0, 5)).toString(16)).join('');
+  const selectID = 's' + weakRandomUUID().replace(/-/g, '');
 
   let showOptions = false;
   // let optionList: HTMLDivElement;
@@ -51,7 +56,7 @@
   <ExpandIcon size="1.2rem" class="ml-auto"/>
 </Button>
 
-<Dropdown bind:open={ showOptions } id={ selectID } class="max-h-[20rem] overflow-y-scroll">
+<Dropdown bind:open={ showOptions } id={ selectID } class="max-h-[20rem] overflow-y-scroll" {placement}>
   {#each items as item, pos}
     {#if pos} <DropdownDivider /> {/if}
     

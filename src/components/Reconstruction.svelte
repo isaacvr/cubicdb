@@ -8,13 +8,23 @@
   import Checkbox from "./material/Checkbox.svelte";
   import type { Language, PuzzleType, Scrambler } from "@interfaces";
   import { navigate, useLocation } from "svelte-routing";
-  import { parseReconstruction } from "@helpers/strings";
-  import _recs from '../database/reconstructions.json';
+  import { copyToClipboard, parseReconstruction, randomUUID } from "@helpers/strings";
+  import _recs from "../database/reconstructions.json";
   import Input from "./material/Input.svelte";
   import { errorIndex } from "./ReconstructionC";
-  import { ArrowKeyLeft, ArrowKeyRight, Button, Dropdown, DropdownItem, Kbd, Modal, Range, Tooltip } from "flowbite-svelte";
+  import {
+    ArrowKeyLeft,
+    ArrowKeyRight,
+    Button,
+    Dropdown,
+    DropdownItem,
+    Kbd,
+    Modal,
+    Range,
+    Tooltip,
+  } from "flowbite-svelte";
   import { screen } from "@stores/screen.store";
-  
+
   // ICONS
   import RestartIcon from "@icons/Restart.svelte";
   import PauseIcon from "@icons/Pause.svelte";
@@ -22,36 +32,40 @@
   import StepForwardIcon from "@icons/ChevronRight.svelte";
   import BackIcon from "@icons/History.svelte";
   import SearchIcon from "@icons/SearchWeb.svelte";
-  import ChevronLeft from '@icons/ChevronLeft.svelte';
+  import ChevronLeft from "@icons/ChevronLeft.svelte";
+  import CopyIcon from "@icons/ClipboardOutline.svelte";
   import WcaCategory from "./wca/WCACategory.svelte";
   import { localLang } from "@stores/language.service";
-  
+  import { NotificationService } from "@stores/notification.service";
+  import { CubeDBICON } from "@constants";
+
   let recs: any[] = [];
 
-  import('../database/reconstructions.json').then(res => {
+  import("../database/reconstructions.json").then(res => {
     recs = (res.default || []).slice(0, 4300).filter(r => errorIndex.indexOf(r.id) < 0);
-  })
+  });
   let recIndex = 0;
   let showRecSearch = false;
-  let recSearch = '';
+  let recSearch = "";
 
   const location = useLocation();
 
   const iconSize = "1.3rem";
-  const PUZZLES: { puzzle: PuzzleType; name: string; order: number, scrambler: Scrambler | '' }[] = [
-    // { puzzle: "helicopter", name: "Helicopter", order: -1, scrambler: '' },       // 0
-    { puzzle: "rubik", name: "2x2x2", order: 2, scrambler: '222so' },       // 0
-    { puzzle: "rubik", name: "3x3x3", order: 3, scrambler: '333' },         // 1
-    { puzzle: "rubik", name: "4x4x4", order: 4, scrambler: '444wca' },      // 2
-    { puzzle: "rubik", name: "5x5x5", order: 5, scrambler: '555wca' },      // 3
-    { puzzle: "rubik", name: "6x6x6", order: 6, scrambler: '666wca' },      // 4
-    { puzzle: "rubik", name: "7x7x7", order: 7, scrambler: '777wca' },      // 5
-    { puzzle: "rubik", name: "8x8x8", order: 8, scrambler: '' },            // 6
-    { puzzle: "square1", name: "Square-1", order: -1, scrambler: 'sqrs' },  // 7
-    { puzzle: "pyraminx", name: "Pyraminx", order: 3, scrambler: 'pyrso' }, // 8
-    { puzzle: "skewb", name: "Skewb", order: -1, scrambler: 'skbso' },      // 9
-    { puzzle: "megaminx", name: "Megaminx", order: 3, scrambler: 'mgmp' },  // 10
-  ];
+  const PUZZLES: { puzzle: PuzzleType; name: string; order: number; scrambler: Scrambler | "" }[] =
+    [
+      // { puzzle: "helicopter", name: "Helicopter", order: -1, scrambler: '' },       // 0
+      { puzzle: "rubik", name: "2x2x2", order: 2, scrambler: "222so" }, // 0
+      { puzzle: "rubik", name: "3x3x3", order: 3, scrambler: "333" }, // 1
+      { puzzle: "rubik", name: "4x4x4", order: 4, scrambler: "444wca" }, // 2
+      { puzzle: "rubik", name: "5x5x5", order: 5, scrambler: "555wca" }, // 3
+      { puzzle: "rubik", name: "6x6x6", order: 6, scrambler: "666wca" }, // 4
+      { puzzle: "rubik", name: "7x7x7", order: 7, scrambler: "777wca" }, // 5
+      { puzzle: "rubik", name: "8x8x8", order: 8, scrambler: "" }, // 6
+      { puzzle: "square1", name: "Square-1", order: -1, scrambler: "sqrs" }, // 7
+      { puzzle: "pyraminx", name: "Pyraminx", order: 3, scrambler: "pyrso" }, // 8
+      { puzzle: "skewb", name: "Skewb", order: -1, scrambler: "skbso" }, // 9
+      { puzzle: "megaminx", name: "Megaminx", order: 3, scrambler: "mgmp" }, // 10
+    ];
 
   let puzzle = PUZZLES[0];
 
@@ -82,15 +96,18 @@
   let puzzleOpen = false;
 
   function isSameArray(a: any[], b: any[]): boolean {
-    if ( a.length != b.length ) return false;
+    if (a.length != b.length) return false;
     return a.every((e, i) => e === b[i]);
   }
 
   function parse(s: string, saveResult = false) {
     let rec = parseReconstruction(s, puzzle.puzzle, puzzle.order);
 
-    if ( saveResult ) {
-      if ( (isSameArray(sequence, rec.sequence) && isSameArray(sequenceIndex, rec.sequenceIndex)) || rec.hasError ) {
+    if (saveResult) {
+      if (
+        (isSameArray(sequence, rec.sequence) && isSameArray(sequenceIndex, rec.sequenceIndex)) ||
+        rec.hasError
+      ) {
         return rec.result;
       }
 
@@ -112,7 +129,7 @@
       initTime,
       finalTime,
       map(dir, -1, 1, finalAlpha, initAlpha),
-      map(dir, -1, 1, initAlpha, finalAlpha),
+      map(dir, -1, 1, initAlpha, finalAlpha)
     );
 
     if (limit >= 0) {
@@ -163,10 +180,8 @@
     let id = sequenceIndex[~~a];
 
     if (lastId != id && id >= initAlpha && id < finalAlpha) {
-      let allMoves = rTextarea
-        .getContentEdit()
-        .querySelectorAll(".move:not(.silent)");
-      allMoves.forEach((mv) => mv.classList.remove("current"));
+      let allMoves = rTextarea.getContentEdit().querySelectorAll(".move:not(.silent)");
+      allMoves.forEach(mv => mv.classList.remove("current"));
       allMoves[id].classList.add("current");
       drawerOpen && allMoves[id].scrollIntoView({ block: "nearest" });
       lastId = id;
@@ -253,19 +268,21 @@
     puzzle = PUZZLES[1];
     scramble = ``;
     reconstruction = ``;
-
   }
 
   function setRecIndex() {
-    for (let i = 0, maxi = recs.length; i < maxi; i += 1){
-      if ( recs[i].id != recIndex ) continue;
+    for (let i = 0, maxi = recs.length; i < maxi; i += 1) {
+      if (recs[i].id != recIndex) continue;
 
       title = recs[i].title;
       scramble = recs[i].scramble;
       reconstruction = recs[i].solution;
-  
+
       for (let j = 0, maxj = PUZZLES.length; j < maxj; j += 1) {
-        if ( title.indexOf( PUZZLES[j].name ) > -1 || title.indexOf( PUZZLES[j].name.slice(0, 3) ) > -1 ){
+        if (
+          title.indexOf(PUZZLES[j].name) > -1 ||
+          title.indexOf(PUZZLES[j].name.slice(0, 3)) > -1
+        ) {
           puzzle = PUZZLES[j];
         }
       }
@@ -291,13 +308,36 @@
   // }
 
   function findReconstructions(inp: string) {
-    if ( !inp.trim() ) return [];
+    if (!inp.trim()) return [];
 
     let parts = inp.split(/\s+/g).map(s => s.toLowerCase());
 
-    return recs.filter((r) => {
+    return recs.filter(r => {
       let t = r.title.toLowerCase();
-      return parts.every(p => t.includes( p ));
+      return parts.every(p => t.includes(p));
+    });
+  }
+
+  function copyReconstruction() {
+    let rec = `https://cubedb.netlify.app/reconstructions?puzzle=${
+      puzzle.puzzle
+    }&order=${
+      puzzle.order
+    }&scramble=${
+      encodeURIComponent(scramble)
+    }&reconstruction=${
+      encodeURIComponent(reconstruction)
+    }`;
+
+    copyToClipboard(rec).then(() => {
+      NotificationService.getInstance().addNotification({
+        key: randomUUID(),
+        header: $localLang.global.done,
+        text: $localLang.global.copiedToClipboard,
+        icon: CubeDBICON,
+        fixed: false,
+        timeout: 1000,
+      });
     });
   }
 
@@ -328,29 +368,30 @@
     />
 
     <div class="grid bg-gray-600 h-[4rem] absolute bottom-0 w-full">
-      <button class="flex px-3 py-2" on:mousedown={ pause }>
-        <Range
-          bind:value={sequenceAlpha}
-          min={initAlpha}
-          max={finalAlpha}
-          step="0.025"
-        />
+      <button class="flex px-3 py-2" on:mousedown={pause}>
+        <Range bind:value={sequenceAlpha} min={initAlpha} max={finalAlpha} step="0.025" />
       </button>
 
       <div class="flex justify-evenly">
-        <Button color="none" class="w-full h-full rounded-none shadow-none hover:bg-purple-600"
-          on:click={() => step(-1)} >
+        <Button
+          color="none"
+          class="w-full h-full rounded-none shadow-none hover:bg-purple-600"
+          on:click={() => step(-1)}
+        >
           <StepBackIcon size={iconSize} />
         </Button>
-        
+
         <Tooltip placement="top" class="flex items-center justify-center gap-2">
-          { $localLang.RECONSTRUCTIONS.stepBack }
+          {$localLang.RECONSTRUCTIONS.stepBack}
           <span class="text-yellow-500 flex items-center gap-2">
-            [Ctrl + <Kbd class="inline-flex items-center -ml-1 -mr-3 p-1 scale-75"><ArrowKeyLeft /></Kbd>]
+            [Ctrl + <Kbd class="inline-flex items-center -ml-1 -mr-3 p-1 scale-75"
+              ><ArrowKeyLeft /></Kbd
+            >]
           </span>
         </Tooltip>
 
-        <Button color="none"
+        <Button
+          color="none"
           class="w-full h-full rounded-none shadow-none hover:bg-green-600"
           on:click={handlePlay}
         >
@@ -363,112 +404,129 @@
           {/if}
         </Button>
         <Tooltip placement="top" class="flex items-center justify-center gap-2">
-          { $localLang.RECONSTRUCTIONS.playPause }
-          <span class="text-yellow-500 flex items-center gap-2">
-            [Ctrl + P]
-          </span>
+          {$localLang.RECONSTRUCTIONS.playPause}
+          <span class="text-yellow-500 flex items-center gap-2"> [Ctrl + P] </span>
         </Tooltip>
 
-        <Button color="none"
+        <Button
+          color="none"
           class="w-full h-full rounded-none shadow-none hover:bg-purple-600"
           on:click={() => step(1)}
         >
           <StepForwardIcon size={iconSize} />
         </Button>
         <Tooltip placement="top" class="flex items-center justify-center gap-2">
-          { $localLang.RECONSTRUCTIONS.stepForward }
+          {$localLang.RECONSTRUCTIONS.stepForward}
           <span class="text-yellow-500 flex items-center gap-2">
-            [Ctrl + <Kbd class="inline-flex items-center -ml-1 -mr-3 p-1 scale-75"><ArrowKeyRight /></Kbd>]
+            [Ctrl + <Kbd class="inline-flex items-center -ml-1 -mr-3 p-1 scale-75"
+              ><ArrowKeyRight /></Kbd
+            >]
           </span>
         </Tooltip>
       </div>
     </div>
   </section>
 
-  <section class="settings" class:open={ drawerOpen }>
+  <section class="settings" class:open={drawerOpen}>
     <TextArea
       bind:value={title}
-      placeholder={ $localLang.RECONSTRUCTIONS.title }
+      placeholder={$localLang.RECONSTRUCTIONS.title}
       class="rounded-none border-none bg-gray-800 px-2 py-1 border-t border-t-blue-800 text-xl text-center"
     />
 
     <div>
-      <h2>{ $localLang.global.scramble }</h2>
+      <h2>{$localLang.global.scramble}</h2>
       <TextArea
-        bind:value={ scramble }
-        getInnerText={ (s) => parse(s, false) }
-        placeholder={ $localLang.RECONSTRUCTIONS.scramble }
+        bind:value={scramble}
+        getInnerText={s => parse(s, false)}
+        placeholder={$localLang.RECONSTRUCTIONS.scramble}
         class="bg-transparent rounded-none w-full border-none"
         cClass="h-[10vh]"
-        bind:this={ sTextarea }
+        bind:this={sTextarea}
       />
     </div>
 
     <div>
-      <h2>{ $localLang.global.reconstruction }</h2>
+      <h2 class="flex items-center gap-2">
+        {$localLang.global.reconstruction}
+        <button on:click={ copyReconstruction }><CopyIcon size={iconSize} /></button>
+        <Tooltip>{$localLang.global.copy}</Tooltip>
+      </h2>
+
       <TextArea
         class="rounded-none border-none absolute inset-0"
-        placeholder={ $localLang.RECONSTRUCTIONS.reconstruction }
-        bind:value={ reconstruction }
+        placeholder={$localLang.RECONSTRUCTIONS.reconstruction}
+        bind:value={reconstruction}
         cClass="h-[30vh]"
-        getInnerText={ (s) => parse(s, true)}
-        bind:this={ rTextarea }
+        getInnerText={s => parse(s, true)}
+        bind:this={rTextarea}
       />
     </div>
 
     <div>
-      <h2>{ $localLang.global.settings }</h2>
+      <h2>{$localLang.global.settings}</h2>
 
       <ul class="setting-list no-grid p-2 gap-4 place-items-center">
         <li>
           <Checkbox
-            label={ $localLang.SIMULATOR.showBackFace + ' [Ctrl + B]' }
+            label={$localLang.SIMULATOR.showBackFace + " [Ctrl + B]"}
             hasKeybinding
             bind:checked={showBackFace}
           />
         </li>
         <li>
           <Button color="alternative" class="flex gap-2">
-            <span class="flex items-center"><WcaCategory icon={ puzzle.scrambler } noFallback size="1rem"/> { puzzle.name }</span>
-            <ChevronLeft size="1.2rem" class="-rotate-90 translate-y-[-0.1rem]"/>
+            <span class="flex items-center"
+              ><WcaCategory icon={puzzle.scrambler} noFallback size="1rem" /> {puzzle.name}</span
+            >
+            <ChevronLeft size="1.2rem" class="-rotate-90 translate-y-[-0.1rem]" />
           </Button>
-          
-          <Dropdown class="max-h-[15rem] overflow-y-scroll" bind:open={ puzzleOpen }>
+
+          <Dropdown class="max-h-[15rem] overflow-y-scroll" bind:open={puzzleOpen}>
             {#each PUZZLES as p}
-              <DropdownItem class="flex gap-1 items-center" on:click={ () => {
-                puzzleOpen = false;
-                puzzle = p;
-                resetPuzzle();
-              } }> <WcaCategory icon={ p.scrambler } noFallback size="1rem"/> { p.name }</DropdownItem>
+              <DropdownItem
+                class="flex gap-1 items-center"
+                on:click={() => {
+                  puzzleOpen = false;
+                  puzzle = p;
+                  resetPuzzle();
+                }}
+              >
+                <WcaCategory icon={p.scrambler} noFallback size="1rem" /> {p.name}</DropdownItem
+              >
             {/each}
           </Dropdown>
         </li>
         <li>
           <Button color="green" on:click={() => simulator.resetCamera()}>
-            <RestartIcon size={iconSize} /> { $localLang.RECONSTRUCTIONS.resetCamera }
+            <RestartIcon size={iconSize} />
+            {$localLang.RECONSTRUCTIONS.resetCamera}
           </Button>
         </li>
         <li>
-          <Button color="purple" on:click={() => showRecSearch = true}>
-            <SearchIcon size={iconSize} /> { $localLang.RECONSTRUCTIONS.findReconstruction }
+          <Button color="purple" on:click={() => (showRecSearch = true)}>
+            <SearchIcon size={iconSize} />
+            {$localLang.RECONSTRUCTIONS.findReconstruction}
           </Button>
         </li>
         <li>
-          <Button on:click={() => scramble = reconstruction = title = '' }>
-            { $localLang.global.reset }
+          <Button on:click={() => (scramble = reconstruction = title = "")}>
+            {$localLang.global.reset}
           </Button>
         </li>
+
         {#if backURL}
           <li>
             <Button on:click={() => navigate(backURL)}>
-              <BackIcon size={iconSize} /> { $localLang.RECONSTRUCTIONS.return }
+              <BackIcon size={iconSize} />
+              {$localLang.RECONSTRUCTIONS.return}
             </Button>
           </li>
         {/if}
+
         <li class="w-full flex flex-col">
-          <span>
-            { $localLang.RECONSTRUCTIONS.speed }: {Math.floor(speed * 10) / 10}x</span>
-          <Range bind:value={speed} min={0.1} max={10} step="0.1"/>
+          <span> {$localLang.RECONSTRUCTIONS.speed}: {Math.floor(speed * 10) / 10}x</span>
+          <Range bind:value={speed} min={0.1} max={10} step="0.1" />
         </li>
       </ul>
 
@@ -482,25 +540,42 @@
       </div> -->
     </div>
 
-    <Button color="none" class="max-md:absolute md:hidden left-0 top-1/2 translate-x-[-100%] translate-y-[-50%] px-[0.3rem] py-8
+    <Button
+      color="none"
+      class="max-md:absolute md:hidden left-0 top-1/2 translate-x-[-100%] translate-y-[-50%] px-[0.3rem] py-8
       rounded-none rounded-tl-md rounded-bl-md bg-background border-2 border-primary-500 border-r-0"
-        on:click={ () => drawerOpen = !drawerOpen }>
-      <ChevronLeft size="1.2rem" class={ drawerOpen ? "rotate-180" : "" }/>
+      on:click={() => (drawerOpen = !drawerOpen)}
+    >
+      <ChevronLeft size="1.2rem" class={drawerOpen ? "rotate-180" : ""} />
     </Button>
   </section>
 </main>
 
-<Modal bind:open={ showRecSearch } autoclose outsideclose size="sm" title={ $localLang.RECONSTRUCTIONS.findReconstruction }>
+<Modal
+  bind:open={showRecSearch}
+  autoclose
+  outsideclose
+  size="sm"
+  title={$localLang.RECONSTRUCTIONS.findReconstruction}
+>
   <span class="text-yellow-500 my-2">eg. 3x3 Max Park</span>
-  <Input bind:value={ recSearch }/>
+  <Input bind:value={recSearch} />
 
-  <ul class="mt-4 max-h-[10rem] overflow-x-clip overflow-y-scroll pr-4" style="scrollbar-gutter: stable;">
+  <ul
+    class="mt-4 max-h-[10rem] overflow-x-clip overflow-y-scroll pr-4"
+    style="scrollbar-gutter: stable;"
+  >
     {#each findReconstructions(recSearch).slice(0, 500) as rec}
       <li>
         <button
-          on:click={() => { recIndex = rec.id; setRecIndex(); showRecSearch = false; }}
-          class="cursor-pointer rounded-md p-1 hover:bg-blue-600 hover:text-white w-full transition-all duration-200">
-          { rec.title }
+          on:click={() => {
+            recIndex = rec.id;
+            setRecIndex();
+            showRecSearch = false;
+          }}
+          class="cursor-pointer rounded-md p-1 hover:bg-blue-600 hover:text-white w-full transition-all duration-200"
+        >
+          {rec.title}
         </button>
       </li>
     {/each}

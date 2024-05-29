@@ -2,7 +2,7 @@ import { circle, Cnk, rn, set8Perm } from '../lib/mathlib';
 import { regScrambler } from './scramble';
 import * as scramble_333 from './scramble_333';
 
-function createArray(length1, length2?) {
+function createArray(length1: number, length2?: number) {
   let result, i;
   result = new Array(length1);
   if (length2 != undefined) {

@@ -19,6 +19,8 @@ export const Spanish: Language = {
     reset: 'Reiniciar',
     generate: 'Generar',
     restart: 'Reiniciar',
+    move: 'Movimiento',
+    moves: 'Movimientos',
     name: 'Nombre',
     steps: 'Pasos',
     step: 'Paso',
@@ -39,6 +41,8 @@ export const Spanish: Language = {
     tutorials: 'Tutorials',
     connected: 'Conectado',
     summary: 'Resumen',
+    time: 'Tiempo',
+    copy: 'Copiar',
   },
   NAVBAR: {
     home: 'Inicio',

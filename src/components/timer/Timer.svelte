@@ -276,7 +276,7 @@
         ...options[pos % options.length],
         rounded: true,
         headless: true
-      }, false, false));
+      }, false, true));
 
     } else {
       cb = [
@@ -284,8 +284,8 @@
           ...all.pScramble.options.get(md),
           rounded: true,
           headless: true
-        } as PuzzleOptions, false, false)
-      ]
+        } as PuzzleOptions, false, true)
+      ];
     }
 
     let date = Date.now();

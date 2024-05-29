@@ -31,7 +31,7 @@ async function blobToDataURL(blob: Blob): Promise<string> {
 
 export async function pGenerateCubeBundle(
   cubes: Puzzle[], width ?: number, _all = true, inCube = false, printable = false, cache = false
-): Promise< string[] > {
+): Promise<string[]> {
   return new Promise(async (resolve) => {
     const dataService = DataService.getInstance();
   
@@ -48,26 +48,25 @@ export async function pGenerateCubeBundle(
       }
 
       if ( !cubes[i].img ) {
-        const opt = cubes[i].options;
-        // const cube = cubes[i].clone();
-        const cube = Puzzle.fromSequence(opt.sequence || '', opt);
+        // const opt = cubes[i].options;
+        const cube = cubes[i];
     
         if ( printable ) cube.p.palette = PRINTABLE_PALETTE;
-        if ( opt.rounded ) {
+        if ( cube.options.rounded ) {
           roundCorners(cube.p, ...cube.p.roundParams);
         }
         
         if ( cube.type === 'clock' ) {
-          cubes[i].img = await blobToDataURL(await clockImage(cube, 500));
-          cache && dataService.cacheSaveImage(sha1(cubes[i].options), cubes[i].img);
+          cube.img = await blobToDataURL(await clockImage(cube, 500));
+          cache && dataService.cacheSaveImage(sha1(cube.options), cube.img);
         } else if ( [ 'plan', '2d' ].indexOf(cube.view) > -1 ) {
-          cubes[i].img = await blobToDataURL(
+          cube.img = await blobToDataURL(
             await (cube.view === 'plan' ? planView(cube, W) : projectedView(cube, W))
           );
-          cache && dataService.cacheSaveImage(sha1(cubes[i].options), cubes[i].img);
+          cache && dataService.cacheSaveImage(sha1(cube.options), cube.img);
         } else {
-          cubes[i].img = await blobToDataURL( await transView(cube, W) );
-          cache && dataService.cacheSaveImage(sha1(cubes[i].options), cubes[i].img);
+          cube.img = await blobToDataURL( await transView(cube, W) );
+          cache && dataService.cacheSaveImage(sha1(cube.options), cube.img);
         }
       }
     }

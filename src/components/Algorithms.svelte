@@ -69,7 +69,7 @@
       return A.length < B.length ? -1 : 1;
     });
     
-    let cubes = list.map(algorithmToPuzzle);
+    let cubes = list.map(alg => algorithmToPuzzle(alg, true));
     
     for (let i = 0, maxi = list.length; i < maxi; i += 1) {
       let e = list[i];

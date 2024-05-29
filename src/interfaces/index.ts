@@ -50,7 +50,7 @@ export function nameToPuzzle(name: string): any[] {
     case 'Axis': return [ 'axis' ];
     case 'Fisher': return [ 'fisher' ];
     case 'Ivy': return [ 'ivy' ];
-    default: return [ 'rubik', 3 ];
+    default: return [ 'rubik' ];
   }
 }
 
@@ -623,6 +623,8 @@ export interface Language {
     reset: string;
     generate: string;
     restart: string;
+    move: string;
+    moves: string;
     name: string;
     steps: string;
     step: string;
@@ -643,6 +645,8 @@ export interface Language {
     tutorials: string;
     connected: string;
     summary: string;
+    time: string;
+    copy: string;
   }
   NAVBAR: {
     home: string;
@@ -955,13 +959,3 @@ export type Scrambler = '222so' | '333' | '333fm' | '333ni' | 'r3ni' | '333oh' |
   | '555wca' | '555bld' | '666wca' | '777wca' | 'clkwca' | 'mgmp' | 'pyrso' | 'skbso' | 'sqrs';
 
 export type ICacheDB = 'Cache' | 'Algorithms' | 'Sessions' | 'Solves' | 'Tutorials';
-
-export interface ReconstructorStep {
-  name: string;
-  case: Algorithm | null;
-  substeps: ReconstructorStep[];
-  moves: number;
-  time: number;
-  skip: boolean;
-  percent: number; // Int percent
-}

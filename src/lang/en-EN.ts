@@ -19,6 +19,8 @@ export const English: Language = {
     reset: 'Reset',
     generate: 'Generate',
     restart: 'Restart',
+    move: 'Move',
+    moves: 'Moves',
     name: 'Name',
     steps: 'Steps',
     step: 'Step',
@@ -39,6 +41,8 @@ export const English: Language = {
     tutorials: 'Tutorials',
     connected: 'Connected',
     summary: 'Summary',
+    time: 'Time',
+    copy: 'Copy',
   },
   NAVBAR: {
     home: 'Home',

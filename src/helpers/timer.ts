@@ -38,6 +38,13 @@ export function sTimer(s: Solve | null, dec?: boolean, suff?: boolean): string {
   return timer(s.time, dec, suff);
 }
 
+export function sTime(s: Solve | null): number {
+  if ( !s ) return 0;
+  if ( s.penalty === Penalty.DNS ) return Infinity;
+  if ( s.penalty === Penalty.DNF ) return Infinity;
+  return s.time + (s.penalty === Penalty.P2 ? 2000 : 0);
+}
+
 export function infinitePenalty(s: Solve): boolean {
   return s.penalty === Penalty.DNF || s.penalty === Penalty.DNS;
 }

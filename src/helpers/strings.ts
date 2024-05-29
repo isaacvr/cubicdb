@@ -25,6 +25,10 @@ export function copyToClipboard(s: string) {
   return navigator.clipboard.writeText(s);
 }
 
+export function weakRandomUUID() {
+  return Math.random().toString(36).slice(2);
+}
+
 export function randomUUID () {
   if ( crypto && crypto.randomUUID ) {
     return crypto.randomUUID();
@@ -37,7 +41,7 @@ export function randomUUID () {
     res[i] = [];
 
     for (let j = 0; j < lens[i]; j += 1) {
-      res[i].push( (~~(Math.random() * 15)).toString(16) );
+      res[i].push( Math.random().toString(16).slice(2) );
     }
   }
 

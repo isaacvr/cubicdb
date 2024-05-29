@@ -1,6 +1,7 @@
 import { AES128 } from "@classes/AES128";
 import { AlgorithmSequence } from "@classes/AlgorithmSequence";
 import { CFOP } from "@classes/reconstructors/CFOP";
+import { Roux } from "@classes/reconstructors/Roux";
 import { CubieCube, SOLVED_FACELET, valuedArray } from "@cstimer/lib/mathlib";
 import { isEscape } from "@helpers/stateMachine";
 import { TimerState, type InputContext, type TimerInputHandler, type Solve, Penalty } from "@interfaces";
@@ -29,7 +30,8 @@ interface GANContext {
   input: InputContext;
   sequencer: AlgorithmSequence;
   moves: string[];
-  cfop: CFOP
+  cfop: CFOP;
+  roux: Roux;
 }
 
 // Guards
@@ -59,13 +61,14 @@ const isScrambleReady = (ctx: GANContext) => {
 // Flow control
 const enterConnected = ({ input: {
   bluetoothStatus, state, time, decimals, scramble, sequenceParts, recoverySequence
-}, moves, sequencer, cfop }: GANContext, ev: any) => {
+}, moves, sequencer, cfop, roux }: GANContext, ev: any) => {
   sequencer.clear();
   moves.length = 0;
   
   let scr = ev?.data?.scramble || get(scramble);
   sequencer.setScramble(scr);
   cfop.setSequence(scr);
+  roux.setSequence(scr);
   updateSequence(sequencer, sequenceParts, recoverySequence);
   
   debug && console.log('[enterConnected]: ', ev, scr);
@@ -136,9 +139,14 @@ const setTimerRunner = ({ input: { decimals, time, lastSolve, state } }: GANCont
   };
 };
 
-const saveSolve = ({ input: { time, state, lastSolve, addSolve, initScrambler }, sequencer, cfop }: GANContext) => {
+const saveSolve = ({ input: { time, state, lastSolve, addSolve, initScrambler }, sequencer, cfop, roux }: GANContext) => {
   let t = get(time);
-  cfop.getAnalysis(t).then(res => DataService.getInstance().emitBluetoothData('reconstructor', res));
+  
+  Promise.all([
+    cfop.getAnalysis(t),
+    roux.getAnalysis(t),
+  ]).then((res) => DataService.getInstance().emitBluetoothData('reconstructor', res))
+  
   state.set(TimerState.STOPPED);
   sequencer.clear();
   initScrambler();
@@ -306,7 +314,8 @@ export class GANInput implements TimerInputHandler {
       input: context,
       moves: this.moves,
       sequencer: this.sequencer,
-      cfop: new CFOP
+      cfop: new CFOP,
+      roux: new Roux,
     };
     
     this.interpreter = interpret( GANMachine.withContext( this.context ) );
@@ -459,6 +468,7 @@ export class GANInput implements TimerInputHandler {
     let ctx = this.context;
     ctx.sequencer.setScramble(s);
     ctx.cfop.setSequence(s);
+    ctx.roux.setSequence(s);
     updateSequence(ctx.sequencer, ctx.input.sequenceParts, ctx.input.recoverySequence);
   }
 
@@ -707,6 +717,7 @@ export class GANInput implements TimerInputHandler {
 
       if ( st === 'RUNNING' || st === 'STOPPED' ) {
         this.context.cfop.addMove(this.prevMoves[i]);
+        this.context.roux.addMove(this.prevMoves[i]);
       }
       
       this.emit('move', [ this.prevMoves[i], this.timeOffs[i] ]);
