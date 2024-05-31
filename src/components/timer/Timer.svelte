@@ -5,7 +5,6 @@
   
   /// Modules
   import * as all from '@cstimer/scramble';
-  import { solve_cross, solve_xcross } from '@cstimer/tools/cross';
   import JSConfetti from 'js-confetti';
   
   /// Data
@@ -18,7 +17,6 @@
   import TimerTab from './TimerTab.svelte';
   import SessionsTab from './SessionsTab.svelte';
   import StatsTab from './StatsTab.svelte';
-  // import Modal from '@components/Modal.svelte';
   import Select from '@components/material/Select.svelte';
 
   /// Types
@@ -32,23 +30,20 @@
   import { NotificationService } from '@stores/notification.service';
   import { prettyScramble, randomUUID } from '@helpers/strings';
   import { binSearch } from '@helpers/object';
+  import type { HTMLImgAttributes } from 'svelte/elements';
   
   // ICONS
   import TimerIcon from '@icons/Timer.svelte';
   import ListIcon from '@icons/FormatListBulleted.svelte';
   import ChartIcon from '@icons/ChartLineVariant.svelte';
-  import TuneIcon from '@icons/Tune.svelte';
   import PlusIcon from '@icons/Plus.svelte';
   import CheckIcon from '@icons/Check.svelte';
   import CloseIcon from '@icons/Close.svelte';
   import DeleteIcon from '@icons/Delete.svelte';
-  import { screen } from '@stores/screen.store';
-  import { Button, Input, Modal, Tooltip } from 'flowbite-svelte';
+  import { Button, Input, Modal } from 'flowbite-svelte';
   import WcaCategory from '@components/wca/WCACategory.svelte';
-  import { isBetween } from '@helpers/math';
-    import type { HTMLImgAttributes } from 'svelte/elements';
-    import { CFOP } from '@classes/reconstructors/CFOP';
 
+  
   let MENU: SCRAMBLE_MENU[] = getLanguage($globalLang).MENU;
   
   export let battle = false;
@@ -117,8 +112,6 @@
   let mode = writable<{ 0: string, 1: string, 2: number }>(modes[0]);
   let hintDialog = writable<boolean>(true);
   let hint = writable<boolean>();
-  let cross = writable<string>();
-  let xcross = writable<string>();
   let preview = writable<HTMLImgAttributes[]>([]);
   let prob = writable<number>();
   let isRunning = writable<boolean>(false);
@@ -344,15 +337,6 @@
       }
       
       $scramble = prettyScramble($scramble);
-      
-      if ( DIALOG_MODES.indexOf(md) > -1 ) {
-        $cross = solve_cross($scramble).map(e => e.map(e1 => e1.trim()).join(' '))[0];
-        $xcross = solve_xcross($scramble, 0).map(e => e.trim()).join(' ');
-      } else {
-        $cross = "";
-        $xcross = "";
-        $hint = false;
-      }
 
       // emit scramble for iCarry and other stuffs
       dataService.scramble($scramble);
@@ -598,7 +582,7 @@
 
   let context: TimerContext = {
     state, ready, tab, solves, allSolves, session, Ao5, stats, scramble, decimals,
-    group, mode, hintDialog, hint, cross, xcross, preview, prob, isRunning, selected,
+    group, mode, hintDialog, hint, preview, prob, isRunning, selected,
     bluetoothList, bluetoothStatus, STATS_WINDOW,
     setSolves, sortSolves, updateSolves, handleUpdateSession, handleUpdateSolve, updateStatistics,
     initScrambler, selectedGroup, selectSolve, selectSolveById, editSolve,
@@ -622,11 +606,6 @@
   {:else}
     <div class="fixed w-max -translate-x-1/2 left-1/2 z-10 grid grid-flow-col
       gap-2 top-14 items-center justify-center text-gray-400">
-      
-      {#if !$screen.isMobile}
-        <button on:click={ editSessions } class="cursor-pointer"><TuneIcon width="1.2rem" height="1.2rem"/> </button>
-        <Tooltip placement="left"> { $localLang.TIMER.manageSessions } </Tooltip>
-      {/if}
       
       <Select
         placeholder={ $localLang.TIMER.selectSession }

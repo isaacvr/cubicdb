@@ -36,20 +36,19 @@ export class ScrambleParser {
     return moveseq;
   }
 
-  static parseNNN(scramble: string, order: number) {
+  static parseNNN(scramble: string, order: number, MOVE_MAP = "URFDLB") {
     let scr = ScrambleParser.parseNNNString(scramble);
 
-    const MOVE_MAP = "URFDLB";
     let moves = ScrambleParser.parseScramble(scr, MOVE_MAP);
     let res = [];
 
     for (let i = 0, maxi = moves.length; i < maxi; i += 1) {
       if (!moves[i][4]) {
         res.push([
-          moves[i][3] ? order - 1 : moves[i][1], // Face Index
-          MOVE_MAP.charAt(moves[i][0]), // Move Index
-          moves[i][2], // Direction
-          moves[i][3] ? order - 2 : undefined // Span
+          moves[i][3] ? order - 1 : moves[i][1], // Face Index | Starting face
+          MOVE_MAP.charAt(moves[i][0]), // Move Index | Index of the move
+          moves[i][2], // Direction | Clockwise, double turn, counterclockwise
+          moves[i][3] ? order - 2 : undefined // Span | How many layers
         ]);
       } else {
         res.push([order, MOVE_MAP.charAt(moves[i][0]), moves[i][2], moves[i][3]]);

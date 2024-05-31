@@ -195,6 +195,7 @@ export const ICONS = [
   { icon: "pyrso", name: 'Pyraminx', scrambler: PYRA },
   { icon: "skbso", name: 'Skewb', scrambler: SKWB },
   { icon: "sqrs", name: 'Square-1', scrambler: SQR1 },
+  { icon: "333cross", name: 'Cross', scrambler: '333cross' },
 ] as const;
 
 export const CubeDBICON = '/assets/logo-100.png';

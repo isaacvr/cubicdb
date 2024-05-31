@@ -3,35 +3,22 @@
   import {
     Penalty,
     TimerState,
-    TIMER_INPUT,
     type InputContext,
-    type Language,
     type Solve,
     type TimerContext,
     type TimerInputHandler,
-    DIALOG_MODES,
   } from "@interfaces";
 
   /// Icons
   import Close from "@icons/Close.svelte";
   import ThumbDown from "@icons/ThumbDown.svelte";
   import Flag from "@icons/FlagOutline.svelte";
-  import Refresh from "@icons/Refresh.svelte";
-  import Pencil from "@icons/PencilOutline.svelte";
-  import Calendar from "@icons/CalendarTextOutline.svelte";
-  import Copy from "@icons/ContentCopy.svelte";
-  import Settings from "@icons/Cog.svelte";
-  import LightBulb from "@icons/LightbulbOn.svelte";
   import WatchOnIcon from "@icons/Wifi.svelte";
   import WatchOffIcon from "@icons/WifiOff.svelte";
   import CommentIcon from "@icons/CommentPlusOutline.svelte";
-  import BluetoothOnIcon from "@icons/Bluetooth.svelte";
   import BluetoothOffIcon from "@icons/BluetoothOff.svelte";
-  import TuneIcon from "@icons/Tune.svelte";
 
   /// Components
-  import TextArea from "@components/material/TextArea.svelte";
-  import Checkbox from "@components/material/Checkbox.svelte";
   import Input from "@components/material/Input.svelte";
   import Select from "@components/material/Select.svelte";
 
@@ -40,7 +27,7 @@
   import { createEventDispatcher, onDestroy, onMount } from "svelte";
   import { DataService } from "@stores/data.service";
   import { NotificationService } from "@stores/notification.service";
-  import { derived, writable, type Readable, type Writable } from "svelte/store";
+  import { writable, type Writable } from "svelte/store";
 
   // Handlers
   import { StackmatInput } from "./input-handlers/Stackmat";
@@ -51,31 +38,19 @@
   import { ExternalTimerInput } from "./input-handlers/ExternalTimer";
 
   // Others
-  import { globalLang } from "@stores/language.service";
-  import { getLanguage } from "@lang/index";
-  import { copyToClipboard, randomUUID } from "@helpers/strings";
+  import { localLang } from "@stores/language.service";
+  import { randomUUID } from "@helpers/strings";
   import { minmax } from "@helpers/math";
   import Simulator from "@components/Simulator.svelte";
   import { statsReplaceId } from "@helpers/statistics";
-  import { screen } from "@stores/screen.store";
-  import {
-    Button,
-    Modal,
-    Popover,
-    Range,
-    Spinner,
-    StepIndicator,
-    TextPlaceholder,
-  } from "flowbite-svelte";
+  import { Button, Modal, StepIndicator, TextPlaceholder } from "flowbite-svelte";
   import Tooltip from "@components/material/Tooltip.svelte";
-  import { CubeDBICON, STEP_COLORS } from "@constants";
   import { blur, scale } from "svelte/transition";
   import { ChevronLeftSolid, ChevronRightSolid } from "flowbite-svelte-icons";
   import { Flip } from "@classes/Flip";
   import Reconstructor from "./Reconstructor.svelte";
   import type { ReconstructorMethod } from "@classes/reconstructors/interfaces";
-  
-  type TModal = "" | "edit-scramble" | "old-scrambles" | "settings";
+  import TimerOptions from "./TimerOptions.svelte";
 
   export let context: TimerContext;
   export let battle = false;
@@ -83,8 +58,6 @@
   export let timerOnly = false;
   export let scrambleOnly = false;
   export let cleanOnScramble = false;
-
-  let localLang: Readable<Language> = derived(globalLang, $lang => getLanguage($lang));
 
   const {
     state,
@@ -98,10 +71,6 @@
     scramble,
     group,
     mode,
-    hintDialog,
-    hint,
-    cross,
-    xcross,
     preview,
     isRunning,
     decimals,
@@ -113,14 +82,7 @@
     editSolve,
     handleUpdateSolve,
     handleRemoveSolves,
-    editSessions,
   } = context;
-
-  let timerInput = derived(session, $s => {
-    return DIALOG_MODES.indexOf($s.settings.mode || $mode[1] || "") > -1
-      ? TIMER_INPUT
-      : TIMER_INPUT.filter(inp => inp != "GAN Cube");
-  });
 
   const dispatch = createEventDispatcher();
   const notification = NotificationService.getInstance();
@@ -229,90 +191,18 @@
     editSolve,
   };
 
-  let inputMethod: TimerInputHandler = new ManualInput();
+  let inputMethod: Writable<TimerInputHandler> = writable(new ManualInput());
   let currentStep = writable(1);
   let totalSteps = writable(1);
-  let deviceID = "default";
+  let deviceID: Writable<string> = writable("default");
   let deviceList: string[][] = [];
   let autoConnectId: string[] = [];
 
-  let externalTimers = dataService.externalTimers;
-
-  /// MODAL
-  let show = false;
-  let type: TModal = "";
-  let modalData: any = null;
-  let closeHandler: Function = () => {};
-
-  /// SCRAMBLE
-  let canOpenDialog = (ev: string): boolean => {
-    if (timerOnly) {
-      return ["settings"].indexOf(ev) > -1;
-    }
-
-    return true;
-  };
-
-  let openDialog = (ev: TModal, dt: any, fn: Function) => {
-    if (!canOpenDialog(ev)) return;
-
-    type = ev;
-    modalData = dt;
-    closeHandler = fn;
-    show = true;
-  };
-
   // OTHER
   let simulator: Simulator;
-  let isSearching = false;
-  let isConnecting = false;
   let selectedImg = 0;
   let reconstructor: ReconstructorMethod[] = [];
   let recIndex = 0;
-
-  let options = [
-    { text: "Reload scramble [Ctrl + S]", icon: Refresh, handler: () => initScrambler() },
-    {
-      text: "Edit [Ctrl + E]",
-      icon: Pencil,
-      handler: () => {
-        openDialog("edit-scramble", $scramble, (scr: string) => scr && initScrambler(scr));
-      },
-    },
-    {
-      text: "Use old scramble [Ctrl + O]",
-      icon: Calendar,
-      handler: () => {
-        openDialog("old-scrambles", null, () => {});
-      },
-    },
-    { text: "Copy scramble [Ctrl + C]", icon: Copy, handler: () => toClipboard() },
-    // { text: "Notes [Ctrl + N]", icon: NoteIcon, handler: () => showNotes = true },
-    {
-      text: "Settings",
-      icon: Settings,
-      handler: () => {
-        let initialCalc = $session?.settings?.calcAoX;
-
-        if (!$session.settings.input) {
-          $session.settings.input = "Keyboard";
-        }
-
-        openDialog("settings", $session, (data: any) => {
-          if (data) {
-            $session = $session;
-
-            if (timerOnly) return;
-
-            initInputHandler();
-
-            dataService.updateSession($session);
-            initialCalc != $session.settings.calcAoX && updateStatistics(false);
-          }
-        });
-      },
-    },
-  ];
 
   function selectNone() {
     selected = 0;
@@ -369,7 +259,7 @@
   }
 
   function reset() {
-    inputMethod.stopTimer();
+    $inputMethod.stopTimer();
     $time = 0;
     $state = TimerState.CLEAN;
     $ready = false;
@@ -377,27 +267,8 @@
   }
 
   function keyUp(event: KeyboardEvent) {
-    if ($tab || !enableKeyboard) {
-      return;
-    }
-
-    inputMethod.keyUpHandler(event);
-
-    const { code } = event;
-
-    if (code != "Space" && !$isRunning && !battle) {
-      if (code === "KeyE" && event.ctrlKey) {
-        if (!show || (show && type != "edit-scramble")) {
-          openDialog("edit-scramble", $scramble, (scr: string) => scr && initScrambler(scr));
-        }
-      } else if (code === "KeyO" && event.ctrlKey) {
-        openDialog("old-scrambles", null, () => {});
-      } else if (code === "KeyC" && event.ctrlKey) {
-        toClipboard();
-      } else if (code === "Comma" && event.ctrlKey) {
-        options[4].handler();
-      }
-    }
+    if ($tab || !enableKeyboard) return;
+    $inputMethod.keyUpHandler(event);
   }
 
   function keyDown(event: KeyboardEvent) {
@@ -407,7 +278,7 @@
 
     switch ($tab) {
       case 0: {
-        inputMethod.keyDownHandler(event);
+        $inputMethod.keyDownHandler(event);
         prevExpanded = false;
 
         if (code === "KeyS" && event.ctrlKey) {
@@ -423,35 +294,6 @@
         break;
       }
     }
-  }
-
-  function toClipboard() {
-    copyToClipboard($scramble).then(() => {
-      notification.addNotification({
-        key: randomUUID(),
-        header: $localLang.global.done,
-        text: $localLang.global.scrambleCopied,
-        timeout: 1000,
-        icon: CubeDBICON,
-      });
-    });
-  }
-
-  function modalKeyupHandler(e: CustomEvent) {
-    let kevent: KeyboardEvent = e.detail;
-    kevent.stopPropagation();
-    show = kevent.code === "Escape" ? closeHandler() : show;
-
-    if (kevent.code === "Enter" && kevent.ctrlKey) {
-      closeHandler(modalData.trim());
-      show = false;
-    }
-  }
-
-  function select(s: Solve) {
-    initScrambler(s.scramble);
-    closeHandler();
-    show = false;
   }
 
   function addTimeString() {
@@ -489,37 +331,37 @@
     let newClass = methodMap[$session?.settings?.input || "Keyboard"];
     let sameClass = true;
 
-    if (!(inputMethod instanceof newClass)) {
+    if (!($inputMethod instanceof newClass)) {
       sameClass = false;
-      inputMethod.disconnect();
+      $inputMethod.disconnect();
     }
 
     if ($session?.settings?.input === "Manual" && !sameClass) {
-      inputMethod = new ManualInput();
+      inputMethod.set(new ManualInput());
     } else if ($session?.settings?.input === "StackMat" && !sameClass) {
-      inputMethod = new StackmatInput(inputContext);
-      inputMethod.init(deviceID, true);
+      inputMethod.set(new StackmatInput(inputContext));
+      $inputMethod.init($deviceID, true);
     } else if ($session?.settings?.input === "GAN Cube" && !sameClass) {
-      inputMethod = new GANInput(inputContext);
-      inputMethod.init();
+      inputMethod.set(new GANInput(inputContext));
+      $inputMethod.init();
     } else if ($session?.settings?.input === "QY-Timer" && !sameClass) {
-      inputMethod = new QiYiSmartTimerInput(inputContext);
-      inputMethod.init();
+      inputMethod.set(new QiYiSmartTimerInput(inputContext));
+      $inputMethod.init();
     } else if ($session?.settings?.input === "Keyboard") {
-      inputMethod.disconnect();
+      $inputMethod.disconnect();
       let ki = new KeyboardInput(inputContext);
 
-      inputMethod = ki;
+      inputMethod.set(ki);
 
       currentStep = ki.interpreter.machine.context.currentStep;
       totalSteps = ki.interpreter.machine.context.steps;
-      inputMethod.init();
+      $inputMethod.init();
     } else if ($session?.settings?.input === "ExternalTimer") {
       if (sameClass) {
-        dataService.external(deviceID, { type: "session", value: $session });
+        dataService.external($deviceID, { type: "session", value: $session });
       } else {
-        inputMethod = new ExternalTimerInput(inputContext);
-        inputMethod.init();
+        inputMethod.set(new ExternalTimerInput(inputContext));
+        $inputMethod.init();
       }
     }
   }
@@ -572,84 +414,6 @@
   function updateTexts() {
     solveControl[0].text = $localLang.global.delete;
     solveControl[3].text = $localLang.TIMER.comments;
-    options[0].text = `${$localLang.TIMER.reloadScramble} [Ctrl + S]`;
-    options[1].text = `${$localLang.TIMER.edit} [Ctrl + E]`;
-    options[2].text = `${$localLang.TIMER.useOldScramble} [Ctrl + O]`;
-    options[3].text = `${$localLang.TIMER.copyScramble} [Ctrl + C]`;
-    options[4].text = `${$localLang.TIMER.settings} [Ctrl + ,]`;
-    // options[4].text = `${ $localLang.TIMER.notes } [Ctrl + N]`;
-    // options[5].text = `${ $localLang.TIMER.settings } [Ctrl + ,]`;
-  }
-
-  function searchBluetooth() {
-    let gn =
-      modalData.settings.input === "GAN Cube"
-        ? new GANInput(inputContext)
-        : new QiYiSmartTimerInput(inputContext);
-
-    isSearching = true;
-    $bluetoothList.length = 0;
-
-    dataService
-      .searchBluetooth(gn)
-      .then(mac => {
-        deviceID = mac;
-
-        if (inputMethod instanceof GANInput && inputMethod.connected) {
-          inputMethod.disconnect();
-        }
-
-        inputMethod = gn;
-      })
-      .catch(err => {
-        // notification.addNotification({
-        //   key: randomUUID(),
-        //   header: 'Search error',
-        //   text: 'Bluetooth error.',
-        // });
-
-        console.log("ERROR: ", err);
-      })
-      .finally(() => {
-        isConnecting = false;
-        isSearching = false;
-      });
-  }
-
-  function cancelSearch() {
-    dataService.cancelBluetoothRequest();
-  }
-
-  function connectBluetooth(id: string) {
-    if (id != deviceID) {
-      isSearching = false;
-      isConnecting = true;
-      dataService.connectBluetoothDevice(id);
-    } else {
-      inputMethod.disconnect();
-    }
-  }
-
-  function showBluetoothData() {
-    notification.addNotification({
-      key: randomUUID(),
-      header: "GAN Cube",
-      text: "",
-      html: $bluetoothStatus
-        ? `
-        <ul>
-          <li>Name: ${bluetoothHardware?.deviceName || "--"}</li>
-          <li>Hardware Version: ${bluetoothHardware?.hardwareVersion || "--"}</li>
-          <li>Software Version: ${bluetoothHardware?.softwareVersion || "--"}</li>
-          <li>Gyroscope: ${bluetoothHardware?.gyro ?? "--"}</li>
-          <li>MAC: ${deviceID != "default" ? deviceID : "--"}</li>
-          <li>Battery: ${bluetoothBattery || "--"}%</li>
-        </ul>`
-        : `Disconnected`,
-      fixed: true,
-      actions: [{ text: "Ok", callback: () => {} }],
-      icon: CubeDBICON,
-    });
   }
 
   function clean() {
@@ -693,7 +457,7 @@
 
       case "disconnect": {
         $bluetoothStatus = false;
-        deviceID = "";
+        $deviceID = "";
         break;
       }
 
@@ -710,25 +474,9 @@
     }
   }
 
-  function selectExternalTimer(id: string) {
-    if (id === deviceID) {
-      deviceID = "";
-    } else {
-      deviceID = id;
-
-      if (!(inputMethod instanceof ExternalTimerInput)) {
-        inputMethod.disconnect();
-        inputMethod = new ExternalTimerInput(inputContext);
-      }
-
-      (inputMethod as ExternalTimerInput).setExternal(id);
-      dataService.external(id, { type: "session", value: $session });
-    }
-  }
-
   function handleNewRecord() {
     console.log("handleNewRecord");
-    inputMethod.newRecord();
+    $inputMethod.newRecord();
   }
 
   function step(ev: MouseEvent, v: number) {
@@ -748,7 +496,7 @@
   });
 
   onDestroy(() => {
-    inputMethod.disconnect();
+    $inputMethod.disconnect();
     navigator.mediaDevices?.removeEventListener("devicechange", updateDevices);
     document.querySelectorAll("#stackmat-signal").forEach(e => e.remove());
     dataService.off("bluetooth", bluetoothHandler);
@@ -771,6 +519,22 @@
   class="timer-tab w-full h-full {timerOnly || scrambleOnly ? 'mt-8' : ''}"
   class:smart_cube={$session.settings.input === "GAN Cube"}
 >
+  <!-- Options -->
+  <TimerOptions
+    {battle}
+    {bluetoothBattery}
+    {context}
+    {bluetoothHardware}
+    {bluetoothStatus}
+    {deviceID}
+    {deviceList}
+    {initInputHandler}
+    {inputContext}
+    {inputMethod}
+    {enableKeyboard}
+    {timerOnly}
+  />
+
   <!-- Timer -->
   <div id="timer" class="text-9xl grid place-items-center w-full h-full">
     {#if $session?.settings?.input === "Manual"}
@@ -866,11 +630,11 @@
   </div>
 
   <!-- Statistics -->
-  {#if !(battle || timerOnly || scrambleOnly) && ($cross || $xcross || $Ao5)}
+  {#if !(battle || timerOnly || scrambleOnly)}
     <!-- Left Statistics -->
     <div
       id="left-stats"
-      class="text-gray-400 transition-all duration-300 max-md:text-xs"
+      class="text-gray-300 transition-all duration-300 max-md:text-xs"
       class:hide={$isRunning}
     >
       <table class="ml-3">
@@ -938,7 +702,7 @@
     <!-- Right Statistics -->
     <div
       id="right-stats"
-      class="text-gray-400 transition-all duration-300 max-md:text-xs"
+      class="text-gray-300 transition-all duration-300 max-md:text-xs"
       class:hide={$isRunning}
     >
       <table class="mr-3">
@@ -1053,7 +817,7 @@
   <div id="scramble" class="transition-all duration-300 max-md:text-xs max-md:leading-5">
     <pre class="scramble-content" class:hide={$isRunning} class:battle>
       
-      {#if inputMethod instanceof GANInput}
+      {#if $inputMethod instanceof GANInput}
         {#if $recoverySequence}
           {"=> " + $recoverySequence}
         {:else if $sequenceParts.length < 3}
@@ -1075,379 +839,11 @@
         {$scramble}
       {/if}
     </pre>
-
-    <!-- Options -->
-    {#if !scrambleOnly}
-      <div
-        class={`absolute md:top-1 md:right-4 md:w-[2rem] md:items-center flex md:flex-col
-        max-md:left-1/2 max-md:-translate-x-[50%] max-md:w-max bg-white bg-opacity-10 rounded-md ` +
-          ($session.settings.input === "GAN Cube" ? "top-[4rem] " : "max-md:top-[min(11rem,24vh)]")}
-        class:hide={$isRunning}
-      >
-        {#each options.filter((e, p) => (!battle ? true : p === 3 || p === 5)) as option, i}
-          {#if !$screen.isMobile}
-            <Tooltip class="cursor-pointer" position="left" text={option.text} hasKeybinding>
-              <Button
-                aria-label={option.text}
-                color="none"
-                class="my-3 mx-1 w-5 h-5 p-0"
-                on:click={option.handler}
-                on:keydown={e => (e.code === "Space" ? e.preventDefault() : null)}
-              >
-                <svelte:component
-                  this={option.icon}
-                  width="100%"
-                  height="100%"
-                  class="pointer-events-none"
-                />
-              </Button>
-            </Tooltip>
-          {:else}
-            <Button
-              aria-label={option.text}
-              color="none"
-              class="my-3 mx-2 w-5 h-5 p-0"
-              on:click={option.handler}
-              on:keydown={e => (e.code === "Space" ? e.preventDefault() : null)}
-            >
-              <svelte:component this={option.icon} width="100%" height="100%" />
-            </Button>
-          {/if}
-        {/each}
-
-        {#if $screen.isMobile}
-          <Button color="none" on:click={editSessions} class="cursor-pointer p-2"
-            ><TuneIcon size="1.2rem" />
-          </Button>
-        {/if}
-
-        {#if $session?.settings?.input === "GAN Cube"}
-          {#if !$screen.isMobile}
-            <Tooltip position="left" text="GAN Cube">
-              <Button
-                aria-label={"GAN Cube"}
-                color="none"
-                class="my-3 mx-1 w-5 h-5 p-0 {$bluetoothStatus ? 'text-blue-500' : 'text-gray-400'}"
-                on:click={showBluetoothData}
-                on:keydown={e => (e.code === "Space" ? e.preventDefault() : null)}
-              >
-                <svelte:component
-                  this={$bluetoothStatus ? BluetoothOnIcon : BluetoothOffIcon}
-                  width="100%"
-                  height="100%"
-                />
-              </Button>
-            </Tooltip>
-          {:else}
-            <Button
-              aria-label={"GAN Cube"}
-              color="none"
-              class="my-3 mx-1 w-5 h-5 p-0 {$bluetoothStatus ? 'text-blue-600' : 'text-gray-400'}"
-              on:click={showBluetoothData}
-              on:keydown={e => (e.code === "Space" ? e.preventDefault() : null)}
-            >
-              <svelte:component
-                this={$bluetoothStatus ? BluetoothOnIcon : BluetoothOffIcon}
-                width="100%"
-                height="100%"
-              />
-            </Button>
-          {/if}
-        {/if}
-      </div>
-    {/if}
   </div>
-
-  <!-- Hints -->
-  {#if !(battle || timerOnly || scrambleOnly) && ($cross || $xcross || $Ao5)}
-    <div
-      id="hints"
-      class="bg-backgroundLv1 w-max p-2 text-gray-400 rounded-md flex items-center
-      shadow-md absolute select-none left-0 max-md:hidden md:top-1/4 transition-all duration-1000"
-      class:isVisible={$hintDialog && !$isRunning}
-    >
-      <table class="inline-block align-middle transition-all duration-300" class:nshow={!$hint}>
-        {#if $cross}
-          <tr><td>{$localLang.TIMER.cross}</td> <td class="text-yellow-500">{$cross}</td></tr>
-        {/if}
-
-        {#if $xcross}
-          <tr><td>XCross</td> <td class="text-yellow-500">{$xcross}</td></tr>
-        {/if}
-
-        {#if $Ao5}
-          <tr>
-            <td>{$localLang.TIMER.nextAo5}</td>
-            <td class="text-yellow-500"
-              >[{timer($Ao5[0], true, true)}, {timer($Ao5[1], true, true)}]</td
-            >
-          </tr>
-        {/if}
-      </table>
-
-      <button
-        id="bulb"
-        class="w-8 h-8 inline-block align-middle mx-0 my-2 cursor-pointer"
-        class:nshow={!$hint}
-        on:click={() => ($hint = !$hint)}
-      >
-        <LightBulb width="100%" height="100%" />
-      </button>
-    </div>
-  {/if}
 </div>
 
-<Modal
-  bind:open={show}
-  size="xs"
-  outsideclose
-  title={$localLang.TIMER.modal[type || "settings"]}
-  bodyClass="space-y-2"
->
-  {#if type === "edit-scramble"}
-    <TextArea
-      on:keyup={modalKeyupHandler}
-      class="bg-gray-900 text-gray-200 border border-gray-600"
-      bind:value={modalData}
-    />
-  {/if}
-
-  {#if type === "old-scrambles"}
-    <div class="grid grid-cols-4 w-full text-center max-h-[calc(100vh-16rem)]">
-      <h2 class="col-span-3">{$localLang.TIMER.scramble}</h2>
-      <h2 class="col-span-1">{$localLang.TIMER.time}</h2>
-      {#each $solves.slice(0, 500) as s}
-        <Button
-          color="none"
-          aria-label={$localLang.TIMER.scramble}
-          tabindex="0"
-          class="
-          col-span-3 cursor-pointer hover:text-blue-400 my-2 justify-start p-0 rounded-none
-          text-ellipsis overflow-hidden whitespace-nowrap
-        "
-          on:click={() => select(s)}>{s.scramble}</Button
-        >
-        <span class="col-span-1 flex items-center justify-center">{timer(s.time, true, true)}</span>
-      {/each}
-    </div>
-  {/if}
-
-  {#if type === "settings"}
-    {#if !(timerOnly || $session.settings.sessionType === "multi-step")}
-      <section class="flex gap-4 items-center">
-        {$localLang.TIMER.inputMethod}: <Select
-          bind:value={modalData.settings.input}
-          items={$timerInput}
-          transform={e => e}
-        />
-      </section>
-    {/if}
-
-    {#if $session.settings.sessionType === "multi-step"}
-      <section
-        class="flex w-max px-2 py-1 rounded-md shadow-md mx-auto my-2 border border-gray-600 cursor-default"
-      >
-        {$localLang.global.steps}: {$session.settings.steps}
-      </section>
-      <Popover>
-        <div class="flex flex-wrap gap-2">
-          {#each $session.settings.stepNames || [] as st, p}
-            <Button
-              class="pointer-events-none text-black"
-              color="none"
-              style={`background-color: ${STEP_COLORS[p]}`}>{st}</Button
-            >
-          {/each}
-        </div>
-      </Popover>
-    {/if}
-
-    {#if modalData.settings.input === "ExternalTimer"}
-      <section class="bg-white bg-opacity-10 p-2 shadow-md rounded-md">
-        <ul class="mt-4">
-          {#each $externalTimers as { id, name } (id)}
-            <li
-              class="flex items-center justify-between mt-2 pl-4 bg-white bg-opacity-10 rounded-md text-white"
-            >
-              {name}
-              <Button
-                color={id === deviceID ? "red" : "green"}
-                loading={isConnecting}
-                on:click={() => selectExternalTimer(id)}
-              >
-                {id === deviceID ? $localLang.TIMER.disconnect : $localLang.TIMER.connect}
-              </Button>
-            </li>
-          {/each}
-        </ul>
-      </section>
-    {/if}
-
-    {#if modalData.settings.input === "StackMat"}
-      <section>
-        {$localLang.TIMER.device}: <Select
-          class="max-w-full"
-          bind:value={deviceID}
-          items={deviceList}
-          label={e => e[1]}
-          transform={e => e[0]}
-        />
-      </section>
-    {/if}
-
-    {#if modalData.settings.input === "Keyboard" || modalData.settings.input === "ExternalTimer"}
-      <section class="flex flex-wrap gap-4 items-center">
-        <Checkbox
-          bind:checked={modalData.settings.hasInspection}
-          class="w-5 h-5"
-          label={$localLang.TIMER.inspection +
-            (modalData.settings.hasInspection ? ` (${modalData.settings.inspection})s` : "")}
-        />
-
-        {#if modalData.settings.hasInspection}
-          <Range
-            class="dark:w-52 mx-auto"
-            bind:value={modalData.settings.inspection}
-            min={5}
-            max={60}
-            step="5"
-          />
-        {/if}
-      </section>
-
-      <section>
-        <Checkbox
-          bind:checked={modalData.settings.withoutPrevention}
-          class="w-5 h-5"
-          label={$localLang.TIMER.withoutPrevention}
-        />
-
-        <i class="text-sm text-yellow-500">({$localLang.TIMER.withoutPreventionDescription})</i>
-      </section>
-
-      <section>
-        <Checkbox
-          bind:checked={modalData.settings.showElapsedTime}
-          class="w-5 h-5 my-2"
-          label={$localLang.TIMER.showTime}
-        />
-      </section>
-    {/if}
-
-    {#if modalData.settings.input === "GAN Cube" || modalData.settings.input === "QY-Timer"}
-      <section class="bg-white bg-opacity-10 p-2 shadow-md rounded-md">
-        <div class="flex justify-center gap-2">
-          <Button color="purple" on:click={() => !isSearching && searchBluetooth()}>
-            {#if isSearching}
-              <Spinner size="4" color="white" />
-            {:else}
-              {$localLang.global.search}
-            {/if}
-          </Button>
-
-          {#if isSearching}
-            <Button color="alternative" on:click={cancelSearch}>
-              {$localLang.global.cancel}
-            </Button>
-          {/if}
-        </div>
-
-        <ul class="mt-4">
-          {#each $bluetoothList as { deviceId, deviceName } (deviceId)}
-            <li class="flex items-center justify-between pl-4 bg-white bg-opacity-10 rounded-md">
-              {deviceName}
-              <Button
-                color={deviceId === deviceID ? "red" : "green"}
-                loading={isConnecting}
-                on:click={() => connectBluetooth(deviceId)}
-              >
-                {deviceId === deviceID ? $localLang.TIMER.disconnect : $localLang.TIMER.connect}
-              </Button>
-            </li>
-          {/each}
-        </ul>
-      </section>
-    {/if}
-
-    {#if modalData.settings.input === "GAN Cube"}
-      <section>
-        <Checkbox
-          bind:checked={modalData.settings.showBackFace}
-          on:change={e => ($session = $session)}
-          class="w-5 h-5"
-          label={"Show back face"}
-        />
-      </section>
-    {/if}
-
-    {#if modalData.settings.input != "Manual" && !timerOnly}
-      <section class="mt-2">
-        <Checkbox
-          bind:checked={modalData.settings.scrambleAfterCancel}
-          class="w-5 h-5 my-2"
-          label={$localLang.TIMER.refreshScramble}
-        />
-      </section>
-    {/if}
-
-    {#if !timerOnly}
-      <section>
-        <Checkbox
-          bind:checked={modalData.settings.genImage}
-          class="w-5 h-5 my-2"
-          label={$localLang.TIMER.genImage}
-        />
-        <!-- <i class="text-sm text-yellow-500">({ $localLang.TIMER.canHurtPerformance })</i> -->
-      </section>
-
-      <section>
-        <Checkbox
-          bind:checked={modalData.settings.recordCelebration}
-          class="w-5 h-5 my-2"
-          label={$localLang.TIMER.recordCelebration}
-        />
-      </section>
-      <section class="flex flex-wrap gap-4 items-center">
-        {$localLang.TIMER.aoxCalculation}:
-
-        <Select
-          value={~~modalData.settings.calcAoX}
-          items={[$localLang.TIMER.sequential, $localLang.TIMER.groupOfX]}
-          transform={(_, p) => p}
-          label={e => e}
-          onChange={(_, p) => (modalData.settings.calcAoX = p)}
-        />
-      </section>
-    {/if}
-  {/if}
-
-  <svelte:fragment slot="footer">
-    <div class="flex w-full justify-center gap-2">
-      <Button
-        ariaLabel={$localLang.global.cancel}
-        color="alternative"
-        on:click={() => (show = false)}
-      >
-        {$localLang.global.cancel}
-      </Button>
-      {#if type === "edit-scramble" || type === "settings"}
-        <Button
-          color="purple"
-          ariaLabel={$localLang.global.save}
-          on:click={() => {
-            closeHandler(type === "settings" ? true : modalData.trim());
-            show = false;
-          }}
-        >
-          {$localLang.global.save}
-        </Button>
-      {/if}
-    </div>
-  </svelte:fragment>
-</Modal>
-
 <!-- Result -->
-<Modal open={reconstructor.length > 0} on:close={() => reconstructor.length = 0}>
+<Modal open={reconstructor.length > 0} on:close={() => (reconstructor.length = 0)}>
   <div slot="header" class="flex w-full justify-center">
     <Select
       items={reconstructor}
@@ -1455,10 +851,10 @@
       label={e => e.name}
       value={reconstructor[recIndex].name}
       placement="right"
-      onChange={(_, pos) => recIndex = pos}
+      onChange={(_, pos) => (recIndex = pos)}
     ></Select>
   </div>
-  <Reconstructor reconstructor={reconstructor[recIndex].steps} {lastSolve}/>
+  <Reconstructor reconstructor={reconstructor[recIndex].steps} {lastSolve} />
 </Modal>
 
 <style lang="postcss">
@@ -1477,12 +873,12 @@
   .timer-tab {
     display: grid;
     height: 100%;
-    grid-template-columns: auto 1fr auto;
+    grid-template-columns: auto auto 1fr auto;
     grid-template-rows: minmax(0rem, 1fr) 1fr min-content;
     grid-template-areas:
-      "scramble scramble scramble"
-      "timer timer timer"
-      "leftStats image rightStats";
+      "options scramble scramble scramble"
+      "options timer timer timer"
+      "options leftStats image rightStats";
   }
 
   .timer-tab.smart_cube {
@@ -1527,29 +923,6 @@
 
   #manual-inp {
     width: 30rem;
-  }
-
-  table.nshow {
-    margin: 0;
-    font-size: 0;
-  }
-
-  table:not(.nshow) {
-    font-size: inherit;
-    margin: 0px 8px;
-  }
-
-  #hints:not(.isVisible) {
-    left: -80px;
-  }
-
-  #hints:not(.isVisible) table {
-    font-size: 0;
-    margin: 0;
-  }
-
-  #bulb.nshow {
-    @apply ml-0 text-amber-300;
   }
 
   #left-stats tr.better,

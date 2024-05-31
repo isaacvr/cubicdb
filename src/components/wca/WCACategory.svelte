@@ -19,6 +19,7 @@
   import Isqrs from "./Isqrs.svelte";
   import { createEventDispatcher } from "svelte";
   import { ICONS } from "@constants";
+  import I333Cross from "./I333Cross.svelte";
 
   export let icon: Scrambler | '' = '333';
   export let size = '2rem';
@@ -60,6 +61,7 @@
   let iconMap = {
     "222so": I222,
     "333": I333,
+    "333cross": I333Cross,
     "333fm": I333fm,
     "333ni": I333ni,
     "r3ni": I333mbf,

@@ -302,8 +302,6 @@ export interface TimerContext {
   mode: Writable<{ 0: string, 1: string, 2: number }>;
   hintDialog: Writable<boolean>;
   hint: Writable<boolean>;
-  cross: Writable<string>;
-  xcross: Writable<string>;
   preview: Writable<HTMLImgAttributes[]>;
   prob: Writable<number>;
   isRunning: Writable<boolean>;
@@ -955,7 +953,21 @@ export interface IReconstruction {
   hasError: boolean;
 }
 
-export type Scrambler = '222so' | '333' | '333fm' | '333ni' | 'r3ni' | '333oh' | '444bld' | '444wca'
+export type Scrambler = '222so' | '333' | '333cross' | '333fm' | '333ni' | 'r3ni' | '333oh' | '444bld' | '444wca'
   | '555wca' | '555bld' | '666wca' | '777wca' | 'clkwca' | 'mgmp' | 'pyrso' | 'skbso' | 'sqrs';
 
 export type ICacheDB = 'Cache' | 'Algorithms' | 'Sessions' | 'Solves' | 'Tutorials';
+
+export interface ToolItem {
+  id: string;
+  text: string;
+  icon: any;
+  iconParams: any;
+  component: any;
+  handler: Function;
+}
+
+export interface ActiveTool {
+  tool: ToolItem;
+  open: boolean;
+}

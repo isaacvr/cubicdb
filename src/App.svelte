@@ -7,18 +7,6 @@
   import Notification from '@components/Notification.svelte';
   import Lazy from '@components/Lazy.svelte';
   import Home from '@components/Home.svelte';
-  // import Tutorials from '@components/Tutorials.svelte';
-  // import TutorialParser from '@components/TutorialParser.svelte';
-  // import Timer from '@components/timer/Timer.svelte';
-  // import PllRecognition from '@components/PllRecognition.svelte';
-  // import Simulator from '@components/Simulator.svelte';
-  // import ImportExport from '@components/import-export/ImportExport.svelte';
-  // import Battle from '@components/battle/Battle.svelte';
-  // import Settings from '@components/Settings.svelte';
-  // import AlgorithmsAdmin from '@components/AlgorithmsAdmin.svelte';
-  // import CubeDb from '@components/CubeDB.svelte';
-  // import Tools from '@components/tools/Tools.svelte';
-  // import Reconstruction from '@components/Reconstruction.svelte';
   
   import { NotificationService } from '@stores/notification.service';
   import type { INotification } from '@interfaces';
@@ -27,17 +15,12 @@
   import { globalLang, localLang } from '@stores/language.service';
 
   // Premium Stuff
-  // import Contest from '@pcomponents/Contest.svelte';
   import { screen } from '@stores/screen.store';
   import { DataService } from '@stores/data.service';
   import { version } from '@stores/version.store';
   import { randomUUID } from '@helpers/strings';
   import { CubeDBICON } from '@constants';
-    import { CFOP } from '@classes/reconstructors/CFOP';
-    import { Puzzle } from '@classes/puzzle/puzzle';
-  import { Roux } from '@classes/reconstructors/Roux';
-  // import Particles from '@pcomponents/Particles.svelte';
-  // import Space from '@pcomponents/Space.svelte';
+  import { updateBackground } from '@helpers/theme';
 
   let dataService = DataService.getInstance();
   let notService = NotificationService.getInstance();
@@ -101,6 +84,8 @@
 
     document.documentElement.style.setProperty('--app-font', localStorage.getItem('app-font') || 'Ubuntu');
     document.documentElement.style.setProperty('--timer-font', localStorage.getItem('timer-font') || 'Ubuntu');
+
+    // updateBackground('#050E1A', '#042044');
   });
 
   onDestroy(() => nSub());
