@@ -42,6 +42,11 @@
   import ToolFrame from "./timer-tools/ToolFrame.svelte";
   import CrossTool from "./timer-tools/CrossTool.svelte";
   import { onMount } from "svelte";
+  import BldHelperTool from "./timer-tools/BLDHelperTool.svelte";
+  import DailyStatsTool from "./timer-tools/DailyStatsTool.svelte";
+  import MetronomeTool from "./timer-tools/MetronomeTool.svelte";
+  import StackmatTool from "./timer-tools/StackmatTool.svelte";
+  import SolverTool from "./timer-tools/SolverTool.svelte";
 
   type TModal = "" | "edit-scramble" | "old-scrambles" | "settings";
 
@@ -158,7 +163,7 @@
         icon: "333ni",
         buttonClass: " pointer-events-none text-orange-300 ",
       },
-      component: CrossTool,
+      component: BldHelperTool,
       handler: () => {},
     },
     {
@@ -168,7 +173,7 @@
       iconParams: {
         class: " m-1 pointer-events-none text-red-300 ",
       },
-      component: CrossTool,
+      component: DailyStatsTool,
       handler: () => {},
     },
     {
@@ -178,7 +183,7 @@
       iconParams: {
         class: " m-1 pointer-events-none text-purple-300 ",
       },
-      component: CrossTool,
+      component: MetronomeTool,
       handler: () => {},
     },
     {
@@ -188,7 +193,7 @@
       iconParams: {
         class: " m-1 pointer-events-none text-blue-300 ",
       },
-      component: CrossTool,
+      component: StackmatTool,
       handler: () => {},
     },
     {
@@ -199,7 +204,7 @@
         icon: "333",
         buttonClass: " pointer-events-none text-green-300 ",
       },
-      component: CrossTool,
+      component: SolverTool,
       handler: () => {},
     },
   ];
@@ -387,7 +392,7 @@
   }
 
   onMount(() => {
-    addTool(tools[0]);
+    addTool(tools[1]);
   });
 
   $: $localLang, updateTexts();
@@ -475,10 +480,15 @@
     </Dropdown>
   </li>
 
-  <ul class="tool-container">
+  <ul class="tool-container" class:open={toolList.some(t => t.open)}>
     {#each toolList as tool}
-      <ToolFrame {tool} on:close={() => toolList = toolList.filter(t => t.tool.id != tool.tool.id)}>
-        <svelte:component this={tool.tool.component} {context}/>
+      <ToolFrame
+        {tool}
+        on:close={() => (toolList = toolList.filter(t => t.tool.id != tool.tool.id))}
+        on:expand={() => (tool.open = true)}
+        on:collapse={() => (tool.open = false)}
+      >
+        <svelte:component this={tool.tool.component} {context} />
       </ToolFrame>
     {/each}
   </ul>
@@ -761,12 +771,12 @@
   }
 
   .tool-container {
-    position: absolute;
-    top: 0;
-    left: calc(100% + .5rem);
-    display: grid;
-    gap: .5rem;
-    width: max-content;
-    max-width: min(calc(100vw - 3rem), 20rem);
+    @apply absolute top-0 grid gap-2 w-min z-10 shadow-lg;
+    left: calc(100% + 0.5rem);
+    max-width: min(calc(100vw - 3rem), 30rem);
+  }
+
+  .tool-container.open {
+    grid-template-columns: repeat(auto-fit, minmax(2.5rem, 1fr));
   }
 </style>

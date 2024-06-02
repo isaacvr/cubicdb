@@ -72,7 +72,6 @@
         title: HOME.importExport,
         route: '/import-export',
         cube: '/assets/import-export.png',
-        // ready: DataService.getInstance().isElectron,
         ready: true,
       }, {
         title: HOME.settings,

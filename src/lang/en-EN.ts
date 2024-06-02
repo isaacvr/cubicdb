@@ -43,6 +43,8 @@ export const English: Language = {
     summary: 'Summary',
     time: 'Time',
     copy: 'Copy',
+    yes: 'Yes',
+    no: 'No',
   },
   NAVBAR: {
     home: 'Home',

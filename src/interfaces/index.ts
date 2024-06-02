@@ -645,6 +645,8 @@ export interface Language {
     summary: string;
     time: string;
     copy: string;
+    yes: string;
+    no: string;
   }
   NAVBAR: {
     home: string;

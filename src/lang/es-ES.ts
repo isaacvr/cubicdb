@@ -43,6 +43,8 @@ export const Spanish: Language = {
     summary: 'Resumen',
     time: 'Tiempo',
     copy: 'Copiar',
+    yes: 'Sí',
+    no: 'No',
   },
   NAVBAR: {
     home: 'Inicio',

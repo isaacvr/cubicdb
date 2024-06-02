@@ -279,12 +279,11 @@
     switch ($tab) {
       case 0: {
         $inputMethod.keyDownHandler(event);
-        prevExpanded = false;
-
-        if (code === "KeyS" && event.ctrlKey) {
-          initScrambler();
+        
+        if ( code === 'Space' || code === 'Escape' ) {
+          prevExpanded = false;
         }
-
+        
         break;
       }
       case 1: {
@@ -749,10 +748,11 @@
       </section>
     {:else if $session?.settings?.genImage || battle}
       <button
-        class={`flex absolute items-center bottom-0 h-full max-w-[90%] left-1/2 translate-x-[-50%] mx-auto aspect-video z-10
+        class={`flex absolute items-center bottom-0 h-full max-w-[90%] left-1/2 translate-x-[-50%] mx-auto aspect-video
           justify-center transition-all duration-300 select-none` +
-          (prevExpanded ? " bg-black w-full max-w-none" : "")}
+          (prevExpanded ? " bg-black w-full max-w-none z-10" : "z-0")}
         class:hide={$isRunning || timerOnly}
+        on:keydown={e => (e.code === "Space" ? e.preventDefault() : null)}
         on:click={() => {
           prevExpanded = $preview ? !prevExpanded : false;
           new Flip("#preview-container > button").flip({ duration: 200 });
@@ -883,9 +883,9 @@
 
   .timer-tab.smart_cube {
     grid-template-areas:
-      "scramble scramble scramble"
-      "image image image"
-      "leftStats timer rightStats";
+      "options scramble scramble scramble"
+      "options image image image"
+      "options leftStats timer rightStats";
   }
 
   #left-stats {
