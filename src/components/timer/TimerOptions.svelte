@@ -392,7 +392,7 @@
   }
 
   onMount(() => {
-    addTool(tools[2]);
+    addTool(tools[3]);
   });
 
   $: $localLang, updateTexts();
