@@ -46,7 +46,8 @@
       type: 'line',
     },
     textStyle: { color: '#a2a0a0' },
-    backgroundColor: '#1c1b2a'
+    backgroundColor: '#1c1b2a',
+    confine: true,
   };
 
   const rendererType = 'svg';
