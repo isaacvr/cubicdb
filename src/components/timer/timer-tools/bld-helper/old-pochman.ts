@@ -15,12 +15,53 @@ export interface OldPochmanResult {
   parity: boolean;
 }
 
+export interface ISchema {
+  name: string;
+  code: "speffz" | "chichu" | "ar";
+  schema: string[][];
+}
+
 // U              R             F             D             L             B
 // 000 000 000    011 111 111   112 222 222   222 333 333   333 344 444   444 445 555
 // 012 345 678    901 234 567   890 123 456   789 012 345   678 901 234   567 890 123
 // RDB RUU UFD    LLR URD LRF   LLF FFB FDB   LLD BDF UDD   UUB BLU FLU   DRB FBR RBR
 
-export const SPEFFZ_SCHEME = "ABCDEFGHIJKLMNOPQRSTUVWX".split(""); // Speffz
+// Letter Schemes [corners, edges, centers]
+export const SPEFFZ_SCH = [
+  "ABCDEFGHIJKLMNOPQRSTUVWX",
+  "ABCDEFGHIJKLMNOPQRSTUVWX",
+  "ABCDEFGHIJKLMNOPQRSTUVWX",
+].map(e => e.split(""));
+
+export const CHICHU_SCH = [
+  "DGJAECMQBLYNKISZHFPTWXRO",
+  "EGACDTLXBQJSHZPRFWNYIOMK",
+  "ABCDEFGHIJKLMNOPQRSTUVWX",
+].map(e => e.split(""));
+
+export const AR_SCH = [
+  "ABCDEFGHIJKLMNOPQRSTUVWX",
+  "EWCABGPNDIRHXKTJFMVLQSUO",
+  "ABCDEFGHIJKLMNOPQRSTUVWX",
+].map(e => e.split(""));
+
+export const SCHEMAS: ISchema[] = [
+  {
+    name: "Speffz",
+    code: "speffz",
+    schema: SPEFFZ_SCH,
+  },
+  {
+    name: "ChiChu",
+    code: "chichu",
+    schema: CHICHU_SCH,
+  },
+  {
+    name: "AR",
+    code: "ar",
+    schema: AR_SCH,
+  },
+];
 
 const EDGES = [
   // U
@@ -234,13 +275,24 @@ function getCenters(order: number, type: number): number[][] {
   return res;
 }
 
-function toASCII(letter: string) {
-  return letter.charCodeAt(0) - 65; // 65 is the ASCII value for A
+function toNumber(letter: string, scheme: string[]) {
+  return scheme.indexOf(letter);
 }
 
-function letterToFC(letter: string, facelet: string, coord: number[][]): string {
+function getCoordPos(letter: string, coord: number[][], scheme: string[]) {
+  let pos = toNumber(letter, scheme);
+
+  if (pos < 0) {
+    console.log(letter, scheme);
+    throw new Error("F");
+  }
+
+  return coord[pos];
+}
+
+function letterToFC(letter: string, facelet: string, coord: number[][], scheme: string[]): string {
   if (!/^[A-X]$/.test(letter)) return "";
-  let pos = coord[toASCII(letter)];
+  let pos = getCoordPos(letter, coord, scheme);
   return pos.map(p => facelet[p]).join("");
 }
 
@@ -267,21 +319,26 @@ function getNextLetter(
   facelet: string,
   solvedFacelet: string,
   coord: number[][],
-  visited: boolean[]
+  visited: boolean[],
+  scheme: string[]
 ): string | null {
-  let pos = letterToFC(letter, facelet, coord);
+  let pos = letterToFC(letter, facelet, coord, scheme);
 
-  for (let i = 0, maxi = SPEFFZ_SCHEME.length; i < maxi; i += 1) {
+  for (let i = 0, maxi = scheme.length; i < maxi; i += 1) {
     if (visited[i]) continue;
-    if (pos === letterToFC(SPEFFZ_SCHEME[i], solvedFacelet, coord)) return SPEFFZ_SCHEME[i];
+    if (pos === letterToFC(scheme[i], solvedFacelet, coord, scheme)) return scheme[i];
   }
 
   return null;
 }
 
-function samePiece(letter1: string, letter2: string, coord: number[][]): boolean {
-  let p1 = coord[toASCII(letter1)].map(e => e).sort((a, b) => a - b);
-  let p2 = coord[toASCII(letter2)].map(e => e).sort((a, b) => a - b);
+function samePiece(letter1: string, letter2: string, coord: number[][], scheme: string[]): boolean {
+  let p1 = getCoordPos(letter1, coord, scheme)
+    .map(e => e)
+    .sort((a, b) => a - b);
+  let p2 = getCoordPos(letter2, coord, scheme)
+    .map(e => e)
+    .sort((a, b) => a - b);
 
   return p1.every((e, pos) => e === p2[pos]);
 }
@@ -291,18 +348,19 @@ function getEdgeCicle(
   facelet: string,
   solvedFacelet: string,
   nEdges: number[][],
-  visited: boolean[]
+  visited: boolean[],
+  scheme: string[]
 ) {
   let cicle: string[] = [letter];
   let currentLetter = letter;
 
   for (let i = 0; i < 24; i += 1) {
-    let nextLetter = getNextLetter(currentLetter, facelet, solvedFacelet, nEdges, visited);
+    let nextLetter = getNextLetter(currentLetter, facelet, solvedFacelet, nEdges, visited, scheme);
 
     if (nextLetter) {
       cicle.push(nextLetter);
 
-      if (samePiece(cicle[0], nextLetter, nEdges)) {
+      if (samePiece(cicle[0], nextLetter, nEdges, scheme)) {
         break;
       }
 
@@ -318,18 +376,26 @@ function getCornerCicle(
   facelet: string,
   solvedFacelet: string,
   nCorners: number[][],
-  visited: boolean[]
+  visited: boolean[],
+  scheme: string[]
 ) {
   let cicle: string[] = [letter];
   let currentLetter = letter;
 
   for (let i = 0; i < 8; i += 1) {
-    let nextLetter = getNextLetter(currentLetter, facelet, solvedFacelet, nCorners, visited);
+    let nextLetter = getNextLetter(
+      currentLetter,
+      facelet,
+      solvedFacelet,
+      nCorners,
+      visited,
+      scheme
+    );
 
     if (nextLetter) {
       cicle.push(nextLetter);
 
-      if (samePiece(cicle[0], nextLetter, nCorners)) {
+      if (samePiece(cicle[0], nextLetter, nCorners, scheme)) {
         break;
       }
 
@@ -345,22 +411,23 @@ function getCenterCicle(
   facelet: string,
   solvedFacelet: string,
   nCenters: number[][],
-  visited: boolean[]
+  visited: boolean[],
+  scheme: string[]
 ) {
   let cicle: string[] = [letter];
   let currentLetter = letter;
   let vs = visited.slice();
 
-  vs[toASCII(letter)] = true;
+  vs[toNumber(letter, scheme)] = true;
 
   for (let i = 0; i < 24; i += 1) {
-    let nextLetter = getNextLetter(currentLetter, facelet, solvedFacelet, nCenters, vs);
+    let nextLetter = getNextLetter(currentLetter, facelet, solvedFacelet, nCenters, vs, scheme);
 
     if (nextLetter) {
       cicle.push(nextLetter);
-      vs[toASCII(nextLetter)] = true;
+      vs[toNumber(nextLetter, scheme)] = true;
 
-      if (samePiece(cicle[0], nextLetter, nCenters)) {
+      if (samePiece(cicle[0], nextLetter, nCenters, scheme)) {
         break;
       }
 
@@ -374,14 +441,19 @@ function getCenterCicle(
   return cicle;
 }
 
-function markAsVisited(letters: string[], visited: boolean[], coord: number[][]): void {
+function markAsVisited(
+  letters: string[],
+  visited: boolean[],
+  coord: number[][],
+  scheme: string[]
+): void {
   for (let i = 0, maxi = letters.length; i < maxi; i += 1) {
-    let pos = toASCII(letters[i]);
+    let pos = toNumber(letters[i], scheme);
 
     if (visited[pos]) continue;
 
-    for (let j = 0, maxj = SPEFFZ_SCHEME.length; j < maxj; j += 1) {
-      if (samePiece(letters[i], SPEFFZ_SCHEME[j], coord)) {
+    for (let j = 0, maxj = scheme.length; j < maxj; j += 1) {
+      if (samePiece(letters[i], scheme[j], coord, scheme)) {
         visited[j] = true;
       }
     }
@@ -394,28 +466,35 @@ function getEdgeCicles(
   solvedFacelet: string,
   cicles: string[][][],
   flippedEdges: string[][],
-  order: number
+  order: number,
+  scheme: string[]
 ) {
   const maxEdge = (order - 1) >> 1;
 
   for (let n = 1; n <= maxEdge; n += 1) {
     let lCicle: string[][] = [];
     let lFlipped: string[] = [];
-    let visited = SPEFFZ_SCHEME.map(_ => false);
+    let visited = scheme.map(_ => false);
     let nEdges = getEdges(order, n);
-    let mcicle = getEdgeCicle(buffer, facelet, solvedFacelet, nEdges, visited);
+    let mcicle = getEdgeCicle(buffer, facelet, solvedFacelet, nEdges, visited, scheme);
 
     if (mcicle.length) {
       lCicle.push(mcicle);
     }
 
-    markAsVisited(mcicle, visited, nEdges);
-    markAsVisited([buffer], visited, nEdges);
+    markAsVisited(mcicle, visited, nEdges, scheme);
+    markAsVisited([buffer], visited, nEdges, scheme);
+
+    // let iteration = 4;
 
     while (visited.some(e => !e)) {
-      for (let i = 0, maxi = SPEFFZ_SCHEME.length; i < maxi; i += 1) {
+      // iteration--;
+
+      // if (!iteration) break;
+
+      for (let i = 0, maxi = scheme.length; i < maxi; i += 1) {
         if (!visited[i]) {
-          let cicle = getEdgeCicle(SPEFFZ_SCHEME[i], facelet, solvedFacelet, nEdges, visited);
+          let cicle = getEdgeCicle(scheme[i], facelet, solvedFacelet, nEdges, visited, scheme);
 
           if (cicle.length != 2) {
             lCicle.push(cicle);
@@ -423,7 +502,7 @@ function getEdgeCicles(
             lFlipped.push(cicle[0]);
           }
 
-          markAsVisited(cicle, visited, nEdges);
+          markAsVisited(cicle, visited, nEdges, scheme);
         }
       }
     }
@@ -439,11 +518,12 @@ function getCornerCicles(
   solvedFacelet: string,
   cicles: string[][],
   twistedCorners: OldPochmanResult["twistedCorners"],
-  order: number
+  order: number,
+  scheme: string[]
 ) {
-  let visited = SPEFFZ_SCHEME.map(_ => false);
+  let visited = scheme.map(_ => false);
   let nCorners = getCorners(order);
-  let mcicle = getCornerCicle(buffer, facelet, solvedFacelet, nCorners, visited);
+  let mcicle = getCornerCicle(buffer, facelet, solvedFacelet, nCorners, visited, scheme);
 
   mcicle.pop();
   mcicle.shift();
@@ -452,19 +532,24 @@ function getCornerCicles(
     cicles.push(mcicle);
   }
 
-  markAsVisited(mcicle, visited, nCorners);
-  markAsVisited([buffer], visited, nCorners);
+  markAsVisited(mcicle, visited, nCorners, scheme);
+  markAsVisited([buffer], visited, nCorners, scheme);
+
+  // let iteration = 4;
 
   while (visited.some(e => !e)) {
-    for (let i = 0, maxi = SPEFFZ_SCHEME.length; i < maxi; i += 1) {
+    // iteration--;
+
+    // if (!iteration) break;
+    for (let i = 0, maxi = scheme.length; i < maxi; i += 1) {
       if (!visited[i]) {
-        let cicle = getCornerCicle(SPEFFZ_SCHEME[i], facelet, solvedFacelet, nCorners, visited);
+        let cicle = getCornerCicle(scheme[i], facelet, solvedFacelet, nCorners, visited, scheme);
 
         if (cicle.length != 2) {
           cicles.push(cicle);
         } else if (cicle[0] != cicle[1]) {
-          let pos1 = nCorners[toASCII(cicle[0])];
-          let pos2 = nCorners[toASCII(cicle[1])];
+          let pos1 = getCoordPos(cicle[0], nCorners, scheme);
+          let pos2 = getCoordPos(cicle[1], nCorners, scheme);
 
           let dir = (pos2.indexOf(pos1[0]) - 1) * 2 - 1; // for 1 => -1 and for 2 => 1
 
@@ -474,7 +559,7 @@ function getCornerCicles(
           });
         }
 
-        markAsVisited(cicle, visited, nCorners);
+        markAsVisited(cicle, visited, nCorners, scheme);
       }
     }
   }
@@ -485,7 +570,8 @@ function getCenterCicles(
   facelet: string,
   solvedFacelet: string,
   cicles: string[][][],
-  order: number
+  order: number,
+  scheme: string[]
 ) {
   if (order < 4) return;
 
@@ -502,10 +588,8 @@ function getCenterCicles(
   for (let n = 1; n <= maxCenter; n += 1) {
     let lCicle: string[][] = [];
     let nCenters = getCenters(order, n);
-    let visited = SPEFFZ_SCHEME.map(
-      (_, p) => solvedFacelet[nCenters[p][0]] === facelet[nCenters[p][0]]
-    );
-    let mcicle = getCenterCicle(buffer, facelet, solvedFacelet, nCenters, visited);
+    let visited = scheme.map((_, p) => solvedFacelet[nCenters[p][0]] === facelet[nCenters[p][0]]);
+    let mcicle = getCenterCicle(buffer, facelet, solvedFacelet, nCenters, visited, scheme);
 
     mcicle.pop();
     mcicle.shift();
@@ -514,14 +598,19 @@ function getCenterCicles(
       lCicle.push(mcicle);
     }
 
-    markAsVisited(mcicle, visited, nCenters);
-    markAsVisited([buffer], visited, nCenters);
+    markAsVisited(mcicle, visited, nCenters, scheme);
+    markAsVisited([buffer], visited, nCenters, scheme);
+
+    // let iteration = 4;
 
     while (visited.some(e => !e)) {
-      for (let i = 0, maxi = SPEFFZ_SCHEME.length; i < maxi; i += 1) {
+      // iteration--;
+
+      // if (!iteration) break;
+      for (let i = 0, maxi = scheme.length; i < maxi; i += 1) {
         if (!visited[i]) {
-          let cicle = getCenterCicle(SPEFFZ_SCHEME[i], facelet, solvedFacelet, nCenters, visited);
-          markAsVisited(cicle, visited, nCenters);
+          let cicle = getCenterCicle(scheme[i], facelet, solvedFacelet, nCenters, visited, scheme);
+          markAsVisited(cicle, visited, nCenters, scheme);
           lCicle.push(cicle);
         }
       }
@@ -536,7 +625,8 @@ export function getOldPochman(
   eBuffer: string,
   cBuffer: string,
   cnBuffer: string,
-  order: number
+  order: number,
+  schema: ISchema["code"]
 ): OldPochmanResult {
   let pz = Puzzle.fromSequence(scramble, { type: "rubik", order: [order] }, false, true);
   let facelet = pz.toFacelet();
@@ -548,9 +638,23 @@ export function getOldPochman(
   let flippedEdges: string[][] = [];
   let twistedCorners: OldPochmanResult["twistedCorners"] = [];
 
-  getEdgeCicles(eBuffer, facelet, solvedFacelet, eCicles, flippedEdges, order);
-  getCornerCicles(cBuffer, facelet, solvedFacelet, cCicles, twistedCorners, order);
-  getCenterCicles(cnBuffer, facelet, solvedFacelet, cnCicles, order);
+  let cornerScheme: string[] = SPEFFZ_SCH[0];
+  let edgeScheme: string[] = SPEFFZ_SCH[1];
+  let centerScheme: string[] = SPEFFZ_SCH[2];
+
+  for (let i = 0, maxi = SCHEMAS.length; i < maxi; i += 1) {
+    let sch = SCHEMAS[i];
+    if (sch.code === schema) {
+      cornerScheme = sch.schema[0];
+      edgeScheme = sch.schema[1];
+      centerScheme = sch.schema[2];
+      break;
+    }
+  }
+
+  getCornerCicles(cBuffer, facelet, solvedFacelet, cCicles, twistedCorners, order, cornerScheme);
+  getEdgeCicles(eBuffer, facelet, solvedFacelet, eCicles, flippedEdges, order, edgeScheme);
+  getCenterCicles(cnBuffer, facelet, solvedFacelet, cnCicles, order, centerScheme);
 
   let edgeLetters = eCicles.map(c => c.reduce((acc, e) => [...acc, ...e], []));
   let centerLetters = cnCicles.map(c => c.reduce((acc, e) => [...acc, ...e], []));
@@ -562,9 +666,7 @@ export function getOldPochman(
 
     edges: edgeLetters,
     flippedEdges,
-    edgeBufferState: flippedEdges.map(fe =>
-      fe.length % 2 === 1 ? 'flipped' : "normal"
-    ),
+    edgeBufferState: flippedEdges.map(fe => (fe.length % 2 === 1 ? "flipped" : "normal")),
 
     corners: cornerLetters,
     twistedCorners: twistedCorners,

@@ -40,8 +40,7 @@ export function circle(arr: any[], ...args: any[]) {
 //pow: 1, 2, 3, ...
 //ori: ori1, ori2, ..., orin, base
 // arr[perm[idx2]] = arr[perm[idx1]] + ori[idx2] - ori[idx1] + base
-export function acycle(arr: number[], perm: any[], pow?: number, ori?: number[]) {
-  pow = pow || 1;
+export function acycle(arr: number[], perm: any[], pow: number = 1, ori?: number[]) {
   let plen = perm.length;
   let tmp = [];
   for (let i = 0; i < plen; i++) {
@@ -104,7 +103,7 @@ export function get8Perm(arr: number[], n?: number, even?: number) {
     idx = (n - i) * idx + ((val >> v) & 7);
     val -= 0x11111110 << v;
   }
-  return even as any < 0 ? idx >> 1 : idx;
+  return (even as any) < 0 ? idx >> 1 : idx;
 }
 
 export function set8Perm(arr: number[], idx: number, n?: number, even?: number) {
@@ -156,49 +155,44 @@ export function setNOri(arr: number[], idx: number, n: number, evenbase: number)
 
 // type: 'p', 'o'
 // evenbase: base for ori, sign for even parity
-export function coord(type: string, length: number, evenbase: number) {
-  // @ts-ignore
-  let _this: any = this;
-  _this.length = length;
-  _this.evenbase = evenbase;
-  _this.get =
-    type == "p"
-      ? function (arr: number[]) {
-        // @ts-ignore
-        let _this: any = this;
-        return get8Perm(arr, _this.length, _this.evenbase);
-      }
-      : function (arr: number[]) {
-        // @ts-ignore
-        let _this: any = this;
-        return getNOri(arr, _this.length, _this.evenbase);
-      };
-  _this.set =
-    type == "p"
-      ? function (arr: number[], idx: number) {
-        // @ts-ignore
-        let _this: any = this;
-        return set8Perm(arr, idx, _this.length, _this.evenbase);
-      }
-      : function (arr: number[], idx: number) {
-        // @ts-ignore
-        let _this: any = this;
-        return setNOri(arr, idx, _this.length, _this.evenbase);
-      };
+export class coord {
+  length: number;
+  evenbase: number;
+
+  private type: string;
+
+  constructor(type: string, length: number, evenbase: number) {
+    this.length = length;
+    this.evenbase = evenbase;
+    this.type = type;
+  }
+
+  get(arr: number[]) {
+    if (this.type === 'p') return get8Perm(arr, this.length, this.evenbase);
+    return getNOri(arr, this.length, this.evenbase);
+  }
+  
+  set(arr: number[], idx: number) {
+    if (this.type === 'p') return set8Perm(arr, idx, this.length, this.evenbase);
+    return setNOri(arr, idx, this.length, this.evenbase);
+  }
 }
 
-export function fillFacelet(facelets: number[][], f: number[], perm: number[], ori: number[], divcol: number) {
+export function fillFacelet(
+  facelets: number[][],
+  f: number[],
+  perm: number[],
+  ori: number[],
+  divcol: number
+) {
   for (let i = 0; i < facelets.length; i++) {
     for (let j = 0; j < facelets[i].length; j++) {
-      f[facelets[i][(j + ori[i]) % facelets[i].length]] = ~~(
-        facelets[perm[i]][j] / divcol
-      );
+      f[facelets[i][(j + ori[i]) % facelets[i].length]] = ~~(facelets[perm[i]][j] / divcol);
     }
   }
 }
 
-export function createMove(moveTable, size, doMove, N_MOVES?) {
-  N_MOVES = N_MOVES || 6;
+export function createMove(moveTable: number[][], size: number, doMove: any, N_MOVES = 6) {
   if (Array.isArray(doMove)) {
     let cord = new coord(doMove[1], doMove[2], doMove[3]);
     doMove = doMove[0];
@@ -242,7 +236,6 @@ export function edgeMove(arr: number[], m: number) {
   }
 }
 
-
 let cornerFacelet = [
   [8, 9, 20],
   [6, 18, 38],
@@ -273,12 +266,30 @@ let rotMult: number[][] = [];
 let rotMulI: number[][] = [];
 let rotMulM: number[][] = [];
 let rot2str = [
-  "", "y'", "y2", "y",
-  "z2", "y' z2", "y2 z2", "y z2",
-  "y' x'", "y2 x'", "y x'", "x'",
-  "y' x", "y2 x", "y x", "x",
-  "y z", "z", "y' z", "y2 z",
-  "y' z'", "y2 z'", "y z'", "z'"
+  "",
+  "y'",
+  "y2",
+  "y",
+  "z2",
+  "y' z2",
+  "y2 z2",
+  "y z2",
+  "y' x'",
+  "y2 x'",
+  "y x'",
+  "x'",
+  "y' x",
+  "y2 x",
+  "y x",
+  "x",
+  "y z",
+  "z",
+  "y' z",
+  "y2 z",
+  "y' z'",
+  "y2 z'",
+  "y z'",
+  "z'",
 ];
 let CubeMoveRE = /^\s*([URFDLB]w?|[EMSyxz]|2-2[URFDLB]w)(['2]?)(@\d+)?\s*$/;
 
@@ -333,13 +344,21 @@ export class CubieCube {
     }
 
     return moveCube;
-
   })();
 
   static rotCube = (function () {
-    let u4 = new CubieCube().init([3, 0, 1, 2, 7, 4, 5, 6], [6, 0, 2, 4, 14, 8, 10, 12, 23, 17, 19, 21]);
-    let f2 = new CubieCube().init([5, 4, 7, 6, 1, 0, 3, 2], [12, 10, 8, 14, 4, 2, 0, 6, 18, 16, 22, 20]);
-    let urf = new CubieCube().init([8, 20, 13, 17, 19, 15, 22, 10], [3, 16, 11, 18, 7, 22, 15, 20, 1, 9, 13, 5]);
+    let u4 = new CubieCube().init(
+      [3, 0, 1, 2, 7, 4, 5, 6],
+      [6, 0, 2, 4, 14, 8, 10, 12, 23, 17, 19, 21]
+    );
+    let f2 = new CubieCube().init(
+      [5, 4, 7, 6, 1, 0, 3, 2],
+      [12, 10, 8, 14, 4, 2, 0, 6, 18, 16, 22, 20]
+    );
+    let urf = new CubieCube().init(
+      [8, 20, 13, 17, 19, 15, 22, 10],
+      [3, 16, 11, 18, 7, 22, 15, 20, 1, 9, 13, 5]
+    );
     let c = new CubieCube();
     let d = new CubieCube();
 
@@ -459,14 +478,12 @@ export class CubieCube {
     for (let c = 0; c < 8; c++) {
       let j = this.ca[c] & 0x7; // cornercubie with index j is at
       let ori = this.ca[c] >> 3; // Orientation of this cubie
-      for (let n = 0; n < 3; n++)
-        f[cFacelet[c][(n + ori) % 3]] = ts[~~(cFacelet[j][n] / 9)];
+      for (let n = 0; n < 3; n++) f[cFacelet[c][(n + ori) % 3]] = ts[~~(cFacelet[j][n] / 9)];
     }
     for (let e = 0; e < 12; e++) {
       let j = this.ea[e] >> 1; // edgecubie with index j is at edgeposition
       let ori = this.ea[e] & 1; // Orientation of this cubie
-      for (let n = 0; n < 2; n++)
-        f[eFacelet[e][(n + ori) % 2]] = ts[~~(eFacelet[j][n] / 9)];
+      for (let n = 0; n < 2; n++) f[eFacelet[e][(n + ori) % 2]] = ts[~~(eFacelet[j][n] / 9)];
     }
     return f.join("");
   }
@@ -481,7 +498,11 @@ export class CubieCube {
     return this;
   }
 
-  fromFacelet(facelet: string, cFacelet: number[][] = cornerFacelet, eFacelet: number[][] = edgeFacelet) {
+  fromFacelet(
+    facelet: string,
+    cFacelet: number[][] = cornerFacelet,
+    eFacelet: number[][] = edgeFacelet
+  ) {
     let count = 0;
     let f = [];
     let centers = facelet[4] + facelet[13] + facelet[22] + facelet[31] + facelet[40] + facelet[49];
@@ -497,8 +518,7 @@ export class CubieCube {
     }
     let col1, col2, i, j, ori;
     for (i = 0; i < 8; ++i) {
-      for (ori = 0; ori < 3; ++ori)
-        if (f[cFacelet[i][ori]] == 0 || f[cFacelet[i][ori]] == 3) break;
+      for (ori = 0; ori < 3; ++ori) if (f[cFacelet[i][ori]] == 0 || f[cFacelet[i][ori]] == 3) break;
       col1 = f[cFacelet[i][(ori + 1) % 3]];
       col2 = f[cFacelet[i][(ori + 2) % 3]];
       for (j = 0; j < 8; ++j) {
@@ -527,14 +547,14 @@ export class CubieCube {
       }
     }
     return this;
-  };
+  }
 
   verify() {
     let mask = 0;
     let sum = 0;
 
     for (let e = 0; e < 12; e++) {
-      mask |= 1 << 8 << (this.ea[e] >> 1);
+      mask |= (1 << 8) << (this.ea[e] >> 1);
       sum ^= this.ea[e] & 1;
     }
 
@@ -542,12 +562,15 @@ export class CubieCube {
 
     for (let c = 0; c < 8; c++) {
       mask |= 1 << (this.ca[c] & 7);
-      sum += this.ca[c] >> 3 << 1;
+      sum += (this.ca[c] >> 3) << 1;
       cp.push(this.ca[c] & 0x7);
     }
 
-    if (mask != 0xfffff || sum % 6 != 0
-      || getNParity(getNPerm(this.ea, 12), 12) != getNParity(getNPerm(cp, 8), 8)) {
+    if (
+      mask != 0xfffff ||
+      sum % 6 != 0 ||
+      getNParity(getNPerm(this.ea, 12), 12) != getNParity(getNPerm(cp, 8), 8)
+    ) {
       return -1;
     }
 
@@ -592,11 +615,10 @@ export class CubieCube {
       cycles += (small_cycles[0] + small_cycles[1]) >> 1;
     } else {
       let flip_cycles = [0, 2, 3, 5, 6, 8, 9];
-      cycles +=
-        small_cycles[1] + flip_cycles[(small_cycles[0] - small_cycles[1]) >> 1];
+      cycles += small_cycles[1] + flip_cycles[(small_cycles[0] - small_cycles[1]) >> 1];
     }
     return cycles - ~~parity;
-  };
+  }
 
   selfMoveStr(moveStr: string, isInv: boolean) {
     let m = CubeMoveRE.exec(moveStr);
@@ -604,7 +626,7 @@ export class CubieCube {
       return;
     }
     let face = m[1];
-    let pow = "2'".indexOf(m[2] || '-') + 2;
+    let pow = "2'".indexOf(m[2] || "-") + 2;
     if (isInv) {
       pow = 4 - pow;
     }
@@ -612,9 +634,9 @@ export class CubieCube {
       this.tstamp = ~~m[3].slice(1);
     }
     this.ori = this.ori || 0;
-    let axis = 'URFDLB'.indexOf(face);
+    let axis = "URFDLB".indexOf(face);
     if (axis != -1) {
-      let _m = axis * 3 + pow % 4 - 1
+      let _m = axis * 3 + (pow % 4) - 1;
       _m = CubieCube.rotMulM[this.ori][_m];
 
       CubieCube.EdgeMult(this, CubieCube.moveCube[_m], tmpCubie);
@@ -624,10 +646,10 @@ export class CubieCube {
 
       return _m;
     }
-    axis = 'UwRwFwDwLwBw'.indexOf(face);
+    axis = "UwRwFwDwLwBw".indexOf(face);
     if (axis != -1) {
       axis >>= 1;
-      let _m = (axis + 3) % 6 * 3 + pow % 4 - 1
+      let _m = ((axis + 3) % 6) * 3 + (pow % 4) - 1;
       _m = CubieCube.rotMulM[this.ori][_m];
       CubieCube.EdgeMult(this, CubieCube.moveCube[_m], tmpCubie);
       CubieCube.CornMult(this, CubieCube.moveCube[_m], tmpCubie);
@@ -638,13 +660,13 @@ export class CubieCube {
       }
       return _m;
     }
-    axis = ['2-2Uw', '2-2Rw', '2-2Fw', '2-2Dw', '2-2Lw', '2-2Bw'].indexOf(face);
+    axis = ["2-2Uw", "2-2Rw", "2-2Fw", "2-2Dw", "2-2Lw", "2-2Bw"].indexOf(face);
     if (axis == -1) {
-      axis = [null, null, 'S', 'E', 'M', null].indexOf(face);
+      axis = [null, null, "S", "E", "M", null].indexOf(face);
     }
     if (axis != -1) {
-      let m1 = axis * 3 + (4 - pow) % 4 - 1;
-      let m2 = (axis + 3) % 6 * 3 + pow % 4 - 1;
+      let m1 = axis * 3 + ((4 - pow) % 4) - 1;
+      let m2 = ((axis + 3) % 6) * 3 + (pow % 4) - 1;
       m1 = CubieCube.rotMulM[this.ori][m1];
       CubieCube.EdgeMult(this, CubieCube.moveCube[m1], tmpCubie);
       CubieCube.CornMult(this, CubieCube.moveCube[m1], tmpCubie);
@@ -659,7 +681,7 @@ export class CubieCube {
       }
       return m1 + 18;
     }
-    axis = 'yxz'.indexOf(face);
+    axis = "yxz".indexOf(face);
     if (axis != -1) {
       let rot = [3, 15, 17][axis];
       for (let i = 0; i < pow; i++) {
@@ -682,7 +704,6 @@ export class CubieCube {
       this.ori = CubieCube.rotMulI[this.ori][conj] || 0;
     }
   }
-
 }
 
 let tmpCubie = new CubieCube();
@@ -874,16 +895,7 @@ export class Solver {
         this.move[i] = [];
         this.prun[i] = [];
         createMove(this.move[i], size, doMove, this.N_MOVES);
-        createPrun(
-          this.prun[i],
-          init,
-          size,
-          maxd,
-          this.move[i],
-          this.N_MOVES,
-          this.N_POWER,
-          N_INV
-        );
+        createPrun(this.prun[i], init, size, maxd, this.move[i], this.N_MOVES, this.N_POWER, N_INV);
       }
       this.inited = true;
     }
@@ -897,7 +909,7 @@ export class Solver {
       }
     }
     return maxl == MAXL ? null : this.sol.reverse();
-  };
+  }
 
   idaSearch(state: SolverState, maxl: number, lm: number) {
     let N_STATES = this.N_STATES;
@@ -927,7 +939,7 @@ export class Solver {
       }
     }
     return false;
-  };
+  }
 
   toStr(sol: number[][], move_map: string, power_map: string) {
     let ret = [];
@@ -935,186 +947,207 @@ export class Solver {
       ret.push(move_map[sol[i][0]] + power_map[sol[i][1]]);
     }
     return ret.join(" ").replace(/ +/g, " ");
-  };
-
-}
-
-function identity(state) {
-  return state;
+  }
 }
 
 // state: string not null
 // solvedStates: [solvedstate, solvedstate, ...], string not null
 // moveFunc: function(state, move);
 // moves: {move: face0 | axis0}, face0 | axis0 = 4 + 4 bits
-export function gSolver(solvedStates, doMove, moves, prunHash) {
-  this.solvedStates = solvedStates;
-  this.doMove = doMove;
-  this.movesList = [];
-  for (let move in moves) {
-    this.movesList.push([move, moves[move]]);
+export class gSolver {
+  prunDepth: number;
+  prevSize: number;
+  prunTableSize: number;
+  prunTable: Record<string, number>;
+  cost: number;
+  MAX_PRUN_SIZE: number;
+  solvedStates: string[];
+  doMove: Function;
+  movesList: any[];
+  toUpdateArr: string[] | null;
+  state: string;
+
+  sol: any;
+  solArr: string[] | null;
+  prevSolStr: string | null;
+  subOpt: any;
+  visited: any;
+  maxl: any;
+
+  constructor(solvedStates: string[], doMove: Function, moves: Record<string, number>) {
+    this.solvedStates = solvedStates;
+    this.doMove = doMove;
+    this.movesList = [];
+    for (var move in moves) {
+      this.movesList.push([move, moves[move]]);
+    }
+    this.prunTable = {};
+    this.toUpdateArr = null;
+    this.prunTableSize = 0;
+    this.prunDepth = -1;
+    this.state = "";
+    this.prevSize = 0;
+    this.cost = 0;
+    this.MAX_PRUN_SIZE = 100000;
+    this.solArr = null;
+    this.prevSolStr = "";
   }
-  this.prunHash = prunHash || identity;
-  this.prunTable = {};
-  this.toUpdateArr = null;
-  this.prunTableSize = 0;
-  this.prunDepth = -1;
-  this.cost = 0;
-}
 
-let _ = gSolver.prototype;
+  updatePrun(targetDepth?: number) {
+    targetDepth = targetDepth === undefined ? this.prunDepth + 1 : targetDepth;
 
-_.updatePrun = function (targetDepth) {
-  targetDepth = targetDepth === undefined ? this.prunDepth + 1 : targetDepth;
-  for (let depth = this.prunDepth + 1; depth <= targetDepth; depth++) {
-    let t = +new Date();
-    if (depth < 1) {
-      this.prevSize = 0;
-      for (let i = 0; i < this.solvedStates.length; i++) {
-        let state = this.prunHash(this.solvedStates[i]);
-        if (!(state in this.prunTable)) {
-          this.prunTable[state] = depth;
-          this.prunTableSize++;
+    for (var depth = this.prunDepth + 1; depth <= targetDepth; depth++) {
+      if (this.prevSize >= this.MAX_PRUN_SIZE) {
+        break;
+      }
+      var t = +new Date();
+      if (depth < 1) {
+        this.prevSize = 0;
+        for (var i = 0; i < this.solvedStates.length; i++) {
+          var state = this.solvedStates[i];
+          if (!(state in this.prunTable)) {
+            this.prunTable[state] = depth;
+            this.prunTableSize++;
+          }
         }
+      } else {
+        this.updatePrunBFS(depth - 1);
       }
-    } else {
-      this.updatePrunBFS(depth - 1);
-    }
-    if (this.cost == 0) {
-      return;
-    }
-    this.prunDepth = depth;
-    this.prevSize = this.prunTableSize;
-  }
-};
-
-_.updatePrunBFS = function (fromDepth) {
-  if (this.toUpdateArr == null) {
-    this.toUpdateArr = [];
-    for (let state in this.prunTable) {
-      if (this.prunTable[state] != fromDepth) {
-        continue;
-      }
-      this.toUpdateArr.push(state);
-    }
-  }
-  while (this.toUpdateArr.length != 0) {
-    let state = this.toUpdateArr.pop();
-    for (let moveIdx = 0; moveIdx < this.movesList.length; moveIdx++) {
-      let newState = this.doMove(state, this.movesList[moveIdx][0]);
-      if (!newState || newState in this.prunTable) {
-        continue;
-      }
-      this.prunTable[newState] = fromDepth + 1;
-      this.prunTableSize++;
-    }
-    if (this.cost >= 0) {
       if (this.cost == 0) {
         return;
       }
+      this.prunDepth = depth;
+      this.prevSize = this.prunTableSize;
+    }
+  }
+
+  updatePrunBFS(fromDepth: number) {
+    if (this.toUpdateArr == null) {
+      this.toUpdateArr = [];
+      for (let state in this.prunTable) {
+        if (this.prunTable[state] != fromDepth) {
+          continue;
+        }
+        this.toUpdateArr.push(state);
+      }
+    }
+    while (this.toUpdateArr.length != 0) {
+      let state = this.toUpdateArr.pop();
+      for (let moveIdx = 0; moveIdx < this.movesList.length; moveIdx++) {
+        let newState = this.doMove(state, this.movesList[moveIdx][0]);
+        if (!newState || newState in this.prunTable) {
+          continue;
+        }
+        this.prunTable[newState] = fromDepth + 1;
+        this.prunTableSize++;
+      }
+      if (this.cost >= 0) {
+        if (this.cost == 0) {
+          return;
+        }
+        this.cost--;
+      }
+    }
+    this.toUpdateArr = null;
+  }
+
+  search(state: string, minl: number, MAXL = 98) {
+    this.sol = [];
+    this.subOpt = false;
+    this.state = state;
+    this.visited = {};
+    this.maxl = minl = minl || 0;
+    return this.searchNext(MAXL);
+  }
+
+  searchNext(MAXL = 98, cost = -1) {
+    MAXL = MAXL + 1;
+    this.cost = cost;
+
+    this.prevSolStr = this.solArr ? this.solArr.join(",") : null;
+    this.solArr = null;
+
+    for (; this.maxl < MAXL; this.maxl += 1) {
+      this.updatePrun(Math.ceil(this.maxl / 2));
+      if (this.cost == 0) {
+        return null;
+      }
+      if (this.idaSearch(this.state, this.maxl, null, 0)) {
+        break;
+      }
+    }
+
+    return this.solArr as string[] | null;
+  }
+
+  getPruning(state: string) {
+    let prun = this.prunTable[state];
+    return prun === undefined ? this.prunDepth + 1 : prun;
+  }
+
+  idaSearch(state: string, maxl: number, lm: any, depth: number) {
+    if (this.getPruning(state) > maxl) {
+      return false;
+    }
+    if (maxl == 0) {
+      if (this.solvedStates.indexOf(state) == -1) {
+        return false;
+      }
+      let solArr = this.getSolArr();
+      this.subOpt = true;
+      if (solArr.join(",") == this.prevSolStr) {
+        return false;
+      }
+      this.solArr = solArr;
+      return true;
+    }
+    if (!this.subOpt) {
+      if (state in this.visited && this.visited[state] < depth) {
+        return false;
+      }
+      this.visited[state] = depth;
+    }
+    if (this.cost >= 0) {
+      if (this.cost == 0) {
+        return true;
+      }
       this.cost--;
     }
-  }
-  this.toUpdateArr = null;
-};
-
-_.search = function (state, minl, MAXL) {
-  this.sol = [];
-  this.subOpt = false;
-  this.state = state;
-  this.visited = {};
-  this.maxl = minl = minl || 0;
-  return this.searchNext(MAXL);
-};
-
-_.searchNext = function (MAXL, cost) {
-  MAXL = MAXL + 1 || 99;
-  this.prevSolStr = this.solArr ? this.solArr.join(",") : null;
-  this.solArr = null;
-  this.cost = cost || -1;
-  for (; this.maxl < MAXL; this.maxl++) {
-    this.updatePrun(Math.ceil(this.maxl / 2));
-    if (this.cost == 0) {
-      return null;
+    let lastMove = lm == null ? "" : this.movesList[lm][0];
+    let lastAxisFace = lm == null ? -1 : this.movesList[lm][1];
+    for (let moveIdx = this.sol[depth] || 0; moveIdx < this.movesList.length; moveIdx++) {
+      let moveArgs = this.movesList[moveIdx];
+      let axisface = moveArgs[1] ^ lastAxisFace;
+      let move = moveArgs[0];
+      if (axisface == 0 || ((axisface & 0xf) == 0 && move <= lastMove)) {
+        continue;
+      }
+      let newState = this.doMove(state, move);
+      if (!newState || newState == state) {
+        continue;
+      }
+      this.sol[depth] = moveIdx;
+      if (this.idaSearch(newState, maxl - 1, moveIdx, depth + 1)) {
+        return true;
+      }
+      this.sol.pop();
     }
-    if (this.idaSearch(this.state, this.maxl, null, 0)) {
-      break;
-    }
-  }
-  return this.solArr;
-};
-
-_.getPruning = function (state) {
-  let prun = this.prunTable[this.prunHash(state)];
-  return prun === undefined ? this.prunDepth + 1 : prun;
-};
-
-_.idaSearch = function (state, maxl, lm, depth) {
-  if (this.getPruning(state) > maxl) {
     return false;
   }
-  if (maxl == 0) {
-    if (this.solvedStates.indexOf(state) == -1) {
-      return false;
-    }
-    let solArr = this.getSolArr();
-    this.subOpt = true;
-    if (solArr.join(",") == this.prevSolStr) {
-      return false;
-    }
-    this.solArr = solArr;
-    return true;
-  }
-  if (!this.subOpt) {
-    if (state in this.visited && this.visited[state] < depth) {
-      return false;
-    }
-    this.visited[state] = depth;
-  }
-  if (this.cost >= 0) {
-    if (this.cost == 0) {
-      return true;
-    }
-    this.cost--;
-  }
-  let lastMove = lm == null ? "" : this.movesList[lm][0];
-  let lastAxisFace = lm == null ? -1 : this.movesList[lm][1];
-  for (
-    let moveIdx = this.sol[depth] || 0;
-    moveIdx < this.movesList.length;
-    moveIdx++
-  ) {
-    let moveArgs = this.movesList[moveIdx];
-    let axisface = moveArgs[1] ^ lastAxisFace;
-    let move = moveArgs[0];
-    if (axisface == 0 || ((axisface & 0xf) == 0 && move <= lastMove)) {
-      continue;
-    }
-    let newState = this.doMove(state, move);
-    if (!newState || newState == state) {
-      continue;
-    }
-    this.sol[depth] = moveIdx;
-    if (this.idaSearch(newState, maxl - 1, moveIdx, depth + 1)) {
-      return true;
-    }
-    this.sol.pop();
-  }
-  return false;
-};
 
-_.getSolArr = function () {
-  let solArr = [];
-  for (let i = 0; i < this.sol.length; i++) {
-    solArr.push(this.movesList[this.sol[i]][0]);
+  getSolArr() {
+    let solArr = [];
+    for (let i = 0; i < this.sol.length; i++) {
+      solArr.push(this.movesList[this.sol[i]][0]);
+    }
+    return solArr;
   }
-  return solArr;
-};
+}
 
 let randGen = (function () {
   let rndFunc: MersenneTwisterObject;
-  let rndCnt;
-  let seedStr; // '' + new Date().getTime();
+  let rndCnt: number;
+  let seedStr: string; // '' + new Date().getTime();
 
   function random() {
     rndCnt++;
@@ -1125,7 +1158,7 @@ let randGen = (function () {
     return [rndCnt, seedStr];
   }
 
-  function setSeed(_rndCnt, _seedStr) {
+  function setSeed(_rndCnt: number, _seedStr: string) {
     if (_seedStr && (_seedStr != seedStr || rndCnt > _rndCnt)) {
       let seed = [];
       for (let i = 0; i < _seedStr.length; i++) {
@@ -1191,14 +1224,14 @@ export function rndProb(plist: number[]) {
   return curIdx;
 }
 
-export function time2str(unix, format) {
+export function time2str(unix: number, format: string) {
   if (!unix) {
     return "N/A";
   }
   format = format || "%Y-%M-%D %h:%m:%s";
   let date = new Date(unix * 1000);
   return format
-    .replace("%Y", date.getFullYear())
+    .replace("%Y", date.getFullYear().toString())
     .replace("%M", ("0" + (date.getMonth() + 1)).slice(-2))
     .replace("%D", ("0" + date.getDate()).slice(-2))
     .replace("%h", ("0" + date.getHours()).slice(-2))
@@ -1208,7 +1241,7 @@ export function time2str(unix, format) {
 
 let timeRe = /^\s*(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)\s*$/;
 
-export function str2time(val) {
+export function str2time(val: string) {
   let m = timeRe.exec(val);
   if (!m) {
     return null;
@@ -1223,21 +1256,21 @@ export function str2time(val) {
   return ~~(date.getTime() / 1000);
 }
 
-export function obj2str(val) {
+export function obj2str(val: object) {
   if (typeof val == "string") {
     return val;
   }
   return JSON.stringify(val);
 }
 
-export function str2obj(val) {
+export function str2obj(val: any): object {
   if (typeof val != "string") {
     return val;
   }
   return JSON.parse(val);
 }
 
-export function valuedArray(len, val) {
+export function valuedArray(len: number, val: any) {
   let ret = [];
   for (let i = 0; i < len; i++) {
     ret[i] = val;
@@ -1253,8 +1286,19 @@ export function idxArray(arr: any[], idx: number) {
   return ret;
 }
 
-export const minx = (function() {
-  let U = 0, R = 1, F = 2, L = 3, BL = 4, BR = 5, DR = 6, DL = 7, DBL = 8, B = 9, DBR = 10, D = 11;
+export const minx = (function () {
+  let U = 0,
+    R = 1,
+    F = 2,
+    L = 3,
+    BL = 4,
+    BR = 5,
+    DR = 6,
+    DL = 7,
+    DBL = 8,
+    B = 9,
+    DBR = 10,
+    D = 11;
   let oppFace = [D, DBL, B, DBR, DR, DL, BL, BR, R, F, L, U];
   let adjFaces = [
     [BR, R, F, L, BL], //U
@@ -1268,13 +1312,13 @@ export const minx = (function() {
     [D, B, BL, L, DL], //DBL
     [D, DBR, BR, BL, DBL], //B
     [D, DR, R, BR, B], //DBR
-    [DR, DBR, B, DBL, DL]  //D
+    [DR, DBR, B, DBL, DL], //D
   ];
 
   // wide: 0=single, 1=all, 2=all but single
   // state: corn*5, edge*5, center*1
   function doMove(state: number[], face: number, pow: number, wide: number) {
-    pow = (pow % 5 + 5) % 5;
+    pow = ((pow % 5) + 5) % 5;
     if (pow == 0) {
       return;
     }
@@ -1287,17 +1331,17 @@ export const minx = (function() {
       if (wide == 0 || wide == 1) {
         swaps[i].push(base + i);
         swaps[i].push(base + i + 5);
-        swaps[i].push(aface * 11 + ridx % 5 + 5);
-        swaps[i].push(aface * 11 + ridx % 5);
-        swaps[i].push(aface * 11 + (ridx + 1) % 5);
+        swaps[i].push(aface * 11 + (ridx % 5) + 5);
+        swaps[i].push(aface * 11 + (ridx % 5));
+        swaps[i].push(aface * 11 + ((ridx + 1) % 5));
       }
       if (wide == 1 || wide == 2) {
         swaps[i].push(aface * 11 + 10);
         for (let j = 1; j < 5; j++) {
-          swaps[i].push(aface * 11 + (ridx + j) % 5 + 5);
+          swaps[i].push(aface * 11 + ((ridx + j) % 5) + 5);
         }
         for (let j = 2; j < 5; j++) {
-          swaps[i].push(aface * 11 + (ridx + j) % 5);
+          swaps[i].push(aface * 11 + ((ridx + j) % 5));
         }
         let ii = 4 - i;
         let opp = oppFace[face];
@@ -1307,8 +1351,8 @@ export const minx = (function() {
         swaps[i].push(opp * 11 + ii + 5);
         swaps[i].push(oaface * 11 + 10);
         for (let j = 0; j < 5; j++) {
-          swaps[i].push(oaface * 11 + (oridx + j) % 5 + 5);
-          swaps[i].push(oaface * 11 + (oridx + j) % 5);
+          swaps[i].push(oaface * 11 + ((oridx + j) % 5) + 5);
+          swaps[i].push(oaface * 11 + ((oridx + j) % 5));
         }
       }
     }
@@ -1320,11 +1364,10 @@ export const minx = (function() {
   return {
     doMove: doMove,
     oppFace: oppFace,
-    adjFaces: adjFaces
-  }
+    adjFaces: adjFaces,
+  };
 })();
 
-export const SOLVED_FACELET =
-  "UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB";
+export const SOLVED_FACELET = "UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB";
 export const getSeed = randGen.getSeed;
 export const setSeed = randGen.setSeed;

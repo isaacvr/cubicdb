@@ -1,5 +1,7 @@
 import { prettyScramble } from "@helpers/strings";
 import { Interpreter } from "./scrambleInterpreter";
+import { solvFacelet } from "@cstimer/scramble/scramble_333";
+import { Puzzle } from "./puzzle/puzzle";
 
 export const scrambleReg = /^([\d]+)?([FRUBLDfrubldzxySME])(?:([w])|&sup([\d]);)?('|2'|2|3'|3)?$/;
 
@@ -34,6 +36,20 @@ export class ScrambleParser {
       moveseq.push([moveMap.indexOf("FRUBLD".charAt(f % 6)), w, p, 0, (f < 12 ? 0 : 1)]); // Move Index, Face Index, Direction
     }
     return moveseq;
+  }
+
+  static parseScrambleOld(scramble: string, order: number, moveMap: string) {
+    return ScrambleParser.parseNNN(
+      solvFacelet(
+        Puzzle.fromSequence(scramble, { type: "rubik", order: [3] }, true, true).toFacelet()
+      ),
+      3,
+      moveMap
+    ).map((moves: any) => ({
+      move: moves[1],
+      pos: moveMap.indexOf(moves[1]),
+      times: ((moves[2] % 4) + 4) % 4
+    }));
   }
 
   static parseNNN(scramble: string, order: number, MOVE_MAP = "URFDLB") {

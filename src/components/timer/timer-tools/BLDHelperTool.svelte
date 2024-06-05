@@ -1,20 +1,24 @@
 <script lang="ts">
   import type { TimerContext } from "@interfaces";
   import * as all from "@cstimer/scramble";
-  import { SPEFFZ_SCHEME, getOldPochman, type OldPochmanResult } from "./bld-helper/old-pochman";
+  import { CHICHU_SCH, SCHEMAS, SPEFFZ_SCH, getOldPochman, type ISchema, type OldPochmanResult } from "./bld-helper/old-pochman";
   import ClockwiseIcon from "@icons/CogClockwise.svelte";
   import CounterClockwiseIcon from "@icons/CogCounterclockwise.svelte";
   import Select from "@components/material/Select.svelte";
   import FlippedIcon from "@icons/ArrowUpDown.svelte";
-  import { Tooltip } from "flowbite-svelte";
+  import { Button, ButtonGroup, Tooltip } from "flowbite-svelte";
+
+  
 
   export let context: TimerContext;
 
   const { scramble, mode } = context;
 
-  let cornerBuffer = "E";
-  let edgeBuffer = "U";
-  let centerBuffer = "A";
+  let schema = SCHEMAS[0];
+
+  let cornerBuffer = '';
+  let edgeBuffer = '';
+  let centerBuffer = '';
 
   let op: OldPochmanResult = {
     centers: [],
@@ -29,6 +33,16 @@
 
     parity: false,
   };
+
+  function setSchema(sch: ISchema) {
+    schema = sch;
+    cornerBuffer = sch.schema[0][4];
+    edgeBuffer = sch.schema[1][20];
+    centerBuffer = sch.schema[2][0];
+  }
+
+  // Speffz by default
+  setSchema(SCHEMAS[0]);
 
   function getPairs(letters: string[]): string {
     return (
@@ -49,22 +63,39 @@
     if (!option || Array.isArray(option)) return;
     if (option.type != "rubik") return;
 
-    // console.log("OP");
-    // console.time('OP');
     op = getOldPochman(
       scr,
       edgeBuffer,
       cornerBuffer,
       centerBuffer,
-      option.order ? option.order[0] : 3
+      option.order ? option.order[0] : 3,
+      schema.code
     );
-    // console.timeEnd('OP');
   }
 
-  $: $scramble && cornerBuffer && edgeBuffer && centerBuffer && updateMemo($scramble, $mode[1]);
+  $: $scramble &&
+    cornerBuffer &&
+    edgeBuffer &&
+    centerBuffer &&
+    schema &&
+    updateMemo($scramble, $mode[1]);
 </script>
 
 <div class="grid">
+  <div class="w-full flex justify-center">
+    <ButtonGroup>
+      {#each SCHEMAS as sch}
+        <Button
+          on:click={() => setSchema(sch)}
+          color={sch === schema ? "yellow" : "dark"}
+          class={"py-1 " + (sch === schema ? "text-black" : "text-gray-400")}
+        >
+          {sch.name}
+        </Button>
+      {/each}
+    </ButtonGroup>
+  </div>
+
   <h2 class="text-center w-full text-orange-200">Buffers</h2>
 
   <ul class="buffer-list">
@@ -85,7 +116,7 @@
       <Select
         class="py-2 !bg-gray-800"
         placement="right"
-        items={SPEFFZ_SCHEME}
+        items={SPEFFZ_SCH[0]}
         bind:value={cornerBuffer}
         transform={e => e}
       />
@@ -95,7 +126,7 @@
       <Select
         class="py-2 !bg-gray-800"
         placement="right"
-        items={SPEFFZ_SCHEME}
+        items={SPEFFZ_SCH[1]}
         bind:value={edgeBuffer}
         transform={e => e}
       />
@@ -105,7 +136,7 @@
       <Select
         class="py-2 !bg-gray-800"
         placement="right"
-        items={SPEFFZ_SCHEME}
+        items={SPEFFZ_SCH[2]}
         bind:value={centerBuffer}
         transform={e => e}
       />

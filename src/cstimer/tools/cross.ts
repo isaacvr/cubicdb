@@ -370,7 +370,8 @@ export function solve_cross(moves: string) {
 
   let seq: any = ScrambleParser.parseNNN(
     solvFacelet(Puzzle.fromSequence(moves, { type: "rubik", order: [3] }, true, true).toFacelet()),
-    3, "FRUBLD"
+    3,
+    "FRUBLD"
   );
 
   let ret = [];
@@ -411,7 +412,8 @@ export function solve_xxcross(moves: any, face: number) {
 
   let seq: any = ScrambleParser.parseNNN(
     solvFacelet(Puzzle.fromSequence(moves, { type: "rubik", order: [3] }, true, true).toFacelet()),
-    3, "FRUBLD"
+    3,
+    "FRUBLD"
   );
 
   for (yrot = 0; yrot < 4; yrot++) {
@@ -420,9 +422,7 @@ export function solve_xxcross(moves: any, face: number) {
     let e1 = [8, 10, 12];
     let c1 = [12, 15, 18];
     for (let i = 0; i < seq.length; i++) {
-      let m = yrotIdx[yrot].indexOf(
-        "FRUBLD".charAt(moveIdx[face].indexOf(seq[i][1]))
-      );
+      let m = yrotIdx[yrot].indexOf("FRUBLD".charAt(moveIdx[face].indexOf(seq[i][1])));
       let p = ((seq[i][2] % 4) + 4) % 4;
       for (let j = 0; j < p; j++) {
         flip = fmv(flip, m);
@@ -485,10 +485,11 @@ export function solve_xcross(moves: string, face: number) {
   let perm = 0;
   let e1 = [8, 10, 12, 14];
   let c1 = [12, 15, 18, 21];
-  
+
   let seq: any = ScrambleParser.parseNNN(
     solvFacelet(Puzzle.fromSequence(moves, { type: "rubik", order: [3] }, true, true).toFacelet()),
-    3, "FRUBLD"
+    3,
+    "FRUBLD"
   );
 
   for (let i = 0; i < seq.length; i++) {

@@ -342,6 +342,8 @@
       dataService.scramble($scramble);
 
       // console.log("SCRAMBLE: ", $scramble);
+
+      // $scramble = "R' U R2 B U2 F2 D2 B' R2 F' R2 U2 L2 R B U' B' F L2 D'";
       
       // let cfop = new CFOP(Puzzle.fromSequence($scramble, { type: 'rubik' }).toFacelet());
       // cfop.getAnalysis();

@@ -27,6 +27,8 @@
 
     total = filteredSv.length;
 
+    timeSerie.style.height = total === 0 ? "0" : "10rem";
+
     let series: echarts.SeriesOption[] = [
       {
         data: filteredSv.map((_, p) =>
@@ -122,6 +124,7 @@
     };
 
     timeChart.setOption(options);
+    timeChart.resize();
 
     timeChart.off("dataZoom");
     timeChart.off("legendselectchanged");
@@ -155,18 +158,19 @@
 <div class="grid place-items-center gap-2">
   <div class="flex justify-center items-center gap-2">
     Period:
-    <Select items={periods} bind:value={period} transform={e => e} />
+    <Select class="py-2 !bg-gray-800" placement="right" items={periods} bind:value={period} transform={e => e} />
+    <span> Solves: {total}</span>
   </div>
 
-  <span> Solves: {total}</span>
-
-  <div class="w-full h-[10rem]" bind:this={timeSerie}></div>
+  <div class="w-full overflow-hidden" bind:this={timeSerie}></div>
 
   <span>Last 5 solves</span>
 
   <ul class="flex gap-2">
     {#each $solves.slice(0, 5) as sv, p}
-      <li class={"bg-gray-800 p-1 rounded-md " + (p === 0 ? 'bg-red-300 text-black' : '')}>{ sTimer(sv, true) }</li>
+      <li class={"bg-gray-800 p-1 rounded-md " + (p === 0 ? "bg-red-300 text-black" : "")}>
+        {sTimer(sv, true)}
+      </li>
     {/each}
   </ul>
 </div>

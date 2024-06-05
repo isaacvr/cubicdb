@@ -392,7 +392,7 @@
   }
 
   onMount(() => {
-    addTool(tools[3]);
+    addTool(tools[5]);
   });
 
   $: $localLang, updateTexts();
@@ -771,9 +771,16 @@
   }
 
   .tool-container {
-    @apply absolute top-0 grid gap-2 w-min z-10 shadow-lg;
+    @apply absolute top-0 grid gap-2 w-min z-0 max-h-full overflow-y-scroll;
     left: calc(100% + 0.5rem);
     max-width: min(calc(100vw - 3rem), 30rem);
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .tool-container::-webkit-scrollbar {
+    width: 0;
+    height: 0;
   }
 
   .tool-container.open {
