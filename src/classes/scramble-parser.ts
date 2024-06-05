@@ -41,9 +41,9 @@ export class ScrambleParser {
   static parseScrambleOld(scramble: string, order: number, moveMap: string) {
     return ScrambleParser.parseNNN(
       solvFacelet(
-        Puzzle.fromSequence(scramble, { type: "rubik", order: [3] }, true, true).toFacelet()
+        Puzzle.fromSequence(scramble, { type: "rubik", order: [order] }, true, true).toFacelet()
       ),
-      3,
+      order,
       moveMap
     ).map((moves: any) => ({
       move: moves[1],
@@ -168,14 +168,13 @@ export class ScrambleParser {
     return res;
   }
 
-  static parseSkewb(scramble: string) {
+  static parseSkewb(scramble: string, moveMap = "FURLBrlxyz") {
     // MOVE_MAP = "URLB"
     // MV = [ plane, turns ]
 
     let res = [];
     let moveReg = /[FULRBrlxyz]['2]?/g;
     let moves = scramble.match(moveReg);
-    let moveMap = "FURLBrlxyz";
 
     if (!moves) return [];
 

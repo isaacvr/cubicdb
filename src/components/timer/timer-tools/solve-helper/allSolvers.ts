@@ -1,7 +1,9 @@
 import { pocketCube } from "./pocketCube";
 import { exec333StepSolver } from "./rubiksCube";
+import { skewbSolver } from "./skewb";
+import { square1Solver } from "./square1";
 
-export type StepSolver = "222" | "cf" | "roux" | "petrus" | "zz" | "eodr" | "pocket";
+export type StepSolver = "222" | "cf" | "roux" | "petrus" | "zz" | "eodr" | "pocket" | "sq1" | "skewb";
 
 export const cubeOris = ["z2", "", "z ", "z'", "x ", "x'"];
 
@@ -22,6 +24,12 @@ export const StepSolverStr: { solver: StepSolver; name: string }[] = [
   
   // 2x2x2
   { solver: 'pocket', name: '2x2x2' },
+  
+  // Skewb
+  { solver: 'skewb', name: 'Skewb' },
+  
+  // Square-1
+  { solver: 'sq1', name: 'Square-1' },
 ];
 
 export function getSolver(type: StepSolver, scramble: string, curOri: string): string[][] {
@@ -31,6 +39,10 @@ export function getSolver(type: StepSolver, scramble: string, curOri: string): s
     return exec333StepSolver(type, scramble, curOri);
   } else if (type === 'pocket') {
     return pocketCube(scramble);
+  } else if (type === 'sq1') {
+    return square1Solver(scramble);
+  } else if (type === 'skewb') {
+    return skewbSolver(scramble);
   }
 
   return [];

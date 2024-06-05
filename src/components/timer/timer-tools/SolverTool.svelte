@@ -9,7 +9,7 @@
   let orientation = oris[0];
 
   let result: string[][] = [];
-  let solver: StepSolver = "pocket";
+  let solver: StepSolver = "skewb";
 
   function updateResult(scr: string, sv: StepSolver, o: string) {
     result = getSolver(sv, scr, o);
