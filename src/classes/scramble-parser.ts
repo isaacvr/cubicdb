@@ -137,14 +137,13 @@ export class ScrambleParser {
     return res;
   }
 
-  static parsePyraminx(scramble: string) {
+  static parsePyraminx(scramble: string, moveMap = "URLB") {
     // MOVE_MAP = "URLB"
     // MV = [ plane, turns, layers, direction ] ]
 
     let res = [];
     let moveReg = /(([ULRB]w?)|(o?[ULRB])|[urlbdyz])['2]?/g;
     let moves = scramble.match(moveReg);
-    let moveMap = "URLB";
 
     if (!moves) return [];
 

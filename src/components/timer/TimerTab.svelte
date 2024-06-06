@@ -279,11 +279,11 @@
     switch ($tab) {
       case 0: {
         $inputMethod.keyDownHandler(event);
-        
-        if ( code === 'Space' || code === 'Escape' ) {
+
+        if (code === "Space" || code === "Escape") {
           prevExpanded = false;
         }
-        
+
         break;
       }
       case 1: {
@@ -725,10 +725,16 @@
   {/if}
 
   <!-- Image -->
-  <div id="preview-container" class:expanded={prevExpanded} class={prevExpanded ? "" : "relative"}>
+  <div
+    id="preview-container"
+    class:expanded={prevExpanded}
+    class={(prevExpanded ? "" : "relative") +
+      " " +
+      ($session?.settings?.input === "GAN Cube" ? "-z-10" : "")}
+  >
     <!-- Cube3D -->
     {#if $session?.settings?.input === "GAN Cube"}
-      <section class="relative cube-3d">
+      <section class="relative cube-3d -z-10">
         <Simulator
           class={$bluetoothStatus ? "" : "z-0 opacity-20"}
           selectedPuzzle={"icarry"}

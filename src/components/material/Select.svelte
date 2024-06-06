@@ -19,6 +19,7 @@
   export let label = (item?: any) => item || "";
   export let transform = (item: any, pos?: number, arr?: any[]) => item.value;
   export let hasIcon: null | ((v: any) => any) = null;
+  export let disabled = (item: any, pos?: number, arr?: any[]) => false;
   export let placement: Side | Placement = "bottom";
   export let useFixed = false;
 
@@ -82,10 +83,13 @@
     <DropdownItem
       class={`flex items-center gap-2
         ` +
+        (disabled(item, pos, items) ? " text-gray-500 pointer-events-none select-none " : " ") +
         (transform(item, pos, items) === value
           ? "bg-primary-600 text-white dark:hover:bg-primary-400"
           : "")}
       on:click={() => {
+        if (disabled(item, pos, items)) return;
+
         showOptions = false;
         value = transform(item, pos, items);
         onChange(item, pos, items);

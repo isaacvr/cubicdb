@@ -49,14 +49,15 @@ export function pocketCube(scramble: string): string[][] {
     })
   );
 
-  let scr = ScrambleParser.parseScrambleOld(scramble, 2, "URF");
+  let scr = ScrambleParser.parseNNN(scramble, 2, "URF");
   let res: string[][] = [];
 
   let state = "UUUURRRRFFFFDDDDLLLLBBBB";
 
   for (let i = 0; i < scr.length; i++) {
-    let m = scr[i];
-    state = pocketMove(state, "URF".charAt(m.pos) + " 2'".charAt(m.times - 1));
+    let m = scr[i] as any[];
+    
+    state = pocketMove(state, "URF".charAt( "URF".indexOf(m[1])) + "'  2".charAt(m[2] + 1));
   }
 
   for (let face = 0; face < 6; face++) {

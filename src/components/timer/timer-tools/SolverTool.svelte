@@ -2,22 +2,49 @@
   import type { TimerContext } from "@interfaces";
   import Select from "@components/material/Select.svelte";
   import { StepSolverStr, cubeOris, getSolver, type StepSolver } from "./solve-helper/allSolvers";
+  import { onMount } from "svelte";
 
   export let context: TimerContext;
+
+  const { scramble, mode } = context;
 
   let oris = cubeOris;
   let orientation = oris[0];
 
   let result: string[][] = [];
-  let solver: StepSolver = "skewb";
+  let solver: StepSolver | null = null;
 
-  function updateResult(scr: string, sv: StepSolver, o: string) {
-    result = getSolver(sv, scr, o);
+  function autoSelect() {
+    for (let i = 0, maxi = StepSolverStr.length; i < maxi; i += 1) {
+      if (canWork(StepSolverStr[i], $mode[1])) {
+        solver = StepSolverStr[i].solver;
+        break;
+      }
+    }
   }
 
-  const { scramble } = context;
+  function canWork(item: (typeof StepSolverStr)[number], md: string) {
+    return item.modes.indexOf(md) > -1;
+  }
 
-  $: $scramble && updateResult($scramble, solver, orientation);
+  function updateResult(scr: string, sv: StepSolver | null, o: string, md: string) {
+    if ( !sv ) return;
+
+    let res = getSolver(sv, scr, o, md);
+
+    if ( !res ) {
+      autoSelect();
+      result = [];
+    } else {
+      result = res;
+    }
+  }
+
+  onMount(() => {
+    autoSelect();
+  });
+
+  $: $scramble && updateResult($scramble, solver, orientation, $mode[1]);
 </script>
 
 <div class="grid">
@@ -30,9 +57,10 @@
       transform={e => e.solver}
       label={e => e.name}
       useFixed={true}
+      disabled={e => !canWork(e, $mode ? $mode[1] : "")}
     />
 
-    {#if ["222", "pocket"].every(t => t != solver)}
+    {#if ["222", "pocket", "skewb", "sq1", "pyra"].every(t => t != solver)}
       <Select
         placement="right-start"
         class="!py-2 !bg-gray-800 !relative"
