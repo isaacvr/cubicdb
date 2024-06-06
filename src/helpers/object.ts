@@ -62,7 +62,7 @@ export function createPath(obj: any, path: string[], def: any, useMap: boolean =
   return obj;
 }
 
-export function clone(obj: any): any {
+export function clone(obj: any, ignore: string[] = []): any {
   switch (typeof obj) {
     case "boolean":
     case "number":
@@ -78,9 +78,11 @@ export function clone(obj: any): any {
     return BigInt(obj);
   }
 
-  if (Array.isArray(obj)) return obj.map(clone);
+  if (Array.isArray(obj)) return obj.map(e => clone(e));
 
   return Object.entries(obj).reduce((acc: any, e) => {
+    if (ignore.indexOf(e[0]) > -1) return acc;
+    
     acc[e[0]] = clone(e[1]);
     return acc;
   }, {});

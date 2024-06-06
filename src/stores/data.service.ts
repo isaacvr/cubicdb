@@ -102,6 +102,10 @@ export class DataService {
     return this.ipc.getAlgorithms({ all, path });
   }
 
+  getAlgorithm(path: string, shortName: string): Promise<Algorithm | null> {
+    return this.ipc.getAlgorithm({ path, shortName });
+  }
+
   addAlgorithm(alg: Algorithm) {
     return this.ipc.addAlgorithm(alg);
   }

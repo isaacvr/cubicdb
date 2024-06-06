@@ -87,7 +87,7 @@ export interface RawCard {
 
 export interface Solution {
   moves: string;
-  votes: number;
+  votes?: number;
 }
 
 export interface Algorithm {
@@ -416,6 +416,7 @@ export interface CubeDBAdaptor {
 export interface AlgorithmOptions {
   all?: boolean;
   path: string;
+  shortName?: string;
 }
 
 export interface IStorageInfo {
@@ -432,6 +433,7 @@ export interface IPC {
   addBluetoothListener: (cb: AnyCallback) => any;
   
   getAlgorithms: (options: AlgorithmOptions) => Promise<Algorithm[]>;
+  getAlgorithm: (options: AlgorithmOptions) => Promise<Algorithm | null>;
   updateAlgorithm: (alg: Algorithm) => Promise<Algorithm>;
   addAlgorithm: (alg: Algorithm) => Promise<Algorithm>;
   removeAlgorithm: (alg: Algorithm) => Promise<boolean>;

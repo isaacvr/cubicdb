@@ -9,6 +9,10 @@ export class ElectronAdaptor implements IPC {
   async getAlgorithms(options: AlgorithmOptions): Promise<Algorithm[]> {
     return await this.ipc.getAlgorithms(options);
   }
+  
+  async getAlgorithm(options: AlgorithmOptions): Promise<Algorithm | null> {
+    return await this.ipc.getAlgorithm(options);
+  }
 
   addDownloadProgressListener(cb: any) {
     this.ipc.addDownloadProgressListener(cb);

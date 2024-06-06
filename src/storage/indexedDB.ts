@@ -126,6 +126,11 @@ export class IndexedDBAdaptor implements IPC {
     let fAlgs = algs.filter(a => a.parentPath === options.path) as Algorithm[];
     return Promise.resolve( clone(fAlgs) );
   }
+  
+  getAlgorithm(options: AlgorithmOptions): Promise<Algorithm | null> {
+    let fAlgs = algs.filter(a => a.parentPath === options.path && a.parentPath === options.shortName) as Algorithm[];
+    return Promise.resolve( fAlgs.length === 0 ? null : clone(fAlgs[0]) );
+  }
 
   updateAlgorithm(alg: Algorithm) {
     return Promise.reject();

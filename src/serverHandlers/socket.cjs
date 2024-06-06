@@ -1,6 +1,3 @@
-const NeDB = require('nedb');
-const { resolve } = require('node:path');
-
 let timerMap = new Map();
 
 function sendList(type, map) {

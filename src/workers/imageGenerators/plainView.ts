@@ -174,7 +174,7 @@ export async function planView(cube: Puzzle, DIM: number): Promise<Blob> {
 
       ctx.beginPath();
       ctx.moveTo(m1.x, m1.y);
-      ctx.lineTo(m2.x, m2.y);
+      ctx.lineTo(type ? m2.x : ini.x, type ? m2.y : ini.y);
       ctx.stroke();
 
     }

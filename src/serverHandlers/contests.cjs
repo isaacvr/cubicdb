@@ -1,6 +1,3 @@
-const NeDB = require('nedb');
-const { resolve } = require('node:path');
-
 module.exports = (ipcMain, Contests) => {
   
   ipcMain.handle('get-contests', async (event) => {

@@ -1,6 +1,3 @@
-const NeDB = require('nedb');
-const { resolve } = require('node:path');
-
 module.exports = (ipcMain, Sessions, Solves) => {
   ipcMain.handle('get-sessions', async () => {
     return await new Promise((res, rej) => {
