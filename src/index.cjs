@@ -254,7 +254,7 @@ function createWindow() {
       if ( cmd === 'check' ) {
         autoUpdater.checkForUpdatesAndNotify()
           .then((data) => {
-            console.log("RES: ", data);
+            // console.log("RES: ", data);
             res( data ? data.updateInfo.version : null );
           })
           .catch(rej);
@@ -267,12 +267,12 @@ function createWindow() {
 
         autoUpdater.on('download-progress', (dp) => {
           win.webContents.send('download-progress', dp.percent );
-          console.log("PERCENT: ", dp.percent);
+          // console.log("PERCENT: ", dp.percent);
         });
 
         autoUpdater.on('update-downloaded', () => {
           win.webContents.send('update-downloaded');
-          console.log("DOWNLOADED!");
+          // console.log("DOWNLOADED!");
           cancellationToken = null;
         });
 
@@ -324,7 +324,7 @@ function createWindow() {
 
   require('./serverHandlers/socket.cjs')(ipcMain, io);
   
-  console.log("PORT: ", port, serve, networkInterfaces());
+  // console.log("PORT: ", port, serve, networkInterfaces());
 
   if ( serve || !prod ) {
     win.webContents.openDevTools();

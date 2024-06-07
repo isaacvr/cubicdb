@@ -478,20 +478,18 @@ function getEdgeCicles(
     let nEdges = getEdges(order, n);
     let mcicle = getEdgeCicle(buffer, facelet, solvedFacelet, nEdges, visited, scheme);
 
+    console.log("CICLE: ", mcicle);
+
     if (mcicle.length) {
+      mcicle.pop();
+      mcicle.shift();
       lCicle.push(mcicle);
     }
 
     markAsVisited(mcicle, visited, nEdges, scheme);
     markAsVisited([buffer], visited, nEdges, scheme);
 
-    // let iteration = 4;
-
     while (visited.some(e => !e)) {
-      // iteration--;
-
-      // if (!iteration) break;
-
       for (let i = 0, maxi = scheme.length; i < maxi; i += 1) {
         if (!visited[i]) {
           let cicle = getEdgeCicle(scheme[i], facelet, solvedFacelet, nEdges, visited, scheme);

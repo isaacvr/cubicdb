@@ -145,6 +145,12 @@ export interface PuzzleInterface {
   vectorsFromCamera?: AnyCallback;
 }
 
+export interface IPuzzleOrder {
+  a: number;
+  b: number;
+  c: number;
+}
+
 export interface PuzzleOptions {
   type: PuzzleType;
   order?: number[];

@@ -6,16 +6,16 @@ export function nonGray(st: Sticker): boolean {
   return /^[^xd]$/.test(st.color);
 }
 
-export function getColoredStickers(pc: Piece): Sticker[] {
-  return pc.stickers.filter(nonGray);
+export function getColoredStickers(pc: Piece, colorFilter = nonGray): Sticker[] {
+  return pc.stickers.filter(colorFilter);
 }
 
 export function nonOGray(st: Sticker): boolean {
   return /^[^xd]$/.test(st.oColor);
 }
 
-export function getOColoredStickers(pc: Piece): Sticker[] {
-  return pc.stickers.filter(nonOGray);
+export function getOColoredStickers(pc: Piece, colorFilter = nonOGray): Sticker[] {
+  return pc.stickers.filter(colorFilter);
 }
 
 export function centerStickerAligned(

@@ -42,6 +42,7 @@
   let imgExpanded = false;
   let listView = JSON.parse(localStorage.getItem("algs-list-view") || "true");
   const NUMBER_REG = /^[+-]?[\d]+(\.[\d]+)?$/;
+  let currentList: Algorithm[] = [];
 
   // Modal
   let show = false;
@@ -59,6 +60,8 @@
     type = 0;
     cards.length = 0;
     cases.length = 0;
+
+    currentList = list;
 
     if (list.length > 0) {
       let hasSolutions = list.find(
@@ -140,10 +143,10 @@
 
     if (e.code === "KeyL" && e.ctrlKey && !allSolutions && (type === 2 || type >= 4)) {
       toggleListView();
-    } else if ( e.code === "KeyA" && e.ctrlKey ) {
+    } else if (e.code === "KeyA" && e.ctrlKey) {
       e.preventDefault();
       allowAlgAdmin = !allowAlgAdmin;
-    } else if ( e.code === "KeyN" && e.ctrlKey ) {
+    } else if (e.code === "KeyN" && e.ctrlKey) {
       addAlgorithm();
     }
   }
@@ -232,15 +235,32 @@
   }
 
   function saveAlgorithm() {
-    (isAdding ? dataService.addAlgorithm(sAlg) : dataService.updateAlgorithm(sAlg)).then(() =>
-      updateCases($location, true)
-    );
+    (isAdding ? dataService.addAlgorithm(sAlg) : dataService.updateAlgorithm(sAlg)).then(alg => {
+      let item = cases.find(a => a._id === alg._id);
+
+      if (!item) {
+        console.log("ITEM NOT FOUND: ", item);
+      } else {
+        let pos = cases.indexOf(item);
+        alg._puzzle = algorithmToPuzzle(alg, true);
+
+        pGenerateCubeBundle([alg._puzzle], 500, true, true)
+          .then(_ => {
+            cases[pos] = alg;
+          })
+          .catch(err => console.log("ERROR: ", err));
+        // handleAlgorithms(currentList);
+      }
+      // updateCases($location, true)
+    });
 
     show = false;
   }
 
   function selectAlg(a: Algorithm) {
     sAlg = clone(a, ["_puzzle"]);
+
+    console.log("ALG: ", sAlg);
 
     sAlg.tips = (sAlg.tips || []).slice();
     show = true;
@@ -272,7 +292,7 @@
       parentPath: [currentAlg?.parentPath || "", currentAlg?.shortName || ""]
         .filter(e => e && e.trim())
         .join("/"),
-      view: currentAlg?.view || "2d",
+      view: currentAlg?.view || "plan",
       puzzle: currentAlg?.puzzle || "333",
     });
 
@@ -284,9 +304,7 @@
     updateCases($location, true);
   }
 
-  onMount(() => {
-
-  });
+  onMount(() => {});
 
   $: updateCases($location);
 </script>
@@ -390,12 +408,12 @@
     <!-- Cards -->
     {#if type < 2}
       <List class="w-full grid py-4">
-        {#each cards as card}
-          <Link to={card.route} class="w-full">
+        {#each cards as card, pos (card.route)}
+          <Link to={card.route}>
             <Li
               class="max-w-[12rem] h-48 text-center shadow-md rounded-md select-none cursor-pointer
             transition-all duration-200 flex flex-col items-center justify-between py-3
-            bg-backgroundLv1 hover:shadow-2xl hover:shadow-primary-900"
+            bg-backgroundLv1 hover:shadow-2xl hover:shadow-primary-900 relative"
             >
               {#if card?.puzzle?.img}
                 <img class="w-32 h-32 object-contain" src={card.puzzle.img} alt={card.title} />
@@ -404,6 +422,22 @@
               {/if}
 
               <Span class="text-base">{card.title}</Span>
+
+              {#if allowAlgAdmin}
+                <ul class="absolute no-grid flex flex-col gap-2 justify-start top-0 left-0">
+                  <Button
+                    on:click={e => {
+                      e.stopPropagation();
+                      selectAlg(currentList[pos]);
+                    }}
+                    class="p-1"
+                    ><EditIcon size="1.2rem" />
+                  </Button>
+                  <Button color="red" on:click={() => removeAlg(currentList[pos])} class="p-1"
+                    ><DeleteIcon size="1.2rem" />
+                  </Button>
+                </ul>
+              {/if}
             </Li>
           </Link>
         {/each}
@@ -419,7 +453,7 @@
           <span class="text-gray-300 font-bold">{$localLang.ALGORITHMS.algorithms}</span>
         </div>
 
-        {#each cases as c}
+        {#each cases as c (c._id)}
           <div class="row min-h-[8rem] relative">
             <span class="font-bold">{c.name}</span>
             <button class="flex items-center justify-center" on:click={() => caseHandler(c)}>

@@ -5,8 +5,8 @@ import { roundStickerCorners } from "@classes/puzzle/puzzleUtils";
 import { Vector2D } from "@classes/vector2-d";
 import { BACK, CENTER, DOWN, FRONT, LEFT, RIGHT, UP, Vector3D } from "@classes/vector3d";
 import { CubeMode, EPS } from "@constants";
-import { map } from "@helpers/math";
 import type { PuzzleType } from "@interfaces";
+import { drawStickers } from "./utils";
 
 const PI = Math.PI;
 const PI_2 = PI / 2;
@@ -331,66 +331,7 @@ export async function projectedView(cube: Puzzle, DIM: number): Promise<Blob> {
     allStickers.push(...sideStk[faceName[i]]);
   }
 
-  let _min = Math.min;
-  let _max = Math.max;
-
-  let limits = [Infinity, -Infinity, Infinity, -Infinity];
-
-  for (let i = 0, maxi = allStickers.length; i < maxi; i += 1) {
-    let pts = allStickers[i].points;
-    pts.forEach(p => {
-      limits[0] = _min(limits[0], p.x); limits[1] = _max(limits[1], p.x);
-      limits[2] = _min(limits[2], p.y); limits[3] = _max(limits[3], p.y);
-    });
-  }
-
-  allStickers.sort((s1, s2) => s1.color === 'd' ? -1 : 1);
-
-  const PAD = 2;
-  const F = _min((W - 2 * PAD) / (limits[1] - limits[0]), (H - 2 * PAD) / (limits[3] - limits[2]));
-  let v1 = new Vector2D(limits[0], limits[2]);
-  let v2 = new Vector2D(limits[1], limits[3]);
-  let vdif = v2.sub(v1).mul(F);
-  let offset = new Vector2D(W / 2, H / 2).sub(new Vector2D(vdif.x / 2, vdif.y / 2));
-
-  if (cube.type === 'supersquare1') {
-    let x1 = map(-2, limits[0], limits[1], 0, vdif.x) + offset.x;
-    let x2 = map(2, limits[0], limits[1], 0, vdif.x) + offset.x;
-    let y = map(0, limits[2], limits[3], 0, vdif.y) + offset.y;
-    
-    ctx.moveTo(x1, H - y);
-    ctx.lineTo(x2, H - y);
-    ctx.strokeStyle = "white";
-    ctx.stroke();
-    ctx.strokeStyle = "black";
-  }
-
-  allStickers.sort((a, b) => {
-    let za = a.points.reduce((acc, e) => acc.z > e.z ? acc : e, new Vector3D(0, 0, -1000));
-    let zb = b.points.reduce((acc, e) => acc.z > e.z ? acc : e, new Vector3D(0, 0, -1000));
-
-    return za.z - zb.z;
-  })
-
-  for (let i = 0, maxi = allStickers.length; i < maxi; i += 1) {
-    ctx.fillStyle = cube.getHexStrColor(allStickers[i].color);
-    let pts = allStickers[i].points;
-
-    ctx.beginPath();
-
-    for (let j = 0, maxj = pts.length; j < maxj; j += 1) {
-      let x = map(pts[j].x, limits[0], limits[1], 0, vdif.x) + offset.x;
-      let y = map(pts[j].y, limits[2], limits[3], 0, vdif.y) + offset.y;
-      if (j === 0) {
-        ctx.moveTo(x, H - y);
-      } else {
-        ctx.lineTo(x, H - y);
-      }
-    }
-    ctx.fill();
-    ctx.closePath();
-    ctx.stroke();
-  }
+  drawStickers(ctx, allStickers, [], W, H, cube);
 
   if (cube.type === 'megaminx') {
     let LX = W * 0.258;

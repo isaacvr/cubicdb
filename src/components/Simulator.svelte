@@ -394,7 +394,6 @@
     // Puzzle setup
     if (facelet) {
       cube = Puzzle.fromFacelet(facelet, selectedPuzzle);
-      cube.move('F');
     } else {
       cube = Puzzle.fromSequence(useScr, {
         type: selectedPuzzle,

@@ -4,7 +4,13 @@ import { Color } from "./../Color";
 import { ScrambleParser } from "./../scramble-parser";
 import { CubeMode, EPS, strToHex } from "@constants";
 import type { Piece } from "./Piece";
-import type { PuzzleInterface, PuzzleOptions, PuzzleType, CubeView } from "@interfaces";
+import type {
+  PuzzleInterface,
+  PuzzleOptions,
+  PuzzleType,
+  CubeView,
+  IPuzzleOrder,
+} from "@interfaces";
 import * as puzzles from "./allPuzzles";
 import { puzzleReg } from "./puzzleRegister";
 import { ImageSticker } from "./ImageSticker";
@@ -16,7 +22,8 @@ void puzzles;
 export class Puzzle {
   rotation: any;
   p: PuzzleInterface;
-  order: number[];
+  // order: number[];
+  order: IPuzzleOrder;
   arrows: number[];
 
   type: PuzzleType;
@@ -82,7 +89,12 @@ export class Puzzle {
 
     this.p = puzzleReg.get(this.type)?.constr.apply(null, a);
 
-    this.order = a;
+    this.order = {
+      a: a[0],
+      b: a[1],
+      c: a[2],
+    };
+
     this.rotation = this.p.rotation;
 
     this.adjustColors();
@@ -576,7 +588,7 @@ export class Puzzle {
     let moves: any[];
 
     if (["rubik", "axis", "fisher"].indexOf(this.type) > -1) {
-      moves = ScrambleParser.parseNNN(seq, this.order[0]);
+      moves = ScrambleParser.parseNNN(seq, this.order);
     } else if (this.type === "pyraminx") {
       moves = ScrambleParser.parsePyraminx(seq);
     } else if (this.type === "skewb") {
@@ -632,7 +644,7 @@ export class Puzzle {
       type: this.type,
       mode: typeof newMode != "undefined" ? newMode : this.mode,
       view: this.view,
-      order: [this.order[0]],
+      order: [this.order.a, this.order.b, this.order.c],
       tips: this.arrows,
       headless: this.options.headless,
       rounded: this.options.rounded,
