@@ -14,7 +14,7 @@
   import { NotificationService } from "@stores/notification.service";
   import type { RouteLocation } from "svelte-routing/types/Route";
   import { screen } from "@stores/screen.store";
-  import { Button, Input, Li, List, Span, Spinner, Tooltip } from "flowbite-svelte";
+  import { Button, Input, Li, List, Range, Span, Spinner, Tooltip } from "flowbite-svelte";
   import { CubeDBICON, CubeMode, CubeModeMap } from "@constants";
   import { localLang } from "@stores/language.service";
   import { algorithmToPuzzle, clone } from "@helpers/object";
@@ -53,6 +53,12 @@
   let img = "";
   let allowAlgAdmin = true;
   let currentAlg: Algorithm | null = null;
+  const rotStep = Math.PI / 12;
+  let rotation = {
+    x: rotStep * 2,
+    y: rotStep * 22,
+    z: 0,
+  };
 
   function handleAlgorithms(list: Algorithm[]) {
     if (list.length === 0) return;
@@ -180,7 +186,7 @@
       let shortName = parts.pop() || "";
 
       currentAlg = await dataService.getAlgorithm(parts.join("/"), shortName);
-      console.log(currentAlg);
+      // console.log(currentAlg);
     }
   }
 
@@ -212,6 +218,8 @@
   async function renderSAlg() {
     let args = nameToPuzzle(sAlg.puzzle || "");
 
+    console.log("ROTATION: ", rotation);
+
     sAlg.tips = tipTemp.length ? tipTemp.join(", ").split(", ").map(Number) : [];
 
     if (solTemp.length) {
@@ -231,10 +239,22 @@
       true
     );
 
+    sAlg._puzzle.rotation = {
+      x: rotation.x,
+      y: rotation.y,
+      z: rotation.z,
+    };
+
     img = (await pGenerateCubeBundle([sAlg._puzzle], 200, true))[0];
   }
 
   function saveAlgorithm() {
+    sAlg.rotation = {
+      x: rotation.x,
+      y: rotation.y,
+      z: rotation.z,
+    };
+
     (isAdding ? dataService.addAlgorithm(sAlg) : dataService.updateAlgorithm(sAlg)).then(alg => {
       let item = cases.find(a => a._id === alg._id);
 
@@ -260,7 +280,7 @@
   function selectAlg(a: Algorithm) {
     sAlg = clone(a, ["_puzzle"]);
 
-    console.log("ALG: ", sAlg);
+    // console.log("ALG: ", sAlg);
 
     sAlg.tips = (sAlg.tips || []).slice();
     show = true;
@@ -304,7 +324,23 @@
     updateCases($location, true);
   }
 
-  onMount(() => {});
+  onMount(() => {
+    // [].forEach((e, p) =>
+    //   dataService.addAlgorithm({
+    //     mode: CubeMode.F3E,
+    //     name: `Backslash ${p + 1}`,
+    //     order: 4,
+    //     ready: true,
+    //     scramble: e,
+    //     shortName: `444_f3ebs_${p + 1}`,
+    //     parentPath: "444/444_f3e",
+    //     solutions: [{ moves: e }],
+    //     view: "trans",
+    //     puzzle: "444",
+    //     rotation,
+    //   })
+    // );
+  });
 
   $: updateCases($location);
 </script>
@@ -522,6 +558,7 @@
     </section>
     <section>
       Modo <Select
+        placement="right"
         class="w-full"
         items={CubeModeMap}
         label={e => e[0]}
@@ -537,6 +574,19 @@
         transform={e => e[0]}
         bind:value={sAlg.view}
       />
+    </section>
+
+    <section>
+      Rotación:
+      <div class="flex items-center">
+        x: <Range bind:value={rotation.x} min={0} max={Math.PI * 2} step={rotStep} />
+      </div>
+      <div class="flex items-center">
+        y: <Range bind:value={rotation.y} min={0} max={Math.PI * 2} step={rotStep} />
+      </div>
+      <div class="flex items-center">
+        z: <Range bind:value={rotation.z} min={0} max={Math.PI * 2} step={rotStep} />
+      </div>
     </section>
 
     <section class="row-span-2">

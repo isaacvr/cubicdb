@@ -21,6 +21,7 @@ export async function transView(cube: Puzzle, width ?: number): Promise<Blob> {
   let camera = new PerspectiveCamera(40, 0.95, 2, 7);
 
   camera.position.z = 5.5;
+  // console.log("POS: ", camera.position);
   
   scene.add(camera);
 

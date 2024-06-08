@@ -6,7 +6,7 @@ export const EPS = 1e-6;
 
 export enum CubeMode {
   NORMAL = 0, OLL, PLL, CMLL, F2L, COLL, WV, ELL, VLS, ZBLL, OLLCP, GRAY, CENTERS, CROSS, FL, YCROSS,
-  CS, EO, CO
+  CS, EO, CO, F3E
 };
 
 export const CubeModeMap = [
@@ -15,6 +15,7 @@ export const CubeModeMap = [
   ['PLL', CubeMode.PLL],
   ['CMLL', CubeMode.CMLL],
   ['F2L', CubeMode.F2L],
+  ['F3E', CubeMode.F3E],
   ['COLL', CubeMode.COLL],
   ['WV', CubeMode.WV],
   ['ELL', CubeMode.ELL],

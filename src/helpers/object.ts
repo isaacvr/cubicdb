@@ -178,6 +178,8 @@ export function algorithmToPuzzle(alg: Algorithm, addZ2: boolean): Puzzle {
     true,
     true
   );
+  
+  res.p.rotation = alg.rotation || res.p.rotation;
 
   return res.adjustColors("", alg.baseColor || "w");
 }

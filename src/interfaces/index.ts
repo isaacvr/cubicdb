@@ -100,6 +100,7 @@ export interface Algorithm {
   puzzle?: string;
   solutions?: Solution[];
   mode: CubeMode;
+  rotation?: PuzzleInterface['rotation'];
   baseColor?: string;
   cube ?: string;
   ready: boolean;

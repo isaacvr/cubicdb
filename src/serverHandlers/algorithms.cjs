@@ -54,26 +54,28 @@ module.exports = (ipcMain, Algorithms) => {
   });
 
   ipcMain.handle("add-algorithm", async (_, arg) => {
+    let obj = {
+      name: arg.name,
+      shortName: arg.shortName,
+      parentPath: arg.parentPath,
+      order: arg.order,
+      scramble: arg.scramble,
+      puzzle: arg.puzzle,
+      mode: arg.mode,
+      view: arg.view,
+      tips: arg.tips,
+      solutions: arg.solutions,
+    };
+
+    if (arg.rotation) {
+      obj.rotation = arg.rotation;
+    }
+
     return await new Promise((res, rej) => {
-      Algorithms.insert(
-        {
-          name: arg.name,
-          shortName: arg.shortName,
-          parentPath: arg.parentPath,
-          order: arg.order,
-          scramble: arg.scramble,
-          puzzle: arg.puzzle,
-          mode: arg.mode,
-          view: arg.view,
-          tips: arg.tips,
-          solutions: arg.solutions,
-          // @ts-ignore
-        },
-        function (err, alg) {
-          if (err) return rej(err);
-          res(alg);
-        }
-      );
+      Algorithms.insert(obj, function (err, alg) {
+        if (err) return rej(err);
+        res(alg);
+      });
     });
   });
 

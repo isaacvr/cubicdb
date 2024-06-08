@@ -190,7 +190,9 @@ export class Puzzle {
       : this.p.faceColors[3];
 
     let TOP_COLOR = ref;
-    let BOTTOM_COLOR = this.p.faceColors[(this.p.faceColors.indexOf(TOP_COLOR) + 3) % 6];
+    let COLORS = this.p.faceColors.length;
+    let BOTTOM_COLOR =
+      this.p.faceColors[(this.p.faceColors.indexOf(TOP_COLOR) + (COLORS >> 1)) % COLORS];
 
     for (let i = 0, maxi = pieces.length; i < maxi; i += 1) {
       let stickers = getOColoredStickers(pieces[i]);
@@ -216,6 +218,20 @@ export class Puzzle {
               stickers[j].color = stickers[j].oColor;
             }
           }
+          break;
+        }
+        case CubeMode.F3E: {
+          let rColor = this.p.faceColors[(this.p.faceColors.indexOf(BOTTOM_COLOR) + 1) % COLORS]; 
+
+          if (
+            (stLen === 1 && (pieces[i].contains(TOP_COLOR) || pieces[i].contains(BOTTOM_COLOR))) ||
+            (stLen === 2 && pieces[i].contains(BOTTOM_COLOR) && pieces[i].contains(rColor))
+          ) {
+            stickers.forEach(st => (st.color = st.oColor));
+          } else {
+            stickers.forEach(st => (st.color = "x"));
+          }
+
           break;
         }
         case CubeMode.CMLL: {
