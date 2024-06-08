@@ -1,14 +1,12 @@
 <script lang="ts">
   import type { TimerContext } from "@interfaces";
   import * as all from "@cstimer/scramble";
-  import { CHICHU_SCH, SCHEMAS, SPEFFZ_SCH, getOldPochman, type ISchema, type OldPochmanResult } from "./bld-helper/old-pochman";
+  import { SCHEMAS, SPEFFZ_SCH, getOldPochman, type ISchema, type OldPochmanResult } from "./bld-helper/old-pochman";
   import ClockwiseIcon from "@icons/CogClockwise.svelte";
   import CounterClockwiseIcon from "@icons/CogCounterclockwise.svelte";
   import Select from "@components/material/Select.svelte";
   import FlippedIcon from "@icons/ArrowUpDown.svelte";
   import { Button, ButtonGroup, Tooltip } from "flowbite-svelte";
-
-  
 
   export let context: TimerContext;
 
@@ -44,6 +42,17 @@
   // Speffz by default
   setSchema(SCHEMAS[0]);
 
+  function cleanOP() {
+    op.centers = [];
+    op.edges = [];
+    op.flippedEdges = [];
+    op.edgeBufferState = [];
+    op.corners = [];
+    op.twistedCorners = [];
+    op.twistedCornerBuffer = 0;
+    op.parity = false;
+  }
+
   function getPairs(letters: string[]): string {
     return (
       letters
@@ -60,8 +69,8 @@
       option = option[0];
     }
 
-    if (!option || Array.isArray(option)) return;
-    if (option.type != "rubik") return;
+    if (!option || Array.isArray(option)) return cleanOP();
+    if (option.type != "rubik") return cleanOP();
 
     op = getOldPochman(
       scr,

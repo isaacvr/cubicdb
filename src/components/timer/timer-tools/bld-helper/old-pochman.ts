@@ -478,8 +478,6 @@ function getEdgeCicles(
     let nEdges = getEdges(order, n);
     let mcicle = getEdgeCicle(buffer, facelet, solvedFacelet, nEdges, visited, scheme);
 
-    console.log("CICLE: ", mcicle);
-
     if (mcicle.length) {
       mcicle.pop();
       mcicle.shift();

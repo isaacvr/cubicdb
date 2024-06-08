@@ -19,6 +19,28 @@ import { getOColoredStickers } from "@classes/reconstructors/utils";
 
 void puzzles;
 
+export function arrayToOrder(arr: number[] | undefined): number[] | null {
+  if (!arr) return null;
+
+  switch (arr.length) {
+    case 0: {
+      return null;
+    }
+
+    case 1: {
+      return [arr[0], arr[0], arr[0]];
+    }
+
+    case 2: {
+      return [arr[0], arr[1], arr[0]];
+    }
+
+    default: {
+      return arr.slice(0, 3);
+    }
+  }
+}
+
 export class Puzzle {
   rotation: any;
   p: PuzzleInterface;
@@ -65,16 +87,7 @@ export class Puzzle {
     let a: any[];
 
     if (Array.isArray(options.order)) {
-      if (options.order.length >= 3) {
-        a = [...options.order.slice(0, 3)];
-      } else {
-        a = [...options.order];
-        let idx = 0;
-        while (a.length < 3) {
-          a.push(options.order[idx]);
-          idx = (idx + 1) % options.order.length;
-        }
-      }
+      a = arrayToOrder(options.order) || [3, 3, 3];
     } else if (typeof options.order === "number") {
       a = [options.order, options.order, options.order];
     } else {
