@@ -49,7 +49,7 @@ export function pocketCube(scramble: string): string[][] {
     })
   );
 
-  let scr = ScrambleParser.parseNNN(scramble, 2, "URF");
+  let scr = ScrambleParser.parseNNN(scramble, { a: 2, b: 2, c: 2 }, "URF");
   let res: string[][] = [];
 
   let state = "UUUURRRRFFFFDDDDLLLLBBBB";

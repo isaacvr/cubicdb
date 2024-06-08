@@ -249,11 +249,11 @@
   }
 
   function saveAlgorithm() {
-    sAlg.rotation = {
-      x: rotation.x,
-      y: rotation.y,
-      z: rotation.z,
-    };
+    // sAlg.rotation = {
+    //   x: rotation.x,
+    //   y: rotation.y,
+    //   z: rotation.z,
+    // };
 
     (isAdding ? dataService.addAlgorithm(sAlg) : dataService.updateAlgorithm(sAlg)).then(alg => {
       let item = cases.find(a => a._id === alg._id);
@@ -325,21 +325,40 @@
   }
 
   onMount(() => {
-    // [].forEach((e, p) =>
-    //   dataService.addAlgorithm({
-    //     mode: CubeMode.F3E,
-    //     name: `Backslash ${p + 1}`,
-    //     order: 4,
-    //     ready: true,
-    //     scramble: e,
-    //     shortName: `444_f3ebs_${p + 1}`,
-    //     parentPath: "444/444_f3e",
-    //     solutions: [{ moves: e }],
-    //     view: "trans",
-    //     puzzle: "444",
-    //     rotation,
-    //   })
-    // );
+    [
+      // "u",
+      // "R' U' R u",
+      // "R U R' F R' F' R u",
+      // "R U' R' u'",
+      // "F R' F' R u'",
+      // "d' R U' R' u",
+      // "u' R U R' u",
+      // "R' U R2 U' R' u'",
+      // "R2 u'",
+
+      // "R U' R' U R' U' R u",
+      // "R U' R' u R U' R' u'",
+      // "R U' R' y R U' R' u",
+
+      // "E R U R' F R' F' R E'",
+      // "R U' R' d R' U R E'",
+      // "F R' F' R U' R' U R E'",
+      // "u2 R' U R2 U' R' 3u'"
+    ].forEach((e, p) =>
+      dataService.addAlgorithm({
+        mode: CubeMode.EDGERF,
+        name: `3E ${p + 1}`,
+        order: 5,
+        ready: true,
+        scramble: e,
+        shortName: `555_f8e3e_${p + 1}`,
+        parentPath: "555/555_f8e",
+        solutions: [{ moves: e }],
+        view: "trans",
+        puzzle: "555",
+        // rotation,
+      })
+    );
   });
 
   $: updateCases($location);

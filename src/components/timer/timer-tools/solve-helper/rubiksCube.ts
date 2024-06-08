@@ -493,10 +493,7 @@ function solveStepByStep(meta: IMeta[]): string[][] {
       break;
     }
 
-    res.push([
-      metai.head,
-      sols[i].length === 0 ? "(skip)" : adjustScramble(sols[i]),
-    ]);
+    res.push([metai.head, sols[i].length === 0 ? "(skip)" : adjustScramble(sols[i])]);
     sol = sol.concat(sols[i]);
   }
 
@@ -506,7 +503,15 @@ function solveStepByStep(meta: IMeta[]): string[][] {
 let block222solv: gSolver;
 
 function block222Solver(scramble: string) {
-  curScramble = ScrambleParser.parseScrambleOld(scramble, 3, "URFDLB");
+  curScramble = ScrambleParser.parseScrambleOld(
+    scramble,
+    {
+      a: 3,
+      b: 3,
+      c: 3,
+    },
+    "URFDLB"
+  );
 
   curScrambleStrArr.length = 0;
 
@@ -577,7 +582,15 @@ export function exec333StepSolver(type: StepSolver, scramble: string, curOri: st
 
   let moveMap = getMoveMap(curOri);
 
-  curScramble = ScrambleParser.parseScrambleOld(scramble, 3, "URFDLB");
+  curScramble = ScrambleParser.parseScrambleOld(
+    scramble,
+    {
+      a: 3,
+      b: 3,
+      c: 3,
+    },
+    "URFDLB"
+  );
   curScrambleStrArr.length = 0;
 
   for (let i = 0; i < curScramble.length; i += 1) {

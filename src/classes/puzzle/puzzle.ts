@@ -221,12 +221,24 @@ export class Puzzle {
           break;
         }
         case CubeMode.F3E: {
-          let rColor = this.p.faceColors[(this.p.faceColors.indexOf(BOTTOM_COLOR) + 1) % COLORS]; 
+          let rColor = this.p.faceColors[(this.p.faceColors.indexOf(BOTTOM_COLOR) + 1) % COLORS];
 
           if (
             (stLen === 1 && (pieces[i].contains(TOP_COLOR) || pieces[i].contains(BOTTOM_COLOR))) ||
             (stLen === 2 && pieces[i].contains(BOTTOM_COLOR) && pieces[i].contains(rColor))
           ) {
+            stickers.forEach(st => (st.color = st.oColor));
+          } else {
+            stickers.forEach(st => (st.color = "x"));
+          }
+
+          break;
+        }
+        case CubeMode.EDGERF: {
+          let rColor = this.p.faceColors[(this.p.faceColors.indexOf(BOTTOM_COLOR) + 1) % COLORS];
+          let fColor = this.p.faceColors[(this.p.faceColors.indexOf(BOTTOM_COLOR) + 2) % COLORS];
+
+          if (stLen === 2 && pieces[i].contains(fColor) && pieces[i].contains(rColor)) {
             stickers.forEach(st => (st.color = st.oColor));
           } else {
             stickers.forEach(st => (st.color = "x"));

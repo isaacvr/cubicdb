@@ -88,7 +88,15 @@ export function roux_s1(scramble: string): string[][] {
     for (let s = 0; s < 4; s += 1) {
       moveConj[s] = _solvOri.join("");
 
-      let moves = ScrambleParser.parseScrambleOld(scramble, 3, moveConj[s]);
+      let moves = ScrambleParser.parseScrambleOld(
+        scramble,
+        {
+          a: 3,
+          b: 3,
+          c: 3,
+        },
+        moveConj[s]
+      );
 
       for (let i = 0; i < moves.length; i += 1) {
         let m = moves[i].pos;
@@ -131,9 +139,7 @@ export function roux_s1(scramble: string): string[][] {
 
     res.push([
       faceStr[face],
-      [rotIdx[face], ["", "x'", "x2", "x"][ori], adjustScramble(sol)]
-        .join(" ")
-        .trim(),
+      [rotIdx[face], ["", "x'", "x2", "x"][ori], adjustScramble(sol)].join(" ").trim(),
     ]);
   }
 

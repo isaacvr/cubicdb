@@ -370,7 +370,7 @@ export function solve_cross(moves: string) {
 
   let seq: any = ScrambleParser.parseNNN(
     solvFacelet(Puzzle.fromSequence(moves, { type: "rubik", order: [3] }, true, true).toFacelet()),
-    3,
+    { a: 3, b: 3, c: 3 },
     "FRUBLD"
   );
 
@@ -412,7 +412,7 @@ export function solve_xxcross(moves: any, face: number) {
 
   let seq: any = ScrambleParser.parseNNN(
     solvFacelet(Puzzle.fromSequence(moves, { type: "rubik", order: [3] }, true, true).toFacelet()),
-    3,
+    { a: 3, b: 3, c: 3 },
     "FRUBLD"
   );
 
@@ -488,7 +488,7 @@ export function solve_xcross(moves: string, face: number) {
 
   let seq: any = ScrambleParser.parseNNN(
     solvFacelet(Puzzle.fromSequence(moves, { type: "rubik", order: [3] }, true, true).toFacelet()),
-    3,
+    { a: 3, b: 3, c: 3 },
     "FRUBLD"
   );
 
