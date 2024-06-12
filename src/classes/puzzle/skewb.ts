@@ -86,8 +86,10 @@ export function SKEWB(): PuzzleInterface {
     [ BACK.add(UP), RIGHT.add(FRONT), RIGHT.add(UP) ],    // R
     [ RIGHT.add(FRONT), LEFT.add(UP), UP.add(FRONT) ],    // L
     [ LEFT.add(UP), RIGHT.add(BACK), BACK.add(UP) ],      // B
+    [ LEFT.add(UP), BACK.add(UP), RIGHT.add(BACK) ],      // f
     [ FRONT.add(RIGHT), FRONT.add(UP), LEFT.add(UP) ],    // r
     [ RIGHT.add(UP), FRONT.add(RIGHT), FRONT.add(DOWN) ], // l
+    [ RIGHT.add(UP), FRONT.add(UP), FRONT.add(LEFT) ],    // b
 
     [ BACK, UP, FRONT ].map(e => e.add(RIGHT.mul(2))),    // x
     [ RIGHT, BACK, LEFT ].map(e => e.add(UP.mul(2))),     // y
@@ -99,7 +101,7 @@ export function SKEWB(): PuzzleInterface {
     let turns = mv[1];
     let pts1 = planes[moveId];
 
-    if ( moveId > 6 ) {
+    if ( moveId >= planes.length - 3 ) {
       turns = -turns * 3 / 4;
     }
 

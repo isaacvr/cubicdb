@@ -51,6 +51,7 @@
   import Reconstructor from "./Reconstructor.svelte";
   import type { ReconstructorMethod } from "@classes/reconstructors/interfaces";
   import TimerOptions from "./TimerOptions.svelte";
+  import PuzzleImage from "@components/PuzzleImage.svelte";
 
   export let context: TimerContext;
   export let battle = false;
@@ -474,7 +475,6 @@
   }
 
   function handleNewRecord() {
-    console.log("handleNewRecord");
     $inputMethod.newRecord();
   }
 
@@ -798,12 +798,7 @@
               <ChevronLeftSolid class="pointer-events-none" />
             </Button>
 
-            <img
-              on:dragstart|preventDefault
-              src={$preview[selectedImg].src}
-              alt=""
-              class="transition-all duration-300 cursor-pointer h-full w-full object-contain"
-            />
+            <PuzzleImage src={$preview[selectedImg].src || ''} />
 
             <Button
               color="none"

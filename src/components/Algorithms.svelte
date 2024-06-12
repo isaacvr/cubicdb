@@ -2,13 +2,7 @@
   import { Link, navigate, useLocation } from "svelte-routing";
   import { Puzzle } from "@classes/puzzle/puzzle";
   import { pGenerateCubeBundle } from "@helpers/cube-draw";
-  import {
-    CubeViewMap,
-    nameToPuzzle,
-    type Algorithm,
-    type ICard,
-    type Solution,
-  } from "@interfaces";
+  import { CubeViewMap, type Algorithm, type ICard, type Solution } from "@interfaces";
   import { DataService } from "@stores/data.service";
   import { copyToClipboard, getSearchParams, randomUUID } from "@helpers/strings";
   import { NotificationService } from "@stores/notification.service";
@@ -27,6 +21,7 @@
   import AddIcon from "@icons/Plus.svelte";
   import EditIcon from "@icons/Pencil.svelte";
   import { onMount } from "svelte";
+  import PuzzleImage from "./PuzzleImage.svelte";
 
   const location = useLocation();
 
@@ -59,6 +54,7 @@
     y: rotStep * 22,
     z: 0,
   };
+  let sPos = -1;
 
   function handleAlgorithms(list: Algorithm[]) {
     if (list.length === 0) return;
@@ -129,7 +125,7 @@
     let arr: Puzzle[] =
       type < 2 ? cards.map(e => e.puzzle as Puzzle) : cases.map(e => e._puzzle as Puzzle);
 
-    pGenerateCubeBundle(arr, 500, true, true)
+    pGenerateCubeBundle(arr, 500, true, true, !1, !1, "svg")
       .then(_ => {
         cards = cards;
         cases = cases;
@@ -186,7 +182,6 @@
       let shortName = parts.pop() || "";
 
       currentAlg = await dataService.getAlgorithm(parts.join("/"), shortName);
-      // console.log(currentAlg);
     }
   }
 
@@ -216,36 +211,16 @@
   }
 
   async function renderSAlg() {
-    let args = nameToPuzzle(sAlg.puzzle || "");
-
-    console.log("ROTATION: ", rotation);
-
     sAlg.tips = tipTemp.length ? tipTemp.join(", ").split(", ").map(Number) : [];
 
     if (solTemp.length) {
       sAlg.solutions = clone(solTemp);
     }
 
-    sAlg._puzzle = Puzzle.fromSequence(
-      (sAlg.scramble || "") + " z2",
-      {
-        type: args[0],
-        order: args.slice(1, args.length),
-        mode: sAlg.mode,
-        view: sAlg.view,
-        tips: sAlg.tips,
-        rounded: true,
-      },
-      true
-    );
+    sAlg._puzzle = algorithmToPuzzle(sAlg, true);
 
-    sAlg._puzzle.rotation = {
-      x: rotation.x,
-      y: rotation.y,
-      z: rotation.z,
-    };
-
-    img = (await pGenerateCubeBundle([sAlg._puzzle], 200, true))[0];
+    img = (await pGenerateCubeBundle([sAlg._puzzle], 200, true, !1, !1, !1, "svg"))[0];
+    // img = (await pGenerateCubeBundle([sAlg._puzzle], 200, true))[0];
   }
 
   function saveAlgorithm() {
@@ -280,8 +255,6 @@
   function selectAlg(a: Algorithm) {
     sAlg = clone(a, ["_puzzle"]);
 
-    // console.log("ALG: ", sAlg);
-
     sAlg.tips = (sAlg.tips || []).slice();
     show = true;
 
@@ -301,6 +274,7 @@
 
   function addAlgorithm() {
     selectAlg({
+      // mode: CubeMode.NORMAL,
       mode: currentAlg?.mode || CubeMode.NORMAL,
       name: "",
       order: currentAlg?.order || 3,
@@ -309,10 +283,14 @@
       shortName: "",
       _id: "",
       group: "",
+      // parentPath: "",
+      view: "bird",
+      // puzzle: "megaminx",
+
       parentPath: [currentAlg?.parentPath || "", currentAlg?.shortName || ""]
         .filter(e => e && e.trim())
         .join("/"),
-      view: currentAlg?.view || "plan",
+      // view: currentAlg?.view || "plan",
       puzzle: currentAlg?.puzzle || "333",
     });
 
@@ -324,41 +302,115 @@
     updateCases($location, true);
   }
 
+  function toArray(str: string, suff = "") {
+    let arr = str.split("\n");
+    let res = [];
+    let toShortName = (s: string) =>
+      s
+        .toLowerCase()
+        .replaceAll("+", "p")
+        .replaceAll("-", "m")
+        .replace(/[\s,]+/g, "_") + suff;
+
+    const section = arr[0].slice(1, -1);
+
+    res.push({
+      name: section,
+      shortName: toShortName(section),
+      parent: "skewb/l2l",
+      scramble: "",
+    });
+
+    for (let i = 1, maxi = arr.length; i < maxi; i += 1) {
+      if (/^\d+$/i.test(arr[i])) {
+        let name = arr[i];
+        let sols = [];
+
+        for (let j = i + 1; j < maxi; j += 1) {
+          if (arr[j] === "") {
+            i = j;
+            break;
+          }
+
+          let s = arr[j]
+            .split("")
+            .map(ch =>
+              /^[FRLB]/i.test(ch)
+                ? ch === ch.toLowerCase()
+                  ? ch.toUpperCase()
+                  : ch.toLowerCase()
+                : ch
+            )
+            .join("")
+            .replaceAll("S", "R' r R r'")
+            .replaceAll("H", "r R' r' R");
+          sols.push(s.replaceAll("S", "r' R r R'").replaceAll("H", "R r' R' r"));
+
+          if (j + 1 === maxi) {
+            i = j;
+          }
+        }
+
+        res.push({
+          name: section + " " + name,
+          shortName: toShortName(section) + "_" + toShortName(name),
+          parent: "skewb/l2l/" + toShortName(section),
+          solutions: sols,
+          scramble: sols[0],
+        });
+      }
+    }
+
+    return res.length === 1 ? [] : res;
+  }
+
+  function selectPosition({
+    pos,
+    type,
+    consecutive,
+  }: {
+    pos: number;
+    type: number;
+    consecutive: boolean;
+  }) {
+    if (sPos < 0) return (sPos = pos);
+    if (pos === sPos) return (sPos = -1);
+
+    let o = sAlg.order;
+    let x1 = sPos % o;
+    let y1 = ~~(sPos / o);
+    let x2 = pos % o;
+    let y2 = ~~(pos / o);
+
+    sPos = consecutive ? pos : -1;
+
+    tipTemp = [...tipTemp, `${x1}, ${y1}, ${x2}, ${y2}, ${type}`];
+
+    renderSAlg();
+  }
+
   onMount(() => {
-    [
-      // "u",
-      // "R' U' R u",
-      // "R U R' F R' F' R u",
-      // "R U' R' u'",
-      // "F R' F' R u'",
-      // "d' R U' R' u",
-      // "u' R U R' u",
-      // "R' U R2 U' R' u'",
-      // "R2 u'",
-
-      // "R U' R' U R' U' R u",
-      // "R U' R' u R U' R' u'",
-      // "R U' R' y R U' R' u",
-
-      // "E R U R' F R' F' R E'",
-      // "R U' R' d R' U R E'",
-      // "F R' F' R U' R' U R E'",
-      // "u2 R' U R2 U' R' 3u'"
-    ].forEach((e, p) =>
-      dataService.addAlgorithm({
-        mode: CubeMode.EDGERF,
-        name: `3E ${p + 1}`,
-        order: 5,
+    toArray(``, "").forEach((e, p) => {
+      // console.log(e);
+      let alg: Algorithm = {
+        mode: CubeMode.NORMAL,
+        name: e.name,
+        order: 3,
         ready: true,
-        scramble: e,
-        shortName: `555_f8e3e_${p + 1}`,
-        parentPath: "555/555_f8e",
-        solutions: [{ moves: e }],
-        view: "trans",
-        puzzle: "555",
+        scramble: e.scramble.trim() ? e.scramble.trim() + " x'" : e.scramble,
+        shortName: e.shortName,
+        parentPath: e.parent,
+        view: "bird",
+        puzzle: "skewb",
         // rotation,
-      })
-    );
+      };
+
+      if (e.solutions) {
+        alg.solutions = e.solutions.map(moves => ({ moves }));
+      }
+
+      dataService.addAlgorithm(alg);
+    });
   });
 
   $: updateCases($location);
@@ -371,16 +423,12 @@
     <div>
       <h1 class="text-gray-300 text-3xl font-bold text-center">{selectedCase?.name}</h1>
       <button
-        class="flex mx-auto items-center justify-center"
+        class={"flex mx-auto items-center justify-center transition-all duration-200 " +
+          (imgExpanded ? "h-[min(20rem,100%)] w-[min(20rem,100%)]" : "h-40 w-40")}
         on:click={() => (imgExpanded = !imgExpanded)}
       >
         {#if selectedCase?._puzzle?.img}
-          <img
-            src={selectedCase?._puzzle?.img}
-            class="puzzle-img object-contain"
-            class:expanded={imgExpanded}
-            alt=""
-          />
+          <PuzzleImage src={selectedCase._puzzle.img} />
         {:else}
           <Spinner size="6" color="white" />
         {/if}
@@ -462,16 +510,16 @@
 
     <!-- Cards -->
     {#if type < 2}
-      <List class="w-full grid py-4">
+      <ul class="w-full grid py-4">
         {#each cards as card, pos (card.route)}
           <Link to={card.route}>
-            <Li
-              class="max-w-[12rem] h-48 text-center shadow-md rounded-md select-none cursor-pointer
-            transition-all duration-200 flex flex-col items-center justify-between py-3
+            <li
+              class="max-w-[12rem] h-48 shadow-md rounded-md select-none cursor-pointer card
+            transition-all duration-200 grid place-items-center justify-center py-3
             bg-backgroundLv1 hover:shadow-2xl hover:shadow-primary-900 relative"
             >
               {#if card?.puzzle?.img}
-                <img class="w-32 h-32 object-contain" src={card.puzzle.img} alt={card.title} />
+                <PuzzleImage src={card.puzzle.img} />
               {:else}
                 <Spinner size="10" color="yellow" class="m-auto" />
               {/if}
@@ -493,10 +541,10 @@
                   </Button>
                 </ul>
               {/if}
-            </Li>
+            </li>
           </Link>
         {/each}
-      </List>
+      </ul>
     {/if}
 
     <!-- Cases -->
@@ -510,14 +558,10 @@
 
         {#each cases as c (c._id)}
           <div class="row min-h-[8rem] relative">
-            <span class="font-bold">{c.name}</span>
+            <span class="font-bold text-center">{c.name}</span>
             <button class="flex items-center justify-center" on:click={() => caseHandler(c)}>
               {#if c?._puzzle?.img}
-                <img
-                  class="puzzle-img transition-all duration-200 cursor-pointer object-contain"
-                  src={c._puzzle.img}
-                  alt=""
-                />
+                <PuzzleImage src={c._puzzle.img} glowOnHover />
               {:else}
                 <Spinner size="10" color="white" />
               {/if}
@@ -547,7 +591,6 @@
 </main>
 
 <Modal
-  class="!overflow-auto"
   bind:show
   onClose={() => {
     show = false;
@@ -615,7 +658,7 @@
         <ul class="grid no-grid gap-2">
           {#each tipTemp as tip, pos}
             <li class="flex gap-2 items-center">
-              <Input bind:value={tip} />
+              <Input bind:value={tip} class="py-1" />
               <button
                 tabindex="0"
                 class="text-gray-400 w-8 h-8 cursor-pointer hover:text-red-500"
@@ -633,8 +676,8 @@
       <Button class="!bg-blue-700 text-gray-300 mt-4" on:click={addTip}>Añadir flecha</Button>
     </section>
 
-    <section class="place-items-center">
-      <img src={img} alt="" class="max-h-52" />
+    <section class="place-items-center max-h-52 w-full h-full">
+      <PuzzleImage src={img} interactive on:position={ev => selectPosition(ev.detail)} />
     </section>
     <section>
       Soluciones:
@@ -686,10 +729,6 @@
     @apply border-0 border-t border-t-gray-400;
   }
 
-  .cases .row .puzzle-img:hover {
-    filter: drop-shadow(0 0 1rem #1d4ed8);
-  }
-
   .cases.compact {
     grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
     gap: 1rem;
@@ -720,12 +759,7 @@
       "name";
   }
 
-  .puzzle-img {
-    cursor: pointer;
-  }
-
-  .puzzle-img.expanded {
-    width: min(20rem, 100%);
-    height: min(20rem, 100%);
+  .card {
+    grid-template-rows: 10fr 1fr;
   }
 </style>

@@ -196,9 +196,9 @@ export function roundCorners(p: PuzzleInterface, rd?: number, scale?: number, pp
       s[j]._generated = newSt;
 
       if (s[j].nonInteractive) {
-        pc.stickers.splice(j, 1, newSt);
+        s.splice(j, 1, newSt);
       } else {
-        pc.stickers.push(newSt);
+        s.push(newSt);
       }
     }
 

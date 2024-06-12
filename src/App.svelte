@@ -20,7 +20,7 @@
   import { version } from '@stores/version.store';
   import { randomUUID } from '@helpers/strings';
   import { CubeDBICON } from '@constants';
-  import { updateBackground } from '@helpers/theme';
+  // import { updateBackground } from '@helpers/theme';
 
   let dataService = DataService.getInstance();
   let notService = NotificationService.getInstance();

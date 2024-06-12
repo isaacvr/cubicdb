@@ -19,7 +19,7 @@ export function MEGAMINX(_n: number, headless?: false): PuzzleInterface {
     faceVectors: [],
     getAllStickers: () => [],
     dims: [],
-    faceColors: ["white", "yellow", "violet", "green", "red", "blue", "orange", "lblue", "lyellow", "pink", "lgreen", "gray"],
+    faceColors: ["white", "yellow", "violet", "green", "red", "blue", "orange", "lblue", "lyellow", "pink", "lgreen", "lightGray"],
     move: () => false,
     roundParams: [(s: Sticker, i: number) => {
       if (s.color === 'd' || s.color === 'x' || s.name === 'center') return null;
@@ -93,7 +93,7 @@ export function MEGAMINX(_n: number, headless?: false): PuzzleInterface {
 
   // Spread little pieces
   for (let i = 0, maxi = midUpFace.length; i < maxi; i += 1) {
-    midUpFace.push(...[0, 1, 2, 3, 4].map(n => midUpFace[i].rotate(CENTER, UP, INNER_ANG * n)));
+    midUpFace.push(...[1, 2, 3, 4].map(n => midUpFace[i].rotate(CENTER, UP, INNER_ANG * n)));
     let mp = midUpFace[i].rotate(CENTER, midUpFace[i].stickers[2].getOrientation(), INNER_ANG);
     midUpFace.push(...[0, 1, 2, 3, 4].map(n => mp.rotate(CENTER, UP, INNER_ANG * n)));
   }
@@ -150,6 +150,7 @@ export function MEGAMINX(_n: number, headless?: false): PuzzleInterface {
     new Sticker(topCenter).add(new Vector3D(0, V11.y, 0))
   ]);
 
+  center.stickers[0].name = 'center-colored';
   center.stickers[1].name = 'center';
 
   midUpFace.push(center);
@@ -250,13 +251,11 @@ export function MEGAMINX(_n: number, headless?: false): PuzzleInterface {
   };
 
   mega.move = function (moves: any[]) {
-    console.time('scramble');
     for (let m = 0, maxm = moves.length; m < maxm; m += 1) {
       let mv = moves[m];
       let pcs = trySingleMove(mv);
 
       if (!pcs) {
-        console.timeEnd('scramble');
         return false;
       }
 
@@ -268,7 +267,6 @@ export function MEGAMINX(_n: number, headless?: false): PuzzleInterface {
       }
       // pcs.pieces.forEach(p => p.rotate(CENTER, u, ang, true));
     }
-    console.timeEnd('scramble');
     return true;
   };
 

@@ -7,9 +7,9 @@ import type { IPuzzleOrder } from "@interfaces";
 export const scrambleReg = /^([\d]+)?([FRUBLDfrubldzxySME])(?:([w])|&sup([\d]);)?('|2'|2|3'|3)?$/;
 
 function _moveToOrder(mv: string, order: IPuzzleOrder): number {
-  if (mv === 'F' || mv === 'B') return order.b;
-  if (mv === 'U' || mv === 'D') return order.c;
-  
+  if (mv === "F" || mv === "B") return order.b;
+  if (mv === "U" || mv === "D") return order.c;
+
   return order.a;
 }
 
@@ -72,13 +72,12 @@ export class ScrambleParser {
     moveToOrder = _moveToOrder
   ) {
     let scr = ScrambleParser.parseNNNString(scramble);
-
     let moves = ScrambleParser.parseScramble(scr, MOVE_MAP);
     let res = [];
 
     for (let i = 0, maxi = moves.length; i < maxi; i += 1) {
       let o = moveToOrder(MOVE_MAP.charAt(moves[i][0]), order);
-      
+
       if (!moves[i][4]) {
         res.push([
           moves[i][3] ? o - 1 : moves[i][1], // Face Index | Starting face
@@ -131,15 +130,15 @@ export class ScrambleParser {
       // WCA Notation
       let moves =
         scramble.match(
-          /((DB[RL]\d*'?)|([dbDB][RL]\d*'?)|(\[[ulfrbd]\d*'?\])|([RDrd](\+|-){1,2})|([ULFRBDy]\d*'?))/g
+          /((DB[RL]\d*'?)|([dbDB][RL]\d*'?)|(\[[ulfrbd]\d*'?\])|([LRDlrd](\+|-){1,2})|([ULFRBDy]\d*'?))/g
         ) || [];
       let moveMap = "ULFRBD";
 
       for (let i = 0, maxi = moves.length; i < maxi; i += 1) {
         let mv = moves[i];
 
-        if (/^([RDrd](\+|-){1,2})$/.test(mv)) {
-          let type = mv[0] === "R" || mv[0] === "r" ? 1 : 0;
+        if (/^([LRDlrd](\+|-){1,2})$/.test(mv)) {
+          let type = { d: 0, r: 1, l: 3 }[mv[0].toLowerCase()] || 0;
           let turns = mv.indexOf("+") * (mv.length - 1);
           res.push([type, turns, -1, mv[0] === mv[0].toLowerCase() ? 1 : 0]);
         } else {
@@ -207,12 +206,9 @@ export class ScrambleParser {
     return res;
   }
 
-  static parseSkewb(scramble: string, moveMap = "FURLBrlxyz") {
-    // MOVE_MAP = "URLB"
-    // MV = [ plane, turns ]
-
+  static parseSkewb(scramble: string, moveMap = "FURLBfrlbxyz") {
     let res = [];
-    let moveReg = /[FULRBrlxyz]['2]?/g;
+    let moveReg = /[FULRBfrlbxyz]['2]?/g;
     let moves = scramble.match(moveReg);
 
     if (!moves) return [];

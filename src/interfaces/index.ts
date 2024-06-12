@@ -1,66 +1,106 @@
-import type { Puzzle } from './../classes/puzzle/puzzle';
-import type { Sticker } from './../classes/puzzle/Sticker';
-import type { Piece } from './../classes/puzzle/Piece';
-import type { Vector3D } from '../classes/vector3d';
+import type { Puzzle } from "./../classes/puzzle/puzzle";
+import type { Sticker } from "./../classes/puzzle/Sticker";
+import type { Piece } from "./../classes/puzzle/Piece";
+import type { Vector3D } from "../classes/vector3d";
 import type { CubeMode, SCRAMBLE_MENU } from "../constants";
-import type { Writable } from 'svelte/store';
-import type { Display } from 'electron';
-import type { HTMLImgAttributes } from 'svelte/elements';
+import type { Writable } from "svelte/store";
+import type { Display } from "electron";
+import type { HTMLImgAttributes } from "svelte/elements";
 
 export const PuzzleTypeName = [
-  'rubik', 'icarry', 'skewb', 'square1', 'pyraminx', 'axis', 'fisher', 'ivy'
- , 'clock', 'megaminx', 'mirror', 'dino', 'rex', 'redi', 'mixup', 'pyramorphix', 'gear', 'dreidel'
- , 'bandaged222', 'bicube', 'square2', 'pandora', 'ultimateSkewb', 'pyraminxCrystal', 'tetraminx'
- , 'meierHalpernPyramid', 'sq1Star', 'windmill', 'helicopter', 'supersquare1'
+  "rubik",
+  "icarry",
+  "skewb",
+  "square1",
+  "pyraminx",
+  "axis",
+  "fisher",
+  "ivy",
+  "clock",
+  "megaminx",
+  "mirror",
+  "dino",
+  "rex",
+  "redi",
+  "mixup",
+  "pyramorphix",
+  "gear",
+  "dreidel",
+  "bandaged222",
+  "bicube",
+  "square2",
+  "pandora",
+  "ultimateSkewb",
+  "pyraminxCrystal",
+  "tetraminx",
+  "meierHalpernPyramid",
+  "sq1Star",
+  "windmill",
+  "helicopter",
+  "supersquare1",
 ] as const;
 
 export declare type PuzzleType = (typeof PuzzleTypeName)[number];
 
 type AnyCallback = (...args: any[]) => any;
 
-export declare type CubeView = 'plan' | 'trans' | '2d';
-export const CubeViewMap: [ CubeView, string ][] = [
-  [ '2d', '2D' ],
-  [ 'plan', 'Plain' ],
-  [ 'trans', '3D' ],
+export declare type CubeView = "plan" | "trans" | "2d" | "bird";
+export const CubeViewMap: [CubeView, string][] = [
+  ["plan", "Plain"],
+  ["bird", "Bird"],
+  ["2d", "2D"],
+  ["trans", "3D"],
 ];
 
-export function nameToPuzzle(name: string): any[] {
-  const reg1 = /^(\d*)[xX](\d*)$/, reg2 = /^(\d*)[xX](\d*)[xX](\d*)$/, reg3 = /^(\d){3}$/;
+export function nameToPuzzle(name: string): { type: PuzzleType; dims: number[] } {
+  const reg1 = /^(\d*)[xX](\d*)$/,
+    reg2 = /^(\d*)[xX](\d*)[xX](\d*)$/,
+    reg3 = /^(\d){3}$/;
 
-  let dims;
+  let dims: number[] = [];
 
-  if ( reg1.test(name) ) {
-    return [ 'rubik', +name.replace(reg1, "$1") ];
-  } else if ( reg2.test(name) ) {
+  if (reg1.test(name)) {
+    return { type: "rubik", dims: [+name.replace(reg1, "$1")] };
+  } else if (reg2.test(name)) {
     dims = name.replace(reg2, "$1 $2 $3").split(" ").map(Number);
-    return [ 'rubik', ...dims ];
-  } else if ( reg3.test(name) ) {
-    dims = name.split('').map(Number);
-    return ['rubik', ...dims];
+    return { type: "rubik", dims };
+  } else if (reg3.test(name)) {
+    dims = name.split("").map(Number);
+    return { type: "rubik", dims };
   }
 
-  if ( PuzzleTypeName.indexOf(name as any) > -1 ) return [ name ];
+  if (PuzzleTypeName.indexOf(name as any) > -1) return { type: name as PuzzleType, dims };
 
-  switch(name) {
-    case 'sq1':
-    case 'Square-1': return [ 'square1' ];
-    case 'Skewb': return [ 'skewb' ];
-    case 'Pyraminx': return [ 'pyraminx' ];
-    case 'Axis': return [ 'axis' ];
-    case 'Fisher': return [ 'fisher' ];
-    case 'Ivy': return [ 'ivy' ];
-    default: return [ 'rubik' ];
+  switch (name) {
+    case "sq1":
+    case "Square-1":
+      return { type: "square1", dims: [] };
+    case "Skewb":
+      return { type: "skewb", dims: [] };
+    case "Pyraminx":
+      return { type: "pyraminx", dims: [] };
+    case "Axis":
+      return { type: "axis", dims: [] };
+    case "Fisher":
+      return { type: "fisher", dims: [] };
+    case "Ivy":
+      return { type: "ivy", dims: [] };
+    default:
+      return { type: "rubik", dims: [3] };
   }
 }
 
 export enum TimerState {
-  CLEAN = 0, STOPPED = 1, PREVENTION = 2, INSPECTION = 3, RUNNING = 4
-};
+  CLEAN = 0,
+  STOPPED = 1,
+  PREVENTION = 2,
+  INSPECTION = 3,
+  RUNNING = 4,
+}
 
 export enum AverageSetting {
   SEQUENTIAL = 0,
-  GROUP = 1
+  GROUP = 1,
 }
 
 export interface ICard {
@@ -100,12 +140,12 @@ export interface Algorithm {
   puzzle?: string;
   solutions?: Solution[];
   mode: CubeMode;
-  rotation?: PuzzleInterface['rotation'];
+  rotation?: PuzzleInterface["rotation"];
   baseColor?: string;
-  cube ?: string;
+  cube?: string;
   ready: boolean;
-  tips ?: number[];
-  parentPath ?: string;
+  tips?: number[];
+  parentPath?: string;
   view?: CubeView;
   _puzzle?: Puzzle;
 }
@@ -142,7 +182,7 @@ export interface PuzzleInterface {
   raw?: any;
   scramble?: () => any;
   toMove?: AnyCallback;
-  applySequence?: (...args: any[]) => { u: Vector3D, ang: number, pieces: string[] }[];
+  applySequence?: (...args: any[]) => { u: Vector3D; ang: number; pieces: string[] }[];
   vectorsFromCamera?: AnyCallback;
 }
 
@@ -165,7 +205,10 @@ export interface PuzzleOptions {
 }
 
 export enum Penalty {
-  NONE = 0, P2 = 1, DNF = 2, DNS = 3
+  NONE = 0,
+  P2 = 1,
+  DNF = 2,
+  DNS = 3,
 }
 
 export interface Solve {
@@ -184,13 +227,36 @@ export interface Solve {
   steps?: number[];
 }
 
-export type TimerInput = 'Keyboard' | 'Manual' | 'StackMat' | 'GAN Cube' | 'QY-Timer' | 'ExternalTimer';
-export type SessionType = 'mixed' | 'single' | 'multi-step';
+export type TimerInput =
+  | "Keyboard"
+  | "Manual"
+  | "StackMat"
+  | "GAN Cube"
+  | "QY-Timer"
+  | "ExternalTimer";
+export type SessionType = "mixed" | "single" | "multi-step";
 
-export const TIMER_INPUT: TimerInput[] = [ 'Keyboard', 'Manual', 'StackMat', 'GAN Cube'/*, 'QY-Timer'*/, 'ExternalTimer' ];
-export const SESSION_TYPE: SessionType[] = [ 'mixed', 'single', 'multi-step' ];
+export const TIMER_INPUT: TimerInput[] = [
+  "Keyboard",
+  "Manual",
+  "StackMat",
+  "GAN Cube" /*, 'QY-Timer'*/,
+  "ExternalTimer",
+];
+export const SESSION_TYPE: SessionType[] = ["mixed", "single", "multi-step"];
 
-export const DIALOG_MODES = ["333", "333fm" ,"333oh" ,"333o" ,"easyc" ,"333ft", "edges", "corners", "2gen", "2genl"];
+export const DIALOG_MODES = [
+  "333",
+  "333fm",
+  "333oh",
+  "333o",
+  "easyc",
+  "333ft",
+  "edges",
+  "corners",
+  "2gen",
+  "2genl",
+];
 
 export interface SessionSettings {
   hasInspection: boolean;
@@ -241,12 +307,12 @@ export interface RawPuzzle {
   raw?: any; // Intended for user specific purposes
 }
 
-declare type ArrowLarge = { type: 'arrow', text: string };
+declare type ArrowLarge = { type: "arrow"; text: string };
 export declare type CubeType = Puzzle | RawPuzzle | ArrowLarge;
 
 export interface BlockType {
   type: "title" | "subtitle" | "text" | "cubes";
-  content ?: string;
+  content?: string;
   cubes?: CubeType[];
 }
 
@@ -306,7 +372,7 @@ export interface TimerContext {
   stats: Writable<Statistics>;
   scramble: Writable<string>;
   group: Writable<number>;
-  mode: Writable<{ 0: string, 1: string, 2: number }>;
+  mode: Writable<{ 0: string; 1: string; 2: number }>;
   hintDialog: Writable<boolean>;
   hint: Writable<boolean>;
   preview: Writable<HTMLImgAttributes[]>;
@@ -317,12 +383,12 @@ export interface TimerContext {
   bluetoothList: Writable<BluetoothDeviceData[]>;
   bluetoothStatus: Writable<boolean>;
   STATS_WINDOW: Writable<(number | null)[][]>;
-  
+
   setSolves: (rescramble?: boolean) => any;
   sortSolves: () => any;
   updateSolves: () => any;
-  updateStatistics: (inc ?: boolean) => any;
-  initScrambler: (scr?: string, _mode ?: string) => any;
+  updateStatistics: (inc?: boolean) => any;
+  initScrambler: (scr?: string, _mode?: string) => any;
   selectedGroup: () => any;
   selectSolve: (s: Solve) => any;
   selectSolveById: (id: string, n: number) => any;
@@ -335,16 +401,24 @@ export interface TimerContext {
 
 export const ROLES = {
   CONTESTANT: 1 << 0,
-  JUDGE:      1 << 1,
-  SCRAMBLER:  1 << 2,
-  ORGANIZER:  1 << 3,
-  DELEGATE:   1 << 4,
-  SPONSOR:    1 << 5,
-  GUEST:      1 << 6,
+  JUDGE: 1 << 1,
+  SCRAMBLER: 1 << 2,
+  ORGANIZER: 1 << 3,
+  DELEGATE: 1 << 4,
+  SPONSOR: 1 << 5,
+  GUEST: 1 << 6,
 };
 
 // export const ROLES_STR = [ "Contestant", "Judge", "Scrambler", "Organizer", "Delegate", "Sponsor", "Guest" ];
-export const ROLES_STR = [ "Competidor", "Juez", "Scrambler", "Organizador", "Delegado", "Patrocinador", "Invitado" ];
+export const ROLES_STR = [
+  "Competidor",
+  "Juez",
+  "Scrambler",
+  "Organizador",
+  "Delegado",
+  "Patrocinador",
+  "Invitado",
+];
 
 export interface ContestResult {
   round: number;
@@ -378,7 +452,7 @@ export interface CubeEvent {
   inscriptionCost: number;
   rounds: {
     [key: string]: number;
-  }
+  };
 }
 
 export interface Sheet {
@@ -438,53 +512,53 @@ export interface IPC {
   addDownloadProgressListener: (cb: AnyCallback) => any;
   addDownloadDoneListener: (cb: AnyCallback) => any;
   addBluetoothListener: (cb: AnyCallback) => any;
-  
+
   getAlgorithms: (options: AlgorithmOptions) => Promise<Algorithm[]>;
   getAlgorithm: (options: AlgorithmOptions) => Promise<Algorithm | null>;
   updateAlgorithm: (alg: Algorithm) => Promise<Algorithm>;
   addAlgorithm: (alg: Algorithm) => Promise<Algorithm>;
   removeAlgorithm: (alg: Algorithm) => Promise<boolean>;
-  
+
   getTutorials: () => Promise<Tutorial[]>;
   addTutorial: (t: Tutorial) => Promise<Tutorial>;
   updateTutorial: (t: Tutorial) => Promise<Tutorial>;
-  
+
   getSolves: () => Promise<Solve[]>;
   addSolve: (s: Solve) => Promise<Solve>;
   addSolves: (s: Solve[]) => Promise<Solve[]>;
   updateSolve: (s: Solve) => Promise<Solve>;
   removeSolves: (s: Solve[]) => Promise<Solve[]>;
-  
+
   getSessions: () => Promise<Session[]>;
   addSession: (s: Session) => Promise<Session>;
   removeSession: (s: Session) => Promise<Session>;
   renameSession: (s: Session) => Promise<Session>;
   updateSession: (s: Session) => Promise<Session>;
-  
+
   addContest: (c: CubeEvent) => Promise<CubeEvent>;
   getContests: () => Promise<CubeEvent[]>;
   updateContest: (c: CubeEvent) => Promise<CubeEvent>;
   removeContests: (c: CubeEvent[]) => Promise<CubeEvent[]>;
-  
+
   minimize: () => Promise<void>;
   maximize: () => Promise<void>;
   close: () => Promise<void>;
-  
+
   generatePDF: (args: PDFOptions) => Promise<PDFResult>;
   generateContestPDF: (args: ContestPDFOptions) => Promise<ContestPDFResult>;
 
-  zipPDF: (s: { name: string, files: Sheet[]}) => Promise<string>;
+  zipPDF: (s: { name: string; files: Sheet[] }) => Promise<string>;
   openFile: (f: string) => Promise<void>;
   revealFile: (f: string) => Promise<void>;
-  
+
   update: (cmd: UpdateCommand) => Promise<string | null>;
   cancelUpdate: () => Promise<boolean>;
-  
+
   sleep: (s: boolean) => Promise<void>;
 
-  connectBluetoothDevice: (id: string) => Promise<void>; 
-  cancelBluetoothRequest: () => Promise<void>; 
-  pairingBluetoothResponse: () => Promise<void>; 
+  connectBluetoothDevice: (id: string) => Promise<void>;
+  cancelBluetoothRequest: () => Promise<void>;
+  pairingBluetoothResponse: () => Promise<void>;
 
   cacheCheckImage: (hash: string) => Promise<boolean>;
   cacheGetImage: (hash: string) => Promise<string>;
@@ -508,7 +582,7 @@ export interface PDFOptions {
 }
 
 export interface PDFResult {
-  name: string,
+  name: string;
   buffer: Buffer;
 }
 
@@ -520,19 +594,19 @@ export interface ContestPDFOptions extends PDFOptions {
 export interface ContestPDFResult extends PDFResult {
   name: string;
   buffer: Buffer;
-  mode: ContestPDFOptions['mode'];
-  round: ContestPDFOptions['round'];
+  mode: ContestPDFOptions["mode"];
+  round: ContestPDFOptions["round"];
 }
 
 export interface Game {
-  players: { 0: string, 1: { name: string, times: number[], connected: boolean } }[];
-  observers: { 0: string, 1: { name: string } }[];
+  players: { 0: string; 1: { name: string; times: number[]; connected: boolean } }[];
+  observers: { 0: string; 1: { name: string } }[];
   round: number;
   total: number;
   started: boolean;
 }
 
-export type StackmatSignalHeader = 'I' | 'S' | 'L' | 'R' | 'A' | 'C' | ' ';
+export type StackmatSignalHeader = "I" | "S" | "L" | "R" | "A" | "C" | " ";
 
 export type StackmatCallback = (e: StackmatState) => void;
 
@@ -552,7 +626,15 @@ export interface StackmatState {
   stackmatId: string;
 }
 
-export type IColor = "gray" | "red" | "yellow" | "green" | "purple" | "blue" | "primary" | undefined;
+export type IColor =
+  | "gray"
+  | "red"
+  | "yellow"
+  | "green"
+  | "purple"
+  | "blue"
+  | "primary"
+  | undefined;
 export type INotColor = IColor | "light" | "dark" | "none" | "indigo" | "alternative";
 
 export interface NotificationAction {
@@ -587,7 +669,7 @@ export interface InputContext {
   recoverySequence: Writable<string>;
 
   reset: () => void;
-  initScrambler: (scr?: string, _mode ?: string) => void;
+  initScrambler: (scr?: string, _mode?: string) => void;
   addSolve: (time?: number, penalty?: Penalty) => void;
   createNewSolve: () => void;
   handleRemoveSolves: (sv: Solve[]) => any;
@@ -656,11 +738,11 @@ export interface Language {
     copy: string;
     yes: string;
     no: string;
-  }
+  };
   NAVBAR: {
     home: string;
     routeMap: (route: string) => string;
-  },
+  };
   HOME: {
     tutorials: string;
     algorithms: string;
@@ -673,7 +755,7 @@ export interface Language {
     importExport: string;
     contest: string;
     tools: string;
-  },
+  };
   SETTINGS: {
     title: string;
     language: string;
@@ -699,14 +781,14 @@ export interface Language {
 
     updateCompleted: string;
     updateFailed: string;
-  },
+  };
   ALGORITHMS: {
     solution: string;
     moves: string;
     case: string;
     algorithms: string;
     toggleView: string;
-  },
+  };
   TIMER: {
     // TimerTab
     stackmatStatus: string;
@@ -792,7 +874,7 @@ export interface Language {
     solve: string;
     timeDistribution: string;
     timeChartLabels: string[];
-    
+
     solves: string;
     hourDistribution: string;
     weekDistribution: string;
@@ -802,7 +884,7 @@ export interface Language {
     // Best section
     bestMarks: string;
     go: string;
-    bestList: {title: string, key: string, select: number }[];
+    bestList: { title: string; key: string; select: number }[];
     stepsAverage: string;
     stepsPercent: string;
 
@@ -811,9 +893,9 @@ export interface Language {
       "edit-scramble": string;
       "old-scrambles": string;
       settings: string;
-    }
+    };
     // ['Ao5', 'Ao12', 'Ao50', 'Ao100', 'Ao200', 'Ao500', 'Ao1k', 'Ao2k' ]
-  },
+  };
   RECONSTRUCTIONS: {
     stepBack: string;
     playPause: string;
@@ -826,7 +908,7 @@ export interface Language {
     findReconstruction: string;
     return: string;
     speed: string;
-  },
+  };
   PLL: {
     title: string;
     topFace: string;
@@ -834,7 +916,7 @@ export interface Language {
     next: string;
     completed: string;
     tryAgain: string;
-    
+
     colorNeutral: string;
     white: string;
     yellow: string;
@@ -858,7 +940,7 @@ export interface Language {
 
     gPerms: string;
     gPermsBlock: string;
-  },
+  };
   SIMULATOR: {
     settings: string;
 
@@ -867,7 +949,7 @@ export interface Language {
     order: string;
     setPuzzle: string;
     showBackFace: string;
-  },
+  };
   IMPORT_EXPORT: {
     title: string;
     import: string;
@@ -878,13 +960,13 @@ export interface Language {
     selectNone: string;
     total: string;
     showingOnly50: string;
-  },
+  };
   CUBEDB: {
     name: string;
     version: string;
     creator: string;
     donations: string;
-  },
+  };
   TOOLS: {
     cubedbBatch: string;
     timerOnly: string;
@@ -935,8 +1017,8 @@ export interface Language {
 
     // Remote Timer
     clickToAuth: string;
-  },
-  MENU: SCRAMBLE_MENU[]
+  };
+  MENU: SCRAMBLE_MENU[];
 }
 
 export interface BluetoothDeviceData {
@@ -945,15 +1027,15 @@ export interface BluetoothDeviceData {
   connected: boolean;
 }
 
-export type UpdateCommand = 'check' | 'download';
-export type TurnMetric = 'QTM' | 'HTM' | 'OBTM' | 'ETM' | 'STM';
+export type UpdateCommand = "check" | "download";
+export type TurnMetric = "QTM" | "HTM" | "OBTM" | "ETM" | "STM";
 
-export const MetricList: { 0: string, 1: TurnMetric }[] = [
-  [ 'ETM', 'ETM' ],
-  [ 'QTM', 'QTM' ],
-  [ 'HTM', 'HTM' ],
-  [ 'OBTM', 'OBTM' ],
-  [ 'STM', 'STM' ],
+export const MetricList: { 0: string; 1: TurnMetric }[] = [
+  ["ETM", "ETM"],
+  ["QTM", "QTM"],
+  ["HTM", "HTM"],
+  ["OBTM", "OBTM"],
+  ["STM", "STM"],
 ];
 
 export interface IReconstruction {
@@ -964,10 +1046,27 @@ export interface IReconstruction {
   hasError: boolean;
 }
 
-export type Scrambler = '222so' | '333' | '333cross' | '333fm' | '333ni' | 'r3ni' | '333oh' | '444bld' | '444wca'
-  | '555wca' | '555bld' | '666wca' | '777wca' | 'clkwca' | 'mgmp' | 'pyrso' | 'skbso' | 'sqrs';
+export type Scrambler =
+  | "222so"
+  | "333"
+  | "333cross"
+  | "333fm"
+  | "333ni"
+  | "r3ni"
+  | "333oh"
+  | "444bld"
+  | "444wca"
+  | "555wca"
+  | "555bld"
+  | "666wca"
+  | "777wca"
+  | "clkwca"
+  | "mgmp"
+  | "pyrso"
+  | "skbso"
+  | "sqrs";
 
-export type ICacheDB = 'Cache' | 'Algorithms' | 'Sessions' | 'Solves' | 'Tutorials';
+export type ICacheDB = "Cache" | "Algorithms" | "Sessions" | "Solves" | "Tutorials";
 
 export interface ToolItem {
   id: string;

@@ -6,13 +6,14 @@ export const EPS = 1e-6;
 
 export enum CubeMode {
   NORMAL = 0, OLL, PLL, CMLL, F2L, COLL, WV, ELL, VLS, ZBLL, OLLCP, GRAY, CENTERS, CROSS, FL, YCROSS,
-  CS, EO, CO, F3E, EDGERF
+  CS, EO, CO, F3E, EDGERF, DPLL
 };
 
 export const CubeModeMap = [
   ['Normal', CubeMode.NORMAL],
   ['OLL', CubeMode.OLL],
   ['PLL', CubeMode.PLL],
+  ['DPLL', CubeMode.DPLL], // Dark face on top
   ['CMLL', CubeMode.CMLL],
   ['F2L', CubeMode.F2L],
   ['F3E', CubeMode.F3E],

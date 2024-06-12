@@ -86,8 +86,8 @@
     }
 
     sAlg._puzzle = Puzzle.fromSequence((sAlg.scramble || '') + " z2", {
-      type: args[0],
-      order: args.slice(1, args.length),
+      type: args.type,
+      order: args.dims,
       mode: sAlg.mode,
       view: sAlg.view,
       tips: sAlg.tips,

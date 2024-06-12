@@ -36,7 +36,7 @@ export const INITIAL_STATISTICS: Statistics = {
 
 export function mean(values: number[]): number {
   let cant = values.length;
-  return cant ? values.reduce((a, b) => a + b, 0) / cant : 0;
+  return values.reduce((a, b) => a + b, 0) / (cant || 1);
 }
 
 export function median(values: number[]): number {

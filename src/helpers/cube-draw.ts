@@ -1,77 +1,88 @@
 import { Puzzle } from "@classes/puzzle/puzzle";
 import { DataService } from "@stores/data.service";
-import { writable, type Writable } from 'svelte/store';
-import { sha1 } from 'object-hash';
+import { writable, type Writable } from "svelte/store";
+import { sha1 } from "object-hash";
 import { clockImage } from "@workers/imageGenerators/clockImage";
 import { planView } from "@workers/imageGenerators/plainView";
 import { projectedView } from "@workers/imageGenerators/projectedView";
 import { transView } from "@workers/imageGenerators/transView";
 import { PRINTABLE_PALETTE } from "@constants";
 import { roundCorners } from "@classes/puzzle/puzzleUtils";
+import { birdView } from "@workers/imageGenerators/birdView";
 
 async function blobToDataURL(blob: Blob): Promise<string> {
   return new Promise(res => {
-    let fr = new FileReader;
+    let fr = new FileReader();
 
-    fr.addEventListener('load', () => {
+    fr.addEventListener("load", () => {
       res(fr.result as string);
     });
 
-    fr.addEventListener('error', () => {
-      res('');
+    fr.addEventListener("error", () => {
+      res("");
     });
 
-    fr.addEventListener('abort', () => {
-      res('');
+    fr.addEventListener("abort", () => {
+      res("");
     });
-    
+
     fr.readAsDataURL(blob);
   });
 }
 
 export async function pGenerateCubeBundle(
-  cubes: Puzzle[], width ?: number, _all = true, inCube = false, printable = false, cache = false
+  cubes: Puzzle[],
+  width?: number,
+  _all = true,
+  inCube = false,
+  printable = false,
+  cache = false,
+  format: "raster" | "svg" = "svg"
 ): Promise<string[]> {
-  return new Promise(async (resolve) => {
+  return new Promise(async resolve => {
     const dataService = DataService.getInstance();
-  
+
     // Cache or views
-    let images = await dataService.cacheGetImageBundle( cubes.map((c) => sha1(c.options)) );
+    let images = await dataService.cacheGetImageBundle(cubes.map(c => sha1(c.options)));
 
     for (let i = 0, maxi = cubes.length; i < maxi; i += 1) {
       const W = width || 250;
 
-      cubes[i].img = '';
-  
-      if ( cache && images[i] ) {
+      cubes[i].img = "";
+
+      if (cache && images[i]) {
         cubes[i].img = images[i];
       }
 
-      if ( !cubes[i].img ) {
+      if (!cubes[i].img) {
         // const opt = cubes[i].options;
         const cube = cubes[i];
-    
-        if ( printable ) cube.p.palette = PRINTABLE_PALETTE;
-        if ( cube.options.rounded ) {
+
+        if (printable) cube.p.palette = PRINTABLE_PALETTE;
+        if (cube.options.rounded) {
           roundCorners(cube.p, ...cube.p.roundParams);
         }
-        
-        if ( cube.type === 'clock' ) {
+
+        if (cube.type === "clock") {
           cube.img = await blobToDataURL(await clockImage(cube, 500));
           cache && dataService.cacheSaveImage(sha1(cube.options), cube.img);
-        } else if ( [ 'plan', '2d' ].indexOf(cube.view) > -1 ) {
-          cube.img = await blobToDataURL(
-            await (cube.view === 'plan' ? planView(cube, W) : projectedView(cube, W))
-          );
+        } else if (["plan", "2d", "bird"].indexOf(cube.view) > -1) {
+          cube.img =
+            cube.view === "plan"
+              ? planView(cube, W, format)
+              : cube.view === "2d"
+              ? projectedView(cube, W, format)
+              : birdView(cube, W, format);
+
           cache && dataService.cacheSaveImage(sha1(cube.options), cube.img);
         } else {
-          cube.img = await blobToDataURL( await transView(cube, W) );
+          cube.img = await blobToDataURL(await transView(cube, W));
           cache && dataService.cacheSaveImage(sha1(cube.options), cube.img);
         }
       }
     }
-    
-    if ( inCube ) return resolve([]);
+
+    if (inCube) return resolve([]);
     return resolve(cubes.map(c => c.img));
   });
 }

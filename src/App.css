@@ -135,10 +135,6 @@ body {
   @apply mt-4 px-5;
 }
 
-.puzzle-img {
-  @apply w-40 h-40 transition-all duration-200;
-}
-
 mark {
   @apply bg-purple-700 bg-opacity-70 p-1 text-slate-300 inline-flex items-center justify-center my-1;
   border-radius: .25rem;

@@ -3,7 +3,7 @@ import type { Sticker } from "@classes/puzzle/Sticker";
 import { EPS } from "@constants";
 
 export function nonGray(st: Sticker): boolean {
-  return /^[^xd]$/.test(st.color);
+  return st.color != 'x' && st.color != 'd';
 }
 
 export function getColoredStickers(pc: Piece, colorFilter = nonGray): Sticker[] {
@@ -11,11 +11,15 @@ export function getColoredStickers(pc: Piece, colorFilter = nonGray): Sticker[] 
 }
 
 export function nonOGray(st: Sticker): boolean {
-  return /^[^xd]$/.test(st.oColor);
+  return st.oColor != 'x' && st.oColor != 'd';
 }
 
 export function getOColoredStickers(pc: Piece, colorFilter = nonOGray): Sticker[] {
   return pc.stickers.filter(colorFilter);
+}
+
+export function getColoredFromList(st: Sticker[], colorFilter = nonOGray): Sticker[] {
+  return st.filter(colorFilter);
 }
 
 export function centerStickerAligned(

@@ -16,6 +16,7 @@ import { puzzleReg } from "./puzzleRegister";
 import { ImageSticker } from "./ImageSticker";
 import { solvFacelet } from "@cstimer/scramble/scramble_333";
 import { getOColoredStickers } from "@classes/reconstructors/utils";
+import { parseReconstruction } from "@helpers/strings";
 
 void puzzles;
 
@@ -68,12 +69,17 @@ export class Puzzle {
 
     if (this.view === "plan") {
       switch (this.type) {
-        case "megaminx":
         case "pyraminx":
         case "skewb":
         case "square1":
           this.view = "2d";
           break;
+      }
+    } else if (this.view === "bird") {
+      let allowedTypes: PuzzleType[] = ["skewb", "rubik", "icarry"];
+
+      if (allowedTypes.indexOf(this.type) < 0) {
+        this.view = "2d";
       }
     }
 
@@ -168,8 +174,9 @@ export class Puzzle {
   }
 
   adjustColors(topColor = "", bottomColor = "") {
-    const typeFilter: PuzzleType[] = ["rubik", "square1"];
+    const typeFilter: PuzzleType[] = ["rubik", "square1", "megaminx", "skewb"];
     const modeFilter: CubeMode[] = [CubeMode.NORMAL, CubeMode.CS, CubeMode.EO, CubeMode.CO];
+    const OFF_COLOR = "gray";
 
     if (!typeFilter.some(e => e === this.type)) {
       return this;
@@ -196,16 +203,20 @@ export class Puzzle {
       return this;
     }
 
-    let ref = topColor
-      ? topColor
-      : bottomColor
-      ? this.p.faceColors[(this.p.faceColors.indexOf(bottomColor) + 3) % 6]
-      : this.p.faceColors[3];
+    let { faceColors, faceVectors } = this.p;
+    let fVec = (v: Vector3D) =>
+      faceVectors.reduce((a, b, p) => (a > -1 || b.sub(v).abs() > EPS ? a : p), -1);
+
+    let COLORS = faceColors.length;
+    let ref =
+      topColor && faceColors.indexOf(topColor) > -1
+        ? topColor
+        : bottomColor && faceColors.indexOf(bottomColor) > -1
+        ? faceColors[fVec(faceVectors[faceColors.indexOf(bottomColor)].mul(-1))]
+        : faceColors[fVec(UP)];
 
     let TOP_COLOR = ref;
-    let COLORS = this.p.faceColors.length;
-    let BOTTOM_COLOR =
-      this.p.faceColors[(this.p.faceColors.indexOf(TOP_COLOR) + (COLORS >> 1)) % COLORS];
+    let BOTTOM_COLOR = faceColors[fVec(faceVectors[faceColors.indexOf(TOP_COLOR)].mul(-1))];
 
     for (let i = 0, maxi = pieces.length; i < maxi; i += 1) {
       let stickers = getOColoredStickers(pieces[i]);
@@ -216,7 +227,19 @@ export class Puzzle {
         case CubeMode.OLL: {
           for (let j = 0; j < stLen; j += 1) {
             if (stickers[j].oColor != TOP_COLOR) {
-              stickers[j].color = "x";
+              stickers[j].color = OFF_COLOR;
+            } else {
+              // stickers[j].color = stickers[j].oColor;
+              stickers[j].color = "yellow";
+            }
+          }
+
+          break;
+        }
+        case CubeMode.DPLL: {
+          for (let j = 0; j < stLen; j += 1) {
+            if (stickers[j].oColor === TOP_COLOR) {
+              stickers[j].color = OFF_COLOR;
             } else {
               stickers[j].color = stickers[j].oColor;
             }
@@ -226,7 +249,7 @@ export class Puzzle {
         case CubeMode.F2L: {
           for (let j = 0; j < stLen; j += 1) {
             if (pieces[i].contains(TOP_COLOR)) {
-              stickers[j].color = "x";
+              stickers[j].color = OFF_COLOR;
             } else {
               stickers[j].color = stickers[j].oColor;
             }
@@ -242,7 +265,7 @@ export class Puzzle {
           ) {
             stickers.forEach(st => (st.color = st.oColor));
           } else {
-            stickers.forEach(st => (st.color = "x"));
+            stickers.forEach(st => (st.color = OFF_COLOR));
           }
 
           break;
@@ -254,7 +277,7 @@ export class Puzzle {
           if (stLen === 2 && pieces[i].contains(fColor) && pieces[i].contains(rColor)) {
             stickers.forEach(st => (st.color = st.oColor));
           } else {
-            stickers.forEach(st => (st.color = "x"));
+            stickers.forEach(st => (st.color = OFF_COLOR));
           }
 
           break;
@@ -262,7 +285,7 @@ export class Puzzle {
         case CubeMode.CMLL: {
           for (let j = 0; j < stLen; j += 1) {
             if (topLayer && stLen === 2) {
-              stickers[j].color = "x";
+              stickers[j].color = OFF_COLOR;
             } else {
               stickers[j].color = stickers[j].oColor;
             }
@@ -273,14 +296,14 @@ export class Puzzle {
           if (topLayer) {
             for (let j = 0; j < stLen; j += 1) {
               if (stLen === 2 && stickers[j].oColor != TOP_COLOR) {
-                stickers[j].color = "x";
+                stickers[j].color = OFF_COLOR;
               } else {
                 stickers[j].color = stickers[j].oColor;
               }
             }
           } else {
             for (let j = 0; j < stLen; j += 1) {
-              stickers[j].color = "x";
+              stickers[j].color = OFF_COLOR;
             }
           }
           break;
@@ -299,7 +322,7 @@ export class Puzzle {
                 }
 
                 if (!isTop) {
-                  stickers[j].color = "x";
+                  stickers[j].color = OFF_COLOR;
                 } else {
                   stickers[j].color = stickers[j].oColor;
                 }
@@ -309,7 +332,7 @@ export class Puzzle {
             }
           } else {
             for (let j = 0; j < stLen; j += 1) {
-              stickers[j].color = "x";
+              stickers[j].color = OFF_COLOR;
             }
           }
           break;
@@ -318,7 +341,7 @@ export class Puzzle {
         case CubeMode.WV: {
           for (let j = 0; j < stLen; j += 1) {
             if (pieces[i].contains(TOP_COLOR) && stickers[j].oColor != TOP_COLOR) {
-              stickers[j].color = "x";
+              stickers[j].color = OFF_COLOR;
             } else {
               stickers[j].color = stickers[j].oColor;
             }
@@ -327,14 +350,14 @@ export class Puzzle {
         }
         case CubeMode.GRAY: {
           for (let j = 0; j < stLen; j += 1) {
-            stickers[j].color = "x";
+            stickers[j].color = OFF_COLOR;
           }
           break;
         }
         case CubeMode.CENTERS: {
           for (let j = 0; j < stLen; j += 1) {
             if (stLen != 1) {
-              stickers[j].color = "x";
+              stickers[j].color = OFF_COLOR;
             } else {
               stickers[j].color = stickers[j].oColor;
             }
@@ -345,21 +368,21 @@ export class Puzzle {
           let cnd = (pieces[i].contains(BOTTOM_COLOR) && stLen === 2) || stLen === 1;
 
           for (let j = 0; j < stLen; j += 1) {
-            stickers[j].color = cnd ? stickers[j].oColor : "x";
+            stickers[j].color = cnd ? stickers[j].oColor : OFF_COLOR;
           }
           break;
         }
         case CubeMode.FL: {
           let cnd = stLen >= 2 && !pieces[i].contains(BOTTOM_COLOR);
           for (let j = 0; j < stLen; j += 1) {
-            stickers[j].color = cnd ? "x" : stickers[j].oColor;
+            stickers[j].color = cnd ? OFF_COLOR : stickers[j].oColor;
           }
           break;
         }
         case CubeMode.YCROSS: {
           let cnd = pieces[i].contains(TOP_COLOR) && stLen > 2;
           for (let j = 0; j < stLen; j += 1) {
-            stickers[j].color = cnd ? "x" : stickers[j].oColor;
+            stickers[j].color = cnd ? OFF_COLOR : stickers[j].oColor;
           }
           break;
         }
@@ -413,11 +436,7 @@ export class Puzzle {
   }
 
   static inverse(type: PuzzleType, sequence: string): string {
-    let arr = sequence
-      .trim()
-      .split(" ")
-      .map(e => e.trim())
-      .filter(e => e != "");
+    let arr: string[] = [];
     let res = [];
 
     if (type === "square1") {
@@ -435,14 +454,17 @@ export class Puzzle {
         }
       }
     } else if (type === "megaminx") {
+      arr = parseReconstruction(sequence, type, 3).sequence;
+
       for (let i = arr.length - 1; i >= 0; i -= 1) {
         let mv = arr[i];
 
-        if (/^([RD](\+|-){2})$/.test(mv)) {
-          res.push(mv[0] + (mv[1] === "+" ? "-" : "+").repeat(2));
+        if (/^([LRDlrd](\+|-){1,2})$/.test(mv)) {
+          res.push(
+            mv[0] +
+              (mv[1] === "+" ? mv.slice(1).replaceAll("+", "-") : mv.slice(1).replaceAll("-", "+"))
+          );
         } else {
-          let turns1 =
-            (parseInt(mv.replace(/\D*(\d+)\D*/g, "$1")) || 1) * Math.sign(mv.indexOf("'") + 0.2);
           let turns =
             (5 -
               (((parseInt(mv.replace(/\D*(\d+)\D*/g, "$1")) || 1) *
@@ -450,13 +472,19 @@ export class Puzzle {
                 5)) %
             5;
 
-          if (/^([URFL]\d*'?)$/.test(mv)) {
+          if (/^([ULFRBDy]\d*'?)$/.test(mv)) {
             res.push(
               `${mv[0]}${turns === 1 || turns === -1 ? "" : Math.abs(turns)}${turns < 0 ? "" : "'"}`
             );
-          } else if (/^([db][RL]\d*'?)$/.test(mv)) {
+          } else if (/^([dbDB][RL]\d*'?)$/.test(mv)) {
             res.push(
               `${mv.slice(0, 2)}${turns === 1 || turns === -1 ? "" : Math.abs(turns)}${
+                turns < 0 ? "" : "'"
+              }`
+            );
+          } else if (/^(DB[RL]\d*'?)$/.test(mv)) {
+            res.push(
+              `${mv.slice(0, 3)}${turns === 1 || turns === -1 ? "" : Math.abs(turns)}${
                 turns < 0 ? "" : "'"
               }`
             );
@@ -470,6 +498,12 @@ export class Puzzle {
         }
       }
     } else {
+      let arr = ScrambleParser.parseNNNString(sequence)
+        .trim()
+        .split(" ")
+        .map(e => e.trim())
+        .filter(e => e != "");
+
       for (let i = arr.length - 1; i >= 0; i -= 1) {
         if (arr[i].indexOf("2") > -1) {
           res.push(arr[i].replace("'", ""));
@@ -487,6 +521,7 @@ export class Puzzle {
   static fromSequence(scramble: string, options: PuzzleOptions, inv = false, move = true): Puzzle {
     let p = new Puzzle(options);
     let s = inv ? Puzzle.inverse(options.type, scramble) : scramble;
+
     p.options.sequence = s;
     try {
       move && p.move(s);

@@ -1,7 +1,7 @@
 import { Puzzle } from "@classes/puzzle/puzzle";
 import { DOWN } from "@classes/vector3d";
 import { EPS } from "@constants";
-import { nameToPuzzle, type Algorithm } from "@interfaces";
+import { nameToPuzzle, type Algorithm, type PuzzleType } from "@interfaces";
 
 export function checkPath(obj: any, path: string[], useMap: boolean = false): boolean {
   if (typeof obj === "undefined") return false;
@@ -158,17 +158,14 @@ export function getByteSize(obj: any): number {
 
 export function algorithmToPuzzle(alg: Algorithm, addZ2: boolean): Puzzle {
   let args = nameToPuzzle(alg.puzzle || "");
-  let seq = alg.scramble + (addZ2 ? " z2" : "");
-
-  if (args.length === 1) {
-    args = [args[0], alg.order];
-  }
-
+  let noZ2: PuzzleType[] = ['megaminx'];
+  let seq = alg.scramble + (addZ2 && noZ2.indexOf(args.type) === -1 ? " z2" : "");
+  
   let res = Puzzle.fromSequence(
     seq,
     {
-      type: args[0],
-      order: args.slice(1, args.length),
+      type: args.type,
+      order: args.dims.length === 0 ? [alg.order] : args.dims,
       mode: alg.mode,
       view: alg.view,
       tips: alg.tips,

@@ -21,7 +21,7 @@
   const notService = NotificationService.getInstance();
   const loc = useLocation();
 
-  let date: string, itv: NodeJS.Timer;
+  let date: string, itv: any;
   let progress = 0;
   let languageSelector = false;
   let parts: { link: string, name: string }[] = [];
@@ -108,7 +108,7 @@
 </script>
 
 <div class="relative py-6 bg-red-200">
-  <Navbar let:hidden let:toggle class="justify-between fixed top-0 left-0 w-full z-50 border-b p-2">
+  <Navbar let:hidden let:toggle class="justify-between fixed top-0 left-0 w-full z-50 border-b p-2" fluid>
     <Link to="/">
       <div class="flex">
         <img draggable="false" src={ CubeDBICON } alt="" width="100%" height="100%" class="ml-1 w-8 flex my-auto">

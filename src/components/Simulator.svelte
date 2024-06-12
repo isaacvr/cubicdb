@@ -859,6 +859,8 @@
     hasOrder = puzzles.find((p) => p.value === selectedPuzzle)!.order;
   }
 
+  setOrder();
+
   function hideGUI() {
     GUIExpanded = false;
   }
