@@ -82,7 +82,7 @@ export function clone(obj: any, ignore: string[] = []): any {
 
   return Object.entries(obj).reduce((acc: any, e) => {
     if (ignore.indexOf(e[0]) > -1) return acc;
-    
+
     acc[e[0]] = clone(e[1]);
     return acc;
   }, {});
@@ -158,9 +158,9 @@ export function getByteSize(obj: any): number {
 
 export function algorithmToPuzzle(alg: Algorithm, addZ2: boolean): Puzzle {
   let args = nameToPuzzle(alg.puzzle || "");
-  let noZ2: PuzzleType[] = ['megaminx'];
+  let noZ2: PuzzleType[] = ["megaminx", "pyraminx"];
   let seq = alg.scramble + (addZ2 && noZ2.indexOf(args.type) === -1 ? " z2" : "");
-  
+
   let res = Puzzle.fromSequence(
     seq,
     {
@@ -175,8 +175,8 @@ export function algorithmToPuzzle(alg: Algorithm, addZ2: boolean): Puzzle {
     true,
     true
   );
-  
+
   res.p.rotation = alg.rotation || res.p.rotation;
 
-  return res.adjustColors("", alg.baseColor || "w");
+  return res.adjustColors("", alg.baseColor || (args.type === "pyraminx" ? "y" : "w"));
 }

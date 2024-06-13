@@ -377,6 +377,10 @@ export class ScrambleParser {
     return new Interpreter().input(scramble) as string;
   }
 
+  static parsePyraminxString(scramble: string): string {
+    return new Interpreter(true, "pyraminx").input(scramble) as string;
+  }
+
   static parseMisc(scramble: string, mode: string): string[] {
     switch (mode) {
       case "r3":

@@ -251,5 +251,7 @@ export function RUBIK(_a: number, _b: number, _c: number): PuzzleInterface {
 
   assignColors(rubik, rubik.faceColors);
 
+  // pieces.forEach(pc => pc.stickers = pc.stickers.filter(st => st.color != 'x'));
+
   return rubik;
 }

@@ -146,9 +146,10 @@
     if (e.code === "KeyL" && e.ctrlKey && !allSolutions && (type === 2 || type >= 4)) {
       toggleListView();
     } else if (e.code === "KeyA" && e.ctrlKey) {
-      e.preventDefault();
-      allowAlgAdmin = !allowAlgAdmin;
-    } else if (e.code === "KeyN" && e.ctrlKey) {
+      // e.preventDefault();
+      // allowAlgAdmin = !allowAlgAdmin;
+      allowAlgAdmin = false;
+    } else if (e.code === "KeyN" && e.ctrlKey && allowAlgAdmin) {
       addAlgorithm();
     }
   }
@@ -274,8 +275,7 @@
 
   function addAlgorithm() {
     selectAlg({
-      // mode: CubeMode.NORMAL,
-      mode: currentAlg?.mode || CubeMode.NORMAL,
+      mode: CubeMode.L4E,
       name: "",
       order: currentAlg?.order || 3,
       ready: true,
@@ -284,14 +284,14 @@
       _id: "",
       group: "",
       // parentPath: "",
-      view: "bird",
+      view: "plan",
       // puzzle: "megaminx",
 
       parentPath: [currentAlg?.parentPath || "", currentAlg?.shortName || ""]
         .filter(e => e && e.trim())
         .join("/"),
       // view: currentAlg?.view || "plan",
-      puzzle: currentAlg?.puzzle || "333",
+      puzzle: currentAlg?.puzzle || "clock",
     });
 
     isAdding = true;
@@ -312,14 +312,14 @@
         .replaceAll("-", "m")
         .replace(/[\s,]+/g, "_") + suff;
 
-    const section = arr[0].slice(1, -1);
+    const section = arr[0];
 
-    res.push({
-      name: section,
-      shortName: toShortName(section),
-      parent: "skewb/l2l",
-      scramble: "",
-    });
+    // res.push({
+    //   name: section,
+    //   shortName: toShortName(section),
+    //   parent: "skewb/l2l",
+    //   scramble: "",
+    // });
 
     for (let i = 1, maxi = arr.length; i < maxi; i += 1) {
       if (/^\d+$/i.test(arr[i])) {
@@ -332,19 +332,9 @@
             break;
           }
 
-          let s = arr[j]
-            .split("")
-            .map(ch =>
-              /^[FRLB]/i.test(ch)
-                ? ch === ch.toLowerCase()
-                  ? ch.toUpperCase()
-                  : ch.toLowerCase()
-                : ch
-            )
-            .join("")
-            .replaceAll("S", "R' r R r'")
-            .replaceAll("H", "r R' r' R");
-          sols.push(s.replaceAll("S", "r' R r R'").replaceAll("H", "R r' R' r"));
+          let s = arr[j];
+
+          sols.push(s.replaceAll("S", "R' L R L'").replaceAll("H", "L R' L' R"));
 
           if (j + 1 === maxi) {
             i = j;
@@ -353,8 +343,8 @@
 
         res.push({
           name: section + " " + name,
-          shortName: toShortName(section) + "_" + toShortName(name),
-          parent: "skewb/l2l/" + toShortName(section),
+          shortName: toShortName(section + " " + name),
+          parent: "pyra/l4e",
           solutions: sols,
           scramble: sols[0],
         });
@@ -391,23 +381,24 @@
 
   onMount(() => {
     toArray(``, "").forEach((e, p) => {
-      // console.log(e);
       let alg: Algorithm = {
-        mode: CubeMode.NORMAL,
+        mode: CubeMode.L4E,
         name: e.name,
         order: 3,
         ready: true,
-        scramble: e.scramble.trim() ? e.scramble.trim() + " x'" : e.scramble,
+        scramble: e.scramble,
         shortName: e.shortName,
         parentPath: e.parent,
-        view: "bird",
-        puzzle: "skewb",
+        view: "plan",
+        puzzle: "pyraminx",
         // rotation,
       };
 
       if (e.solutions) {
         alg.solutions = e.solutions.map(moves => ({ moves }));
       }
+
+      console.log(alg);
 
       dataService.addAlgorithm(alg);
     });
@@ -510,12 +501,12 @@
 
     <!-- Cards -->
     {#if type < 2}
-      <ul class="w-full grid py-4">
+      <ul class="cards w-full grid py-4">
         {#each cards as card, pos (card.route)}
-          <Link to={card.route}>
+          <Link to={card.route} class="flex w-full">
             <li
-              class="max-w-[12rem] h-48 shadow-md rounded-md select-none cursor-pointer card
-            transition-all duration-200 grid place-items-center justify-center py-3
+              class="w-full max-w-[12rem] h-48 shadow-md rounded-md select-none cursor-pointer card
+            transition-all duration-200 grid place-items-center justify-center py-3 px-2
             bg-backgroundLv1 hover:shadow-2xl hover:shadow-primary-900 relative"
             >
               {#if card?.puzzle?.img}
@@ -557,9 +548,12 @@
         </div>
 
         {#each cases as c (c._id)}
-          <div class="row min-h-[8rem] relative">
+          <div class="row min-h-[8rem] relative gap-2">
             <span class="font-bold text-center">{c.name}</span>
-            <button class="flex items-center justify-center" on:click={() => caseHandler(c)}>
+            <button
+              class="img-btn flex items-center justify-center my-2"
+              on:click={() => caseHandler(c)}
+            >
               {#if c?._puzzle?.img}
                 <PuzzleImage src={c._puzzle.img} glowOnHover />
               {:else}
@@ -567,7 +561,7 @@
               {/if}
             </button>
 
-            <ul class="alg-list">
+            <ul class="no-grid alg-list">
               {#each (c.solutions || []).slice(0, 4) as solution}
                 <li class="algorithm">{solution.moves}</li>
               {/each}
@@ -712,11 +706,16 @@
 </Modal>
 
 <style lang="postcss">
-  :global(ul:not(.no-grid)) {
-    grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr));
+  ul:not(.no-grid) {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-evenly;
     row-gap: 2rem;
     column-gap: 1rem;
-    grid-template-rows: max-content;
+  }
+
+  :global(.cards > a) {
+    flex: 0 0 calc(9rem);
   }
 
   .cases .row {
@@ -730,8 +729,11 @@
   }
 
   .cases.compact {
-    grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
-    gap: 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-evenly;
+    row-gap: 2rem;
+    column-gap: 1rem;
   }
 
   .cases.compact .row:first-child {
@@ -757,9 +759,28 @@
     grid-template-areas:
       "img"
       "name";
+    flex: 0 0 calc(9rem);
+  }
+
+  .cases:not(.compact) .img-btn {
+    @apply md:h-40 md:w-40 w-32 h-32;
   }
 
   .card {
     grid-template-rows: 10fr 1fr;
+  }
+
+  .alg-list {
+    display: grid;
+    gap: 0.5rem;
+    justify-content: start;
+  }
+
+  .alg-list li:nth-child(n + 2) {
+    @apply hidden sm:list-item;
+  }
+
+  .alg-list li:nth-child(n + 3) {
+    @apply hidden md:list-item;
   }
 </style>

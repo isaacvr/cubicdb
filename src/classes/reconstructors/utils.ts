@@ -7,7 +7,7 @@ export function nonGray(st: Sticker): boolean {
 }
 
 export function getColoredStickers(pc: Piece, colorFilter = nonGray): Sticker[] {
-  return pc.stickers.filter(colorFilter);
+  return pc.stickers.filter(st => colorFilter(st));
 }
 
 export function nonOGray(st: Sticker): boolean {
@@ -15,11 +15,11 @@ export function nonOGray(st: Sticker): boolean {
 }
 
 export function getOColoredStickers(pc: Piece, colorFilter = nonOGray): Sticker[] {
-  return pc.stickers.filter(colorFilter);
+  return pc.stickers.filter(st => colorFilter(st));
 }
 
 export function getColoredFromList(st: Sticker[], colorFilter = nonOGray): Sticker[] {
-  return st.filter(colorFilter);
+  return st.filter(s => colorFilter(s));
 }
 
 export function centerStickerAligned(

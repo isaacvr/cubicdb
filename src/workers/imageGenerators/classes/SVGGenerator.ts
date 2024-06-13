@@ -1,3 +1,6 @@
+import { EPS } from "@constants";
+import type { IDrawer } from "../utils";
+
 interface IElement {
   type: "path" | "text";
   fill: boolean;
@@ -16,7 +19,7 @@ interface IElement {
   y: number;
 }
 
-export class SVGGenerator {
+export class SVGGenerator implements IDrawer {
   strokeStyle: string;
   fillStyle: string;
   lineWidth: CanvasPathDrawingStyles["lineWidth"];
@@ -143,5 +146,37 @@ export class SVGGenerator {
     });
 
     this._cursor = this.elements.length - 1;
+  }
+
+  arc(
+    x: number,
+    y: number,
+    radius: number,
+    startAngle: number,
+    endAngle: number,
+    counterclockwise = false
+  ) {
+    const startX = x + radius * Math.cos(startAngle);
+    const startY = y + radius * Math.sin(startAngle);
+    const endX = x + radius * Math.cos(endAngle);
+    const endY = y + radius * Math.sin(endAngle);
+
+    const largeArcFlag = endAngle - startAngle <= Math.PI ? 0 : 1;
+    const sweepFlag = counterclockwise ? 0 : 1;
+
+    if (Math.abs((startAngle - endAngle) % (Math.PI * 2)) < EPS) {
+      const startX = x + radius;
+      const startY = y;
+
+      // Dos arcos para hacer un círculo completo
+      const arc1 = `A ${radius} ${radius} 0 1 0 ${x - radius} ${y}`;
+      const arc2 = `A ${radius} ${radius} 0 1 0 ${startX} ${startY}`;
+
+      this.elements[this._cursor].path += `M ${startX} ${startY} ${arc1} ${arc2}`;
+    } else {
+      this.elements[
+        this._cursor
+      ].path += `M ${startX} ${startY} A ${radius} ${radius} 0 ${largeArcFlag} ${sweepFlag} ${endX} ${endY}`;
+    }
   }
 }

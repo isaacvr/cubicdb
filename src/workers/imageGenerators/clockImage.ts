@@ -1,8 +1,11 @@
 import { Sticker } from "@classes/puzzle/Sticker";
 import type { Puzzle } from "@classes/puzzle/puzzle";
 import { CENTER, DOWN, FRONT, Vector3D } from "@classes/vector3d";
+import { SVGGenerator } from "./classes/SVGGenerator";
+import { CanvasGenerator } from "./classes/CanvasGenerator";
+import type { IDrawer } from "./utils";
 
-function circle(ctx: CanvasRenderingContext2D, x: number, y: number, rad: number, col: string) {
+function circle(ctx: IDrawer, x: number, y: number, rad: number, col: string) {
   ctx.fillStyle = col;
   ctx.beginPath();
   ctx.arc(x, y, rad, 0, Math.PI * 2);
@@ -11,10 +14,18 @@ function circle(ctx: CanvasRenderingContext2D, x: number, y: number, rad: number
 }
 
 function drawSingleClock(
-  ctx: CanvasRenderingContext2D, RAD: number, X: number, Y: number,
-  MAT: any, PINS: any, BLACK: string, WHITE: string, GRAY: string) {
+  ctx: IDrawer,
+  RAD: number,
+  X: number,
+  Y: number,
+  MAT: any,
+  PINS: any,
+  BLACK: string,
+  WHITE: string,
+  GRAY: string
+) {
   const W = RAD * 0.582491582491582;
-  const RAD_CLOCK = RAD * 0.20202020202020;
+  const RAD_CLOCK = RAD * 0.2020202020202;
   const BORDER = RAD * 0.0909090909090909;
   const BORDER1 = 4;
 
@@ -22,18 +33,15 @@ function drawSingleClock(
   const TAU = PI * 2;
 
   const arrow = new Sticker([
-    new Vector3D(0.0000, 1.0000),
+    new Vector3D(0.0, 1.0),
     new Vector3D(0.1491, 0.4056),
     new Vector3D(0.0599, 0.2551),
-    new Vector3D(0.0000, 0.0000),
+    new Vector3D(0.0, 0.0),
     new Vector3D(-0.0599, 0.2551),
     new Vector3D(-0.1491, 0.4056),
   ]).mul(RAD_CLOCK);
 
-  const circles = new Sticker([
-    new Vector3D(0.1672),
-    new Vector3D(0.1254),
-  ]).mul(RAD_CLOCK);
+  const circles = new Sticker([new Vector3D(0.1672), new Vector3D(0.1254)]).mul(RAD_CLOCK);
 
   const R_PIN = circles.points[0].x * 2.3;
 
@@ -54,7 +62,7 @@ function drawSingleClock(
 
       const ANCHOR = new Vector3D(X + W * i, Y + W * j);
       let angId = MAT[j + 1][i + 1];
-      let ang = angId * TAU / 12;
+      let ang = (angId * TAU) / 12;
       let pts = arrow.rotate(CENTER, FRONT, PI + ang).add(ANCHOR).points;
       ctx.fillStyle = BLACK;
       ctx.beginPath();
@@ -69,39 +77,37 @@ function drawSingleClock(
       circle(ctx, ANCHOR.x, ANCHOR.y, circles.points[1].x, WHITE);
 
       for (let a = 0; a < 12; a += 1) {
-        let pt = ANCHOR.add( DOWN.mul(RAD_CLOCK + BORDER / 2).rotate(CENTER, FRONT, a * TAU / 12) );
-        let r = circles.points[0].x / 4 * (a ? 1 : 1.6);
-        let c = a ? WHITE : '#ff0000'
+        let pt = ANCHOR.add(DOWN.mul(RAD_CLOCK + BORDER / 2).rotate(CENTER, FRONT, (a * TAU) / 12));
+        let r = (circles.points[0].x / 4) * (a ? 1 : 1.6);
+        let c = a ? WHITE : "#ff0000";
         circle(ctx, pt.x, pt.y, r, c);
       }
 
-      if ( i <= 0 && j <= 0 ) {
-        let val = PINS[ (j + 1) * 2 + i + 1 ];
-        circle(ctx, ANCHOR.x + W / 2, ANCHOR.y + W / 2, R_PIN, (val) ? WHITE : GRAY);
-        circle(ctx, ANCHOR.x + W / 2, ANCHOR.y + W / 2, R_PIN * 0.8, (val) ? BLACK : GRAY);
+      if (i <= 0 && j <= 0) {
+        let val = PINS[(j + 1) * 2 + i + 1];
+        circle(ctx, ANCHOR.x + W / 2, ANCHOR.y + W / 2, R_PIN, val ? WHITE : GRAY);
+        circle(ctx, ANCHOR.x + W / 2, ANCHOR.y + W / 2, R_PIN * 0.8, val ? BLACK : GRAY);
       }
     }
   }
 }
 
-export async function clockImage(cube: Puzzle, DIM: number): Promise<Blob> {
-  const canvas = document.createElement('canvas');
-  canvas.width = DIM * 2.2
-  canvas.height = DIM;
+export function clockImage(cube: Puzzle, DIM: number, format: "raster" | "svg" = "svg"): string {
+  const W = DIM * 2.2;
+  const H = DIM;
+  const ctx = format === 'svg' ? new SVGGenerator(W, H) : new CanvasGenerator(W, H);
 
-  const ctx: any = canvas.getContext('2d');
- 
   const PINS1 = cube.p.raw[0];
-  const PINS2 = cube.p.raw[0].map((e: any, p: number) => !PINS1[ ((p >> 1) << 1) + 1 - (p & 1) ]);
+  const PINS2 = cube.p.raw[0].map((e: any, p: number) => !PINS1[((p >> 1) << 1) + 1 - (p & 1)]);
   const MAT = cube.p.raw[1];
   const RAD = DIM / 2;
-  
+
   const BLACK = cube.p.palette.black;
   const WHITE = cube.p.palette.white;
   const GRAY = cube.p.palette.gray;
 
   drawSingleClock(ctx, RAD, RAD, RAD, MAT[0], PINS2, BLACK, WHITE, GRAY);
-  drawSingleClock(ctx, RAD, canvas.width - RAD, RAD, MAT[1], PINS1, WHITE, BLACK, GRAY);
+  drawSingleClock(ctx, RAD, W - RAD, RAD, MAT[1], PINS1, WHITE, BLACK, GRAY);
 
-  return await new Promise((res) => canvas.toBlob(b => res(b || new Blob([])), 'image/jpg'));
+  return ctx.getImage();
 }

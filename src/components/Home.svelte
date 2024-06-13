@@ -4,13 +4,9 @@
   import { getLanguage } from "@lang/index";
   import type { ICard } from "@interfaces";
   import { screen } from "@stores/screen.store";
-  // import { Snow } from "@pclasses/Snow";
-  // import { onDestroy, onMount } from "svelte";
 
   let cards: ICard[] = [];
   let canvas: HTMLCanvasElement;
-  // let snow = new Snow(100);
-  // let showSnow = true;
 
   function updateTexts() {
     const HOME = getLanguage($globalLang).HOME;
@@ -104,29 +100,6 @@
       },
     ].filter(c => c.ready);
   }
-
-  // function updateSnow() {
-  //   let ctx = canvas.getContext('2d');
-
-  //   if ( !showSnow || !ctx ) return;
-
-  //   ctx.fillStyle = 'white';
-  //   ctx.strokeStyle = 'white';
-  //   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  //   snow.draw( ctx );
-  //   requestAnimationFrame(updateSnow);
-  // }
-
-  // onMount(() => {
-  //   canvas.width = window.innerWidth;
-  //   canvas.height = window.innerHeight;
-
-  //   updateSnow();
-  // });
-
-  // onDestroy(() => {
-  //   showSnow = false;
-  // });
 
   $: $globalLang, updateTexts();
 </script>

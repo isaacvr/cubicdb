@@ -1,4 +1,6 @@
-export class CanvasGenerator {
+import type { IDrawer } from "../utils";
+
+export class CanvasGenerator implements IDrawer {
   W: number;
   H: number;
 
@@ -77,6 +79,10 @@ export class CanvasGenerator {
 
   fillText(s: string, x: number, y: number) {
     this.ctx.fillText(s, x, y);
+  }
+
+  arc(x: number, y: number, radius: number, startAngle: number, endAngle: number, counterclockwise = false) {
+    this.ctx.arc(x, y, radius, startAngle, endAngle, counterclockwise);
   }
 
   setPosition() {}

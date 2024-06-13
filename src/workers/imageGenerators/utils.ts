@@ -5,7 +5,7 @@ import { Vector3D } from "@classes/vector3d";
 import { CubeMode, getColorByName } from "@constants";
 import { map } from "@helpers/math";
 
-interface IDrawer {
+export interface IDrawer {
   moveTo: (x: number, y: number) => void;
   lineTo: (x: number, y: number) => void;
   stroke: () => any;
@@ -13,6 +13,14 @@ interface IDrawer {
   fill: () => any;
   closePath: () => any;
   setPosition?: (p: number) => any;
+  arc: (
+    x: number,
+    y: number,
+    radius: number,
+    startAngle: number,
+    endAngle: number,
+    counterclockwise?: boolean
+  ) => void;
 
   strokeStyle: string | CanvasGradient | CanvasPattern;
   fillStyle: string | CanvasGradient | CanvasPattern;
@@ -43,8 +51,8 @@ export function drawStickers(
   let _min = Math.min;
   let _max = Math.max;
 
-  stickers.forEach((st, p) => st.userData = p);
-  sideStickers.forEach(st => st.userData = null);
+  stickers.forEach((st, p) => (st.userData = p));
+  sideStickers.forEach(st => (st.userData = null));
 
   let limits = [Infinity, -Infinity, Infinity, -Infinity];
   let allStickers = [...stickers, ...sideStickers].filter(st => st.getOrientation().z >= 0);
@@ -129,7 +137,7 @@ export function drawStickers(
 
   ctx.strokeStyle = col;
   ctx.fillStyle = col;
-  ctx.lineWidth = LW;
+  ctx.lineWidth = 1;
 
   for (let i = 0, maxi = ~~(swaps.length / elems) * elems; i < maxi; i += elems) {
     let x1 = swaps[i];
@@ -157,14 +165,14 @@ export function drawStickers(
     let m1 = tip1.add(tip2).div(2);
     let m2 = tip3.add(tip4).div(2);
 
-    ctx.lineWidth = LW;
+    ctx.lineWidth = 1;
 
     ctx.beginPath();
     ctx.moveTo(fin.x, H - fin.y);
     ctx.lineTo(tip1.x, H - tip1.y);
     ctx.lineTo(tip2.x, H - tip2.y);
     ctx.fill();
-    ctx.stroke();
+    ctx.closePath();
 
     if (type != 0) {
       ctx.beginPath();
@@ -172,7 +180,7 @@ export function drawStickers(
       ctx.lineTo(tip3.x, H - tip3.y);
       ctx.lineTo(tip4.x, H - tip4.y);
       ctx.fill();
-      ctx.stroke();
+      ctx.closePath();
     }
 
     ctx.lineWidth = LW * 2;

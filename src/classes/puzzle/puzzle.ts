@@ -69,7 +69,6 @@ export class Puzzle {
 
     if (this.view === "plan") {
       switch (this.type) {
-        case "pyraminx":
         case "skewb":
         case "square1":
           this.view = "2d";
@@ -174,7 +173,7 @@ export class Puzzle {
   }
 
   adjustColors(topColor = "", bottomColor = "") {
-    const typeFilter: PuzzleType[] = ["rubik", "square1", "megaminx", "skewb"];
+    const typeFilter: PuzzleType[] = ["rubik", "square1", "megaminx", "skewb", "pyraminx"];
     const modeFilter: CubeMode[] = [CubeMode.NORMAL, CubeMode.CS, CubeMode.EO, CubeMode.CO];
     const OFF_COLOR = "gray";
 
@@ -192,7 +191,8 @@ export class Puzzle {
       this.mode === CubeMode.NORMAL ||
       this.mode === CubeMode.ELL ||
       this.mode === CubeMode.ZBLL ||
-      this.mode === CubeMode.PLL
+      this.mode === CubeMode.PLL ||
+      (this.mode === CubeMode.L4E && this.type != "pyraminx")
     ) {
       for (let i = 0, maxi = pieces.length; i < maxi; i += 1) {
         let stickers = pieces[i].stickers;
@@ -215,13 +215,28 @@ export class Puzzle {
         ? faceColors[fVec(faceVectors[faceColors.indexOf(bottomColor)].mul(-1))]
         : faceColors[fVec(UP)];
 
-    let TOP_COLOR = ref;
-    let BOTTOM_COLOR = faceColors[fVec(faceVectors[faceColors.indexOf(TOP_COLOR)].mul(-1))];
+    let TOP_COLOR = "";
+    let BOTTOM_COLOR = "";
+
+    if (this.type === "pyraminx") {
+      BOTTOM_COLOR = bottomColor || "y";
+    } else {
+      TOP_COLOR = ref;
+      BOTTOM_COLOR = faceColors[fVec(faceVectors[faceColors.indexOf(TOP_COLOR)].mul(-1))];
+    }
+
+    let pts = this.type === "pyraminx" ? (this.p.raw as Vector3D[]).slice(1) : [];
+    let u = this.type === "pyraminx" ? Vector3D.cross(pts[0], pts[1], pts[2]).unit() : UP;
+    let a =
+      this.type === "pyraminx"
+        ? (this.p.raw[0] as Vector3D).sub(pts[0]).div(this.order.a, true).add(pts[0])
+        : UP;
 
     for (let i = 0, maxi = pieces.length; i < maxi; i += 1) {
       let stickers = getOColoredStickers(pieces[i]);
       let stLen = stickers.length;
       let topLayer = pieces[i].contains(TOP_COLOR);
+      let bottomLayer = pieces[i].contains(BOTTOM_COLOR);
 
       switch (this.mode) {
         case CubeMode.OLL: {
@@ -268,6 +283,16 @@ export class Puzzle {
             stickers.forEach(st => (st.color = OFF_COLOR));
           }
 
+          break;
+        }
+        case CubeMode.L4E: {
+          for (let i = 0; i < stLen; i += 1) {
+            if (stickers[i].direction1(a, u, true) < 0 && !bottomLayer) {
+              stickers[i].color = OFF_COLOR;
+            } else {
+              stickers[i].color = stickers[i].oColor;
+            }
+          }
           break;
         }
         case CubeMode.EDGERF: {
@@ -498,7 +523,9 @@ export class Puzzle {
         }
       }
     } else {
-      let arr = ScrambleParser.parseNNNString(sequence)
+      let fn =
+        type === "pyraminx" ? ScrambleParser.parsePyraminxString : ScrambleParser.parseNNNString;
+      let arr = fn(sequence)
         .trim()
         .split(" ")
         .map(e => e.trim())

@@ -1,6 +1,5 @@
 import { Puzzle } from "@classes/puzzle/puzzle";
 import { DataService } from "@stores/data.service";
-import { writable, type Writable } from "svelte/store";
 import { sha1 } from "object-hash";
 import { clockImage } from "@workers/imageGenerators/clockImage";
 import { planView } from "@workers/imageGenerators/plainView";
@@ -9,6 +8,7 @@ import { transView } from "@workers/imageGenerators/transView";
 import { PRINTABLE_PALETTE } from "@constants";
 import { roundCorners } from "@classes/puzzle/puzzleUtils";
 import { birdView } from "@workers/imageGenerators/birdView";
+import { WebGLRenderer } from "three";
 
 async function blobToDataURL(blob: Blob): Promise<string> {
   return new Promise(res => {
@@ -45,6 +45,15 @@ export async function pGenerateCubeBundle(
     // Cache or views
     let images = await dataService.cacheGetImageBundle(cubes.map(c => sha1(c.options)));
 
+    // Prepare for trans view
+    let cv = document.createElement("canvas");
+    let renderer = new WebGLRenderer({
+      antialias: true,
+      alpha: true,
+      powerPreference: "high-performance",
+      canvas: cv,
+    });
+
     for (let i = 0, maxi = cubes.length; i < maxi; i += 1) {
       const W = width || 250;
 
@@ -55,7 +64,6 @@ export async function pGenerateCubeBundle(
       }
 
       if (!cubes[i].img) {
-        // const opt = cubes[i].options;
         const cube = cubes[i];
 
         if (printable) cube.p.palette = PRINTABLE_PALETTE;
@@ -64,7 +72,7 @@ export async function pGenerateCubeBundle(
         }
 
         if (cube.type === "clock") {
-          cube.img = await blobToDataURL(await clockImage(cube, 500));
+          cube.img = clockImage(cube, 500, format);
           cache && dataService.cacheSaveImage(sha1(cube.options), cube.img);
         } else if (["plan", "2d", "bird"].indexOf(cube.view) > -1) {
           cube.img =
@@ -76,11 +84,13 @@ export async function pGenerateCubeBundle(
 
           cache && dataService.cacheSaveImage(sha1(cube.options), cube.img);
         } else {
-          cube.img = await blobToDataURL(await transView(cube, W));
+          cube.img = await blobToDataURL(await transView(renderer, cv, cube, W));
           cache && dataService.cacheSaveImage(sha1(cube.options), cube.img);
         }
       }
     }
+
+    renderer.dispose();
 
     if (inCube) return resolve([]);
     return resolve(cubes.map(c => c.img));
