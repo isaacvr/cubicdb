@@ -15,7 +15,7 @@
   }
 
   function editAlgorithm(a: Algorithm) {
-    dispatch('edit', a);
+    dispatch('edit-step', a);
   }
 
   function addSection(a: Algorithm) {
@@ -46,7 +46,7 @@
     <div>
       {#each obj.children as child (child.alg.parentPath + '/' + child.route)}
         <svelte:self obj={ child }
-          on:edit={ (ev) => editAlgorithm(ev.detail) }
+          on:edit-step={ (ev) => editAlgorithm(ev.detail) }
           on:add={ (ev) => addSection(ev.detail) }
           on:delete={ (ev) => deleteSection(ev.detail) }/>
       {/each}

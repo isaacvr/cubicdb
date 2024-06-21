@@ -2,12 +2,12 @@ import { Puzzle } from "@classes/puzzle/puzzle";
 import { cubeToThree } from "@helpers/cubeToThree";
 import { Geometry, Material, PerspectiveCamera, Scene, WebGLRenderer } from "three";
 
-export async function transView(
+export function transView(
   renderer: WebGLRenderer,
   cv: HTMLCanvasElement,
   cube: Puzzle,
   width?: number
-): Promise<Blob> {
+): string {
   const W = width || 250;
   cv.width = W;
   cv.height = W;
@@ -29,5 +29,5 @@ export async function transView(
   ctt.meshes.map(m => (<Material>m.material).dispose());
   ctt.meshes.map(m => (<Geometry>m.geometry).dispose());
 
-  return await new Promise(resolve => cv.toBlob(b => resolve(b || new Blob([])), "image/jpg"));
+  return cv.toDataURL();
 }

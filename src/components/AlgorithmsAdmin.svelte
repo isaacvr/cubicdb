@@ -344,7 +344,7 @@
     <Button class="bg-blue-700 text-gray-300" on:click={ refresh }>Refresh</Button>
   </section>
 
-  <Tree obj={ t } on:edit={ handleEdit } on:add={ handleAdd } on:delete={ handleDelete }></Tree>
+  <Tree obj={ t } on:edit-step={ handleEdit } on:add={ handleAdd } on:delete={ handleDelete }></Tree>
 </main>
 
 <Modal class="!overflow-auto" bind:show onClose={ () => {show = false; isAdding = false; } }>

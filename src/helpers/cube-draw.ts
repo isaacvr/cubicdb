@@ -39,12 +39,12 @@ export async function pGenerateCubeBundle(
   cache = false,
   format: "raster" | "svg" = "svg"
 ): Promise<string[]> {
-  return new Promise(async resolve => {
-    const dataService = DataService.getInstance();
+  const dataService = DataService.getInstance();
 
-    // Cache or views
-    let images = await dataService.cacheGetImageBundle(cubes.map(c => sha1(c.options)));
+  // Cache or views
+  let images = await dataService.cacheGetImageBundle(cubes.map(c => sha1(c.options)));
 
+  return new Promise(resolve => {
     // Prepare for trans view
     let cv = document.createElement("canvas");
     let renderer = new WebGLRenderer({
@@ -84,7 +84,7 @@ export async function pGenerateCubeBundle(
 
           cache && dataService.cacheSaveImage(sha1(cube.options), cube.img);
         } else {
-          cube.img = await blobToDataURL(await transView(renderer, cv, cube, W));
+          cube.img = transView(renderer, cv, cube, W);
           cache && dataService.cacheSaveImage(sha1(cube.options), cube.img);
         }
       }

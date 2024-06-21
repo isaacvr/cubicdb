@@ -6,30 +6,37 @@ export const EPS = 1e-6;
 
 export enum CubeMode {
   NORMAL = 0, OLL, PLL, CMLL, F2L, COLL, WV, ELL, VLS, ZBLL, OLLCP, GRAY, CENTERS, CROSS, FL, YCROSS,
-  CS, EO, CO, F3E, EDGERF, DPLL, L4E
+  CS, EO, CO, F3E, EDGERF, DPLL, L4E, CYCROSS,
 };
 
 export const CubeModeMap = [
   ['Normal', CubeMode.NORMAL],
-  ['OLL', CubeMode.OLL],
-  ['PLL', CubeMode.PLL],
-  ['DPLL', CubeMode.DPLL], // Dark face on top
-  ['CMLL', CubeMode.CMLL],
+  ['Gray', CubeMode.GRAY],
+  ['Centers', CubeMode.CENTERS],
+  
+  ['Cross', CubeMode.CROSS],
+  ['First Layer', CubeMode.FL],
+  
   ['F2L', CubeMode.F2L],
   ['F3E', CubeMode.F3E],
   ['L4E', CubeMode.L4E],
   ['EDGERU', CubeMode.EDGERF],
+  
+  ['Yellow Cross', CubeMode.YCROSS],
+  ['CYellow Cross', CubeMode.CYCROSS],
+  ['OLL', CubeMode.OLL],
+  ['OLLCP', CubeMode.OLLCP],
+  ['PLL', CubeMode.PLL],
+  ['DPLL', CubeMode.DPLL], // Dark face on top
+  
+  ['CMLL', CubeMode.CMLL],
   ['COLL', CubeMode.COLL],
   ['WV', CubeMode.WV],
   ['ELL', CubeMode.ELL],
   ['VLS', CubeMode.VLS],
   ['ZBLL', CubeMode.ZBLL],
-  ['OLLCP', CubeMode.OLLCP],
-  ['Gray', CubeMode.GRAY],
-  ['Centers', CubeMode.CENTERS],
-  ['Cross', CubeMode.CROSS],
-  ['First Layer', CubeMode.FL],
-  ['Yellow Cross', CubeMode.YCROSS],
+  
+  // SQ1
   ['Cube Shape', CubeMode.CS],
   ['Edge Orientation', CubeMode.EO],
   ['Corner Orientation', CubeMode.CO],

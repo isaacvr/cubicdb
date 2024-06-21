@@ -12,8 +12,6 @@
   import { CubeDBICON, CubeMode, CubeModeMap } from "@constants";
   import { localLang } from "@stores/language.service";
   import { algorithmToPuzzle, clone } from "@helpers/object";
-  import Modal from "./Modal.svelte";
-  import Select from "./material/Select.svelte";
 
   import ViewListIcon from "@icons/ViewList.svelte";
   import ViewGridIcon from "@icons/Grid.svelte";
@@ -22,6 +20,7 @@
   import EditIcon from "@icons/Pencil.svelte";
   import { onMount } from "svelte";
   import PuzzleImage from "./PuzzleImage.svelte";
+  import AlgorithmEditorModal from "@components/AlgorithmEditorModal.svelte";
 
   const location = useLocation();
 
@@ -38,23 +37,16 @@
   let listView = JSON.parse(localStorage.getItem("algs-list-view") || "true");
   const NUMBER_REG = /^[+-]?[\d]+(\.[\d]+)?$/;
   let currentList: Algorithm[] = [];
+  let allowAlgAdmin = false;
+  let currentAlg: Algorithm | null = null;
 
   // Modal
   let show = false;
   let isAdding = false;
-  let sAlg: Algorithm;
+  let sAlg: { alg: Algorithm; tutorial: false };
   let tipTemp: string[] = [];
   let solTemp: Solution[] = [];
   let img = "";
-  let allowAlgAdmin = true;
-  let currentAlg: Algorithm | null = null;
-  const rotStep = Math.PI / 12;
-  let rotation = {
-    x: rotStep * 2,
-    y: rotStep * 22,
-    z: 0,
-  };
-  let sPos = -1;
 
   function handleAlgorithms(list: Algorithm[]) {
     if (list.length === 0) return;
@@ -125,7 +117,7 @@
     let arr: Puzzle[] =
       type < 2 ? cards.map(e => e.puzzle as Puzzle) : cases.map(e => e._puzzle as Puzzle);
 
-    pGenerateCubeBundle(arr, 500, true, true, !1, !1, "svg")
+    pGenerateCubeBundle(arr, 500, true, true, false, true)
       .then(_ => {
         cards = cards;
         cases = cases;
@@ -203,52 +195,46 @@
   }
 
   // Alg admin
-  function addTip() {
-    tipTemp = [...tipTemp, [0, 0, 0, 0, 0].join(", ")];
-  }
-
-  function addSolution() {
-    solTemp = [...solTemp, { moves: "", votes: 0 }];
-  }
 
   async function renderSAlg() {
-    sAlg.tips = tipTemp.length ? tipTemp.join(", ").split(", ").map(Number) : [];
+    sAlg.alg.tips = tipTemp.length ? tipTemp.join(", ").split(", ").map(Number) : [];
 
     if (solTemp.length) {
-      sAlg.solutions = clone(solTemp);
+      sAlg.alg.solutions = clone(solTemp);
     }
 
-    sAlg._puzzle = algorithmToPuzzle(sAlg, true);
+    sAlg.alg._puzzle = algorithmToPuzzle(sAlg.alg, true);
 
-    img = (await pGenerateCubeBundle([sAlg._puzzle], 200, true, !1, !1, !1, "svg"))[0];
-    // img = (await pGenerateCubeBundle([sAlg._puzzle], 200, true))[0];
+    img = (await pGenerateCubeBundle([sAlg.alg._puzzle], 200, true))[0];
   }
 
   function saveAlgorithm() {
-    // sAlg.rotation = {
+    // sAlg.alg.rotation = {
     //   x: rotation.x,
     //   y: rotation.y,
     //   z: rotation.z,
     // };
 
-    (isAdding ? dataService.addAlgorithm(sAlg) : dataService.updateAlgorithm(sAlg)).then(alg => {
-      let item = cases.find(a => a._id === alg._id);
+    (isAdding ? dataService.addAlgorithm(sAlg.alg) : dataService.updateAlgorithm(sAlg.alg)).then(
+      alg => {
+        let item = cases.find(a => a._id === alg._id);
 
-      if (!item) {
-        console.log("ITEM NOT FOUND: ", item);
-      } else {
-        let pos = cases.indexOf(item);
-        alg._puzzle = algorithmToPuzzle(alg, true);
+        if (!item) {
+          console.log("ITEM NOT FOUND: ", item);
+        } else {
+          let pos = cases.indexOf(item);
+          alg._puzzle = algorithmToPuzzle(alg, true);
 
-        pGenerateCubeBundle([alg._puzzle], 500, true, true)
-          .then(_ => {
-            cases[pos] = alg;
-          })
-          .catch(err => console.log("ERROR: ", err));
-        // handleAlgorithms(currentList);
+          pGenerateCubeBundle([alg._puzzle], 500, true, true)
+            .then(_ => {
+              cases[pos] = alg;
+            })
+            .catch(err => console.log("ERROR: ", err));
+          // handleAlgorithms(currentList);
+        }
+        // updateCases($location, true)
       }
-      // updateCases($location, true)
-    });
+    );
 
     show = false;
   }
@@ -256,19 +242,19 @@
   function selectAlg(a: Algorithm) {
     sAlg = clone(a, ["_puzzle"]);
 
-    sAlg.tips = (sAlg.tips || []).slice();
+    sAlg.alg.tips = (sAlg.alg.tips || []).slice();
     show = true;
 
     tipTemp.length = 0;
 
-    let { tips } = sAlg;
+    let { tips } = sAlg.alg;
 
     for (let i = 0, maxi = tips.length; i < maxi; i += 5) {
       tipTemp.push(tips.slice(i, i + 5).join(", "));
     }
 
     tipTemp = tipTemp;
-    solTemp = sAlg.solutions ? clone(sAlg.solutions) : [];
+    solTemp = sAlg.alg.solutions ? clone(sAlg.alg.solutions) : [];
 
     renderSAlg();
   }
@@ -352,31 +338,6 @@
     }
 
     return res.length === 1 ? [] : res;
-  }
-
-  function selectPosition({
-    pos,
-    type,
-    consecutive,
-  }: {
-    pos: number;
-    type: number;
-    consecutive: boolean;
-  }) {
-    if (sPos < 0) return (sPos = pos);
-    if (pos === sPos) return (sPos = -1);
-
-    let o = sAlg.order;
-    let x1 = sPos % o;
-    let y1 = ~~(sPos / o);
-    let x2 = pos % o;
-    let y2 = ~~(pos / o);
-
-    sPos = consecutive ? pos : -1;
-
-    tipTemp = [...tipTemp, `${x1}, ${y1}, ${x2}, ${y2}, ${type}`];
-
-    renderSAlg();
   }
 
   onMount(() => {
@@ -584,126 +545,16 @@
   {/if}
 </main>
 
-<Modal
+<AlgorithmEditorModal
+  on:render={renderSAlg}
+  on:save={saveAlgorithm}
+  bind:alg={sAlg}
   bind:show
-  onClose={() => {
-    show = false;
-    isAdding = false;
-  }}
->
-  <div
-    class="grid grid-cols-3 max-md:grid-cols-2 gap-4 place-items-center max-w-[50rem] max-h-[92vh] overflow-auto"
-  >
-    <section>
-      Nombre: <Input bind:value={sAlg.name} />
-    </section>
-    <section>
-      Nombre corto: <Input bind:value={sAlg.shortName} disabled={!isAdding} />
-    </section>
-    <section>
-      Padre: <Input bind:value={sAlg.parentPath} />
-    </section>
-    <section>
-      Orden: <Input bind:value={sAlg.order} type="number" />
-    </section>
-    <section>
-      Scramble: <Input bind:value={sAlg.scramble} />
-    </section>
-    <section>
-      Puzzle: <Input bind:value={sAlg.puzzle} />
-    </section>
-    <section>
-      Modo <Select
-        placement="right"
-        class="w-full"
-        items={CubeModeMap}
-        label={e => e[0]}
-        transform={e => e[1]}
-        bind:value={sAlg.mode}
-      />
-    </section>
-    <section>
-      Vista <Select
-        class="w-full"
-        items={CubeViewMap}
-        label={e => e[1]}
-        transform={e => e[0]}
-        bind:value={sAlg.view}
-      />
-    </section>
-
-    <section>
-      Rotación:
-      <div class="flex items-center">
-        x: <Range bind:value={rotation.x} min={0} max={Math.PI * 2} step={rotStep} />
-      </div>
-      <div class="flex items-center">
-        y: <Range bind:value={rotation.y} min={0} max={Math.PI * 2} step={rotStep} />
-      </div>
-      <div class="flex items-center">
-        z: <Range bind:value={rotation.z} min={0} max={Math.PI * 2} step={rotStep} />
-      </div>
-    </section>
-
-    <section class="row-span-2">
-      Tips:
-
-      {#if tipTemp.length}
-        <ul class="grid no-grid gap-2">
-          {#each tipTemp as tip, pos}
-            <li class="flex gap-2 items-center">
-              <Input bind:value={tip} class="py-1" />
-              <button
-                tabindex="0"
-                class="text-gray-400 w-8 h-8 cursor-pointer hover:text-red-500"
-                on:click|stopPropagation={() => {
-                  tipTemp = tipTemp.filter((_, p) => p != pos);
-                }}
-              >
-                <DeleteIcon size="1.2rem" />
-              </button>
-            </li>
-          {/each}
-        </ul>
-      {/if}
-
-      <Button class="!bg-blue-700 text-gray-300 mt-4" on:click={addTip}>Añadir flecha</Button>
-    </section>
-
-    <section class="place-items-center max-h-52 w-full h-full">
-      <PuzzleImage src={img} interactive on:position={ev => selectPosition(ev.detail)} />
-    </section>
-    <section>
-      Soluciones:
-
-      {#if solTemp.length}
-        <ul class="grid gap-2">
-          {#each solTemp as solution, pos}
-            <li class="flex gap-2 items-center">
-              <Input bind:value={solution.moves} />
-              <button
-                tabindex="0"
-                class="text-gray-400 w-8 h-8 cursor-pointer hover:text-red-500"
-                on:click|stopPropagation={() => {
-                  solTemp = solTemp.filter((_, p) => p != pos);
-                }}
-              >
-                <DeleteIcon size="1.2rem" />
-              </button>
-            </li>
-          {/each}
-        </ul>
-      {/if}
-
-      <Button class="!bg-blue-700 text-gray-300 mt-4" on:click={addSolution}>Añadir solución</Button
-      >
-    </section>
-    <section class="actions col-span-full">
-      <Button class="text-gray-300 !bg-purple-700" on:click={renderSAlg}>Actualizar Imagen</Button>
-      <Button class="text-gray-300 !bg-green-700" on:click={saveAlgorithm}>Guardar</Button>
-    </section>
-  </div>
-</Modal>
+  bind:isAdding
+  bind:tipTemp
+  bind:img
+  bind:solTemp
+/>
 
 <style lang="postcss">
   ul:not(.no-grid) {

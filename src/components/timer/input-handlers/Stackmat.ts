@@ -67,7 +67,7 @@ const wasCleaned = ({ initScrambler }: InputContext, { state, lastState }: SMSta
   return false;
 };
 
-const wasStopped = ({}: InputContext, { state, lastState }: SMState) => {
+const wasStopped = (_: InputContext, { state, lastState }: SMState) => {
   return lastState?.running && !state.running && !!state.time_milli;
 };
 

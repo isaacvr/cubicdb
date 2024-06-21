@@ -4,6 +4,7 @@ import { EPS, STANDARD_PALETTE } from "@constants";
 import { Piece } from './Piece';
 import { Sticker } from './Sticker';
 import { assignColors, getAllStickers, random } from './puzzleUtils';
+import { newArr } from '@helpers/object';
 
 export function SQUARE1_STAR(): PuzzleInterface {
 
@@ -33,7 +34,7 @@ export function SQUARE1_STAR(): PuzzleInterface {
   // Center
   let centerSticker = new Sticker([
     RIGHT.mul( R1 ),
-    ...new Array( POINTS ).fill(0).map((_, p) => RIGHT.mul( R1 ).rotate(CENTER, UP, p * PI / (POINTS - 1))),
+    ...newArr( POINTS ).fill(0).map((_, p) => RIGHT.mul( R1 ).rotate(CENTER, UP, p * PI / (POINTS - 1))),
     RIGHT.mul( -R1 ), RIGHT.mul( R1 )
   ], '', [ BACK ]).add( UP_FACE );
 
@@ -46,7 +47,7 @@ export function SQUARE1_STAR(): PuzzleInterface {
   let bigSticker = new Sticker([
     RIGHT.mul( R3 ).rotate(CENTER, UP, PI_6),
     RIGHT.mul( R2 ).rotate(CENTER, UP, PI_3),
-    ...new Array( POINTS ).fill(0).map((_, p) => RIGHT.mul( R1 ).rotate(CENTER, UP, (1 - p / (POINTS - 1)) * PI_3  )),
+    ...newArr( POINTS ).fill(0).map((_, p) => RIGHT.mul( R1 ).rotate(CENTER, UP, (1 - p / (POINTS - 1)) * PI_3  )),
     RIGHT.mul( R2 )
   ], '', [ UP, bsDir ]).add( UP_FACE );
 

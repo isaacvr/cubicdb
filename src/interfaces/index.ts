@@ -2,7 +2,7 @@ import type { Puzzle } from "./../classes/puzzle/puzzle";
 import type { Sticker } from "./../classes/puzzle/Sticker";
 import type { Piece } from "./../classes/puzzle/Piece";
 import type { Vector3D } from "../classes/vector3d";
-import type { CubeMode, SCRAMBLE_MENU } from "../constants";
+import type { CubeMode, SCRAMBLE_MENU, ICONS } from "@constants";
 import type { Writable } from "svelte/store";
 import type { Display } from "electron";
 import type { HTMLImgAttributes } from "svelte/elements";
@@ -310,19 +310,58 @@ export interface RawPuzzle {
 declare type ArrowLarge = { type: "arrow"; text: string };
 export declare type CubeType = Puzzle | RawPuzzle | ArrowLarge;
 
-export interface BlockType {
-  type: "title" | "subtitle" | "text" | "cubes";
-  content?: string;
-  cubes?: CubeType[];
+export interface ITutorialAlg {
+  order: number;
+  scramble: string;
+  mode: CubeMode;
+  solution?: string;
+  group?: string;
+  puzzle?: string;
+  baseColor?: string;
+  rotation?: PuzzleInterface["rotation"];
+  tips?: number[];
+  view?: CubeView;
 }
 
-export interface Tutorial {
-  _id: string;
+export interface ITutorialSubtitle {
+  type: "subtitle" | "text";
+  content: string;
+}
+
+export interface ITutorialList {
+  type: "list";
+  list: string[];
+  start?: number;
+}
+
+export interface ITutorialCubes {
+  type: "cubes";
+  cubes: ITutorialAlg[];
+  progressive?: boolean;
+  preffix?: string;
+  suffix?: string;
+  algMode?: boolean;
+}
+
+export type ITutorialBlock = ITutorialSubtitle | ITutorialList | ITutorialCubes;
+
+export interface ITutorialStep {
   title: string;
-  titleLower: string;
-  puzzle: string;
+  icon?: Scrambler;
+  content: ITutorialBlock[];
+}
+
+export interface ITutorial {
+  _id: string;
+  name: string;
+  description: ITutorialStep;
+  summary: string;
+  shortName: string;
+  lang: LanguageCode;
+  steps: ITutorialStep[];
+  puzzle: (typeof ICONS)[number]['name'];
+  icon?: Scrambler;
   algs: number;
-  content: BlockType[];
   level: number;
 }
 
@@ -519,9 +558,11 @@ export interface IPC {
   addAlgorithm: (alg: Algorithm) => Promise<Algorithm>;
   removeAlgorithm: (alg: Algorithm) => Promise<boolean>;
 
-  getTutorials: () => Promise<Tutorial[]>;
-  addTutorial: (t: Tutorial) => Promise<Tutorial>;
-  updateTutorial: (t: Tutorial) => Promise<Tutorial>;
+  getTutorials: () => Promise<ITutorial[]>;
+  getTutorial: (puzzle: string, shortName: string, lang: string) => Promise<ITutorial | null>;
+  addTutorial: (t: ITutorial) => Promise<ITutorial>;
+  updateTutorial: (t: ITutorial) => Promise<ITutorial>;
+  removeTutorial: (t: ITutorial) => Promise<ITutorial>;
 
   getSolves: () => Promise<Solve[]>;
   addSolve: (s: Solve) => Promise<Solve>;
@@ -693,9 +734,11 @@ export interface TimerInputHandler {
   newRecord: () => void;
 }
 
+export type LanguageCode = "EN" | "ES";
+
 export interface Language {
   name: string;
-  code: string;
+  code: LanguageCode;
   global: {
     // Notification
     done: string;
@@ -738,6 +781,15 @@ export interface Language {
     copy: string;
     yes: string;
     no: string;
+    saved: string;
+    settingsSaved: string;
+  };
+  TUTORIALS: {
+    easy: string;
+    intermediate: string;
+    advanced: string;
+    start: string;
+    empty: string;
   };
   NAVBAR: {
     home: string;
@@ -762,10 +814,6 @@ export interface Language {
     appFont: string;
     timerFont: string;
     screen: string;
-
-    // Notifications
-    saved: string;
-    settingsSaved: string;
 
     // Updates
     update: string;

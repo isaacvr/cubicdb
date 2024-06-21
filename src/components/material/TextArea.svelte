@@ -1,7 +1,6 @@
 <script lang="ts">
   import { defaultInner } from "@helpers/strings";
   import { createEventDispatcher } from "svelte";
-  import { readonly } from "svelte/store";
 
   export let value = '';
   export let cClass = '';

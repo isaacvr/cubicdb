@@ -1,13 +1,14 @@
+import { newArr } from '@helpers/object';
 import { circle, Cnk, rn, set8Perm } from '../lib/mathlib';
 import { regScrambler } from './scramble';
 import * as scramble_333 from './scramble_333';
 
 function createArray(length1: number, length2?: number) {
   let result, i;
-  result = new Array(length1);
+  result = newArr(length1);
   if (length2 != undefined) {
     for (i = 0; i < length1; i++) {
-      result[i] = new Array(length2);
+      result[i] = newArr(length2);
     }
   }
   return result;
@@ -73,7 +74,7 @@ function createFrom(array, length_0) {
 }
 
 function createFromSeed(seedType, length_0) {
-  let array = new Array(length_0);
+  let array = newArr(length_0);
   if (seedType == 3) {
     for (let i_0 = 0; i_0 < length_0; ++i_0) {
       array[i_0] = { h: 0, m: 0, l: 0 };
@@ -125,7 +126,9 @@ function initExpandos(protoType, expandoNames, expandoValues) {
   let i_0 = 0,
     value;
   for (let name_0 in protoType) {
-    if (value = protoType[name_0]) {
+    value = protoType[name_0];
+
+    if (value) {
       expandoNames[i_0] = name_0;
       expandoValues[i_0] = value;
       ++i_0;
@@ -1814,7 +1817,7 @@ function $getEdge(this$static) {
 
 function $getMoveString(this$static) {
   let finishSym, fixedMoves, i_0, idx, move, rot, sb, sym;
-  fixedMoves = new Array(this$static.moveLength - (this$static.add1 ? 2 : 0));
+  fixedMoves = newArr(this$static.moveLength - (this$static.add1 ? 2 : 0));
   idx = 0;
   for (i_0 = 0; i_0 < this$static.length1; ++i_0) {
     fixedMoves[idx++] = this$static.moveBuffer[i_0];

@@ -14,14 +14,15 @@
   export { cl as class };
   export let placeholder: string = "";
   export let value: any = placeholder;
-  export let items: any[];
-  export let onChange = (item: any, pos: number, arr: any[]) => {};
+  export let items: readonly any[];
+  export let onChange = (item: any, pos: number, arr: readonly any[]) => {};
   export let label = (item?: any) => item || "";
-  export let transform = (item: any, pos?: number, arr?: any[]) => item.value;
+  export let transform = (item: any, pos?: number, arr?: readonly any[]) => item.value;
   export let hasIcon: null | ((v: any) => any) = null;
-  export let disabled = (item: any, pos?: number, arr?: any[]) => false;
+  export let disabled = (item: any, pos?: number, arr?: readonly any[]) => false;
   export let placement: Side | Placement = "bottom";
   export let useFixed = false;
+  export let iconComponent: any = WcaCategory;
 
   const selectID = "s" + weakRandomUUID().replace(/-/g, "");
   const dispatch = createEventDispatcher();
@@ -62,10 +63,20 @@
   $: emitStatus(showOptions);
 </script>
 
-<Button color="alternative" class={"gap-1 " + cl} on:click={handleClick}
-  >{items.some((a, p, i) => transform(a, p, i) === value)
-    ? label(items.find((e, p, i) => transform(e, p, i) === value))
-    : placeholder}
+<Button color="alternative" class={"gap-1 h-10 " + cl} on:click={handleClick}>
+  {#if items.some((a, p, i) => transform(a, p, i) === value)}
+    {@const item = items.find((e, p, i) => transform(e, p, i) === value)}
+
+    {#if hasIcon && iconComponent}
+      <!-- <WcaCategory icon={hasIcon(item)} noFallback size="1.1rem" /> -->
+      <svelte:component this={iconComponent} icon={hasIcon(item)} noFallback size="1.1rem" />
+    {/if}
+
+    {label(item)}
+  {:else}
+    {placeholder}
+  {/if}
+
   <ExpandIcon size="1.2rem" class="ml-auto" />
 </Button>
 
@@ -95,8 +106,9 @@
         onChange(item, pos, items);
       }}
     >
-      {#if hasIcon}
-        <WcaCategory icon={hasIcon(item)} noFallback size="1.1rem" />
+      {#if hasIcon && iconComponent}
+        <!-- <WcaCategory icon={hasIcon(item)} noFallback size="1.1rem" /> -->
+        <svelte:component this={iconComponent} icon={hasIcon(item)} noFallback size="1.1rem" />
       {/if}
 
       {#if label(item).trim()}

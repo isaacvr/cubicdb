@@ -22,6 +22,7 @@
   import type { ReconstructorStep } from "@classes/reconstructors/interfaces";
   import TextArea from "@components/material/TextArea.svelte";
   import { parseReconstruction } from "@helpers/strings";
+  import PuzzleImage from "@components/PuzzleImage.svelte";
 
   export let lastSolve: Writable<Solve | null>;
   export let reconstructor: ReconstructorStep[];
@@ -114,7 +115,7 @@
 
       {#if rec.case}
         <div class="text-center">
-          <img src={images[pos]} alt="" class="puzzle-img scale-75 object-contain m-auto" />
+          <PuzzleImage src={images[pos]} />
         </div>
       {/if}
 

@@ -1,6 +1,7 @@
 import { ScrambleParser } from "@classes/scramble-parser";
 import { Interpreter } from "@classes/scrambleInterpreter";
 import type { IReconstruction, PuzzleType } from "@interfaces";
+import { newArr } from "./object";
 
 export function getSearchParams(loc: string): Map<string, string> {
   return loc
@@ -69,7 +70,7 @@ export function getTreeString(token: IToken, puzzle: PuzzleType): string {
           /^(-?\d)(-?\d)/,
           /^(-?\d)/,
         ];
-        let operators = /^[\(\,\)]$/;
+        let operators = /^[(,)]$/;
 
         for (let i = 0, maxi = regs.length; i < maxi; i += 1) {
           let m = regs[i].exec(value);
@@ -203,7 +204,7 @@ export function parseReconstruction(s: string, puzzle: PuzzleType, order: number
 
       switch (puzzle) {
         case "square1": {
-          sequenceIndex = new Array(finalAlpha).fill(0).map((_, i) => i);
+          sequenceIndex = newArr(finalAlpha).fill(0).map((_, i) => i);
           break;
         }
 

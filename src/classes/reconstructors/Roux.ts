@@ -352,7 +352,7 @@ export class Roux implements IReconstructor {
       this.stage = Stage.BLOCK_123_2;
     } else if (cmll.every(cres => !cres.cp)) {
       this.stage = Stage.CO;
-    } else if (!eo || eo.length === 0 || eo.every(e => !e)) {
+    } else if (!eo || eo.every(e => !e)) {
       this.stage = Stage.CP;
     } else if (!ulur) {
       this.stage = Stage.EO;

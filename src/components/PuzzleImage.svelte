@@ -33,7 +33,7 @@
 </script>
 
 <div
-  class={"rounded grid place-items-center puzzle-img" + (!src ? " bg-gray-700 animate-pulse" : " ")}
+  class={"rounded flex items-center justify-center puzzle-img" + (!src ? " bg-gray-700 animate-pulse" : " ")}
   class:interactive
   class:glow={glowOnHover}
   role={type === "svg" ? "document" : "img"}

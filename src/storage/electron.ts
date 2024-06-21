@@ -1,4 +1,4 @@
-import type { Algorithm, AlgorithmOptions, CubeEvent, IPC, ContestPDFOptions, Session, Sheet, Solve, Tutorial, UpdateCommand, PDFOptions, IStorageInfo, ICacheDB } from "@interfaces";
+import type { Algorithm, AlgorithmOptions, CubeEvent, IPC, ContestPDFOptions, Session, Sheet, Solve, ITutorial, UpdateCommand, PDFOptions, IStorageInfo, ICacheDB } from "@interfaces";
 
 export class ElectronAdaptor implements IPC {
   private ipc: IPC;
@@ -6,12 +6,12 @@ export class ElectronAdaptor implements IPC {
     this.ipc = (<any> window).electronAPI as IPC;
   }
 
-  async getAlgorithms(options: AlgorithmOptions): Promise<Algorithm[]> {
-    return await this.ipc.getAlgorithms(options);
+  getAlgorithms(options: AlgorithmOptions): Promise<Algorithm[]> {
+    return this.ipc.getAlgorithms(options);
   }
   
-  async getAlgorithm(options: AlgorithmOptions): Promise<Algorithm | null> {
-    return await this.ipc.getAlgorithm(options);
+  getAlgorithm(options: AlgorithmOptions): Promise<Algorithm | null> {
+    return this.ipc.getAlgorithm(options);
   }
 
   addDownloadProgressListener(cb: any) {
@@ -50,12 +50,20 @@ export class ElectronAdaptor implements IPC {
     return this.ipc.getTutorials();
   }
 
-  addTutorial(t: Tutorial) {
+  getTutorial(puzzle: string, shortName: string, lang: string) {
+    return this.ipc.getTutorial(puzzle, shortName, lang);
+  }
+
+  addTutorial(t: ITutorial) {
     return this.ipc.addTutorial(t);
   }
 
-  updateTutorial(t: Tutorial) {
+  updateTutorial(t: ITutorial) {
     return this.ipc.updateTutorial(t);
+  }
+
+  removeTutorial(t: ITutorial) {
+    return this.ipc.removeTutorial(t);
   }
 
   getSolves() {

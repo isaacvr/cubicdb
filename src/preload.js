@@ -30,7 +30,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   
   addTutorial: async (t) => await ipc.invoke('add-tutorial', t),
   getTutorials: async () => await ipc.invoke('get-tutorials'),
+  getTutorial: async (puzzle, shortName, lang) => await ipc.invoke('get-tutorial', puzzle, shortName, lang),
   updateTutorial: async (t) => await ipc.invoke('update-tutorial', t),
+  removeTutorial: async (t) => await ipc.invoke('remove-tutorial', t),
 
   // Misc functions
   minimize: async () => await ipc.invoke('minimize'),

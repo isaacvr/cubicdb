@@ -29,7 +29,7 @@
   import { getLanguage } from '@lang/index';
   import { NotificationService } from '@stores/notification.service';
   import { prettyScramble, randomUUID } from '@helpers/strings';
-  import { binSearch } from '@helpers/object';
+  import { binSearch, newArr } from '@helpers/object';
   import type { HTMLImgAttributes } from 'svelte/elements';
   
   // ICONS
@@ -700,7 +700,7 @@
                   class="bg-gray-600 text-gray-200 flex-1 max-w-[10ch]"
                   inpClass="text-center" type="number" min={2} max={10}
                   bind:value={ newSessionSteps } on:keyup={ handleInputKeyUp }
-                  on:change={ _ => stepNames = [ ...stepNames, ...(new Array(newSessionSteps).fill('')) ].slice(0, newSessionSteps) }
+                  on:change={ _ => stepNames = [ ...stepNames, ...(newArr(newSessionSteps).fill('')) ].slice(0, newSessionSteps) }
                   />
               </div>
             {/if}

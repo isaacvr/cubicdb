@@ -293,7 +293,8 @@ let lsallprobs = valuedArray(lsall_map.length, 1);
 let lsallfilter = idxArray(lsall_map, 1);
 
 function getScramble(type: string, length: number, state: number) {
-  let ori, perm, lim;
+  void length;
+  let ori: any, perm: any, lim;
   let maxl = type == '222o' ? 0 : 9;
   do {
     lim = 2;

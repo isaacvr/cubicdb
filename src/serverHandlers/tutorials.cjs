@@ -1,49 +1,61 @@
 module.exports = (ipcMain, Tutorials) => {
-  ipcMain.handle('get-tutorials', async (_) => {
+  ipcMain.handle("get-tutorials", async _ => {
     return await new Promise((res, rej) => {
       // @ts-ignore
       Tutorials.find({}, (err, tutorials) => {
-        if ( err ) return rej(err);
+        if (err) return rej(err);
         res(tutorials);
       });
     });
   });
-  
-  ipcMain.handle('add-tutorial', async (_, arg) => {
+
+  ipcMain.handle("get-tutorial", async (_, puzzle, shortName, lang) => {
     return await new Promise((res, rej) => {
-      Tutorials.insert(arg, function(err, tutorial) {
-        if ( err ) return rej(err);
+      // @ts-ignore
+      Tutorials.findOne({ puzzle, shortName, lang }, (err, tutorial) => {
+        if (err) return rej(err);
+        res(tutorial || null);
+      });
+    });
+  });
+
+  ipcMain.handle("add-tutorial", async (_, arg) => {
+    let nTut = { ...arg };
+
+    delete nTut._id;
+
+    return await new Promise((res, rej) => {
+      Tutorials.insert(nTut, function (err, tutorial) {
+        if (err) return rej(err);
         res(tutorial);
       });
     });
   });
-  
-  ipcMain.handle('remove-tutorial', async (_, arg) => {
+
+  ipcMain.handle("remove-tutorial", async (_, arg) => {
     return await new Promise((res, rej) => {
-      Tutorials.remove({ _id: arg._id }, function(err, tutorial) {
-        if ( err ) return rej(err);
+      Tutorials.remove({ _id: arg._id }, function (err, tutorial) {
+        if (err) return rej(err);
         res(tutorial);
       });
     });
   });
-  
-  ipcMain.handle('update-tutorial', async (_, arg) => {
+
+  ipcMain.handle("update-tutorial", async (_, arg) => {
     return await new Promise((res, rej) => {
-      Tutorials.update({ _id: arg._id }, {
-        $set: {
-          title: arg.title,
-          titleLower: arg.titleLower,
-          puzzle: arg.puzzle,
-          algs: arg.algs,
-          content: arg.content,
-          level: arg.level || 0
+      Tutorials.update(
+        { _id: arg._id },
+        {
+          $set: {
+            ...arg,
+          },
+          // @ts-ignore
+        },
+        function (err) {
+          if (err) return rej(err);
+          res(arg);
         }
-        // @ts-ignore
-      }, function(err) {
-        if ( err ) return rej(err);
-        res(arg);
-      });
+      );
     });
   });
 };
-

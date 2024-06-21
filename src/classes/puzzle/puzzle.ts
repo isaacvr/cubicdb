@@ -407,6 +407,17 @@ export class Puzzle {
         case CubeMode.YCROSS: {
           let cnd = pieces[i].contains(TOP_COLOR) && stLen > 2;
           for (let j = 0; j < stLen; j += 1) {
+            stickers[j].color = cnd
+              ? OFF_COLOR
+              : stickers[j].oColor === TOP_COLOR
+              ? stickers[j].oColor
+              : OFF_COLOR;
+          }
+          break;
+        }
+        case CubeMode.CYCROSS: {
+          let cnd = pieces[i].contains(TOP_COLOR) && stLen > 2;
+          for (let j = 0; j < stLen; j += 1) {
             stickers[j].color = cnd ? OFF_COLOR : stickers[j].oColor;
           }
           break;
@@ -464,7 +475,17 @@ export class Puzzle {
     let arr: string[] = [];
     let res = [];
 
-    if (type === "square1") {
+    if (type === "clock") {
+      res = sequence
+        .split(" ")
+        .filter(s => !/^[UD][RL]$/.test(s) && s.trim())
+        .reverse()
+        .map(s =>
+          s.endsWith("0+") || s === "y2"
+            ? s
+            : s.slice(0, -1) + { "+": "-", "-": "+" }[s[s.length - 1]]
+        );
+    } else if (type === "square1") {
       let sqre = /\s*\(?(-?\d+), *(-?\d+)\)?\s*/;
 
       arr = sequence.replace(/\s+/g, "").split("/");

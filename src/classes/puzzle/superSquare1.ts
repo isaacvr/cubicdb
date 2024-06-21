@@ -9,6 +9,7 @@ import { square1SolverGetRandomScramble } from '@cstimer/scramble/scramble_sq1';
 import { ScrambleParser } from '@classes/scramble-parser';
 import { FaceSticker } from './FaceSticker';
 import { utilscramble } from '@cstimer/scramble/utilscramble';
+import { newArr } from '@helpers/object';
 
 export function SUPER_SQUARE1(): PuzzleInterface {
   const edgePoint = (p: Vector3D) => [p.x, p.y, p.z].reduce((acc, n) =>
@@ -50,7 +51,7 @@ export function SUPER_SQUARE1(): PuzzleInterface {
     new Sticker([
       LEFT.add(BACK).add(UP),
       LEFT.add(BACK).add(UP).add(FRONT.mul(BIG)),
-      ...(new Array(CURVE_PTS).fill(0).map((_, n) => UP.add(DV.rotate(CENTER, DOWN, PI_6 * n * 2 / (CURVE_PTS - 1))))),
+      ...(newArr(CURVE_PTS).fill(0).map((_, n) => UP.add(DV.rotate(CENTER, DOWN, PI_6 * n * 2 / (CURVE_PTS - 1))))),
       LEFT.add(BACK).add(UP).add(RIGHT.mul(BIG)),
     ]),
     new Sticker([
@@ -76,12 +77,12 @@ export function SUPER_SQUARE1(): PuzzleInterface {
     ], undefined, [], false, 'side-edge'),
     new Sticker([
       LEFT.add(UP).add(BACK).add(RIGHT.mul(BIG)),
-      ...(new Array(CURVE_PTS).fill(0).map((_, n) => UP.add(DV.rotate(CENTER, DOWN, PI_6 * 2 + PI_6 * n / (CURVE_PTS - 1))))),
+      ...(newArr(CURVE_PTS).fill(0).map((_, n) => UP.add(DV.rotate(CENTER, DOWN, PI_6 * 2 + PI_6 * n / (CURVE_PTS - 1))))),
       RIGHT.add(UP).add(BACK).add(LEFT.mul(BIG)),
     ]),
     new Sticker([
       LEFT.add(UP).add(BACK).add(RIGHT.mul(BIG)),
-      ...(new Array(CURVE_PTS).fill(0).map((_, n) => UP.add(DV.rotate(CENTER, DOWN, PI_6 * 2 + PI_6 * n / (CURVE_PTS - 1))))),
+      ...(newArr(CURVE_PTS).fill(0).map((_, n) => UP.add(DV.rotate(CENTER, DOWN, PI_6 * 2 + PI_6 * n / (CURVE_PTS - 1))))),
       RIGHT.add(UP).add(BACK).add(LEFT.mul(BIG)),
     ]).reverse().add(DOWN.mul(0.5), true),
   ]);

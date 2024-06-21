@@ -1,0 +1,5 @@
+cache
+release
+dist
+.vscode
+node_modules

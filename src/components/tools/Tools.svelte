@@ -88,10 +88,7 @@
   let colors = STANDARD_PALETTE;
   const DEFAULT_COLOR = colors.gray;
   let fColors = [ colors.w, colors.r, colors.g, colors.y, colors.o, colors.b ];
-  let facelets: string[][] = [
-    // ...[0, 1, 2, 3, 4, 5].map(n => [ '-', '-', '-', '-', fColors[n], '-', '-', '-', '-' ])
-    ...[0, 1, 2, 3, 4, 5].map(n => [ '-', '-', '-', '-', '-', '-', '-', '-', '-' ])
-  ];
+  let facelets: string[][] = [0, 1, 2, 3, 4, 5].map(_ => [ '-', '-', '-', '-', '-', '-', '-', '-', '-' ]);
 
   let keys = [ "[W]", "[R]", "[G]", "[Y]", "[O]", "[B]" ];
   let color = 0;
@@ -271,10 +268,7 @@
   }
 
   function clearCube() {
-    facelets = [
-      // ...[0, 1, 2, 3, 4, 5].map(n => [ '-', '-', '-', '-', fColors[n], '-', '-', '-', '-' ])
-      ...[0, 1, 2, 3, 4, 5].map(n => [ '-', '-', '-', '-', '-', '-', '-', '-', '-' ])
-    ];
+    facelets = [0, 1, 2, 3, 4, 5].map(_ => [ '-', '-', '-', '-', '-', '-', '-', '-', '-' ]);
   }
 
   function handleKeyup(e: KeyboardEvent) {

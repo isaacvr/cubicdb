@@ -1,7 +1,7 @@
 import { Puzzle } from "@classes/puzzle/puzzle";
 import { DOWN } from "@classes/vector3d";
 import { EPS } from "@constants";
-import { nameToPuzzle, type Algorithm, type PuzzleType } from "@interfaces";
+import { nameToPuzzle, type Algorithm, type ITutorialAlg, type PuzzleType } from "@interfaces";
 
 export function checkPath(obj: any, path: string[], useMap: boolean = false): boolean {
   if (typeof obj === "undefined") return false;
@@ -89,7 +89,7 @@ export function clone(obj: any, ignore: string[] = []): any {
 }
 
 export function getUint8DataView(dt: DataView): Uint8Array {
-  let res = new Array(dt.byteLength);
+  let res = newArr(dt.byteLength);
 
   for (let i = 0, maxi = dt.byteLength; i < maxi; i += 1) {
     res[i] = dt.getUint8(i);
@@ -156,9 +156,9 @@ export function getByteSize(obj: any): number {
   }, 0);
 }
 
-export function algorithmToPuzzle(alg: Algorithm, addZ2: boolean): Puzzle {
+export function algorithmToPuzzle(alg: ITutorialAlg, addZ2: boolean, invert = true): Puzzle {
   let args = nameToPuzzle(alg.puzzle || "");
-  let noZ2: PuzzleType[] = ["megaminx", "pyraminx"];
+  let noZ2: PuzzleType[] = ["megaminx", "pyraminx", "clock"];
   let seq = alg.scramble + (addZ2 && noZ2.indexOf(args.type) === -1 ? " z2" : "");
 
   let res = Puzzle.fromSequence(
@@ -172,11 +172,15 @@ export function algorithmToPuzzle(alg: Algorithm, addZ2: boolean): Puzzle {
       headless: true,
       rounded: true,
     },
-    true,
+    invert,
     true
   );
 
   res.p.rotation = alg.rotation || res.p.rotation;
 
   return res.adjustColors("", alg.baseColor || (args.type === "pyraminx" ? "y" : "w"));
+}
+
+export function newArr(length: number): any[] {
+  return Array.from({ length });
 }

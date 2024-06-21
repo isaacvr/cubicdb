@@ -1,3 +1,5 @@
+import { newArr } from "./object";
+
 const PERLIN_YWRAPB = 4;
 const PERLIN_YWRAP = 1 << PERLIN_YWRAPB;
 const PERLIN_ZWRAPB = 8;
@@ -60,7 +62,7 @@ export function perlin2(x: number, y?: number, z?: number): number {
   z = z || 0;
 
   if (perlin == null) {
-    perlin = new Array(PERLIN_SIZE + 1);
+    perlin = newArr(PERLIN_SIZE + 1);
     for (let i = 0; i < PERLIN_SIZE + 1; i++) {
       perlin[i] = Math.random();
     }
@@ -233,7 +235,7 @@ export function noiseSeed(seed: number) {
   })();
 
   lcg.setSeed(seed);
-  perlin = new Array(PERLIN_SIZE + 1);
+  perlin = newArr(PERLIN_SIZE + 1);
   for (let i = 0; i < PERLIN_SIZE + 1; i++) {
     perlin[i] = lcg.rand();
   }

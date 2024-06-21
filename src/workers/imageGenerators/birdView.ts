@@ -44,7 +44,5 @@ export function birdView(cube: Puzzle, DIM: number, format: "raster" | "svg" = "
 
   drawStickers(ctx, [...leftSticker, ...backSticker, ...restStickers], [], W, H, cube);
 
-  console.log("BIRD");
-
   return ctx.getImage();
 }

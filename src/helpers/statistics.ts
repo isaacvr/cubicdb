@@ -9,6 +9,7 @@ import {
 } from "@interfaces";
 import { adjustMillis, infinitePenalty, sTime } from "./timer";
 import { scrambleReg } from "@classes/scramble-parser";
+import { newArr } from "./object";
 
 export const INITIAL_STATISTICS: Statistics = {
   best: { value: 0, better: false, prev: Infinity },
@@ -116,12 +117,12 @@ export function bundleAverageS(
   arr: Solve[],
   calc: AverageSetting
 ): (number | null)[][] {
-  let res: (number | null)[][] = new Array(N.length).fill(0).map(_ => []);
-  let sets: MultiSet<number>[] = new Array(N.length).fill(0).map(_ => new MultiSet());
+  let res: (number | null)[][] = newArr(N.length).fill(0).map(_ => []);
+  let sets: MultiSet<number>[] = newArr(N.length).fill(0).map(_ => new MultiSet());
   let disc = N.map(n => (n === 3 ? 0 : Math.ceil(n * 0.05)));
   let len = arr.length - 1;
-  let infP: number[] = new Array(N.length).fill(0);
-  let sums: number[] = new Array(N.length).fill(0);
+  let infP: number[] = newArr(N.length).fill(0);
+  let sums: number[] = newArr(N.length).fill(0);
 
   let getIndex = (i: number) => len - i;
 
@@ -213,7 +214,7 @@ export function decimateT<T>(arr: T[], width: number): T[] {
 
   const f = (arr.length - 1) / (MAXP - 1);
 
-  return new Array(MAXP).fill(0).map((e, p) => arr[Math.floor(p * f)]);
+  return newArr(MAXP).fill(0).map((e, p) => arr[Math.floor(p * f)]);
 }
 
 export function decimateN(arr: (number | null)[], width: number): (number | null)[] {

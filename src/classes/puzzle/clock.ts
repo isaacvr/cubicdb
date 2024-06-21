@@ -90,7 +90,7 @@ export function CLOCK(): PuzzleInterface {
     const Y = 0;
 
     const LAYER_V = FRONT.mul(0.002);
-    const CROSS_LAYER = (-2 + 0 * LAYER_V.abs()) * WIDTH / LAYER_V.abs();
+    const CROSS_LAYER = -2 * WIDTH / LAYER_V.abs();
 
     let levelSticker = (s: Sticker, layer: number, self = false) => {
       return s.add(LAYER_V.mul(layer), self);

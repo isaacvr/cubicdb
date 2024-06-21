@@ -1,7 +1,8 @@
 <script lang="ts">
-  import { between, calcPercents, evalLine, rotatePoint } from '@helpers/math';
+  import { between, calcPercents } from '@helpers/math';
   import { getAverageS, trendLSV } from '@helpers/statistics';
   import { formatHour, infinitePenalty, timer } from '@helpers/timer';
+  import { newArr } from '@helpers/object';
   import { AverageSetting, Penalty, type Language, type Solve, type TimerContext, type Session } from '@interfaces';
   import { onMount } from 'svelte';
   import StatsProgress from './StatsProgress.svelte';
@@ -266,7 +267,7 @@
     // HOUR CHART
     let HData = sv.reduce((acc, s) => {
       acc[ moment(s.date).hour() ] += 1; return acc;
-    }, new Array(24).fill(0));
+    }, newArr(24).fill(0));
 
     let hourOptions: echarts.EChartsOption = {
       title: [{
@@ -309,7 +310,7 @@
     let WData: number[] = sv.reduce((acc, s) => {
       acc[ moment(s.date).isoWeekday() - 1 ] += 1;
       return acc;
-    }, new Array(7).fill(0));
+    }, newArr(7).fill(0));
 
     let weekOptions: echarts.EChartsOption = {
       title: [{
@@ -350,7 +351,7 @@
     let splits = between($solves.length, 1, 10);
     let f = (x: number) => minT + (maxT - minT) * x / splits;
 
-    let itvs = new Array(splits).fill(0).map((_, p) => [ f(p), f(p + 1) ]);
+    let itvs = newArr(splits).fill(0).map((_, p) => [ f(p), f(p + 1) ]);
     let nonPenalty = 0;
     let cants = $solves.reduce((acc, s) => {
       if ( !infinitePenalty(s) ) {
@@ -358,7 +359,7 @@
         nonPenalty += 1;
       }
       return acc;
-    }, new Array(splits).fill(0));
+    }, newArr(splits).fill(0));
 
     let distOption: echarts.EChartsOption = {
       title: [{
@@ -393,7 +394,7 @@
 
     // Splits
     let sessionSteps = $session.settings.steps || 0;
-    steps = (new Array(sessionSteps)).fill(0);
+    steps = (newArr(sessionSteps)).fill(0);
 
     for (let i = 0, maxi = $solves.length; i < maxi; i += 1) {
       if ( !infinitePenalty($solves[i]) ) {

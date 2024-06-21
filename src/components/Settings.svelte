@@ -31,6 +31,7 @@
     { name: 'Raleway', value: 'Raleway' },
     { name: 'Roboto', value: 'Roboto' },
     { name: 'LCD4', value: 'lcd4' },
+    { name: 'Monaco', value: 'Monaco' },
   ];
 
   const DEFAULT_APP_FONT = 'Ubuntu';
@@ -54,8 +55,8 @@
 
     notService.addNotification({
       key: randomUUID(),
-      header: $localLang.SETTINGS.saved,
-      text: $localLang.SETTINGS.settingsSaved,
+      header: $localLang.global.saved,
+      text: $localLang.global.settingsSaved,
       timeout: 2000,
       icon: CubeDBICON,
     });

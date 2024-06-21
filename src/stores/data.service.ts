@@ -3,7 +3,7 @@
 import { Emitter } from '@classes/Emitter';
 import { GANInput } from '@components/timer/input-handlers/GAN';
 import { QiYiSmartTimerInput } from '@components/timer/input-handlers/QY-Timer';
-import type { Algorithm, Solve, Session, Tutorial, Sheet, CubeEvent, IPC, ContestPDFOptions, UpdateCommand, PDFOptions, ICacheDB } from '@interfaces';
+import type { Algorithm, Solve, Session, ITutorial, Sheet, CubeEvent, IPC, ContestPDFOptions, UpdateCommand, PDFOptions, ICacheDB } from '@interfaces';
 import { ElectronAdaptor, IndexedDBAdaptor } from '@storage/index';
 import type { Display } from 'electron';
 import { writable, type Writable } from 'svelte/store';
@@ -122,12 +122,20 @@ export class DataService {
     return this.ipc.getTutorials();
   }
 
-  addTutorial(t: Tutorial) {
+  getTutorial(puzzle: string, shortName: string, lang: string) {
+    return this.ipc.getTutorial(puzzle, shortName, lang);
+  }
+
+  addTutorial(t: ITutorial) {
     return this.ipc.addTutorial(t);
   }
 
-  updateTutorial(t: Tutorial) {
+  updateTutorial(t: ITutorial) {
     return this.ipc.updateTutorial(t);
+  }
+
+  removeTutorial(t: ITutorial) {
+    return this.ipc.removeTutorial(t);
   }
 
   getSolves() {
