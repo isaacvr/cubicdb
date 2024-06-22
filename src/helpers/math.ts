@@ -5,7 +5,7 @@ import { EPS } from "@constants";
 import { Quaternion, Vector3 } from "three";
 
 export function map(v: number, a: number, b: number, A: number, B: number): number {
-  return b === a ? A : (v - a) * (B - A) / (b - a) + A;
+  return b === a ? A : ((v - a) * (B - A)) / (b - a) + A;
 }
 
 export function evalLine(x: number, x1: number, y1: number, x2: number, y2: number): number {
@@ -25,13 +25,21 @@ export function sin(a: number): number {
 }
 
 export function rotatePoint(x: number, y: number, ang: number): number[] {
-  return [ x * cos(ang) - y * sin(ang), x * sin(ang) + y * cos(ang) ];
+  return [x * cos(ang) - y * sin(ang), x * sin(ang) + y * cos(ang)];
 }
 
-export function rotateSegment(x1: number, y1: number, x2: number, y2: number, ang: number, ox: number, oy: number): number[] {
+export function rotateSegment(
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+  ang: number,
+  ox: number,
+  oy: number
+): number[] {
   let p1 = rotatePoint(x1 - ox, y1 - oy, ang);
   let p2 = rotatePoint(x2 - ox, y2 - oy, ang);
-  return [ p1[0] + ox, p1[1] + oy, p2[0] + ox, p2[1] + oy ];
+  return [p1[0] + ox, p1[1] + oy, p2[0] + ox, p2[1] + oy];
 }
 
 export function between(n: number, a: number, b: number): number {
@@ -43,36 +51,42 @@ export function isBetween(n: number, a: number, b: number, inclusive = true): bo
   return inclusive ? v <= 0 : v < 0;
 }
 
-export function planeLineIntersection(p0: Vector3D, n: Vector3D, l0: Vector3D, l: Vector3D): Vector3D | null | undefined {
+export function planeLineIntersection(
+  p0: Vector3D,
+  n: Vector3D,
+  l0: Vector3D,
+  l: Vector3D
+): Vector3D | null | undefined {
   let num = p0.sub(l0).dot(n);
   let den = l.dot(n);
 
-  if ( den === 0 ) {
+  if (den === 0) {
     return null;
   }
 
-  if ( num === 0 ) {
+  if (num === 0) {
     return undefined;
   }
 
-  return l0.add( l.mul(num / den) );
+  return l0.add(l.mul(num / den));
 }
 
 export function search(v: number, arr: number[], bound?: boolean): number {
-  let ini = 0, fin = arr.length;
+  let ini = 0,
+    fin = arr.length;
 
   while (ini < fin) {
     let mid = (ini + fin) >> 1;
 
-    if ( !bound && arr[mid] === v ) {
+    if (!bound && arr[mid] === v) {
       return mid;
     }
 
-    if ( arr[mid] < v ) {
+    if (arr[mid] < v) {
       ini = mid + 1;
     } else {
       fin = mid;
-    } 
+    }
   }
 
   return bound ? ini : -1;
@@ -87,7 +101,7 @@ export function calcPercents(st: number[], time: number) {
   let solveSteps = [];
 
   for (let i = 0, maxi = st.length; i < maxi; i += 1) {
-    let perc = st[i] * 100 / time;
+    let perc = (st[i] * 100) / time;
     let newV = Math.round(perc + acc);
     acc = perc - newV;
     solveSteps.push(newV);
@@ -110,59 +124,74 @@ export function getPixelInfo(x: number, y: number, d: ImageData): Color {
 export function colorDistance(a: Color, b: Color): number {
   let c1 = a.color;
   let c2 = b.color;
-  
+
   return c1.map((e, p) => (e - c2[p]) ** 2).reduce((a, b) => a + b, 0);
 }
 
-export function lineIntersection2D(a: Vector2D, _ua: Vector2D, b: Vector2D, _ub: Vector2D): Vector2D | null {
+export function lineIntersection2D(
+  a: Vector2D,
+  _ua: Vector2D,
+  b: Vector2D,
+  _ub: Vector2D
+): Vector2D | null {
   let ua = _ua.unit();
   let ub = _ub.unit();
 
-  if ( Math.abs( Vector2D.cross(ua, ub) ) < EPS ) return null;
+  if (Math.abs(Vector2D.cross(ua, ub)) < EPS) return null;
 
   let D = ua.y * ub.x - ua.x * ub.y;
   let D1 = (b.y - a.y) * ub.x - (b.x - a.x) * ub.y;
 
   let t1 = D1 / D;
 
-  return a.add( ua.mul(t1) );
+  return a.add(ua.mul(t1));
 }
 
-export function lineIntersection3D(a: Vector3D, ua: Vector3D, b: Vector3D, ub: Vector3D): Vector3D | null {
+export function lineIntersection3D(
+  a: Vector3D,
+  ua: Vector3D,
+  b: Vector3D,
+  ub: Vector3D
+): Vector3D | null {
   let v1 = ua.cross(ub);
   let v2 = b.sub(a).cross(ub);
 
-  if ( v1.abs() < EPS ) return null;
+  if (v1.abs() < EPS) return null;
 
   let r = v2.abs() / v1.abs();
 
-  if ( v1.mul(r).sub(v2).abs() < EPS ) {
-    return a.add( ua.mul(r) );
+  if (v1.mul(r).sub(v2).abs() < EPS) {
+    return a.add(ua.mul(r));
   }
 
-  if ( v1.mul(-r).sub(v2).abs() < EPS ) {
-    return a.add( ua.mul(-r) );
+  if (v1.mul(-r).sub(v2).abs() < EPS) {
+    return a.add(ua.mul(-r));
   }
 
   return null;
 }
 
 export function byteToString(b: number): string {
-  const units = [ 'B', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB' ];
+  const units = ["B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"];
   let nb = b;
   let u = 0;
 
-  while ( nb >= 1000 && u < units.length - 1 ) {
+  while (nb >= 1000 && u < units.length - 1) {
     nb /= 1024;
     u += 1;
   }
 
   nb = Math.floor(nb * 100) / 100;
 
-  return nb + ' ' + units[u];
+  return nb + " " + units[u];
 }
 
-export function rotateBundle(points: Vector3D[], O: Vector3D, u: Vector3D, ang: number): Vector3D[] {
+export function rotateBundle(
+  points: Vector3D[],
+  O: Vector3D,
+  u: Vector3D,
+  ang: number
+): Vector3D[] {
   let q = new Quaternion().setFromAxisAngle(new Vector3(u.x, u.y, u.z).setLength(1), ang);
   return points.map(p => {
     let p1 = new Vector3(p.x - O.x, p.y - O.y, p.z - O.z).applyQuaternion(q);
@@ -177,4 +206,44 @@ export function sum(arr: number[]): number {
 export function toInt(n: number, d: number): number {
   let pot = 10 ** d;
   return Math.floor(n / pot) * pot;
+}
+
+// Animation Timing Functions
+export function cubicBezier(t: number, x1: number, y1: number, x2: number, y2: number): number {
+  let p1 = new Vector2D(0, 0);
+  let p2 = new Vector2D(x1, y1);
+  let p3 = new Vector2D(x2, y2);
+  let p4 = new Vector2D(1, 1);
+
+  return p1.mul((1 - t) ** 3).add(
+    p2
+      .mul(3 * t)
+      .mul((1 - t) ** 2)
+      .add(
+        p3
+          .mul(3 * t ** 2)
+          .mul(1 - t)
+          .add(p4.mul(t ** 3))
+      )
+  ).y;
+}
+
+export function ease(t: number): number {
+  return cubicBezier(t, 0.25, 0.1, 0.25, 1);
+}
+
+export function linear(t: number): number {
+  return cubicBezier(t, 0, 0, 1, 1);
+}
+
+export function easeIn(t: number): number {
+  return cubicBezier(t, 0.42, 0, 1, 1);
+}
+
+export function easeOut(t: number): number {
+  return cubicBezier(t, 0, 0, 0.58, 1);
+}
+
+export function easeInOut(t: number): number {
+  return cubicBezier(t, 0.42, 0, 0.58, 1);
 }

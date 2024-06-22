@@ -121,8 +121,6 @@ module.exports = (ipcMain, Sessions, Solves, dbPath) => {
       let sArr = [...ids1];
 
       Solves.remove({ session: { $in: sArr } }, { multi: true });
-
-      console.log("Unparented solves: ", count, "/", svs.length);
     });
   });
 

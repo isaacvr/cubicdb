@@ -17,7 +17,7 @@
       {
         title: HOME.tutorials,
         route: "/tutorials",
-        ready: showPrivate,
+        ready: true,
         cube: "/assets/tutorials.png",
       },
       {

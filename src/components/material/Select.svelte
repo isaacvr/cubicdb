@@ -23,13 +23,13 @@
   export let placement: Side | Placement = "bottom";
   export let useFixed = false;
   export let iconComponent: any = WcaCategory;
+  export let preferIcon = false;
 
   const selectID = "s" + weakRandomUUID().replace(/-/g, "");
   const dispatch = createEventDispatcher();
 
   let showOptions = false;
   let mounted = false;
-  // let optionList: HTMLDivElement;
 
   function findValuePosition() {
     for (let i = 0, maxi = items.length; i < maxi; i += 1) {
@@ -68,11 +68,12 @@
     {@const item = items.find((e, p, i) => transform(e, p, i) === value)}
 
     {#if hasIcon && iconComponent}
-      <!-- <WcaCategory icon={hasIcon(item)} noFallback size="1.1rem" /> -->
       <svelte:component this={iconComponent} icon={hasIcon(item)} noFallback size="1.1rem" />
     {/if}
 
-    {label(item)}
+    {#if !(hasIcon && iconComponent && preferIcon)}
+      {label(item)}
+    {/if}
   {:else}
     {placeholder}
   {/if}
@@ -107,7 +108,6 @@
       }}
     >
       {#if hasIcon && iconComponent}
-        <!-- <WcaCategory icon={hasIcon(item)} noFallback size="1.1rem" /> -->
         <svelte:component this={iconComponent} icon={hasIcon(item)} noFallback size="1.1rem" />
       {/if}
 

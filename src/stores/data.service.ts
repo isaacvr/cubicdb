@@ -1,18 +1,30 @@
 /// <reference types="web-bluetooth" />
 
-import { Emitter } from '@classes/Emitter';
-import { GANInput } from '@components/timer/input-handlers/GAN';
-import { QiYiSmartTimerInput } from '@components/timer/input-handlers/QY-Timer';
-import type { Algorithm, Solve, Session, ITutorial, Sheet, CubeEvent, IPC, ContestPDFOptions, UpdateCommand, PDFOptions, ICacheDB } from '@interfaces';
-import { ElectronAdaptor, IndexedDBAdaptor } from '@storage/index';
-import type { Display } from 'electron';
-import { writable, type Writable } from 'svelte/store';
+import { Emitter } from "@classes/Emitter";
+import { GANInput } from "@components/timer/input-handlers/GAN";
+import { QiYiSmartTimerInput } from "@components/timer/input-handlers/QY-Timer";
+import type {
+  Algorithm,
+  Solve,
+  Session,
+  ITutorial,
+  Sheet,
+  CubeEvent,
+  IPC,
+  ContestPDFOptions,
+  UpdateCommand,
+  PDFOptions,
+  ICacheDB,
+} from "@interfaces";
+import { ElectronAdaptor, IndexedDBAdaptor } from "@storage/index";
+import type { Display } from "electron";
+import { writable, type Writable } from "svelte/store";
 
-type DownloadEvent = 'download-progress' | 'update-downloaded';
-type BluetoothEvent = 'bluetooth';
-type TimerEvent = 'scramble';
-type ExternalEvent = 'external';
-type DataEvent = DownloadEvent | BluetoothEvent | TimerEvent | ExternalEvent | string & {};
+type DownloadEvent = "download-progress" | "update-downloaded";
+type BluetoothEvent = "bluetooth";
+type TimerEvent = "scramble";
+type ExternalEvent = "external";
+type DataEvent = DownloadEvent | BluetoothEvent | TimerEvent | ExternalEvent | (string & {});
 
 interface ExternalTimer {
   id: string;
@@ -35,7 +47,7 @@ export class DataService {
     this.externalTimers = writable([]);
 
     // @ts-ignore
-    if ( window.electronAPI ) {
+    if (window.electronAPI) {
       this.ipc = new ElectronAdaptor();
       this._isElectron = true;
     } else {
@@ -51,38 +63,36 @@ export class DataService {
   }
 
   static getInstance(): DataService {
-    if ( DataService._instance ) {
+    if (DataService._instance) {
       return DataService._instance;
     }
-    return DataService._instance = new DataService();
+    return (DataService._instance = new DataService());
   }
-  
+
   setIpc() {
     this.ipc.addDownloadProgressListener((_, progress: number) => {
-      this.emitter.emit('download-progress', progress);
-      console.log('download-progress', progress);
+      this.emitter.emit("download-progress", progress);
     });
 
     this.ipc.addDownloadDoneListener(() => {
-      this.emitter.emit('update-downloaded');
-      console.log('update-downloaded')
+      this.emitter.emit("update-downloaded");
     });
 
     this.ipc.addBluetoothListener((_, args) => {
-      this.emitter.emit('bluetooth', ...args);
+      this.emitter.emit("bluetooth", ...args);
     });
 
     this.ipc.addExternalConnector((_, args) => {
       if (!Array.isArray(args)) return;
       if (args.length != 4) return;
 
-      if ( args[3].type === '__timer_list' ) {
-        let data: { 0: any, 1: ExternalTimer}[] = args[3].value;
-        this.externalTimers.set( data.map((e: any) => e[1]) );
+      if (args[3].type === "__timer_list") {
+        let data: { 0: any; 1: ExternalTimer }[] = args[3].value;
+        this.externalTimers.set(data.map((e: any) => e[1]));
         return;
       }
 
-      this.emitter.emit('external', args);
+      this.emitter.emit("external", args);
     });
   }
 
@@ -150,12 +160,14 @@ export class DataService {
   }
 
   addSolves(s: Solve[]) {
-    return this.ipc.addSolves( s.map(sv => {
-      let ts: Solve = Object.assign({}, sv);
-      delete ts._id;
-      
-      return ts;
-    }) );
+    return this.ipc.addSolves(
+      s.map(sv => {
+        let ts: Solve = Object.assign({}, sv);
+        delete ts._id;
+
+        return ts;
+      })
+    );
   }
 
   updateSolve(s: Solve) {
@@ -179,7 +191,7 @@ export class DataService {
   removeSession(s: Session) {
     let _s = Object.assign({}, s);
     delete _s.icon;
-    return this.ipc.removeSession( extractKey(_s, '_id') as Session );
+    return this.ipc.removeSession(extractKey(_s, "_id") as Session);
   }
 
   renameSession(s: Session) {
@@ -230,7 +242,7 @@ export class DataService {
     return this.ipc.generateContestPDF(args);
   }
 
-  zipPDF(s: { name: string, files: Sheet[]}) {
+  zipPDF(s: { name: string; files: Sheet[] }) {
     return this.ipc.zipPDF(s);
   }
 
@@ -259,12 +271,12 @@ export class DataService {
   }
 
   connectBluetoothDevice(id: string) {
-    localStorage.setItem('bluetooth-mac', id);
+    localStorage.setItem("bluetooth-mac", id);
     return this.ipc.connectBluetoothDevice(id);
   }
 
   cancelBluetoothRequest() {
-    localStorage.removeItem('bluetooth-mac');
+    localStorage.removeItem("bluetooth-mac");
     return this.ipc.cancelBluetoothRequest();
   }
 
@@ -273,15 +285,16 @@ export class DataService {
   }
 
   searchBluetooth(inp: GANInput | QiYiSmartTimerInput): Promise<string> {
-    let filters = inp instanceof GANInput ? GANInput.BLUETOOTH_FILTERS : QiYiSmartTimerInput.BLUETOOTH_FILTERS;
-
-    console.log("FILTERS: ", filters);
+    let filters =
+      inp instanceof GANInput ? GANInput.BLUETOOTH_FILTERS : QiYiSmartTimerInput.BLUETOOTH_FILTERS;
 
     return new Promise((res, rej) => {
-      navigator.bluetooth.requestDevice( filters )
-        .then(async(device) => {
-          inp.fromDevice( device ).then(res).catch(rej);
-        }).catch(rej);
+      navigator.bluetooth
+        .requestDevice(filters)
+        .then(async device => {
+          inp.fromDevice(device).then(res).catch(rej);
+        })
+        .catch(rej);
     });
   }
 
@@ -318,7 +331,7 @@ export class DataService {
   }
 
   emitBluetoothData(type: string, data: any) {
-    this.emitter.emit('bluetooth', type, data);
+    this.emitter.emit("bluetooth", type, data);
   }
 
   external(device: string, ...args: any[]) {
@@ -326,6 +339,6 @@ export class DataService {
   }
 
   scramble(s: string) {
-    this.emitter.emit<DataEvent>('scramble', s);
+    this.emitter.emit<DataEvent>("scramble", s);
   }
 }

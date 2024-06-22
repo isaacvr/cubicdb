@@ -30,6 +30,7 @@
   import FlagIcon from "./FlagIcon.svelte";
   import { ArrowUpRightDownLeftOutline } from "flowbite-svelte-icons";
   import Select from "./material/Select.svelte";
+  import type { LanguageCode } from "@interfaces";
 
   const dataService = DataService.getInstance();
   const notService = NotificationService.getInstance();
@@ -75,11 +76,6 @@
 
   function close() {
     dataService.close();
-  }
-
-  function updateLang(code: string) {
-    $globalLang = code;
-    localStorage.setItem("language", $globalLang);
   }
 
   function updateParts(rt: RouteLocation) {
@@ -183,6 +179,8 @@
           label={e => e[1].name}
           hasIcon={e => e[2]}
           iconComponent={FlagIcon}
+          onChange={() => localStorage.setItem("language", $globalLang)}
+          preferIcon
         />
 
         {#if dataService.isElectron && $screen.width > 640}

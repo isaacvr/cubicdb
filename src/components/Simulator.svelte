@@ -39,6 +39,7 @@
   import { screen } from "@stores/screen.store";
   import { Button, Modal, Toggle } from "flowbite-svelte";
   import Select from "./material/Select.svelte";
+  import { easeIn } from "@helpers/math";
 
   export let enableKeyboard = true;
   export let enableDrag = true;
@@ -282,7 +283,7 @@
     if (a < 0 || a >= states.length) return;
 
     let id = ~~a;
-    let alpha = ((n: number) => (n > 0.9 ? 1 : n / 0.9))(a - id);
+    let alpha = easeIn(a - id);
 
     let state = states[id];
     let ang = stateAngle[id];

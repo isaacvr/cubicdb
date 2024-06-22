@@ -32,8 +32,6 @@ function getRoundedSQ1Sticker(
     return st;
   }
 
-  // console.log("P0: ", pts[0], SQ1_A1[0]);
-
   // Divide by 2 the height of the sticker with anchor = pts[0]
   st1.points.map(p => (p.y = (p.y + pts[0].y) / 2));
   st1.updateMassCenter();

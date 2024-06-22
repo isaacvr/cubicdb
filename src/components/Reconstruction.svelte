@@ -319,15 +319,11 @@
   }
 
   function copyReconstruction() {
-    let rec = `https://cubedb.netlify.app/reconstructions?puzzle=${
-      puzzle.puzzle
-    }&order=${
+    let rec = `https://cubedb.netlify.app/reconstructions?puzzle=${puzzle.puzzle}&order=${
       puzzle.order
-    }&scramble=${
-      encodeURIComponent(scramble)
-    }&reconstruction=${
-      encodeURIComponent(reconstruction)
-    }`;
+    }&scramble=${encodeURIComponent(scramble)}&reconstruction=${encodeURIComponent(
+      reconstruction
+    )}`;
 
     copyToClipboard(rec).then(() => {
       NotificationService.getInstance().addNotification({
@@ -449,7 +445,7 @@
     <div>
       <h2 class="flex items-center gap-2">
         {$localLang.global.reconstruction}
-        <button on:click={ copyReconstruction }><CopyIcon size={iconSize} /></button>
+        <button on:click={copyReconstruction}><CopyIcon size={iconSize} /></button>
         <Tooltip>{$localLang.global.copy}</Tooltip>
       </h2>
 
