@@ -1,4 +1,15 @@
-module.exports = (ipcMain, Algorithms) => {
+const fs = require('node:fs');
+const path = require('node:path');
+
+/**
+ * @typedef {import('electron').IpcMain} IpcMain
+ * @typedef {import('nedb')} NeDB
+ * 
+ * @param {IpcMain} ipcMain 
+ * @param {NeDB} Algorithms
+ * @param {string} dbPath 
+ */
+module.exports = (ipcMain, Algorithms, dbPath) => {
   ipcMain.handle("get-algorithms", async (_, arg) => {
     return await new Promise(res => {
       let filter = arg.all ? {} : { parentPath: arg.path };
@@ -102,5 +113,10 @@ module.exports = (ipcMain, Algorithms) => {
     }
 
     return true;
+  });
+
+  ipcMain.handle("algorithms-storage", async () => {
+    let stats = fs.statSync(path.join(dbPath, "algs.db"));
+    return stats.size;
   });
 };

@@ -1,4 +1,15 @@
-module.exports = (ipcMain, Tutorials) => {
+const fs = require("node:fs");
+const path = require("node:path");
+
+/**
+ * @typedef {import('electron').IpcMain} IpcMain
+ * @typedef {import('nedb')} NeDB
+ *
+ * @param {IpcMain} ipcMain
+ * @param {NeDB} Tutorials
+ * @param {string} dbPath
+ */
+module.exports = (ipcMain, Tutorials, dbPath) => {
   ipcMain.handle("get-tutorials", async _ => {
     return await new Promise((res, rej) => {
       // @ts-ignore
@@ -57,5 +68,10 @@ module.exports = (ipcMain, Tutorials) => {
         }
       );
     });
+  });
+
+  ipcMain.handle("tutorials-storage", async () => {
+    let stats = fs.statSync(path.join(dbPath, "tutorials.db"));
+    return stats.size;
   });
 };

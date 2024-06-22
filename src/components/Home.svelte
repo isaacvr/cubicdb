@@ -11,7 +11,7 @@
   function updateTexts() {
     const HOME = getLanguage($globalLang).HOME;
 
-    const showPrivate = true;
+    const showPrivate = false;
 
     cards = [
       {
@@ -25,12 +25,6 @@
         route: "/algorithms",
         ready: true,
         cube: "/assets/algorithms.png",
-      },
-      {
-        title: "Algorithm Handler",
-        route: "/algorithms-admin",
-        ready: showPrivate,
-        cube: "/assets/algorithms-admin.png",
       },
       {
         title: HOME.timer,

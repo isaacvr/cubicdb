@@ -3,58 +3,59 @@
 @tailwind utilities;
 
 @font-face {
-  font-family: 'Ubuntu';
-  src: url('/assets/fonts/UbuntuMono-Regular.ttf');
+  font-family: "Ubuntu";
+  src: url("/assets/fonts/UbuntuMono-Regular.ttf");
   font-display: swap;
 }
 
 @font-face {
-  font-family: 'RopaSans';
-  src: url('/assets/fonts/RopaSans-Regular.ttf');
+  font-family: "RopaSans";
+  src: url("/assets/fonts/RopaSans-Regular.ttf");
   font-display: swap;
 }
 
 @font-face {
-  font-family: 'BreeSerif';
-  src: url('/assets/fonts/BreeSerif-Regular.ttf');
+  font-family: "BreeSerif";
+  src: url("/assets/fonts/BreeSerif-Regular.ttf");
   font-display: swap;
 }
 
 @font-face {
-  font-family: 'CQMono';
-  src: url('/assets/fonts/CQMono.otf');
+  font-family: "CQMono";
+  src: url("/assets/fonts/CQMono.otf");
   font-display: swap;
 }
 
 @font-face {
-  font-family: 'Raleway';
-  src: url('/assets/fonts/Raleway-Regular.ttf');
+  font-family: "Raleway";
+  src: url("/assets/fonts/Raleway-Regular.ttf");
   font-display: swap;
 }
 
 @font-face {
-  font-family: 'Roboto';
-  src: url('/assets/fonts/Roboto-Medium.ttf');
+  font-family: "Roboto";
+  src: url("/assets/fonts/Roboto-Medium.ttf");
   font-display: swap;
 }
 
 @font-face {
-  font-family: 'Monaco';
-  src: url('/assets/fonts/Monaco.ttf');
+  font-family: "Monaco";
+  src: url("/assets/fonts/Monaco.ttf");
   font-display: swap;
 }
 
 @font-face {
-	font-family: 'lcd4';
-	src: url('data:application/x-font-woff;charset=utf-8;base64,d09GRgABAAAAAAjkAA8AAAAAEIgAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAABGRlRNAAABWAAAABwAAAAcYtGkmk9TLzIAAAF0AAAARwAAAGBvU9QaY21hcAAAAbwAAABZAAABSiFjHAZjdnQgAAACGAAAAAoAAAAKBdIFv2ZwZ20AAAIkAAABsQAAAmVTtC+nZ2FzcAAAA9gAAAAIAAAACAAAABBnbHlmAAAD4AAAAZ0AAATsSma5VGhlYWQAAAWAAAAAMAAAADYF5bK4aGhlYQAABbAAAAAdAAAAJAl2BwlobXR4AAAF0AAAAB8AAAA8Nw4GJWxvY2EAAAXwAAAAIAAAACAG6ghCbWF4cAAABhAAAAAfAAAAIAEuAC5uYW1lAAAGMAAAAl4AAAUi95KxXnBvc3QAAAiQAAAAEwAAACD/JACCcHJlcAAACKQAAABAAAAAQFzJu3kAAAABAAAAAMw9os8AAAAAxQtN8AAAAADRiLPaeJxjYGZ2ZJzAwMrAwirOsouBgZELQjN7M8QyPmJgYGKAgQagJAMScPQJCWZwYNBjsGJL+5fGwMAmw8jOgKpGgYERANRjCKoAeJxjYGBgZoBgGQZGBhBwAfIYwXwWBg0gzQakGRmYGPQYrP7/B/L1GAz+//9/9f8VqHogYGRjgHMYmYAEEwMqYETjA61gYWVj5+Dk4ubh5UOXHJIAAF8iCZ8AAAAAEwUqBSoAlQCVAAB4nF1Ru05bQRDdDQ8DgcTYIDnaFLOZkMZ7oQUJxNWNYmQ7heUIaTdykYtxAR9AgUQN2q8ZoKGkSJsGIRdIfEI+IRIza4iiNDs7s3POmTNLypGqd+lrz1PnJJDC3QbNNv1OSLWzAPek6+uNjLSDB1psZvTKdfv+Cwab0ZQ7agDlPW8pDxlNO4FatKf+0fwKhvv8H/M7GLQ00/TUOgnpIQTmm3FLg+8ZzbrLD/qC1eFiMDCkmKbiLj+mUv63NOdqy7C1kdG8gzMR+ck0QFNrbQSa/tQh1fNxFEuQy6axNpiYsv4kE8GFyXRVU7XM+NrBXbKz6GCDKs2BB9jDVnkMHg4PJhTStyTKLA0R9mKrxAgRkxwKOeXcyf6kQPlIEsa8SUo744a1BsaR18CgNk+z/zybTW1vHcL4WRzBd78ZSzr4yIbaGBFiO2IpgAlEQkZV+YYaz70sBuRS+89AlIDl8Y9/nQi07thEPJe1dQ4xVgh6ftvc8suKu1a5zotCd2+qaqjSKc37Xs6+xwOeHgvDQWPBm8/7/kqB+jwsrjRoDgRDejd6/6K16oirvBc+sifTv7FaAAAAAAEAAf//AA94nI2UP0vDQBjGn7ukCVhE47WNYEWiJmJBl6K9RUTcLo4OLm4Vx+Rb9APILQ76URy66uLQDyBdXS1FEky0jUl7/TMmkDy/573feyBoAxhCQgOaJ81qW0qZvDEgAO2mdIYSVrCGKurYA86JYzvegdWyLc2yLVM7bTmmQ9Jnw9SsVi15JyR54dG7qHiBlME+E/SIx5fkI3SZ4Fww95ZLFpC+F8ZPtE76PH4O6bGoyO9P0gm9aCCY5pCOZH40cBMUUNodsRhYBdxCGu1m/5WKz0uFHuuoYbvY4reA1nJs03Ez/gGPHlP+hxH8lSB9349T2CK/7ibc0Zfvi7d/4nxmGRY2sTPOzMepp7YxFVmYm/46DowvVNPSs2w96Ztmg6UHZSsjA3c6hfZoncf3IZuZMWemOSkKJTMn/oS443G5WDDtRrs5GSY6QunkFnZnOamOz5RUE6isnAaZNWP1Mqg2gPYWaW8qux4u1XbuHs7waonmhaU0FA7sL7JgEmwh1TwjJu4ItEkDQ50l95iZnEdyk2mj24w0pKTXUv4AhhMy3gAAAHicY2BkYGAAYq9FBxfF89t8ZZDnYACBix1b7OG0FwMDcwSrLZDLwcAEEgUAK90JoXicY2BkYGCT+feTgYGDAQSYIxgYGVABPwBGGAKOAAAAeJzjYIAADiBmjGVIYV7E4MW8iOkwhMaNQWoBHaYLZgAAAAAAAAAAAAAMAFIAcACqAOgBGgFWAZoBzAIcAmQCdnicY2BkYGDgZ9BiYGcAASYGRiAWY2BgZIAAAAfUAF4AeJylU8tu00AUPXbSqo0aJFQQFCE0YtFdXNttmjRiEzXqrmyyZeM609aqa5uxk7RdIf6AJX9APwAJIfZ8BD8BazacGU8RUqG8MvLMufee+5h7JwDuO+twUP+e4b3FDm45XYtdNJ2nFjeof25xE6vOG4sXsOZ8tngRbfcq5hIeucriZdx231q8gjX3q8VtDBuvLV5Fq/GFWZzmMqV3JqPGDh469yx2seSMLG5QP7a4iXXnhcULCJ0PFi/igduyeAlP3C2Ll/HYfWXxCkL3o8VtvGzctXgVdxqfsAsFiQgV9wkEDnDOfYwEF9RkOEFOeYiU0hl5GVmSPh61l/xC+Fx941PRV/M66Bm79kp5KkY7wjHtpZEkTx1jZnJqprZVKDDABtfcLI+sq4iaPzP1eIhZ0Smwq2RUyYk4OBfj5EJmJ7kYpvIsyiZSeeJShL7fF+PqPJWdnkdTKlRydFyVQslSqpmceOK4qorBxsZ8PvdKTSzlTGZenDP6yJScsICIBegLCewzccYPo+QoqaK00xP7eUb5u6EW/8r3JvIv3axvwG74nIDudMF+CkraP6BuwL3LXU+nnlLAhcDzQzEslPB7IggHQXfg+2xVEPyskuvZ67z/82Z+Mzf8QRhc88O/PKAbpr9nLigZIzJI4JA+usGFqaA0jYnM456a2B7/Wi361aw6w6nhxrzPj0wdIzXtq6XYxKpojbnXLI8lKCnnkZLiMFeikKrMsygV01J67dYeVazzVKo4qZWiSGXEI86zahpXVDGEbx7CJrb4ELY5zj52qAzCza3udq+/g29Lg/LeAAB4nGNgZgCD/4oMTQxYAAAmBgGmALgB/4WwAY0AS7AIUFixAQGOWbFGBitYIbAQWUuwFFJYIbCAWR2wBitcWACwAyBFsAMrRAGwBCBFsAMrRFmwFCs=') format('woff');
-	font-weight: normal;
-	font-style: normal;
+  font-family: "lcd4";
+  src: url("data:application/x-font-woff;charset=utf-8;base64,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")
+    format("woff");
+  font-weight: normal;
+  font-style: normal;
 }
 
 :root {
   line-height: 1.5;
   font-weight: 400;
-  font-size: 16px;
+  font-size: calc(16px * var(--zoom-factor, 100) / 100);
   color-scheme: dark;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -84,24 +85,42 @@ body {
   font-family: var(--app-font);
 }
 
-.ubuntu { font-family: 'Ubuntu'; }
-.ropa-sans { font-family: 'RopaSans'; }
-.bree-serif { font-family: 'BreeSerif'; }
-.cq-mono { font-family: 'CQMono'; }
-.raleway { font-family: 'Raleway'; }
-.roboto { font-family: 'Roboto'; }
-.lcd4 { font-family: 'lcd4'; }
-.monaco { font-family: 'Monaco'; }
-.monospaced { font-family: 'Courier New', Courier, monospace; }
+.ubuntu {
+  font-family: "Ubuntu";
+}
+.ropa-sans {
+  font-family: "RopaSans";
+}
+.bree-serif {
+  font-family: "BreeSerif";
+}
+.cq-mono {
+  font-family: "CQMono";
+}
+.raleway {
+  font-family: "Raleway";
+}
+.roboto {
+  font-family: "Roboto";
+}
+.lcd4 {
+  font-family: "lcd4";
+}
+.monaco {
+  font-family: "Monaco";
+}
+.monospaced {
+  font-family: "Courier New", Courier, monospace;
+}
 
 @property --percent {
-  syntax: '<percentage>';
+  syntax: "<percentage>";
   inherits: false;
   initial-value: 0%;
 }
 
 @property --color {
-  syntax: '<color>';
+  syntax: "<color>";
   inherits: false;
   initial-value: white;
 }
@@ -111,7 +130,7 @@ body {
     --percent: 0%;
     --color: var(--color1);
   }
-  
+
   100% {
     --percent: 200%;
     --color: var(--color2);
@@ -125,8 +144,11 @@ body {
   --color2: transparent;
 
   background-image: radial-gradient(
-      circle at var(--x, 50%) var(--y, 50%),
-      var(--color, white), var(--color, white) var(--percent, 0%), transparent 0%);
+    circle at var(--x, 50%) var(--y, 50%),
+    var(--color, white),
+    var(--color, white) var(--percent, 0%),
+    transparent 0%
+  );
 
   animation: ripple-effect var(--duration) linear 0s 1;
 }
@@ -137,7 +159,7 @@ body {
 
 mark {
   @apply bg-purple-700 bg-opacity-70 p-1 text-slate-300 inline-flex items-center justify-center my-1;
-  border-radius: .25rem;
+  border-radius: 0.25rem;
 }
 
 .note {
@@ -173,7 +195,7 @@ pre .operator {
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: .7rem;
+  width: 0.7rem;
 }
 
 ::-webkit-scrollbar-track {

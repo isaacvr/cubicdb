@@ -104,7 +104,7 @@
     grid-template-columns: repeat(3, auto);
   }
 
-  :global(input[type="range"]) {
+  :global(.metronome [type="range"]) {
     @apply !bg-gray-800;
   }
 </style>

@@ -401,7 +401,6 @@ function init() {
 	initPhase1();
 	initPhase2();
 	initPhase3();
-	console.log('[kilo] init finished, tt=', performance.now() - tt);
 }
 
 let Phase1Move: any[] = [];
@@ -541,7 +540,6 @@ function solveKiloCubie(cc: KiloCubie) {
 		KiloCubie.KiloMult(kc0, KiloCubie.moveCube[move[0] * 4 + move[1]], kc1);
 		kc0.init(kc1.perm, kc1.twst);
 	}
-	console.log('[kilo] Phase1 in ', +new Date - tt);
 
 	//phase2
 	let doPhase2Move = comb3FullMove.bind(null, Phase2Move);
@@ -566,7 +564,6 @@ function solveKiloCubie(cc: KiloCubie) {
 		KiloCubie.KiloMult(kc0, KiloCubie.moveCube[move[0] * 4 + move[1]], kc1);
 		kc0.init(kc1.perm, kc1.twst);
 	}
-	console.log('[kilo] Phase2 in ', +new Date - tt);
 
 	//phase3
 	let doPhase3Move = comb4FullMove.bind(null, Phase3Move);
@@ -584,8 +581,7 @@ function solveKiloCubie(cc: KiloCubie) {
 	}, function(idx: number[], move: number) {
 		return [doPhase3Move(idx[0], move), doPhase3Move(idx[1], (move + 1) % 3), doPhase3Move(idx[2], (move + 2) % 3)];
 	}, 3, 14);
-	console.log('[kilo] Phase3 in ', +new Date - tt);
-	console.log('[kilo] total length: ', sol1.length + sol2.length + sol3.length);
+	
 	return move2str(Array.prototype.concat(sol1, sol2, sol3));
 }
 

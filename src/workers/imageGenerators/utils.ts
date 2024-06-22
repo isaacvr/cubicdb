@@ -57,6 +57,8 @@ export function drawStickers(
   let limits = [Infinity, -Infinity, Infinity, -Infinity];
   let allStickers = [...stickers, ...sideStickers].filter(st => st.getOrientation().z >= 0);
 
+  if (allStickers.length === 0) return;
+
   for (let i = 0, maxi = allStickers.length; i < maxi; i += 1) {
     let pts = allStickers[i].points;
     pts.forEach(p => {
@@ -79,10 +81,14 @@ export function drawStickers(
     let x2 = map(2, v1.x, v2.x, 0, vdif.x) + offset.x;
     let y = map(0, v1.y, v2.y, 0, vdif.y) + offset.y;
 
+    ctx.strokeStyle = "white";
+    ctx.beginPath();
     ctx.moveTo(x1, H - y);
     ctx.lineTo(x2, H - y);
-    ctx.strokeStyle = "white";
+    ctx.lineWidth = 1;
     ctx.stroke();
+    ctx.fill();
+    ctx.closePath();
     ctx.strokeStyle = "black";
   }
 

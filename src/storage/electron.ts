@@ -1,15 +1,30 @@
-import type { Algorithm, AlgorithmOptions, CubeEvent, IPC, ContestPDFOptions, Session, Sheet, Solve, ITutorial, UpdateCommand, PDFOptions, IStorageInfo, ICacheDB } from "@interfaces";
+import { getByteSize } from "@helpers/object";
+import type {
+  Algorithm,
+  AlgorithmOptions,
+  CubeEvent,
+  IPC,
+  ContestPDFOptions,
+  Session,
+  Sheet,
+  Solve,
+  ITutorial,
+  UpdateCommand,
+  PDFOptions,
+  IStorageInfo,
+  ICacheDB,
+} from "@interfaces";
 
 export class ElectronAdaptor implements IPC {
   private ipc: IPC;
   constructor() {
-    this.ipc = (<any> window).electronAPI as IPC;
+    this.ipc = (<any>window).electronAPI as IPC;
   }
 
   getAlgorithms(options: AlgorithmOptions): Promise<Algorithm[]> {
     return this.ipc.getAlgorithms(options);
   }
-  
+
   getAlgorithm(options: AlgorithmOptions): Promise<Algorithm | null> {
     return this.ipc.getAlgorithm(options);
   }
@@ -142,7 +157,7 @@ export class ElectronAdaptor implements IPC {
     return this.ipc.generateContestPDF(args);
   }
 
-  zipPDF(s: { name: string, files: Sheet[]}) {
+  zipPDF(s: { name: string; files: Sheet[] }) {
     return this.ipc.zipPDF(s);
   }
 
@@ -157,7 +172,7 @@ export class ElectronAdaptor implements IPC {
   update(cmd: UpdateCommand) {
     return this.ipc.update(cmd);
   }
-  
+
   cancelUpdate() {
     return this.ipc.cancelUpdate();
   }
@@ -195,18 +210,38 @@ export class ElectronAdaptor implements IPC {
   }
 
   clearCache(db: ICacheDB) {
-    // Implement this
+    switch (db) {
+      case "Cache":
+      case "Solves":
+      case "Sessions": {
+        return this.ipc.clearCache(db);
+      }
+    }
+
     return Promise.resolve();
   }
 
-  getStorageInfo(): Promise<IStorageInfo> {
-    return Promise.resolve({
-      algorithms: 0,
-      cache: 0,
-      sessions: 0,
-      solves: 0,
-      tutorials: 0
-    });
+  // For IPC only
+  algorithmsStorage() {}
+  cacheStorage() {}
+  sessionsStorage() {}
+  solvesStorage() {}
+  tutorialsStorage() {}
+
+  async getStorageInfo(): Promise<IStorageInfo> {
+    let algorithms = await this.ipc.algorithmsStorage();
+    let cache = await this.ipc.cacheStorage();
+    let sessions = await this.ipc.sessionsStorage();
+    let solves = await this.ipc.solvesStorage();
+    let tutorials = await this.ipc.tutorialsStorage();
+
+    return {
+      algorithms,
+      cache,
+      sessions,
+      solves,
+      tutorials,
+    };
   }
 
   getAllDisplays() {

@@ -8,50 +8,80 @@
   import { timer } from "@helpers/timer";
   import type { Display } from "electron";
   import { CubeDBICON } from "@constants";
-  import { Button, Card, Heading, Span, Spinner, TabItem, Table, TableBody, TableBodyCell, TableBodyRow, Tabs } from "flowbite-svelte";
+  import {
+    Button,
+    Card,
+    Heading,
+    Span,
+    Spinner,
+    StepIndicator,
+    TabItem,
+    Table,
+    TableBody,
+    TableBodyCell,
+    TableBodyRow,
+    Tabs,
+    Tooltip,
+  } from "flowbite-svelte";
   import { localLang } from "@stores/language.service";
-  
-  // ICONS
-  import ScreenIcon from '@icons/Monitor.svelte';
-  import TextIcon from '@icons/Text.svelte';
-  import UpdateIcon from '@icons/Update.svelte';
-  import StorageIcon from '@icons/Harddisk.svelte';
-  import type { ICacheDB, IStorageInfo } from "@interfaces";
+  import type { ICacheDB, IStorageInfo, Language } from "@interfaces";
   import { byteToString } from "@helpers/math";
+
+  // ICONS
+  import ScreenIcon from "@icons/Monitor.svelte";
+  import TextIcon from "@icons/Text.svelte";
+  import UpdateIcon from "@icons/Update.svelte";
+  import StorageIcon from "@icons/Harddisk.svelte";
+  import CleanIcon from "@icons/DeleteAlert.svelte";
 
   const notService = NotificationService.getInstance();
 
   let dataService = DataService.getInstance();
 
   const FONTS = [
-    { name: 'Ubuntu', value: 'Ubuntu' },
-    { name: 'Ropa Sans', value: 'RopaSans' },
-    { name: 'Bree Serif', value: 'BreeSerif' },
-    { name: 'CQ Mono', value: 'CQMono' },
-    { name: 'Raleway', value: 'Raleway' },
-    { name: 'Roboto', value: 'Roboto' },
-    { name: 'LCD4', value: 'lcd4' },
-    { name: 'Monaco', value: 'Monaco' },
+    { name: "Ubuntu", value: "Ubuntu" },
+    { name: "Ropa Sans", value: "RopaSans" },
+    { name: "Bree Serif", value: "BreeSerif" },
+    { name: "CQ Mono", value: "CQMono" },
+    { name: "Raleway", value: "Raleway" },
+    { name: "Roboto", value: "Roboto" },
+    { name: "LCD4", value: "lcd4" },
+    { name: "Monaco", value: "Monaco" },
   ];
 
-  const DEFAULT_APP_FONT = 'Ubuntu';
-  const DEFAULT_TIMER_FONT = 'Ubuntu';
+  const DEFAULT_APP_FONT = "Ubuntu";
+  const DEFAULT_TIMER_FONT = "Ubuntu";
+  const DEFAULT_ZOOM_FACTOR = 100;
+  const tabActiveClass = "text-primary-400 p-4 border-b-2 border-b-primary-400";
+  const ZOOM_FACTORS = [25, 50, 75, 100, 125, 150, 175, 200];
 
-  let appFont = localStorage.getItem('app-font') || DEFAULT_APP_FONT;
-  let timerFont = localStorage.getItem('timer-font') || DEFAULT_TIMER_FONT;
+  let appFont = localStorage.getItem("app-font") || DEFAULT_APP_FONT;
+  let timerFont = localStorage.getItem("timer-font") || DEFAULT_TIMER_FONT;
+  let zoomFactor: number = ~~(localStorage.getItem("zoom-factor") || DEFAULT_ZOOM_FACTOR);
+  let initialZoomFactor = zoomFactor;
   let canCheckUpdate = true;
   let dTime = 10587;
   let itv: NodeJS.Timeout;
   let displays: Display[] = [];
   let storage: IStorageInfo = {
-    algorithms: 0, cache: 0, sessions: 0, solves: 0, tutorials: 0
+    algorithms: 0,
+    cache: 0,
+    sessions: 0,
+    solves: 0,
+    tutorials: 0,
   };
-  
+
+  let storeList: any[] = [];
+
   function save() {
-    localStorage.setItem('app-font', appFont);
-    localStorage.setItem('timer-font', timerFont);
-    document.documentElement.style.setProperty('--app-font', appFont);
-    document.documentElement.style.setProperty('--timer-font', timerFont);
+    localStorage.setItem("app-font", appFont);
+    localStorage.setItem("timer-font", timerFont);
+    localStorage.setItem("zoom-factor", "" + zoomFactor);
+    document.documentElement.style.setProperty("--app-font", appFont);
+    document.documentElement.style.setProperty("--timer-font", timerFont);
+    document.documentElement.style.setProperty("--zoom-factor", "" + zoomFactor);
+
+    initialZoomFactor = zoomFactor;
 
     notService.addNotification({
       key: randomUUID(),
@@ -60,91 +90,96 @@
       timeout: 2000,
       icon: CubeDBICON,
     });
-
   }
 
   function reset() {
     appFont = DEFAULT_APP_FONT;
     timerFont = DEFAULT_TIMER_FONT;
+    zoomFactor = DEFAULT_ZOOM_FACTOR;
     save();
   }
 
   function checkUpdate() {
     canCheckUpdate = false;
-    dataService.update('check').then(res => {
-      if ( !res ) return;
+    dataService
+      .update("check")
+      .then(res => {
+        if (!res) return;
 
-      let p1 = $version.split(".").map(Number);
-      let p2 = res.split(".").map(Number);
+        let p1 = $version.split(".").map(Number);
+        let p2 = res.split(".").map(Number);
 
-      let cmp = (a: number[], b: number[]) => {
-        if ( a.length < b.length ) return -1;
-        if ( a.length > b.length ) return 1;
+        let cmp = (a: number[], b: number[]) => {
+          if (a.length < b.length) return -1;
+          if (a.length > b.length) return 1;
 
-        for (let i = 0, maxi = a.length; i < maxi; i += 1){
-          if ( a[i] < b[i] ) return -1;
-          if ( a[i] > b[i] ) return 1;
+          for (let i = 0, maxi = a.length; i < maxi; i += 1) {
+            if (a[i] < b[i]) return -1;
+            if (a[i] > b[i]) return 1;
+          }
+
+          return 0;
+        };
+
+        if (cmp(p2, p1) <= 0) {
+          notService.addNotification({
+            header: $localLang.SETTINGS.alreadyUpdated,
+            text: $localLang.SETTINGS.alreadyUpdatedText,
+            fixed: true,
+            actions: [{ text: $localLang.global.accept, callback: () => {} }],
+            key: randomUUID(),
+            icon: CubeDBICON,
+          });
+        } else {
+          notService.addNotification({
+            header: `${$localLang.SETTINGS.updateAvailable} (${res})`,
+            text: $localLang.SETTINGS.updateAvailableText,
+            fixed: true,
+            actions: [
+              { text: $localLang.global.cancel, callback: () => {}, color: "alternative" },
+              { text: $localLang.global.update, callback: updateNow, color: "purple" },
+            ],
+            key: randomUUID(),
+            icon: CubeDBICON,
+          });
         }
-
-        return 0;
-      };
-
-      if ( cmp(p2, p1) <= 0 ) {
+      })
+      .catch(err => {
         notService.addNotification({
-          header: $localLang.SETTINGS.alreadyUpdated,
-          text: $localLang.SETTINGS.alreadyUpdatedText,
-          fixed: true,
-          actions: [
-            { text: $localLang.global.accept, callback: () => {} }
-          ],
+          header: $localLang.SETTINGS.updateError,
+          text: $localLang.SETTINGS.updateErrorText,
+          timeout: 2000,
           key: randomUUID(),
           icon: CubeDBICON,
         });
-      } else {
-        notService.addNotification({
-          header: `${ $localLang.SETTINGS.updateAvailable } (${ res })`,
-          text: $localLang.SETTINGS.updateAvailableText,
-          fixed: true,
-          actions: [
-            { text: $localLang.global.cancel, callback: () => {}, color: 'alternative' },
-            { text: $localLang.global.update, callback: updateNow, color: 'purple' },
-          ],
-          key: randomUUID(),
-          icon: CubeDBICON,
-        });
-      }
-    }).catch((err) => {
-      notService.addNotification({
-        header: $localLang.SETTINGS.updateError,
-        text: $localLang.SETTINGS.updateErrorText,
-        timeout: 2000,
-        key: randomUUID(),
-        icon: CubeDBICON,
-      });
 
-      console.dir(err);
-    }).finally(() => canCheckUpdate = true);
+        console.dir(err);
+      })
+      .finally(() => (canCheckUpdate = true));
   }
 
   function updateNow() {
-    dataService.update('download').then(() => {
-      console.log('Downloaded');
-    })
-    .catch(err => {
-      console.log('update error: ');
-      console.dir(err);
-    });
+    dataService
+      .update("download")
+      .then(() => {
+        console.log("Downloaded");
+      })
+      .catch(err => {
+        console.log("update error: ");
+        console.dir(err);
+      });
   }
 
   function updateDisplays() {
     dataService.getAllDisplays().then(res => {
       let cnt = 1;
 
-      displays = res.sort((a, b) => a.label < b.label ? -1 : 1).map(s => {
-        s.label = s.label || ($localLang.SETTINGS.screen + ' ' + (cnt++));
-        return s;
-      });
-
+      displays = res
+        .sort((a, b) => (a.label < b.label ? -1 : 1))
+        .map(s => {
+          s.label = s.label || $localLang.SETTINGS.screen + " " + cnt++;
+          return s;
+        });
     });
   }
 
@@ -155,6 +190,14 @@
   async function updateStorage() {
     try {
       storage = await dataService.getStorageInfo();
+
+      storeList = [
+        { name: "images", clean: true, length: storage.cache, db: "Cache" },
+        { name: "sessions", clean: true, length: storage.sessions, db: "Sessions" },
+        { name: "solves", clean: true, length: storage.solves, db: "Solves" },
+        { name: "algorithms", clean: false, length: storage.algorithms, db: "Algorithms" },
+        { name: "tutorials", clean: false, length: storage.tutorials, db: "Tutorials" },
+      ].filter(s => s.length);
     } catch {}
   }
 
@@ -162,7 +205,15 @@
     try {
       await dataService.clearCache(db);
       await updateStorage();
-    } catch{}
+    } catch {}
+  }
+
+  function getName(name: string) {
+    return $localLang.global[name as keyof Language["global"]];
+  }
+
+  function updateZoom() {
+    document.documentElement.style.setProperty("--zoom-factor", "" + zoomFactor);
   }
 
   onMount(() => {
@@ -172,86 +223,115 @@
     itv = setInterval(() => {
       dTime = Math.random() * 20000;
     }, 2000);
-  });    
+  });
 
   onDestroy(() => {
     clearInterval(itv);
+    document.documentElement.style.setProperty("--zoom-factor", "" + initialZoomFactor);
   });
 
   $: $localLang && updateDisplays();
 </script>
 
 <Card class="mx-auto w-full max-w-4xl mt-8">
-  <Heading tag="h2" class="text-center text-3xl">{ $localLang.SETTINGS.title }</Heading>
-  
+  <Heading tag="h2" class="text-center text-3xl">{$localLang.SETTINGS.title}</Heading>
+
   <Tabs divider>
-    <TabItem open activeClasses="text-yellow-500 p-4 border-b-2 border-b-yellow-500">
+    <TabItem open activeClasses={tabActiveClass}>
       <div slot="title" class="flex items-center gap-2">
-        <TextIcon size="1.2rem"/> { $localLang.SETTINGS.appFont }
+        <TextIcon size="1.2rem" />
+        {$localLang.SETTINGS.appFont}
       </div>
 
       <div class="flex flex-wrap justify-around">
+        <!-- App font -->
         <div>
-          <!-- App font -->
-          <Heading tag="h3" class="text-center text-green-300 text-2xl mb-4 mt-4">{ $localLang.SETTINGS.appFont }</Heading>
+          <Heading tag="h3" class="text-center text-green-300 text-2xl mb-4 mt-4">
+            {$localLang.SETTINGS.appFont}
+          </Heading>
           <div class="flex items-center justify-center gap-4">
-            <Select items={ FONTS } bind:value={ appFont } label={(e) => e.name}/>
+            <Select items={FONTS} bind:value={appFont} label={e => e.name} />
             <p
-              style="font-family: { appFont };"
-              class="text-base bg-black bg-opacity-60 p-2 rounded-md text-gray-300">R U R F Dw2 L'</p>
+              style="font-family: {appFont};"
+              class="text-base bg-black bg-opacity-60 p-2 rounded-md text-gray-300"
+            >
+              R U R F Dw2 L'
+            </p>
           </div>
         </div>
-  
+
+        <!-- Timer font -->
         <div>
-          <!-- Timer font -->
-          <Heading tag="h3" class="text-center text-blue-300 text-2xl mb-4 mt-4">{ $localLang.SETTINGS.timerFont }</Heading>
+          <Heading tag="h3" class="text-center text-blue-300 text-2xl mb-4 mt-4">
+            {$localLang.SETTINGS.timerFont}
+          </Heading>
           <div class="flex items-center justify-center gap-4">
-            <Select items={ FONTS } bind:value={ timerFont } label={(e) => e.name}/>
+            <Select items={FONTS} bind:value={timerFont} label={e => e.name} />
             <p
-              style="font-family: { timerFont };"
-              class="bg-black bg-opacity-60 p-2 rounded-md text-gray-300 text-4xl">{ timer(dTime, true) }</p>
+              style="font-family: {timerFont};"
+              class="bg-black bg-opacity-60 p-2 rounded-md text-gray-300 text-4xl"
+            >
+              {timer(dTime, true)}
+            </p>
           </div>
+        </div>
+
+        <!-- Zoom Factor -->
+        <div>
+          <Heading tag="h3" class="text-center text-blue-300 text-2xl mb-4 mt-4">
+            {$localLang.SETTINGS.zoomFactor}
+          </Heading>
+
+          <Select
+            bind:value={zoomFactor}
+            items={ZOOM_FACTORS}
+            transform={e => e}
+            label={e => e.toString()}
+            onChange={updateZoom}
+          />
         </div>
       </div>
     </TabItem>
 
-    {#if dataService.isElectron }
-      <TabItem activeClasses="text-yellow-500 p-4 border-b-2 border-b-yellow-500">
+    {#if dataService.isElectron}
+      <TabItem activeClasses={tabActiveClass}>
         <div slot="title" class="flex items-center gap-2">
-          <ScreenIcon size="1.2rem"/> { $localLang.SETTINGS.screen }
+          <ScreenIcon size="1.2rem" />
+          {$localLang.SETTINGS.screen}
         </div>
 
         <!-- Displays -->
         <div class="flex flex-col items-center justify-center gap-4">
           <div class="flex justify-center gap-2">
             {#each displays as display}
-              <Button color="alternative" class="gap-2" on:click={ () => useDisplay(display.id) }>
-                <ScreenIcon size="1.2rem"/>
-                { display.label }
+              <Button color="alternative" class="gap-2" on:click={() => useDisplay(display.id)}>
+                <ScreenIcon size="1.2rem" />
+                {display.label}
               </Button>
             {/each}
           </div>
-      
+
           <div>
-            <Button on:click={ updateDisplays }>{ $localLang.global.update }</Button>
+            <Button on:click={updateDisplays}>{$localLang.global.update}</Button>
           </div>
         </div>
       </TabItem>
 
-      <TabItem activeClasses="text-yellow-500 p-4 border-b-2 border-b-yellow-500">
+      <TabItem activeClasses={tabActiveClass}>
         <div slot="title" class="flex items-center gap-2">
-          <UpdateIcon size="1.2rem"/> { $localLang.SETTINGS.update }
+          <UpdateIcon size="1.2rem" />
+          {$localLang.SETTINGS.update}
         </div>
 
         <!-- Updates -->
         <div class="flex items-center justify-center gap-4">
           <div class="flex items-center justify-center gap-2">
-            { $localLang.SETTINGS.version }: <mark>{ $version }</mark>
-            <Button on:click={ () => canCheckUpdate && checkUpdate() }>
+            {$localLang.SETTINGS.version}: <mark>{$version}</mark>
+            <Button on:click={() => canCheckUpdate && checkUpdate()}>
               {#if !canCheckUpdate}
-                <Spinner size="4" color="white"/>
+                <Spinner size="4" color="white" />
               {:else}
-                { $localLang.SETTINGS.checkUpdate }
+                {$localLang.SETTINGS.checkUpdate}
               {/if}
             </Button>
           </div>
@@ -259,32 +339,32 @@
       </TabItem>
     {/if}
 
-   <TabItem activeClasses="text-yellow-500 p-4 border-b-2 border-b-yellow-500">
+    <TabItem activeClasses={tabActiveClass}>
       <div slot="title" class="flex items-center gap-2">
-        <StorageIcon size="1.2rem"/> { $localLang.global.storage }
+        <StorageIcon size="1.2rem" />
+        {$localLang.global.storage}
       </div>
 
       <Span class="flex justify-center text-lg">
-        { $localLang.global.storage }: { byteToString( Object.entries(storage).reduce((acc, e) => acc + e[1], 0) ) }
+        {$localLang.global.storage}: {byteToString(
+          Object.entries(storage).reduce((acc, e) => acc + e[1], 0)
+        )}
       </Span>
 
       <Table striped shadow>
         <TableBody>
-          {#each [
-            { name: $localLang.global.images, length: storage.cache, db: 'Cache' },
-            { name: $localLang.global.algorithms, length: storage.algorithms, db: 'Algorithms' },
-            { name: $localLang.global.sessions, length: storage.sessions, db: 'Sessions' },
-            { name: $localLang.global.solves, length: storage.solves, db: 'Solves' },
-            { name: $localLang.global.tutorials, length: storage.tutorials, db: 'Tutorials' },
-          ].filter(s => s.length) as st}
+          {#each storeList as st}
             <TableBodyRow>
-              <TableBodyCell>{ st.name }</TableBodyCell>
-              <TableBodyCell>{ byteToString( st.length ) }</TableBodyCell>
+              <TableBodyCell>{getName(st.name)}</TableBodyCell>
+              <TableBodyCell>{byteToString(st.length)}</TableBodyCell>
               <TableBodyCell>
-                <Button on:click={ () => {
-                    // @ts-ignore
-                    clearCache(st.db)
-                  }} color="alternative"> { $localLang.global.clear } </Button>
+                {#if st.clean}
+                  <Button on:click={() => clearCache(st.db)} color="alternative" shadow>
+                    <CleanIcon size="1.2rem" />
+                  </Button>
+
+                  <Tooltip placement="left">{$localLang.global.clear}</Tooltip>
+                {/if}
               </TableBodyCell>
             </TableBodyRow>
           {/each}
@@ -297,8 +377,8 @@
 
   <!-- Actions -->
   <div class="actions flex gap-4 items-center justify-center mt-8">
-    <Button color="green" on:click={ save }>{ $localLang.global.save }</Button>
-    <Button color="purple" on:click={ reset }>{ $localLang.global.reset }</Button>
+    <Button color="green" on:click={save}>{$localLang.global.save}</Button>
+    <Button color="purple" on:click={reset}>{$localLang.global.reset}</Button>
   </div>
 </Card>
 

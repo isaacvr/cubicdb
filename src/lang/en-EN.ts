@@ -100,6 +100,7 @@ export const English: Language = {
     appFont: "General font",
     timerFont: "Timer font",
     screen: "Screen",
+    zoomFactor: "Zoom factor",
 
     // Update
     update: "Update",

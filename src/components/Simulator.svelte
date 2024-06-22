@@ -449,8 +449,7 @@
   }
 
   function scramble() {
-    // resetPuzzle(undefined, true);
-    resetPuzzle('BRUUUUULLUFFRRRRRRLUFFFFFFFDDDDDDDDDRBBLLLLLLRUUBBBBBB');
+    resetPuzzle(undefined, true);
   }
 
   let piece: Intersection | null = null;
@@ -609,7 +608,6 @@
     let pos = mv.indexOf(m[0]);
 
     if (pos < 0) {
-      console.log("Invalid move: ", m);
       return false;
     }
 
@@ -856,7 +854,7 @@
 
   /// GUI
   function setOrder() {
-    hasOrder = puzzles.find((p) => p.value === selectedPuzzle)!.order;
+    hasOrder = !!puzzles.find((p) => p.value === selectedPuzzle)?.order;
   }
 
   setOrder();

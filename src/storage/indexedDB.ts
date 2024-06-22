@@ -466,6 +466,13 @@ export class IndexedDBAdaptor implements IPC {
     await Promise.all([...allCache.map(c => tx.store.delete(c._id)), tx.done]);
   }
 
+  // For IPC only
+  algorithmsStorage() {}
+  cacheStorage() {}
+  sessionsStorage() {}
+  solvesStorage() {}
+  tutorialsStorage() { }
+  
   async getStorageInfo(): Promise<IStorageInfo> {
     await this.init();
     if (!this.DB) return { algorithms: 0, cache: 0, sessions: 0, solves: 0, tutorials: 0 };
@@ -475,11 +482,11 @@ export class IndexedDBAdaptor implements IPC {
     let solves = await this.DB.getAll(SolveStore);
 
     return {
-      algorithms: 0,
+      algorithms: getByteSize(algs),
       cache: getByteSize(cache),
       sessions: getByteSize(sessions),
       solves: getByteSize(solves),
-      tutorials: 0,
+      tutorials: getByteSize(tuts),
     };
   }
 

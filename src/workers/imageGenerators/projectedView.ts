@@ -196,17 +196,16 @@ export function projectedView(cube: Puzzle, DIM: number, format: "raster" | "svg
         sideStk["U"].push(newst.rotate(CENTER, RIGHT, PI_2).add(off1));
       } else if (mc.y > 0.2) {
         if (!(st.color != "x" || (st.color === "x" && uv.y > 0))) continue;
-
         let newst = UP.dot(uv) < EPS ? getRoundedSQ1Sticker(cube, st, SQ1_A1, SQ1_A2, 0.5) : st;
         sideStk["U1"].push(newst.rotate(CENTER, RIGHT, PI_2).add(off2));
       } else if (mc.y < -0.6) {
         let newst = DOWN.dot(uv) < EPS ? getRoundedSQ1Sticker(cube, st, SQ1_A1, SQ1_A2) : st;
-        sideStk["D"].push(newst.rotate(CENTER, RIGHT, PI_2).add(off1.rotate(CENTER, FRONT, PI)));
+        sideStk["D"].push(newst.rotate(CENTER, RIGHT, -PI_2).add(off1.rotate(CENTER, FRONT, PI)));
       } else if (mc.y < -0.2) {
         if (!(st.color != "x" || (st.color === "x" && uv.y < 0))) continue;
 
         let newst = DOWN.dot(uv) < EPS ? getRoundedSQ1Sticker(cube, st, SQ1_A1, SQ1_A2, 0.5) : st;
-        sideStk["D1"].push(newst.rotate(CENTER, RIGHT, PI_2).add(off2.rotate(CENTER, FRONT, PI)));
+        sideStk["D1"].push(newst.rotate(CENTER, RIGHT, -PI_2).add(off2.rotate(CENTER, FRONT, PI)));
       } //*/
 
       continue;

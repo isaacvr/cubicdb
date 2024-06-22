@@ -374,11 +374,11 @@ export class ScrambleParser {
   }
 
   static parseNNNString(scramble: string): string {
-    return new Interpreter().input(scramble) as string;
+    return new Interpreter(false).input(scramble) as string;
   }
 
   static parsePyraminxString(scramble: string): string {
-    return new Interpreter(true, "pyraminx").input(scramble) as string;
+    return new Interpreter(false, "pyraminx").input(scramble) as string;
   }
 
   static parseMisc(scramble: string, mode: string): string[] {

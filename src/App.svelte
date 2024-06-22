@@ -100,6 +100,7 @@
   <Frame />
   <Route path="/" component={ Home }/>
   <Route path="/tutorials" let:params> <Lazy component={ import('@components/tutorials/Tutorials.svelte') } {params}/> </Route>
+  <Route path="/tutorials/:puzzle" let:params> <Lazy component={ import('@components/tutorials/TutorialView.svelte') } {params}/> </Route>
   <Route path="/tutorials/:puzzle/:name" let:params> <Lazy component={ import('@components/tutorials/TutorialView.svelte') } {params}/> </Route>
   <Route path="/algorithms/*" let:params> <Lazy component={ import('@components/Algorithms.svelte') } {params}/> </Route>
   <Route path="/timer" let:params> <Lazy component={ import('@components/timer/Timer.svelte') } {params}/> </Route>

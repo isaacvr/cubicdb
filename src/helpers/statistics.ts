@@ -443,7 +443,7 @@ export function computeMoves(
     if (metric === "HTM") {
       v = isSlice ? 2 : isNormal ? 1 : 0;
     } else if (metric === "OBTM") {
-      v = isNormal || isBlock ? 1 : 0;
+      v = isNormal || isBlock ? 1 : isSlice ? 2 : 0;
     } else if (metric === "QTM") {
       v = isSlice ? (isDouble ? 4 : 2) : isNormal ? (isDouble ? 2 : 1) : 0;
     } else if (metric === "ETM") {

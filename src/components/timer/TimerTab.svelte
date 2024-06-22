@@ -23,7 +23,7 @@
   import Select from "@components/material/Select.svelte";
 
   /// Helpers
-  import { sTimer, timer, timerToMilli } from "@helpers/timer";
+  import { adjustMillis, sTimer, timer, timerToMilli } from "@helpers/timer";
   import { createEventDispatcher, onDestroy, onMount } from "svelte";
   import { DataService } from "@stores/data.service";
   import { NotificationService } from "@stores/notification.service";
@@ -220,7 +220,7 @@
     ls.prob = prob;
     ls.session = $session._id;
     ls.penalty = p || Penalty.NONE;
-    ls.time = t || $time;
+    ls.time = adjustMillis(t || $time, false);
     ls._id = randomUUID();
 
     $lastSolve = ls;
@@ -519,20 +519,22 @@
   class:smart_cube={$session.settings.input === "GAN Cube"}
 >
   <!-- Options -->
-  <TimerOptions
-    {battle}
-    {bluetoothBattery}
-    {context}
-    {bluetoothHardware}
-    {bluetoothStatus}
-    {deviceID}
-    {deviceList}
-    {initInputHandler}
-    {inputContext}
-    {inputMethod}
-    {enableKeyboard}
-    {timerOnly}
-  />
+  {#if !scrambleOnly}
+    <TimerOptions
+      {battle}
+      {bluetoothBattery}
+      {context}
+      {bluetoothHardware}
+      {bluetoothStatus}
+      {deviceID}
+      {deviceList}
+      {initInputHandler}
+      {inputContext}
+      {inputMethod}
+      {enableKeyboard}
+      {timerOnly}
+    />
+  {/if}
 
   <!-- Timer -->
   <div id="timer" class="text-9xl grid place-items-center w-full h-full">
@@ -545,15 +547,15 @@
               : timer(timerToMilli(+timeStr), true, true)
             : ""}
         </div>
+
         <Input
           bind:value={timeStr}
           stopKeyupPropagation
           on:UENTER={addTimeString}
           class="w-full max-md:w-[min(90%,20rem)] mx-auto h-36 text-center {validTimeStr(timeStr)
             ? ''
-            : 'border-red-400 border-2'}
-            focus-within:shadow-black"
-          inpClass="text-center"
+            : 'border-red-400 border-2'}"
+          inpClass="text-center text-7xl outline-none"
         />
       </div>
     {:else}
@@ -798,7 +800,7 @@
               <ChevronLeftSolid class="pointer-events-none" />
             </Button>
 
-            <PuzzleImage src={$preview[selectedImg].src || ''} />
+            <PuzzleImage src={$preview[selectedImg].src || ""} />
 
             <Button
               color="none"
@@ -816,30 +818,30 @@
 
   <!-- Scramble -->
   <div id="scramble" class="transition-all duration-300 max-md:text-xs max-md:leading-5">
-    <pre class="scramble-content" class:hide={$isRunning} class:battle>
-      
-      {#if $inputMethod instanceof GANInput}
-        {#if $recoverySequence}
-          {"=> " + $recoverySequence}
-        {:else if $sequenceParts.length < 3}
-          <TextPlaceholder
-            size="xl"
-            class="w-full"
-            divClass="grid gap-2 place-items-center max-h-12 overflow-hidden animate-pulse"
-          />
-        {:else}
-          {$sequenceParts[0]} <mark>{$sequenceParts[1]}</mark> {$sequenceParts[2]}
-        {/if}
-      {:else if !$scramble}
+    {#if $inputMethod instanceof GANInput}
+      {#if $recoverySequence}
+        <pre class="scramble-content" class:hide={$isRunning} class:battle>{"=> " +
+            $recoverySequence}</pre>
+      {:else if $sequenceParts.length < 3}
         <TextPlaceholder
           size="xl"
-          class="w-full"
+          class="w-full mx-auto"
           divClass="grid gap-2 place-items-center max-h-12 overflow-hidden animate-pulse"
         />
       {:else}
-        {$scramble}
+        <pre class="scramble-content" class:hide={$isRunning} class:battle>
+          {$sequenceParts[0]} <mark>{$sequenceParts[1]}</mark> {$sequenceParts[2]}
+        </pre>
       {/if}
-    </pre>
+    {:else if !$scramble}
+      <TextPlaceholder
+        size="xl"
+        class="w-full mx-auto"
+        divClass="grid gap-2 place-items-center max-h-12 overflow-hidden animate-pulse"
+      />
+    {:else}
+      <pre class="scramble-content" class:hide={$isRunning} class:battle>{$scramble}</pre>
+    {/if}
   </div>
 </div>
 
@@ -874,6 +876,7 @@
   .timer-tab {
     display: grid;
     height: 100%;
+    overflow: hidden;
     grid-template-columns: auto auto 1fr auto;
     grid-template-rows: minmax(0rem, 1fr) 1fr min-content;
     grid-template-areas:
@@ -887,6 +890,27 @@
       "options scramble scramble scramble"
       "options image image image"
       "options leftStats timer rightStats";
+  }
+
+  .timer-tab.timerOnly {
+    grid-template-columns: auto 1fr;
+    grid-template-rows: 1fr;
+    grid-template-areas: "options timer";
+  }
+
+  .timer-tab.scrambleOnly {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr;
+    grid-template-areas: "scramble";
+  }
+
+  .timer-tab.scrambleOnly #preview-container,
+  .timer-tab.scrambleOnly #timer {
+    display: none;
+  }
+
+  .timer-tab.timerOnly #scramble {
+    display: none;
   }
 
   #left-stats {

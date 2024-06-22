@@ -114,8 +114,9 @@
       </ul>
 
       {#if rec.case}
-        <div class="text-center">
-          <PuzzleImage src={images[pos]} />
+        <div class="flex items-center justify-center gap-4">
+          <h3 class="text-3xl text-gray-300">{rec.case.name}</h3>
+          <PuzzleImage src={images[pos]} class="!w-48 !h-48"/>
         </div>
       {/if}
 

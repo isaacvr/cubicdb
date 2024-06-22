@@ -38,7 +38,7 @@ export const Spanish: Language = {
     session: "Sesión",
     sessions: "Sesiones",
     solves: "Tiempos",
-    tutorials: "Tutorials",
+    tutorials: "Tutoriales",
     connected: "Conectado",
     summary: "Resumen",
     time: "Tiempo",
@@ -100,6 +100,7 @@ export const Spanish: Language = {
     appFont: "Fuente general",
     timerFont: "Fuente del timer",
     screen: "Pantalla",
+    zoomFactor: "Factor de zoom",
 
     // Update
     update: "Actualización",

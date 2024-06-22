@@ -186,16 +186,16 @@
       component: MetronomeTool,
       handler: () => {},
     },
-    {
-      id: "stackmat",
-      text: "Stackmat",
-      icon: HandIcon,
-      iconParams: {
-        class: " m-1 pointer-events-none text-blue-300 ",
-      },
-      component: StackmatTool,
-      handler: () => {},
-    },
+    // {
+    //   id: "stackmat",
+    //   text: "Stackmat",
+    //   icon: HandIcon,
+    //   iconParams: {
+    //     class: " m-1 pointer-events-none text-blue-300 ",
+    //   },
+    //   component: StackmatTool,
+    //   handler: () => {},
+    // },
     {
       id: "solver",
       text: "Solver",
@@ -400,7 +400,7 @@
 
 <svelte:window on:keydown={keyDown} />
 
-<ul class="timer-options-container border-r border-r-gray-700 pt-2">
+<ul class="timer-options-container border-r border-r-gray-700 pt-2" class:timerOnly>
   <li>
     <Tooltip position="right" text={$localLang.TIMER.manageSessions}>
       <Button
@@ -415,8 +415,8 @@
     </Tooltip>
   </li>
 
-  {#each options.filter((_, p) => (!battle ? true : p === 3 || p === 5)) as option, i}
-    <li>
+  {#each options.filter((_, p) => (!battle ? true : p === 3 || p === 5)) as option}
+    <li class:timerOnly={option.icon === Settings}>
       <Tooltip class="cursor-pointer" position="right" text={option.text} hasKeybinding>
         <Button
           aria-label={option.text}
@@ -530,6 +530,7 @@
   {/if}
 
   {#if type === "settings"}
+    <!-- Input Method -->
     {#if !(timerOnly || $session.settings.sessionType === "multi-step")}
       <section class="flex gap-4 items-center">
         {$localLang.TIMER.inputMethod}: <Select
@@ -540,6 +541,7 @@
       </section>
     {/if}
 
+    <!-- Steps -->
     {#if $session.settings.sessionType === "multi-step"}
       <section
         class="flex w-max px-2 py-1 rounded-md shadow-md mx-auto my-2 border border-gray-600 cursor-default"
@@ -559,6 +561,7 @@
       </Popover>
     {/if}
 
+    <!-- External Timer -->
     {#if modalData.settings.input === "ExternalTimer"}
       <section class="bg-white bg-opacity-10 p-2 shadow-md rounded-md">
         <ul class="mt-4">
@@ -580,6 +583,7 @@
       </section>
     {/if}
 
+    <!-- Stackmat selector -->
     {#if modalData.settings.input === "StackMat"}
       <section>
         {$localLang.TIMER.device}: <Select
@@ -592,6 +596,7 @@
       </section>
     {/if}
 
+    <!-- Inspections, Prevention, Elapsed time -->
     {#if modalData.settings.input === "Keyboard" || modalData.settings.input === "ExternalTimer"}
       <section class="flex flex-wrap gap-4 items-center">
         <Checkbox
@@ -603,7 +608,7 @@
 
         {#if modalData.settings.hasInspection}
           <Range
-            class="dark:w-52 mx-auto"
+            class="w-52 mx-auto"
             bind:value={modalData.settings.inspection}
             min={5}
             max={60}
@@ -631,6 +636,7 @@
       </section>
     {/if}
 
+    <!-- Search Bluetooth -->
     {#if modalData.settings.input === "GAN Cube" || modalData.settings.input === "QY-Timer"}
       <section class="bg-white bg-opacity-10 p-2 shadow-md rounded-md">
         <div class="flex justify-center gap-2">
@@ -666,6 +672,7 @@
       </section>
     {/if}
 
+    <!-- Show back face -->
     {#if modalData.settings.input === "GAN Cube"}
       <section>
         <Checkbox
@@ -677,6 +684,7 @@
       </section>
     {/if}
 
+    <!-- Scramble after cancel -->
     {#if modalData.settings.input != "Manual" && !timerOnly}
       <section class="mt-2">
         <Checkbox
@@ -687,6 +695,7 @@
       </section>
     {/if}
 
+    <!-- Gen images, Celebrations, AoX calculation -->
     {#if !timerOnly}
       <section>
         <Checkbox
@@ -694,7 +703,6 @@
           class="w-5 h-5 my-2"
           label={$localLang.TIMER.genImage}
         />
-        <!-- <i class="text-sm text-yellow-500">({ $localLang.TIMER.canHurtPerformance })</i> -->
       </section>
 
       <section>
@@ -704,6 +712,7 @@
           label={$localLang.TIMER.recordCelebration}
         />
       </section>
+
       <section class="flex flex-wrap gap-4 items-center">
         {$localLang.TIMER.aoxCalculation}:
 
@@ -768,6 +777,10 @@
     background-color: white;
     clip-path: polygon(0% 0%, 100% 50%, 0% 100%);
     translate: 100% -50%;
+  }
+
+  .timer-options-container.timerOnly > li:not(.timerOnly) {
+    display: none;
   }
 
   .tool-container {

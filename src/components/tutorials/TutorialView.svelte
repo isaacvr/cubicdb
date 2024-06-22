@@ -230,6 +230,10 @@
     let lang = map.get("lang") || "EN";
     let parts = $location.pathname.split("/").slice(2);
 
+    if ( parts.length != 2 ) {
+      return navigate('/tutorials');
+    }
+
     editMode = JSON.parse(map.get("edit") || "false");
 
     dataService

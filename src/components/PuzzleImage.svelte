@@ -1,9 +1,12 @@
 <script lang="ts">
   import { createEventDispatcher } from "svelte";
 
+  let _cl = "";
+
   export let src = "";
   export let glowOnHover = false;
   export let interactive = false;
+  export { _cl as class };
 
   type ImageType = "raster" | "svg";
 
@@ -19,7 +22,7 @@
   }
 
   function handleClick(e: MouseEvent) {
-    if (!interactive || type != 'svg') return;
+    if (!interactive || type != "svg") return;
 
     let tg = e.target as SVGPathElement;
     let pos = tg.getAttribute("data-position");
@@ -33,7 +36,9 @@
 </script>
 
 <div
-  class={"rounded flex items-center justify-center puzzle-img" + (!src ? " bg-gray-700 animate-pulse" : " ")}
+  class={"rounded flex items-center justify-center puzzle-img " +
+    (!src ? " bg-gray-700 animate-pulse " : " ") +
+    (_cl || "")}
   class:interactive
   class:glow={glowOnHover}
   role={type === "svg" ? "document" : "img"}

@@ -194,7 +194,7 @@
 <svelte:window on:keyup={handleKeyUp} />
 
 <Card
-  class="flex flex-col relative items-center mt-4 max-w-2xl w-[calc(100%-2rem)] max-h-[calc(100vh-6rem)] mx-auto mb-8"
+  class="flex flex-col relative items-center mt-4 max-w-2xl w-[calc(100%-2rem)] max-h-[calc(100vh-3rem)] mx-auto mb-8"
 >
   <Heading class="text-center text-3xl mb-4 text-gray-300 font-bold">{$localLang.PLL.title}</Heading
   >
@@ -221,8 +221,7 @@
 
   {#if stage === 1}
     <h3>{$localLang.PLL.case} {idx + 1} / {cases}</h3>
-    <!-- <img src={ images[ idx ] } class={"puzzle-img " + ($screen.isMobile ? '' : '!w-60 !h-60')} alt=""> -->
-    <PuzzleImage src={images[idx]} />
+    <PuzzleImage src={images[idx]} class={ $screen.isMobile ? "!w-52 !h-52" : "!w-60 !h-60"} />
 
     <div
       class="answer-container grid gap-2 my-4 w-full max-w-2xl"

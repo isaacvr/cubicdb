@@ -359,7 +359,7 @@ export interface ITutorial {
   shortName: string;
   lang: LanguageCode;
   steps: ITutorialStep[];
-  puzzle: (typeof ICONS)[number]['name'];
+  puzzle: (typeof ICONS)[number]["name"];
   icon?: Scrambler;
   algs: number;
   level: number;
@@ -613,6 +613,12 @@ export interface IPC {
 
   addExternalConnector: (cb: AnyCallback) => any;
   external: (device: string, ...args: any[]) => any;
+
+  algorithmsStorage: () => any;
+  cacheStorage: () => any;
+  sessionsStorage: () => any;
+  solvesStorage: () => any;
+  tutorialsStorage: () => any;
 }
 
 export interface PDFOptions {
@@ -676,7 +682,18 @@ export type IColor =
   | "blue"
   | "primary"
   | undefined;
-export type INotColor = IColor | "light" | "dark" | "none" | "indigo" | "alternative";
+
+export type INotColor =
+  | "red"
+  | "yellow"
+  | "green"
+  | "purple"
+  | "blue"
+  | "primary"
+  | "light"
+  | "dark"
+  | "none"
+  | "alternative";
 
 export interface NotificationAction {
   text: string;
@@ -814,6 +831,7 @@ export interface Language {
     appFont: string;
     timerFont: string;
     screen: string;
+    zoomFactor: string;
 
     // Updates
     update: string;
