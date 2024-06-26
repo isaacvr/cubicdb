@@ -33,8 +33,8 @@ export function generateRandomImage(from: string, to: string, W: number, H: numb
 }
 
 export function updateBackground(from: string, to: string) {
-  const W = window.screen.width;
-  const H = window.screen.height;
+  const W = window.screen.width * 1.5;
+  const H = window.screen.height * 1.5;
   let res = generateRandomImage(from, to, W, H);
   document.body.style.backgroundImage = "url(" + res + ")";
 }

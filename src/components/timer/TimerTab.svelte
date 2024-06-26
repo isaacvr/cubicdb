@@ -23,11 +23,13 @@
   import Select from "@components/material/Select.svelte";
 
   /// Helpers
+  import { writable, type Writable } from "svelte/store";
   import { adjustMillis, sTimer, timer, timerToMilli } from "@helpers/timer";
   import { createEventDispatcher, onDestroy, onMount } from "svelte";
   import { DataService } from "@stores/data.service";
   import { NotificationService } from "@stores/notification.service";
-  import { writable, type Writable } from "svelte/store";
+  import { localLang } from "@stores/language.service";
+  import { screen } from "@stores/screen.store";
 
   // Handlers
   import { StackmatInput } from "./input-handlers/Stackmat";
@@ -35,10 +37,9 @@
   import { GANInput } from "./input-handlers/GAN";
   import { KeyboardInput } from "./input-handlers/Keyboard";
   import { QiYiSmartTimerInput } from "./input-handlers/QY-Timer";
-  import { ExternalTimerInput } from "./input-handlers/ExternalTimer";
+  // import { ExternalTimerInput } from "./input-handlers/ExternalTimer";
 
   // Others
-  import { localLang } from "@stores/language.service";
   import { randomUUID } from "@helpers/strings";
   import { minmax } from "@helpers/math";
   import Simulator from "@components/Simulator.svelte";
@@ -99,7 +100,9 @@
       text: "Delete",
       icon: Close,
       highlight: () => false,
-      handler: () => {
+      handler: (ev: MouseEvent) => {
+        ev.stopPropagation();
+
         if ($lastSolve) {
           dataService.removeSolves([$lastSolve]).then(handleRemoveSolves);
           $time = 0;
@@ -111,7 +114,8 @@
       text: "DNF",
       icon: ThumbDown,
       highlight: (s: any) => s.penalty === Penalty.DNF,
-      handler: () => {
+      handler: (ev: MouseEvent) => {
+        ev.stopPropagation();
         if ($lastSolve) {
           if ($lastSolve.penalty === Penalty.P2) {
             $lastSolve.time -= 2000;
@@ -129,7 +133,8 @@
       text: "+2",
       icon: Flag,
       highlight: (s: any) => s.penalty === Penalty.P2,
-      handler: () => {
+      handler: (ev: MouseEvent) => {
+        ev.stopPropagation();
         if ($lastSolve) {
           $lastSolve.penalty = $lastSolve.penalty === Penalty.P2 ? Penalty.NONE : Penalty.P2;
           $lastSolve.penalty === Penalty.P2 ? ($lastSolve.time += 2000) : ($lastSolve.time -= 2000);
@@ -147,7 +152,8 @@
       text: "Comments",
       icon: CommentIcon,
       highlight: () => false,
-      handler: () => {
+      handler: (ev: MouseEvent) => {
+        ev.stopPropagation();
         if ($lastSolve) {
           editSolve($lastSolve);
         }
@@ -325,7 +331,7 @@
       "GAN Cube": GANInput,
       "QY-Timer": QiYiSmartTimerInput,
       Keyboard: KeyboardInput,
-      ExternalTimer: ExternalTimerInput,
+      // ExternalTimer: ExternalTimerInput,
     };
 
     let newClass = methodMap[$session?.settings?.input || "Keyboard"];
@@ -353,17 +359,20 @@
 
       inputMethod.set(ki);
 
-      currentStep = ki.interpreter.machine.context.currentStep;
-      totalSteps = ki.interpreter.machine.context.steps;
+      let machineContext = ki.interpreter.getSnapshot().context;
+      currentStep = machineContext.currentStep;
+      totalSteps = machineContext.steps;
       $inputMethod.init();
-    } else if ($session?.settings?.input === "ExternalTimer") {
-      if (sameClass) {
-        dataService.external($deviceID, { type: "session", value: $session });
-      } else {
-        inputMethod.set(new ExternalTimerInput(inputContext));
-        $inputMethod.init();
-      }
     }
+
+    // else if ($session?.settings?.input === "ExternalTimer") {
+    //   if (sameClass) {
+    //     dataService.external($deviceID, { type: "session", value: $session });
+    //   } else {
+    //     inputMethod.set(new ExternalTimerInput(inputContext));
+    //     $inputMethod.init();
+    //   }
+    // }
   }
 
   function updateDevices() {
@@ -483,6 +492,34 @@
     selectedImg = minmax(selectedImg + v, 0, $preview.length);
   }
 
+  function handleMouseDown(ev: MouseEvent) {
+    ev.preventDefault();
+
+    if ($inputMethod instanceof KeyboardInput) {
+      keyDown({
+        type: "keydown",
+        code: "Space",
+      } as KeyboardEvent);
+    }
+  }
+
+  function handleMouseUp(ev: MouseEvent) {
+    ev.preventDefault();
+
+    if ($inputMethod instanceof KeyboardInput) {
+      keyUp({
+        type: "keyup",
+        code: "Space",
+      } as KeyboardEvent);
+    }
+  }
+
+  function stopTimer() {
+    if ($inputMethod instanceof KeyboardInput) {
+      $inputMethod.stopTimer();
+    }
+  }
+
   onMount(() => {
     if (timerOnly || scrambleOnly) {
       return;
@@ -537,7 +574,13 @@
   {/if}
 
   <!-- Timer -->
-  <div id="timer" class="text-9xl grid place-items-center w-full h-full">
+  <div
+    id="timer"
+    class="text-9xl grid place-items-center w-full h-full z-0 active:bg-transparent"
+    on:pointerdown|self={handleMouseDown}
+    on:pointerup|self={handleMouseUp}
+    role="timer"
+  >
     {#if $session?.settings?.input === "Manual"}
       <div id="manual-inp">
         <div class="text-xl w-full text-center text-primary-300">
@@ -559,17 +602,23 @@
         />
       </div>
     {:else}
-      {#if $state === TimerState.RUNNING}
-        <span
-          class="timer text-gray-300 max-sm:text-7xl max-sm:[line-height:8rem]"
-          in:scale
-          class:ready={$ready}
-          hidden={$state === TimerState.RUNNING && !$session.settings.showElapsedTime}
-        >
-          {timer($time, $decimals, false)}
-        </span>
-      {:else}
-        <div class="flex flex-col transition-all duration-200 mx-auto">
+      <div class="flex flex-col transition-all duration-200 mx-auto">
+        {#if $state === TimerState.RUNNING}
+          <span
+            class="timer text-gray-300 max-sm:text-7xl max-sm:[line-height:8rem]"
+            in:scale
+            class:ready={$ready}
+            hidden={$state === TimerState.RUNNING && !$session.settings.showElapsedTime}
+          >
+            {timer($time, $decimals, false)}
+          </span>
+
+          {#if $screen.isMobile}
+            <Button color="alternative" class="w-min mx-auto" on:click={stopTimer}>
+              {$localLang.global.cancel}
+            </Button>
+          {/if}
+        {:else}
           <span
             class="timer text-gray-300 max-sm:text-7xl max-sm:[line-height:8rem]"
             class:prevention={$state === TimerState.PREVENTION}
@@ -580,9 +629,15 @@
               : timer($time, $decimals, false)}
           </span>
 
+          {#if $state === TimerState.INSPECTION && $screen.isMobile}
+            <Button color="alternative" class="w-min mx-auto" on:click={stopTimer}>
+              {$localLang.global.cancel}
+            </Button>
+          {/if}
+
           {#if !timerOnly && $state === TimerState.STOPPED}
             <div
-              class="flex justify-center w-full"
+              class="flex justify-center w-full z-10"
               class:show={$state === TimerState.STOPPED}
               transition:blur
             >
@@ -601,8 +656,8 @@
               {/each}
             </div>
           {/if}
-        </div>
-      {/if}
+        {/if}
+      </div>
 
       {#if $session.settings.sessionType === "multi-step" && $state === TimerState.RUNNING}
         <div class="step-progress w-[min(100%,30rem)] text-base" transition:scale>
@@ -610,7 +665,8 @@
         </div>
       {/if}
 
-      {#if $session?.settings?.input === "StackMat" || $session?.settings?.input === "ExternalTimer"}
+      {#if $session?.settings?.input === "StackMat"}
+        <!-- {#if $session?.settings?.input === "StackMat" || $session?.settings?.input === "ExternalTimer"} -->
         <span class="text-2xl flex gap-2 items-center">
           {$localLang.TIMER.stackmatStatus}:
 
@@ -861,24 +917,12 @@
 </Modal>
 
 <style lang="postcss">
-  @keyframes bump {
-    0% {
-      font-size: 110px;
-    }
-    50% {
-      font-size: 125px;
-    }
-    100% {
-      font-size: 110px;
-    }
-  }
-
   .timer-tab {
     display: grid;
     height: 100%;
     overflow: hidden;
     grid-template-columns: auto auto 1fr auto;
-    grid-template-rows: minmax(0rem, 1fr) 1fr min-content;
+    grid-template-rows: auto 1fr min-content;
     grid-template-areas:
       "options scramble scramble scramble"
       "options timer timer timer"
@@ -928,7 +972,7 @@
 
   #scramble .scramble-content {
     @apply max-w-[calc(100%-2rem)] md:w-[min(calc(100%-10rem),50rem)] mx-auto break-words whitespace-pre-wrap
-      flex text-left justify-center items-baseline h-[min(100%,15rem)];
+      flex text-left justify-center items-baseline h-min max-h-[15rem];
     line-height: 1.3;
     overflow: hidden auto;
   }
@@ -944,6 +988,9 @@
 
   #timer {
     grid-area: timer;
+    user-select: none;
+    touch-action: none;
+    -webkit-touch-callout: none;
   }
 
   #manual-inp {
@@ -959,15 +1006,37 @@
   .timer {
     font-family: var(--timer-font);
     user-select: none;
+    pointer-events: none;
+    touch-action: none;
+    -webkit-touch-callout: none;
   }
 
   .timer.prevention {
     @apply text-red-800;
   }
 
+  @keyframes bump {
+    0% {
+      font-size: var(--font-size);
+    }
+    50% {
+      font-size: calc(var(--font-size) * 1.3);
+    }
+    100% {
+      font-size: var(--font-size);
+    }
+  }
+
   .timer.ready {
     @apply text-green-700;
     animation: bump 300ms 1;
+    --font-size: 8rem;
+  }
+
+  @media not all and (min-width: 640px) {
+    .timer.ready {
+      --font-size: 4.5rem;
+    }
   }
 
   #preview-container {

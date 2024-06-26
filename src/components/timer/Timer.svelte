@@ -27,6 +27,7 @@
   import SessionsTab from "./SessionsTab.svelte";
   import StatsTab from "./StatsTab.svelte";
   import Select from "@components/material/Select.svelte";
+  import TimerSessionIcon from "./TimerSessionIcon.svelte";
 
   /// Types
   import {
@@ -40,7 +41,6 @@
     type BluetoothDeviceData,
     SESSION_TYPE,
     type SessionType,
-    DIALOG_MODES,
   } from "@interfaces";
   import { Puzzle } from "@classes/puzzle/puzzle";
   import { ScrambleParser } from "@classes/scramble-parser";
@@ -686,7 +686,7 @@
     />
   {:else}
     <div
-      class="fixed w-max -translate-x-1/2 left-1/2 z-10 grid grid-flow-col
+      class="fixed mt-1 w-max -translate-x-1/2 left-1/2 z-10 grid grid-flow-col
       gap-2 top-14 items-center justify-center text-gray-400"
     >
       <Select
@@ -699,6 +699,8 @@
           $session = g;
           setTimeout(selectedSession, 10);
         }}
+        hasIcon={e => e.settings.sessionType || "mixed"}
+        iconComponent={TimerSessionIcon}
       />
 
       {#if $tab === 0 && ($session.settings.sessionType || "mixed") === "mixed"}
@@ -772,6 +774,8 @@
             transform={e => e}
             bind:value={newSessionType}
             class="mx-auto"
+            hasIcon={e => e}
+            iconComponent={TimerSessionIcon}
           />
 
           <i class="note text-gray-300">{$localLang.TIMER.sessionTypeDescription[newSessionType]}</i
@@ -857,8 +861,13 @@
         >
           {#each sessions as s}
             <button
-              class={"grid h-max border border-gray-400 rounded-md relative " +
-                (s.icon ? "pl-8" : "")}
+              class={"grid h-max border rounded-md relative " +
+                (s.settings.sessionType === "mixed"
+                  ? "border-purple-400"
+                  : s.settings.sessionType === "single"
+                    ? "border-green-400"
+                    : "border-sky-500") +
+                (s.icon ? " pl-8" : "")}
               on:click={() => {
                 sessions.forEach(s1 => (s1.editing = false));
                 s.editing = true;
@@ -866,7 +875,7 @@
             >
               {#if s.icon}
                 <span
-                  class="absolute bg-purple-700 p-[.05rem] rounded-sm text-white
+                  class="absolute p-[.05rem] rounded-sm text-white
                   left-[.5rem] top-1/2 -translate-y-1/2"
                 >
                   <WcaCategory icon={s.icon.icon} size="1rem" buttonClass="!p-[.1rem]" />
@@ -874,9 +883,8 @@
               {/if}
 
               <Input
-                class="!bg-transparent text-center text-ellipsis w-full rounded-none flex-1 {!s.editing
-                  ? 'border-transparent'
-                  : ''}"
+                class={"!bg-transparent text-center text-ellipsis w-full rounded-none flex-1 " +
+                  (!s.editing ? " border-none " : "") + (s.icon ? " text-left pl-1 " : "")}
                 bind:value={s.tName}
                 focus={s.editing}
                 on:keydown={e => {
@@ -971,3 +979,9 @@
     </div>
   </Modal>
 </main>
+
+<style>
+  main {
+    height: calc(100svh - 3rem);
+  }
+</style>

@@ -352,7 +352,7 @@
       [$localLang.TOOLS.metrics, "metrics"],
       [$localLang.TOOLS.solver, "solver"],
       [$localLang.TOOLS.mosaic, "mosaic"],
-      [$localLang.TOOLS.remoteTimer, "remote-timer"],
+      // [$localLang.TOOLS.remoteTimer, "remote-timer"],
     ]}
     label={e => e[0]}
     transform={e => e[1]}
@@ -573,8 +573,8 @@
   </div>
 {:else if option === "mosaic"}
   <Mosaic />
-{:else if option === "remote-timer"}
-  <RemoteTimer />
+<!-- {:else if option === "remote-timer"}
+  <RemoteTimer /> -->
 {/if}
 
 <style>

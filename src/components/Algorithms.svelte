@@ -2,14 +2,14 @@
   import { Link, navigate, useLocation } from "svelte-routing";
   import { Puzzle } from "@classes/puzzle/puzzle";
   import { pGenerateCubeBundle } from "@helpers/cube-draw";
-  import { CubeViewMap, type Algorithm, type ICard, type Solution } from "@interfaces";
+  import { type Algorithm, type ICard, type Solution } from "@interfaces";
   import { DataService } from "@stores/data.service";
   import { copyToClipboard, getSearchParams, randomUUID } from "@helpers/strings";
   import { NotificationService } from "@stores/notification.service";
   import type { RouteLocation } from "svelte-routing/types/Route";
   import { screen } from "@stores/screen.store";
-  import { Button, Input, Li, List, Range, Span, Spinner, Tooltip } from "flowbite-svelte";
-  import { CubeDBICON, CubeMode, CubeModeMap } from "@constants";
+  import { Button, Span, Spinner, Tooltip } from "flowbite-svelte";
+  import { CubeDBICON, CubeMode } from "@constants";
   import { localLang } from "@stores/language.service";
   import { algorithmToPuzzle, clone } from "@helpers/object";
 
@@ -467,8 +467,9 @@
           <Link to={card.route} class="flex w-full">
             <li
               class="w-full max-w-[12rem] h-48 shadow-md rounded-md select-none cursor-pointer card
-            transition-all duration-200 grid place-items-center justify-center py-3 px-2
-            bg-backgroundLv1 hover:shadow-2xl hover:shadow-primary-900 relative"
+              transition-all duration-200 grid place-items-center justify-center py-3 px-2
+              bg-backgroundLv1 hover:bg-primary-600 hover:bg-opacity-50 hover:shadow-2xl
+              hover:shadow-primary-900 relative"
             >
               {#if card?.puzzle?.img}
                 <PuzzleImage src={card.puzzle.img} />

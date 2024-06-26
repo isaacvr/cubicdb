@@ -33,6 +33,7 @@
   import UpdateIcon from "@icons/Update.svelte";
   import StorageIcon from "@icons/Harddisk.svelte";
   import CleanIcon from "@icons/DeleteAlert.svelte";
+  import Modal from "./Modal.svelte";
 
   const notService = NotificationService.getInstance();
 
@@ -72,6 +73,9 @@
   };
 
   let storeList: any[] = [];
+  let showDelete = false;
+  let sDb: ICacheDB = "Cache";
+  let sName = "";
 
   function save() {
     localStorage.setItem("app-font", appFont);
@@ -187,25 +191,36 @@
     dataService.useDisplay(id);
   }
 
+  function updateStorageNames() {
+    storeList = [
+      { name: "images", clean: true, length: storage.cache, db: "Cache" },
+      { name: "sessions", clean: true, length: storage.sessions, db: "Sessions" },
+      { name: "solves", clean: true, length: storage.solves, db: "Solves" },
+      { name: "algorithms", clean: false, length: storage.algorithms, db: "Algorithms" },
+      { name: "tutorials", clean: false, length: storage.tutorials, db: "Tutorials" },
+    ].filter(s => s.length);
+  }
+
   async function updateStorage() {
     try {
       storage = await dataService.getStorageInfo();
-
-      storeList = [
-        { name: "images", clean: true, length: storage.cache, db: "Cache" },
-        { name: "sessions", clean: true, length: storage.sessions, db: "Sessions" },
-        { name: "solves", clean: true, length: storage.solves, db: "Solves" },
-        { name: "algorithms", clean: false, length: storage.algorithms, db: "Algorithms" },
-        { name: "tutorials", clean: false, length: storage.tutorials, db: "Tutorials" },
-      ].filter(s => s.length);
+      updateStorageNames();
     } catch {}
   }
 
   async function clearCache(db: ICacheDB) {
+    showDelete = false;
+
     try {
       await dataService.clearCache(db);
       await updateStorage();
     } catch {}
+  }
+
+  function preClearCache(db: ICacheDB, name: string) {
+    sDb = db;
+    sName = name;
+    showDelete = true;
   }
 
   function getName(name: string) {
@@ -230,7 +245,7 @@
     document.documentElement.style.setProperty("--zoom-factor", "" + initialZoomFactor);
   });
 
-  $: $localLang && updateDisplays();
+  $: $localLang && [updateDisplays(), updateStorageNames()];
 </script>
 
 <Card class="mx-auto w-full max-w-4xl mt-8">
@@ -294,13 +309,13 @@
     </TabItem>
 
     {#if dataService.isElectron}
+      <!-- Displays -->
       <TabItem activeClasses={tabActiveClass}>
         <div slot="title" class="flex items-center gap-2">
           <ScreenIcon size="1.2rem" />
           {$localLang.SETTINGS.screen}
         </div>
 
-        <!-- Displays -->
         <div class="flex flex-col items-center justify-center gap-4">
           <div class="flex justify-center gap-2">
             {#each displays as display}
@@ -317,13 +332,13 @@
         </div>
       </TabItem>
 
+      <!-- Updates -->
       <TabItem activeClasses={tabActiveClass}>
         <div slot="title" class="flex items-center gap-2">
           <UpdateIcon size="1.2rem" />
           {$localLang.SETTINGS.update}
         </div>
 
-        <!-- Updates -->
         <div class="flex items-center justify-center gap-4">
           <div class="flex items-center justify-center gap-2">
             {$localLang.SETTINGS.version}: <mark>{$version}</mark>
@@ -359,7 +374,7 @@
               <TableBodyCell>{byteToString(st.length)}</TableBodyCell>
               <TableBodyCell>
                 {#if st.clean}
-                  <Button on:click={() => clearCache(st.db)} color="alternative" shadow>
+                  <Button on:click={() => preClearCache(st.db, st.name)} color="alternative" shadow>
                     <CleanIcon size="1.2rem" />
                   </Button>
 
@@ -381,6 +396,25 @@
     <Button color="purple" on:click={reset}>{$localLang.global.reset}</Button>
   </div>
 </Card>
+
+<Modal bind:show={showDelete} onClose={() => (showDelete = false)} closeOnClickOutside>
+  <h1 class="text-gray-400 mb-4 text-lg">
+    {$localLang.SETTINGS.deleteStorage.replace("$1", getName(sName))}
+  </h1>
+  <div class="flex justify-evenly">
+    <Button
+      color="alternative"
+      ariaLabel={$localLang.global.cancel}
+      on:click={() => (showDelete = false)}
+    >
+      {$localLang.global.cancel}
+    </Button>
+
+    <Button color="red" ariaLabel={$localLang.global.delete} on:click={() => clearCache(sDb)}>
+      {$localLang.global.delete}
+    </Button>
+  </div>
+</Modal>
 
 <style lang="postcss">
   hr {

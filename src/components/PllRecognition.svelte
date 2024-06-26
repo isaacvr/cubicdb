@@ -221,7 +221,7 @@
 
   {#if stage === 1}
     <h3>{$localLang.PLL.case} {idx + 1} / {cases}</h3>
-    <PuzzleImage src={images[idx]} class={ $screen.isMobile ? "!w-52 !h-52" : "!w-60 !h-60"} />
+    <PuzzleImage src={images[idx]} class={$screen.isMobile ? "!w-52 !h-52" : "!w-60 !h-60"} />
 
     <div
       class="answer-container grid gap-2 my-4 w-full max-w-2xl"
@@ -270,8 +270,7 @@
             {/if}
 
             <TableBodyCell tdClass="p-0 whitespace-nowrap font-medium text-center">
-              <!-- <img src={b.img} alt="" class="puzzle-img object-contain flex mx-auto" /> -->
-              <PuzzleImage src={b.img} />
+              <PuzzleImage src={b.img} class={$screen.isMobile ? "!w-28 !h-28" : "!w-36 !h-36"} />
             </TableBodyCell>
 
             <TableBodyCell

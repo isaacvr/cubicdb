@@ -60,14 +60,14 @@ let server = https
     },
     eApp
   )
-  .listen(12345);
+  .listen();
 
 let _port = server.address();
 let port = typeof _port === "string" ? _port : _port ? _port.port : "";
 
 eApp.set("port", port);
 
-const io = new Server(server, { cors: { origin: "*" } });
+// const io = new Server(server, { cors: { origin: "*" } });
 
 ipcMain.on("get-port", ev => (ev.returnValue = port));
 
@@ -351,12 +351,12 @@ function createWindow() {
     }
   });
 
-  require("./serverHandlers/socket.cjs")(ipcMain, io);
+  // require("./serverHandlers/socket.cjs")(ipcMain, io);
 
   // console.log("PORT: ", port, serve, networkInterfaces());
 
   if (serve || !prod) {
-    win.webContents.openDevTools();
+    // win.webContents.openDevTools();
 
     // electronReload(__dirname, {
     //   electron: join(__dirname, '../node_modules', 'electron', 'dist', 'electron.exe'),

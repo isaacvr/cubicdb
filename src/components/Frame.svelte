@@ -8,8 +8,6 @@
     Breadcrumb,
     BreadcrumbItem,
     Button,
-    Dropdown,
-    DropdownItem,
     NavHamburger,
     NavUl,
     Navbar,
@@ -23,14 +21,12 @@
   import { NotificationService } from "@stores/notification.service";
   import { randomUUID } from "@helpers/strings";
   import { Link, navigate, useLocation } from "svelte-routing";
-  import ChevronIcon from "@icons/ChevronDown.svelte";
   import { screen } from "@stores/screen.store";
   import type { RouteLocation } from "svelte-routing/types/Route";
   import { CubeDBICON } from "@constants";
   import FlagIcon from "./FlagIcon.svelte";
   import { ArrowUpRightDownLeftOutline } from "flowbite-svelte-icons";
   import Select from "./material/Select.svelte";
-  import type { LanguageCode } from "@interfaces";
 
   const dataService = DataService.getInstance();
   const notService = NotificationService.getInstance();
@@ -38,7 +34,6 @@
 
   let date: string, itv: any;
   let progress = 0;
-  let languageSelector = false;
   let parts: { link: string; name: string }[] = [];
 
   function handleProgress(p: number) {

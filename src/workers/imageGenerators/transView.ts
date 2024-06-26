@@ -1,6 +1,6 @@
 import { Puzzle } from "@classes/puzzle/puzzle";
 import { cubeToThree } from "@helpers/cubeToThree";
-import { Geometry, Material, PerspectiveCamera, Scene, WebGLRenderer } from "three";
+import { Material, PerspectiveCamera, Scene, WebGLRenderer } from "three";
 
 export function transView(
   renderer: WebGLRenderer,
@@ -27,7 +27,7 @@ export function transView(
   // clean up
   scene.children.length = 0;
   ctt.meshes.map(m => (<Material>m.material).dispose());
-  ctt.meshes.map(m => (<Geometry>m.geometry).dispose());
+  ctt.meshes.map(m => m.geometry.dispose());
 
   return cv.toDataURL();
 }

@@ -101,6 +101,7 @@ export const English: Language = {
     timerFont: "Timer font",
     screen: "Screen",
     zoomFactor: "Zoom factor",
+    deleteStorage: "Are you sure you want to delete \"$1\"?",
 
     // Update
     update: "Update",

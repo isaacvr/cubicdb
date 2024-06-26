@@ -104,11 +104,9 @@
   <ul class="w-full grid place-items-center" class:isMobile={$screen.isMobile}>
     {#each cards as card (card.route)}
       <li
-        class={`text-center shadow-md rounded-md select-none cursor-pointer
-      transition-all duration-200 py-3 px-3
-      bg-backgroundLv1 text-gray-400
-
-      hover:rotate-3 hover:shadow-lg ` + "card-premium"}
+        class="w-full max-w-[12rem] h-48 shadow-md rounded-md select-none cursor-pointer card
+          transition-all duration-200 grid place-items-center justify-center py-3 px-2
+          bg-backgroundLv1 hover:shadow-2xl hover:bg-backgroundLv2 hover:shadow-primary-900 relative"
       >
         <Link class="flex flex-col items-center justify-between w-full h-full" to={card.route}>
           <img class="mx-auto" src={card.puzzle ? card.puzzle.img : card.cube} alt={card.title} />

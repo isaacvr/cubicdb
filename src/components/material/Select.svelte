@@ -16,7 +16,7 @@
   export let value: any = placeholder;
   export let items: readonly any[];
   export let onChange = (item: any, pos: number, arr: readonly any[]) => {};
-  export let label = (item?: any) => item || "";
+  export let label = (item?: any) => (item || "").toString();
   export let transform = (item: any, pos?: number, arr?: readonly any[]) => item.value;
   export let hasIcon: null | ((v: any) => any) = null;
   export let disabled = (item: any, pos?: number, arr?: readonly any[]) => false;
@@ -63,7 +63,7 @@
   $: emitStatus(showOptions);
 </script>
 
-<Button color="alternative" class={"gap-1 h-10 " + cl} on:click={handleClick}>
+<Button color="alternative" class={"gap-1 h-9 py-1 px-2 " + cl} on:click={handleClick}>
   {#if items.some((a, p, i) => transform(a, p, i) === value)}
     {@const item = items.find((e, p, i) => transform(e, p, i) === value)}
 
@@ -84,7 +84,7 @@
 <Dropdown
   bind:open={showOptions}
   id={selectID}
-  containerClass={"max-h-[20rem] overflow-y-scroll z-10 " + (useFixed ? "!fixed" : "")}
+  containerClass={"max-h-[20rem] overflow-y-scroll z-10 w-max " + (useFixed ? "!fixed" : "")}
   {placement}
 >
   {#each items as item, pos}
@@ -93,7 +93,7 @@
     {/if}
 
     <DropdownItem
-      class={`flex items-center gap-2
+      class={`flex items-center gap-2 py-2 px-2
         ` +
         (disabled(item, pos, items) ? " text-gray-500 pointer-events-none select-none " : " ") +
         (transform(item, pos, items) === value

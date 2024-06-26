@@ -1,8 +1,8 @@
 import type { Penalty, Session } from "@interfaces";
 import { io } from "socket.io-client";
 import { get, writable, type Writable } from "svelte/store";
-import { assign, createMachine, interpret, type Sender } from "xstate";
-import JSConfetti from 'js-confetti';
+import { createActor, setup } from "xstate";
+import JSConfetti from "js-confetti";
 
 let confetti = new JSConfetti();
 
@@ -13,147 +13,156 @@ interface MachineContext {
   session: Writable<Session | null>;
   time: Writable<number>;
 }
+type Actor = ({ context, event }: { context: MachineContext; event: any }) => any;
+type MachineState =
+  | "DISCONNECTED"
+  | "CONNECTING"
+  | "CONNECTION_ERROR"
+  | "CLEAN"
+  | "STARTING"
+  | "READY"
+  | "RUNNING"
+  | "STOPPED";
 
-type MachineState = 'DISCONNECTED' | 'CONNECTING' | 'CONNECTION_ERROR' | 'CLEAN' | 'STARTING' | 'READY' | 'RUNNING' | 'STOPPED';
-
-// Actions
-const handleDown = (ctx: MachineContext, ev: any) => {
-  ctx.leftDown.set( ev.hand === 'left' ? true : get(ctx.leftDown) );
-  ctx.rightDown.set( ev.hand === 'right' ? true : get(ctx.rightDown) );
+// Actors
+const handleDown: Actor = ({ context, event }) => {
+  context.leftDown.set(event.hand === "left" ? true : get(context.leftDown));
+  context.rightDown.set(event.hand === "right" ? true : get(context.rightDown));
 };
 
-const handleUp = (ctx: MachineContext, ev: any) => {
-  ctx.leftDown.set( ev.hand === 'left' ? false : get(ctx.leftDown) );
-  ctx.rightDown.set( ev.hand === 'right' ? false : get(ctx.rightDown) );
-  ctx.locked.set(false);
+const handleUp: Actor = ({ context, event }) => {
+  context.leftDown.set(event.hand === "left" ? false : get(context.leftDown));
+  context.rightDown.set(event.hand === "right" ? false : get(context.rightDown));
+  context.locked.set(false);
 };
 
-const setTimerInspection = ({ session, time }: MachineContext, snd: Sender<any>) => {
-  let { settings } = get(session) || { settings: { hasInspection: false } };
+// const setTimerInspection = ({ session, time }: MachineContext, snd: Sender<any>) => {
+//   let { settings } = get(session) || { settings: { hasInspection: false } };
 
-  let ref = performance.now() + (settings.hasInspection ? (settings.inspection || 15) * 1000 : 0);
-  
-  let itv = setInterval(() => {
-    let t = Math.round((ref - performance.now()) / 1000) * 1000;
+//   let ref = performance.now() + (settings.hasInspection ? (settings.inspection || 15) * 1000 : 0);
 
-    if (t < -2000) {
-      snd('DNF');
-      return;
-    }
+//   let itv = setInterval(() => {
+//     let t = Math.round((ref - performance.now()) / 1000) * 1000;
 
-    time.set(~~t);
-  });
+//     if (t < -2000) {
+//       snd("DNF");
+//       return;
+//     }
 
-  return () => { clearInterval(itv); };
-}
+//     time.set(~~t);
+//   });
+
+//   return () => {
+//     clearInterval(itv);
+//   };
+// };
 
 // Guards
-const bothPadsDown = (ctx: MachineContext) => {
-  return !get(ctx.locked) && get(ctx.leftDown) && get(ctx.rightDown);
-}
+const bothPadsDown: Actor = ({ context }) => {
+  return !get(context.locked) && get(context.leftDown) && get(context.rightDown);
+};
 
-const hasInspection = (ctx: MachineContext) => {
-  return get(ctx.session)?.settings.hasInspection || false;
-}
+// const hasInspection = (ctx: MachineContext) => {
+//   return get(ctx.session)?.settings.hasInspection || false;
+// };
 
-const machine = createMachine<MachineContext>({
-  predictableActionArguments: true,
-  initial: 'DISCONNECTED',
+const machine = setup({
+  types: {
+    context: {} as MachineContext,
+  },
+}).createMachine({
+  context: {} as MachineContext,
+  initial: "DISCONNECTED",
   states: {
     DISCONNECTED: {
-      entry: ({ session }) => { session.set(null); },
+      entry: ({ context: { session } }: { context: MachineContext }) => {
+        session.set(null);
+      },
       on: {
-        CONNECTING: 'CONNECTING',
-        CONNECTED: 'CLEAN',
-      }
+        CONNECTING: "CONNECTING",
+        CONNECTED: "CLEAN",
+      },
     },
 
     CONNECTING: {
       on: {
-        CONNECTED: 'CONFIG',
-        CONNECTION_ERROR: 'CONNECTION_ERROR',
-      }
+        CONNECTED: "CONFIG",
+        CONNECTION_ERROR: "CONNECTION_ERROR",
+      },
     },
 
     CONNECTION_ERROR: {
       on: {
-        CONNECT: 'CONNECTING'
-      }
+        CONNECT: "CONNECTING",
+      },
     },
 
     CONFIG: {
-      always: [{ target: 'CLEAN', cond: (ctx) => !!get(ctx.session) }]
+      always: [
+        {
+          target: "CLEAN",
+          guard: ({ context }: { context: MachineContext }) => !!get(context.session),
+        },
+      ],
     },
 
     CLEAN: {
-      entry: ctx => ctx.locked.set(false),
+      entry: ({ context }) => context.locked.set(false),
       on: {
-        pointerdown: { actions: 'handleDown' },
-        pointerup: { actions: 'handleUp' }
+        pointerdown: { actions: handleDown },
+        pointerup: { actions: handleUp },
       },
-      always: [
-        { target: 'STARTING', cond: 'bothPadsDown' }
-      ]
+      always: [{ target: "STARTING", guard: bothPadsDown }],
     },
 
     STARTING: {
       on: {
         pointerup: {
-          actions: 'handleUp',
-          target: "CLEAN"
+          actions: handleUp,
+          target: "CLEAN",
         },
       },
       after: {
         400: {
-          target: 'READY'
-        }
-      }
+          target: "READY",
+        },
+      },
     },
 
     READY: {
       on: {
         pointerup: {
-          actions: 'handleUp',
-          target: 'RUNNING',
-        }
-      }
+          actions: handleUp,
+          target: "RUNNING",
+        },
+      },
     },
 
     RUNNING: {
       on: {
-        reset: 'CLEAN'
+        reset: "CLEAN",
       },
-      always: [
-        { target: 'STOPPED', cond: 'bothPadsDown' }
-      ]
+      always: [{ target: "STOPPED", guard: bothPadsDown }],
     },
 
     STOPPED: {
-      entry: ctx => ctx.locked.set(true),
+      entry: ({ context }) => context.locked.set(true),
       on: {
-        pointerdown: { actions: 'handleDown' },
-        pointerup: { actions: 'handleUp' },
-        reset: 'CLEAN',
-      }
+        pointerdown: { actions: handleDown },
+        pointerup: { actions: handleUp },
+        reset: "CLEAN",
+      },
     },
   },
   on: {
     pointerdown: {
-      actions: 'handleDown',
+      actions: handleDown,
     },
     pointerup: {
-      actions: 'handleUp',
+      actions: handleUp,
     },
-    DISCONNECTED: { target: 'DISCONNECTED' },
-  }
-}, {
-  actions: {
-    handleDown,
-    handleUp
+    DISCONNECTED: { target: ".DISCONNECTED" },
   },
-  guards: {
-    bothPadsDown
-  }
 });
 
 export class RemoteMachine {
@@ -164,7 +173,7 @@ export class RemoteMachine {
   state;
   url: string;
   name: string;
-  
+
   constructor() {
     this.session = writable(null);
 
@@ -173,28 +182,27 @@ export class RemoteMachine {
       rightDown: writable(false),
       locked: writable(false),
       session: this.session,
-      time: writable(0)
+      time: writable(0),
     };
 
     this.state = writable<MachineState>("DISCONNECTED");
-    
-    
-    this.interpreter = interpret(machine.withContext(this.context));
 
-    this.url = 'https://127.0.0.1';
-    this.name = '';
+    this.interpreter = createActor(machine, { input: this.context });
+
+    this.url = "https://127.0.0.1";
+    this.name = "";
     this.socket = io(this.url, { autoConnect: false });
   }
 
   private initInterpreter() {
-    this.interpreter = interpret(machine.withContext(this.context));
+    this.interpreter = createActor(machine, { input: this.context });
 
-    this.interpreter.onTransition((event) => {
+    this.interpreter.subscribe(event => {
       let ev = event.value as MachineState;
-      
-      if ( ev != get(this.state) ) {
+
+      if (ev != get(this.state)) {
         this.state.set(ev);
-        this.socket.emit('message', { type: 'state', state: event.value });
+        this.socket.emit("message", { type: "state", state: event.value });
       }
     });
   }
@@ -206,31 +214,31 @@ export class RemoteMachine {
     this.interpreter.start();
     this.socket = io(this.url, { autoConnect: false });
 
-    this.socket.on('connect', () => {
-      this.socket.emit('register', { type: 'timer', name: this.name });
+    this.socket.on("connect", () => {
+      this.socket.emit("register", { type: "timer", name: this.name });
       console.log("CONNECTED");
-      this.interpreter.send('CONNECTED');
+      this.interpreter.send({ type: "CONNECTED" });
     });
-    
-    this.socket.on('disconnect', () => {
+
+    this.socket.on("disconnect", () => {
       console.log("DISCONNECTED");
-      this.interpreter.send('DISCONNECTED');
+      this.interpreter.send({ type: "DISCONNECTED" });
     });
 
-    this.socket.on('external', (data) => {
-      console.log('EXTERNAL DATA', data);
+    this.socket.on("external", data => {
+      console.log("EXTERNAL DATA", data);
 
-      if ( !data ) return;
-      if ( !data.type ) return;
+      if (!data) return;
+      if (!data.type) return;
 
-      if ( data.type === 'new-record' ) {
+      if (data.type === "new-record") {
         confetti.addConfetti({
           confettiNumber: 100,
-          confettiColors: [ '#009d54', '#3d81f6', '#ffeb3b' ]
+          confettiColors: ["#009d54", "#3d81f6", "#ffeb3b"],
         });
-      } else if ( data.type === 'session' ) {
+      } else if (data.type === "session") {
         this.session.set(data.value);
-        this.interpreter.send('');
+        this.interpreter.send({ type: "" });
       }
     });
   }
@@ -239,7 +247,7 @@ export class RemoteMachine {
     console.log("UPDATE URL: ", url);
     this.url = url;
     this.init();
-    this.interpreter.send('CONNECTING');
+    this.interpreter.send({ type: "CONNECTING" });
     this.socket.connect();
   }
 
@@ -251,22 +259,22 @@ export class RemoteMachine {
   }
 
   handleLeft(e: MouseEvent) {
-    this.socket.emit('message', { type: e.type, value: 'left' });
-    this.interpreter.send(Object.assign(e, { hand: 'left' }));
+    this.socket.emit("message", { type: e.type, value: "left" });
+    this.interpreter.send(Object.assign(e, { hand: "left" }));
   }
-  
+
   handleRight(e: MouseEvent) {
-    this.socket.emit('message', { type: e.type, value: 'right' });
-    this.interpreter.send(Object.assign(e, { hand: 'right' }));
+    this.socket.emit("message", { type: e.type, value: "right" });
+    this.interpreter.send(Object.assign(e, { hand: "right" }));
   }
 
   reset() {
-    this.socket.emit('message', { type: 'reset' });
-    this.interpreter.send({ type: 'reset' });
+    this.socket.emit("message", { type: "reset" });
+    this.interpreter.send({ type: "reset" });
   }
 
   onOff() {
-    if ( this.socket.connected ) {
+    if (this.socket.connected) {
       this.disconnect();
     } else {
       this.init();
@@ -275,16 +283,15 @@ export class RemoteMachine {
   }
 
   delete() {
-    this.socket.emit('message', { type: 'delete' });
-    this.interpreter.send('reset');
+    this.socket.emit("message", { type: "delete" });
+    this.interpreter.send({ type: "reset" });
   }
 
   penalty(p: Penalty) {
-    this.socket.emit('message', { type: 'penalty', value: p});
+    this.socket.emit("message", { type: "penalty", value: p });
   }
 
   editSolve() {
-    this.socket.emit('message', { type: 'edit' });
+    this.socket.emit("message", { type: "edit" });
   }
-
 }

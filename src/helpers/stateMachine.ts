@@ -1,13 +1,18 @@
 import type { InputContext } from "@interfaces";
 
-export const isSpace = <Context = InputContext>(_: Context, ev: any) => {
-  return ev.code === 'Space';
+export interface Actor<Context = InputContext> {
+  context: Context;
+  event: any;
+}
+
+export const isSpace = <Context = InputContext>({ event }: Actor<Context>) => {
+  return event.code === 'Space';
 };
 
-export const isEscape = <Context = InputContext>(_: Context, ev: any) => {
-  return ev.code === 'Escape';
+export const isEscape = <Context = InputContext>({ event }: Actor<Context>) => {
+  return event.code === 'Escape';
 };
 
-export const notEscape = <Context = InputContext>(_: Context, ev: any) => {
-  return !isEscape(_, ev);
+export const notEscape = <Context = InputContext>({ context, event }: Actor<Context>) => {
+  return !isEscape({ context, event });
 };

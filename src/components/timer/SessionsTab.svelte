@@ -413,7 +413,7 @@
         class="shadow-md w-full h-full min-h-[3rem] rounded-md p-1 bg-backgroundLv1 relative
           flex items-center justify-center transition-all duration-200 select-none cursor-pointer
 
-          hover:shadow-lg hover:bg-opacity-70
+          hover:shadow-lg hover:shadow-primary-900 hover:bg-primary-800 hover:text-white
         "
         on:click={ev => handleClick(solve, ev)}
         on:contextmenu={e => handleContextMenu(e, solve)}
@@ -609,12 +609,12 @@
         placeholder={$localLang.TIMER.comment}
       />
     </div>
-    <div class="mt-2 flex justify-evenly gap-1">
+    <div class="mt-2 flex flex-wrap justify-evenly gap-1">
       <Button
         color="none"
         ariaLabel={$localLang.global.delete}
         flat
-        class="text-red-500 hover:text-gray-200 hover:bg-red-800 text-sm gap-1"
+        class="text-red-500 hover:text-gray-200 hover:bg-red-800 text-sm gap-1 px-2"
         on:click={() => {
           _delete([sSolve]);
           modal.close();
@@ -629,7 +629,7 @@
         ariaLabel={$localLang.global.cancel}
         flat
         on:click={() => modal.close()}
-        class="text-gray-400 hover:bg-gray-900 hover:text-gray-200 text-sm gap-1"
+        class="text-gray-400 hover:bg-gray-900 hover:text-gray-200 text-sm gap-1 px-2"
       >
         <CloseIcon />
         {$localLang.global.cancel}
@@ -640,7 +640,7 @@
         ariaLabel={$localLang.global.save}
         flat
         on:click={() => modal.close(sSolve)}
-        class="text-purple-400 hover:bg-purple-900 hover:text-gray-200 mr-2 text-sm gap-1"
+        class="text-purple-400 hover:bg-purple-900 hover:text-gray-200 mr-2 text-sm gap-1 px-2"
       >
         <SendIcon />
         {$localLang.global.save}
@@ -652,7 +652,7 @@
           ariaLabel={$localLang.global.save}
           flat
           on:click={checkReconstruction}
-          class="text-green-400 hover:bg-green-900 hover:text-gray-200 mr-2 text-sm"
+          class="text-green-400 hover:bg-green-900 hover:text-gray-200 mr-2 text-sm px-2"
         >
           {$localLang.global.reconstruction}
         </Button>
@@ -695,8 +695,12 @@
   </Modal>
 
   <!-- Context Menu -->
-  <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-  <ul class="context-menu" class:active={showContextMenu} bind:this={contextMenuElement}>
+  <ul
+    class="context-menu w-max p-2 rounded-md shadow-md fixed top-8 left-28 bg-gray-800
+    text-gray-300 grid gap-1 pointer-events-none opacity-0 invisible"
+    class:active={showContextMenu}
+    bind:this={contextMenuElement}
+  >
     <li>
       <button on:click={() => editSolve(sSolve)}>
         <EditIcon />
@@ -776,13 +780,8 @@
     @apply bg-violet-500 text-gray-200 bg-opacity-60 hover:bg-opacity-50;
   }
 
-  .context-menu {
-    @apply w-max p-2 rounded-md shadow-md fixed top-8 left-28 bg-gray-600
-    text-gray-300 grid gap-1;
-  }
-
-  .context-menu:not(.active) {
-    @apply pointer-events-none opacity-0 invisible;
+  .context-menu.active {
+    @apply pointer-events-auto opacity-100 visible;
   }
 
   .context-menu li {
@@ -791,7 +790,7 @@
 
   .context-menu li button {
     @apply pointer-events-auto pr-2 hover:pl-2 hover:pr-1 p-1 rounded-md transition-all duration-200 cursor-pointer
-    hover:bg-gray-800 w-full flex gap-2 justify-start items-center;
+    hover:bg-white hover:bg-opacity-10 w-full flex gap-2 justify-start items-center;
   }
 
   .step-part {

@@ -363,7 +363,7 @@
       enableKeyboard={false}
     />
 
-    <div class="grid bg-gray-600 h-[4rem] absolute bottom-0 w-full">
+    <div class="grid bg-backgroundLv2 h-[4rem] absolute bottom-0 w-full">
       <button class="flex px-3 py-2" on:mousedown={pause}>
         <Range bind:value={sequenceAlpha} min={initAlpha} max={finalAlpha} step="0.025" />
       </button>

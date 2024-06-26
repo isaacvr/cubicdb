@@ -23,7 +23,7 @@
   import { timer } from "@helpers/timer";
   import { GANInput } from "./input-handlers/GAN";
   import { QiYiSmartTimerInput } from "./input-handlers/QY-Timer";
-  import { ExternalTimerInput } from "./input-handlers/ExternalTimer";
+  // import { ExternalTimerInput } from "./input-handlers/ExternalTimer";
 
   // ICONS
   import TuneIcon from "@icons/Tune.svelte";
@@ -365,21 +365,21 @@
     }
   }
 
-  function selectExternalTimer(id: string) {
-    if (id === $deviceID) {
-      deviceID.set("");
-    } else {
-      deviceID.set(id);
+  // function selectExternalTimer(id: string) {
+  //   if (id === $deviceID) {
+  //     deviceID.set("");
+  //   } else {
+  //     deviceID.set(id);
 
-      if (!($inputMethod instanceof ExternalTimerInput)) {
-        $inputMethod.disconnect();
-        inputMethod.set(new ExternalTimerInput(inputContext));
-      }
+  //     if (!($inputMethod instanceof ExternalTimerInput)) {
+  //       $inputMethod.disconnect();
+  //       inputMethod.set(new ExternalTimerInput(inputContext));
+  //     }
 
-      ($inputMethod as ExternalTimerInput).setExternal(id);
-      dataService.external(id, { type: "session", value: $session });
-    }
-  }
+  //     ($inputMethod as ExternalTimerInput).setExternal(id);
+  //     dataService.external(id, { type: "session", value: $session });
+  //   }
+  // }
 
   function addTool(tool: ToolItem) {
     showToolsMenu = false;
@@ -562,7 +562,7 @@
     {/if}
 
     <!-- External Timer -->
-    {#if modalData.settings.input === "ExternalTimer"}
+    <!-- {#if modalData.settings.input === "ExternalTimer"}
       <section class="bg-white bg-opacity-10 p-2 shadow-md rounded-md">
         <ul class="mt-4">
           {#each $externalTimers as { id, name } (id)}
@@ -581,7 +581,7 @@
           {/each}
         </ul>
       </section>
-    {/if}
+    {/if} -->
 
     <!-- Stackmat selector -->
     {#if modalData.settings.input === "StackMat"}

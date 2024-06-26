@@ -17,8 +17,21 @@ import type {
 
 export class ElectronAdaptor implements IPC {
   private ipc: IPC;
+  private cache: Map<string, string>;
+
   constructor() {
     this.ipc = (<any>window).electronAPI as IPC;
+    this.cache = new Map();
+    this.init();
+  }
+
+  async init() {
+    let c = await (this.ipc as any).cacheGetAll();
+
+    for (let i = 0, maxi = c.length; i < maxi; i += 1) {
+      let cc = c[i];
+      this.cache.set(cc[0], cc[1]);
+    }
   }
 
   getAlgorithms(options: AlgorithmOptions): Promise<Algorithm[]> {
@@ -198,20 +211,25 @@ export class ElectronAdaptor implements IPC {
   }
 
   cacheGetImage(hash: string): Promise<string> {
-    return this.ipc.cacheGetImage(hash);
+    // return this.ipc.cacheGetImage(hash);
+    return Promise.resolve(this.cache.get(hash) || "");
   }
 
   cacheGetImageBundle(hashes: string[]): Promise<string[]> {
-    return this.ipc.cacheGetImageBundle(hashes);
+    // return this.ipc.cacheGetImageBundle(hashes);
+    return Promise.resolve(hashes.map(h => this.cache.get(h) || ""));
   }
 
   cacheSaveImage(hash: string, data: string): Promise<void> {
+    this.cache.set(hash, data);
     return this.ipc.cacheSaveImage(hash, data);
   }
 
   clearCache(db: ICacheDB) {
     switch (db) {
-      case "Cache":
+      case "Cache": {
+        this.cache.clear();
+      }
       case "Solves":
       case "Sessions": {
         return this.ipc.clearCache(db);

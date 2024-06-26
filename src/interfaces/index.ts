@@ -232,8 +232,8 @@ export type TimerInput =
   | "Manual"
   | "StackMat"
   | "GAN Cube"
-  | "QY-Timer"
-  | "ExternalTimer";
+  | "QY-Timer";
+  // | "ExternalTimer";
 export type SessionType = "mixed" | "single" | "multi-step";
 
 export const TIMER_INPUT: TimerInput[] = [
@@ -241,7 +241,7 @@ export const TIMER_INPUT: TimerInput[] = [
   "Manual",
   "StackMat",
   "GAN Cube" /*, 'QY-Timer'*/,
-  "ExternalTimer",
+  // "ExternalTimer",
 ];
 export const SESSION_TYPE: SessionType[] = ["mixed", "single", "multi-step"];
 
@@ -832,6 +832,7 @@ export interface Language {
     timerFont: string;
     screen: string;
     zoomFactor: string;
+    deleteStorage: string;
 
     // Updates
     update: string;

@@ -78,4 +78,8 @@ module.exports = (ipcMain, dbPath) => {
       }
     }
   });
+
+  ipcMain.handle("cache-get-all", async () => {
+    return [...cache];
+  });
 };

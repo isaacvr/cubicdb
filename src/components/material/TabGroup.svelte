@@ -63,8 +63,8 @@
       <Button color="none" ariaLabel={ tab.ariaLabel }
         class="rounded-none w-full border border-gray-400 border-l-transparent first:border-l-gray-400 
         { tab.index === $selectedTab
-          ? 'bg-blue-400 text-black hover:bg-blue-500 hover:bg-opacity-100'
-          : 'bg-gray-700 hover:bg-gray-600' }"
+          ? 'bg-blue-500 text-black hover:bg-blue-600 z-10 '
+          : 'bg-backgroundLv1 hover:bg-backgroundLv2' }"
         on:click={ () => selectTab(tab) }
       >
         {#if tab.icon }
