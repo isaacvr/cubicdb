@@ -129,12 +129,9 @@ module.exports = (ipcMain, Algorithms, dbPath) => {
 
   ipcMain.handle("algorithms-version", async () => {
     try {
-      let vs = await fsp.readFile(path.join(dbPath, "versions.json"), { encoding: "utf8" });
+      let vs = await fsp.readFile(path.join(dbPath, "algversion.json"), { encoding: "utf8" });
       let vsJSON = JSON.parse(vs);
-
-      if (vsJSON.algorithms) {
-        return vsJSON.algorithms;
-      }
+      return vsJSON;
     } catch {}
 
     return { version: "0.0.0", minVersion: "0.0.0" };

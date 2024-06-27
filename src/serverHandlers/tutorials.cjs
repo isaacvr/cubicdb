@@ -83,12 +83,9 @@ module.exports = (ipcMain, Tutorials, dbPath) => {
 
   ipcMain.handle("tutorials-version", async () => {
     try {
-      let vs = await fsp.readFile(path.join(dbPath, "versions.json"), { encoding: "utf8" });
+      let vs = await fsp.readFile(path.join(dbPath, "tutversion.json"), { encoding: "utf8" });
       let vsJSON = JSON.parse(vs);
-
-      if (vsJSON.tutorials) {
-        return vsJSON.tutorials;
-      }
+      return vsJSON;
     } catch (err) {
       console.log("ERROR: ", err);
     }
