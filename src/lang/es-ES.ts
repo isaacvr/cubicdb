@@ -108,9 +108,10 @@ export const Spanish: Language = {
     version: "Versión",
     checkUpdate: "Buscar actualización",
     updateAvailable: "Actualización disponible",
-    updateAvailableText: "Hay una nueva versión disponible.",
+    updateAvailableText: "Hay una nueva versión disponible de $1.",
     alreadyUpdated: "Actualizado",
-    alreadyUpdatedText: "Ya tienes la última versión de CubeDB.",
+    alreadyUpdatedText: "Ya tienes la última versión de $1.",
+    needsUpdate: "Hay una nueva versión de $1, pero necesitas al menos la versión $2 de CubeDB. Por favor, actualiza CubeDB para tener la última versión.",
 
     updateError: "Error",
     updateErrorText: "Hubo un error al intentar actualizar.",

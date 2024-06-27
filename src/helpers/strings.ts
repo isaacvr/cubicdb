@@ -204,7 +204,9 @@ export function parseReconstruction(s: string, puzzle: PuzzleType, order: number
 
       switch (puzzle) {
         case "square1": {
-          sequenceIndex = newArr(finalAlpha).fill(0).map((_, i) => i);
+          sequenceIndex = newArr(finalAlpha)
+            .fill(0)
+            .map((_, i) => i);
           break;
         }
 
@@ -258,4 +260,14 @@ export function prettyScramble(scramble: string): string {
     .trim()
     .replace(/\s*<br>\s*/g, "\n")
     .replace(/(\n\s+)/g, "\n");
+}
+
+export function replaceParams(str: string, params: string[]): string {
+  let s1 = str;
+
+  for (let i = 0, maxi = params.length; i < maxi; i += 1) {
+    s1 = s1.replaceAll("$" + (i + 1), params[i]);
+  }
+
+  return s1;
 }

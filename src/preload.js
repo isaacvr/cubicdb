@@ -10,6 +10,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
   removeAlgorithm: async alg => ipc.invoke("remove-algorithm", alg),
   algorithmsVersion: async () => ipc.invoke("algorithms-version"),
   checkAlgorithms: async () => ipc.invoke("algorithms-check"),
+  updateAlgorithms: async () => ipc.invoke("update-algorithms"),
 
   getCards: async () => ipc.invoke("cards"),
 
@@ -37,6 +38,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
   removeTutorial: async t => ipc.invoke("remove-tutorial", t),
   tutorialsVersion: async () => ipc.invoke("tutorials-version"),
   checkTutorials: async () => ipc.invoke("tutorials-check"),
+  updateTutorials: async () => ipc.invoke("update-tutorials"),
 
   // Misc functions
   minimize: async () => ipc.invoke("minimize"),

@@ -4,7 +4,7 @@
   import Select from "@material/Select.svelte";
   import { DataService } from "@stores/data.service";
   import { version } from "@stores/version.store";
-  import { randomUUID } from "@helpers/strings";
+  import { randomUUID, replaceParams } from "@helpers/strings";
   import { timer } from "@helpers/timer";
   import type { Display } from "electron";
   import { CubeDBICON } from "@constants";
@@ -123,46 +123,67 @@
     return 0;
   }
 
+  function sendUpdateError() {
+    notService.addNotification({
+      header: $localLang.SETTINGS.updateError,
+      text: $localLang.SETTINGS.updateErrorText,
+      timeout: 2000,
+      key: randomUUID(),
+      icon: CubeDBICON,
+    });
+  }
+
+  function sendAlreadyUpdated(name: string) {
+    notService.addNotification({
+      header: $localLang.SETTINGS.alreadyUpdated,
+      text: replaceParams($localLang.SETTINGS.alreadyUpdatedText, [name]),
+      fixed: true,
+      actions: [{ text: $localLang.global.accept, callback: () => {} }],
+      key: randomUUID(),
+      icon: CubeDBICON,
+    });
+  }
+
+  function sendUpdateAvailable(name: string, v: string, cb: (m: MouseEvent) => void) {
+    notService.addNotification({
+      header: `${$localLang.SETTINGS.updateAvailable} (${v})`,
+      text: replaceParams($localLang.SETTINGS.updateAvailableText, [name]),
+      fixed: true,
+      actions: [
+        { text: $localLang.global.cancel, callback: () => {}, color: "alternative" },
+        { text: $localLang.global.update, callback: cb, color: "purple" },
+      ],
+      key: randomUUID(),
+      icon: CubeDBICON,
+    });
+  }
+
+  function sendNeedsUpdate(name: string, minVersion: string) {
+    notService.addNotification({
+      header: $localLang.SETTINGS.updateAvailable,
+      text: replaceParams($localLang.SETTINGS.needsUpdate, [name, minVersion]),
+      fixed: true,
+      actions: [{ text: $localLang.global.accept, callback: () => {} }],
+      key: randomUUID(),
+      icon: CubeDBICON,
+    });
+  }
+
   function checkUpdate() {
     canCheckUpdate = false;
     dataService
       .update("check")
       .then(res => {
         if (!res) return;
-        let cmpRes = cmpVersions($version, res);
 
-        if (cmpRes <= 0) {
-          notService.addNotification({
-            header: $localLang.SETTINGS.alreadyUpdated,
-            text: $localLang.SETTINGS.alreadyUpdatedText,
-            fixed: true,
-            actions: [{ text: $localLang.global.accept, callback: () => {} }],
-            key: randomUUID(),
-            icon: CubeDBICON,
-          });
+        if (cmpVersions($version, res) >= 0) {
+          sendAlreadyUpdated("CubeDB");
         } else {
-          notService.addNotification({
-            header: `${$localLang.SETTINGS.updateAvailable} (${res})`,
-            text: $localLang.SETTINGS.updateAvailableText,
-            fixed: true,
-            actions: [
-              { text: $localLang.global.cancel, callback: () => {}, color: "alternative" },
-              { text: $localLang.global.update, callback: updateNow, color: "purple" },
-            ],
-            key: randomUUID(),
-            icon: CubeDBICON,
-          });
+          sendUpdateAvailable("CubeDB", res, updateNow);
         }
       })
       .catch(err => {
-        notService.addNotification({
-          header: $localLang.SETTINGS.updateError,
-          text: $localLang.SETTINGS.updateErrorText,
-          timeout: 2000,
-          key: randomUUID(),
-          icon: CubeDBICON,
-        });
-
+        sendUpdateError();
         console.dir(err);
       })
       .finally(() => (canCheckUpdate = true));
@@ -176,6 +197,30 @@
       })
       .catch(err => {
         console.log("update error: ");
+        console.dir(err);
+      });
+  }
+
+  function updateAlgs() {
+    dataService
+      .updateAlgorithms()
+      .then(() => {
+        getVersions();
+      })
+      .catch(err => {
+        console.log("update algs error: ");
+        console.dir(err);
+      });
+  }
+
+  function updateTuts() {
+    dataService
+      .updateTutorials()
+      .then(() => {
+        getVersions();
+      })
+      .catch(err => {
+        console.log("update tuts error: ");
         console.dir(err);
       });
   }
@@ -248,11 +293,59 @@
   }
 
   function checkAlgs() {
-    dataService.checkAlgorithms().then(res => console.log("ALGS: ", res));
+    canCheckAlgs = false;
+    dataService
+      .checkAlgorithms()
+      .then(res => {
+        console.log("ALGS: ", res);
+
+        if (res.version === "0.0.0") {
+          return sendUpdateError();
+        }
+
+        let cmpRes = cmpVersions(algVersion, res.version);
+
+        if (cmpRes >= 0) {
+          return sendAlreadyUpdated($localLang.HOME.algorithms);
+        }
+
+        let cmpvRes = cmpVersions(res.minVersion, $version);
+
+        if (cmpvRes > 0) {
+          return sendNeedsUpdate($localLang.HOME.algorithms, res.minVersion);
+        }
+
+        sendUpdateAvailable($localLang.HOME.algorithms, res.version, updateAlgs);
+      })
+      .finally(() => (canCheckAlgs = true));
   }
 
   function checkTuts() {
+    canCheckTuts = false;
+    dataService
+      .checkAlgorithms()
+      .then(res => {
+        console.log("TUTS: ", res);
 
+        if (res.version === "0.0.0") {
+          return sendUpdateError();
+        }
+
+        let cmpRes = cmpVersions(tutVersion, res.version);
+
+        if (cmpRes >= 0) {
+          return sendAlreadyUpdated($localLang.HOME.tutorials);
+        }
+
+        let cmpvRes = cmpVersions(res.minVersion, $version);
+
+        if (cmpvRes > 0) {
+          return sendNeedsUpdate($localLang.HOME.tutorials, res.minVersion);
+        }
+
+        sendUpdateAvailable($localLang.HOME.tutorials, res.version, updateTuts);
+      })
+      .finally(() => (canCheckTuts = true));
   }
 
   onMount(() => {

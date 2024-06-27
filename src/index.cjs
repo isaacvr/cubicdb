@@ -11,7 +11,7 @@ const {
 } = require("fs");
 const { tmpdir, networkInterfaces } = require("os");
 const { exec } = require("child_process");
-const { Server } = require("socket.io");
+// const { Server } = require("socket.io");
 
 const NeDB = require("nedb");
 const archiver = require("archiver");

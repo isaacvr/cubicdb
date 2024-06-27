@@ -193,6 +193,10 @@ export class IndexedDBAdaptor implements IPC {
     return Promise.resolve({ version: "0.0.0", minVersion: "0.0.0" });
   }
 
+  updateAlgorithms() {
+    return Promise.resolve(false);
+  }
+
   getTutorials() {
     return Promise.resolve(tuts);
   }
@@ -226,6 +230,10 @@ export class IndexedDBAdaptor implements IPC {
 
   checkTutorials() {
     return Promise.resolve({ version: "0.0.0", minVersion: "0.0.0" });
+  }
+
+  updateTutorials() {
+    return Promise.resolve(false);
   }
 
   // Solves

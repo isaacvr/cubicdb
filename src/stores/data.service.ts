@@ -136,6 +136,10 @@ export class DataService {
     return this.ipc.checkAlgorithms();
   }
 
+  updateAlgorithms() {
+    return this.ipc.updateAlgorithms();
+  }
+
   getTutorials() {
     return this.ipc.getTutorials();
   }
@@ -154,6 +158,10 @@ export class DataService {
 
   removeTutorial(t: ITutorial) {
     return this.ipc.removeTutorial(t);
+  }
+
+  updateTutorials() {
+    return this.ipc.updateTutorials();
   }
 
   tutorialsVersion() {

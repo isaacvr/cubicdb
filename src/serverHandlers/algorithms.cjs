@@ -1,5 +1,8 @@
 const fsp = require("node:fs/promises");
 const path = require("node:path");
+const { app } = require("electron");
+
+const FOREIGN_PATH = "https://raw.githubusercontent.com/isaacvr/cubedb-svelte/beta/src/database";
 
 /**
  * @typedef {import('electron').IpcMain} IpcMain
@@ -139,14 +142,30 @@ module.exports = (ipcMain, Algorithms, dbPath) => {
 
   ipcMain.handle("algorithms-check", async () => {
     try {
-      let data = await fetch(
-        "https://github.com/isaacvr/cubedb-svelte/tree/beta/src/database/versions.json"
-      ).then(res => res.json());
+      let data = await fetch(FOREIGN_PATH + "/algversion.json").then(res => res.json());
 
       if (data) {
         return data;
       }
     } catch {}
     return { version: "0.0.0", minVersion: "0.0.0" };
+  });
+
+  ipcMain.handle("update-algorithms", async () => {
+    try {
+      let data = await fetch(FOREIGN_PATH + "/algs.db").then(res => res.text());
+      await fsp.writeFile(path.join(dbPath, "algs.db"), data, { encoding: "utf8" });
+
+      let algVersion = await fetch(FOREIGN_PATH + "/algversion.json").then(res => res.text());
+      await fsp.writeFile(path.join(dbPath, "algversion.json"), algVersion, { encoding: "utf8" });
+
+      setTimeout(() => {
+        app.relaunch({ args: process.argv.slice(1) });
+        app.exit(0);
+      }, 5000);
+
+      return true;
+    } catch {}
+    return false;
   });
 };
