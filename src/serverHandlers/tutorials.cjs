@@ -1,4 +1,4 @@
-const fs = require("node:fs");
+const fsp = require("node:fs/promises");
 const path = require("node:path");
 
 /**
@@ -71,7 +71,39 @@ module.exports = (ipcMain, Tutorials, dbPath) => {
   });
 
   ipcMain.handle("tutorials-storage", async () => {
-    let stats = fs.statSync(path.join(dbPath, "tutorials.db"));
-    return stats.size;
+    try {
+      let stats = await fsp.stat(path.join(dbPath, "tutorials.db"));
+      return stats.size;
+    } catch {
+      return 0;
+    }
+  });
+
+  ipcMain.handle("tutorials-version", async () => {
+    try {
+      let vs = await fsp.readFile(path.join(dbPath, "versions.json"), { encoding: "utf8" });
+      let vsJSON = JSON.parse(vs);
+
+      if (vsJSON.tutorials) {
+        return vsJSON.tutorials;
+      }
+    } catch (err) {
+      console.log("ERROR: ", err);
+    }
+
+    return { version: "0.0.0", minVersion: "0.0.0" };
+  });
+
+  ipcMain.handle("tutorials-check", async () => {
+    try {
+      let data = await fetch(
+        "https://github.com/isaacvr/cubedb-svelte/tree/beta/src/database/versions.json"
+      ).then(res => res.json());
+
+      if (data) {
+        return data;
+      }
+    } catch {}
+    return { version: "0.0.0", minVersion: "0.0.0" };
   });
 };

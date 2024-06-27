@@ -557,12 +557,16 @@ export interface IPC {
   updateAlgorithm: (alg: Algorithm) => Promise<Algorithm>;
   addAlgorithm: (alg: Algorithm) => Promise<Algorithm>;
   removeAlgorithm: (alg: Algorithm) => Promise<boolean>;
+  algorithmsVersion: () => Promise<{ version: string, minVersion: string }>;
+  checkAlgorithms: () => Promise<{ version: string, minVersion: string }>;
 
   getTutorials: () => Promise<ITutorial[]>;
   getTutorial: (puzzle: string, shortName: string, lang: string) => Promise<ITutorial | null>;
   addTutorial: (t: ITutorial) => Promise<ITutorial>;
   updateTutorial: (t: ITutorial) => Promise<ITutorial>;
   removeTutorial: (t: ITutorial) => Promise<ITutorial>;
+  tutorialsVersion: () => Promise<{ version: string, minVersion: string }>;
+  checkTutorials: () => Promise<{ version: string, minVersion: string }>;
 
   getSolves: () => Promise<Solve[]>;
   addSolve: (s: Solve) => Promise<Solve>;

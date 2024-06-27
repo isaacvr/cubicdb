@@ -74,6 +74,14 @@ export class ElectronAdaptor implements IPC {
     return this.ipc.removeAlgorithm(cp);
   }
 
+  algorithmsVersion() {
+    return this.ipc.algorithmsVersion();
+  }
+
+  checkAlgorithms() {
+    return this.ipc.checkAlgorithms();
+  }
+
   getTutorials() {
     return this.ipc.getTutorials();
   }
@@ -92,6 +100,14 @@ export class ElectronAdaptor implements IPC {
 
   removeTutorial(t: ITutorial) {
     return this.ipc.removeTutorial(t);
+  }
+  
+  tutorialsVersion() {
+    return this.ipc.tutorialsVersion();
+  }
+
+  checkTutorials() {
+    return this.ipc.checkTutorials();
   }
 
   getSolves() {

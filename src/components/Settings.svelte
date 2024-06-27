@@ -26,6 +26,8 @@
   import { localLang } from "@stores/language.service";
   import type { ICacheDB, IStorageInfo, Language } from "@interfaces";
   import { byteToString } from "@helpers/math";
+  import Modal from "./Modal.svelte";
+  import axios from "axios";
 
   // ICONS
   import ScreenIcon from "@icons/Monitor.svelte";
@@ -33,7 +35,6 @@
   import UpdateIcon from "@icons/Update.svelte";
   import StorageIcon from "@icons/Harddisk.svelte";
   import CleanIcon from "@icons/DeleteAlert.svelte";
-  import Modal from "./Modal.svelte";
 
   const notService = NotificationService.getInstance();
 
@@ -61,6 +62,8 @@
   let zoomFactor: number = ~~(localStorage.getItem("zoom-factor") || DEFAULT_ZOOM_FACTOR);
   let initialZoomFactor = zoomFactor;
   let canCheckUpdate = true;
+  let canCheckAlgs = true;
+  let canCheckTuts = true;
   let dTime = 10587;
   let itv: NodeJS.Timeout;
   let displays: Display[] = [];
@@ -76,6 +79,8 @@
   let showDelete = false;
   let sDb: ICacheDB = "Cache";
   let sName = "";
+  let algVersion = "0.0.0";
+  let tutVersion = "0.0.0";
 
   function save() {
     localStorage.setItem("app-font", appFont);
@@ -103,29 +108,30 @@
     save();
   }
 
+  function cmpVersions(v1: string, v2: string) {
+    let a = v1.split(".").map(Number);
+    let b = v2.split(".").map(Number);
+
+    if (a.length < b.length) return -1;
+    if (a.length > b.length) return 1;
+
+    for (let i = 0, maxi = a.length; i < maxi; i += 1) {
+      if (a[i] < b[i]) return -1;
+      if (a[i] > b[i]) return 1;
+    }
+
+    return 0;
+  }
+
   function checkUpdate() {
     canCheckUpdate = false;
     dataService
       .update("check")
       .then(res => {
         if (!res) return;
+        let cmpRes = cmpVersions($version, res);
 
-        let p1 = $version.split(".").map(Number);
-        let p2 = res.split(".").map(Number);
-
-        let cmp = (a: number[], b: number[]) => {
-          if (a.length < b.length) return -1;
-          if (a.length > b.length) return 1;
-
-          for (let i = 0, maxi = a.length; i < maxi; i += 1) {
-            if (a[i] < b[i]) return -1;
-            if (a[i] > b[i]) return 1;
-          }
-
-          return 0;
-        };
-
-        if (cmp(p2, p1) <= 0) {
+        if (cmpRes <= 0) {
           notService.addNotification({
             header: $localLang.SETTINGS.alreadyUpdated,
             text: $localLang.SETTINGS.alreadyUpdatedText,
@@ -231,9 +237,28 @@
     document.documentElement.style.setProperty("--zoom-factor", "" + zoomFactor);
   }
 
+  async function getVersions() {
+    let versions = await Promise.all([
+      dataService.algorithmsVersion(),
+      dataService.tutorialsVersion(),
+    ]);
+
+    algVersion = versions[0].version;
+    tutVersion = versions[1].version;
+  }
+
+  function checkAlgs() {
+    dataService.checkAlgorithms().then(res => console.log("ALGS: ", res));
+  }
+
+  function checkTuts() {
+
+  }
+
   onMount(() => {
     updateDisplays();
     updateStorage();
+    getVersions();
 
     itv = setInterval(() => {
       dTime = Math.random() * 20000;
@@ -339,16 +364,44 @@
           {$localLang.SETTINGS.update}
         </div>
 
-        <div class="flex items-center justify-center gap-4">
-          <div class="flex items-center justify-center gap-2">
-            {$localLang.SETTINGS.version}: <mark>{$version}</mark>
+        <div class="grid gap-4 place-items-center w-max mx-auto">
+          <div class="flex w-full gap-4 items-center">
+            <span>{$localLang.SETTINGS.version} (CubeDB):</span>
+            <mark class="ml-auto">{$version}</mark>
             <Button on:click={() => canCheckUpdate && checkUpdate()}>
               {#if !canCheckUpdate}
                 <Spinner size="4" color="white" />
               {:else}
-                {$localLang.SETTINGS.checkUpdate}
+                <UpdateIcon size="1.2rem" />
               {/if}
             </Button>
+            <Tooltip>{$localLang.SETTINGS.checkUpdate}</Tooltip>
+          </div>
+
+          <div class="flex w-full gap-4 items-center">
+            <span>{$localLang.HOME.algorithms}:</span>
+            <mark class="ml-auto">{algVersion}</mark>
+            <Button on:click={() => canCheckAlgs && checkAlgs()}>
+              {#if !canCheckAlgs}
+                <Spinner size="4" color="white" />
+              {:else}
+                <UpdateIcon size="1.2rem" />
+              {/if}
+            </Button>
+            <Tooltip>{$localLang.SETTINGS.checkUpdate}</Tooltip>
+          </div>
+
+          <div class="flex w-full gap-4 items-center">
+            <span>{$localLang.HOME.tutorials}:</span>
+            <mark class="ml-auto">{tutVersion}</mark>
+            <Button on:click={() => canCheckTuts && checkTuts()}>
+              {#if !canCheckTuts}
+                <Spinner size="4" color="white" />
+              {:else}
+                <UpdateIcon size="1.2rem" />
+              {/if}
+            </Button>
+            <Tooltip>{$localLang.SETTINGS.checkUpdate}</Tooltip>
           </div>
         </div>
       </TabItem>

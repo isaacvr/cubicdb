@@ -1,13 +1,13 @@
-const fs = require('node:fs');
-const path = require('node:path');
+const fsp = require("node:fs/promises");
+const path = require("node:path");
 
 /**
  * @typedef {import('electron').IpcMain} IpcMain
  * @typedef {import('nedb')} NeDB
- * 
- * @param {IpcMain} ipcMain 
+ *
+ * @param {IpcMain} ipcMain
  * @param {NeDB} Algorithms
- * @param {string} dbPath 
+ * @param {string} dbPath
  */
 module.exports = (ipcMain, Algorithms, dbPath) => {
   ipcMain.handle("get-algorithms", async (_, arg) => {
@@ -116,7 +116,37 @@ module.exports = (ipcMain, Algorithms, dbPath) => {
   });
 
   ipcMain.handle("algorithms-storage", async () => {
-    let stats = fs.statSync(path.join(dbPath, "algs.db"));
-    return stats.size;
+    try {
+      let stats = await fsp.stat(path.join(dbPath, "algs.db"));
+      return stats.size;
+    } catch {
+      return 0;
+    }
+  });
+
+  ipcMain.handle("algorithms-version", async () => {
+    try {
+      let vs = await fsp.readFile(path.join(dbPath, "versions.json"), { encoding: "utf8" });
+      let vsJSON = JSON.parse(vs);
+
+      if (vsJSON.algorithms) {
+        return vsJSON.algorithms;
+      }
+    } catch {}
+
+    return { version: "0.0.0", minVersion: "0.0.0" };
+  });
+
+  ipcMain.handle("algorithms-check", async () => {
+    try {
+      let data = await fetch(
+        "https://github.com/isaacvr/cubedb-svelte/tree/beta/src/database/versions.json"
+      ).then(res => res.json());
+
+      if (data) {
+        return data;
+      }
+    } catch {}
+    return { version: "0.0.0", minVersion: "0.0.0" };
   });
 };
