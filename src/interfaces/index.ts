@@ -834,6 +834,7 @@ export interface Language {
     importExport: string;
     contest: string;
     tools: string;
+    about: string;
   };
   SETTINGS: {
     title: string;

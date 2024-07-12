@@ -97,6 +97,7 @@ export const English: Language = {
     importExport: "Import / Export",
     contest: "Contest",
     tools: "Tools",
+    about: "About CubeDB",
   },
   SETTINGS: {
     title: "Settings",

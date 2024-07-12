@@ -123,12 +123,9 @@
   <Route path="/timer" let:params>
     <Lazy component={import("@components/timer/Timer.svelte")} {params} />
   </Route>
-  <!-- <Route path="/reconstructions" let:params>
+  <Route path="/reconstructions" let:params>
     <Lazy component={import("@components/Reconstruction.svelte")} {params} />
-  </Route> -->
-  
-  <Route path="/reconstructions" component={Reconstruction} />
-
+  </Route>
   <Route path="/battle" let:params>
     <Lazy component={import("@components/battle/Battle.svelte")} {params} />
   </Route>

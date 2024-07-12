@@ -80,10 +80,10 @@
         cube: "/assets/settings.png",
       },
       {
-        title: "CubeDB",
+        title: HOME.about,
         route: "/cubedb",
         cube: "/assets/logo-500.png",
-        ready: false,
+        ready: true,
       },
       {
         title: "Remote",

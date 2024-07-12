@@ -97,6 +97,7 @@ export const Spanish: Language = {
     importExport: "Importar / Exportar",
     contest: "Concursos",
     tools: "Herramientas",
+    about: "Sobre CubeDB",
   },
   SETTINGS: {
     title: "Configuración",
