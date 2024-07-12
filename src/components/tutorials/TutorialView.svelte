@@ -7,10 +7,10 @@
     LanguageCode,
   } from "@interfaces";
   import { onMount, tick } from "svelte";
-  import { CubeDBICON, ICONS } from "@constants";
+  import { ICONS } from "@constants";
   import WCACategory from "@components/wca/WCACategory.svelte";
   import CubesView from "./CubesView.svelte";
-  import { Button, Dropdown, DropdownItem, Toggle, Modal, Input } from "flowbite-svelte";
+  import { Button, Dropdown, DropdownItem, Modal, Input } from "flowbite-svelte";
   import TextView from "./TextView.svelte";
   import ListView from "./ListView.svelte";
   import Select from "@components/material/Select.svelte";
@@ -31,7 +31,6 @@
   import ListIcon from "@icons/ListBox.svelte";
   import SettingIcon from "@icons/Cog.svelte";
   import { NotificationService } from "@stores/notification.service";
-  import { randomUUID } from "@helpers/strings";
 
   const dataService = DataService.getInstance();
   const location = useLocation();
@@ -77,7 +76,7 @@
   let tAlgs = 0;
   let tLevel = 0;
   let tLang: LanguageCode = $localLang.code;
-  let tIcon: Scrambler | undefined = "333";
+  let tIcon: Scrambler | "fundamentals" | undefined = "333";
   let modalType: "delete" | "edit-step" | "edit-tutorial" = "edit-step";
 
   function edit(pos: number) {
@@ -143,11 +142,8 @@
 
     dataService.updateTutorial(tut).then(() => {
       NotificationService.getInstance().addNotification({
-        key: randomUUID(),
         header: $localLang.global.done,
         text: $localLang.global.settingsSaved,
-        icon: CubeDBICON,
-        fixed: false,
         timeout: 1000,
       });
       navigate(
@@ -230,8 +226,8 @@
     let lang = map.get("lang") || "EN";
     let parts = $location.pathname.split("/").slice(2);
 
-    if ( parts.length != 2 ) {
-      return navigate('/tutorials');
+    if (parts.length != 2) {
+      return navigate("/tutorials");
     }
 
     editMode = JSON.parse(map.get("edit") || "false");
@@ -265,7 +261,7 @@
 
 <div class="tutorial pr-6 text-justify text-gray-400">
   <!-- Content -->
-  <section class="content max-w-3xl h-full">
+  <section class="content max-w-3xl h-full mx-auto">
     <div class="title" bind:this={contentRef}>
       <div class="icon">
         {#if index > 0 ? currentStep.icon : tut.icon}

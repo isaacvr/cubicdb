@@ -1,6 +1,18 @@
 <script lang="ts">
   import { derived, type Writable } from "svelte/store";
-  import { Button, Modal, Popover, Range, Spinner, Dropdown, DropdownItem } from "flowbite-svelte";
+  import {
+    Button,
+    Modal,
+    Popover,
+    Range,
+    Spinner,
+    Dropdown,
+    DropdownItem,
+    Table,
+    TableBody,
+    TableBodyCell,
+    TableBodyRow,
+  } from "flowbite-svelte";
   import { DataService } from "@stores/data.service";
   import { NotificationService } from "@stores/notification.service";
   import { localLang } from "@stores/language.service";
@@ -14,8 +26,8 @@
     type TimerInputHandler,
     type ToolItem,
   } from "@interfaces";
-  import { copyToClipboard, randomUUID } from "@helpers/strings";
-  import { CubeDBICON, STEP_COLORS } from "@constants";
+  import { copyToClipboard } from "@helpers/strings";
+  import { STEP_COLORS } from "@constants";
   import TextArea from "@components/material/TextArea.svelte";
   import Select from "@components/material/Select.svelte";
   import Checkbox from "@components/material/Checkbox.svelte";
@@ -36,7 +48,6 @@
   import BluetoothOffIcon from "@icons/BluetoothOff.svelte";
   import ToolsIcon from "@icons/Tools.svelte";
   import ChartIcon from "@icons/ChartLineVariant.svelte";
-  import HandIcon from "@icons/HandFrontRight.svelte";
   import MetronomeIcon from "@icons/Metronome.svelte";
   import WCACategory from "@components/wca/WCACategory.svelte";
   import ToolFrame from "./timer-tools/ToolFrame.svelte";
@@ -45,7 +56,6 @@
   import BldHelperTool from "./timer-tools/BLDHelperTool.svelte";
   import DailyStatsTool from "./timer-tools/DailyStatsTool.svelte";
   import MetronomeTool from "./timer-tools/MetronomeTool.svelte";
-  import StackmatTool from "./timer-tools/StackmatTool.svelte";
   import SolverTool from "./timer-tools/SolverTool.svelte";
 
   type TModal = "" | "edit-scramble" | "old-scrambles" | "settings";
@@ -94,8 +104,8 @@
   // OTHER
   let externalTimers = dataService.externalTimers;
   let isSearching = false;
-  let isConnecting = false;
   let showToolsMenu = false;
+  let connectingPos = -1;
 
   const BUTTON_CLASS = "w-7 h-7 p-1 ";
   const DD_CLASS = "font-medium p-2 text-sm dark:hover:bg-gray-600 flex items-center";
@@ -211,36 +221,12 @@
 
   let toolList: ActiveTool[] = [];
 
-  function showBluetoothData() {
-    notification.addNotification({
-      key: randomUUID(),
-      header: "GAN Cube",
-      text: "",
-      html: $bluetoothStatus
-        ? `
-        <ul>
-          <li>Name: ${bluetoothHardware?.deviceName || "--"}</li>
-          <li>Hardware Version: ${bluetoothHardware?.hardwareVersion || "--"}</li>
-          <li>Software Version: ${bluetoothHardware?.softwareVersion || "--"}</li>
-          <li>Gyroscope: ${bluetoothHardware?.gyro ?? "--"}</li>
-          <li>MAC: ${$deviceID != "default" ? $deviceID : "--"}</li>
-          <li>Battery: ${bluetoothBattery || "--"}%</li>
-        </ul>`
-        : `Disconnected`,
-      fixed: true,
-      actions: [{ text: "Ok", callback: () => {} }],
-      icon: CubeDBICON,
-    });
-  }
-
   function toClipboard() {
     copyToClipboard($scramble).then(() => {
       notification.addNotification({
-        key: randomUUID(),
         header: $localLang.global.done,
         text: $localLang.global.scrambleCopied,
         timeout: 1000,
-        icon: CubeDBICON,
       });
     });
   }
@@ -338,7 +324,6 @@
       })
       .catch(err => {
         // notification.addNotification({
-        //   key: randomUUID(),
         //   header: 'Search error',
         //   text: 'Bluetooth error.',
         // });
@@ -346,7 +331,7 @@
         console.log("ERROR: ", err);
       })
       .finally(() => {
-        isConnecting = false;
+        connectingPos = -1;
         isSearching = false;
       });
   }
@@ -358,7 +343,6 @@
   function connectBluetooth(id: string) {
     if (id != $deviceID) {
       isSearching = false;
-      isConnecting = true;
       dataService.connectBluetoothDevice(id);
     } else {
       $inputMethod.disconnect();
@@ -438,21 +422,56 @@
 
   {#if $session?.settings?.input === "GAN Cube"}
     <li>
-      <Tooltip position="right" text="GAN Cube">
-        <Button
-          aria-label={"GAN Cube"}
-          color="none"
-          class="{BUTTON_CLASS} {$bluetoothStatus ? 'text-blue-500' : 'text-gray-400'}"
-          on:click={showBluetoothData}
-          on:keydown={e => (e.code === "Space" ? e.preventDefault() : null)}
-        >
-          <svelte:component
-            this={$bluetoothStatus ? BluetoothOnIcon : BluetoothOffIcon}
-            width="100%"
-            height="100%"
-          />
-        </Button>
-      </Tooltip>
+      <Button
+        aria-label={"GAN Cube"}
+        color="none"
+        class="{BUTTON_CLASS} {$bluetoothStatus ? 'text-blue-500' : 'text-gray-400'}"
+        on:click={() => {}}
+        on:keydown={e => (e.code === "Space" ? e.preventDefault() : null)}
+      >
+        <svelte:component
+          this={$bluetoothStatus ? BluetoothOnIcon : BluetoothOffIcon}
+          width="100%"
+          height="100%"
+        />
+      </Button>
+
+      <Popover placement="right">
+        {#if $bluetoothStatus}
+          <Table>
+            <TableBody>
+              <TableBodyRow>
+                <TableBodyCell>{$localLang.global.name}</TableBodyCell>
+                <TableBodyCell>{bluetoothHardware?.deviceName || "-"}</TableBodyCell>
+              </TableBodyRow>
+              <TableBodyRow>
+                <TableBodyCell>Hardware Version</TableBodyCell>
+                <TableBodyCell>{bluetoothHardware?.hardwareVersion || "-"}</TableBodyCell>
+              </TableBodyRow>
+              <TableBodyRow>
+                <TableBodyCell>Software Version</TableBodyCell>
+                <TableBodyCell>{bluetoothHardware?.softwareVersion || "-"}</TableBodyCell>
+              </TableBodyRow>
+              <TableBodyRow>
+                <TableBodyCell>Gyroscope</TableBodyCell>
+                <TableBodyCell>
+                  {bluetoothHardware?.gyro ? $localLang.global.yes : $localLang.global.no}
+                </TableBodyCell>
+              </TableBodyRow>
+              <TableBodyRow>
+                <TableBodyCell>MAC</TableBodyCell>
+                <TableBodyCell>{$deviceID != "default" ? $deviceID : "-"}</TableBodyCell>
+              </TableBodyRow>
+              <TableBodyRow>
+                <TableBodyCell>Battery</TableBodyCell>
+                <TableBodyCell>{bluetoothBattery ? bluetoothBattery + "%" : "-"}</TableBodyCell>
+              </TableBodyRow>
+            </TableBody>
+          </Table>
+        {:else}
+          <BluetoothOffIcon size="2rem" />
+        {/if}
+      </Popover>
     </li>
   {/if}
 
@@ -656,15 +675,29 @@
         </div>
 
         <ul class="mt-4">
-          {#each $bluetoothList as { deviceId, deviceName } (deviceId)}
+          {#each $bluetoothList as { deviceId, deviceName }, pos (deviceId)}
             <li class="flex items-center justify-between pl-4 bg-white bg-opacity-10 rounded-md">
               {deviceName}
               <Button
                 color={deviceId === $deviceID ? "red" : "green"}
-                loading={isConnecting}
-                on:click={() => connectBluetooth(deviceId)}
+                class="gap-2"
+                on:click={() => {
+                  if (pos === connectingPos) return;
+                  if (deviceId === $deviceID) {
+                    deviceList = [];
+                    $inputMethod.disconnect();
+                    $deviceID = "default";
+                    return;
+                  }
+                  connectingPos = pos;
+                  connectBluetooth(deviceId);
+                }}
               >
-                {deviceId === $deviceID ? $localLang.TIMER.disconnect : $localLang.TIMER.connect}
+                {#if pos === connectingPos}
+                  <Spinner size="4" color="white" />
+                {:else}
+                  {deviceId === $deviceID ? $localLang.TIMER.disconnect : $localLang.TIMER.connect}
+                {/if}
               </Button>
             </li>
           {/each}
@@ -784,7 +817,7 @@
   }
 
   .tool-container {
-    @apply absolute top-0 grid gap-2 w-min z-0 max-h-full overflow-y-scroll;
+    @apply absolute top-0 grid gap-2 w-min z-10 max-h-full overflow-y-scroll;
     left: calc(100% + 0.5rem);
     max-width: min(calc(100vw - 3rem), 30rem);
     scrollbar-width: none;

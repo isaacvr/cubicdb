@@ -8,7 +8,7 @@
 </script>
 
 {#if icon === 'EN'}
-  <Us {role} {size} {ariaLabel}/>
+  <Us {role} {size} {ariaLabel} class="pointer-events-none" />
 {:else if icon === 'ES'}
-  <Es {role} {size} {ariaLabel}/>
+  <Es {role} {size} {ariaLabel} class="pointer-events-none" />
 {/if}

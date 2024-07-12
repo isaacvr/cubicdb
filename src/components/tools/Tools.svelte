@@ -15,13 +15,7 @@
   } from "@interfaces";
   import { globalLang } from "@stores/language.service";
   import { getLanguage } from "@lang/index";
-  import {
-    STANDARD_PALETTE,
-    SessionDefaultSettings,
-    type SCRAMBLE_MENU,
-    AON,
-    CubeDBICON,
-  } from "@constants";
+  import { STANDARD_PALETTE, SessionDefaultSettings, type SCRAMBLE_MENU, AON } from "@constants";
   import * as all from "@cstimer/scramble";
   import Tooltip from "@material/Tooltip.svelte";
   import CopyIcon from "@icons/ContentCopy.svelte";
@@ -37,7 +31,6 @@
   import { isBetween } from "@helpers/math";
   import { Button } from "flowbite-svelte";
   import Input from "@components/material/Input.svelte";
-  import RemoteTimer from "./RemoteTimer.svelte";
 
   type ToolOption =
     | "timer-only"
@@ -165,11 +158,9 @@
 
     copyToClipboard(str).then(() => {
       notification.addNotification({
-        key: randomUUID(),
         header: $localLang.global.done,
         text: $localLang.global.scrambleCopied,
         timeout: 1000,
-        icon: CubeDBICON,
       });
     });
   }
@@ -277,12 +268,10 @@
     }
 
     notification.addNotification({
-      key: randomUUID(),
       header,
       text,
       fixed: true,
       actions: [{ text: $localLang.global.done, color: "green", callback: () => {} }],
-      icon: CubeDBICON,
     });
   }
 
@@ -416,166 +405,172 @@
   {/if}
 </div>
 
-{#if option === "timer-only"}
-  <Timer bind:this={timer} timerOnly={true} />
-{:else if option === "scramble-only"}
-  <Timer
-    bind:this={timer}
-    scrambleOnly={true}
-    useMode={$mode[1]}
-    useLen={$mode[2]}
-    useProb={$prob}
-  />
-{:else if option === "scramble-batch"}
-  {#if scrambleBatch.length}
+<div class="content h-[calc(100vh-6rem)]">
+  {#if option === "timer-only"}
+    <Timer bind:this={timer} timerOnly={true} />
+  {:else if option === "scramble-only"}
+    <Timer
+      bind:this={timer}
+      scrambleOnly={true}
+      useMode={$mode[1]}
+      useLen={$mode[2]}
+      useProb={$prob}
+    />
+  {:else if option === "scramble-batch"}
+    {#if scrambleBatch.length}
+      <div
+        class="container-mini bg-white bg-opacity-10 mx-auto max-w-[calc(min(100%-2rem,100ch))] mt-4
+          w-max mb-0 p-4 rounded-md shadow-md text-center"
+      >
+        <ul class="text-gray-400 flex flex-col gap-2 max-h-[calc(100vh-25rem)] overflow-auto">
+          {#each scrambleBatch as scr, pos}
+            <li>{pos + 1}- {scr}</li>
+          {/each}
+        </ul>
+
+        <div class="flex gap-2 items-center justify-center pt-4">
+          <Tooltip
+            class="cursor-pointer transition-all duration-200
+          hover:text-purple-300 text-gray-400"
+            position="bottom"
+            text={$localLang.global.clickToCopy}
+          >
+            <Button color="alternative" class="h-8 w-8 p-0 me-3 rounded-full" on:click={toClipboard}
+              ><CopyIcon size="1.2rem" /></Button
+            >
+          </Tooltip>
+        </div>
+      </div>
+    {/if}
+
+    <div class="flex items-center justify-center gap-2 mt-8">
+      <Input type="number" class="!w-20" bind:value={batch} min={1} on:UENTER={generateBatch} />
+      <Button color="purple" on:click={generateBatch}>{$localLang.global.generate}</Button>
+    </div>
+  {:else if option === "statistics"}
+    <div class="mt-4">
+      <StatsTab {context} headless />
+    </div>
+
+    <hr class="border-gray-200 w-full mt-2" />
+
     <div
-      class="container-mini bg-white bg-opacity-10 mx-auto max-w-[calc(min(100%-2rem,100ch))] mt-4
-        w-max mb-0 p-4 rounded-md shadow-md text-center"
+      id="grid"
+      class="text-gray-400 gap-2 mx-8 my-4 grid max-h-[15rem] overflow-x-hidden overflow-y-auto"
     >
-      <ul class="text-gray-400 flex flex-col gap-2 max-h-[calc(100vh-25rem)] overflow-auto">
-        {#each scrambleBatch as scr, pos}
-          <li>{pos + 1}- {scr}</li>
+      {#each $solves as _, p}
+        <Tooltip text={$localLang.TOOLS.clickToDelete} position="top">
+          <button
+            class="shadow-md w-24 h-12 rounded-md p-1 bg-white bg-opacity-10 relative
+              flex items-center justify-center transition-all duration-200 select-none cursor-pointer
+      
+              hover:shadow-lg hover:bg-opacity-20
+            "
+            on:click={() => ($solves = $solves.filter(s => s != $solves[$solves.length - p - 1]))}
+          >
+            <span class="text-center font-bold"
+              >{sTimer($solves[$solves.length - p - 1], true)}</span
+            >
+          </button>
+        </Tooltip>
+      {/each}
+    </div>
+
+    <hr class="border-gray-200 w-full mb-2" />
+
+    <div class="w-[min(100%,30rem)] grid grid-cols-1 gap-2 mx-auto max-md:place-items-center">
+      <i class="text-yellow-500 flex items-center gap-2 justify-start">
+        {$localLang.TOOLS.writeYourTime}
+        <DownArrowIcon size="1.2rem" />
+      </i>
+      <div class="flex max-md:grid max-md:w-[min(90%,20rem)] items-center gap-2">
+        <Input
+          focus={true}
+          bind:value={timeStr}
+          stopKeyupPropagation
+          on:UENTER={addTimeString}
+          class="w-full text-8xl mx-auto !h-24 text-center {validTimeStr(timeStr)
+            ? ''
+            : '!border-red-400 !border-2'}
+            focus-within:shadow-black"
+          inpClass="text-center"
+        />
+        <Button color="purple" class="h-min" on:click={addTimeString}
+          >{$localLang.global.add}</Button
+        >
+        <Button color="red" class="h-min" on:click={clear}>{$localLang.global.clear}</Button>
+      </div>
+    </div>
+  {:else if option === "metrics"}
+    <div class="mt-8 grid text-center max-w-[50rem] mx-auto">
+      <p class="note mb-8">{getDescription($localLang.TOOLS, selectedMetric)}</p>
+
+      <span>{$localLang.global.moves}: {moves}</span>
+
+      <ul class="flex gap-2 py-8">
+        {#each metricDetails as md}
+          <li class="bg-green-800 rounded-md p-2">{md[0]}: {md[1]}</li>
         {/each}
       </ul>
 
-      <div class="flex gap-2 items-center justify-center pt-4">
-        <Tooltip
-          class="cursor-pointer transition-all duration-200
-        hover:text-purple-300 text-gray-400"
-          position="bottom"
-          text={$localLang.global.clickToCopy}
-        >
-          <Button color="alternative" class="h-8 w-8 p-0 me-3 rounded-full" on:click={toClipboard}
-            ><CopyIcon size="1.2rem" /></Button
-          >
-        </Tooltip>
-      </div>
-    </div>
-  {/if}
+      <i class="text-yellow-500 flex items-center gap-2 justify-center">
+        {$localLang.TOOLS.writeYourScramble}<DownArrowIcon size="1.2rem" />
+      </i>
 
-  <div class="flex items-center justify-center gap-2 mt-8">
-    <Input type="number" class="!w-20" bind:value={batch} min={1} on:UENTER={generateBatch} />
-    <Button color="purple" on:click={generateBatch}>{$localLang.global.generate}</Button>
-  </div>
-{:else if option === "statistics"}
-  <div class="mt-4">
-    <StatsTab {context} headless />
-  </div>
-
-  <hr class="border-gray-200 w-full mt-2" />
-
-  <div
-    id="grid"
-    class="text-gray-400 gap-2 mx-8 my-4 grid max-h-[15rem] overflow-x-hidden overflow-y-auto"
-  >
-    {#each $solves as _, p}
-      <Tooltip text={$localLang.TOOLS.clickToDelete} position="top">
-        <button
-          class="shadow-md w-24 h-12 rounded-md p-1 bg-white bg-opacity-10 relative
-            flex items-center justify-center transition-all duration-200 select-none cursor-pointer
-    
-            hover:shadow-lg hover:bg-opacity-20
-          "
-          on:click={() => ($solves = $solves.filter(s => s != $solves[$solves.length - p - 1]))}
-        >
-          <span class="text-center font-bold">{sTimer($solves[$solves.length - p - 1], true)}</span>
-        </button>
-      </Tooltip>
-    {/each}
-  </div>
-
-  <hr class="border-gray-200 w-full mb-2" />
-
-  <div class="w-[min(100%,30rem)] grid grid-cols-1 gap-2 mx-auto max-md:place-items-center">
-    <i class="text-yellow-500 flex items-center gap-2 justify-start">
-      {$localLang.TOOLS.writeYourTime}
-      <DownArrowIcon size="1.2rem" />
-    </i>
-    <div class="flex max-md:grid max-md:w-[min(90%,20rem)] items-center gap-2">
-      <Input
-        focus={true}
-        bind:value={timeStr}
-        stopKeyupPropagation
-        on:UENTER={addTimeString}
-        class="w-full text-8xl mx-auto !h-24 text-center {validTimeStr(timeStr)
-          ? ''
-          : '!border-red-400 !border-2'}
-          focus-within:shadow-black"
-        inpClass="text-center"
+      <TextArea
+        class="rounded-md"
+        bind:value={metricString}
+        cClass="h-[20vh]"
+        getInnerText={parse}
       />
-      <Button color="purple" class="h-min" on:click={addTimeString}>{$localLang.global.add}</Button>
-      <Button color="red" class="h-min" on:click={clear}>{$localLang.global.clear}</Button>
+
+      <!-- <TextArea bind:value={metricString}  class="bg-white bg-opacity-10 w-full" /> -->
     </div>
-  </div>
-{:else if option === "metrics"}
-  <div class="mt-8 grid text-center max-w-[50rem] mx-auto">
-    <p class="note mb-8">{getDescription($localLang.TOOLS, selectedMetric)}</p>
+  {:else if option === "solver"}
+    <h2 class="text-2xl text-center mt-4">{$localLang.TOOLS.colors}</h2>
 
-    <span>{$localLang.global.moves}: {moves}</span>
-
-    <ul class="flex gap-2 py-8">
-      {#each metricDetails as md}
-        <li class="bg-green-800 rounded-md p-2">{md[0]}: {md[1]}</li>
-      {/each}
-    </ul>
-
-    <i class="text-yellow-500 flex items-center gap-2 justify-center">
-      {$localLang.TOOLS.writeYourScramble}<DownArrowIcon size="1.2rem" />
-    </i>
-
-    <TextArea
-      class="rounded-md"
-      bind:value={metricString}
-      cClass="h-[20vh]"
-      getInnerText={parse}
-    />
-
-    <!-- <TextArea bind:value={metricString}  class="bg-white bg-opacity-10 w-full" /> -->
-  </div>
-{:else if option === "solver"}
-  <h2 class="text-2xl text-center mt-4">{$localLang.TOOLS.colors}</h2>
-
-  <div class="flex flex-wrap justify-center items-center gap-2">
-    <div class="colors">
-      {#each fColors as f, p}
-        <Tooltip position="bottom" text={keys[p]} hasKeybinding>
-          <button
-            class="color"
-            on:click={() => (color = p)}
-            class:selected={p === color}
-            style={`background-color: ${f}`}
-          ></button>
-        </Tooltip>
-      {/each}
-    </div>
-    <div class="flex gap-2 h-10 items-center">
-      <Button color="purple" on:click={solve} class="ml-4">{$localLang.TOOLS.solve}</Button>
-      <Button color="red" on:click={clearCube}>{$localLang.global.clear}</Button>
-    </div>
-  </div>
-
-  <h2 class="text-2xl text-center mt-4">{$localLang.TOOLS.stickers}</h2>
-
-  <div class="cube-grid">
-    {#each faces as face}
-      <div class={face[1]}>
-        {#each facelets[+face[0]] as f, p}
-          <button
-            class="facelet"
-            style={`background-color: ${f === "-" ? DEFAULT_COLOR : f}`}
-            on:click={() => assignColor(+face[0], p)}
-            on:mousemove={() =>
-              md && facelets[+face[0]][p] != fColors[color] && assignColor(+face[0], p)}
-          ></button>
+    <div class="flex flex-wrap justify-center items-center gap-2">
+      <div class="colors">
+        {#each fColors as f, p}
+          <Tooltip position="bottom" text={keys[p]} hasKeybinding>
+            <button
+              class="color"
+              on:click={() => (color = p)}
+              class:selected={p === color}
+              style={`background-color: ${f}`}
+            ></button>
+          </Tooltip>
         {/each}
       </div>
-    {/each}
-  </div>
-{:else if option === "mosaic"}
-  <Mosaic />
-<!-- {:else if option === "remote-timer"}
-  <RemoteTimer /> -->
-{/if}
+      <div class="flex gap-2 h-10 items-center">
+        <Button color="purple" on:click={solve} class="ml-4">{$localLang.TOOLS.solve}</Button>
+        <Button color="red" on:click={clearCube}>{$localLang.global.clear}</Button>
+      </div>
+    </div>
+
+    <h2 class="text-2xl text-center mt-4">{$localLang.TOOLS.stickers}</h2>
+
+    <div class="cube-grid">
+      {#each faces as face}
+        <div class={face[1]}>
+          {#each facelets[+face[0]] as f, p}
+            <button
+              class="facelet"
+              style={`background-color: ${f === "-" ? DEFAULT_COLOR : f}`}
+              on:click={() => assignColor(+face[0], p)}
+              on:mousemove={() =>
+                md && facelets[+face[0]][p] != fColors[color] && assignColor(+face[0], p)}
+            ></button>
+          {/each}
+        </div>
+      {/each}
+    </div>
+  {:else if option === "mosaic"}
+    <Mosaic />
+    <!-- {:else if option === "remote-timer"}
+    <RemoteTimer /> -->
+  {/if}
+</div>
 
 <style>
   #grid {

@@ -18,10 +18,12 @@ import type {
 export class ElectronAdaptor implements IPC {
   private ipc: IPC;
   private cache: Map<string, string>;
+  private vCache: Map<string, ArrayBuffer>;
 
   constructor() {
     this.ipc = (<any>window).electronAPI as IPC;
     this.cache = new Map();
+    this.vCache = new Map();
     this.init();
   }
 
@@ -31,6 +33,13 @@ export class ElectronAdaptor implements IPC {
     for (let i = 0, maxi = c.length; i < maxi; i += 1) {
       let cc = c[i];
       this.cache.set(cc[0], cc[1]);
+    }
+
+    let v = await (this.ipc as any).vCacheGetAll();
+
+    for (let i = 0, maxi = v.length; i < maxi; i += 1) {
+      let cc = v[i];
+      this.vCache.set(cc[0], cc[1]);
     }
   }
 
@@ -244,15 +253,30 @@ export class ElectronAdaptor implements IPC {
     return Promise.resolve(hashes.map(h => this.cache.get(h) || ""));
   }
 
+  cacheGetVideo(hash: string): Promise<ArrayBuffer | null> {
+    // return this.ipc.cacheGetImage(hash);
+    return Promise.resolve(this.vCache.get(hash) || null);
+  }
+
   cacheSaveImage(hash: string, data: string): Promise<void> {
     this.cache.set(hash, data);
     return this.ipc.cacheSaveImage(hash, data);
+  }
+
+  cacheSaveVideo(hash: string, data: ArrayBuffer): Promise<void> {
+    this.vCache.set(hash, data);
+    return this.ipc.cacheSaveVideo(hash, data);
   }
 
   clearCache(db: ICacheDB) {
     switch (db) {
       case "Cache": {
         this.cache.clear();
+        return this.ipc.clearCache(db);
+      }
+      case "VCache": {
+        this.vCache.clear();
+        return this.ipc.clearCache(db);
       }
       case "Solves":
       case "Sessions": {
@@ -266,6 +290,7 @@ export class ElectronAdaptor implements IPC {
   // For IPC only
   algorithmsStorage() {}
   cacheStorage() {}
+  vCacheStorage() {}
   sessionsStorage() {}
   solvesStorage() {}
   tutorialsStorage() {}
@@ -273,6 +298,7 @@ export class ElectronAdaptor implements IPC {
   async getStorageInfo(): Promise<IStorageInfo> {
     let algorithms = await this.ipc.algorithmsStorage();
     let cache = await this.ipc.cacheStorage();
+    let vcache = await this.ipc.vCacheStorage();
     let sessions = await this.ipc.sessionsStorage();
     let solves = await this.ipc.solvesStorage();
     let tutorials = await this.ipc.tutorialsStorage();
@@ -280,6 +306,7 @@ export class ElectronAdaptor implements IPC {
     return {
       algorithms,
       cache,
+      vcache,
       sessions,
       solves,
       tutorials,

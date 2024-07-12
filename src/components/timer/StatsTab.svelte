@@ -768,7 +768,7 @@
       <div id="best-marks">
         {#each $localLang.TIMER.bestList as ao}
           {#if $stats[ao.key].id}
-            <span class="flex items-center justify-between px-1 bg-black bg-opacity-40">
+            <span class="flex items-center justify-between px-2 rounded-md bg-black bg-opacity-40">
               {ao.title}:
 
               <Button
@@ -860,7 +860,7 @@
 
   #best-marks {
     @apply grid gap-y-1;
-    grid-template-columns: repeat(auto-fit, minmax(6rem, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
     margin: auto;
     column-gap: 1rem;
     row-gap: 0.5rem;

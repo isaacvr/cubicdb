@@ -14,7 +14,6 @@
     type SCRAMBLE_MENU,
     AON,
     ICONS,
-    CubeDBICON,
     STEP_COLORS,
     MISC,
   } from "@constants";
@@ -49,7 +48,7 @@
   import { globalLang } from "@stores/language.service";
   import { getLanguage } from "@lang/index";
   import { NotificationService } from "@stores/notification.service";
-  import { prettyScramble, randomUUID } from "@helpers/strings";
+  import { prettyScramble } from "@helpers/strings";
   import { binSearch, newArr } from "@helpers/object";
   import type { HTMLImgAttributes } from "svelte/elements";
 
@@ -203,8 +202,6 @@
           )
           .join("<br>"),
         timeout: 5000,
-        key: randomUUID(),
-        icon: CubeDBICON,
       });
 
       confetti.addConfetti({
@@ -672,7 +669,7 @@
 
 <svelte:window on:keyup={handleKeyUp} />
 
-<main class={"w-full pt-14 " + (scrambleOnly || timerOnly ? "h-auto" : "h-[calc(100vh-3rem)]")}>
+<main class={"w-full " + (scrambleOnly || timerOnly ? "h-full" : "h-[calc(100vh-3rem)] pt-14")}>
   {#if timerOnly || scrambleOnly}
     <TimerTab {timerOnly} {scrambleOnly} {context} {battle} {enableKeyboard} />
   {:else if battle}
@@ -776,6 +773,7 @@
             class="mx-auto"
             hasIcon={e => e}
             iconComponent={TimerSessionIcon}
+            placement="right"
           />
 
           <i class="note text-gray-300">{$localLang.TIMER.sessionTypeDescription[newSessionType]}</i
@@ -789,6 +787,7 @@
                 bind:value={newSessionGroup}
                 items={groups}
                 transform={(_, p) => p}
+                placement="right"
               />
 
               <Select
@@ -798,6 +797,8 @@
                 items={MENU[newSessionGroup][1]}
                 label={e => e[0]}
                 transform={(_, p) => p}
+                placement="right"
+                hasIcon={e => e[1]}
               />
             </div>
           {/if}
@@ -884,7 +885,8 @@
 
               <Input
                 class={"!bg-transparent text-center text-ellipsis w-full rounded-none flex-1 " +
-                  (!s.editing ? " border-none " : "") + (s.icon ? " text-left pl-1 " : "")}
+                  (!s.editing ? " border-none " : "") +
+                  (s.icon ? " text-left pl-1 " : "")}
                 bind:value={s.tName}
                 focus={s.editing}
                 on:keydown={e => {
@@ -979,9 +981,3 @@
     </div>
   </Modal>
 </main>
-
-<style>
-  main {
-    height: calc(100svh - 3rem);
-  }
-</style>

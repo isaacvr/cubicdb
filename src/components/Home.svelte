@@ -6,7 +6,6 @@
   import { screen } from "@stores/screen.store";
 
   let cards: ICard[] = [];
-  let canvas: HTMLCanvasElement;
 
   function updateTexts() {
     const HOME = getLanguage($globalLang).HOME;
@@ -98,8 +97,6 @@
   $: $globalLang, updateTexts();
 </script>
 
-<!-- <svelte:window on:resize={() => snow.reset()}/> -->
-
 <main class="container-mini relative">
   <ul class="w-full grid place-items-center" class:isMobile={$screen.isMobile}>
     {#each cards as card (card.route)}
@@ -110,14 +107,12 @@
       >
         <Link class="flex flex-col items-center justify-between w-full h-full" to={card.route}>
           <img class="mx-auto" src={card.puzzle ? card.puzzle.img : card.cube} alt={card.title} />
-          <h2 class="text-sm">{card.title}</h2>
+          <h2 class="text-sm text-center">{card.title}</h2>
         </Link>
       </li>
     {/each}
   </ul>
 </main>
-
-<canvas bind:this={canvas} class="absolute inset-0 pointer-events-none" />
 
 <style lang="postcss">
   ul {

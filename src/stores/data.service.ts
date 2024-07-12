@@ -334,8 +334,16 @@ export class DataService {
     return this.ipc.cacheGetImageBundle(hashes);
   }
 
+  cacheGetVideo(hash: string): Promise<ArrayBuffer | null> {
+    return this.ipc.cacheGetVideo(hash);
+  }
+
   cacheSaveImage(hash: string, data: string): Promise<void> {
     return this.ipc.cacheSaveImage(hash, data);
+  }
+
+  cacheSaveVideo(hash: string, data: ArrayBuffer): Promise<void> {
+    return this.ipc.cacheSaveVideo(hash, data);
   }
 
   clearCache(db: ICacheDB) {

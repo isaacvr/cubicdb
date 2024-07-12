@@ -71,16 +71,26 @@ contextBridge.exposeInMainWorld("electronAPI", {
   cacheGetImage: async hash => ipc.invoke("get-image", hash),
   cacheGetImageBundle: async hashes => ipc.invoke("get-image-bundle", hashes),
   cacheSaveImage: async (hash, data) => ipc.invoke("save-image", hash, data),
+  vCacheGetAll: async () => ipc.invoke("vcache-get-all"),
+  cacheCheckVideo: async hash => ipc.invoke("check-video", hash),
+  cacheGetVideo: async hash => ipc.invoke("get-video", hash),
+  cacheGetVideoBundle: async hashes => ipc.invoke("get-video-bundle", hashes),
+  cacheSaveVideo: async (hash, data) => ipc.invoke("save-video", hash, data),
   clearCache: async db => {
+    console.log("DB: ", db);
+    
     switch (db) {
       case "Cache": {
-        return ipc.invoke("clear-cache");
+        return await ipc.invoke("clear-cache");
+      }
+      case "VCache": {
+        return await ipc.invoke("clear-vcache");
       }
       case "Solves": {
-        return ipc.invoke("clear-solves");
+        return await ipc.invoke("clear-solves");
       }
       case "Sessions": {
-        return ipc.invoke("clear-sessions");
+        return await ipc.invoke("clear-sessions");
       }
     }
   },
@@ -95,6 +105,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
 
   // Storage
   cacheStorage: async () => ipc.invoke("cache-storage"),
+  vCacheStorage: async () => ipc.invoke("vcache-storage"),
   algorithmsStorage: async () => ipc.invoke("algorithms-storage"),
   sessionsStorage: async () => ipc.invoke("sessions-storage"),
   solvesStorage: async () => ipc.invoke("solves-storage"),

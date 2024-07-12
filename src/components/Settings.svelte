@@ -4,17 +4,15 @@
   import Select from "@material/Select.svelte";
   import { DataService } from "@stores/data.service";
   import { version } from "@stores/version.store";
-  import { randomUUID, replaceParams } from "@helpers/strings";
+  import { replaceParams } from "@helpers/strings";
   import { timer } from "@helpers/timer";
   import type { Display } from "electron";
-  import { CubeDBICON } from "@constants";
   import {
     Button,
     Card,
     Heading,
     Span,
     Spinner,
-    StepIndicator,
     TabItem,
     Table,
     TableBody,
@@ -27,7 +25,6 @@
   import type { ICacheDB, IStorageInfo, Language } from "@interfaces";
   import { byteToString } from "@helpers/math";
   import Modal from "./Modal.svelte";
-  import axios from "axios";
 
   // ICONS
   import ScreenIcon from "@icons/Monitor.svelte";
@@ -70,6 +67,7 @@
   let storage: IStorageInfo = {
     algorithms: 0,
     cache: 0,
+    vcache: 0,
     sessions: 0,
     solves: 0,
     tutorials: 0,
@@ -93,11 +91,9 @@
     initialZoomFactor = zoomFactor;
 
     notService.addNotification({
-      key: randomUUID(),
       header: $localLang.global.saved,
       text: $localLang.global.settingsSaved,
       timeout: 2000,
-      icon: CubeDBICON,
     });
   }
 
@@ -128,8 +124,6 @@
       header: $localLang.SETTINGS.updateError,
       text: $localLang.SETTINGS.updateErrorText,
       timeout: 2000,
-      key: randomUUID(),
-      icon: CubeDBICON,
     });
   }
 
@@ -139,8 +133,6 @@
       text: replaceParams($localLang.SETTINGS.alreadyUpdatedText, [name]),
       fixed: true,
       actions: [{ text: $localLang.global.accept, callback: () => {} }],
-      key: randomUUID(),
-      icon: CubeDBICON,
     });
   }
 
@@ -153,8 +145,6 @@
         { text: $localLang.global.cancel, callback: () => {}, color: "alternative" },
         { text: $localLang.global.update, callback: cb, color: "purple" },
       ],
-      key: randomUUID(),
-      icon: CubeDBICON,
     });
   }
 
@@ -164,8 +154,13 @@
       text: replaceParams($localLang.SETTINGS.needsUpdate, [name, minVersion]),
       fixed: true,
       actions: [{ text: $localLang.global.accept, callback: () => {} }],
-      key: randomUUID(),
-      icon: CubeDBICON,
+    });
+  }
+
+  function sendWillRestart() {
+    notService.addNotification({
+      header: $localLang.global.done,
+      text: $localLang.global.willRestart,
     });
   }
 
@@ -205,7 +200,7 @@
     dataService
       .updateAlgorithms()
       .then(() => {
-        getVersions();
+        sendWillRestart();
       })
       .catch(err => {
         console.log("update algs error: ");
@@ -217,7 +212,7 @@
     dataService
       .updateTutorials()
       .then(() => {
-        getVersions();
+        sendWillRestart();
       })
       .catch(err => {
         console.log("update tuts error: ");
@@ -245,6 +240,7 @@
   function updateStorageNames() {
     storeList = [
       { name: "images", clean: true, length: storage.cache, db: "Cache" },
+      { name: "videos", clean: true, length: storage.vcache, db: "VCache" },
       { name: "sessions", clean: true, length: storage.sessions, db: "Sessions" },
       { name: "solves", clean: true, length: storage.solves, db: "Solves" },
       { name: "algorithms", clean: false, length: storage.algorithms, db: "Algorithms" },
@@ -260,6 +256,7 @@
   }
 
   async function clearCache(db: ICacheDB) {
+    console.log("[clearCache]: ", db);
     showDelete = false;
 
     try {
@@ -297,8 +294,6 @@
     dataService
       .checkAlgorithms()
       .then(res => {
-        console.log("ALGS: ", res);
-
         if (res.version === "0.0.0") {
           return sendUpdateError();
         }
@@ -325,8 +320,6 @@
     dataService
       .checkAlgorithms()
       .then(res => {
-        console.log("TUTS: ", res);
-
         if (res.version === "0.0.0") {
           return sendUpdateError();
         }
@@ -366,7 +359,7 @@
   $: $localLang && [updateDisplays(), updateStorageNames()];
 </script>
 
-<Card class="mx-auto w-full max-w-4xl mt-8">
+<Card class="mx-auto w-[calc(100%-2rem)] max-w-4xl mt-8">
   <Heading tag="h2" class="text-center text-3xl">{$localLang.SETTINGS.title}</Heading>
 
   <Tabs divider>
@@ -378,7 +371,7 @@
 
       <div class="flex flex-wrap justify-around">
         <!-- App font -->
-        <div>
+        <div class="grid">
           <Heading tag="h3" class="text-center text-green-300 text-2xl mb-4 mt-4">
             {$localLang.SETTINGS.appFont}
           </Heading>
@@ -394,7 +387,7 @@
         </div>
 
         <!-- Timer font -->
-        <div>
+        <div class="grid">
           <Heading tag="h3" class="text-center text-blue-300 text-2xl mb-4 mt-4">
             {$localLang.SETTINGS.timerFont}
           </Heading>
@@ -410,7 +403,7 @@
         </div>
 
         <!-- Zoom Factor -->
-        <div>
+        <div class="grid">
           <Heading tag="h3" class="text-center text-blue-300 text-2xl mb-4 mt-4">
             {$localLang.SETTINGS.zoomFactor}
           </Heading>
@@ -419,7 +412,7 @@
             bind:value={zoomFactor}
             items={ZOOM_FACTORS}
             transform={e => e}
-            label={e => e.toString()}
+            label={e => e + "%"}
             onChange={updateZoom}
           />
         </div>

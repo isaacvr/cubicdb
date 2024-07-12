@@ -10,26 +10,6 @@ import { roundCorners } from "@classes/puzzle/puzzleUtils";
 import { birdView } from "@workers/imageGenerators/birdView";
 import { WebGLRenderer } from "three";
 
-async function blobToDataURL(blob: Blob): Promise<string> {
-  return new Promise(res => {
-    let fr = new FileReader();
-
-    fr.addEventListener("load", () => {
-      res(fr.result as string);
-    });
-
-    fr.addEventListener("error", () => {
-      res("");
-    });
-
-    fr.addEventListener("abort", () => {
-      res("");
-    });
-
-    fr.readAsDataURL(blob);
-  });
-}
-
 export async function pGenerateCubeBundle(
   cubes: Puzzle[],
   width?: number,

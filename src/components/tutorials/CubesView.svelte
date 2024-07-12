@@ -3,7 +3,7 @@
   import PuzzleImage from "@components/PuzzleImage.svelte";
   import { pGenerateCubeBundle } from "@helpers/cube-draw";
   import { algorithmToPuzzle, clone } from "@helpers/object";
-  import type { Algorithm, ITutorialAlg, ITutorialCubes } from "@interfaces";
+  import type { ITutorialAlg, ITutorialCubes } from "@interfaces";
   import { Button, Dropdown, DropdownItem, Input, Tooltip } from "flowbite-svelte";
   import AlgorithmEditorModal from "@components/AlgorithmEditorModal.svelte";
   import { CubeMode } from "@constants";
@@ -17,6 +17,7 @@
   import NextIcon from "@icons/ChevronRight.svelte";
   import { createEventDispatcher } from "svelte";
   import Toggle from "@components/material/Toggle.svelte";
+  import CubeVideo from "@components/CubeVideo.svelte";
 
   const dispatch = createEventDispatcher();
 
@@ -24,10 +25,12 @@
   export let editMode = false;
 
   let images: string[] = [];
+  let scrambles: string[] = [];
   let editing = false;
   let showDropdown = false;
 
   let tempAlgMode = false;
+  let tempAnimated = false;
   let tempCubes: ITutorialAlg[] = [];
   let tempPreffix = "";
   let tempSuffix = "";
@@ -52,6 +55,7 @@
 
   function updateTemp() {
     tempAlgMode = !!block.algMode;
+    tempAnimated = !!block.animated;
     tempCubes = block.cubes.map(alg => <ITutorialAlg>clone(alg));
     tempPreffix = block.preffix || "";
     tempSuffix = block.suffix || "";
@@ -73,19 +77,26 @@
     block.suffix = tempSuffix;
     block.preffix = tempPreffix;
     block.progressive = tempProgressive;
+    block.animated = tempAnimated;
+  }
+
+  function newScramble(scramble: string) {
+    let pref = editing ? tempPreffix : block.preffix || "";
+    let suff = editing ? tempSuffix : block.suffix || "";
+    let scr = [pref, scramble, suff].join(" ").trim();
+    return scr;
   }
 
   function newAlg(alg: ITutorialAlg) {
-    let pref = editing ? tempPreffix : block.preffix || "";
-    let suff = editing ? tempSuffix : block.suffix || "";
-    let scr = [pref, alg.scramble, suff].join(" ").trim();
-    return { ...alg, scramble: scr };
+    return { ...alg, scramble: newScramble(alg.scramble) };
   }
 
   function handleCubes(cb: ITutorialAlg[], progressive: boolean) {
     if (cb.length === 0) return;
 
     let cubes: Puzzle[] = [];
+
+    scrambles.length = 0;
 
     if (progressive) {
       let alg = newAlg(cb[0]);
@@ -96,14 +107,20 @@
         let a = { ...alg };
         a.scramble = parts.slice(0, i).join(" ");
         cubes.unshift(algorithmToPuzzle(a, false, false));
+        scrambles.unshift(a.scramble);
       }
     } else {
       cubes = cb.map(alg => algorithmToPuzzle(newAlg(alg), false));
+      scrambles = cubes.map(c => c.options.sequence || "");
     }
 
-    pGenerateCubeBundle(cubes, 500, true).then(res => {
-      images = res;
-    });
+    scrambles = scrambles;
+
+    setTimeout(() => {
+      pGenerateCubeBundle(cubes, 500, true).then(res => {
+        images = res;
+      });
+    }, 100);
   }
 
   function edit(pos: number) {
@@ -231,7 +248,17 @@
 
       <li class="cube-item flex items-center gap-4">
         <div class="w-[8rem] h-[8rem] relative shrink-0">
-          <PuzzleImage src={img} />
+          {#if editing}
+            {#if tempAnimated}
+              <CubeVideo cube={tempCubes[pos]} />
+            {:else}
+              <PuzzleImage src={img} />
+            {/if}
+          {:else if block.animated}
+            <CubeVideo cube={block.cubes[pos]} />
+          {:else}
+            <PuzzleImage src={img} />
+          {/if}
 
           {#if editMode && editing}
             <div class="actions absolute flex flex-col top-1 -left-3 z-10">
@@ -249,7 +276,7 @@
           {/if}
         </div>
 
-        <div class="description grid">
+        <div class="description grid min-w-[5rem]">
           {#if editing}
             {tempCubes[pos]?.solution || tempCubes[pos]?.scramble || "-"}
           {:else}
@@ -264,6 +291,9 @@
     <div class="flex gap-2 justify-center items-center">
       <Toggle bind:checked={tempAlgMode} />
       <Tooltip>AlgMode</Tooltip>
+
+      <Toggle bind:checked={tempAnimated} />
+      <Tooltip>Animated</Tooltip>
 
       <Input bind:value={tempPreffix} placeholder="Preffix" class="max-w-[10rem]" />
       <Tooltip>Preffix</Tooltip>
@@ -325,16 +355,16 @@
   }
 
   .cube-list {
-    @apply flex flex-wrap gap-4 items-center justify-center;
-  }
-
-  .cube-list.algMode {
-    @apply grid gap-4;
-    grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+    @apply flex flex-wrap gap-4 items-center justify-evenly;
   }
 
   .cube-list:not(.algMode) .cube-item .description {
     display: none;
+  }
+
+  .cube-list.algMode {
+    @apply grid;
+    grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
   }
 
   .cube-list.algMode .cube-item {

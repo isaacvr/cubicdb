@@ -12,6 +12,7 @@ module.exports = {
         background: "#080a16",
         backgroundLv1: "#11192a",
         backgroundLv2: "#18243e",
+        backgroundLv3: "#2f3b56",
         primary: {
           50: "#eff6ff",
           100: "#dbeafe",

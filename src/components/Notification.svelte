@@ -4,13 +4,14 @@
   import { NotificationService } from "@stores/notification.service";
   import { Avatar, Button, Toast } from "flowbite-svelte";
   import { fly } from "svelte/transition";
+  import { CubeDBICON } from "@constants";
 
-  export let key: string;
+  export let key: string = "";
   export let timeout = 5000;
   export let header = "Header";
   export let text = "Text";
   export let html = "";
-  export let icon: any = "";
+  export let icon: any = CubeDBICON;
   export let fixed = false;
   export let actions: NotificationAction[] = [];
 
@@ -44,7 +45,7 @@
 <Toast
   transition={fly}
   params={{ x: 200 }}
-  class="relative pointer-events-auto bottom-0 end-0 ml-auto mr-4 shadow-lg !bg-gray-700"
+  class="relative pointer-events-auto bottom-0 end-0 ml-auto mr-4 shadow-lg !bg-backgroundLv3"
   contentClass="flex items-center"
   bind:open
   dismissable={fixed}
@@ -53,15 +54,15 @@
 >
   {#if icon}
     {#if typeof icon === "string"}
-      <Avatar slot="icon" src={icon} />
+      <Avatar slot="icon" src={icon} class="text-gray-300"/>
     {:else}
-      <svelte:component this={icon} slot="icon" size="1.2rem" />
+      <svelte:component this={icon} slot="icon" size="1.2rem" class="text-gray-300"/>
     {/if}
   {/if}
 
-  <div class="ms-3 text-sm font-normal">
-    <span class="mb-1 text-base font-semibold dark:text-white">{header}</span>
-    <div class="mb-2 text-sm font-normal">{text}</div>
+  <div class="ms-3 text-sm font-normal text-gray-300">
+    <span class="text-lg font-semibold text-green-200">{header}</span>
+    <div class="mt-2 mb-2 text-sm font-normal">{text}</div>
     <div bind:innerHTML={html} contenteditable="false"></div>
 
     {#if (actions || []).length}

@@ -17,7 +17,7 @@
   import { Puzzle } from "@classes/puzzle/puzzle";
   import { pGenerateCubeBundle } from "@helpers/cube-draw";
   import { options } from "@cstimer/scramble/scramble";
-  import { CubeDBICON, STEP_COLORS } from "@constants";
+  import { STEP_COLORS } from "@constants";
   import { Paginator } from "@classes/Paginator";
 
   /// ICONS
@@ -45,7 +45,7 @@
   import { globalLang } from "@stores/language.service";
   import { getLanguage } from "@lang/index";
   import { tick } from "svelte";
-  import { copyToClipboard, defaultInner, parseReconstruction, randomUUID } from "@helpers/strings";
+  import { copyToClipboard, defaultInner, parseReconstruction } from "@helpers/strings";
   import { calcPercents } from "@helpers/math";
   import { startViewTransition } from "@helpers/DOM";
   import { navigate } from "svelte-routing";
@@ -266,11 +266,9 @@
   function toClipboard(text: string) {
     copyToClipboard(text.replaceAll("<br>", "\n")).then(() => {
       notification.addNotification({
-        key: randomUUID(),
         header: $localLang.global.done,
         text: $localLang.global.copiedToClipboard,
         timeout: 1000,
-        icon: CubeDBICON,
       });
     });
   }

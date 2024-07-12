@@ -525,12 +525,48 @@ export class GANInput implements TimerInputHandler {
 
     if (!this.connected) return;
     this.device?.gatt?.disconnect();
-    this.connected = false;
+    this.connected = false; 
     this.context.input.bluetoothStatus.set(false);
+
     this.interpreter.stop();
   }
 
-  keyUpHandler() {}
+  keyUpHandler(ev: KeyboardEvent) {
+    // if (ev.code === "KeyI") {
+    //   this.connected = true;
+    //   this.emit("connect", null);
+
+    //   if (this.interpreter.getSnapshot().status != "active") {
+    //     this.init();
+    //   }
+
+    //   this.interpreter.send({
+    //     type: "CONNECT",
+    //     data: {
+    //       scramble: get(this.context.input.scramble),
+    //     },
+    //   });
+    // } else if (ev.code === "KeyO") {
+    //   this.disconnect();
+    // }
+
+    // if (!this.connected) return;
+    // if (!/^Key[RUFDLBMSEXYZ]/.test(ev.code)) return;
+
+    // let mv = ev.code.slice(3) + (ev.shiftKey ? "'" : "");
+    // let move = /^[XYZ]/.test(mv) ? mv.toLowerCase() : mv;
+
+    // this.interpreter.send({
+    //   type: "MOVE",
+    //   data: {
+    //     move,
+    //     offset: 0,
+    //     facelet: SOLVED_FACELET,
+    //   },
+    // });
+
+    // this.emit("move", [move, 200]);
+  }
 
   keyDownHandler(ev: KeyboardEvent) {
     if (!this.connected) return;
@@ -554,14 +590,14 @@ export class GANInput implements TimerInputHandler {
     this.device = device;
     this.deviceMac = localStorage.getItem("bluetooth-mac") || "";
 
-    debug && console.log("[gancube] deviceMac: ", this.deviceMac);
+    // debug && console.log("[gancube] deviceMac: ", this.deviceMac);
 
     let server: BluetoothRemoteGATTServer | undefined;
 
     try {
       server = await device.gatt?.connect();
     } catch (err) {
-      debug && console.log("Connect err: ", err);
+      // debug && console.log("Connect err: ", err);
       return "";
     }
 
@@ -594,9 +630,9 @@ export class GANInput implements TimerInputHandler {
           this.disconnect();
         });
 
-        if (this.interpreter.getSnapshot().status != "active") {
-          this.init();
-        }
+        // if (this.interpreter.getSnapshot().status != "active") {
+        this.init();
+        // }
 
         this.interpreter.send({
           type: "CONNECT",
@@ -657,7 +693,7 @@ export class GANInput implements TimerInputHandler {
 
     let keyiv = await this.getKeyV2(value, ver);
 
-    debug && console.log("[gancube] ver=", ver, " key=", JSON.stringify(keyiv));
+    // debug && console.log("[gancube] ver=", ver, " key=", JSON.stringify(keyiv));
 
     this.decoder = new AES128(keyiv[0]);
     this.decoder.iv = keyiv[1];
@@ -695,13 +731,13 @@ export class GANInput implements TimerInputHandler {
 
   private v2sendRequest(req: any[]) {
     if (!this.chrct_v2write) {
-      debug && console.log("[gancube] v2sendRequest cannot find v2write chrct");
+      // debug && console.log("[gancube] v2sendRequest cannot find v2write chrct");
       return;
     }
 
     let encodedReq = this.encode(req.slice());
 
-    debug && console.log("[gancube] v2sendRequest", req, encodedReq);
+    // debug && console.log("[gancube] v2sendRequest", req, encodedReq);
     return this.chrct_v2write.writeValue(new Uint8Array(encodedReq).buffer);
   }
 
@@ -735,9 +771,9 @@ export class GANInput implements TimerInputHandler {
 
   private initCubeState() {
     // let locTime = $.now();
-    debug && console.log("[gancube]", "init cube state");
+    // debug && console.log("[gancube]", "init cube state");
     // callback(latestFacelet, prevMoves, [null, locTime], deviceName);
-    debug && console.log("Prev facelet: ", this.latestFacelet);
+    // debug && console.log("Prev facelet: ", this.latestFacelet);
     this.prevCubie.fromFacelet(this.latestFacelet);
     this.prevMoveCnt = this.moveCnt;
   }
@@ -765,7 +801,7 @@ export class GANInput implements TimerInputHandler {
     }
 
     if (Math.abs(locTime - calcTs) > 2000) {
-      debug && console.log("[gancube]", "time adjust", locTime - calcTs, "@", locTime);
+      // debug && console.log("[gancube]", "time adjust", locTime - calcTs, "@", locTime);
       this.deviceTime += locTime - calcTs;
     }
 
@@ -778,9 +814,9 @@ export class GANInput implements TimerInputHandler {
       this.curCubie = this.prevCubie;
       this.prevCubie = tmp;
 
-      debug && console.log("[gancube] move", this.prevMoves[i], this.timeOffs[i]);
-      debug &&
-        console.log("[gancube] facelet: ", this.prevCubie.toFaceCube(), this.curCubie.toFaceCube());
+      // debug && console.log("[gancube] move", this.prevMoves[i], this.timeOffs[i]);
+      // debug &&
+      //   console.log("[gancube] facelet: ", this.prevCubie.toFaceCube(), this.curCubie.toFaceCube());
 
       this.interpreter.send({
         type: "MOVE",
@@ -854,7 +890,7 @@ export class GANInput implements TimerInputHandler {
       }
     } else if (mode == 4) {
       // cube state
-      debug && console.log("[gancube]", "v2 received facelets event");
+      // debug && console.log("[gancube]", "v2 received facelets event");
 
       this.moveCnt = parseInt(value.slice(4, 12), 2);
 
@@ -897,17 +933,17 @@ export class GANInput implements TimerInputHandler {
       if (this.prevMoveCnt == -1) {
         this.initCubeState();
       } else if (this.prevCubie.toFaceCube() != this.latestFacelet) {
-        debug && console.log("[gancube]", "Cube state check error");
-        debug && console.log("[gancube]", "calc", this.prevCubie.toFaceCube());
-        debug && console.log("[gancube]", "read", this.latestFacelet);
+        // debug && console.log("[gancube]", "Cube state check error");
+        // debug && console.log("[gancube]", "calc", this.prevCubie.toFaceCube());
+        // debug && console.log("[gancube]", "read", this.latestFacelet);
         this.prevCubie.fromFacelet(this.latestFacelet);
         // callback(latestFacelet, prevMoves, [null, locTime], deviceName + '*');
       }
       this.prevMoveCnt = this.moveCnt;
     } else if (mode == 5) {
       // hardware info
-      debug && console.log("[gancube]", "v2 received hardware info event", value);
-      debug && console.log("[gancube]", "v2 received hardware info event");
+      // debug && console.log("[gancube]", "v2 received hardware info event", value);
+      // debug && console.log("[gancube]", "v2 received hardware info event");
       let hardwareVersion =
         parseInt(value.slice(8, 16), 2) + "." + parseInt(value.slice(16, 24), 2);
       let softwareVersion =
@@ -920,19 +956,19 @@ export class GANInput implements TimerInputHandler {
 
       let gyro = 1 === parseInt(value.slice(104, 105), 2);
 
-      debug && console.log("[gancube]", "Hardware Version", hardwareVersion);
-      debug && console.log("[gancube]", "Software Version", softwareVersion);
-      debug && console.log("[gancube]", "Device Name", deviceName);
-      debug && console.log("[gancube]", "Gyro Enabled", gyro);
+      // debug && console.log("[gancube]", "Hardware Version", hardwareVersion);
+      // debug && console.log("[gancube]", "Software Version", softwareVersion);
+      // debug && console.log("[gancube]", "Device Name", deviceName);
+      // debug && console.log("[gancube]", "Gyro Enabled", gyro);
 
       this.emit("hardware", { hardwareVersion, softwareVersion, deviceName, gyro });
     } else if (mode == 9) {
       // battery
       this.battery = parseInt(value.slice(8, 16), 2);
       this.emit("battery", this.battery);
-      debug && console.log("[gancube]", "v2 received battery event", this.battery);
+      // debug && console.log("[gancube]", "v2 received battery event", this.battery);
     } else {
-      debug && console.log("[gancube]", "v2 received unknown event", value);
+      // debug && console.log("[gancube]", "v2 received unknown event", value);
     }
   }
 
@@ -963,21 +999,21 @@ export class GANInput implements TimerInputHandler {
     return ret;
   }
 
-  private async getKey(version: number, value: DataView) {
-    let key = GANInput.KEYS[(version >> 8) & 0xff];
+  // private async getKey(version: number, value: DataView) {
+  //   let key = GANInput.KEYS[(version >> 8) & 0xff];
 
-    if (!key) {
-      return;
-    }
+  //   if (!key) {
+  //     return;
+  //   }
 
-    let k: number[] = JSON.parse(await decompressFromBase64(key));
+  //   let k: number[] = JSON.parse(await decompressFromBase64(key));
 
-    for (let i = 0; i < 6; i++) {
-      k[i] = (k[i] + value.getUint8(5 - i)) & 0xff;
-    }
+  //   for (let i = 0; i < 6; i++) {
+  //     k[i] = (k[i] + value.getUint8(5 - i)) & 0xff;
+  //   }
 
-    return k;
-  }
+  //   return k;
+  // }
 
   private async getKeyV2(value: number[], ver: any): Promise<number[][]> {
     let v = ver || 0;
@@ -991,7 +1027,7 @@ export class GANInput implements TimerInputHandler {
   }
 
   private async v2init(ver: any): Promise<boolean> {
-    debug && console.log("[gancube] v2init start");
+    // debug && console.log("[gancube] v2init start");
     this.keyCheck = 0;
 
     this.v2initDecoder(this.deviceMac, ver);
@@ -1003,11 +1039,11 @@ export class GANInput implements TimerInputHandler {
     return this.service_v2data
       .getCharacteristics()
       .then(chrcts => {
-        debug && console.log("[gancube] v2init find chrcts", chrcts);
+        // debug && console.log("[gancube] v2init find chrcts", chrcts);
 
         for (let i = 0; i < chrcts.length; i++) {
           let chrct = chrcts[i];
-          debug && console.log("[gancube] v2init find chrct", chrct);
+          // debug && console.log("[gancube] v2init find chrct", chrct);
           if (matchUUID(chrct.uuid, GANInput.CHRCT_UUID_V2READ)) {
             this.chrct_v2read = chrct;
           } else if (matchUUID(chrct.uuid, GANInput.CHRCT_UUID_V2WRITE)) {
@@ -1015,15 +1051,15 @@ export class GANInput implements TimerInputHandler {
           }
         }
         if (!this.chrct_v2read) {
-          debug && console.log("[gancube] v2init cannot find v2read chrct");
+          // debug && console.log("[gancube] v2init cannot find v2read chrct");
         }
       })
       .then(() => {
-        debug && console.log("[gancube] v2init v2read start notifications");
+        // debug && console.log("[gancube] v2init v2read start notifications");
         return this.chrct_v2read?.startNotifications();
       })
       .then(() => {
-        debug && console.log("[gancube] v2init v2read notification started");
+        // debug && console.log("[gancube] v2init v2read notification started");
         return this.chrct_v2read?.addEventListener("characteristicvaluechanged", (e: any) => {
           this.onStateChangedV2(e);
         });

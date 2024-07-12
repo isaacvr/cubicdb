@@ -19,7 +19,6 @@
   import { LANGUAGES } from "@lang/index";
   import { globalLang, localLang } from "@stores/language.service";
   import { NotificationService } from "@stores/notification.service";
-  import { randomUUID } from "@helpers/strings";
   import { Link, navigate, useLocation } from "svelte-routing";
   import { screen } from "@stores/screen.store";
   import type { RouteLocation } from "svelte-routing/types/Route";
@@ -48,9 +47,7 @@
         { text: $localLang.global.accept, callback: () => {}, color: "alternative" },
         { text: $localLang.global.restart, callback: () => dataService.close(), color: "purple" },
       ],
-      fixed: true,
-      key: randomUUID(),
-      icon: CubeDBICON,
+      fixed: true
     });
   }
 

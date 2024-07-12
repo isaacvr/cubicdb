@@ -99,7 +99,6 @@
       header: 'Network error',
       text: 'Please, check your connection.',
       timeout: 3000,
-      key: randomUUID(),
     });
 
     return false;
@@ -118,8 +117,7 @@
     notification.addNotification({
       header: 'Network error',
       text: 'Please, check your connection.',
-      timeout: 3000,
-      key: randomUUID(),
+      timeout: 3000
     });
 
     return false;
@@ -310,8 +308,6 @@
       text && notification.addNotification({
         header: 'Error',
         text,
-        key: randomUUID(),
-        fixed: false,
         timeout: 3000
       });
     });

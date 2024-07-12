@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { navigate } from "svelte-routing";
-  import type { ITutorial } from "@interfaces";
+  import type { ITutorial, LanguageCode } from "@interfaces";
   import {
     Button,
     Card,
@@ -13,23 +13,27 @@
     Tooltip,
   } from "flowbite-svelte";
   import WCACategory from "@components/wca/WCACategory.svelte";
-  import { localLang } from "@stores/language.service";
+  import { globalLang, localLang } from "@stores/language.service";
   import { DataService } from "@stores/data.service";
+  import Select from "@components/material/Select.svelte";
+  import { LANGUAGES } from "@lang/index";
+  import { ICONS } from "@constants";
 
   import ArrowRightIcon from "@icons/ArrowRight.svelte";
   import DotsIcon from "@icons/DotsVertical.svelte";
   import EditIcon from "@icons/Pencil.svelte";
   import RemoveIcon from "@icons/Delete.svelte";
   import AddIcon from "@icons/Plus.svelte";
-  import Select from "@components/material/Select.svelte";
-  import { LANGUAGES } from "@lang/index";
-  import { ICONS } from "@constants";
+  import FundamentalsIcon from "@icons/HumanMaleBoardPoll.svelte";
+  import FlagIcon from "@components/FlagIcon.svelte";
 
   type IndicatorColor = "green" | "blue" | "yellow";
 
   const dataService = DataService.getInstance();
   const dropdownDefaultClass =
     "font-medium py-2 px-4 text-sm hover:bg-gray-600 flex items-center gap-2 justify-start";
+
+  const NICONS = [{ icon: "fundamentals", name: "fundamentals" }, ...ICONS];
 
   let tutorials: ITutorial[] = [];
 
@@ -41,11 +45,14 @@
   let allowAdmin = false;
   let showModal = false;
   let textAreaRef: HTMLTextAreaElement;
+  let lang = $globalLang;
 
-  function groupTutorials(list: ITutorial[]) {
+  function groupTutorials(list: ITutorial[], language: LanguageCode) {
     groups = {};
 
     for (let i = 0, maxi = list.length; i < maxi; i += 1) {
+      if (list[i].lang != language) continue;
+
       if (!groups[list[i].puzzle]) {
         groups[list[i].puzzle] = [];
       }
@@ -67,11 +74,12 @@
       })
     );
 
-    if (groupNames.length) {
-      currentGroup = groupNames[0];
-    } else {
-      currentGroup = "";
-    }
+    // if (groupNames.length) {
+    //   currentGroup = groupNames[0];
+    // } else {
+    //   currentGroup = "";
+    // }
+    currentGroup = "fundamentals";
   }
 
   function getLevel(lv: number): string {
@@ -142,11 +150,11 @@
       lang: $localLang.code,
       level: 0,
       name: "",
-      puzzle: "3x3x3",
+      puzzle: "fundamentals",
       shortName: "",
       steps: [],
       summary: "",
-      icon: "333",
+      icon: "fundamentals",
     };
 
     showModal = true;
@@ -168,21 +176,50 @@
     getTutorials();
   });
 
-  $: groupTutorials(tutorials);
+  $: groupTutorials(tutorials, lang);
 </script>
 
 <div class="tutorial-container w-full h-[calc(100vh-6rem)] overflow-hidden">
-  <h1 class="header text-3xl mx-auto mt-4">{currentGroup}</h1>
+  <h1 class="header text-3xl mx-auto mt-4">
+    {currentGroup === "fundamentals" ? $localLang.TUTORIALS.fundamentals : currentGroup}
+
+    <Select
+      class="mr-2 px-2"
+      items={LANGUAGES}
+      bind:value={lang}
+      transform={e => e[1].code}
+      label={e => e[1].name}
+      hasIcon={e => e[2]}
+      iconComponent={FlagIcon}
+      preferIcon
+    />
+  </h1>
 
   <!-- Options -->
-  <section class="options rounded-r-md" class:empty={tutorials.length === 0}>
+  <section
+    class="options rounded-r-md overflow-y-auto overflow-x-hidden"
+    class:empty={tutorials.length === 0}
+  >
+    <button
+      type="button"
+      class={"rounded-md grid place-items-center w-6 h-6 cursor-pointer transition-all duration-200 " +
+        (currentGroup === "fundamentals" ? "text-purple-400" : "text-gray-500")}
+      on:click={() => (currentGroup = "fundamentals")}
+    >
+      <FundamentalsIcon class="" size="1.4rem" />
+    </button>
+    <Tooltip class="z-10" placement="right">{$localLang.TUTORIALS.fundamentals}</Tooltip>
+
     {#each groupNames as gn}
-      <WCACategory
-        icon={groups[gn][0].icon}
-        class={"w-6 h-6 cursor-pointer transition-all duration-200 " +
-          (currentGroup === gn ? "text-purple-400" : "text-gray-500")}
-        on:click={() => (currentGroup = gn)}
-      />
+      {#if gn != "fundamentals"}
+        <WCACategory
+          icon={groups[gn][0].icon}
+          class={"w-6 h-6 cursor-pointer transition-all duration-200 " +
+            (currentGroup === gn ? "text-purple-400" : "text-gray-500")}
+          on:click={() => (currentGroup = gn)}
+        />
+        <Tooltip class="z-10" placement="right">{gn}</Tooltip>
+      {/if}
     {/each}
 
     {#if allowAdmin}
@@ -313,7 +350,7 @@
       <span>Icon: </span>
       <Select
         bind:value={nTut.icon}
-        items={ICONS}
+        items={NICONS}
         transform={e => e.icon}
         label={e => e.name}
         hasIcon={e => e.icon}

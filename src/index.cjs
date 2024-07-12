@@ -84,6 +84,7 @@ require("./serverHandlers/sessions.cjs")(ipcMain, Sessions, Solves, dbPath);
 require("./serverHandlers/solves.cjs")(ipcMain, Solves, dbPath);
 require("./serverHandlers/contests.cjs")(ipcMain, Contests);
 require("./serverHandlers/cache.cjs")(ipcMain, dbPath);
+require("./serverHandlers/vCache.cjs")(ipcMain, dbPath);
 
 /// Other handlers
 ipcMain.handle("close", () => {
@@ -232,6 +233,13 @@ function createWindow() {
       preload: join(__dirname, "preload.js"),
     },
     icon: join(__dirname, "../public/assets", "icon-big.png"),
+  });
+
+  // Enable SharedArrayBuffer
+  win.webContents.session.webRequest.onHeadersReceived((details, callback) => {
+    details.responseHeaders["Cross-Origin-Opener-Policy"] = ["same-origin"];
+    details.responseHeaders["Cross-Origin-Embedder-Policy"] = ["require-corp"];
+    callback({ responseHeaders: details.responseHeaders });
   });
 
   // @ts-ignore

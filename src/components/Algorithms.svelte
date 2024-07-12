@@ -4,12 +4,12 @@
   import { pGenerateCubeBundle } from "@helpers/cube-draw";
   import { type Algorithm, type ICard, type Solution } from "@interfaces";
   import { DataService } from "@stores/data.service";
-  import { copyToClipboard, getSearchParams, randomUUID } from "@helpers/strings";
+  import { copyToClipboard, getSearchParams } from "@helpers/strings";
   import { NotificationService } from "@stores/notification.service";
   import type { RouteLocation } from "svelte-routing/types/Route";
   import { screen } from "@stores/screen.store";
   import { Button, Span, Spinner, Tooltip } from "flowbite-svelte";
-  import { CubeDBICON, CubeMode } from "@constants";
+  import { CubeMode } from "@constants";
   import { localLang } from "@stores/language.service";
   import { algorithmToPuzzle, clone } from "@helpers/object";
 
@@ -185,11 +185,9 @@
   function toClipboard(s: string) {
     copyToClipboard(s).then(() => {
       notification.addNotification({
-        key: randomUUID(),
         header: $localLang.global.done,
         text: $localLang.global.scrambleCopied,
         timeout: 1000,
-        icon: CubeDBICON,
       });
     });
   }
@@ -468,8 +466,7 @@
             <li
               class="w-full max-w-[12rem] h-48 shadow-md rounded-md select-none cursor-pointer card
               transition-all duration-200 grid place-items-center justify-center py-3 px-2
-              bg-backgroundLv1 hover:bg-primary-600 hover:bg-opacity-50 hover:shadow-2xl
-              hover:shadow-primary-900 relative"
+              bg-backgroundLv1 hover:bg-backgroundLv2 hover:shadow-2xl hover:shadow-primary-900 relative"
             >
               {#if card?.puzzle?.img}
                 <PuzzleImage src={card.puzzle.img} />
@@ -567,7 +564,7 @@
   }
 
   :global(.cards > a) {
-    flex: 0 0 calc(9rem);
+    flex: 0 0 9rem;
   }
 
   .cases .row {

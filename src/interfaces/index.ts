@@ -227,13 +227,8 @@ export interface Solve {
   steps?: number[];
 }
 
-export type TimerInput =
-  | "Keyboard"
-  | "Manual"
-  | "StackMat"
-  | "GAN Cube"
-  | "QY-Timer";
-  // | "ExternalTimer";
+export type TimerInput = "Keyboard" | "Manual" | "StackMat" | "GAN Cube" | "QY-Timer";
+// | "ExternalTimer";
 export type SessionType = "mixed" | "single" | "multi-step";
 
 export const TIMER_INPUT: TimerInput[] = [
@@ -341,13 +336,14 @@ export interface ITutorialCubes {
   preffix?: string;
   suffix?: string;
   algMode?: boolean;
+  animated?: boolean;
 }
 
 export type ITutorialBlock = ITutorialSubtitle | ITutorialList | ITutorialCubes;
 
 export interface ITutorialStep {
   title: string;
-  icon?: Scrambler;
+  icon?: Scrambler | "fundamentals";
   content: ITutorialBlock[];
 }
 
@@ -359,8 +355,8 @@ export interface ITutorial {
   shortName: string;
   lang: LanguageCode;
   steps: ITutorialStep[];
-  puzzle: (typeof ICONS)[number]["name"];
-  icon?: Scrambler;
+  puzzle: (typeof ICONS)[number]["name"] | "fundamentals";
+  icon?: Scrambler | "fundamentals";
   algs: number;
   level: number;
 }
@@ -541,6 +537,7 @@ export interface AlgorithmOptions {
 
 export interface IStorageInfo {
   cache: number;
+  vcache: number;
   tutorials: number;
   algorithms: number;
   solves: number;
@@ -557,8 +554,8 @@ export interface IPC {
   updateAlgorithm: (alg: Algorithm) => Promise<Algorithm>;
   addAlgorithm: (alg: Algorithm) => Promise<Algorithm>;
   removeAlgorithm: (alg: Algorithm) => Promise<boolean>;
-  algorithmsVersion: () => Promise<{ version: string, minVersion: string }>;
-  checkAlgorithms: () => Promise<{ version: string, minVersion: string }>;
+  algorithmsVersion: () => Promise<{ version: string; minVersion: string }>;
+  checkAlgorithms: () => Promise<{ version: string; minVersion: string }>;
   updateAlgorithms: () => Promise<boolean>;
 
   getTutorials: () => Promise<ITutorial[]>;
@@ -566,8 +563,8 @@ export interface IPC {
   addTutorial: (t: ITutorial) => Promise<ITutorial>;
   updateTutorial: (t: ITutorial) => Promise<ITutorial>;
   removeTutorial: (t: ITutorial) => Promise<ITutorial>;
-  tutorialsVersion: () => Promise<{ version: string, minVersion: string }>;
-  checkTutorials: () => Promise<{ version: string, minVersion: string }>;
+  tutorialsVersion: () => Promise<{ version: string; minVersion: string }>;
+  checkTutorials: () => Promise<{ version: string; minVersion: string }>;
   updateTutorials: () => Promise<boolean>;
 
   getSolves: () => Promise<Solve[]>;
@@ -610,7 +607,9 @@ export interface IPC {
   cacheCheckImage: (hash: string) => Promise<boolean>;
   cacheGetImage: (hash: string) => Promise<string>;
   cacheGetImageBundle: (hashes: string[]) => Promise<string[]>;
+  cacheGetVideo: (hash: string) => Promise<ArrayBuffer | null>;
   cacheSaveImage: (hash: string, data: string) => Promise<void>;
+  cacheSaveVideo: (hash: string, data: ArrayBuffer) => Promise<void>;
   clearCache: (db: ICacheDB) => Promise<void>;
   getStorageInfo: () => Promise<IStorageInfo>;
 
@@ -622,6 +621,7 @@ export interface IPC {
 
   algorithmsStorage: () => any;
   cacheStorage: () => any;
+  vCacheStorage: () => any;
   sessionsStorage: () => any;
   solvesStorage: () => any;
   tutorialsStorage: () => any;
@@ -708,7 +708,7 @@ export interface NotificationAction {
 }
 
 export interface INotification {
-  key: string;
+  key?: string;
   header: string;
   text: string;
   icon?: any;
@@ -793,6 +793,7 @@ export interface Language {
     fullScreen: string;
     storage: string;
     images: string;
+    videos: string;
     algorithms: string;
     session: string;
     sessions: string;
@@ -806,6 +807,8 @@ export interface Language {
     no: string;
     saved: string;
     settingsSaved: string;
+    willRestart: string;
+    generatedByCubeDB: string;
   };
   TUTORIALS: {
     easy: string;
@@ -813,6 +816,7 @@ export interface Language {
     advanced: string;
     start: string;
     empty: string;
+    fundamentals: string;
   };
   NAVBAR: {
     home: string;
@@ -876,6 +880,13 @@ export interface Language {
 
     congrats: string;
     from: string;
+
+    stats: {
+      average: string;
+      deviation: string;
+      mo3: string;
+      ao5: string;
+    },
 
     // Stackmat
     stackmatAvailableHeader: string;
@@ -1140,7 +1151,7 @@ export type Scrambler =
   | "skbso"
   | "sqrs";
 
-export type ICacheDB = "Cache" | "Algorithms" | "Sessions" | "Solves" | "Tutorials";
+export type ICacheDB = "Cache" | "Algorithms" | "Sessions" | "Solves" | "Tutorials" | "VCache";
 
 export interface ToolItem {
   id: string;

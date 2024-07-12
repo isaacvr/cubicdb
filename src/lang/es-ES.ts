@@ -34,6 +34,7 @@ export const Spanish: Language = {
     fullScreen: "Pantalla completa",
     storage: "Almacenamiento",
     images: "Imágenes",
+    videos: "Videos",
     algorithms: "Algoritmos",
     session: "Sesión",
     sessions: "Sesiones",
@@ -47,13 +48,16 @@ export const Spanish: Language = {
     no: "No",
     saved: "Guardado!",
     settingsSaved: "Configuración guardada",
+    willRestart: "CubeDB va a reiniciar de forma automática en unos segundos.",
+    generatedByCubeDB: "Generado por CubeDB",
   },
   TUTORIALS: {
     easy: "Fácil",
     intermediate: "Intermedio",
     advanced: "Avanzado",
     start: "Comenzar",
-    empty: "No hay tutoriales aún."
+    empty: "No hay tutoriales aún.",
+    fundamentals: "Fundamentos",
   },
   NAVBAR: {
     home: "Inicio",
@@ -138,6 +142,15 @@ export const Spanish: Language = {
 
     congrats: "Felicitaciones",
     from: "desde",
+
+    stats: {
+      average:
+        "El promedio (media aritmética) es la suma de todos los tiempos, dividido por la cantidad total de tiempos.",
+      deviation:
+        "La Desviación Estándar es un valor que indica cuán alejados están los valores respecto al promedio. Mientras más estables son los tiempos, menor es la desviación.",
+      mo3: "El Mo3 es el promedio de los últimos 3 tiempos.",
+      ao5: "El Ao5 es el promedio de los últimos 5 tiempos, quitando el mayor y el menor.",
+    },
 
     // Stackmat
     stackmatAvailableHeader: "Stackmat disponible",

@@ -1,3 +1,4 @@
+import { randomUUID } from "@helpers/strings";
 import type { INotification } from "@interfaces";
 import { writable, type Writable } from 'svelte/store';
 
@@ -17,6 +18,9 @@ export class NotificationService {
   }
 
   addNotification(n: INotification) {
+    if (!n.key) {
+      n.key = randomUUID();
+    }
     this.notificationSub.update((v) => [ ...v, n ]);
   }
 

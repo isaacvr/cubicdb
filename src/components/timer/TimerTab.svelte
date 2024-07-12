@@ -54,6 +54,8 @@
   import TimerOptions from "./TimerOptions.svelte";
   import PuzzleImage from "@components/PuzzleImage.svelte";
 
+  import StatsInfo from "./StatsInfo.svelte";
+
   export let context: TimerContext;
   export let battle = false;
   export let enableKeyboard = true;
@@ -68,7 +70,6 @@
     solves,
     allSolves,
     session,
-    Ao5,
     stats,
     scramble,
     group,
@@ -200,7 +201,6 @@
 
   let inputMethod: Writable<TimerInputHandler> = writable(new ManualInput());
   let currentStep = writable(1);
-  let totalSteps = writable(1);
   let deviceID: Writable<string> = writable("default");
   let deviceList: string[][] = [];
   let autoConnectId: string[] = [];
@@ -361,7 +361,6 @@
 
       let machineContext = ki.interpreter.getSnapshot().context;
       currentStep = machineContext.currentStep;
-      totalSteps = machineContext.steps;
       $inputMethod.init();
     }
 
@@ -493,6 +492,8 @@
   }
 
   function handleMouseDown(ev: MouseEvent) {
+    if (dataService.isElectron) return;
+
     ev.preventDefault();
 
     if ($inputMethod instanceof KeyboardInput) {
@@ -504,6 +505,8 @@
   }
 
   function handleMouseUp(ev: MouseEvent) {
+    if (dataService.isElectron) return;
+
     ev.preventDefault();
 
     if ($inputMethod instanceof KeyboardInput) {
@@ -552,7 +555,7 @@
 <div
   class:timerOnly
   class:scrambleOnly
-  class="timer-tab w-full h-full {timerOnly || scrambleOnly ? 'mt-8' : ''}"
+  class="timer-tab w-full h-full"
   class:smart_cube={$session.settings.input === "GAN Cube"}
 >
   <!-- Options -->
@@ -576,7 +579,7 @@
   <!-- Timer -->
   <div
     id="timer"
-    class="text-9xl grid place-items-center w-full h-full z-0 active:bg-transparent"
+    class="text-9xl grid place-items-center w-full h-full active:bg-transparent"
     on:pointerdown|self={handleMouseDown}
     on:pointerup|self={handleMouseUp}
     role="timer"
@@ -602,7 +605,7 @@
         />
       </div>
     {:else}
-      <div class="flex flex-col transition-all duration-200 mx-auto">
+      <div class="flex flex-col items-center transition-all duration-200 mx-auto">
         {#if $state === TimerState.RUNNING}
           <span
             class="timer text-gray-300 max-sm:text-7xl max-sm:[line-height:8rem]"
@@ -613,7 +616,7 @@
             {timer($time, $decimals, false)}
           </span>
 
-          {#if $screen.isMobile}
+          {#if !dataService.isElectron}
             <Button color="alternative" class="w-min mx-auto" on:click={stopTimer}>
               {$localLang.global.cancel}
             </Button>
@@ -629,7 +632,7 @@
               : timer($time, $decimals, false)}
           </span>
 
-          {#if $state === TimerState.INSPECTION && $screen.isMobile}
+          {#if $state === TimerState.INSPECTION && !dataService.isElectron}
             <Button color="alternative" class="w-min mx-auto" on:click={stopTimer}>
               {$localLang.global.cancel}
             </Button>
@@ -688,98 +691,7 @@
 
   <!-- Statistics -->
   {#if !(battle || timerOnly || scrambleOnly)}
-    <!-- Left Statistics -->
-    <div
-      id="left-stats"
-      class="text-gray-300 transition-all duration-300 max-md:text-xs"
-      class:hide={$isRunning}
-    >
-      <table class="ml-3">
-        <tr class:better={$stats.best.better && $stats.counter.value > 0 && $stats.best.value > -1}>
-          <td>{$localLang.TIMER.best}:</td>
-          {#if !$stats.best.value}
-            <td>N/A</td>
-          {/if}
-          {#if $stats.best.value}
-            <td>{timer($stats.best.value, true, true)}</td>
-          {/if}
-        </tr>
-        <tr>
-          <td>{$localLang.TIMER.worst}:</td>
-          {#if !$stats.worst.value}
-            <td>N/A</td>
-          {/if}
-          {#if $stats.worst.value}
-            <td>{timer($stats.worst.value, true, true)}</td>
-          {/if}
-        </tr>
-        <tr class:better={$stats.avg.better && $stats.counter.value > 0}>
-          <td>{$localLang.TIMER.average}:</td>
-          {#if !$stats.avg.value}
-            <td>N/A</td>
-          {/if}
-          {#if $stats.avg.value}
-            <td>{timer($stats.avg.value, true, true)}</td>
-          {/if}
-        </tr>
-        <tr>
-          <td>{$localLang.TIMER.deviation}:</td>
-          {#if !$stats.dev.value}
-            <td>N/A</td>
-          {/if}
-          {#if $stats.dev.value}
-            <td>{timer($stats.dev.value, true, true)}</td>
-          {/if}
-        </tr>
-        <tr>
-          <td>{$localLang.TIMER.count}:</td>
-          <td>{$stats.count.value}</td>
-        </tr>
-        <tr class:better={$stats.Mo3.better && $stats.counter.value > 0 && $stats.Mo3.value > -1}>
-          <td>Mo3:</td>
-          {#if !($stats.Mo3.value > -1)}
-            <td>N/A</td>
-          {/if}
-          {#if $stats.Mo3.value > -1}
-            <td>{timer($stats.Mo3.value, true, true)}</td>
-          {/if}
-        </tr>
-        <tr class:better={$stats.Ao5.better && $stats.counter.value > 0 && $stats.Ao5.value > -1}>
-          <td>Ao5:</td>
-          {#if !($stats.Ao5.value > -1)}
-            <td>N/A</td>
-          {/if}
-          {#if $stats.Ao5.value > -1}
-            <td>{timer($stats.Ao5.value, true, true)}</td>
-          {/if}
-        </tr>
-      </table>
-    </div>
-
-    <!-- Right Statistics -->
-    <div
-      id="right-stats"
-      class="text-gray-300 transition-all duration-300 max-md:text-xs"
-      class:hide={$isRunning}
-    >
-      <table class="mr-3">
-        {#each ["Ao12", "Ao50", "Ao100", "Ao200", "Ao500", "Ao1k", "Ao2k"] as stat}
-          <tr
-            class:better={$stats[stat].better &&
-              $stats.counter.value > 0 &&
-              $stats[stat].value > -1}
-          >
-            <td>{stat}:</td>
-            {#if !($stats[stat].value > -1)}
-              <td>N/A</td>
-            {/if}
-            {#if $stats[stat].value > -1}
-              <td>{timer($stats[stat].value, true, true)}</td>
-            {/if}
-          </tr>
-        {/each}
-      </table>
-    </div>
+    <StatsInfo {context} />
   {/if}
 
   <!-- Image -->
@@ -788,7 +700,7 @@
     class:expanded={prevExpanded}
     class={(prevExpanded ? "" : "relative") +
       " " +
-      ($session?.settings?.input === "GAN Cube" ? "-z-10" : "")}
+      ($session?.settings?.input === "GAN Cube" ? "z-0" : "")}
   >
     <!-- Cube3D -->
     {#if $session?.settings?.input === "GAN Cube"}
@@ -919,7 +831,6 @@
 <style lang="postcss">
   .timer-tab {
     display: grid;
-    height: 100%;
     overflow: hidden;
     grid-template-columns: auto auto 1fr auto;
     grid-template-rows: auto 1fr min-content;
@@ -948,6 +859,10 @@
     grid-template-areas: "scramble";
   }
 
+  .timer-tab.scrambleOnly #scramble {
+    margin-top: 4rem;
+  }
+
   .timer-tab.scrambleOnly #preview-container,
   .timer-tab.scrambleOnly #timer {
     display: none;
@@ -955,14 +870,6 @@
 
   .timer-tab.timerOnly #scramble {
     display: none;
-  }
-
-  #left-stats {
-    grid-area: leftStats;
-  }
-
-  #right-stats {
-    grid-area: rightStats;
   }
 
   #scramble {
@@ -995,12 +902,6 @@
 
   #manual-inp {
     width: 30rem;
-  }
-
-  #left-stats tr.better,
-  #right-stats tr.better {
-    text-decoration: underline;
-    font-weight: bold;
   }
 
   .timer {
@@ -1049,9 +950,10 @@
   }
 
   .cube-3d {
-    @apply bg-white bg-opacity-20 overflow-hidden shadow-md rounded-md mx-auto
+    @apply w-full h-full bg-white bg-opacity-20 max-w-md shadow-md rounded-md mx-auto overflow-hidden;
+    /* @apply bg-white bg-opacity-20 overflow-hidden shadow-md rounded-md mx-auto
     w-[calc(100vw-20rem)] max-md:w-[calc(100vw-3rem)]
-    h-[45vh] max-md:h-[calc(100vh-25rem)];
+    h-[45vh] max-md:h-[calc(100vh-25rem)]; */
 
     /* height: calc(100vh - 25rem); */
   }

@@ -208,7 +208,7 @@ pre .operator {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(0, 0, 0, 0.7);
+  background-color: rgba(163, 171, 255, 0.5);
 }
 
 ::-webkit-scrollbar-button {

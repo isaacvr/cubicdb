@@ -215,7 +215,7 @@ export function RUBIK(_a: number, _b: number, _c: number): PuzzleInterface {
   };
 
   rubik.applySequence = function (seq: string[]) {
-    let moves = seq.map(mv => ScrambleParser.parseNNN(mv, {a, b, c})[0]);
+    let moves = seq.map(mv => ScrambleParser.parseNNN(mv, { a, b, c })[0]);
     let res: { u: Vector3D; ang: number; pieces: string[] }[] = [];
 
     for (let i = 0, maxi = moves.length; i < maxi; i += 1) {
@@ -249,9 +249,7 @@ export function RUBIK(_a: number, _b: number, _c: number): PuzzleInterface {
 
   rubik.faceVectors = [UP, RIGHT, FRONT, DOWN, LEFT, BACK];
 
-  assignColors(rubik, rubik.faceColors);
-
-  // pieces.forEach(pc => pc.stickers = pc.stickers.filter(st => st.color != 'x'));
+  assignColors(rubik, rubik.faceColors, isCube);
 
   return rubik;
 }

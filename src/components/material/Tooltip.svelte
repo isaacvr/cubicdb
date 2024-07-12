@@ -88,7 +88,7 @@
     { hasKeybinding ? processKey(text)[0] : text }
 
     {#if hasKeybinding}
-      &nbsp; <span class="flex ml-auto text-yellow-400">{ processKey(text)[1] }</span>
+      &nbsp; <span class="flex ml-auto text-yellow-300">{ processKey(text)[1] }</span>
     {/if}
   </div>
 </button>

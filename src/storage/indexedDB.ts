@@ -470,6 +470,20 @@ export class IndexedDBAdaptor implements IPC {
     this.cache.set(hash, data);
   }
 
+  async cacheSave(hash: string, data: string): Promise<void> {
+    // await this.init();
+    // if (!this.DB) return;
+    // const tx = this.DB.transaction(CacheStore, "readwrite");
+    // await Promise.all([tx.store.put(<ICacheImg>{ hash, img: data }), tx.done]);
+    // this.cache.set(hash, data);
+  }
+
+  async cacheGetVideo(hash: string) {
+    return null;
+  }
+
+  async cacheSaveVideo(hash: string, data: ArrayBuffer) {}
+
   async clearCache(db: ICacheDB) {
     await this.init();
     if (!this.DB) return;
@@ -493,13 +507,15 @@ export class IndexedDBAdaptor implements IPC {
   // For IPC only
   algorithmsStorage() {}
   cacheStorage() {}
+  vCacheStorage() {}
   sessionsStorage() {}
   solvesStorage() {}
-  tutorialsStorage() { }
-  
+  tutorialsStorage() {}
+
   async getStorageInfo(): Promise<IStorageInfo> {
     await this.init();
-    if (!this.DB) return { algorithms: 0, cache: 0, sessions: 0, solves: 0, tutorials: 0 };
+    if (!this.DB)
+      return { algorithms: 0, cache: 0, sessions: 0, solves: 0, tutorials: 0, vcache: 0 };
 
     let cache = await this.DB.getAll(CacheStore);
     let sessions = await this.DB.getAll(SessionStore);
@@ -508,6 +524,7 @@ export class IndexedDBAdaptor implements IPC {
     return {
       algorithms: getByteSize(algs),
       cache: getByteSize(cache),
+      vcache: 0,
       sessions: getByteSize(sessions),
       solves: getByteSize(solves),
       tutorials: getByteSize(tuts),

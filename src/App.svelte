@@ -18,10 +18,7 @@
   import { screen } from "@stores/screen.store";
   import { DataService } from "@stores/data.service";
   import { version } from "@stores/version.store";
-  import { randomUUID } from "@helpers/strings";
-  import { CubeDBICON } from "@constants";
-  import { updateBackground } from "@helpers/theme";
-  // import { updateBackground } from '@helpers/theme';
+  import Reconstruction from "@components/Reconstruction.svelte";
 
   let dataService = DataService.getInstance();
   let notService = NotificationService.getInstance();
@@ -70,8 +67,6 @@
                 color: "purple",
               },
             ],
-            key: randomUUID(),
-            icon: CubeDBICON,
           });
         }
       })
@@ -128,9 +123,12 @@
   <Route path="/timer" let:params>
     <Lazy component={import("@components/timer/Timer.svelte")} {params} />
   </Route>
-  <Route path="/reconstructions" let:params>
+  <!-- <Route path="/reconstructions" let:params>
     <Lazy component={import("@components/Reconstruction.svelte")} {params} />
-  </Route>
+  </Route> -->
+  
+  <Route path="/reconstructions" component={Reconstruction} />
+
   <Route path="/battle" let:params>
     <Lazy component={import("@components/battle/Battle.svelte")} {params} />
   </Route>
@@ -177,5 +175,6 @@
     flex-direction: column;
     gap: 0.5rem;
     justify-content: center;
+    z-index: 50;
   }
 </style>
