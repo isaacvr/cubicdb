@@ -6,26 +6,37 @@ export const EPS = 1e-6;
 
 export enum CubeMode {
   NORMAL = 0, OLL, PLL, CMLL, F2L, COLL, WV, ELL, VLS, ZBLL, OLLCP, GRAY, CENTERS, CROSS, FL, YCROSS,
-  CS, EO, CO
+  CS, EO, CO, F3E, EDGERF, DPLL, L4E, CYCROSS,
 };
 
 export const CubeModeMap = [
   ['Normal', CubeMode.NORMAL],
-  ['OLL', CubeMode.OLL],
-  ['PLL', CubeMode.PLL],
-  ['CMLL', CubeMode.CMLL],
+  ['Gray', CubeMode.GRAY],
+  ['Centers', CubeMode.CENTERS],
+  
+  ['Cross', CubeMode.CROSS],
+  ['First Layer', CubeMode.FL],
+  
   ['F2L', CubeMode.F2L],
+  ['F3E', CubeMode.F3E],
+  ['L4E', CubeMode.L4E],
+  ['EDGERU', CubeMode.EDGERF],
+  
+  ['Yellow Cross', CubeMode.YCROSS],
+  ['CYellow Cross', CubeMode.CYCROSS],
+  ['OLL', CubeMode.OLL],
+  ['OLLCP', CubeMode.OLLCP],
+  ['PLL', CubeMode.PLL],
+  ['DPLL', CubeMode.DPLL], // Dark face on top
+  
+  ['CMLL', CubeMode.CMLL],
   ['COLL', CubeMode.COLL],
   ['WV', CubeMode.WV],
   ['ELL', CubeMode.ELL],
   ['VLS', CubeMode.VLS],
   ['ZBLL', CubeMode.ZBLL],
-  ['OLLCP', CubeMode.OLLCP],
-  ['Gray', CubeMode.GRAY],
-  ['Centers', CubeMode.CENTERS],
-  ['Cross', CubeMode.CROSS],
-  ['First Layer', CubeMode.FL],
-  ['Yellow Cross', CubeMode.YCROSS],
+  
+  // SQ1
   ['Cube Shape', CubeMode.CS],
   ['Edge Orientation', CubeMode.EO],
   ['Corner Orientation', CubeMode.CO],
@@ -39,7 +50,8 @@ const COLORS = {
   "yellow": "rgb(255,235,59)",
   "white": "rgb(230, 230, 230)",
   "black": "rgb(0, 0, 0)",
-  "gray": "rgb(80, 80, 80)",
+  // "gray": "rgb(80, 80, 80)",
+  "gray": "rgb(75, 81, 90)",
   "darkGray": "rgb(50, 50, 50)",
   "lightGray": "rgb(211, 211, 211)",
   "violet": "rgb(138, 27, 255)",
@@ -174,6 +186,7 @@ export const MISC = [
   ['233'],
   ['334'],
   ['336'],
+  ['ssq1t'],
 ];
 
 export const ICONS = [
@@ -194,6 +207,7 @@ export const ICONS = [
   { icon: "pyrso", name: 'Pyraminx', scrambler: PYRA },
   { icon: "skbso", name: 'Skewb', scrambler: SKWB },
   { icon: "sqrs", name: 'Square-1', scrambler: SQR1 },
+  { icon: "333cross", name: 'Cross', scrambler: '333cross' },
 ] as const;
 
 export const CubeDBICON = '/assets/logo-100.png';
@@ -231,6 +245,7 @@ const OPTS_MISC: PuzzleOptions[][] = [
   [{ type: 'rubik', order: [3, 3, 2] }],
   [{ type: 'rubik', order: [3, 3, 4] }],
   [{ type: 'rubik', order: [3, 3, 6] }],
+  [{ type: 'supersquare1' }],
 ];
 
 const MODES = [R222, R333, R444, R555, R666, R777, PYRA, SKWB, SQR1, CLCK, MEGA, KILO, GIGA];

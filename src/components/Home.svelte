@@ -4,143 +4,115 @@
   import { getLanguage } from "@lang/index";
   import type { ICard } from "@interfaces";
   import { screen } from "@stores/screen.store";
-  // import { Snow } from "@pclasses/Snow";
-  // import { onDestroy, onMount } from "svelte";
 
   let cards: ICard[] = [];
-  let canvas: HTMLCanvasElement;
-  // let snow = new Snow(100);
-  // let showSnow = true;
 
   function updateTexts() {
-    const HOME = getLanguage( $globalLang ).HOME;
+    const HOME = getLanguage($globalLang).HOME;
 
-    const showPrivate = true;
+    const showPrivate = false;
 
     cards = [
       {
         title: HOME.tutorials,
         route: "/tutorials",
-        ready: showPrivate,
-        cube: '/assets/tutorials.png',
-      }, {
+        ready: true,
+        cube: "/assets/tutorials.png",
+      },
+      {
         title: HOME.algorithms,
         route: "/algorithms",
         ready: true,
-        cube: '/assets/algorithms.png',
-      }, {
-        title: 'Algorithm Handler',
-        route: "/algorithms-admin",
-        ready: showPrivate,
-        cube: '/assets/algorithms-admin.png',
-      }, {
+        cube: "/assets/algorithms.png",
+      },
+      {
         title: HOME.timer,
         route: "/timer",
         ready: true,
-        cube: '/assets/timer.png',
-      }, {
+        cube: "/assets/timer.png",
+      },
+      {
         title: HOME.reconstructions,
         route: "/reconstructions",
         ready: true,
-        cube: '/assets/reconstructions.png',
-      }, {
+        cube: "/assets/reconstructions.png",
+      },
+      {
         title: HOME.battle,
         route: "/battle",
         ready: showPrivate,
-        cube: '/assets/battle.png',
-      }, {
+        cube: "/assets/battle.png",
+      },
+      {
         title: HOME.pll_recognition,
         route: "/pll-trainer",
         ready: true,
-        cube: '/assets/pll.png',
-      }, {
+        cube: "/assets/pll.png",
+      },
+      {
         title: HOME.simulator,
         route: "/simulator",
         ready: true,
-        cube: '/assets/megaminx.png',
-      }, {
+        cube: "/assets/megaminx.png",
+      },
+      {
         title: HOME.contest,
-        route: '/contest',
-        cube: '/assets/logo-500.png',
+        route: "/contest",
+        cube: "/assets/logo-500.png",
         ready: showPrivate,
-      }, {
+      },
+      {
         title: HOME.tools,
-        route: '/tools',
-        cube: '/assets/tools.png',
+        route: "/tools",
+        cube: "/assets/tools.png",
         ready: true,
-      }, {
+      },
+      {
         title: HOME.importExport,
-        route: '/import-export',
-        cube: '/assets/import-export.png',
-        // ready: DataService.getInstance().isElectron,
+        route: "/import-export",
+        cube: "/assets/import-export.png",
         ready: true,
-      }, {
+      },
+      {
         title: HOME.settings,
         route: "/settings",
         ready: true,
-        cube: '/assets/settings.png'
+        cube: "/assets/settings.png",
       },
       {
-        title: 'CubeDB',
-        route: '/cubedb',
-        cube: '/assets/logo-500.png',
+        title: "CubeDB",
+        route: "/cubedb",
+        cube: "/assets/logo-500.png",
         ready: false,
-      }, {
-        title: 'Remote',
-        route: '/remote',
-        cube: '/assets/logo-500.png',
+      },
+      {
+        title: "Remote",
+        route: "/remote",
+        cube: "/assets/logo-500.png",
         ready: false,
-      }
+      },
     ].filter(c => c.ready);
-  };
-
-  // function updateSnow() {
-  //   let ctx = canvas.getContext('2d');
-
-  //   if ( !showSnow || !ctx ) return;
-    
-  //   ctx.fillStyle = 'white';
-  //   ctx.strokeStyle = 'white';
-  //   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  //   snow.draw( ctx );
-  //   requestAnimationFrame(updateSnow);
-  // }
-
-  // onMount(() => {
-  //   canvas.width = window.innerWidth;
-  //   canvas.height = window.innerHeight;
-
-  //   updateSnow();
-  // });
-
-  // onDestroy(() => {
-  //   showSnow = false;
-  // });
+  }
 
   $: $globalLang, updateTexts();
 </script>
 
-<!-- <svelte:window on:resize={() => snow.reset()}/> -->
-
 <main class="container-mini relative">
-  <ul class="w-full grid place-items-center" class:isMobile={ $screen.isMobile }>
+  <ul class="w-full grid place-items-center" class:isMobile={$screen.isMobile}>
     {#each cards as card (card.route)}
-      <li class={`text-center shadow-md rounded-md select-none cursor-pointer
-      transition-all duration-200 py-3 px-3
-      bg-backgroundLv1 text-gray-400
-
-      hover:rotate-3 hover:shadow-lg ` + 'card-premium'}>
-        <Link class="flex flex-col items-center justify-between w-full h-full" to={ card.route }>
-          <img class="mx-auto" src={card.puzzle ? card.puzzle.img : card.cube} alt={ card.title }>
-          <h2 class="text-sm">{card.title}</h2>
+      <li
+        class="w-full max-w-[12rem] h-48 shadow-md rounded-md select-none cursor-pointer card
+          transition-all duration-200 grid place-items-center justify-center py-3 px-2
+          bg-backgroundLv1 hover:shadow-2xl hover:bg-backgroundLv2 hover:shadow-primary-900 relative"
+      >
+        <Link class="flex flex-col items-center justify-between w-full h-full" to={card.route}>
+          <img class="mx-auto" src={card.puzzle ? card.puzzle.img : card.cube} alt={card.title} />
+          <h2 class="text-sm text-center">{card.title}</h2>
         </Link>
       </li>
-      {/each}
+    {/each}
   </ul>
-
 </main>
-
-<canvas bind:this={ canvas } class="absolute inset-0 pointer-events-none"/>
 
 <style lang="postcss">
   ul {

@@ -1,4 +1,5 @@
 import { Penalty, type Solve } from "@interfaces";
+import { toInt } from "./math";
 
 export function timer(val: number, dec?: boolean, suff?: boolean): string {
   if ( val === Infinity ) return "DNF";
@@ -37,6 +38,13 @@ export function sTimer(s: Solve | null, dec?: boolean, suff?: boolean): string {
   return timer(s.time, dec, suff);
 }
 
+export function sTime(s: Solve | null): number {
+  if ( !s ) return 0;
+  if ( s.penalty === Penalty.DNS ) return Infinity;
+  if ( s.penalty === Penalty.DNF ) return Infinity;
+  return s.time + (s.penalty === Penalty.P2 ? 2000 : 0);
+}
+
 export function infinitePenalty(s: Solve): boolean {
   return s.penalty === Penalty.DNF || s.penalty === Penalty.DNS;
 }
@@ -55,8 +63,8 @@ export function timerToMilli(n: number): number {
   return res + n * 86_400_000; // Add days
 }
 
-export function adjustMillis(n: number): number {
-  return Math.floor(n / 10) * 10;
+export function adjustMillis(n: number, round = false): number {
+  return !round ? toInt(n, 1) : Math.round(n / 10) * 10;
 }
 
 export function formatHour(n: number, long?: boolean): string {

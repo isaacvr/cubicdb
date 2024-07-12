@@ -1,13 +1,54 @@
-import type { Algorithm, AlgorithmOptions, CubeEvent, IPC, ContestPDFOptions, Session, Sheet, Solve, Tutorial, UpdateCommand, PDFOptions, IStorageInfo, ICacheDB } from "@interfaces";
+import { getByteSize } from "@helpers/object";
+import type {
+  Algorithm,
+  AlgorithmOptions,
+  CubeEvent,
+  IPC,
+  ContestPDFOptions,
+  Session,
+  Sheet,
+  Solve,
+  ITutorial,
+  UpdateCommand,
+  PDFOptions,
+  IStorageInfo,
+  ICacheDB,
+} from "@interfaces";
 
 export class ElectronAdaptor implements IPC {
   private ipc: IPC;
+  private cache: Map<string, string>;
+  private vCache: Map<string, ArrayBuffer>;
+
   constructor() {
-    this.ipc = (<any> window).electronAPI as IPC;
+    this.ipc = (<any>window).electronAPI as IPC;
+    this.cache = new Map();
+    this.vCache = new Map();
+    this.init();
   }
 
-  async getAlgorithms(options: AlgorithmOptions): Promise<Algorithm[]> {
-    return await this.ipc.getAlgorithms(options);
+  async init() {
+    let c = await (this.ipc as any).cacheGetAll();
+
+    for (let i = 0, maxi = c.length; i < maxi; i += 1) {
+      let cc = c[i];
+      this.cache.set(cc[0], cc[1]);
+    }
+
+    let v = await (this.ipc as any).vCacheGetAll();
+
+    for (let i = 0, maxi = v.length; i < maxi; i += 1) {
+      let cc = v[i];
+      this.vCache.set(cc[0], cc[1]);
+    }
+  }
+
+  getAlgorithms(options: AlgorithmOptions): Promise<Algorithm[]> {
+    return this.ipc.getAlgorithms(options);
+  }
+
+  getAlgorithm(options: AlgorithmOptions): Promise<Algorithm | null> {
+    return this.ipc.getAlgorithm(options);
   }
 
   addDownloadProgressListener(cb: any) {
@@ -42,16 +83,48 @@ export class ElectronAdaptor implements IPC {
     return this.ipc.removeAlgorithm(cp);
   }
 
+  algorithmsVersion() {
+    return this.ipc.algorithmsVersion();
+  }
+
+  checkAlgorithms() {
+    return this.ipc.checkAlgorithms();
+  }
+
+  updateAlgorithms() {
+    return this.ipc.updateAlgorithms();
+  }
+
   getTutorials() {
     return this.ipc.getTutorials();
   }
 
-  addTutorial(t: Tutorial) {
+  getTutorial(puzzle: string, shortName: string, lang: string) {
+    return this.ipc.getTutorial(puzzle, shortName, lang);
+  }
+
+  addTutorial(t: ITutorial) {
     return this.ipc.addTutorial(t);
   }
 
-  updateTutorial(t: Tutorial) {
+  updateTutorial(t: ITutorial) {
     return this.ipc.updateTutorial(t);
+  }
+
+  removeTutorial(t: ITutorial) {
+    return this.ipc.removeTutorial(t);
+  }
+  
+  tutorialsVersion() {
+    return this.ipc.tutorialsVersion();
+  }
+
+  checkTutorials() {
+    return this.ipc.checkTutorials();
+  }
+
+  updateTutorials() {
+    return this.ipc.updateTutorials();
   }
 
   getSolves() {
@@ -130,7 +203,7 @@ export class ElectronAdaptor implements IPC {
     return this.ipc.generateContestPDF(args);
   }
 
-  zipPDF(s: { name: string, files: Sheet[]}) {
+  zipPDF(s: { name: string; files: Sheet[] }) {
     return this.ipc.zipPDF(s);
   }
 
@@ -145,7 +218,7 @@ export class ElectronAdaptor implements IPC {
   update(cmd: UpdateCommand) {
     return this.ipc.update(cmd);
   }
-  
+
   cancelUpdate() {
     return this.ipc.cancelUpdate();
   }
@@ -171,30 +244,73 @@ export class ElectronAdaptor implements IPC {
   }
 
   cacheGetImage(hash: string): Promise<string> {
-    return this.ipc.cacheGetImage(hash);
+    // return this.ipc.cacheGetImage(hash);
+    return Promise.resolve(this.cache.get(hash) || "");
   }
 
   cacheGetImageBundle(hashes: string[]): Promise<string[]> {
-    return this.ipc.cacheGetImageBundle(hashes);
+    // return this.ipc.cacheGetImageBundle(hashes);
+    return Promise.resolve(hashes.map(h => this.cache.get(h) || ""));
+  }
+
+  cacheGetVideo(hash: string): Promise<ArrayBuffer | null> {
+    // return this.ipc.cacheGetImage(hash);
+    return Promise.resolve(this.vCache.get(hash) || null);
   }
 
   cacheSaveImage(hash: string, data: string): Promise<void> {
+    this.cache.set(hash, data);
     return this.ipc.cacheSaveImage(hash, data);
   }
 
+  cacheSaveVideo(hash: string, data: ArrayBuffer): Promise<void> {
+    this.vCache.set(hash, data);
+    return this.ipc.cacheSaveVideo(hash, data);
+  }
+
   clearCache(db: ICacheDB) {
-    // Implement this
+    switch (db) {
+      case "Cache": {
+        this.cache.clear();
+        return this.ipc.clearCache(db);
+      }
+      case "VCache": {
+        this.vCache.clear();
+        return this.ipc.clearCache(db);
+      }
+      case "Solves":
+      case "Sessions": {
+        return this.ipc.clearCache(db);
+      }
+    }
+
     return Promise.resolve();
   }
 
-  getStorageInfo(): Promise<IStorageInfo> {
-    return Promise.resolve({
-      algorithms: 0,
-      cache: 0,
-      sessions: 0,
-      solves: 0,
-      tutorials: 0
-    });
+  // For IPC only
+  algorithmsStorage() {}
+  cacheStorage() {}
+  vCacheStorage() {}
+  sessionsStorage() {}
+  solvesStorage() {}
+  tutorialsStorage() {}
+
+  async getStorageInfo(): Promise<IStorageInfo> {
+    let algorithms = await this.ipc.algorithmsStorage();
+    let cache = await this.ipc.cacheStorage();
+    let vcache = await this.ipc.vCacheStorage();
+    let sessions = await this.ipc.sessionsStorage();
+    let solves = await this.ipc.solvesStorage();
+    let tutorials = await this.ipc.tutorialsStorage();
+
+    return {
+      algorithms,
+      cache,
+      vcache,
+      sessions,
+      solves,
+      tutorials,
+    };
   }
 
   getAllDisplays() {

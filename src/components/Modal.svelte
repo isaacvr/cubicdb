@@ -78,7 +78,7 @@
 
 <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 <dialog data-type="modal" bind:this={ modal } on:mousedown={ handleClick } on:keyup={ keyUpHandler } on:keydown={ keyDownHandler }
-  class="bg-gray-800 rounded-md show p-4 pt-3 overflow-visible { _cl || '' }"
+  class="bg-backgroundLv2 rounded-md show p-4 pt-3 overflow-visible { _cl || '' }"
   style="view-transition-name: { transitionName };">
   {#if show}
     <slot />
@@ -94,7 +94,7 @@
     
     to {
       background-color: #0003;
-      backdrop-filter: blur(.4rem);
+      backdrop-filter: blur(.5rem);
     }
   }
 
@@ -102,7 +102,7 @@
     z-index: -1;
     animation: fadeIn 200ms linear 0ms forwards;
     background-color: #0003;
-    backdrop-filter: blur(.4rem);
+    backdrop-filter: blur(.5rem);
   }
 
   .show {

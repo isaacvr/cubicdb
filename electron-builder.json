@@ -41,6 +41,7 @@
   ],
   "extraResources": [
     "src/database/algs.db",
-    "src/database/tutorials.db"
+    "src/database/tutorials.db",
+    "src/database/versions.json"
   ]
 }

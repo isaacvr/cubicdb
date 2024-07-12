@@ -1,15 +1,20 @@
+import { Puzzle } from "@classes/puzzle/puzzle";
+import { DOWN } from "@classes/vector3d";
+import { EPS } from "@constants";
+import { nameToPuzzle, type Algorithm, type ITutorialAlg, type PuzzleType } from "@interfaces";
+
 export function checkPath(obj: any, path: string[], useMap: boolean = false): boolean {
-  if ( typeof obj === 'undefined' ) return false;
+  if (typeof obj === "undefined") return false;
 
   let tmp = obj;
 
-  for ( let i = 0, maxi = path.length - 1; i < maxi; i += 1 ) {
-    if ( typeof tmp === 'undefined' ) return false;
-  
-    if ( useMap && tmp.has( path[i] ) ) {
-      tmp = tmp.get( path[i] );
-    } else if ( !useMap && Object.prototype.hasOwnProperty.call(tmp, path[i]) ) {
-      tmp = tmp[ path[i] ];
+  for (let i = 0, maxi = path.length - 1; i < maxi; i += 1) {
+    if (typeof tmp === "undefined") return false;
+
+    if (useMap && tmp.has(path[i])) {
+      tmp = tmp.get(path[i]);
+    } else if (!useMap && Object.prototype.hasOwnProperty.call(tmp, path[i])) {
+      tmp = tmp[path[i]];
     } else {
       return false;
     }
@@ -19,11 +24,11 @@ export function checkPath(obj: any, path: string[], useMap: boolean = false): bo
 }
 
 export function pushPath(obj: any, path: string[], value: any, useMap: boolean = false): any {
-  if ( typeof obj === 'undefined' ) return obj;
+  if (typeof obj === "undefined") return obj;
 
   path.reduce((acc, p, pos) => {
-    if ( pos + 1 === path.length ) {
-      if ( useMap ) {
+    if (pos + 1 === path.length) {
+      if (useMap) {
         acc.get(p).push(value);
       } else {
         acc[p].push(value);
@@ -37,20 +42,16 @@ export function pushPath(obj: any, path: string[], value: any, useMap: boolean =
 }
 
 export function createPath(obj: any, path: string[], def: any, useMap: boolean = false): any {
-  if ( typeof obj === 'undefined' ) return obj;
+  if (typeof obj === "undefined") return obj;
 
-  const objSetter = (o: any, p: any, v: any) => o[p] = v;
+  const objSetter = (o: any, p: any, v: any) => (o[p] = v);
   const mapSetter = (m: Map<any, any>, p: any, v: any) => m.set(p, v);
 
   path.reduce((acc, p, pos) => {
-    let altV = pos + 1 === path.length
-      ? def
-      : useMap
-        ? new Map<string, any>()
-        : {};
+    let altV = pos + 1 === path.length ? def : useMap ? new Map<string, any>() : {};
 
-    if ( (!pos && acc instanceof Map) || (pos && useMap) ) {
-      mapSetter(acc, p, altV); 
+    if ((!pos && acc instanceof Map) || (pos && useMap)) {
+      mapSetter(acc, p, altV);
     } else {
       objSetter(acc, p, acc[p] || altV);
     }
@@ -61,53 +62,55 @@ export function createPath(obj: any, path: string[], def: any, useMap: boolean =
   return obj;
 }
 
-export function clone(obj: any): any {
-  switch(typeof obj) {
-    case 'boolean':
-    case 'number':
-    case 'string':
-    case 'undefined':
-    case 'function':
+export function clone(obj: any, ignore: string[] = []): any {
+  switch (typeof obj) {
+    case "boolean":
+    case "number":
+    case "string":
+    case "undefined":
+    case "function":
       return obj;
   }
 
-  if ( obj === null ) return obj;
+  if (obj === null) return obj;
 
-  if ( typeof obj === 'bigint' ) {
+  if (typeof obj === "bigint") {
     return BigInt(obj);
   }
 
-  if ( Array.isArray(obj) ) return obj.map(clone);
-  
+  if (Array.isArray(obj)) return obj.map(e => clone(e));
+
   return Object.entries(obj).reduce((acc: any, e) => {
-    acc[ e[0] ] = clone(e[1]);
+    if (ignore.indexOf(e[0]) > -1) return acc;
+
+    acc[e[0]] = clone(e[1]);
     return acc;
   }, {});
 }
 
 export function getUint8DataView(dt: DataView): Uint8Array {
-  let res = new Array( dt.byteLength );
+  let res = newArr(dt.byteLength);
 
   for (let i = 0, maxi = dt.byteLength; i < maxi; i += 1) {
     res[i] = dt.getUint8(i);
   }
 
-  return Uint8Array.from( res );
+  return Uint8Array.from(res);
 }
 
 export function binSearch<T>(elem: T, arr: T[], cmp: (a: T, b: T) => number) {
   let from = 0;
   let to = arr.length;
 
-  while ( from < to ) {
+  while (from < to) {
     let mid = (to + from) >> 1;
     let comp = cmp(elem, arr[mid]);
 
-    if ( comp === 0 ) {
+    if (comp === 0) {
       return mid;
     }
 
-    if ( comp < 0 ) {
+    if (comp < 0) {
       to = mid;
     } else {
       from = mid + 1;
@@ -118,33 +121,66 @@ export function binSearch<T>(elem: T, arr: T[], cmp: (a: T, b: T) => number) {
 }
 
 export function getByteSize(obj: any): number {
-  switch(typeof obj) {
-    case 'boolean': return 4;
-    case 'number': return 8;
-    case 'string': return obj.length * 2;
-    case 'undefined': return 4;
-    case 'function':
+  switch (typeof obj) {
+    case "boolean":
+      return 4;
+    case "number":
+      return 8;
+    case "string":
+      return obj.length * 2;
+    case "undefined":
+      return 4;
+    case "function":
       return JSON.stringify(obj).length;
   }
 
-  if ( obj === null ) return 4;
+  if (obj === null) return 4;
 
-  if ( typeof obj === 'bigint' ) {
+  if (typeof obj === "bigint") {
     let b = BigInt(obj);
-    
-    if ( b < 0n ) b = b * -1n;
+
+    if (b < 0n) b = b * -1n;
 
     let s = b.toString();
     let pot = s.length - 1;
-    let base = +(s[0] + '.' + (s.slice(1) || '0'));
-    return b === 0n ? 4 : (2 + Math.ceil(((Math.log10(base) + pot) / Math.log(2) + 1) / 64)) * 8
+    let base = +(s[0] + "." + (s.slice(1) || "0"));
+    return b === 0n ? 4 : (2 + Math.ceil(((Math.log10(base) + pot) / Math.log(2) + 1) / 64)) * 8;
   }
 
-  if ( Array.isArray(obj) ) {
+  if (Array.isArray(obj)) {
     return obj.reduce((acc, o) => acc + getByteSize(o), 0);
   }
-  
+
   return Object.entries(obj).reduce((acc: any, e) => {
     return acc + getByteSize(e[0]) + getByteSize(e[1]);
   }, 0);
+}
+
+export function algorithmToPuzzle(alg: ITutorialAlg, addZ2: boolean, invert = true): Puzzle {
+  let args = nameToPuzzle(alg.puzzle || "");
+  let noZ2: PuzzleType[] = ["megaminx", "pyraminx", "clock"];
+  let seq = alg.scramble + (addZ2 && noZ2.indexOf(args.type) === -1 ? " z2" : "");
+
+  let res = Puzzle.fromSequence(
+    seq,
+    {
+      type: args.type,
+      order: args.dims.length === 0 ? [alg.order] : args.dims,
+      mode: alg.mode,
+      view: alg.view,
+      tips: alg.tips,
+      headless: true,
+      rounded: true,
+    },
+    invert,
+    true
+  );
+
+  res.p.rotation = alg.rotation || res.p.rotation;
+
+  return res.adjustColors("", alg.baseColor || (args.type === "pyraminx" ? "y" : "w"));
+}
+
+export function newArr(length: number): any[] {
+  return Array.from({ length });
 }

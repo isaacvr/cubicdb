@@ -58,13 +58,13 @@
   <section class="flex relative" style="--len: {tabs.length};">
     <slot />
   </section>
-  <footer class="flex mt-auto border-t-2 border-t-gray-700">
+  <footer class="flex mt-auto border-t border-t-gray-700 gap-1 px-2 py-1">
     {#each tabs as tab}
       <Button color="none" ariaLabel={ tab.ariaLabel }
-        class="rounded-none w-full border border-gray-400 border-l-transparent first:border-l-gray-400 
+        class="rounded-lg w-full
         { tab.index === $selectedTab
-          ? 'bg-blue-400 text-black hover:bg-blue-500 hover:bg-opacity-100'
-          : 'bg-gray-700 hover:bg-gray-600' }"
+          ? 'bg-blue-600 text-white hover:bg-blue-500 z-10 '
+          : 'bg-backgroundLv1 hover:bg-backgroundLv2' }"
         on:click={ () => selectTab(tab) }
       >
         {#if tab.icon }

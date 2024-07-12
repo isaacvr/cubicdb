@@ -1,7 +1,8 @@
-import { EPS } from '@constants';
-import { Vector3D, CENTER } from './../vector3d';
-import { BufferGeometry, Group, Matrix4, Points, PointsMaterial, Vector3 } from 'three';
-import { rotateBundle } from '@helpers/math';
+import { EPS } from "@constants";
+import { Vector3D, CENTER } from "./../vector3d";
+import { BufferGeometry, Group, Matrix4, Points, PointsMaterial, Vector3 } from "three";
+import { rotateBundle } from "@helpers/math";
+import { mean } from "@helpers/statistics";
 
 export class Sticker {
   points: Vector3D[];
@@ -14,10 +15,17 @@ export class Sticker {
   _cached_mass_center: Vector3D;
   nonInteractive: boolean;
   name: string;
+  userData: any;
 
-  constructor(pts?: Vector3D[], color?: string, vecs?: Vector3D[], nonInteractive = false, name = "") {
+  constructor(
+    pts?: Vector3D[],
+    color?: string,
+    vecs?: Vector3D[],
+    nonInteractive = false,
+    name = ""
+  ) {
     this.points = (pts || []).map(e => e.clone());
-    this.oColor = color || 'w';
+    this.oColor = color || "w";
     this.color = this.oColor;
     this.boundingBox = [];
     this._cached_mass_center = CENTER;
@@ -30,17 +38,24 @@ export class Sticker {
   }
 
   computeBoundingBox(): Vector3D[] {
-    let box = this.points.reduce((ac, p) => {
-      return [
-        Math.min(ac[0], p.x), Math.min(ac[1], p.y), Math.min(ac[2], p.z),
-        Math.max(ac[3], p.x), Math.max(ac[4], p.y), Math.max(ac[5], p.z),
-      ]
-    }, [Infinity, Infinity, Infinity, -Infinity, -Infinity, -Infinity]);
+    let box = this.points.reduce(
+      (ac, p) => {
+        return [
+          Math.min(ac[0], p.x),
+          Math.min(ac[1], p.y),
+          Math.min(ac[2], p.z),
+          Math.max(ac[3], p.x),
+          Math.max(ac[4], p.y),
+          Math.max(ac[5], p.z),
+        ];
+      },
+      [Infinity, Infinity, Infinity, -Infinity, -Infinity, -Infinity]
+    );
 
-    return this.boundingBox = [
+    return (this.boundingBox = [
       new Vector3D(box[0], box[1], box[2]),
-      new Vector3D(box[3], box[4], box[5])
-    ];
+      new Vector3D(box[3], box[4], box[5]),
+    ]);
   }
 
   updateMassCenter(): Vector3D {
@@ -50,7 +65,7 @@ export class Sticker {
   }
 
   getMassCenter(): Vector3D {
-    return this._cached_mass_center;
+    return this._cached_mass_center.clone();
   }
 
   add(ref: Vector3D, self?: boolean): Sticker {
@@ -146,7 +161,13 @@ export class Sticker {
     return res;
   }
 
-  partialRotation(ref: Vector3D, dir: Vector3D, ang: number, self?: boolean, col?: string): Sticker {
+  partialRotation(
+    ref: Vector3D,
+    dir: Vector3D,
+    ang: number,
+    self?: boolean,
+    col?: string
+  ): Sticker {
     if (Math.abs(ang % (Math.PI * 2)) < EPS) {
       return self ? this : this.clone();
     }
@@ -189,7 +210,13 @@ export class Sticker {
   }
 
   clone(excludePoints?: boolean): Sticker {
-    let s = new Sticker(excludePoints ? [] : this.points, this.color, this.vecs, this.nonInteractive, this.name);
+    let s = new Sticker(
+      excludePoints ? [] : this.points,
+      this.color,
+      this.vecs,
+      this.nonInteractive,
+      this.name
+    );
     s.color = this.color;
     s.oColor = this.oColor;
     s._cached_mass_center = this._cached_mass_center.clone();
@@ -199,7 +226,7 @@ export class Sticker {
 
   direction1(anchor: Vector3D, u: Vector3D, useMc?: boolean): -1 | 0 | 1 {
     let dirs = [0, 0, 0];
-    let pts = (useMc) ? [this.getMassCenter()] : this.points;
+    let pts = useMc ? [this.getMassCenter()] : this.points;
     let len = pts.length;
 
     for (let i = 0; i < len; i += 1) {
@@ -286,7 +313,7 @@ export class Sticker {
     return true;
   }
 
-  cutPlane(p0: Vector3D, n: Vector3D): { intersection: boolean, points: Vector3D[] } {
+  cutPlane(p0: Vector3D, n: Vector3D): { intersection: boolean; points: Vector3D[] } {
     let p = this.points;
     let inters: Vector3D[] = [];
 
@@ -308,7 +335,7 @@ export class Sticker {
     return {
       intersection: true,
       points: inters,
-    }
+    };
   }
 
   // scale(c: Vector3D, factor: number, self: boolean = false) {

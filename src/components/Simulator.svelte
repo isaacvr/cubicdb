@@ -3,10 +3,10 @@
   import { CENTER, Vector3D } from "@classes/vector3d";
   import { CubeMode, EPS } from "@constants";
   import { Puzzle } from "@classes/puzzle/puzzle";
-  import type { Language, PuzzleType } from "@interfaces";
+  import type { PuzzleType } from "@interfaces";
   import { TrackballControls } from "three/examples/jsm/controls/TrackballControls";
   import { puzzleReg } from "@classes/puzzle/puzzleRegister";
-  import { onDestroy, onMount, tick } from "svelte";
+  import { onDestroy, onMount } from "svelte";
 
   import SettingsIcon from "@icons/Cog.svelte";
   import Refresh from "@icons/Refresh.svelte";
@@ -39,6 +39,7 @@
   import { screen } from "@stores/screen.store";
   import { Button, Modal, Toggle } from "flowbite-svelte";
   import Select from "./material/Select.svelte";
+  import { easeIn } from "@helpers/math";
 
   export let enableKeyboard = true;
   export let enableDrag = true;
@@ -52,6 +53,11 @@
   export let sequence: string[] = [];
   export let sequenceAlpha = 0;
   export let useScramble = "";
+  export let zoom = 12;
+
+  let _cl = "";
+
+  export { _cl as class };
 
   let cube: Puzzle;
   let dragging = false;
@@ -61,8 +67,8 @@
   let H = 0;
 
   /// GUI
-  let excludedPuzzles: PuzzleType[] = [ "icarry", 'clock' ];
-  let puzzles: { name: string, value: string, order: boolean }[] = [];
+  let excludedPuzzles: PuzzleType[] = ["icarry", "clock"];
+  let puzzles: { name: string; value: string; order: boolean }[] = [];
   let hasOrder = true;
   let GUIExpanded = false;
   let mounted = false;
@@ -97,7 +103,7 @@
   let stateFilter: boolean[][] = [];
 
   function vectorsFromCamera(vecs: any[], cam: PerspectiveCamera) {
-    return vecs.map((e) => {
+    return vecs.map(e => {
       let vp = new Vector3(e.x, e.y, e.z).project(cam);
       return new Vector3D(vp.x, -vp.y, 0);
     });
@@ -107,7 +113,7 @@
     mx: number,
     my: number,
     arr: any[],
-    camera: PerspectiveCamera,
+    camera: PerspectiveCamera
   ): Intersection[] {
     let mouse = new Vector2(mx, my);
     let raycaster = new Raycaster();
@@ -125,13 +131,7 @@
     return false;
   }
 
-  function dataFromGroup(
-    pc: any,
-    best: Vector3D,
-    vv: Vector3D,
-    dir: number,
-    fp = findPiece,
-  ) {
+  function dataFromGroup(pc: any, best: Vector3D, vv: Vector3D, dir: number, fp = findPiece) {
     let animationBuffer: Object3D[][] = [];
     let userData: any[][] = [];
     let angs: number[] = [];
@@ -142,8 +142,8 @@
 
     let u: any = best;
 
-    groupToMove.forEach((g) => {
-      if ( 'dir' in g ) {
+    groupToMove.forEach(g => {
+      if ("dir" in g) {
         let cr = vv.cross(vectorsFromCamera([g.dir], camera)[0]);
         dir = -Math.sign(cr.z);
         u = g.dir;
@@ -194,11 +194,9 @@
         mode: CubeMode.NORMAL,
       });
 
-      let cubeIDs = cube.p.pieces.map((p) => p.id);
-      let ncIDs = nc.p.pieces.map((p) => p.id);
-      let idMap: Map<string, string> = new Map(
-        ncIDs.map((id, pos) => [id, cubeIDs[pos]]),
-      );
+      let cubeIDs = cube.p.pieces.map(p => p.id);
+      let ncIDs = nc.p.pieces.map(p => p.id);
+      let idMap: Map<string, string> = new Map(ncIDs.map((id, pos) => [id, cubeIDs[pos]]));
 
       states.length = 0;
       stateAngle.length = 0;
@@ -210,7 +208,7 @@
         let seq = nc.p.applySequence(s);
 
         let getMatrices = (data: Object3D[]) => {
-          return data.map((d) => d.matrixWorld.clone());
+          return data.map(d => d.matrixWorld.clone());
         };
 
         let allObjects = [...group.children, ...backFace.children];
@@ -226,10 +224,8 @@
           let c = new Vector3(center.x, center.y, center.z);
 
           stateFilter.push(
-            allObjects.map((d) => {
-              if (
-                !ids.some((id) => idMap.get(id) === (d.userData as Piece).id)
-              ) {
+            allObjects.map(d => {
+              if (!ids.some(id => idMap.get(id) === (d.userData as Piece).id)) {
                 return false;
               }
               // if (p.hasCallback) {
@@ -247,7 +243,7 @@
               // }
 
               return true;
-            }),
+            })
           );
 
           states.push(getMatrices(allObjects));
@@ -278,7 +274,7 @@
     if (a < 0 || a >= states.length) return;
 
     let id = ~~a;
-    let alpha = ((n: number) => (n > 0.9 ? 1 : n / 0.9))(a - id);
+    let alpha = easeIn(a - id);
 
     let state = states[id];
     let ang = stateAngle[id];
@@ -305,21 +301,14 @@
     });
   }
 
-  function drag(
-    piece: Intersection,
-    ini: Vector2,
-    fin: Vector2,
-    camera: PerspectiveCamera
-  ) {
+  function drag(piece: Intersection, ini: Vector2, fin: Vector2, camera: PerspectiveCamera) {
     camera.updateMatrix();
     camera.updateMatrixWorld();
     camera.updateProjectionMatrix();
 
     let pc = [piece.object.parent!.userData, piece.object.userData!];
     let po = pc[1].getOrientation();
-    let vecs: Vector3D[] = pc[1].vecs.filter(
-      (v: Vector3D) => v.sub(po).abs() > EPS,
-    );
+    let vecs: Vector3D[] = pc[1].vecs.filter((v: Vector3D) => v.cross(po).abs() > EPS);
     let v = fin.clone().sub(ini);
     let vv = new Vector3D(v.x, v.y, 0);
 
@@ -354,11 +343,9 @@
   let controls: TrackballControls;
 
   export function resetCamera() {
-    camera.position.set(
-      5.296722614625655,
-      2.6519943868108236,
-      5.045980364854634,
-    );
+    let pos = new Vector3D(0.68068, 0.34081, 0.6485).setLength(zoom);
+
+    camera.position.set(pos.x, pos.y, pos.z);
     camera.rotation.set(0, 0, 0);
     camera.up.set(0, 1, 0);
     camera.lookAt(0, 0, 0);
@@ -367,7 +354,7 @@
 
   const planeGeometry = new PlaneGeometry(2, 2);
   const planeMaterial = new MeshBasicMaterial({ color: 0xffffff, side: DoubleSide });
-  const planeMesh = new Mesh(planeGeometry, planeMaterial); 
+  const planeMesh = new Mesh(planeGeometry, planeMaterial);
 
   function resetPuzzle(facelet?: string, scramble = false, useScr = "") {
     let children = scene.children;
@@ -386,11 +373,10 @@
     // plane.receiveShadow = true;
     // scene.add( plane );
     // scene.add(planeMesh);
-    
-    // Puzzle setup
 
+    // Puzzle setup
     if (facelet) {
-      cube = Puzzle.fromFacelet(facelet);
+      cube = Puzzle.fromFacelet(facelet, selectedPuzzle);
     } else {
       cube = Puzzle.fromSequence(useScr, {
         type: selectedPuzzle,
@@ -403,7 +389,7 @@
     }
 
     // @ts-ignore
-    window.cube = cube;
+    // window.cube = cube;
 
     let ctt = cubeToThree(cube);
     let bfc = piecesToTree(
@@ -411,22 +397,18 @@
       1,
       (st: Sticker[]) => {
         return st
-          .filter(
-            (s) =>
-              cube.p.faceColors.indexOf(s.color) > -1 &&
-              !(s instanceof ImageSticker),
-          )
-          .map((s) =>
+          .filter(s => cube.p.faceColors.indexOf(s.color) > -1 && !(s instanceof ImageSticker))
+          .map(s =>
             s
               .reflect1(
                 s.getMassCenter().add(s.getOrientation().mul(0.6)),
                 s.getOrientation(),
-                true,
+                true
               )
-              .mul(1.3),
+              .mul(1.3)
           );
       },
-      FrontSide,
+      FrontSide
     );
 
     group = ctt.group;
@@ -471,10 +453,7 @@
     dragging = true;
 
     ini = new Vector2(event.clientX, event.clientY);
-    iniM = new Vector3(
-      (event.clientX / W) * 2 - 1,
-      -(event.clientY / H) * 2 + 1,
-    );
+    iniM = new Vector3((event.clientX / W) * 2 - 1, -(event.clientY / H) * 2 + 1);
 
     let allStickers: Object3D[] = [];
 
@@ -514,7 +493,7 @@
       userData: data.userData,
       u: data.u,
       angs: data.ang.map((a: number) => a * data.dir),
-      from: data.buffer.map((g: any[]) => g.map((e) => e.matrixWorld.clone())),
+      from: data.buffer.map((g: any[]) => g.map(e => e.matrixWorld.clone())),
       animationTimes: data.animationTime.map((e: any) => e || animationTime),
       timeIni: performance.now(),
     };
@@ -549,12 +528,7 @@
     }
   };
 
-  let interpolate = (
-    data: Object3D[],
-    from: Matrix4[],
-    ang: number,
-    userData: Piece[],
-  ) => {
+  let interpolate = (data: Object3D[], from: Matrix4[], ang: number, userData: Piece[]) => {
     let nu = new Vector3(u.x, u.y, u.z).normalize();
     let center = cube.p.center;
     let c = new Vector3(center.x, center.y, center.z);
@@ -605,16 +579,13 @@
     let pos = mv.indexOf(m[0]);
 
     if (pos < 0) {
-      console.log("Invalid move: ", m);
       return false;
     }
 
     let dir = m[1] === "'" ? 1 : -1;
     let u: any = mc[pos];
-    let piece = cube.pieces.find(
-      (p) => p.direction1(u, u, true) === 0 && p.stickers.length > 4,
-    );
-    let sticker = piece?.stickers.find((s) => s.vecs.length === 3);
+    let piece = cube.pieces.find(p => p.direction1(u, u) === 0 && p.stickers.length > 4);
+    let sticker = piece?.stickers.find(s => s.vecs.length === 3);
 
     let data: any = dataFromGroup([piece, sticker], u, u, dir);
     data && prepareFromDrag(data);
@@ -693,7 +664,7 @@
   };
 
   export function applyMove(m: string, t: number) {
-    if (cube.type != "rubik") return;
+    if (cube.type != "icarry" && cube.type != "rubik") return;
     moveQueue.push([m, t]);
   }
 
@@ -739,17 +710,19 @@
 
     let data: any = drag(piece, new Vector2(mcx, mcy), vec, camera);
 
-    if ( data && pos ) {
+    if (data && pos) {
       let dg = prepareFromDrag(data);
-      
+
       planeMesh.position.set(pos.x, pos.y, pos.z);
       planeMesh.lookAt(pos.x + dg.u.x, pos.y + dg.u.y, pos.z + dg.u.z);
+      setAnimationData();
+      animating = true;
     }
   }
 
   function keyDownHandler(e: KeyboardEvent) {
-    if ( !enableKeyboard ) return;
-    
+    if (!enableKeyboard) return;
+
     let mc = new Vector2(mcx, mcy);
 
     switch (e.code) {
@@ -813,17 +786,9 @@
     canvas.addEventListener("pointerup", upHandler);
     canvas.addEventListener("pointermove", moveHandler);
 
-    canvas.addEventListener(
-      "touchstart",
-      (e) => downHandler(e.touches[0] as any),
-      { passive: true },
-    );
+    canvas.addEventListener("touchstart", e => downHandler(e.touches[0] as any), { passive: true });
     canvas.addEventListener("touchend", upHandler);
-    canvas.addEventListener(
-      "touchmove",
-      (e) => moveHandler(e.touches[0] as any),
-      { passive: true },
-    );
+    canvas.addEventListener("touchmove", e => moveHandler(e.touches[0] as any), { passive: true });
 
     controls = new TrackballControls(camera, canvas);
     controls.rotateSpeed = 3;
@@ -845,13 +810,16 @@
   onDestroy(() => {
     renderer.domElement.remove();
     renderer.dispose();
+    renderer.forceContextLoss();
     controls.dispose();
   });
 
   /// GUI
   function setOrder() {
-    hasOrder = puzzles.find((p) => p.value === selectedPuzzle)!.order;
+    hasOrder = !!puzzles.find(p => p.value === selectedPuzzle)?.order;
   }
+
+  setOrder();
 
   function hideGUI() {
     GUIExpanded = false;
@@ -868,17 +836,26 @@
 
 <svelte:window on:resize={resizeHandler} on:keydown={keyDownHandler} />
 
-<canvas bind:this={canvas} />
+<canvas bind:this={canvas} class={_cl || ""} />
 
 {#if gui}
   <div class="absolute right-2 top-[5rem] flex flex-col gap-2 items-center ps-3">
-    <Tooltip hasKeybinding position="left" on:click={showGUI} text={$localLang.SIMULATOR.settings + "[Ctrl + ,]"}>
-      <Button color="alternative" class="h-8 w-8 p-0 me-3 rounded-full"><SettingsIcon size="1.2rem"/></Button>
+    <Tooltip
+      hasKeybinding
+      position="left"
+      on:click={showGUI}
+      text={$localLang.SIMULATOR.settings + "[Ctrl + ,]"}
+    >
+      <Button color="alternative" class="h-8 w-8 p-0 me-3 rounded-full"
+        ><SettingsIcon size="1.2rem" /></Button
+      >
     </Tooltip>
 
     {#if cube?.p.scramble}
       <Tooltip hasKeybinding position="left" text={$localLang.global.toScramble + "[Ctrl + S]"}>
-        <Button on:click={scramble} color="alternative" class="h-8 w-8 p-0 me-3 rounded-full"><Refresh size="1.2rem" /></Button>
+        <Button on:click={scramble} color="alternative" class="h-8 w-8 p-0 me-3 rounded-full"
+          ><Refresh size="1.2rem" /></Button
+        >
       </Tooltip>
     {/if}
 
@@ -888,13 +865,13 @@
   </div>
 {/if}
 
-<Modal bind:open={GUIExpanded} size="xs" title={ $localLang.SIMULATOR.puzzleSettings } outsideclose>
+<Modal bind:open={GUIExpanded} size="xs" title={$localLang.SIMULATOR.puzzleSettings} outsideclose>
   <div class="grid grid-cols-2 gap-4 place-items-center text-gray-400">
     <span>{$localLang.SIMULATOR.puzzle}</span>
-    
+
     <Select
       items={puzzles}
-      label={(e) => e.name}
+      label={e => e.name}
       bind:value={selectedPuzzle}
       onChange={setOrder}
       class="text-gray-400 w-full max-w-[unset]"
@@ -902,8 +879,15 @@
 
     {#if hasOrder}
       <span>{$localLang.SIMULATOR.order}</span>
-      <Input on:UENTER={() => { resetPuzzle(); hideGUI(); }} type="number" min={1}
-        bind:value={order} class="bg-white bg-opacity-10 text-gray-400 !w-20"
+      <Input
+        on:UENTER={() => {
+          resetPuzzle();
+          hideGUI();
+        }}
+        type="number"
+        min={1}
+        bind:value={order}
+        class="bg-white bg-opacity-10 text-gray-400 !w-20"
       />
     {/if}
   </div>
@@ -911,10 +895,14 @@
   <svelte:fragment slot="footer">
     <div class="flex flex-wrap items-center mx-auto gap-2">
       <Button color="alternative" on:click={hideGUI}>{$localLang.global.cancel}</Button>
-      <Button color="green" on:click={() => {
-        resetPuzzle();
-        hideGUI();
-      }}>
+
+      <Button
+        color="green"
+        on:click={() => {
+          resetPuzzle();
+          hideGUI();
+        }}
+      >
         {$localLang.SIMULATOR.setPuzzle}
       </Button>
     </div>

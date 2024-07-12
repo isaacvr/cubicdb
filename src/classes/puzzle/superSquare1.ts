@@ -8,6 +8,8 @@ import { assignColors, getAllStickers } from './puzzleUtils';
 import { square1SolverGetRandomScramble } from '@cstimer/scramble/scramble_sq1';
 import { ScrambleParser } from '@classes/scramble-parser';
 import { FaceSticker } from './FaceSticker';
+import { utilscramble } from '@cstimer/scramble/utilscramble';
+import { newArr } from '@helpers/object';
 
 export function SUPER_SQUARE1(): PuzzleInterface {
   const edgePoint = (p: Vector3D) => [p.x, p.y, p.z].reduce((acc, n) =>
@@ -26,30 +28,6 @@ export function SUPER_SQUARE1(): PuzzleInterface {
       if (s.name === 'center' && (i === 1 || i === 3)) return [1];
       return 0.11;
     }],
-    // roundParams: [
-    //   (s: Sticker, i: number) => {
-    //     let o = s.getOrientation();
-    //     let acc = s.points.reduce((acc, v) => acc + (edgePoint(v) >= 2 ? 1 : 0), 0);
-
-    //     if ( o.cross(UP).abs() < EPS ) {
-    //       if ( s.points.length === 3 ) return i === 1 ? [0.25] : 0.11;
-    //       return i === 2 ? [ 0.2 ] : 0.11;
-    //     }
-
-    //     if ( s.name === 'side-equator' ) {
-    //       return [0.05, true];
-    //     }
-
-    //     if ( s.name === 'side-corner' ) {
-    //       return (i === 2) ? [0.2, true] : [0.05, true];
-    //     }
-
-    //     if ( s.name === 'side-edge' ) {
-    //       return (i === 1 || i === 2) ? [0.2, true] : [0.05, true];
-    //     }
-
-    //     return i === 1 || i === 2 ? [0.2, true] : [0.05, true];
-    //   }, 0.95],
   };
 
   sq1.getAllStickers = getAllStickers.bind(sq1);
@@ -73,7 +51,7 @@ export function SUPER_SQUARE1(): PuzzleInterface {
     new Sticker([
       LEFT.add(BACK).add(UP),
       LEFT.add(BACK).add(UP).add(FRONT.mul(BIG)),
-      ...(new Array(CURVE_PTS).fill(0).map((_, n) => UP.add(DV.rotate(CENTER, DOWN, PI_6 * n * 2 / (CURVE_PTS - 1))))),
+      ...(newArr(CURVE_PTS).fill(0).map((_, n) => UP.add(DV.rotate(CENTER, DOWN, PI_6 * n * 2 / (CURVE_PTS - 1))))),
       LEFT.add(BACK).add(UP).add(RIGHT.mul(BIG)),
     ]),
     new Sticker([
@@ -99,9 +77,14 @@ export function SUPER_SQUARE1(): PuzzleInterface {
     ], undefined, [], false, 'side-edge'),
     new Sticker([
       LEFT.add(UP).add(BACK).add(RIGHT.mul(BIG)),
-      ...(new Array(CURVE_PTS).fill(0).map((_, n) => UP.add(DV.rotate(CENTER, DOWN, PI_6 * 2 + PI_6 * n / (CURVE_PTS - 1))))),
+      ...(newArr(CURVE_PTS).fill(0).map((_, n) => UP.add(DV.rotate(CENTER, DOWN, PI_6 * 2 + PI_6 * n / (CURVE_PTS - 1))))),
       RIGHT.add(UP).add(BACK).add(LEFT.mul(BIG)),
     ]),
+    new Sticker([
+      LEFT.add(UP).add(BACK).add(RIGHT.mul(BIG)),
+      ...(newArr(CURVE_PTS).fill(0).map((_, n) => UP.add(DV.rotate(CENTER, DOWN, PI_6 * 2 + PI_6 * n / (CURVE_PTS - 1))))),
+      RIGHT.add(UP).add(BACK).add(LEFT.mul(BIG)),
+    ]).reverse().add(DOWN.mul(0.5), true),
   ]);
 
   let slidePlane = [
@@ -120,15 +103,17 @@ export function SUPER_SQUARE1(): PuzzleInterface {
   pieceSmall.stickers.forEach(s => { s.vecs = [vec.clone(), UP.clone()]; });
 
   for (let i = 0; i < 4; i += 1) {
-    for (let j = 0; j < 3; j += 1) {
+    for (let j = 0; j < 2; j += 1) {
       pieces.push(pieceSmall.rotate(CENTER, UP, i * PI_2).add(DOWN.mul(j * L24), true));
       pieces.push(pieceBig.rotate(CENTER, UP, i * PI_2).add(DOWN.mul(j * L24), true));
     }
   }
 
   for (let i = 0; i < 4; i += 1) {
-    pieces.push(pieceSmall.rotate(CENTER, UP, i * PI_2).rotate(CENTER, FRONT, PI, true));
-    pieces.push(pieceBig.rotate(CENTER, UP, i * PI_2).rotate(CENTER, FRONT, PI, true));
+    for (let j = 0; j < 2; j += 1) {
+      pieces.push(pieceSmall.rotate(CENTER, UP, i * PI_2).rotate(CENTER, FRONT, PI, true).add(UP.mul(j * L24)));
+      pieces.push(pieceBig.rotate(CENTER, UP, i * PI_2).rotate(CENTER, FRONT, PI, true).add(UP.mul(j * L24)));
+    }
   }
 
   // Center
@@ -149,12 +134,10 @@ export function SUPER_SQUARE1(): PuzzleInterface {
 
   let planes = [
     slidePlane.map(v => v.clone()), // /
-    pieceBig.stickers[2].clone().points.reverse(), // up
-    slidePlane.map(v => v.clone()), // /
-    slidePlane.map(v => v.rotate(CENTER, UP, PI_2)), // For simulator only /
-    [CENTER, UP, FRONT].map(v => v.add(LEFT.mul(2))), // x
-    [CENTER, RIGHT, FRONT].map(v => v.add(UP.mul(2))), // y
-    [CENTER, RIGHT, DOWN].map(v => v.add(FRONT.mul(2))), // z
+    pieceBig.stickers[2].points.map(p => p.clone().add(UP.mul(.25))).reverse(), // up1
+    pieceBig.stickers[2].points.map(p => p.clone().add(DOWN.mul(.25))).reverse(), // up2
+    pieceBig.stickers[2].points.map(p => p.clone().add(DOWN.mul(.75))), // down2
+    pieceBig.stickers[2].points.map(p => p.clone().add(DOWN.mul(1.25))), // down1
   ];
 
   let trySingleMove = (mv: any): { pieces: Piece[], u: Vector3D, ang: number } | null => {
@@ -170,14 +153,15 @@ export function SUPER_SQUARE1(): PuzzleInterface {
     for (let i = 0, maxi = pieces.length; i < maxi; i += 1) {
       let d = pieces[i].direction1(pts1[0], u, false, (x: Sticker) => !/^[xd]$/.test(x.color));
 
-      if (d === 0) {
+      if ((!moveId && d > 0) || (moveId && d === 0)) {
+        pcs.push(pieces[i]);
+        continue;
+      }
+
+      if (!moveId && d === 0) {
         console.log("Invalid move. Piece intersection detected.", "/UD"[moveId], turns, mv);
         console.log("Piece: ", i, pieces[i], pts1);
         return null;
-      }
-
-      if (d > 0) {
-        pcs.push(pieces[i]);
       }
     }
 
@@ -221,7 +205,7 @@ export function SUPER_SQUARE1(): PuzzleInterface {
         return p.direction1(mc, dir) === 0
       });
     }
-    
+
     return {
       pieces: toMovePieces,
       ang,
@@ -230,7 +214,8 @@ export function SUPER_SQUARE1(): PuzzleInterface {
   };
 
   sq1.scramble = function () {
-    let scramble = ScrambleParser.parseSquare1(square1SolverGetRandomScramble());
+    let scramble = ScrambleParser.parseSuperSquare1(utilscramble('ssq1t', 20)!);
+    // let scramble = ScrambleParser.parseSuperSquare1("/ (6,6,0,0) / (6,6,0,0) / (6,6,0,0)");
     sq1.move(scramble);
   };
 
@@ -273,6 +258,8 @@ export function SUPER_SQUARE1(): PuzzleInterface {
   };
 
   assignColors(sq1, sq1.faceColors);
+
+  pieces.forEach(p => p.stickers.forEach(s => s.color === 'x' && (s.vecs = [])));
 
   return sq1;
 

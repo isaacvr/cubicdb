@@ -150,11 +150,13 @@ export class Piece {
   // }
 
   rotate(ref: Vector3D, dir: Vector3D, ang: number, self?: boolean): Piece {
+    let st = this.stickers;
+
     if (self) {
       let pts: Vector3D[] = [];
 
-      for (let i = 0, maxi = this.stickers.length; i < maxi; i += 1) {
-        let p = this.stickers[i].points;
+      for (let i = 0, maxi = st.length; i < maxi; i += 1) {
+        let p = st[i].points;
 
         for (let j = 0, maxj = p.length; j < maxj; j += 1) {
           pts.push(p[j]);
@@ -162,15 +164,25 @@ export class Piece {
       }
 
       let pts1 = rotateBundle(pts, ref, dir, ang);
-      pts.forEach((e, p) => e.setCoords(pts1[p].x, pts1[p].y, pts1[p].z));
-      this.stickers.map(s => s.partialRotation(ref, dir, ang, true));
+
+      for (let i = 0, maxi = pts.length; i < maxi; i += 1) {
+        pts[i].setCoords(pts1[i].x, pts1[i].y, pts1[i].z);
+      }
+
+
+      for (let i = 0, maxi = st.length; i < maxi; i += 1) {
+        st[i].partialRotation(ref, dir, ang, true);
+      }
+
+      // pts.forEach((e, p) => e.setCoords(pts1[p].x, pts1[p].y, pts1[p].z));
+      // this.stickers.map(s => s.partialRotation(ref, dir, ang, true));
       this._cached_mass_center.rotate(ref, dir, ang, true);
       this.anchor && this.anchor.rotate(ref, dir, ang, true).toNormal();
       return this;
     }
 
     let pc = new Piece();
-    pc.stickers = this.stickers.map(s => s.rotateBundle(ref, dir, ang));
+    pc.stickers = st.map(s => s.rotateBundle(ref, dir, ang));
     pc._cached_mass_center = this._cached_mass_center.rotate(ref, dir, ang);
     this.anchor && (pc.anchor = this.anchor.rotate(ref, dir, ang).toNormal());
     return pc;

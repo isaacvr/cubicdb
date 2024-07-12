@@ -7,11 +7,10 @@
   import GmailIcon from '@icons/Gmail.svelte';
   
   import CopyIcon from '@icons/ContentCopy.svelte';
-  import { copyToClipboard, randomUUID } from '@helpers/strings';
+  import { copyToClipboard } from '@helpers/strings';
   import { NotificationService } from '@stores/notification.service';
   import { DataService } from '@stores/data.service';
   import { Card } from 'flowbite-svelte';
-  import { CubeDBICON } from '@constants';
   import { localLang } from '@stores/language.service';
 
   const notification = NotificationService.getInstance();
@@ -74,11 +73,9 @@
   function toClipboard(s: string) {
     copyToClipboard(s).then(() => {
       notification.addNotification({
-        key: randomUUID(),
         header: $localLang.global.done,
         text: $localLang.global.copiedToClipboard,
         timeout: 1000,
-        icon: CubeDBICON
       });
     });
   }

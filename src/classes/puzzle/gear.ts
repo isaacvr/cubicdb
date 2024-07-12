@@ -30,7 +30,8 @@ function edgeCallback(p: Piece, center: Vector3D, dir: Vector3D, ang: number, th
   if ( three ) {
     let p1 = <any> p;
     let dir1 = new Vector3D(dir.x, dir.y, dir.z).toNormal();
-    let a = (<Piece>p1.userData).anchor.rotate(center, dir1, ang);
+    let c = new Vector3D(center.x, center.y, center.z);
+    let a = (<Piece>p1.userData).anchor.rotate(c, dir1, ang);
     let u1 = new vc(a.x, a.y, a.z);
     let u1n = u1.clone().normalize();
     p1.rotateOnWorldAxis(<any>dir, ang);

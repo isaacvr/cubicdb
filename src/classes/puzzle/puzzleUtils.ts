@@ -1,18 +1,19 @@
-import { CENTER, Vector3D } from './../vector3d';
-import { Sticker } from './Sticker';
-import type { PuzzleInterface } from '@interfaces';
-import { FaceSticker } from './FaceSticker';
-import { lineIntersection3D } from '@helpers/math';
-import { ImageSticker } from './ImageSticker';
-import { EPS } from '@constants';
+import { CENTER, Vector3D } from "./../vector3d";
+import { Sticker } from "./Sticker";
+import type { PuzzleInterface } from "@interfaces";
+import { FaceSticker } from "./FaceSticker";
+import { lineIntersection3D } from "@helpers/math";
+import { ImageSticker } from "./ImageSticker";
+import { EPS } from "@constants";
 
-export function assignColors(p: PuzzleInterface, cols?: string[]) {
-  let colors = cols || ['y', 'o', 'g', 'w', 'r', 'b'];
+export function assignColors(p: PuzzleInterface, cols?: string[], isCube = false) {
+  let colors = cols || ["y", "o", "g", "w", "r", "b"];
 
   let stickers: Sticker[] = p.getAllStickers();
   let pieces = p.pieces;
 
   // Adjust -1, 0 and 1 values for better precision
+  // console.time("adjustCoords");
   for (let i = 0, maxi = stickers.length; i < maxi; i += 1) {
     let sticker = stickers[i];
     let points = sticker.points;
@@ -28,10 +29,11 @@ export function assignColors(p: PuzzleInterface, cols?: string[]) {
           points[j].z = k;
         }
       }
-
     }
   }
+  // console.timeEnd("adjustCoords");
 
+  // console.time("adjustColors");
   for (let i = 0, maxi = stickers.length; i < maxi; i += 1) {
     if (stickers[i].nonInteractive || stickers[i] instanceof ImageSticker) continue;
 
@@ -41,14 +43,24 @@ export function assignColors(p: PuzzleInterface, cols?: string[]) {
     let dirs = [0, 0, 0];
     let ok = false;
 
-    for (let j = 0, maxj = pieces.length; j < maxj; j += 1) {
-      dirs[pieces[j].direction1(p1, u, true) + 1] += 1;
-
-      if (dirs[0] > 0 && dirs[2] > 0) {
-        sticker.color = 'x';
-        sticker.oColor = 'x';
+    if (isCube) {
+      if (!sticker.points.every(p => [p.x, p.y, p.z].some(n => Math.abs(Math.abs(n) - 1) < EPS))) {
+        sticker.color = "x";
+        sticker.oColor = "x";
         ok = true;
-        break;
+      } else {
+        dirs[0] = 1;
+      }
+    } else {
+      for (let j = 0, maxj = pieces.length; j < maxj; j += 1) {
+        dirs[pieces[j].direction1(p1, u, true) + 1] += 1;
+
+        if (dirs[0] > 0 && dirs[2] > 0) {
+          sticker.color = "x";
+          sticker.oColor = "x";
+          ok = true;
+          break;
+        }
       }
     }
 
@@ -62,15 +74,15 @@ export function assignColors(p: PuzzleInterface, cols?: string[]) {
           }
         }
       } else {
-        sticker.color = 'x';
-        sticker.oColor = 'x';
+        sticker.color = "x";
+        sticker.oColor = "x";
       }
     }
   }
+  // console.timeEnd("adjustColors");
 }
 
 export function getAllStickers(): Sticker[] {
-
   let res = [];
   // @ts-ignore
   let pieces = this.pieces;
@@ -81,7 +93,6 @@ export function getAllStickers(): Sticker[] {
   }
 
   return res;
-
 }
 
 export function scaleSticker(st: Sticker, scale: number): Sticker {
@@ -91,9 +102,14 @@ export function scaleSticker(st: Sticker, scale: number): Sticker {
   return st.sub(cm).mul(SCALE).add(cm).add(n.mul(0.005));
 }
 
-export function roundStickerCorners(s: Sticker, rd?: number | Function, scale?: number, ppc?: number): Sticker {
+export function roundStickerCorners(
+  s: Sticker,
+  rd?: number | Function,
+  scale?: number,
+  ppc?: number
+): Sticker {
   const RAD = rd || 0.11;
-  const RAD_FN = typeof rd === 'function' ? rd : () => RAD;
+  const RAD_FN = typeof rd === "function" ? rd : () => RAD;
   const PPC = ppc || 10;
   const C2k = [1, 2, 1];
   const SCALE = scale || 0.925;
@@ -103,6 +119,10 @@ export function roundStickerCorners(s: Sticker, rd?: number | Function, scale?: 
   let pts = st.points;
   let newSt = new Sticker();
 
+  if (ppc === 0) {
+    return scaleSticker(s.clone(), SCALE);
+  }
+
   for (let i = 0, maxi = pts.length; i < maxi; i += 1) {
     let r = RAD_FN(s, i);
 
@@ -110,13 +130,12 @@ export function roundStickerCorners(s: Sticker, rd?: number | Function, scale?: 
 
     let isCircle = Array.isArray(r) && r.length === 1;
     let isEllipse = Array.isArray(r) && r.length > 1;
-    let seg_perc = (isCircle || isEllipse) ? r[0] : r;
-    let seg_perc1 = isEllipse ? (typeof r[1] != 'boolean' ? r[1] : r[0]) : isCircle ? r[0] : r;
+    let seg_perc = isCircle || isEllipse ? r[0] : r;
+    let seg_perc1 = isEllipse ? (typeof r[1] != "boolean" ? r[1] : r[0]) : isCircle ? r[0] : r;
     let v1 = pts[(i - 1 + maxi) % maxi].sub(pts[i]).mul(seg_perc);
     let v2 = pts[(i + 1) % maxi].sub(pts[i]).mul(seg_perc1);
 
-    if (isEllipse && typeof r[1] === 'boolean') {
-
+    if (isEllipse && typeof r[1] === "boolean") {
       if (v1.abs() < v2.abs()) {
         v2 = v2.setLength(v1.abs());
       } else {
@@ -131,11 +150,18 @@ export function roundStickerCorners(s: Sticker, rd?: number | Function, scale?: 
     let u = Vector3D.cross(P[0], P[1], P[2]).unit();
 
     if (isCircle && Math.abs(v1.abs() - v2.abs()) < EPS) {
-      let center = lineIntersection3D(P[0], v1.rotate(CENTER, u, PI_2), P[2], v2.rotate(CENTER, u, PI_2));
+      let center = lineIntersection3D(
+        P[0],
+        v1.rotate(CENTER, u, PI_2),
+        P[2],
+        v2.rotate(CENTER, u, PI_2)
+      );
 
       if (center) {
         let sides = [v1.abs(), v2.abs(), v1.sub(v2).abs()];
-        let ang = Math.PI - Math.acos((sides[2] ** 2 - sides[0] ** 2 - sides[1] ** 2) / (-2 * sides[0] * sides[1]));
+        let ang =
+          Math.PI -
+          Math.acos((sides[2] ** 2 - sides[0] ** 2 - sides[1] ** 2) / (-2 * sides[0] * sides[1]));
 
         for (let j = 0; j <= PPC; j += 1) {
           let a = j / PPC;
@@ -150,7 +176,7 @@ export function roundStickerCorners(s: Sticker, rd?: number | Function, scale?: 
       let a = j / PPC;
       newSt.points.push(
         P.reduce((ac: Vector3D, p: Vector3D, pos: number) => {
-          return ac.add(p.mul(C2k[pos] * Math.pow(1 - a, 2 - pos) * Math.pow(a, pos)))
+          return ac.add(p.mul(C2k[pos] * Math.pow(1 - a, 2 - pos) * Math.pow(a, pos)));
         }, new Vector3D())
       );
     }
@@ -159,7 +185,14 @@ export function roundStickerCorners(s: Sticker, rd?: number | Function, scale?: 
   return scaleSticker(newSt, SCALE);
 }
 
-export function roundCorners(p: PuzzleInterface, rd?: number, scale?: number, ppc?: number, fn?: Function, justScale?: boolean) {
+export function roundCorners(
+  p: PuzzleInterface,
+  rd?: number,
+  scale?: number,
+  ppc?: number,
+  fn?: Function,
+  justScale?: boolean
+) {
   if (p.isRounded) {
     return;
   }
@@ -178,9 +211,7 @@ export function roundCorners(p: PuzzleInterface, rd?: number, scale?: number, pp
         continue;
       }
 
-      let newSt = (justScale)
-        ? scaleSticker(s[j], 0)
-        : roundStickerCorners(s[j], rd, scale, ppc);
+      let newSt = justScale ? scaleSticker(s[j], 0) : roundStickerCorners(s[j], rd, scale, ppc);
 
       if (newSt === s[j]) continue;
 
@@ -190,18 +221,17 @@ export function roundCorners(p: PuzzleInterface, rd?: number, scale?: number, pp
       newSt.oColor = s[j].oColor;
       newSt.vecs = s[j].vecs.map(e => e.clone());
 
-      s[j].color = 'd';
-      s[j].oColor = 'd';
+      s[j].color = "d";
+      s[j].oColor = "d";
       newSt._generator = s[j];
       s[j]._generated = newSt;
 
       if (s[j].nonInteractive) {
-        pc.stickers.splice(j, 1, newSt);
+        s.splice(j, 1, newSt);
       } else {
-        pc.stickers.push(newSt);
+        s.push(newSt);
       }
     }
-
   }
 }
 
@@ -211,14 +241,14 @@ export function assignVectors(p: PuzzleInterface) {
   for (let i = 0, maxi = pieces.length; i < maxi; i += 1) {
     let stickers = pieces[i].stickers;
     let vecs = pieces[i].stickers.reduce((ac: Vector3D[], s) => {
-      if (s.color != 'x' && s.color != 'd') {
+      if (s.color != "x" && s.color != "d") {
         ac.push(s.getOrientation());
       }
       return ac;
     }, []);
 
     for (let j = 0, maxj = stickers.length; j < maxj; j += 1) {
-      if (stickers[j].color != 'x' && stickers[j].color != 'd') {
+      if (stickers[j].color != "x" && stickers[j].color != "d") {
         stickers[j].vecs = vecs.map(e => e.clone());
       }
     }
@@ -226,9 +256,9 @@ export function assignVectors(p: PuzzleInterface) {
 }
 
 export function random(a: any) {
-  if (Array.isArray(a) || typeof a === 'string') {
+  if (Array.isArray(a) || typeof a === "string") {
     return a[~~(Math.random() * a.length)];
-  } else if (typeof a === 'object') {
+  } else if (typeof a === "object") {
     let k = Object.keys(a);
     return a[k[~~(Math.random() * k.length)]];
   }

@@ -7,6 +7,8 @@
 
 <script lang="ts">
   import Checkbox from "./Checkbox.svelte";
+  import { newArr } from "@helpers/object";
+
   let selectAll = false;
   let cl = '';
   export let title: string = '';
@@ -19,7 +21,7 @@
   let _rows: any[] = [];
 
   $: {
-    rows.length > _rows.length && _rows.concat( (new Array(rows.length - _rows.length).fill( (new Array(columns.length).fill(false)) )) );
+    rows.length > _rows.length && _rows.concat( (newArr(rows.length - _rows.length).fill( (newArr(columns.length).fill(false)) )) );
     rows.length < _rows.length && (_rows = _rows.slice(0, rows.length));
     _rows = rows.map((r, p) => [ (_rows[p] || [!1])[0], ...map(r) ]);
     changeSingle();
@@ -27,7 +29,7 @@
 
   function changeAll(ev: CustomEvent) {
     let v = ev.detail.value;
-    _rows = (new Array(_rows.length).fill(!!v));
+    _rows = (newArr(_rows.length).fill(!!v));
   }
 
   function changeSingle() {

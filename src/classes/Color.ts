@@ -125,10 +125,10 @@ export class Color {
   fromString(s: string) {
     let rgbaReg = /$rgba\(([0-9]*),([0-9]*),([0-9]*),([0-9]*)\)$/;
     let rgbReg = /^rgb\(([0-9]*),([0-9]*),([0-9]*)\)$/;
-    let hexReg = /^\#(\w{2})(\w{2})(\w{2})$/;
-    let hex1Reg = /^\#(\w{1})(\w{1})(\w{1})$/;
-    let hexaReg = /^\#(\w{2})(\w{2})(\w{2})(\w{2})$/;
-    let hexa1Reg = /^\#(\w{1})(\w{1})(\w{1})(\w{1})$/;
+    let hexReg = /^#(\w{2})(\w{2})(\w{2})$/;
+    let hex1Reg = /^#(\w{1})(\w{1})(\w{1})$/;
+    let hexaReg = /^#(\w{2})(\w{2})(\w{2})(\w{2})$/;
+    let hexa1Reg = /^#(\w{1})(\w{1})(\w{1})(\w{1})$/;
     let str = s.replace(/\s/g, '');
 
     if ( rgbaReg.test(str) ) {

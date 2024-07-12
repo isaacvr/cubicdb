@@ -19,7 +19,7 @@ export function MEGAMINX(_n: number, headless?: false): PuzzleInterface {
     faceVectors: [],
     getAllStickers: () => [],
     dims: [],
-    faceColors: ["white", "yellow", "violet", "green", "red", "blue", "orange", "lblue", "lyellow", "pink", "lgreen", "gray"],
+    faceColors: ["white", "yellow", "violet", "green", "red", "blue", "orange", "lblue", "lyellow", "pink", "lgreen", "lightGray"],
     move: () => false,
     roundParams: [(s: Sticker, i: number) => {
       if (s.color === 'd' || s.color === 'x' || s.name === 'center') return null;
@@ -33,7 +33,7 @@ export function MEGAMINX(_n: number, headless?: false): PuzzleInterface {
         return [0.5];
       }
 
-      return 0.11;
+      return 0.2;
     }],
   };
 
@@ -93,7 +93,7 @@ export function MEGAMINX(_n: number, headless?: false): PuzzleInterface {
 
   // Spread little pieces
   for (let i = 0, maxi = midUpFace.length; i < maxi; i += 1) {
-    midUpFace.push(...[0, 1, 2, 3, 4].map(n => midUpFace[i].rotate(CENTER, UP, INNER_ANG * n)));
+    midUpFace.push(...[1, 2, 3, 4].map(n => midUpFace[i].rotate(CENTER, UP, INNER_ANG * n)));
     let mp = midUpFace[i].rotate(CENTER, midUpFace[i].stickers[2].getOrientation(), INNER_ANG);
     midUpFace.push(...[0, 1, 2, 3, 4].map(n => mp.rotate(CENTER, UP, INNER_ANG * n)));
   }
@@ -150,6 +150,7 @@ export function MEGAMINX(_n: number, headless?: false): PuzzleInterface {
     new Sticker(topCenter).add(new Vector3D(0, V11.y, 0))
   ]);
 
+  center.stickers[0].name = 'center-colored';
   center.stickers[1].name = 'center';
 
   midUpFace.push(center);
@@ -221,7 +222,7 @@ export function MEGAMINX(_n: number, headless?: false): PuzzleInterface {
   let trySingleMove = (mv: any): { pieces: Piece[], u: Vector3D, ang: number } | null => {
     let moveId = mv[0];
     let turns = mv[1];
-    const pts1 = planes[moveId].map(e => e.clone());
+    const pts1 = planes[moveId];
     const u = Vector3D.cross(pts1[0], pts1[1], pts1[2]).unit();
     const anc = pts1[0].add(u.mul(-(mv[3] || 0) * LDIST));
     const ang = INNER_ANG * turns;
@@ -259,7 +260,12 @@ export function MEGAMINX(_n: number, headless?: false): PuzzleInterface {
       }
 
       let { u, ang } = pcs;
-      pcs.pieces.forEach(p => p.rotate(CENTER, u, ang, true));
+      let p = pcs.pieces;
+
+      for (let i = 0, maxi = p.length; i < maxi; i += 1) {
+        p[i].rotate(CENTER, u, ang, true);
+      }
+      // pcs.pieces.forEach(p => p.rotate(CENTER, u, ang, true));
     }
     return true;
   };
@@ -275,8 +281,6 @@ export function MEGAMINX(_n: number, headless?: false): PuzzleInterface {
   };
 
   mega.scramble = function () {
-    if (!mega.toMove) return;
-
     const MOVES = n >= 2 ? (n - 2) * 50 + 10 : 0;
 
     for (let i = 0; i < MOVES; i += 1) {
@@ -286,7 +290,7 @@ export function MEGAMINX(_n: number, headless?: false): PuzzleInterface {
       if (!s) { i -= 1; continue; }
       let vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > EPS));
       if (!vec) { i -= 1; continue; }
-      let pcs = mega.toMove(p, s, vec);
+      let pcs = mega.toMove!(p, s, vec);
       let cant = 1 + random(3);
       pcs.pieces.forEach((p: Piece) => p.rotate(CENTER, vec, pcs.ang * cant, true));
     }

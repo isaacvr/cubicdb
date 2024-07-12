@@ -1,186 +1,119 @@
 import type { Sticker } from "@classes/puzzle/Sticker";
 import type { Puzzle } from "@classes/puzzle/puzzle";
 import { roundCorners } from "@classes/puzzle/puzzleUtils";
-import { Vector2D } from "@classes/vector2-d";
-import { CENTER, RIGHT, UP, Vector3D } from "@classes/vector3d";
+import { CENTER, DOWN, RIGHT, UP, Vector3D } from "@classes/vector3d";
 import { EPS } from "@constants";
-import { map } from "@helpers/math";
+import { drawStickers } from "./utils";
+import { getOColoredStickers } from "@classes/reconstructors/utils";
+import type { Piece } from "@classes/puzzle/Piece";
+import { SVGGenerator } from "./classes/SVGGenerator";
+import { CanvasGenerator } from "./classes/CanvasGenerator";
+import type { PuzzleType } from "@interfaces";
 
-export async function planView(cube: Puzzle, DIM: number): Promise<Blob> {
-  // if ( [ 'rubik', 'skewb', 'ivy' ].indexOf(cube.type) > -1 ) {
-  if ( [ 'rubik' ].indexOf(cube.type) > -1 ) {
-    let canvas = document.createElement('canvas');
-    canvas.width = DIM;
-    canvas.height = DIM;
-    let ctx: any = canvas.getContext('2d');
-    const PI_2 = Math.PI / 2;
-    const order = cube.order[0];
-    const LW = Math.max(2, DIM / 100);
-    const PAD = DIM / 10;
-    const ALL_PAD = LW + PAD;
-    const mSticker = (DIM - ALL_PAD * 2) / (order + 1) / 2 + ALL_PAD;
-    
-    roundCorners(cube.p, ...cube.p.roundParams);
+function pointing(st: Sticker, vec = UP): boolean {
+  if (st.color === "d") return false;
+  return st.getOrientation().sub(vec).abs() < EPS;
+}
 
-    let allStickers = cube.getAllStickers();
+function nPointing(st: Sticker, vec = UP) {
+  return !pointing(st, vec);
+}
 
-    // Top face stickers
-    let stickers = allStickers
-      .filter(s => {
-        if ( s.color === 'd' ) {
-          return false;
+export function planView(cube: Puzzle, DIM: number, format: "raster" | "svg" = "raster"): string {
+  const allowed: PuzzleType[] = ["rubik", "megaminx", "pyraminx"] as const;
+
+  if (!allowed.includes(cube.type)) return "";
+
+  const W = DIM;
+  const H = DIM;
+  const PI = Math.PI;
+  const PI_2 = PI / 2;
+  const LW = Math.max(2, DIM / 100);
+  const SIDE_ANG = cube.type === "megaminx" ? PI - cube.p.raw[1] : PI_2;
+  const ctx = format === "raster" ? new CanvasGenerator(W, H) : new SVGGenerator(W, H);
+
+  roundCorners(cube.p, ...cube.p.roundParams);
+
+  let pieces = cube.pieces;
+  let topPieces: Piece[] = [];
+
+  if (cube.type === "pyraminx") {
+    topPieces = cube.p.pieces.filter(pc =>
+      getOColoredStickers(pc).every(st => nPointing(st, DOWN))
+    );
+  } else {
+    for (let i = 0, maxi = pieces.length; i < maxi; i += 1) {
+      if (getOColoredStickers(pieces[i]).some(st => pointing(st))) {
+        let pc = pieces[i];
+        let st = getOColoredStickers(pieces[i]).find(st => nPointing(st));
+
+        if (st && cube.p.toMove) {
+          topPieces = cube.p.toMove(pc, st, UP).pieces;
+          break;
         }
-        let p = s.points;
-        let u = s.getOrientation();
-        return p[0].y >= 1 - EPS && UP.sub(u).abs2() < 1e-4;
-      })
+      }
+    }
+  }
+
+  // Top face stickers
+  let stickers: Sticker[] = [];
+  let sideStikers: Sticker[] = [];
+
+  if (cube.type === "pyraminx") {
+    stickers = topPieces
+      .reduce((a, b) => [...a, ...getOColoredStickers(b)], <Sticker[]>[])
+      .map(st => st.rotate(CENTER, RIGHT, PI_2));
+  } else {
+    stickers = topPieces
+      .reduce(
+        (acc, e) => [...acc, ...getOColoredStickers(e).filter(st => pointing(st))],
+        [] as Sticker[]
+      )
       .map(s => s.rotate(CENTER, RIGHT, PI_2))
       .sort((a: Sticker, b: Sticker) => {
-        let ca = a._generator.updateMassCenter(), cb = b._generator.updateMassCenter();
+        let ca = a._generator.updateMassCenter(),
+          cb = b._generator.updateMassCenter();
 
-        if ( Math.abs( ca.y - cb.y ) < EPS ) {
+        if (Math.abs(ca.y - cb.y) < EPS) {
           return ca.x - cb.x;
         }
 
         return cb.y - ca.y;
       });
 
-    ctx.strokeStyle = '7px solid #000000';
-    ctx.lineWidth = LW;
+    sideStikers = topPieces
+      .reduce(
+        (acc, e) => [...acc, ...getOColoredStickers(e).filter(st => nPointing(st))],
+        [] as Sticker[]
+      )
+      .map(s => {
+        let o = s.getOrientation();
+        let ac = s._generator;
+        let a = ac.points.reduce((a, b) => (a.y > b.y ? a : b));
+        let newS = s.rotate(a, o.cross(UP), SIDE_ANG);
 
-    let mapVector = function(x: number, y: number) {
-      return new Vector2D(
-        map(x, -1, 1, mSticker, DIM - mSticker),
-        map(y, -1, 1, mSticker, DIM - mSticker)
-      );
-    };
+        o.y = 0; // Always get the horizontal plane only
 
-    let render = function(st: Sticker[]) {
-      for (let i = 0, maxi = st.length; i < maxi; i += 1) {
-        ctx.fillStyle = cube.getHexStrColor( st[i].color );
-        let pts = st[i].points;
-  
-        ctx.beginPath();
-  
-        for (let j = 0, maxj = pts.length; j < maxj; j += 1) {
-          let v = mapVector( pts[j].x, pts[j].y );
+        const factor = cube.type === "megaminx" ? 1 / 2 : 2 / 3;
 
-          if ( j === 0 ) {
-            ctx.moveTo(v.x, DIM - v.y);
-          } else {
-            ctx.lineTo(v.x, DIM - v.y);
-          }
-        }
-        ctx.fill();
-        ctx.closePath();
-        ctx.stroke();
-      }
-    }
+        let shrink = (V: Vector3D) => {
+          let O = V.reflect1(a, o).add(V).div(2);
+          return O.add(V.sub(O).mul(factor));
+        };
 
-    // Render the top layer
-    render(stickers);
-
-    // if ( cube.type === 'rubik' ) {
-      
-    let sideStikers = allStickers.filter(s => {
-      if ( s.color === 'd' ) {
-        return false;
-      }
-
-      let th = 1 - 2 / cube.order[0];
-      let mc = s.getMassCenter();
-
-      return mc.y > th && ( Math.abs(mc.x) > 1 - EPS || Math.abs(mc.z) > 1 - EPS );
-    }).map(s => {
-      let o = s.getOrientation();
-      let ac = s._generator;
-      let newS = s.rotate(
-        new Vector3D(ac.points[0].x, 1, ac.points[0].z),
-        o.cross(UP), PI_2
-      );
-
-      const factor = 2 / 3;
-      let mc = s.updateMassCenter();
-      let muls = [mc.x, mc.y, mc.z].map(n => Math.abs(Math.abs(n) - 1) < 1e-2 ? factor : 1);
-
-      let mc1 = newS.updateMassCenter();
-      newS.points.forEach(p => {
-        p.x = (p.x - mc1.x) * muls[0] + mc1.x - o.x / order * (1 - factor);
-        p.y = (p.y - mc1.y) * muls[1] + mc1.y - o.y / order * (1 - factor);
-        p.z = (p.z - mc1.z) * muls[2] + mc1.z - o.z / order * (1 - factor);
+        // Scale and move closer to the original sticker
+        newS.points.forEach(p => {
+          let s = shrink(p);
+          p.setCoords(s.x, s.y, s.z);
+        });
+        return newS.rotate(CENTER, RIGHT, PI_2);
       });
-      return newS.rotate(CENTER, RIGHT, PI_2);
-    });
-
-    render(sideStikers);
-
-    // Show arrows
-    let swaps = cube.arrows;
-
-    const tipLength = 0.06 * DIM;
-    const tipAngle = Math.PI * 0.88;
-    const elems = 5;
-
-    for (let i = 0, maxi = (~~(swaps.length / elems) ) * elems; i < maxi; i += elems) {
-      let x1 = swaps[i];
-      let y1 = swaps[i + 1];
-      let x2 = swaps[i + 2];
-      let y2 = swaps[i + 3];
-      let type = swaps[i + 4];
-
-      if ( x1 < 0 || x1 >= order ||
-          y1 < 0 || y1 >= order ||
-          x2 < 0 || x2 >= order ||
-          x2 < 0 || x2 >= order ) {
-        continue;
-      }
-
-      ctx.strokeStyle = 'black';
-      ctx.fillStyle = 'black';
-
-      let c1 = stickers[ x1 + y1 * order ].getMassCenter();
-      let c2 = stickers[ x2 + y2 * order ].getMassCenter();
-
-      let ini = mapVector(c1.x, -c1.y);
-      let fin = mapVector(c2.x, -c2.y);
-      let tip = fin.sub(ini).unit().mul( tipLength );
-      let tip1 = fin.add( tip.rot( tipAngle ) );
-      let tip2 = fin.add( tip.rot( -tipAngle ) );
-      let tip3 = ini.sub( tip.rot( tipAngle ) );
-      let tip4 = ini.sub( tip.rot( -tipAngle ) );
-      let m1 = tip1.add(tip2).div(2);
-      let m2 = tip3.add(tip4).div(2);
-
-      ctx.lineWidth = 1;
-
-      ctx.beginPath();
-      ctx.lineTo(fin.x, fin.y);
-      ctx.lineTo(tip1.x, tip1.y);
-      ctx.lineTo(tip2.x, tip2.y);
-      ctx.fill();
-      ctx.stroke();
-
-      if ( type != 0 ) {
-        ctx.beginPath();
-        ctx.lineTo(ini.x, ini.y);
-        ctx.lineTo(tip3.x, tip3.y);
-        ctx.lineTo(tip4.x, tip4.y);
-        ctx.fill();
-        ctx.stroke();
-      }
-
-      ctx.lineWidth = 4;
-      ctx.lineCap = 'square';
-
-      ctx.beginPath();
-      ctx.moveTo(m1.x, m1.y);
-      ctx.lineTo(m2.x, m2.y);
-      ctx.stroke();
-
-    }
-
-    return await new Promise((res) => canvas.toBlob(b => res(b || new Blob([])), 'image/jpg'));
   }
 
-  return new Blob([]);
+  ctx.strokeStyle = "#000000";
+  ctx.lineWidth = LW;
+
+  drawStickers(ctx, stickers, sideStikers, W, H, cube);
+
+  return ctx.getImage();
 }

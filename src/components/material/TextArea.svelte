@@ -7,6 +7,7 @@
   export let placeholder = '';
   export let blurOnEscape = false;
   export let spellcheck = false;
+  export let readOnly = false;
   export let getInnerText = defaultInner;
 
   let cl = '';
@@ -71,7 +72,7 @@
       h-full break-words whitespace-pre-wrap overflow-auto stable monaco `
       + ( cl || "bg-gray-600 text-gray-300" ) }
     bind:innerHTML={ innerText } contenteditable="false" { spellcheck }></pre>
-  <textarea
+  <textarea disabled={ readOnly }
     on:keyup={ keyup } on:keydown={ keydown } on:focus={ focus } on:blur={ blur } on:click={ click }
     on:scroll={ handleScrollFactory(cedit, textarea) } { placeholder } bind:this={ textarea } { spellcheck }
     bind:value class={`lesp bg-transparent outline-none p-2 rounded-md text-start text-transparent

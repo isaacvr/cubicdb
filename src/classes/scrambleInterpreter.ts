@@ -66,11 +66,14 @@ const MegaminxSpec = [
   [ /^,/, ',' ],
   [ /^:/, ':' ],
 
+  // /((DB[RL]\d*'?)|([dbDB][RL]\d*'?)|(\[[ulfrbd]\d*'?\])|([RDrd](\+|-){1,2})|([ULFRBDy]\d*'?))/g
+
   // Move:
-  [ /^\[[urfl]\d*'?\]/, 'MOVE' ], // Rotation moves
-  [ /^[RD](\+|-){2}/, 'MOVE' ], // WCA moves
-  [ /^[db][RL]\d*'?/, 'MOVE' ], // Side faces move
-  [ /^[URFL]\d*'?/, 'MOVE' ], // Single moves
+  [ /^DB[RL]\d*'?/, 'MOVE' ], // Single moves back side
+  [ /^[dbDB][RL]\d*'?/, 'MOVE' ], // Side faces move
+  [ /^\[[ulfrbd]\d*'?\]/, 'MOVE' ], // Rotation moves
+  [ /^[LRDlrd](\+|-){1,2}/, 'MOVE' ], // WCA moves
+  [ /^[ULFRBDy]\d*'?/, 'MOVE' ], // Single moves
 
   // Symbols-delimiters:
   [ /^\(/, '(' ],

@@ -59,7 +59,7 @@ export function PYRAMINX(n: number): PuzzleInterface {
   let createPiece = function(v1: Vector3D, v2: Vector3D, v3: Vector3D): Piece {
     let pts = [ v1, v2, v3 ];
     let v = pts[2].sub(pts[1]).cross( pts[1].sub(pts[0]) ).unit().mul( H / n );
-    let c = pts.reduce((ac, v) => ac.add(v), new Vector3D(0, 0, 0)).div(3).add(v);
+    let c = pts.reduce((ac, vc) => ac.add(vc), new Vector3D(0, 0, 0)).div(3).add(v);
 
     return new Piece([
       new Sticker(pts),
@@ -89,13 +89,11 @@ export function PYRAMINX(n: number): PuzzleInterface {
     }
   }
 
-  const MOVE_MAP = "URLB";
-
   let planes = [
-    [ PL, PB, PR ],
-    [ PL, PU, PB ],
-    [ PR, PB, PU ],
-    [ PR, PU, PL ],
+    [ PL, PB, PR ], // D plane
+    [ PL, PU, PB ], // L plane
+    [ PR, PB, PU ], // R plane
+    [ PR, PU, PL ], // F plane
   ];
 
   let len = PU.sub(PL).div(n).y;
@@ -130,8 +128,8 @@ export function PYRAMINX(n: number): PuzzleInterface {
     };
   };
 
-  /// [ id, turns, -3?, layers ]
-  pyra.move = function(moves: any[]) {
+  /// [ id, turns, layers, direction ]
+  pyra.move = function (moves: any[]) {
     for (let m = 0, maxm = moves.length; m < maxm; m += 1) {
       let mv = moves[m];
       let pcs = trySingleMove(mv);
@@ -211,6 +209,8 @@ export function PYRAMINX(n: number): PuzzleInterface {
     y: -Math.PI / 4,
     z: 0,
   };
+
+  pyra.raw = ANCHORS;
 
   return pyra;
 

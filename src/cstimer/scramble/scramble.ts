@@ -73,7 +73,7 @@ export function formatScramble(str: string) {
       return '';
     }
   };
-  var re1 = /[$#]\{([^\}]+)\}/g;
+  var re1 = /[$#]\{([^}]+)\}/g;
   return str.replace(re1, repfunc);
 }
 

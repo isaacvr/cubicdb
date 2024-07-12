@@ -1,6 +1,10 @@
-const NeDB = require('nedb');
-const { resolve } = require('node:path');
-
+/**
+ * @typedef {import('electron').IpcMain} IpcMain
+ * @typedef {import('nedb')} NeDB
+ * 
+ * @param {IpcMain} ipcMain 
+ * @param {NeDB} Contests
+ */
 module.exports = (ipcMain, Contests) => {
   
   ipcMain.handle('get-contests', async (event) => {

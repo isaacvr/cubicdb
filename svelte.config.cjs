@@ -1,4 +1,4 @@
-const sveltePreprocess = require('svelte-preprocess');
+const sveltePreprocess = require("svelte-preprocess");
 
 module.exports = {
   // Consult https://github.com/sveltejs/svelte-preprocess
@@ -6,8 +6,8 @@ module.exports = {
   preprocess: sveltePreprocess({
     postcss: true,
   }),
-  
+
   compilerOptions: {
-    css: 'external'
-  }
-}
+    css: "external",
+  },
+};

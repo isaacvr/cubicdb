@@ -1,65 +1,78 @@
-import { randomUUID } from '@helpers/strings';
-import { TimerState, type InputContext, type StackmatCallback, type StackmatState, type TimerInputHandler } from '@interfaces';
-import { get } from 'svelte/store';
-import { createMachine, interpret } from 'xstate';
+import type { Actor } from "@helpers/stateMachine";
+import { randomUUID } from "@helpers/strings";
+import {
+  TimerState,
+  type InputContext,
+  type StackmatCallback,
+  type StackmatState,
+  type TimerInputHandler,
+} from "@interfaces";
+import { get, writable, type Writable } from "svelte/store";
+import { createActor, setup } from "xstate";
 
-interface SMState {
-  state: StackmatState;
-  lastState: StackmatState;
+interface StackmatContext extends InputContext {
+  stState: Writable<StackmatState>;
+  lastState: Writable<StackmatState | null>;
 }
 
-const enterDisconnect = ({ state, stackmatStatus }: InputContext) => {
+type STActor = (data: Actor<StackmatContext>) => any;
+
+const enterDisconnect: STActor = ({ context: { state, stackmatStatus } }) => {
   stackmatStatus.set(false);
-  state.set( TimerState.CLEAN );
-}
+  state.set(TimerState.CLEAN);
+};
 
-const enterClean = ({ state }: InputContext, st: SMState) => {
-  state.set( TimerState.CLEAN );
-}
+const enterClean: STActor = ({ context: { state } }) => {
+  state.set(TimerState.CLEAN);
+};
 
-const enterInspection = ({ state }: InputContext) => {
-  state.set( TimerState.INSPECTION );
-}
+const enterInspection: STActor = ({ context: { state } }) => {
+  state.set(TimerState.INSPECTION);
+};
 
-const enterRunning = ({ state }: InputContext) => {
-  state.set( TimerState.RUNNING );
-}
+const enterRunning: STActor = ({ context: { state } }) => {
+  state.set(TimerState.RUNNING);
+};
 
-const enterStopped = ({ state, addSolve, time }: InputContext) => {
-  state.set( TimerState.STOPPED );
-  addSolve( get(time) );
-}
+const enterStopped: STActor = ({ context: { state, time, addSolve } }) => {
+  state.set(TimerState.STOPPED);
+  addSolve(get(time));
+};
 
-const isTurnedOn = ({ stackmatStatus }: InputContext, { state, lastState }: SMState) => {
-  if ( !lastState?.on && state.on ) {
+const isTurnedOn: STActor = ({ context: { stackmatStatus, lastState, stState } }) => {
+  if (!get(lastState)?.on && get(stState).on) {
     stackmatStatus.set(true);
     return true;
   }
 
   return false;
-}
+};
 
-const isTurnedOff = ({ stackmatStatus }: InputContext, { state }: SMState) => {
-  if ( get(stackmatStatus) && !state.on ) {
+const isTurnedOff: STActor = ({ context: { stackmatStatus, stState } }) => {
+  if (get(stackmatStatus) && !get(stState).on) {
     stackmatStatus.set(false);
     return true;
   }
 
   return false;
-}
+};
 
-const isRunning = ({ stackmatStatus, createNewSolve }: InputContext, { state, lastState }: SMState, a: any) => {
-  if ( state.on && state.time_milli > ( lastState?.time_milli || 0 ) ) {
+const isRunning: STActor = ({
+  context: { lastState, stackmatStatus, stState, createNewSolve },
+}) => {
+  if (get(stState).on && get(stState).time_milli > (get(lastState)?.time_milli || 0)) {
     createNewSolve();
     stackmatStatus.set(true);
     return true;
   }
-  
+
   return false;
 };
 
-const wasCleaned = ({ initScrambler }: InputContext, { state, lastState }: SMState) => {
-  if ( lastState && state.time_milli < lastState.time_milli) {
+const wasCleaned: STActor = ({ context: { lastState, stState, initScrambler } }) => {
+  let ls = get(lastState);
+
+  if (ls && get(stState).time_milli < ls.time_milli) {
     initScrambler();
     return true;
   }
@@ -67,61 +80,63 @@ const wasCleaned = ({ initScrambler }: InputContext, { state, lastState }: SMSta
   return false;
 };
 
-const wasStopped = ({}: InputContext, { state, lastState }: SMState) => {
-  return lastState?.running && !state.running && !!state.time_milli;
+const wasStopped: STActor = ({ context: { lastState, stState } }) => {
+  return get(lastState)?.running && !get(stState).running && !!get(stState).time_milli;
 };
 
-const StackmatMachine = createMachine<InputContext, any>({
-  predictableActionArguments: true,
-  initial: 'DISCONNECTED',
+const StackmatMachine = setup({
+  types: {
+    context: {} as StackmatContext,
+  },
+}).createMachine({
+  initial: "DISCONNECTED",
+  context: ({ input }) => input as StackmatContext,
   states: {
     DISCONNECTED: {
       entry: enterDisconnect,
       on: {
         state: [
-          { target: 'RUNNING', cond: isRunning },
-          { target: 'CLEAN', cond: isTurnedOn },
-        ]
-      }
+          { target: "RUNNING", guard: isRunning },
+          { target: "CLEAN", guard: isTurnedOn },
+        ],
+      },
     },
-    
+
     CLEAN: {
       entry: enterClean,
       on: {
         state: [
-          { target: 'RUNNING', cond: isRunning },
-          { target: 'CLEAN', cond: wasCleaned },
+          { target: "RUNNING", guard: isRunning },
+          { target: "CLEAN", guard: wasCleaned },
         ],
       },
     },
-    
+
     INSPECTION: {
       entry: enterInspection,
     },
-    
+
     RUNNING: {
       entry: enterRunning,
       on: {
         state: [
-          { target: 'STOPPED', cond: wasStopped },
-          { target: 'CLEAN', cond: wasCleaned },
+          { target: "STOPPED", guard: wasStopped },
+          { target: "CLEAN", guard: wasCleaned },
         ],
-      }
+      },
     },
-    
+
     STOPPED: {
       entry: enterStopped,
       on: {
-        state: [
-          { target: 'CLEAN', cond: wasCleaned }
-        ]
-      }
+        state: [{ target: "CLEAN", guard: wasCleaned }],
+      },
     },
   },
 
   on: {
-    state: { target: 'DISCONNECTED', cond: isTurnedOff }
-  }
+    state: { target: ".DISCONNECTED", guard: isTurnedOff },
+  },
 });
 
 export class StackmatInput implements TimerInputHandler {
@@ -136,25 +151,33 @@ export class StackmatInput implements TimerInputHandler {
   id: string;
 
   constructor(context: InputContext) {
-    this.interpreter = interpret( StackmatMachine.withContext(context) );
+    this.interpreter = createActor(StackmatMachine, {
+      input: {
+        ...context,
+        stState: writable({}),
+        lastState: writable(null),
+      },
+    });
     this.audio_context = new AudioContext();
     this.id = randomUUID();
     this.isActive = false;
-    // this.interpreter.onTransition((st) => console.log('STATE: ', st.value));
     this.lastState = null;
   }
 
-  static updateInputDevices(): Promise<string[][]> {
+  static async updateInputDevices(): Promise<string[][]> {
     let devices: string[][] = [];
-    let retobj: Promise<string[][]> = new Promise(function(resolve, reject) {
+    let retobj: Promise<string[][]> = new Promise(function (resolve, reject) {
       resolve(devices);
     });
-  
-    return navigator?.mediaDevices?.enumerateDevices().then(function(deviceInfos) {
+
+    return navigator?.mediaDevices?.enumerateDevices().then(function (deviceInfos) {
       for (let i = 0; i < deviceInfos.length; i++) {
         let deviceInfo = deviceInfos[i];
-        if (deviceInfo.kind === 'audioinput') {
-          devices.push([deviceInfo.deviceId, deviceInfo.label || 'microphone ' + (devices.length + 1)]);
+        if (deviceInfo.kind === "audioinput") {
+          devices.push([
+            deviceInfo.deviceId,
+            deviceInfo.label || "microphone " + (devices.length + 1),
+          ]);
         }
       }
       return retobj;
@@ -193,35 +216,32 @@ export class StackmatInput implements TimerInputHandler {
   //   });
   // }
 
-  private static stackmatProcessor = '';
+  private static stackmatProcessor = "";
 
   // getDevice(): string {
   //   return this.device;
   // }
 
   init(deviceId: string, force: boolean) {
-    // console.log("INIT STACKMAT: ", deviceId, force);
-
     this.interpreter.start();
     this.isActive = true;
-  
+
     let selectObj: any = {
-      "echoCancellation": false,
-      "noiseSuppression": false
+      echoCancellation: false,
+      noiseSuppression: false,
     };
-  
-    if ( deviceId ) {
-      selectObj.deviceId = { "exact": deviceId };
+
+    if (deviceId) {
+      selectObj.deviceId = { exact: deviceId };
     }
-  
-    if ( this.audio_stream == undefined ) {
-      return navigator.mediaDevices.getUserMedia({ "audio": selectObj })
-        .then((stream) => {
-          if ( this.audio_context.state == 'suspended' && !force ) {
-            return Promise.reject();
-          }
-          this.success(stream);
-        }, console.log);
+
+    if (this.audio_stream == undefined) {
+      return navigator.mediaDevices.getUserMedia({ audio: selectObj }).then(stream => {
+        if (this.audio_context.state == "suspended" && !force) {
+          return Promise.reject();
+        }
+        this.success(stream);
+      });
     } else {
       return Promise.resolve();
     }
@@ -232,33 +252,37 @@ export class StackmatInput implements TimerInputHandler {
   }
 
   private async getAudioProcessor() {
-    return fetch('/assets/audio-processor.js')
-      .then((res) => {
-        if ( !res.ok ) throw new Error('');
+    return fetch("/assets/audio-processor.js")
+      .then(res => {
+        if (!res.ok) throw new Error("");
         return res.text();
       })
-      .then(text => URL.createObjectURL(new Blob([ text ], {
-        type: 'text/javascript'
-      })));
+      .then(text =>
+        URL.createObjectURL(
+          new Blob([text], {
+            type: "text/javascript",
+          })
+        )
+      );
   }
 
   async success(stream: MediaStream) {
     this.audio_stream = stream;
-    this.source = this.audio_context.createMediaStreamSource( stream );
+    this.source = this.audio_context.createMediaStreamSource(stream);
 
-    if ( !StackmatInput.stackmatProcessor ) {
+    if (!StackmatInput.stackmatProcessor) {
       StackmatInput.stackmatProcessor = await this.getAudioProcessor();
     }
 
     let stackmatProcessor = StackmatInput.stackmatProcessor;
-    
-    await this.audio_context.audioWorklet.addModule( stackmatProcessor );
 
-    this.node = new AudioWorkletNode(this.audio_context, 'stackmat-processor', {
+    await this.audio_context.audioWorklet.addModule(stackmatProcessor);
+
+    this.node = new AudioWorkletNode(this.audio_context, "stackmat-processor", {
       parameterData: {
         sampleRate: this.audio_context.sampleRate,
-        curTimer: 0
-      }
+        curTimer: 0,
+      },
     });
 
     // let cnv: HTMLCanvasElement = document.getElementById('stackmat-signal') as HTMLCanvasElement;
@@ -303,43 +327,46 @@ export class StackmatInput implements TimerInputHandler {
     //   ctx?.stroke();
     // };
 
-    this.node.port.onmessage = (ev) => {
-      let { data }: { data: StackmatState} = ev;
+    this.node.port.onmessage = ev => {
+      let { data }: { data: StackmatState } = ev;
       data.stackmatId = this.id;
       this.callback(data);
     };
 
     this.source.connect(this.node);
-    this.node.connect( this.audio_context.destination );
+    this.node.connect(this.audio_context.destination);
   }
- 
+
   async disconnect() {
     this.interpreter.stop();
     this.isActive = false;
     this.lastState = null;
 
-    if ( this.audio_stream != undefined ) {
+    if (this.audio_stream != undefined) {
       try {
         this.audio_stream.getTracks().forEach(t => t.stop());
         this.audio_stream = undefined;
-        this.source?.disconnect( this.node as AudioWorkletNode );
-        this.node?.disconnect( this.audio_context.destination );
+        this.source?.disconnect(this.node as AudioWorkletNode);
+        this.node?.disconnect(this.audio_context.destination);
         this.node?.port.close();
         this.source?.disconnect();
         this.node?.disconnect();
         await this.audio_context.close();
-        console.log("AUDIO_PROCESSOR_DISCONNECTED");
-      } catch(err) {
+      } catch (err) {
         console.log("AUDIO_PROCESSOR_ERROR: ", err);
       }
     }
   }
 
-  callback(sst: StackmatState) {    
-    if ( !this.isActive ) return;
+  callback(sst: StackmatState) {
+    if (!this.isActive) return;
 
-    this.interpreter.machine.context.time.set( sst.time_milli );
-    this.interpreter.send({ type: 'state', state: sst, lastState: this.lastState });
+    let ctx = this.interpreter.getSnapshot().context;
+    ctx.time.set(sst.time_milli);
+    ctx.stState.set(sst);
+    ctx.lastState.set(this.lastState);
+
+    this.interpreter.send({ type: "state", state: sst, lastState: this.lastState });
     this.lastState = sst;
   }
 

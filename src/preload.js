@@ -1,72 +1,113 @@
-const { contextBridge, ipcRenderer } = require('electron');
+const { contextBridge, ipcRenderer } = require("electron");
 
 const ipc = ipcRenderer;
 
-contextBridge.exposeInMainWorld('electronAPI', {
-  getAlgorithms: async (dir) => await ipc.invoke('get-algorithms', dir),
-  addAlgorithm: async (alg) => await ipc.invoke('add-algorithm', alg),
-  updateAlgorithm: async (alg) => await ipc.invoke('update-algorithm', alg),
-  removeAlgorithm: async (alg) => await ipc.invoke('remove-algorithm', alg),
-  
-  getCards: async () => await ipc.invoke('cards'),
-  
-  addSolve: async (s) => await ipc.invoke('add-solve', s),
-  addSolves: async (s) => await ipc.invoke('add-solves', s),
-  getSolves: async () => await ipc.invoke('get-solves'),
-  updateSolve: async (s) => await ipc.invoke('update-solve', s),
-  removeSolves: async (s) => await ipc.invoke('remove-solves', s),
-  
-  addContest: async (s) => await ipc.invoke('add-contest', s),
-  getContests: async () => await ipc.invoke('get-contests'),
-  updateContest: async (s) => await ipc.invoke('update-contest', s),
-  removeContests: async (s) => await ipc.invoke('remove-contests', s),
-  
-  addSession: async (s) => await ipc.invoke('add-session', s),
-  getSessions: async () => await ipc.invoke('get-sessions'),
-  removeSession: async (s) => await ipc.invoke('remove-session', s),
-  renameSession: async (s) => await ipc.invoke('rename-session', s),
-  updateSession: async (s) => await ipc.invoke('update-session', s),
-  
-  addTutorial: async (t) => await ipc.invoke('add-tutorial', t),
-  getTutorials: async () => await ipc.invoke('get-tutorials'),
-  updateTutorial: async (t) => await ipc.invoke('update-tutorial', t),
+contextBridge.exposeInMainWorld("electronAPI", {
+  getAlgorithms: async dir => ipc.invoke("get-algorithms", dir),
+  getAlgorithm: async dir => ipc.invoke("get-algorithm", dir),
+  addAlgorithm: async alg => ipc.invoke("add-algorithm", alg),
+  updateAlgorithm: async alg => ipc.invoke("update-algorithm", alg),
+  removeAlgorithm: async alg => ipc.invoke("remove-algorithm", alg),
+  algorithmsVersion: async () => ipc.invoke("algorithms-version"),
+  checkAlgorithms: async () => ipc.invoke("algorithms-check"),
+  updateAlgorithms: async () => ipc.invoke("update-algorithms"),
+
+  getCards: async () => ipc.invoke("cards"),
+
+  addSolve: async s => ipc.invoke("add-solve", s),
+  addSolves: async s => ipc.invoke("add-solves", s),
+  getSolves: async () => ipc.invoke("get-solves"),
+  updateSolve: async s => ipc.invoke("update-solve", s),
+  removeSolves: async s => ipc.invoke("remove-solves", s),
+
+  addContest: async s => ipc.invoke("add-contest", s),
+  getContests: async () => ipc.invoke("get-contests"),
+  updateContest: async s => ipc.invoke("update-contest", s),
+  removeContests: async s => ipc.invoke("remove-contests", s),
+
+  addSession: async s => ipc.invoke("add-session", s),
+  getSessions: async () => ipc.invoke("get-sessions"),
+  removeSession: async s => ipc.invoke("remove-session", s),
+  renameSession: async s => ipc.invoke("rename-session", s),
+  updateSession: async s => ipc.invoke("update-session", s),
+
+  addTutorial: async t => ipc.invoke("add-tutorial", t),
+  getTutorials: async () => ipc.invoke("get-tutorials"),
+  getTutorial: async (pz, sn, lang) => ipc.invoke("get-tutorial", pz, sn, lang),
+  updateTutorial: async t => ipc.invoke("update-tutorial", t),
+  removeTutorial: async t => ipc.invoke("remove-tutorial", t),
+  tutorialsVersion: async () => ipc.invoke("tutorials-version"),
+  checkTutorials: async () => ipc.invoke("tutorials-check"),
+  updateTutorials: async () => ipc.invoke("update-tutorials"),
 
   // Misc functions
-  minimize: async () => await ipc.invoke('minimize'),
-  maximize: async () => await ipc.invoke('maximize'),
-  close: async () => await ipc.invoke('close'),
-  generatePDF: async (opts) => await ipc.invoke('generate-pdf', opts),
-  generateContestPDF: async (opts) => await ipc.invoke('generate-contest-pdf', opts),
-  zipPDF: async (sheets) => await ipc.invoke('zip-pdf', sheets),
-  openFile: async (f) => await ipc.invoke('open-file', f),
-  revealFile: async (f) => await ipc.invoke('reveal-file', f),
+  minimize: async () => ipc.invoke("minimize"),
+  maximize: async () => ipc.invoke("maximize"),
+  close: async () => ipc.invoke("close"),
+  generatePDF: async opts => ipc.invoke("generate-pdf", opts),
+  generateContestPDF: async opts => ipc.invoke("generate-contest-pdf", opts),
+  zipPDF: async sheets => ipc.invoke("zip-pdf", sheets),
+  openFile: async f => ipc.invoke("open-file", f),
+  revealFile: async f => ipc.invoke("reveal-file", f),
 
   // Update
-  update: async (cmd) => await ipc.invoke('update', cmd),
-  cancelUpdate: async () => await ipc.invoke('cancel-update'),
-  addDownloadProgressListener: (cb) => ipc.on('download-progress', cb),
-  addDownloadDoneListener: (cb) => ipc.on('update-downloaded', cb),
+  update: async cmd => ipc.invoke("update", cmd),
+  cancelUpdate: async () => ipc.invoke("cancel-update"),
+  addDownloadProgressListener: cb => ipc.on("download-progress", cb),
+  addDownloadDoneListener: cb => ipc.on("update-downloaded", cb),
 
   // Power control
-  sleep: async (s) => await ipc.invoke('sleep', s),
+  sleep: async s => ipc.invoke("sleep", s),
 
   // Bluetooth
-  connectBluetoothDevice: async (id) => await ipc.invoke('connect-bluetooth-device', id),
-  cancelBluetoothRequest: async () => await ipc.invoke('cancel-bluetooth-request'),
-  pairingBluetoothResponse: async (id) => await ipc.invoke('connect-bluetooth-device', id),
-  addBluetoothListener: (cb) => ipc.on('bluetooth', cb),
+  connectBluetoothDevice: async id => ipc.invoke("connect-bluetooth-device", id),
+  cancelBluetoothRequest: async () => ipc.invoke("cancel-bluetooth-request"),
+  pairingBluetoothResponse: async id => ipc.invoke("connect-bluetooth-device", id),
+  addBluetoothListener: cb => ipc.on("bluetooth", cb),
 
   // Cache
-  cacheCheckImage: async (hash) => await ipc.invoke('check-image', hash),
-  cacheGetImage: async (hash) => await ipc.invoke('get-image', hash),
-  cacheGetImageBundle: async (hashes) => await ipc.invoke('get-image-bundle', hashes),
-  cacheSaveImage: async (hash, data) => await ipc.invoke('save-image', hash, data),
+  cacheGetAll: async () => ipc.invoke("cache-get-all"),
+  cacheCheckImage: async hash => ipc.invoke("check-image", hash),
+  cacheGetImage: async hash => ipc.invoke("get-image", hash),
+  cacheGetImageBundle: async hashes => ipc.invoke("get-image-bundle", hashes),
+  cacheSaveImage: async (hash, data) => ipc.invoke("save-image", hash, data),
+  vCacheGetAll: async () => ipc.invoke("vcache-get-all"),
+  cacheCheckVideo: async hash => ipc.invoke("check-video", hash),
+  cacheGetVideo: async hash => ipc.invoke("get-video", hash),
+  cacheGetVideoBundle: async hashes => ipc.invoke("get-video-bundle", hashes),
+  cacheSaveVideo: async (hash, data) => ipc.invoke("save-video", hash, data),
+  clearCache: async db => {
+    console.log("DB: ", db);
+    
+    switch (db) {
+      case "Cache": {
+        return await ipc.invoke("clear-cache");
+      }
+      case "VCache": {
+        return await ipc.invoke("clear-vcache");
+      }
+      case "Solves": {
+        return await ipc.invoke("clear-solves");
+      }
+      case "Sessions": {
+        return await ipc.invoke("clear-sessions");
+      }
+    }
+  },
 
   // Screens
-  getAllDisplays: async () => await ipc.invoke('get-all-displays'),
-  useDisplay: async (id) => await ipc.invoke('use-display', id),
+  getAllDisplays: async () => ipc.invoke("get-all-displays"),
+  useDisplay: async id => ipc.invoke("use-display", id),
 
   // External
-  addExternalConnector: (cb) => ipc.on('external', cb),
-  external: async (deviceId, ...args) => await ipc.invoke('external', deviceId, ...args),
+  addExternalConnector: cb => ipc.on("external", cb),
+  external: async (deviceId, ...args) => ipc.invoke("external", deviceId, ...args),
+
+  // Storage
+  cacheStorage: async () => ipc.invoke("cache-storage"),
+  vCacheStorage: async () => ipc.invoke("vcache-storage"),
+  algorithmsStorage: async () => ipc.invoke("algorithms-storage"),
+  sessionsStorage: async () => ipc.invoke("sessions-storage"),
+  solvesStorage: async () => ipc.invoke("solves-storage"),
+  tutorialsStorage: async () => ipc.invoke("tutorials-storage"),
 });
