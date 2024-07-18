@@ -712,7 +712,7 @@
           bind:checked={modalData.settings.showBackFace}
           on:change={e => ($session = $session)}
           class="w-5 h-5"
-          label={"Show back face"}
+          label={$localLang.global.showBackFace}
         />
       </section>
     {/if}

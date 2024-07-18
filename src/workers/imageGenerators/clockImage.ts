@@ -45,6 +45,8 @@ function drawSingleClock(
 
   const R_PIN = circles.points[0].x * 2.3;
 
+  ctx.strokeStyle = "transparent";
+
   circle(ctx, X, Y, RAD, WHITE);
 
   for (let i = -1; i < 2; i += 2) {

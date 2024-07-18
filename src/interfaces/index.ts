@@ -731,6 +731,7 @@ export interface InputContext {
   scramble: Writable<string>;
   sequenceParts: Writable<string[]>;
   recoverySequence: Writable<string>;
+  keyboardEnabled: Writable<boolean>;
 
   reset: () => void;
   initScrambler: (scr?: string, _mode?: string) => void;
@@ -757,7 +758,7 @@ export interface TimerInputHandler {
   newRecord: () => void;
 }
 
-export type LanguageCode = "EN" | "ES";
+export type LanguageCode = "EN" | "ES" | "ZH";
 
 export interface Language {
   name: string;
@@ -809,6 +810,7 @@ export interface Language {
     settingsSaved: string;
     willRestart: string;
     generatedByCubeDB: string;
+    showBackFace: string;
   };
   TUTORIALS: {
     easy: string;
@@ -1034,7 +1036,6 @@ export interface Language {
     puzzle: string;
     order: string;
     setPuzzle: string;
-    showBackFace: string;
   };
   IMPORT_EXPORT: {
     title: string;

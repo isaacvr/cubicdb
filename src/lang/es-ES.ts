@@ -50,6 +50,7 @@ export const Spanish: Language = {
     settingsSaved: "Configuración guardada",
     willRestart: "CubeDB va a reiniciar de forma automática en unos segundos.",
     generatedByCubeDB: "Generado por CubeDB",
+    showBackFace: "Caras traseras",
   },
   TUTORIALS: {
     easy: "Fácil",
@@ -318,7 +319,6 @@ export const Spanish: Language = {
     puzzle: "Puzzle",
     order: "Orden",
     setPuzzle: "Establecer",
-    showBackFace: "Caras traseras",
   },
   IMPORT_EXPORT: {
     title: "Importar / Exportar",

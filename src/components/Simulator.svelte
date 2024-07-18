@@ -859,7 +859,7 @@
       </Tooltip>
     {/if}
 
-    <Tooltip hasKeybinding text={$localLang.SIMULATOR.showBackFace + "[Ctrl + B]"} position="left">
+    <Tooltip hasKeybinding text={$localLang.global.showBackFace + "[Ctrl + B]"} position="left">
       <Toggle class="cursor-pointer" bind:checked={showBackFace} />
     </Tooltip>
   </div>

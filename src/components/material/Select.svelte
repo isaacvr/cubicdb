@@ -84,7 +84,7 @@
 <Dropdown
   bind:open={showOptions}
   id={selectID}
-  containerClass={"max-h-[20rem] overflow-y-scroll z-10 w-max " + (useFixed ? "!fixed" : "")}
+  containerClass={"max-h-[20rem] overflow-y-scroll z-50 w-max " + (useFixed ? "!fixed" : "")}
   {placement}
 >
   {#each items as item, pos}

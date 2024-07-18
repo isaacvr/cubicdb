@@ -94,7 +94,17 @@ const setTimerRunner = fromCallback(
 
 const saveSolve = fromCallback(
   ({
-    input: { state, session, time, lastSolve, timeRef, stepsTime, initScrambler, addSolve },
+    input: {
+      state,
+      session,
+      time,
+      lastSolve,
+      timeRef,
+      stepsTime,
+      keyboardEnabled,
+      initScrambler,
+      addSolve,
+    },
   }: {
     input: KeyboardContext;
   }) => {
@@ -123,6 +133,11 @@ const saveSolve = fromCallback(
 
     t > 0 && addSolve(t, ls?.penalty);
     time.set(0);
+
+    // Prevent keyboard to run after pressing some key + space to stop the timer
+    let kbe = get(keyboardEnabled);
+    keyboardEnabled.set(false);
+    setTimeout(() => keyboardEnabled.set(kbe), 1000);
   }
 );
 
@@ -280,12 +295,12 @@ export class KeyboardInput implements TimerInputHandler {
   }
 
   keyUpHandler(ev: KeyboardEvent) {
-    if (!this.isActive) return;
+    if (!this.isActive || !get(this.interpreter.getSnapshot().context.keyboardEnabled)) return;
     this.interpreter.send(ev);
   }
 
   keyDownHandler(ev: KeyboardEvent) {
-    if (!this.isActive) return;
+    if (!this.isActive || !get(this.interpreter.getSnapshot().context.keyboardEnabled)) return;
     this.interpreter.send(ev);
   }
 

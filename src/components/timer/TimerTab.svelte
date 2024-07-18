@@ -190,6 +190,7 @@
     sequenceParts,
     recoverySequence,
     bluetoothStatus,
+    keyboardEnabled: writable(enableKeyboard),
     addSolve,
     initScrambler,
     reset,

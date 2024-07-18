@@ -599,6 +599,7 @@
         $allSolves = sv;
 
         dataService.getSessions().then(_sessions => {
+          console.log("SESSIONS: ", _sessions);
           sessions = _sessions.map(s => {
             s.tName = s.name;
             return s;
@@ -683,7 +684,7 @@
     />
   {:else}
     <div
-      class="fixed mt-1 w-max -translate-x-1/2 left-1/2 z-10 grid grid-flow-col
+      class="fixed mt-1 w-max -translate-x-1/2 left-1/2 z-50 grid grid-flow-col
       gap-2 top-14 items-center justify-center text-gray-400"
     >
       <Select
