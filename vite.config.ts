@@ -74,7 +74,7 @@ export default defineConfig(env => ({
     // })
   ],
   publicDir: "public",
-  base: env.mode === "production" ? "./" : "",
+  base: env.mode === "production" ? "/" : "",
   server: {
     host: true,
     port: 5432,
