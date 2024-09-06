@@ -35,21 +35,6 @@
   import { timer } from "@helpers/timer";
   import { GANInput } from "./input-handlers/GAN";
   import { QiYiSmartTimerInput } from "./input-handlers/QY-Timer";
-  // import { ExternalTimerInput } from "./input-handlers/ExternalTimer";
-
-  // ICONS
-  import TuneIcon from "@icons/Tune.svelte";
-  import Refresh from "@icons/Refresh.svelte";
-  import Pencil from "@icons/PencilOutline.svelte";
-  import Calendar from "@icons/CalendarTextOutline.svelte";
-  import Copy from "@icons/ContentCopy.svelte";
-  import Settings from "@icons/Cog.svelte";
-  import BluetoothOnIcon from "@icons/Bluetooth.svelte";
-  import BluetoothOffIcon from "@icons/BluetoothOff.svelte";
-  import ToolsIcon from "@icons/Tools.svelte";
-  import ChartIcon from "@icons/ChartLineVariant.svelte";
-  import MetronomeIcon from "@icons/Metronome.svelte";
-  import WCACategory from "@components/wca/WCACategory.svelte";
   import ToolFrame from "./timer-tools/ToolFrame.svelte";
   import CrossTool from "./timer-tools/CrossTool.svelte";
   import { onMount } from "svelte";
@@ -57,6 +42,22 @@
   import DailyStatsTool from "./timer-tools/DailyStatsTool.svelte";
   import MetronomeTool from "./timer-tools/MetronomeTool.svelte";
   import SolverTool from "./timer-tools/SolverTool.svelte";
+  // import { ExternalTimerInput } from "./input-handlers/ExternalTimer";
+
+  // ICONS
+  import TuneIcon from "@icons/Tune.svelte";
+  import RefreshIcon from "@icons/Refresh.svelte";
+  import PencilIcon from "@icons/PencilOutline.svelte";
+  import CalendarIcon from "@icons/CalendarTextOutline.svelte";
+  import CopyIcon from "@icons/ContentCopy.svelte";
+  import SettingsIcon from "@icons/Cog.svelte";
+  import BluetoothOnIcon from "@icons/Bluetooth.svelte";
+  import BluetoothOffIcon from "@icons/BluetoothOff.svelte";
+  import ToolsIcon from "@icons/Tools.svelte";
+  import ChartIcon from "@icons/ChartLineVariant.svelte";
+  import MetronomeIcon from "@icons/Metronome.svelte";
+  import Ao5Icon from "@icons/FormatListNumbered.svelte";
+  import WCACategory from "@components/wca/WCACategory.svelte";
 
   type TModal = "" | "edit-scramble" | "old-scrambles" | "settings";
 
@@ -111,25 +112,25 @@
   const DD_CLASS = "font-medium p-2 text-sm dark:hover:bg-gray-600 flex items-center";
 
   const options = [
-    { text: "Reload scramble [Ctrl + S]", icon: Refresh, handler: () => initScrambler() },
+    { text: "Reload scramble [Ctrl + S]", icon: RefreshIcon, handler: () => initScrambler() },
     {
       text: "Edit [Ctrl + E]",
-      icon: Pencil,
+      icon: PencilIcon,
       handler: () => {
         openDialog("edit-scramble", $scramble, (scr: string) => scr && initScrambler(scr));
       },
     },
     {
       text: "Use old scramble [Ctrl + O]",
-      icon: Calendar,
+      icon: CalendarIcon,
       handler: () => {
         openDialog("old-scrambles", null, () => {});
       },
     },
-    { text: "Copy scramble [Ctrl + C]", icon: Copy, handler: () => toClipboard() },
+    { text: "Copy scramble [Ctrl + C]", icon: CopyIcon, handler: () => toClipboard() },
     {
       text: "Settings",
-      icon: Settings,
+      icon: SettingsIcon,
       handler: () => {
         let initialCalc = $session?.settings?.calcAoX;
 
@@ -400,7 +401,7 @@
   </li>
 
   {#each options.filter((_, p) => (!battle ? true : p === 3 || p === 5)) as option}
-    <li class:timerOnly={option.icon === Settings}>
+    <li class:timerOnly={option.icon === SettingsIcon}>
       <Tooltip class="cursor-pointer" position="right" text={option.text} hasKeybinding>
         <Button
           aria-label={option.text}
@@ -497,6 +498,17 @@
         </DropdownItem>
       {/each}
     </Dropdown>
+  </li>
+
+  <li>
+    <Button
+      aria-label="Ao5"
+      color="none"
+      class={BUTTON_CLASS}
+      on:keydown={e => (e.code === "Space" ? e.preventDefault() : null)}
+    >
+      <Ao5Icon width="100%" height="100%" />
+    </Button>
   </li>
 
   <ul class="tool-container" class:open={toolList.some(t => t.open)}>

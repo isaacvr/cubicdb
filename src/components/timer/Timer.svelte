@@ -113,8 +113,8 @@
 
   /// CONTEXT
   let state = writable<TimerState>(TimerState.CLEAN);
-  let ready = writable<boolean>(false);
-  let tab = writable<number>(0);
+  let ready = writable(false);
+  let tab = writable(0);
   let solves = writable<Solve[]>([]);
   let allSolves = writable<Solve[]>([]);
   let session = writable<Session>({
@@ -126,16 +126,14 @@
   });
   let Ao5 = writable<number[]>();
   let stats = writable<Statistics>(INITIAL_STATISTICS);
-  let scramble = writable<string>();
+  let scramble = writable("");
   let group = writable<number>();
   let mode = writable<{ 0: string; 1: string; 2: number }>(modes[0]);
-  let hintDialog = writable<boolean>(true);
-  let hint = writable<boolean>();
   let preview = writable<HTMLImgAttributes[]>([]);
   let prob = writable<number>();
-  let isRunning = writable<boolean>(false);
-  let selected = writable<number>(0);
-  let decimals = writable<boolean>(true);
+  let isRunning = writable(false);
+  let selected = writable(0);
+  let decimals = writable(true);
   let bluetoothList = writable<BluetoothDeviceData[]>([]);
   let bluetoothStatus = writable(false);
   let STATS_WINDOW = writable<(number | null)[][]>($AON.map(_ => []));
@@ -396,17 +394,22 @@
     }, 10);
   }
 
-  function selectedFilter(rescramble = true) {
+  function selectedFilter(rescramble = true, saveFilter = false) {
+    if (saveFilter && $session.settings.sessionType === "mixed") {
+      $session.settings.prob = $prob;
+      dataService.updateSession($session).then().catch();
+    }
+
     rescramble && initScrambler();
   }
 
-  function selectedMode(rescramble = true, saveMode = false) {
-    if (saveMode) {
+  function selectedMode(rescramble = true, saveMode = false, updateProb = true) {
+    if (saveMode && $session.settings.sessionType === "mixed") {
       $session.settings.mode = $mode[1];
       dataService.updateSession($session).then().catch();
     }
     filters = all.pScramble.filters.get($mode[1]) || [];
-    $prob = -1;
+    updateProb && ($prob = -1);
     selectedFilter(rescramble);
   }
 
@@ -415,7 +418,8 @@
 
     modes = MENU[$group][1];
     $mode = modes[0];
-    selectedMode(rescramble, true);
+    // selectedMode(rescramble, true);
+    selectedMode(rescramble, false);
   }
 
   function selectedSession() {
@@ -431,7 +435,14 @@
         $mode = md;
         $group = i;
         modes = MENU[$group][1];
-        selectedMode(false, false);
+
+        if (typeof $session.settings.prob === "undefined") {
+          selectedMode(false, false);
+        } else {
+          $prob = $session.settings.prob;
+          selectedMode(false, false, false);
+        }
+
         fnd = true;
         break;
       }
@@ -573,11 +584,15 @@
       if (sessions[i].settings?.sessionType != "mixed") {
         for (let j = 0, maxj = ICONS.length; j < maxj; j += 1) {
           if (Array.isArray(ICONS[j].scrambler)) {
-            if ((ICONS[j].scrambler as string[]).some(s => s === sessions[i].settings?.mode)) {
+            if (
+              (ICONS[j].scrambler as string[]).some(
+                s => sessions[i].settings && s === sessions[i].settings.mode
+              )
+            ) {
               sessions[i].icon = ICONS[j];
               break;
             }
-          } else if (ICONS[j].scrambler === sessions[i].settings?.mode) {
+          } else if (sessions[i].settings && ICONS[j].scrambler === sessions[i].settings.mode) {
             sessions[i].icon = ICONS[j];
             break;
           }
@@ -589,6 +604,7 @@
   onMount(() => {
     testPrediction();
     mounted = true;
+    // tabs.nextTab();
 
     if (timerOnly && scrambleOnly) {
       timerOnly = scrambleOnly = false;
@@ -599,7 +615,6 @@
         $allSolves = sv;
 
         dataService.getSessions().then(_sessions => {
-          console.log("SESSIONS: ", _sessions);
           sessions = _sessions.map(s => {
             s.tName = s.name;
             return s;
@@ -636,8 +651,6 @@
     decimals,
     group,
     mode,
-    hintDialog,
-    hint,
     preview,
     prob,
     isRunning,
@@ -731,12 +744,12 @@
         <Select
           placeholder={$localLang.TIMER.selectFilter}
           value={$prob}
-          items={filters}
+          items={["", ...filters]}
           label={e => e.toUpperCase()}
-          transform={(i, p) => p}
+          transform={(i, p) => (p || 0) - 1}
           onChange={(i, p) => {
-            $prob = p || 0;
-            selectedFilter();
+            $prob = p - 1;
+            selectedFilter(true, true);
           }}
         />
       {/if}

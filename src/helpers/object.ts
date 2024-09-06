@@ -1,7 +1,5 @@
 import { Puzzle } from "@classes/puzzle/puzzle";
-import { DOWN } from "@classes/vector3d";
-import { EPS } from "@constants";
-import { nameToPuzzle, type Algorithm, type ITutorialAlg, type PuzzleType } from "@interfaces";
+import { nameToPuzzle, type ITutorialAlg, type PuzzleType } from "@interfaces";
 
 export function checkPath(obj: any, path: string[], useMap: boolean = false): boolean {
   if (typeof obj === "undefined") return false;

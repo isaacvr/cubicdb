@@ -59,7 +59,7 @@
         title: HOME.contest,
         route: "/contest",
         cube: "/assets/logo-500.png",
-        ready: showPrivate,
+        ready: true,
       },
       {
         title: HOME.tools,

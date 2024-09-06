@@ -339,6 +339,8 @@
   }
 
   onMount(() => {
+    // dataService.getAlgorithms("", true).then(res => console.log("Algorithms: ", res.length));
+
     toArray(``, "").forEach((e, p) => {
       let alg: Algorithm = {
         mode: CubeMode.L4E,

@@ -1,14 +1,13 @@
 <script lang="ts">
   import type { Tab } from '@interfaces';
   import { getContext, onMount, onDestroy } from 'svelte';
-  import { TABS } from './TabGroup.svelte';
   import { randomUUID } from '@helpers/strings';
 
   export let name: string;
   export let icon: any = null;
   export let ariaLabel = '';
   const id = randomUUID();
-  const { registerTab, unregisterTab, selectedTab } = getContext(TABS) as any;
+  const { registerTab, unregisterTab, selectedTab } = getContext("TABS") as any;
   let tab: Tab = { name: "", id: "", index: 0, icon: null, ariaLabel };
 
   onMount(() => {

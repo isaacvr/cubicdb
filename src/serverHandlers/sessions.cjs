@@ -110,8 +110,6 @@ module.exports = (ipcMain, Sessions, Solves, dbPath) => {
         return console.log("Error reading solves");
       }
 
-      let count = 0;
-
       for (let i = 0, maxi = svs.length; i < maxi; i += 1) {
         if (!ids.has(svs[i].session)) {
           ids1.add(svs[i].session);

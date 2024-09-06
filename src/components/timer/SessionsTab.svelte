@@ -29,15 +29,12 @@
   import CloseIcon from "@icons/Close.svelte";
   import SendIcon from "@icons/Send.svelte";
   import DeleteAllIcon from "@icons/DeleteSweepOutline.svelte";
-  import ChevronLeftIcon from "@icons/ChevronLeft.svelte";
-  import ChevronRightIcon from "@icons/ChevronRight.svelte";
-  import ChevronDoubleLeftIcon from "@icons/ChevronDoubleLeft.svelte";
-  import ChevronDoubleRightIcon from "@icons/ChevronDoubleRight.svelte";
   import ChevronDown from "@icons/ChevronDown.svelte";
   import ShareIcon from "@icons/Share.svelte";
   import EditIcon from "@icons/Pencil.svelte";
   import SelectIcon from "@icons/Select.svelte";
   import CopyIcon from "@icons/ClipboardOutline.svelte";
+  import FilterIcon from "@icons/Filter.svelte";
 
   import { getAverageS } from "@helpers/statistics";
   import { NotificationService } from "@stores/notification.service";
@@ -49,8 +46,10 @@
   import { calcPercents } from "@helpers/math";
   import { startViewTransition } from "@helpers/DOM";
   import { navigate } from "svelte-routing";
-  import { Button, Dropdown, DropdownItem, Spinner } from "flowbite-svelte";
+  import { Button, Dropdown, DropdownItem, Indicator, Spinner } from "flowbite-svelte";
   import PuzzleImage from "@components/PuzzleImage.svelte";
+  import AdvancedSearch from "./AdvancedSearch.svelte";
+  import PaginatorComponent from "@components/PaginatorComponent.svelte";
 
   let localLang: Readable<Language> = derived(globalLang, $lang => getLanguage($lang));
 
@@ -76,11 +75,15 @@
   let contextMenuElement: HTMLUListElement;
   let solvesElement: HTMLDivElement;
   let pSolves: Solve[] = [];
+  let fSolves: Solve[] = [];
   let solveSteps: number[] = [];
   let fComment = false;
   let collapsed = false;
   let reconstructionError = true;
   let showDropdown = false;
+  let searchModal = false;
+  let filters: ((sv: Solve) => boolean)[] = [];
+  let advancedSearchFilters: any[] = [];
 
   const PENALTIES = [
     { label: "+2", penalty: Penalty.P2 },
@@ -240,26 +243,24 @@
       case "KeyD":
         !show && ($selected ? deleteSelected() : deleteAll());
         break;
+      case "KeyF":
+        e.ctrlKey && !show && !searchModal && (searchModal = true);
+        break;
       case "Enter":
         showDeleteAll && deleteAllModal.close(true);
     }
   }
 
   function updateSolves() {
-    pSolves = $solves.slice(pg.start, pg.end);
+    pSolves = fSolves.slice(pg.start, pg.end);
     pg = pg;
   }
 
   function updatePaginator(s: any) {
-    pg.setData($solves);
+    console.log("FILTERS: ", filters);
+    fSolves = $solves.filter(sv => filters.every(f => f(sv)));
+    pg.setData(fSolves);
 
-    updateSolves();
-  }
-
-  function setPage(p: number) {
-    p === -1 && pg.nextPage();
-    p === -2 && pg.prevPage();
-    p != -1 && p != -2 && pg.setPage(p);
     updateSolves();
   }
 
@@ -318,7 +319,7 @@
 
   function updatePageFromSelected() {
     if ($selected) {
-      let sv = $solves;
+      let sv = fSolves;
 
       for (let i = 0, maxi = sv.length; i < maxi; i += 1) {
         if (sv[i].selected) {
@@ -382,29 +383,10 @@
 <svelte:window on:keyup={handleKeyUp} on:click={globalHandleClick} />
 
 <main class="w-full h-full">
-  <ul
-    class={"w-max flex justify-center no-grid gap-2 mx-auto text-gray-400 " +
-      (pg.pages > 1 ? "" : "hidden")}
-  >
-    <li class="paginator-item">
-      <button on:click={() => setPage(1)}> <ChevronDoubleLeftIcon /> </button>
-    </li>
-    <li class="paginator-item">
-      <button on:click={() => setPage(-2)}> <ChevronLeftIcon /> </button>
-    </li>
-    {#each pg.labels as lb}
-      <li class="paginator-item" class:selected={pg.page === lb}>
-        <button on:click={() => setPage(lb)}>{lb}</button>
-      </li>
-    {/each}
-    <li class="paginator-item">
-      <button on:click={() => setPage(-1)}> <ChevronRightIcon /> </button>
-    </li>
-    <li class="paginator-item">
-      <button on:click={() => setPage(Infinity)}> <ChevronDoubleRightIcon /> </button>
-    </li>
-  </ul>
+  <!-- Pagination -->
+  <PaginatorComponent {pg} on:update={updateSolves} />
 
+  <!-- Solves -->
   <div id="grid" class="text-gray-400 ml-8 mt-4 grid overflow-scroll" bind:this={solvesElement}>
     {#each pSolves as solve (solve._id)}
       <button
@@ -436,6 +418,7 @@
     {/each}
   </div>
 
+  <!-- Options -->
   <div class="absolute top-3 right-2 text-gray-400 my-3 mx-1 flex flex-col gap-2">
     {#if $solves.length > 0}
       <Tooltip position="left" text={$localLang.TIMER.deleteAll + " [D]"} hasKeybinding>
@@ -444,18 +427,35 @@
         </button>
       </Tooltip>
     {/if}
+
     <Tooltip position="left" text={$localLang.TIMER.shareAo5}>
       <button on:click={() => shareAoX(5)} class="cursor-pointer grid place-items-center">
         <ShareIcon width="1.2rem" height="1.2rem" />
       </button>
     </Tooltip>
+
     <Tooltip position="left" text={$localLang.TIMER.shareAo12}>
       <button on:click={() => shareAoX(12)} class="cursor-pointer grid place-items-center">
         <ShareIcon width="1.2rem" height="1.2rem" />
       </button>
     </Tooltip>
+
+    <Tooltip position="left" text={$localLang.global.filter}>
+      <button
+        on:click={() => (searchModal = true)}
+        class="cursor-pointer grid place-items-center relative"
+      >
+        <FilterIcon width="1.2rem" height="1.2rem" />
+        <Indicator placement="top-right" color="yellow" class="text-black ml-2 text-sm">2</Indicator
+        >
+        <!-- {#if filters.length}
+          <Indicator placement="top-right">{filters.length}</Indicator>
+        {/if} -->
+      </button>
+    </Tooltip>
   </div>
 
+  <!-- Solve Actions -->
   <div
     class:isVisible={$selected}
     class="fixed rounded-md p-2 top-0 opacity-0 pointer-events-none w-[min(90%,56rem)] justify-center
@@ -518,180 +518,6 @@
     </Button>
   </div>
 
-  <Modal
-    bind:this={modal}
-    bind:show
-    onClose={closeHandler}
-    class="w-[min(100%,36rem)]"
-    transitionName="modal"
-  >
-    <div class="flex justify-between items-center text-gray-400 m-2">
-      <span class="view-time m-1 w-max">
-        {#if sSolve.penalty === Penalty.NONE || sSolve.penalty === Penalty.P2}
-          {sTimer(sSolve, true, true)}
-        {/if}
-        {#if sSolve.penalty === Penalty.P2}
-          <span class="font-small text-red-500">+2</span>
-        {/if}
-        {#if sSolve.penalty === Penalty.DNF}
-          <span class="font-small text-red-500">DNF</span>
-        {/if}
-        {#if sSolve.penalty === Penalty.DNS}
-          <span class="font-small text-red-500">DNS</span>
-        {/if}
-      </span>
-      <span class="flex items-center font-small">
-        <CalendarIcon width="1.2rem" height="1.2rem" />
-        <span class="ml-2">
-          {moment(sSolve.date).format("D MMM YYYY")} <br />
-          {moment(sSolve.date).format("HH:MM")}
-        </span>
-      </span>
-    </div>
-    <div
-      class={"algorithm-container text-gray-400 m-2 transition-all duration-300 delay-100 " +
-        (fComment || collapsed ? "collapsed" : "")}
-    >
-      <Dice5Icon />
-      <span bind:innerHTML={sSolve.scramble} contenteditable="false" class="text-center"></span>
-
-      <button
-        class="preview col-span-2 mb-2 mt-2 mx-auto overflow-hidden"
-        on:click={() => (collapsed = !collapsed)}
-      >
-        {#if preview}
-          <PuzzleImage src={preview} />
-        {:else}
-          <Spinner size="20" />
-        {/if}
-      </button>
-
-      {#if sSolve.steps}
-        <hr class="w-full border border-t-gray-400 col-span-2" />
-        <h3 class="text-gray-300 text-center col-span-2 mt-2 mb-8 text-lg">
-          {$localLang.global.steps}
-        </h3>
-
-        <div class="col-span-2 flex mb-4">
-          {#each solveSteps as s, p (p)}
-            <span
-              class="step-part text-gray-300"
-              data-percent={`${s}%`}
-              data-time={timer((sSolve.steps || [])[p], true, true)}
-              style={`
-                width: ${s}%;
-                background-color: ${STEP_COLORS[p]};
-                --p: ${p};
-              `}
-            ></span>
-          {/each}
-        </div>
-
-        <div class="col-span-2 flex mb-4 text-center -mt-4">
-          {#each solveSteps as s, p (p)}
-            <span style={`width: ${s}%; `}>{($session.settings.stepNames || [])[p] || ""}</span>
-          {/each}
-        </div>
-      {/if}
-
-      <CommentIcon />
-
-      <TextArea
-        blurOnEscape
-        on:focus={() => focusTextArea(true)}
-        on:blur={() => focusTextArea(false)}
-        cClass={fComment ? "max-h-[30ch]" : "max-h-[20ch]"}
-        getInnerText={parse}
-        class="border border-gray-400 text-sm"
-        bind:value={sSolve.comments}
-        placeholder={$localLang.TIMER.comment}
-      />
-    </div>
-    <div class="mt-2 flex flex-wrap justify-evenly gap-1">
-      <Button
-        color="none"
-        ariaLabel={$localLang.global.delete}
-        flat
-        class="text-red-500 hover:text-gray-200 hover:bg-red-800 text-sm gap-1 px-2"
-        on:click={() => {
-          _delete([sSolve]);
-          modal.close();
-        }}
-      >
-        <DeleteIcon />
-        {$localLang.global.delete}
-      </Button>
-
-      <Button
-        color="none"
-        ariaLabel={$localLang.global.cancel}
-        flat
-        on:click={() => modal.close()}
-        class="text-gray-400 hover:bg-gray-900 hover:text-gray-200 text-sm gap-1 px-2"
-      >
-        <CloseIcon />
-        {$localLang.global.cancel}
-      </Button>
-
-      <Button
-        color="none"
-        ariaLabel={$localLang.global.save}
-        flat
-        on:click={() => modal.close(sSolve)}
-        class="text-purple-400 hover:bg-purple-900 hover:text-gray-200 mr-2 text-sm gap-1 px-2"
-      >
-        <SendIcon />
-        {$localLang.global.save}
-      </Button>
-
-      {#if !reconstructionError}
-        <Button
-          color="none"
-          ariaLabel={$localLang.global.save}
-          flat
-          on:click={checkReconstruction}
-          class="text-green-400 hover:bg-green-900 hover:text-gray-200 mr-2 text-sm px-2"
-        >
-          {$localLang.global.reconstruction}
-        </Button>
-      {/if}
-
-      <Button color="none">
-        {[{ label: $localLang.TIMER.noPenalty, penalty: Penalty.NONE }, ...PENALTIES].find(
-          p => p.penalty === sSolve.penalty
-        )?.label || $localLang.TIMER.noPenalty}
-
-        <ChevronDown size="1.2rem" />
-      </Button>
-      <Dropdown bind:open={showDropdown}>
-        {#each [{ label: $localLang.TIMER.noPenalty, penalty: Penalty.NONE }, ...PENALTIES] as p}
-          <DropdownItem on:click={() => setPenalty(p.penalty)}>{p.label}</DropdownItem>
-        {/each}
-      </Dropdown>
-    </div>
-  </Modal>
-
-  <Modal bind:this={deleteAllModal} bind:show={showDeleteAll} onClose={deleteAllHandler}>
-    <h1 class="text-gray-400 mb-4 text-lg">{$localLang.TIMER.removeAllSolves}</h1>
-    <div class="flex justify-evenly">
-      <Button
-        color="alternative"
-        ariaLabel={$localLang.global.cancel}
-        on:click={() => deleteAllModal.close()}
-      >
-        {$localLang.global.cancel}
-      </Button>
-
-      <Button
-        color="red"
-        ariaLabel={$localLang.global.delete}
-        on:click={() => deleteAllModal.close(true)}
-      >
-        {$localLang.global.delete}
-      </Button>
-    </div>
-  </Modal>
-
   <!-- Context Menu -->
   <ul
     class="context-menu w-max p-2 rounded-md shadow-md fixed top-8 left-28 bg-gray-800
@@ -725,6 +551,195 @@
     </li>
   </ul>
 </main>
+
+<Modal
+  bind:this={modal}
+  bind:show
+  onClose={closeHandler}
+  class="w-[min(100%,36rem)]"
+  transitionName="modal"
+>
+  <div class="flex justify-between items-center text-gray-400 m-2">
+    <span class="view-time m-1 w-max">
+      {#if sSolve.penalty === Penalty.NONE || sSolve.penalty === Penalty.P2}
+        {sTimer(sSolve, true, true)}
+      {/if}
+      {#if sSolve.penalty === Penalty.P2}
+        <span class="font-small text-red-500">+2</span>
+      {/if}
+      {#if sSolve.penalty === Penalty.DNF}
+        <span class="font-small text-red-500">DNF</span>
+      {/if}
+      {#if sSolve.penalty === Penalty.DNS}
+        <span class="font-small text-red-500">DNS</span>
+      {/if}
+    </span>
+    <span class="flex items-center font-small">
+      <CalendarIcon width="1.2rem" height="1.2rem" />
+      <span class="ml-2">
+        {moment(sSolve.date).format("D MMM YYYY")} <br />
+        {moment(sSolve.date).format("HH:MM")}
+      </span>
+    </span>
+  </div>
+  <div
+    class={"algorithm-container text-gray-400 m-2 transition-all duration-300 delay-100 " +
+      (fComment || collapsed ? "collapsed" : "")}
+  >
+    <Dice5Icon />
+    <span bind:innerHTML={sSolve.scramble} contenteditable="false" class="text-center"></span>
+
+    <button
+      class="preview col-span-2 mb-2 mt-2 mx-auto overflow-hidden"
+      on:click={() => (collapsed = !collapsed)}
+    >
+      {#if preview}
+        <PuzzleImage src={preview} />
+      {:else}
+        <Spinner size="20" />
+      {/if}
+    </button>
+
+    {#if sSolve.steps}
+      <hr class="w-full border border-t-gray-400 col-span-2" />
+      <h3 class="text-gray-300 text-center col-span-2 mt-2 mb-8 text-lg">
+        {$localLang.global.steps}
+      </h3>
+
+      <div class="col-span-2 flex mb-4">
+        {#each solveSteps as s, p (p)}
+          <span
+            class="step-part text-gray-300"
+            data-percent={`${s}%`}
+            data-time={timer((sSolve.steps || [])[p], true, true)}
+            style={`
+                width: ${s}%;
+                background-color: ${STEP_COLORS[p]};
+                --p: ${p};
+              `}
+          ></span>
+        {/each}
+      </div>
+
+      <div class="col-span-2 flex mb-4 text-center -mt-4">
+        {#each solveSteps as s, p (p)}
+          <span style={`width: ${s}%; `}>{($session.settings.stepNames || [])[p] || ""}</span>
+        {/each}
+      </div>
+    {/if}
+
+    <CommentIcon />
+
+    <TextArea
+      blurOnEscape
+      on:focus={() => focusTextArea(true)}
+      on:blur={() => focusTextArea(false)}
+      cClass={fComment ? "max-h-[30ch]" : "max-h-[20ch]"}
+      getInnerText={parse}
+      class="border border-gray-400 text-sm"
+      bind:value={sSolve.comments}
+      placeholder={$localLang.TIMER.comment}
+    />
+  </div>
+  <div class="mt-2 flex flex-wrap justify-evenly gap-1">
+    <Button
+      color="none"
+      ariaLabel={$localLang.global.delete}
+      flat
+      class="text-red-500 hover:text-gray-200 hover:bg-red-800 text-sm gap-1 px-2"
+      on:click={() => {
+        _delete([sSolve]);
+        modal.close();
+      }}
+    >
+      <DeleteIcon />
+      {$localLang.global.delete}
+    </Button>
+
+    <Button
+      color="none"
+      ariaLabel={$localLang.global.cancel}
+      flat
+      on:click={() => modal.close()}
+      class="text-gray-400 hover:bg-gray-900 hover:text-gray-200 text-sm gap-1 px-2"
+    >
+      <CloseIcon />
+      {$localLang.global.cancel}
+    </Button>
+
+    <Button
+      color="none"
+      ariaLabel={$localLang.global.save}
+      flat
+      on:click={() => modal.close(sSolve)}
+      class="text-purple-400 hover:bg-purple-900 hover:text-gray-200 mr-2 text-sm gap-1 px-2"
+    >
+      <SendIcon />
+      {$localLang.global.save}
+    </Button>
+
+    {#if !reconstructionError}
+      <Button
+        color="none"
+        ariaLabel={$localLang.global.save}
+        flat
+        on:click={checkReconstruction}
+        class="text-green-400 hover:bg-green-900 hover:text-gray-200 mr-2 text-sm px-2"
+      >
+        {$localLang.global.reconstruction}
+      </Button>
+    {/if}
+
+    <Button color="none">
+      {[{ label: $localLang.TIMER.noPenalty, penalty: Penalty.NONE }, ...PENALTIES].find(
+        p => p.penalty === sSolve.penalty
+      )?.label || $localLang.TIMER.noPenalty}
+
+      <ChevronDown size="1.2rem" />
+    </Button>
+    <Dropdown bind:open={showDropdown}>
+      {#each [{ label: $localLang.TIMER.noPenalty, penalty: Penalty.NONE }, ...PENALTIES] as p}
+        <DropdownItem on:click={() => setPenalty(p.penalty)}>{p.label}</DropdownItem>
+      {/each}
+    </Dropdown>
+  </div>
+</Modal>
+
+<Modal bind:this={deleteAllModal} bind:show={showDeleteAll} onClose={deleteAllHandler}>
+  <h1 class="text-gray-400 mb-4 text-lg">{$localLang.TIMER.removeAllSolves}</h1>
+  <div class="flex justify-evenly">
+    <Button
+      color="alternative"
+      ariaLabel={$localLang.global.cancel}
+      on:click={() => deleteAllModal.close()}
+    >
+      {$localLang.global.cancel}
+    </Button>
+
+    <Button
+      color="red"
+      ariaLabel={$localLang.global.delete}
+      on:click={() => deleteAllModal.close(true)}
+    >
+      {$localLang.global.delete}
+    </Button>
+  </div>
+</Modal>
+
+<Modal bind:show={searchModal} class="max-w-xl w-full">
+  <AdvancedSearch
+    fields={[
+      { field: "time", name: "Time", type: "map", fn: t => timer(t, true) },
+      { field: "date", name: "Date", type: "date" },
+      { field: "comments", name: "Comments", type: "string" },
+    ]}
+    on:filters={f => {
+      filters = f.detail;
+      updatePaginator(null);
+    }}
+    bind:filters={advancedSearchFilters}
+  />
+</Modal>
 
 <style lang="postcss">
   #grid {
@@ -761,21 +776,6 @@
 
   .isVisible {
     @apply top-4 z-50 opacity-100 pointer-events-auto;
-  }
-
-  .paginator-item {
-    @apply rounded-md;
-  }
-
-  .paginator-item button {
-    @apply w-8 h-8 bg-violet-400 bg-opacity-30 grid place-items-center rounded-md cursor-pointer shadow-md
-    transition-all duration-300 select-none
-    
-    hover:bg-opacity-40 hover:text-gray-300;
-  }
-
-  .paginator-item.selected button {
-    @apply bg-violet-500 text-gray-200 bg-opacity-60 hover:bg-opacity-50;
   }
 
   .context-menu.active {

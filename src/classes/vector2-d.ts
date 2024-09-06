@@ -2,9 +2,9 @@ export class Vector2D {
   x: number;
   y: number;
 
-  constructor(x ?: number, y ?: number) {
+  constructor(x?: number, y?: number) {
     this.x = x || 0;
-    this.y = y || 0; 
+    this.y = y || 0;
   }
 
   static cross(a: Vector2D, b: Vector2D): number {
@@ -21,6 +21,10 @@ export class Vector2D {
 
   mul(f: number): Vector2D {
     return new Vector2D(this.x * f, this.y * f);
+  }
+
+  multiply(v: Vector2D): Vector2D {
+    return new Vector2D(this.x * v.x - this.y * v.y, this.x * v.y + this.y * v.x);
   }
 
   div(f: number): Vector2D {

@@ -51,6 +51,7 @@ export const Chinese: Language = {
     willRestart: "CubeDB 将在几秒钟内自动重新启动.",
     generatedByCubeDB: "由 CubeDB 生成",
     showBackFace: "显示背面",
+    filter: "篩選",
   },
   TUTORIALS: {
     easy: "简单",
@@ -224,6 +225,7 @@ export const Chinese: Language = {
     removeAllSolves: "你要删除所有解答吗?",
     removeSession: "你要删除这个会话吗?",
     select: "选择",
+    addFilter: "新增過濾器",
 
     // 统计标签
     totalTime: "总时间",

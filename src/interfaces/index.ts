@@ -266,6 +266,7 @@ export interface SessionSettings {
   showBackFace?: boolean;
   sessionType?: SessionType;
   mode?: string;
+  prob?: number;
   steps?: number;
   stepNames?: string[];
 }
@@ -408,8 +409,6 @@ export interface TimerContext {
   scramble: Writable<string>;
   group: Writable<number>;
   mode: Writable<{ 0: string; 1: string; 2: number }>;
-  hintDialog: Writable<boolean>;
-  hint: Writable<boolean>;
   preview: Writable<HTMLImgAttributes[]>;
   prob: Writable<number>;
   isRunning: Writable<boolean>;
@@ -811,6 +810,7 @@ export interface Language {
     willRestart: string;
     generatedByCubeDB: string;
     showBackFace: string;
+    filter: string;
   };
   TUTORIALS: {
     easy: string;
@@ -955,6 +955,7 @@ export interface Language {
     removeAllSolves: string;
     removeSession: string;
     select: string;
+    addFilter: string;
 
     // Stats Tab
     totalTime: string;

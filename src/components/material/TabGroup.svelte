@@ -1,14 +1,9 @@
-<script context="module">
-  export const TABS = {};
-</script>
-
 <script lang="ts">
   import type { Tab } from '@interfaces';
   import { Button } from 'flowbite-svelte';
 
   import { setContext } from 'svelte';
   import { writable } from 'svelte/store';
-  // import Button from './Button.svelte';
 
   const selectedTab = writable(0);
 
@@ -18,7 +13,7 @@
   export { cl as class };
   export let onChange = (tab?: number) => {};
 
-  setContext(TABS, {
+  setContext("TABS", {
     registerTab(tab: Tab) {
       tabs.push(tab);
       tabs.forEach((e, p) => e.index = p);

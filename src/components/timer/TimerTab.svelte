@@ -29,7 +29,6 @@
   import { DataService } from "@stores/data.service";
   import { NotificationService } from "@stores/notification.service";
   import { localLang } from "@stores/language.service";
-  import { screen } from "@stores/screen.store";
 
   // Handlers
   import { StackmatInput } from "./input-handlers/Stackmat";

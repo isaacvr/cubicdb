@@ -51,6 +51,7 @@ export const Spanish: Language = {
     willRestart: "CubeDB va a reiniciar de forma automática en unos segundos.",
     generatedByCubeDB: "Generado por CubeDB",
     showBackFace: "Caras traseras",
+    filter: "Filtrar",
   },
   TUTORIALS: {
     easy: "Fácil",
@@ -107,7 +108,7 @@ export const Spanish: Language = {
     timerFont: "Fuente del timer",
     screen: "Pantalla",
     zoomFactor: "Factor de zoom",
-    deleteStorage: "¿Está seguro que desea eliminar \"$1\"?",
+    deleteStorage: '¿Está seguro que desea eliminar "$1"?',
 
     // Update
     update: "Actualización",
@@ -117,7 +118,8 @@ export const Spanish: Language = {
     updateAvailableText: "Hay una nueva versión disponible de $1.",
     alreadyUpdated: "Actualizado",
     alreadyUpdatedText: "Ya tienes la última versión de $1.",
-    needsUpdate: "Hay una nueva versión de $1, pero necesitas al menos la versión $2 de CubeDB. Por favor, actualiza CubeDB para tener la última versión.",
+    needsUpdate:
+      "Hay una nueva versión de $1, pero necesitas al menos la versión $2 de CubeDB. Por favor, actualiza CubeDB para tener la última versión.",
 
     updateError: "Error",
     updateErrorText: "Hubo un error al intentar actualizar.",
@@ -226,6 +228,7 @@ export const Spanish: Language = {
     removeAllSolves: "¿Deseas eliminar todos los tiempos?",
     removeSession: "¿Desea eliminar esta sesión?",
     select: "Seleccionar",
+    addFilter: "Añadir filtro",
 
     // Stats Tab
     totalTime: "Tiempo total",

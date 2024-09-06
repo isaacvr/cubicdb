@@ -1,7 +1,7 @@
 <script lang="ts">
   import { between, calcPercents } from "@helpers/math";
-  import { getAverageS, trendLSV } from "@helpers/statistics";
-  import { formatHour, infinitePenalty, timer } from "@helpers/timer";
+  import { getAnomalies, getAverageS, trendLSV } from "@helpers/statistics";
+  import { formatHour, infinitePenalty, sTime, timer } from "@helpers/timer";
   import { newArr } from "@helpers/object";
   import {
     AverageSetting,
@@ -87,6 +87,8 @@
     const len = sv.length - 1;
     let avgs = [5, 12, 50, 100];
 
+    // let anomalies = getAnomalies(sv);
+
     // Series
     /// Ao5 to AoX
     let avgSerie: echarts.SeriesOption[] = avgs.map((e, i) => {
@@ -166,6 +168,14 @@
       ...avgSerie,
       bestSerie,
       ...trendSerie,
+      // {
+      //   name: "anomaly",
+      //   type: "scatter",
+      //   data: anomalies.map(r => [len - r.pos, r.val.time]),
+      //   itemStyle: { color: "#c2410c" },
+      //   symbolSize: 5, // Resaltar las anomalías
+      //   zlevel: 1, // Asegurar que estén sobre los otros puntos
+      // },
     ];
 
     let options: echarts.EChartsOption = {
@@ -239,7 +249,7 @@
             const value = Array.isArray(param.data) ? param.data[1] : param.data;
             const name: string = param.seriesName;
 
-            if (name.startsWith("Ao") && pos < +name.slice(2)) {
+            if ((name.startsWith("Ao") && pos < +name.slice(2)) || name.startsWith("anomaly")) {
               return;
             }
 
@@ -575,8 +585,6 @@
             },
           ],
         });
-
-      console.log("NEW DATA", stepTimeChart && !stepTimeChart.isDisposed());
 
       let percents = calcPercents(steps, $stats.avg.value);
 

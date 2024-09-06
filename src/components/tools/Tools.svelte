@@ -122,7 +122,7 @@
   let md = false;
 
   function selectedGroup() {
-    if (!isBetween($group + 0.1, 0, MENU.length - 1, true)) return;
+    if (!isBetween($group, 0, MENU.length - 1, true)) return;
     modes = MENU[$group][1];
     $mode = modes[0];
     selectedMode();

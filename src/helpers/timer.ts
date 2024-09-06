@@ -2,7 +2,7 @@ import { Penalty, type Solve } from "@interfaces";
 import { toInt } from "./math";
 
 export function timer(val: number, dec?: boolean, suff?: boolean): string {
-  if ( val === Infinity ) return "DNF";
+  if ( val === Infinity || val === -Infinity ) return "DNF";
   if ( isNaN(val) ) return (dec ? "0.00" : "0") + (suff ? 's' : '');
 
   let v = ~~(val / 10);
@@ -15,17 +15,15 @@ export function timer(val: number, dec?: boolean, suff?: boolean): string {
 
   let res = '';
   let sf = '';
-  let sec = false;
 
   if ( h ) {
     res = `${ h }h ${ m }:${ l2(s) }`;
   } else if ( m ) {
     res = `${ m }:${ l2(s) }`;
-    sf = dec ? '' : 'm';
+    sf = 'm';
   } else {
     res = `${ s }`;
     sf = 's';
-    sec = true;
   }
 
   return res + (dec ? `.${ l2(ms) }` : '') + (suff ? sf : '');
@@ -35,14 +33,14 @@ export function sTimer(s: Solve | null, dec?: boolean, suff?: boolean): string {
   if ( !s ) return (dec ? '0.00' : '0') + (suff ? 's' : '');
   if ( s.penalty === Penalty.DNS ) return 'DNS';
   if ( s.penalty === Penalty.DNF ) return 'DNF';
-  return timer(s.time, dec, suff);
+  return timer(s.time, dec, suff) + (s.penalty === Penalty.P2 ? "+" : "");
 }
 
 export function sTime(s: Solve | null): number {
   if ( !s ) return 0;
   if ( s.penalty === Penalty.DNS ) return Infinity;
   if ( s.penalty === Penalty.DNF ) return Infinity;
-  return s.time + (s.penalty === Penalty.P2 ? 2000 : 0);
+  return adjustMillis(s.time) + (s.penalty === Penalty.P2 ? 2000 : 0);
 }
 
 export function infinitePenalty(s: Solve): boolean {
@@ -67,9 +65,7 @@ export function adjustMillis(n: number, round = false): number {
   return !round ? toInt(n, 1) : Math.round(n / 10) * 10;
 }
 
-export function formatHour(n: number, long?: boolean): string {
-  if ( long ) return (n % 12) + 'h';
-
+export function formatHour(n: number): string {
   let res = (n % 12) || 12;
   let suff = ['am', 'pm'][ ~~(n >= 12) ];
   return res + suff;
