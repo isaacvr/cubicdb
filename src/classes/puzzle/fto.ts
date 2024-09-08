@@ -105,7 +105,6 @@ export function FTO(): PuzzleInterface {
   ];
 
   let trySingleMove = (mv: any): { pieces: Piece[]; u: Vector3D; ang: number } | null => {
-    console.log("MV: ", mv);
     let moveId = mv[0];
     let turns = mv[1];
     const pts1 = planes[moveId];
@@ -122,8 +121,6 @@ export function FTO(): PuzzleInterface {
         pcs.push(pieces[i]);
       }
     }
-
-    console.log("PIECES: ", pcs);
 
     return {
       pieces: pcs,
@@ -161,9 +158,6 @@ export function FTO(): PuzzleInterface {
     for (let i = 0; i < 50; i += 1) {
       let p = random(pieces) as Piece;
       let s = random(p.stickers.filter(s => /^[^xd]$/.test(s.color))) as Sticker;
-      if (!s) {
-        console.log(p.stickers.map(st => st.color));
-      }
       // let vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > EPS));
       // let pcs = fto.toMove(p, s, vec);
       // pcs.pieces.forEach((p: Piece) => p.rotate(CENTER, vec, pcs.ang, true));
@@ -171,7 +165,6 @@ export function FTO(): PuzzleInterface {
   };
 
   fto.applySequence = function (seq: string[]) {
-    console.log("SEQ: ", seq);
     let moves = seq.map(mv => ScrambleParser.parseMegaminx(mv)[0]);
     let res: { u: Vector3D; ang: number; pieces: string[] }[] = [];
 

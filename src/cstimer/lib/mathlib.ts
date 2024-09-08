@@ -1,3 +1,4 @@
+import { Isaac } from "@helpers/isaac";
 import { MersenneTwisterObject } from "./mersennetwister";
 
 export const Cnk: number[][] = [];
@@ -168,12 +169,12 @@ export class coord {
   }
 
   get(arr: number[]) {
-    if (this.type === 'p') return get8Perm(arr, this.length, this.evenbase);
+    if (this.type === "p") return get8Perm(arr, this.length, this.evenbase);
     return getNOri(arr, this.length, this.evenbase);
   }
-  
+
   set(arr: number[], idx: number) {
-    if (this.type === 'p') return set8Perm(arr, idx, this.length, this.evenbase);
+    if (this.type === "p") return set8Perm(arr, idx, this.length, this.evenbase);
     return setNOri(arr, idx, this.length, this.evenbase);
   }
 }
@@ -1145,16 +1146,16 @@ export class gSolver {
 }
 
 let randGen = (function () {
-  let rndFunc: MersenneTwisterObject;
+  let isaac = new Isaac();
   let rndCnt: number;
   let seedStr: string; // '' + new Date().getTime();
 
   function random() {
     rndCnt++;
-    return rndFunc.randomReal53();
+    return isaac.random();
   }
 
-  function getSeed() {
+  function getSeed(): any[] {
     return [rndCnt, seedStr];
   }
 
@@ -1164,12 +1165,12 @@ let randGen = (function () {
       for (let i = 0; i < _seedStr.length; i++) {
         seed[i] = _seedStr.charCodeAt(i);
       }
-      rndFunc = new MersenneTwisterObject(seed[0], seed);
+      isaac.seed(seed);
       rndCnt = 0;
       seedStr = _seedStr;
     }
     while (rndCnt < _rndCnt) {
-      rndFunc.randomReal53();
+      isaac.random();
       rndCnt++;
     }
   }

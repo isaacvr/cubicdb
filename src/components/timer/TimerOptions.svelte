@@ -12,6 +12,7 @@
     TableBody,
     TableBodyCell,
     TableBodyRow,
+    Input,
   } from "flowbite-svelte";
   import { DataService } from "@stores/data.service";
   import { NotificationService } from "@stores/notification.service";
@@ -45,6 +46,7 @@
   // import { ExternalTimerInput } from "./input-handlers/ExternalTimer";
 
   // ICONS
+  import WCACategory from "@components/wca/WCACategory.svelte";
   import TuneIcon from "@icons/Tune.svelte";
   import RefreshIcon from "@icons/Refresh.svelte";
   import PencilIcon from "@icons/PencilOutline.svelte";
@@ -57,7 +59,8 @@
   import ChartIcon from "@icons/ChartLineVariant.svelte";
   import MetronomeIcon from "@icons/Metronome.svelte";
   import Ao5Icon from "@icons/FormatListNumbered.svelte";
-  import WCACategory from "@components/wca/WCACategory.svelte";
+  import SeedIcon from "@icons/Leaf.svelte";
+  import { getSeed, setSeed } from "@cstimer/lib/mathlib";
 
   type TModal = "" | "edit-scramble" | "old-scrambles" | "settings";
 
@@ -102,8 +105,11 @@
   let modalData: any = null;
   let closeHandler: Function = () => {};
 
+  let showSeedModal = false;
+  let seedStr = "";
+  let seedCounter = 0;
+
   // OTHER
-  let externalTimers = dataService.externalTimers;
   let isSearching = false;
   let showToolsMenu = false;
   let connectingPos = -1;
@@ -376,6 +382,13 @@
     }
   }
 
+  function prepareShowSeedModal() {
+    let seed = getSeed();
+    seedCounter = seed[0];
+    seedStr = seed[1];
+    showSeedModal = true;
+  }
+
   onMount(() => {
     // addTool(tools[5]);
   });
@@ -511,6 +524,20 @@
     </Button>
   </li>
 
+  <li>
+    <Tooltip text="Seed ">
+      <Button
+        aria-label={"GAN Cube"}
+        color="none"
+        class={BUTTON_CLASS + " text-green-300"}
+        on:click={prepareShowSeedModal}
+      >
+        <SeedIcon size="100%" />
+      </Button>
+    </Tooltip>
+  </li>
+
+  <!-- Tools list -->
   <ul class="tool-container" class:open={toolList.some(t => t.open)}>
     {#each toolList as tool}
       <ToolFrame
@@ -795,6 +822,28 @@
       {/if}
     </div>
   </svelte:fragment>
+</Modal>
+
+<Modal bind:open={showSeedModal} size="xs" outsideclose title={"Seed"}>
+  <Input bind:value={seedStr} />
+  <Input type="number" bind:value={seedCounter} min={1} max={5000} />
+
+  <div class="flex justify-center gap-2">
+    <Button color="alternative" on:click={() => (showSeedModal = false)}>
+      {$localLang.global.cancel}
+    </Button>
+    <Button color="purple" on:click={prepareShowSeedModal}>{$localLang.global.reset}</Button>
+    <Button
+      color="green"
+      on:click={() => {
+        setSeed(seedCounter, seedStr);
+        initScrambler();
+        showSeedModal = false;
+      }}
+    >
+      {$localLang.global.update}
+    </Button>
+  </div>
 </Modal>
 
 <style lang="postcss">
