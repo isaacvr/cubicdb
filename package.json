@@ -1,7 +1,7 @@
 {
   "name": "cube-db",
   "productName": "CubeDB",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "The definitive speedcubing app",
   "homepage": "https://github.com/isaacvr/cubedb-svelte",
   "repository": {

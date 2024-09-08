@@ -274,6 +274,23 @@ export class ScrambleParser {
     return res;
   }
 
+  static parseFTO(scramble: string) {
+    let res = [];
+    let moveReg = /(BL|BR|[URFDLB])'?/g;
+    let moves = scramble.match(moveReg);
+    const moveMap = ["U", "R", "F", "D", "L", "B", "BR", "BL"];
+
+    if (!moves) return [];
+
+    for (let i = 0, maxi = moves.length; i < maxi; i += 1) {
+      let mv = moves[i];
+      let turns = mv.endsWith("'") ? -1 : 1;
+      res.push([moveMap.indexOf(turns < 0 ? mv.slice(0, -1) : mv), -turns]);
+    }
+
+    return res;
+  }
+
   static parseClock(scramble: string) {
     let parts = scramble.replace("\\n", " ").split(/\s+/g);
     let res: number[][] = [];
@@ -420,7 +437,8 @@ export class ScrambleParser {
       case "233":
       case "334":
       case "336":
-      case "ssq1t": {
+      case "ssq1t":
+      case "fto": {
         return [scramble];
       }
 

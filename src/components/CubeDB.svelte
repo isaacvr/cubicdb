@@ -84,7 +84,7 @@
 <Card class="mx-auto w-full max-w-3xl mt-8 flex flex-col gap-2 items-center mb-8">
   <!-- Logo -->
   <section>
-    <img src="/assets/logo-500.png" alt="" class="w-[10rem] h-[10rem]">
+    <img src="/assets/logo_dark.svg" alt="" class="w-[10rem] h-[10rem]">
   </section>
 
   <hr>

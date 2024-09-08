@@ -733,6 +733,8 @@ export class Puzzle {
       moves = [seq];
     } else if (this.type === "supersquare1") {
       moves = ScrambleParser.parseSuperSquare1(seq);
+    } else if (this.type === "fto") {
+      moves = ScrambleParser.parseFTO(seq);
     } else {
       return this;
     }

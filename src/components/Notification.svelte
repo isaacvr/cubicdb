@@ -54,9 +54,9 @@
 >
   {#if icon}
     {#if typeof icon === "string"}
-      <Avatar slot="icon" src={icon} class="text-gray-300"/>
+      <Avatar slot="icon" src={icon} class="text-gray-300 aspect-square"/>
     {:else}
-      <svelte:component this={icon} slot="icon" size="1.2rem" class="text-gray-300"/>
+      <svelte:component this={icon} slot="icon" size="1.2rem" class="text-gray-300 aspect-square"/>
     {/if}
   {/if}
 

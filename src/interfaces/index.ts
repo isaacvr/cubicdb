@@ -38,6 +38,7 @@ export const PuzzleTypeName = [
   "windmill",
   "helicopter",
   "supersquare1",
+  "fto",
 ] as const;
 
 export declare type PuzzleType = (typeof PuzzleTypeName)[number];
@@ -889,7 +890,7 @@ export interface Language {
       deviation: string;
       mo3: string;
       ao5: string;
-    },
+    };
 
     // Stackmat
     stackmatAvailableHeader: string;

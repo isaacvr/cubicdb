@@ -232,7 +232,7 @@ function createWindow() {
       backgroundThrottling: false,
       preload: join(__dirname, "preload.js"),
     },
-    icon: join(__dirname, "../public/assets", "icon-big.png"),
+    icon: join(__dirname, "../public/assets", "icon.png"),
   });
 
   // Enable SharedArrayBuffer

@@ -46,7 +46,7 @@
   export let enableRotation = true;
   export let gui = true;
   export let contained = false;
-  export let selectedPuzzle: PuzzleType = "megaminx";
+  export let selectedPuzzle: PuzzleType = "fto";
   export let order = 3;
   export let animationTime = $screen.isMobile ? 150 : 200; /// Default animation time: 200ms
   export let showBackFace = false;
@@ -180,7 +180,7 @@
   }
 
   export async function handleSequence(s: string[], scr: string) {
-    if (!mounted) return;
+    if (!mounted || (s.length === 0 && scr === "")) return;
 
     let nc: Puzzle;
 

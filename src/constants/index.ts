@@ -187,6 +187,7 @@ export const MISC = [
   ['334'],
   ['336'],
   ['ssq1t'],
+  ['fto'],
 ];
 
 export const ICONS = [
@@ -210,7 +211,7 @@ export const ICONS = [
   { icon: "333cross", name: 'Cross', scrambler: '333cross' },
 ] as const;
 
-export const CubeDBICON = '/assets/logo-100.png';
+export const CubeDBICON = '/assets/logo_dark.svg';
 
 const OPTS: PuzzleOptions[] = [
   { type: 'rubik', order: [2] }, { type: 'rubik', order: [3] }, { type: 'rubik', order: [4] },
@@ -246,6 +247,7 @@ const OPTS_MISC: PuzzleOptions[][] = [
   [{ type: 'rubik', order: [3, 3, 4] }],
   [{ type: 'rubik', order: [3, 3, 6] }],
   [{ type: 'supersquare1' }],
+  [{ type: 'fto' }],
 ];
 
 const MODES = [R222, R333, R444, R555, R666, R777, PYRA, SKWB, SQR1, CLCK, MEGA, KILO, GIGA];

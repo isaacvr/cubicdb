@@ -1,19 +1,17 @@
-import type { Piece } from "@classes/puzzle/Piece";
 import type { Sticker } from "@classes/puzzle/Sticker";
 import type { Puzzle } from "@classes/puzzle/puzzle";
 import { roundStickerCorners } from "@classes/puzzle/puzzleUtils";
-import { Vector2D } from "@classes/vector2-d";
 import { BACK, CENTER, DOWN, FRONT, LEFT, RIGHT, UP, Vector3D } from "@classes/vector3d";
 import { CubeMode, EPS } from "@constants";
 import type { PuzzleType } from "@interfaces";
 import { drawStickers } from "./utils";
-import { getColoredFromList } from "@classes/reconstructors/utils";
 import { CanvasGenerator } from "./classes/CanvasGenerator";
 import { SVGGenerator } from "./classes/SVGGenerator";
 
 const PI = Math.PI;
 const PI_2 = PI / 2;
 const PI_3 = PI / 3;
+const PI_4 = PI / 4;
 const PI_6 = PI / 6;
 
 function getRoundedSQ1Sticker(
@@ -162,6 +160,13 @@ export function projectedView(cube: Puzzle, DIM: number, format: "raster" | "svg
     }
   } else if (cube.type === "supersquare1") {
     faceName = ["U", "U1", "D1", "D"];
+  } else if (cube.type === "fto") {
+    faceName = ["F1", "F2", "F3", "F4", "B1", "B2", "B3", "B4"];
+    fcTr = [];
+
+    for (let i = 0; i < 8; i += 1) {
+      fcTr.push([CENTER, RIGHT, Math.asin(0.5773502691896258), CENTER, 0]);
+    }
   }
 
   for (let i = 0, maxi = faceName.length; i < maxi; i += 1) {
@@ -178,6 +183,7 @@ export function projectedView(cube: Puzzle, DIM: number, format: "raster" | "svg
     "pyraminxCrystal",
     "redi",
     "helicopter",
+    "fto",
   ];
 
   for (let i = 0, maxi = stickers.length; i < maxi; i += 1) {
@@ -353,6 +359,8 @@ export function projectedView(cube: Puzzle, DIM: number, format: "raster" | "svg
         }
       }
     }
+  } else if (cube.type === "fto") {
+    faceName.slice(4).forEach(name => sideStk[name].forEach(st => st.rotate(RIGHT.mul(1.1), UP, PI, true)));
   }
 
   let allStickers: Sticker[] = [];
