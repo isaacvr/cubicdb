@@ -22,7 +22,7 @@
   import I333Cross from "./I333Cross.svelte";
   import FundamentalsIcon from "@icons/HumanMaleBoardPoll.svelte";
 
-  export let icon: Scrambler | "fundamentals" | "" = "333";
+  export let icon: any = "333";
   export let size = "2rem";
   export let selected = false;
   export let width = size;
@@ -46,7 +46,7 @@
   }
 
   function findIcon(ic: string): Scrambler | "fundamentals" | null {
-    if ( ic === "fundamentals" ) return ic;
+    if (ic === "fundamentals") return ic;
 
     for (let i = 0, maxi = ICONS.length; i < maxi; i += 1) {
       let scr = ICONS[i].scrambler;

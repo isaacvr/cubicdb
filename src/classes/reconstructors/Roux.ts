@@ -1,14 +1,8 @@
 import { Puzzle } from "@classes/puzzle/puzzle";
-import type { IReconstructor, ReconstructorMethod, ReconstructorStep } from "./interfaces";
+import type { IReconstructor, ReconstructorMethod } from "./interfaces";
 import type { Piece } from "@classes/puzzle/Piece";
 import { Vector3D } from "@classes/vector3d";
-import {
-  piecesCorrectRelative,
-  pieceInCenter,
-  pieceInCenterColor,
-  getColoredStickers,
-  nonGray,
-} from "./utils";
+import { piecesCorrectRelative, pieceInCenterColor, getColoredStickers, nonGray } from "./utils";
 import { EPS } from "@constants";
 import { calcPercents, sum } from "@helpers/math";
 

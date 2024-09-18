@@ -68,29 +68,28 @@
     {
       type: "date",
       code: "date_equal",
-      fn: (n: number, m: Moment) => {
-        return moment(n).diff(m, "days") === 0;
-      },
+      fn: (n: number, m: Moment) => moment(n).isSame(m, "days"),
     },
     {
       type: "date",
       code: "date_after",
-      fn: (n: number, m: Moment) => moment(n).diff(m, "days") > 0,
+      fn: (n: number, m: Moment) => moment(n).isAfter(m, "days"),
+    },
+    {
+      type: "date",
+      code: "date_after_eq",
+      fn: (n: number, m: Moment) => moment(n).isSameOrAfter(m, "days"),
     },
     {
       type: "date",
       code: "date_before",
-      fn: (n: number, m: Moment) => moment(n).diff(m, "days") < 0,
+      fn: (n: number, m: Moment) => moment(n).isBefore(m, "days"),
     },
-    // {
-    //   type: "date",
-    //   code: "date_between",
-    //   fn: (n: number, a: number, b: number) => {
-    //     let d1 = moment(n).diff(moment(a), "days");
-    //     let d2 = moment(n).diff(moment(b), "days");
-    //     return d1 * d2 <= 0;
-    //   },
-    // },
+    {
+      type: "date",
+      code: "date_before_eq",
+      fn: (n: number, m: Moment) => moment(n).isSameOrBefore(m, "days"),
+    },
   ];
 
   function getFilter(type: SearchFilter["type"]) {
@@ -189,7 +188,7 @@
           bind:value={filter.filter}
           items={getFilter(filter.field.type)}
           transform={e => e}
-          label={e => e.code.split("_")[1]}
+          label={e => e.code.split("_").slice(1).join("-")}
           onChange={e => selectFilter(filter, e)}
         />
         <Input

@@ -52,6 +52,7 @@ export const Spanish: Language = {
     generatedByCubeDB: "Generado por CubeDB",
     showBackFace: "Caras traseras",
     filter: "Filtrar",
+    date: "Fecha"
   },
   TUTORIALS: {
     easy: "Fácil",
@@ -677,6 +678,6 @@ export const Spanish: Language = {
         ["234567", "r234567", 0],
       ],
     ],
-    ["Otros", [["FTO (Face-Turning Octahedron)", "fto", 25]]],
+    ["FTO (Face-Turning Octahedron)", [["Aleatorio", "fto", 25]]],
   ],
 };

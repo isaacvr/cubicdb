@@ -158,9 +158,13 @@ export function FTO(): PuzzleInterface {
     for (let i = 0; i < 50; i += 1) {
       let p = random(pieces) as Piece;
       let s = random(p.stickers.filter(s => /^[^xd]$/.test(s.color))) as Sticker;
-      // let vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > EPS));
-      // let pcs = fto.toMove(p, s, vec);
-      // pcs.pieces.forEach((p: Piece) => p.rotate(CENTER, vec, pcs.ang, true));
+      if (!s) {
+        i -= 1;
+        continue;
+      }
+      let vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > EPS));
+      let pcs = fto.toMove(p, s, vec);
+      pcs.pieces.forEach((p: Piece) => p.rotate(CENTER, vec, pcs.ang, true));
     }
   };
 
@@ -194,6 +198,8 @@ export function FTO(): PuzzleInterface {
   const commonVecs = pieces[0].stickers.map(st => st.getOrientation());
 
   fto.faceVectors = [...commonVecs, ...commonVecs.map(v => v.mul(-1))].map(v => v.clone());
+
+  pieces.forEach(pcs => pcs.stickers.forEach(st => (st.vecs = commonVecs.map(v => v.clone()))));
 
   assignColors(fto, fto.faceColors);
 

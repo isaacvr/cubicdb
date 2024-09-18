@@ -9,7 +9,7 @@
     type TimerContext,
   } from "@interfaces";
   import { DataService } from "@stores/data.service";
-  import { infinitePenalty, sTimer, timer } from "@helpers/timer";
+  import { infinitePenalty, isMo3, sTimer, timer } from "@helpers/timer";
   import Modal from "@components/Modal.svelte";
   import Tooltip from "@components/material/Tooltip.svelte";
   import TextArea from "@components/material/TextArea.svelte";
@@ -35,8 +35,11 @@
   import SelectIcon from "@icons/Select.svelte";
   import CopyIcon from "@icons/ClipboardOutline.svelte";
   import FilterIcon from "@icons/Filter.svelte";
+  import Avg3Icon from "@icons/Numeric3BoxOutline.svelte";
+  import Avg5Icon from "@icons/Numeric5BoxOutline.svelte";
+  import Avg12Icon from "@icons/DiceD12Outline.svelte";
 
-  import { getAverageS } from "@helpers/statistics";
+  import { getAverageS, solveSummary } from "@helpers/statistics";
   import { NotificationService } from "@stores/notification.service";
   import { derived, type Readable } from "svelte/store";
   import { globalLang } from "@stores/language.service";
@@ -257,7 +260,6 @@
   }
 
   function updatePaginator(s: any) {
-    console.log("FILTERS: ", filters);
     fSolves = $solves.filter(sv => filters.every(f => f(sv)));
     pg.setData(fSolves);
 
@@ -306,8 +308,17 @@
   function handleContextMenu(e: MouseEvent, s: Solve) {
     e.stopPropagation();
     e.preventDefault();
-    contextMenuElement.style.left = e.clientX + "px";
-    contextMenuElement.style.top = e.clientY + "px";
+
+    const dims = contextMenuElement.getBoundingClientRect();
+    const zoom = ~~document.documentElement.style.getPropertyValue("--zoom-factor") || 1;
+    const footerHeight = 2.5 * 16 * zoom;
+    const sideSpace = 2.5 * 16 * zoom;
+    const avalHeight = document.body.clientHeight - footerHeight;
+    const avalWidth = document.body.clientWidth - sideSpace;
+
+    contextMenuElement.style.left = Math.min(e.clientX, avalWidth - dims.width) + "px";
+    contextMenuElement.style.top = Math.min(e.clientY, avalHeight - dims.height) + "px";
+
     sSolve = s;
 
     if (sSolve.steps) {
@@ -373,6 +384,31 @@
 
   async function focusTextArea(f: boolean) {
     setTimeout(() => (fComment = f), 100);
+  }
+
+  function solveIndex(sv: Solve) {
+    if (!sv) return -1;
+
+    for (let i = 0, maxi = $solves.length; i < maxi; i += 1) {
+      if ($solves[i]._id === sv._id) {
+        return maxi - i;
+      }
+    }
+
+    return -1;
+  }
+
+  function copyAverage(sv: Solve, n: number) {
+    let idx = $solves.length - solveIndex(sv);
+    let arr = $solves.slice(idx, idx + n);
+
+    copyToClipboard(solveSummary(arr)).then(() => {
+      notification.addNotification({
+        header: $localLang.global.done,
+        text: $localLang.global.copiedToClipboard,
+        timeout: 1000,
+      });
+    });
   }
 
   $: updatePaginator($solves);
@@ -543,6 +579,26 @@
         {$localLang.TIMER.copyScramble}
       </button>
     </li>
+    {#if solveIndex(sSolve) >= (isMo3($session.settings.mode || "") ? 3 : 5)}
+      <li>
+        <button on:click={() => copyAverage(sSolve, isMo3($session.settings.mode || "") ? 3 : 5)}>
+          {#if isMo3($session.settings.mode || "")}
+            <Avg3Icon /> {$localLang.global.copy} Mo3
+          {:else}
+            <Avg5Icon /> {$localLang.global.copy} Ao5
+          {/if}
+        </button>
+      </li>
+    {/if}
+
+    {#if solveIndex(sSolve) >= 12}
+      <li>
+        <button on:click={() => copyAverage(sSolve, 12)}>
+          <Avg12Icon />
+          {$localLang.global.copy} Ao12
+        </button>
+      </li>
+    {/if}
     <li>
       <button on:click={() => _delete([sSolve])}>
         <DeleteIcon />
@@ -729,9 +785,9 @@
 <Modal bind:show={searchModal} class="max-w-xl w-full">
   <AdvancedSearch
     fields={[
-      { field: "time", name: "Time", type: "map", fn: t => timer(t, true) },
-      { field: "date", name: "Date", type: "date" },
-      { field: "comments", name: "Comments", type: "string" },
+      { field: "time", name: $localLang.global.time, type: "map", fn: t => timer(t, true) },
+      { field: "date", name: $localLang.global.date, type: "date" },
+      { field: "comments", name: $localLang.TIMER.comments, type: "string" },
     ]}
     on:filters={f => {
       filters = f.detail;

@@ -4,7 +4,7 @@
   import { type TimerContext, type Solve, AverageSetting } from "@interfaces";
   import { localLang } from "@stores/language.service";
   import { Button, Modal, Popover } from "flowbite-svelte";
-  import { getAverageS } from "@helpers/statistics";
+  import { getAverageS, solveSummary } from "@helpers/statistics";
   import { copyToClipboard } from "@helpers/strings";
   import { NotificationService } from "@stores/notification.service";
   import moment from "moment";
@@ -20,35 +20,7 @@
 
   function summary(n: number) {
     let sv = $solves.slice(0, n).reverse();
-    let minTime = (a: Solve, b: Solve) => {
-      if (infinitePenalty(a)) return b;
-      if (infinitePenalty(b)) return a;
-      return a.time < b.time ? a : b;
-    };
-
-    let minMax = sv.reduce(
-      (acc, s) => [minTime(acc[0], s) === s ? s : acc[0], minTime(acc[1], s) === s ? acc[1] : s],
-      [sv[0], sv[0]]
-    );
-
-    let avg = getAverageS(n, sv, AverageSetting.SEQUENTIAL)[n - 1];
-
-    textSummary = `${$localLang.global.generatedByCubeDB} - ${moment().format("DD/MM/YYYY hh:mma")}
-    ${n === 3 ? "M" : "A"}o${n}: ${avg ? timer(avg, true, true) : "DNF"}
-    
-    ${sv
-      .map(
-        (s, p) =>
-          `${p + 1}. ${
-            s === minMax[0] || s === minMax[1]
-              ? "(" + sTimer(s, true, true) + ")"
-              : sTimer(s, true, true)
-          } - ${s.scramble}`
-      )
-      .join("\n\n")}`
-      .split("\n")
-      .map(s => s.trimStart())
-      .join("\n");
+    textSummary = solveSummary(sv);
     showModal = true;
   }
 

@@ -7,9 +7,12 @@ import {
   type Statistics,
   type TurnMetric,
 } from "@interfaces";
-import { adjustMillis, infinitePenalty, sTime } from "./timer";
+import { adjustMillis, infinitePenalty, sTime, sTimer, timer } from "./timer";
 import { scrambleReg } from "@classes/scramble-parser";
 import { newArr } from "./object";
+import moment from "moment";
+import { localLang } from "@stores/language.service";
+import { get } from "svelte/store";
 
 export const INITIAL_STATISTICS: Statistics = {
   best: { value: 0, better: false, prev: Infinity },
@@ -524,4 +527,37 @@ export function autocorrelate(values: number[]): number[] {
   }
 
   return result;
+}
+
+export function solveSummary(sv: Solve[]) {
+  let n = sv.length;
+  let minTime = (a: Solve, b: Solve) => {
+    if (infinitePenalty(a)) return b;
+    if (infinitePenalty(b)) return a;
+    return a.time < b.time ? a : b;
+  };
+
+  let minMax = sv.reduce(
+    (acc, s) => [minTime(acc[0], s) === s ? s : acc[0], minTime(acc[1], s) === s ? acc[1] : s],
+    [sv[0], sv[0]]
+  );
+
+  let avg = getAverageS(n, sv, AverageSetting.SEQUENTIAL)[n - 1];
+
+  return `${get(localLang).global.generatedByCubeDB} - ${moment().format("DD/MM/YYYY hh:mma")}
+  ${n === 3 ? "M" : "A"}o${n}: ${avg ? timer(avg, true, true) : "DNF"}
+  
+  ${sv
+    .map(
+      (s, p) =>
+        `${p + 1}. ${
+          s === minMax[0] || s === minMax[1]
+            ? "(" + sTimer(s, true, true) + ")"
+            : sTimer(s, true, true)
+        } - ${s.scramble}`
+    )
+    .join("\n\n")}`
+    .split("\n")
+    .map(s => s.trimStart())
+    .join("\n");
 }

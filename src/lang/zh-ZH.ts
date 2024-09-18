@@ -52,6 +52,7 @@ export const Chinese: Language = {
     generatedByCubeDB: "由 CubeDB 生成",
     showBackFace: "显示背面",
     filter: "篩選",
+    date: "日期",
   },
   TUTORIALS: {
     easy: "简单",
@@ -670,6 +671,6 @@ export const Chinese: Language = {
         ["234567 接力赛", "r234567", 0],
       ],
     ],
-    ["Other", [["FTO (Face-Turning Octahedron)", "fto", 25]]],
+    ["FTO (Face-Turning Octahedron)", [["随机", "fto", 25]]],
   ],
 };

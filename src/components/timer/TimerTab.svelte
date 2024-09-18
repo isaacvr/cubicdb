@@ -444,6 +444,7 @@
       }
 
       case "facelet": {
+        simulator
         simulator.fromFacelet(data);
         break;
       }
@@ -555,11 +556,12 @@
 <div
   class:timerOnly
   class:scrambleOnly
+  class:battle
   class="timer-tab w-full h-full"
   class:smart_cube={$session.settings.input === "GAN Cube"}
 >
   <!-- Options -->
-  {#if !scrambleOnly}
+  {#if !scrambleOnly && !battle}
     <TimerOptions
       {battle}
       {bluetoothBattery}
@@ -859,6 +861,15 @@
     grid-template-areas: "scramble";
   }
 
+  .timer-tab.battle {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    grid-template-areas:
+      "scramble"
+      "timer"
+      "image";
+  }
+
   .timer-tab.scrambleOnly #scramble {
     margin-top: 4rem;
   }
@@ -873,7 +884,7 @@
   }
 
   #scramble {
-    @apply grid h-full;
+    @apply grid h-full place-items-center grid-cols-1;
     grid-area: scramble;
   }
 
@@ -887,6 +898,7 @@
   #scramble .scramble-content.battle {
     margin: 0;
     max-height: 9rem;
+    text-align: center;
   }
 
   #scramble .scramble-content mark {

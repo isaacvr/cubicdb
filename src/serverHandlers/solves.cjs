@@ -81,4 +81,17 @@ module.exports = (ipcMain, Solves, dbPath) => {
       });
     });
   });
+
+  Solves.find({}).exec((err, docs) => {
+    if (err) return;
+    let cant = 0;
+
+    docs.forEach(sv => {
+      let cnt = sv.time % 10 ? 1 : 0;
+      cant += cnt;
+      cnt && Solves.update({ _id: sv._id }, { $set: { time: Math.floor(sv.time / 10) * 10 } });
+    });
+
+    cant && console.log("%d times with error", cant);
+  });
 };

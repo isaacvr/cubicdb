@@ -40,7 +40,7 @@
       {
         title: HOME.battle,
         route: "/battle",
-        ready: showPrivate,
+        ready: true,
         cube: "/assets/battle.png",
       },
       {

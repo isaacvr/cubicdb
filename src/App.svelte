@@ -18,7 +18,6 @@
   import { screen } from "@stores/screen.store";
   import { DataService } from "@stores/data.service";
   import { version } from "@stores/version.store";
-  import Reconstruction from "@components/Reconstruction.svelte";
 
   let dataService = DataService.getInstance();
   let notService = NotificationService.getInstance();

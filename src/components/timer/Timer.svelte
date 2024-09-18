@@ -384,7 +384,7 @@
       // let cfop = new CFOP(Puzzle.fromSequence($scramble, { type: 'rubik' }).toFacelet());
       // cfop.getAnalysis();
 
-      // console.log("MODE: ", md);
+      console.log("MODE: ", md);
       if (all.pScramble.options.has(md) && $session?.settings?.genImage) {
         // console.log("HAS", md);
         updateImage(md);
@@ -604,7 +604,7 @@
   onMount(() => {
     testPrediction();
     mounted = true;
-    // tabs.nextTab();
+    tabs.nextTab();
 
     if (timerOnly && scrambleOnly) {
       timerOnly = scrambleOnly = false;
@@ -683,7 +683,10 @@
 
 <svelte:window on:keyup={handleKeyUp} />
 
-<main class={"w-full " + (scrambleOnly || timerOnly ? "h-full" : "h-[calc(100vh-3rem)] pt-14")}>
+<main
+  class={"w-full " +
+    (scrambleOnly || timerOnly || battle ? "h-full" : "h-[calc(100vh-3rem)] pt-14")}
+>
   {#if timerOnly || scrambleOnly}
     <TimerTab {timerOnly} {scrambleOnly} {context} {battle} {enableKeyboard} />
   {:else if battle}

@@ -571,6 +571,7 @@ export class Puzzle {
     let s = inv ? Puzzle.inverse(options.type, scramble) : scramble;
 
     p.options.sequence = s;
+
     try {
       move && p.move(s);
     } catch {}
@@ -579,7 +580,7 @@ export class Puzzle {
 
   static fromFacelet(facelet: string, type: PuzzleType): Puzzle {
     if (!/^[UDLRFB]+$/.test(facelet) || facelet.length % 6 != 0) {
-      return Puzzle.fromSequence("", { type: "rubik" });
+      return Puzzle.fromSequence("", { type });
     }
 
     let order = ~~Math.sqrt(facelet.length / 6);
@@ -600,7 +601,9 @@ export class Puzzle {
   }
 
   toFacelet(): string {
-    if (!(this.type === "rubik" || this.type === "icarry")) return "";
+    if (!(this.type === "rubik" || this.type === "icarry")) {
+      return "";
+    }
 
     let colors = "URFDLB";
     let vecs = this.p.faceVectors;
@@ -711,7 +714,7 @@ export class Puzzle {
   move(seq: string) {
     let moves: any[];
 
-    if (["rubik", "axis", "fisher"].indexOf(this.type) > -1) {
+    if (["rubik", "icarry", "axis", "fisher"].indexOf(this.type) > -1) {
       moves = ScrambleParser.parseNNN(seq, this.order);
     } else if (this.type === "pyraminx") {
       moves = ScrambleParser.parsePyraminx(seq);

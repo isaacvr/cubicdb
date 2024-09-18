@@ -507,12 +507,12 @@ export function getF2LScramble(_type: any, _length: any, prob: any) {
 
   */
   let p = between(prob || 0, 0, crossProbs.length - 1);
+  let _prob = crossProbs[p];
 
   if (typeof prob != "number" || prob < 0 || prob >= crossProbs.length) {
-    p = between(Math.round(Math.random() * crossProbs.length), 0, crossProbs.length - 1);
+    _prob = rndEl(crossProbs);
   }
 
-  const _prob = crossProbs[p];
   return getAnyScramble(_prob[0], _prob[1], 0xffffffff, 0xffffffff);
 }
 

@@ -438,8 +438,18 @@ export class ScrambleParser {
       case "334":
       case "336":
       case "ssq1t":
-      case "fto": {
+      case "fto":
+      case "sfl": {
         return [scramble];
+      }
+
+      case "133": {
+        return [
+          scramble
+            .split(" ")
+            .map(mv => mv[0] + "2")
+            .join(" "),
+        ];
       }
 
       default: {

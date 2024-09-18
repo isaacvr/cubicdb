@@ -1,4 +1,4 @@
-import { get, writable, type Writable } from "svelte/store";
+import { get, writable } from "svelte/store";
 import { isEscape, isSpace, type Actor } from "@helpers/stateMachine";
 import {
   TimerState,

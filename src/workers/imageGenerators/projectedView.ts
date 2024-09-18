@@ -65,14 +65,12 @@ function getRoundedSQ1Sticker(
 }
 
 export function projectedView(cube: Puzzle, DIM: number, format: "raster" | "svg" = "svg"): string {
-  // const canvas = document.createElement("canvas");
-  // const ctx = canvas.getContext("2d", { willReadFrequently: true })!;
-
   let W = (DIM * 4) / 2;
   let H = (DIM * 3) / 2;
   const FACTOR = 2.1;
   let LW = DIM * 0.007;
   const SPECIAL_SQ1 = [CubeMode.CS, CubeMode.EO, CubeMode.CO];
+  const ORDER = cube.order;
 
   const getFactor = () => {
     if (
@@ -85,6 +83,7 @@ export function projectedView(cube: Puzzle, DIM: number, format: "raster" | "svg
     return FACTOR;
   };
 
+  // Set dimensions
   if (cube.type === "pyraminx") {
     H = W / 1.1363636363636365;
   } else if (cube.type === "square1" || cube.type === "square2") {
@@ -137,6 +136,7 @@ export function projectedView(cube: Puzzle, DIM: number, format: "raster" | "svg
     SQ1_A2.push(BACK.rotate(CENTER, UP, PI_6 * i + PI_6 / 2).mul(1.88561808632825));
   }
 
+  // Set face names and transformations
   if (cube.type === "pyraminx") {
     faceName = ["F", "R", "D", "L"];
   } else if (cube.type === "square1" || cube.type === "square2") {
@@ -167,6 +167,19 @@ export function projectedView(cube: Puzzle, DIM: number, format: "raster" | "svg
     for (let i = 0; i < 8; i += 1) {
       fcTr.push([CENTER, RIGHT, Math.asin(0.5773502691896258), CENTER, 0]);
     }
+  } else if (cube.type === "rubik") {
+    let unit = 2 / Math.max(ORDER.a, ORDER.b, ORDER.c);
+    let sideMult = ORDER.a === 3 && ORDER.b === 1 && ORDER.c === 3 ? 2 : 1;
+
+    fcTr = [
+      // rotate([0], [1], [2]).add([3].mul([4]))
+      [CENTER, RIGHT, PI_2, UP, (sideMult * unit * (ORDER.b + ORDER.c + 1)) / 2],
+      [CENTER, UP, -PI_2, RIGHT, (sideMult * unit * (ORDER.a + ORDER.b + 1)) / 2],
+      [CENTER, RIGHT, 0, UP, 0], /// F = no transform
+      [CENTER, LEFT, PI_2, DOWN, (sideMult * unit * (ORDER.b + ORDER.c + 1)) / 2],
+      [CENTER, UP, PI_2, LEFT, (sideMult * unit * (ORDER.a + ORDER.b + 1)) / 2],
+      [CENTER, UP, PI, RIGHT, sideMult * unit * (ORDER.a + ORDER.b + 1)],
+    ];
   }
 
   for (let i = 0, maxi = faceName.length; i < maxi; i += 1) {
@@ -360,7 +373,9 @@ export function projectedView(cube: Puzzle, DIM: number, format: "raster" | "svg
       }
     }
   } else if (cube.type === "fto") {
-    faceName.slice(4).forEach(name => sideStk[name].forEach(st => st.rotate(RIGHT.mul(1.1), UP, PI, true)));
+    faceName
+      .slice(4)
+      .forEach(name => sideStk[name].forEach(st => st.rotate(RIGHT.mul(1.1), UP, PI, true)));
   }
 
   let allStickers: Sticker[] = [];

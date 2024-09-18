@@ -654,46 +654,6 @@
       </section>
     {/if}
 
-    <!-- Inspections, Prevention, Elapsed time -->
-    {#if modalData.settings.input === "Keyboard" || modalData.settings.input === "ExternalTimer"}
-      <section class="flex flex-wrap gap-4 items-center">
-        <Checkbox
-          bind:checked={modalData.settings.hasInspection}
-          class="w-5 h-5"
-          label={$localLang.TIMER.inspection +
-            (modalData.settings.hasInspection ? ` (${modalData.settings.inspection})s` : "")}
-        />
-
-        {#if modalData.settings.hasInspection}
-          <Range
-            class="w-52 mx-auto"
-            bind:value={modalData.settings.inspection}
-            min={5}
-            max={60}
-            step="5"
-          />
-        {/if}
-      </section>
-
-      <section>
-        <Checkbox
-          bind:checked={modalData.settings.withoutPrevention}
-          class="w-5 h-5"
-          label={$localLang.TIMER.withoutPrevention}
-        />
-
-        <i class="text-sm text-yellow-500">({$localLang.TIMER.withoutPreventionDescription})</i>
-      </section>
-
-      <section>
-        <Checkbox
-          bind:checked={modalData.settings.showElapsedTime}
-          class="w-5 h-5 my-2"
-          label={$localLang.TIMER.showTime}
-        />
-      </section>
-    {/if}
-
     <!-- Search Bluetooth -->
     {#if modalData.settings.input === "GAN Cube" || modalData.settings.input === "QY-Timer"}
       <section class="bg-white bg-opacity-10 p-2 shadow-md rounded-md">
@@ -741,6 +701,46 @@
             </li>
           {/each}
         </ul>
+      </section>
+    {/if}
+
+    <section class="flex flex-wrap gap-4 items-center">
+      <Checkbox
+        bind:checked={modalData.settings.hasInspection}
+        class="w-5 h-5"
+        label={$localLang.TIMER.inspection +
+          (modalData.settings.hasInspection ? ` (${modalData.settings.inspection})s` : "")}
+      />
+
+      {#if modalData.settings.hasInspection}
+        <Range
+          class="w-52 mx-auto"
+          bind:value={modalData.settings.inspection}
+          min={5}
+          max={60}
+          step="5"
+        />
+      {/if}
+    </section>
+
+    <!-- Inspections, Prevention, Elapsed time -->
+    {#if modalData.settings.input === "Keyboard" || modalData.settings.input === "ExternalTimer"}
+      <section>
+        <Checkbox
+          bind:checked={modalData.settings.withoutPrevention}
+          class="w-5 h-5"
+          label={$localLang.TIMER.withoutPrevention}
+        />
+
+        <i class="text-sm text-yellow-500">({$localLang.TIMER.withoutPreventionDescription})</i>
+      </section>
+
+      <section>
+        <Checkbox
+          bind:checked={modalData.settings.showElapsedTime}
+          class="w-5 h-5 my-2"
+          label={$localLang.TIMER.showTime}
+        />
       </section>
     {/if}
 

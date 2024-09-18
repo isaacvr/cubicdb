@@ -652,11 +652,13 @@ export interface ContestPDFResult extends PDFResult {
 }
 
 export interface Game {
-  players: { 0: string; 1: { name: string; times: number[]; connected: boolean } }[];
+  players: { 0: string; 1: { name: string; times: any[]; connected: boolean } }[];
   observers: { 0: string; 1: { name: string } }[];
   round: number;
   total: number;
   started: boolean;
+  owner: string;
+  mode: string;
 }
 
 export type StackmatSignalHeader = "I" | "S" | "L" | "R" | "A" | "C" | " ";
@@ -749,6 +751,13 @@ export interface KeyboardContext extends InputContext {
   timeRef: Writable<number>;
 }
 
+export interface AblyContext {
+  isOwner: Writable<boolean>;
+  clientID: Writable<string>;
+  game: Writable<Game>;
+  isConnected: Writable<boolean>;
+}
+
 export interface TimerInputHandler {
   init: AnyCallback;
   disconnect: () => void;
@@ -812,6 +821,7 @@ export interface Language {
     generatedByCubeDB: string;
     showBackFace: string;
     filter: string;
+    date: string;
   };
   TUTORIALS: {
     easy: string;
@@ -1169,4 +1179,21 @@ export interface ToolItem {
 export interface ActiveTool {
   tool: ToolItem;
   open: boolean;
+}
+
+export interface ROUND {
+  contestant: {
+    id: string;
+    name: string;
+  };
+  scrambler: string;
+  t1: Solve;
+  t2: Solve;
+  t3: Solve;
+  t4: Solve;
+  t5: Solve;
+  e1: Solve;
+  e2: Solve;
+  round: number;
+  average: number;
 }
