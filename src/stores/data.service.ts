@@ -1,8 +1,8 @@
 /// <reference types="web-bluetooth" />
 
 import { Emitter } from "@classes/Emitter";
-import { GANInput } from "@components/timer/input-handlers/GAN";
-import { QiYiSmartTimerInput } from "@components/timer/input-handlers/QY-Timer";
+import { GANInput } from "@pages/Timer/components/TimerTab/adaptors/GAN";
+import { QiYiSmartTimerInput } from "@pages/Timer/components/TimerTab/adaptors/QY-Timer";
 import type {
   Algorithm,
   Solve,

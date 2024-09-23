@@ -48,31 +48,6 @@
     "test": "vitest"
   },
   "license": "MIT",
-  "config": {
-    "forge": {
-      "electronRebuildConfig": {
-        "forceABI": 113
-      },
-      "makers": [
-        {
-          "name": "@electron-forge/maker-zip",
-          "platforms": [
-            "win32"
-          ]
-        },
-        {
-          "name": "@electron-forge/maker-squirrel",
-          "platforms": [
-            "win32"
-          ],
-          "config": {
-            "outputDirectory": "./release",
-            "noMsi": true
-          }
-        }
-      ]
-    }
-  },
   "dependencies": {
     "@electron/remote": "2.0.8",
     "@ffmpeg/ffmpeg": "0.12.10",
@@ -129,7 +104,7 @@
     "autoprefixer": "10.4.16",
     "concurrently": "5.1.0",
     "echarts": "5.4.3",
-    "electron": "31.0.2",
+    "electron": "32.1.2",
     "electron-builder": "24.13.3",
     "esbuild": "0.19.4",
     "flowbite": "2.2.1",

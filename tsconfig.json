@@ -33,6 +33,7 @@
       "@storage/*": ["src/storage/*"],
       "@workers/*": ["src/workers/*"],
       "@lang/*": ["src/lang/*"],
+      "@pages/*": ["src/pages/*"],
       "@public/*": ["public/*"],
 
       // PREMIUM

@@ -104,6 +104,7 @@ export default defineConfig(env => ({
       "@storage": resolve(__dirname, "./src/storage"),
       "@workers": resolve(__dirname, "./src/workers"),
       "@lang": resolve(__dirname, "./src/lang"),
+      "@pages": resolve(__dirname, "./src/pages"),
       "@public": resolve(__dirname, "./public"),
 
       // PREMIUM

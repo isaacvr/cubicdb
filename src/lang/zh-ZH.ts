@@ -53,6 +53,9 @@ export const Chinese: Language = {
     showBackFace: "显示背面",
     filter: "篩選",
     date: "日期",
+    invert: "反转",
+    true: "真",
+    false: "假",
   },
   TUTORIALS: {
     easy: "简单",
@@ -227,6 +230,7 @@ export const Chinese: Language = {
     removeSession: "你要删除这个会话吗?",
     select: "选择",
     addFilter: "新增過濾器",
+    addGroup: "添加组",
 
     // 统计标签
     totalTime: "总时间",
@@ -265,6 +269,30 @@ export const Chinese: Language = {
       "old-scrambles": "旧打乱",
       settings: "设置",
     },
+
+    // Advanced Search Operators
+    operators: {
+      date_after: "之后",
+      date_after_eq: "之后等于",
+      date_before: "之前",
+      date_before_eq: "之前等于",
+      date_equal: "等于",
+      number_between: "之间",
+      number_equal: "等于",
+      number_gt: "大于",
+      number_gte: "大于等于",
+      number_lt: "小于",
+      number_lte: "小于等于",
+      number_nbetween: "不在之间",
+      number_nequal: "不等于",
+      string_contain: "包含",
+      string_ends: "以...结尾",
+      string_equal: "等于",
+      string_nequal: "不等于",
+      string_starts: "以...开始",
+    },
+
+    gateResultIndicator: ["结果是", "如果某个值是"],
   },
   RECONSTRUCTIONS: {
     stepBack: "后退一步",

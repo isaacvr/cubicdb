@@ -543,19 +543,22 @@ export function solveSummary(sv: Solve[]) {
   );
 
   let avg = getAverageS(n, sv, AverageSetting.SEQUENTIAL)[n - 1];
+  let svParts = sv.map((s, p) => {
+    return [
+      (sv.length >= 10 && p < 9 ? "0" : "") + (p + 1),
+      s === minMax[0] || s === minMax[1]
+        ? "(" + sTimer(s, true, true) + ")"
+        : sTimer(s, true, true),
+      s.scramble,
+    ];
+  });
+  let maxTime = svParts.reduce((acc, s) => Math.max(acc, s[1].length), 0);
 
   return `${get(localLang).global.generatedByCubeDB} - ${moment().format("DD/MM/YYYY hh:mma")}
   ${n === 3 ? "M" : "A"}o${n}: ${avg ? timer(avg, true, true) : "DNF"}
   
-  ${sv
-    .map(
-      (s, p) =>
-        `${p + 1}. ${
-          s === minMax[0] || s === minMax[1]
-            ? "(" + sTimer(s, true, true) + ")"
-            : sTimer(s, true, true)
-        } - ${s.scramble}`
-    )
+  ${svParts
+    .map((s, p) => s[0] + ". " + (s[1] + " ".repeat(maxTime)).slice(0, maxTime) + "  " + s[2])
     .join("\n\n")}`
     .split("\n")
     .map(s => s.trimStart())

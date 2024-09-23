@@ -52,7 +52,10 @@ export const Spanish: Language = {
     generatedByCubeDB: "Generado por CubeDB",
     showBackFace: "Caras traseras",
     filter: "Filtrar",
-    date: "Fecha"
+    date: "Fecha",
+    invert: "Invertir",
+    true: "Verdadero",
+    false: "Falso",
   },
   TUTORIALS: {
     easy: "Fácil",
@@ -230,6 +233,7 @@ export const Spanish: Language = {
     removeSession: "¿Desea eliminar esta sesión?",
     select: "Seleccionar",
     addFilter: "Añadir filtro",
+    addGroup: "Añadir grupo",
 
     // Stats Tab
     totalTime: "Tiempo total",
@@ -268,6 +272,30 @@ export const Spanish: Language = {
       "old-scrambles": "Mezcla anterior",
       settings: "Configuración",
     },
+
+    // Advanced Search Operators
+    operators: {
+      date_after: "Después",
+      date_after_eq: "Desde",
+      date_before: "Antes",
+      date_before_eq: "Hasta",
+      date_equal: "Igual",
+      number_between: "Entre",
+      number_equal: "Igual",
+      number_gt: "Mayor",
+      number_gte: "Mayor-Igual",
+      number_lt: "Menor",
+      number_lte: "Menor-Igual",
+      number_nbetween: "No Entre",
+      number_nequal: "Distinto",
+      string_contain: "Contiene",
+      string_ends: "Termina",
+      string_equal: "Igual",
+      string_nequal: "No Igual",
+      string_starts: "Comienza",
+    },
+
+    gateResultIndicator: ["El resultado es", "si algún valor es"],
   },
   RECONSTRUCTIONS: {
     stepBack: "Paso atrás",

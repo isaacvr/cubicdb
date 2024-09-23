@@ -6,7 +6,7 @@
   import Frame from "@components/Frame.svelte";
   import Notification from "@components/Notification.svelte";
   import Lazy from "@components/Lazy.svelte";
-  import Home from "@components/Home.svelte";
+  import Home from "@pages/Home/HomeLayout.svelte";
 
   import { NotificationService } from "@stores/notification.service";
   import type { INotification, LanguageCode } from "@interfaces";
@@ -108,46 +108,46 @@
   <Frame />
   <Route path="/" component={Home} />
   <Route path="/tutorials" let:params>
-    <Lazy component={import("@components/tutorials/Tutorials.svelte")} {params} />
+    <Lazy component={import("@pages/Tutorials/TutorialsLayout.svelte")} {params} />
   </Route>
   <Route path="/tutorials/:puzzle" let:params>
-    <Lazy component={import("@components/tutorials/TutorialView.svelte")} {params} />
+    <Lazy component={import("@pages/Tutorials/TutorialView.svelte")} {params} />
   </Route>
   <Route path="/tutorials/:puzzle/:name" let:params>
-    <Lazy component={import("@components/tutorials/TutorialView.svelte")} {params} />
+    <Lazy component={import("@pages/Tutorials/TutorialView.svelte")} {params} />
   </Route>
   <Route path="/algorithms/*" let:params>
-    <Lazy component={import("@components/Algorithms.svelte")} {params} />
+    <Lazy component={import("@pages/Algorithms/AlgorithmsLayout.svelte")} {params} />
   </Route>
   <Route path="/timer" let:params>
-    <Lazy component={import("@components/timer/Timer.svelte")} {params} />
+    <Lazy component={import("@pages/Timer/TimerLayout.svelte")} {params} />
   </Route>
   <Route path="/reconstructions" let:params>
-    <Lazy component={import("@components/Reconstruction.svelte")} {params} />
+    <Lazy component={import("@pages/Reconstructions/ReconstructionLayout.svelte")} {params} />
   </Route>
   <Route path="/battle" let:params>
-    <Lazy component={import("@components/battle/Battle.svelte")} {params} />
+    <Lazy component={import("@pages/Battles/BattleLayout.svelte")} {params} />
   </Route>
   <Route path="/pll-trainer" let:params>
-    <Lazy component={import("@components/PllRecognition.svelte")} {params} />
+    <Lazy component={import("@pages/PLL_Recognition/PLLRecognitionLayout.svelte")} {params} />
   </Route>
   <Route path="/simulator" let:params>
-    <Lazy component={import("@components/Simulator.svelte")} {params} />
+    <Lazy component={import("@pages/Simulator/SimulatorLayout.svelte")} {params} />
   </Route>
   <Route path="/contest" let:params>
     <Lazy component={import("@pcomponents/Contest.svelte")} {params} />
   </Route>
   <Route path="/import-export" let:params>
-    <Lazy component={import("@components/import-export/ImportExport.svelte")} {params} />
+    <Lazy component={import("@pages/Import_Export/ImportExportLayout.svelte")} {params} />
   </Route>
   <Route path="/settings" let:params>
-    <Lazy component={import("@components/Settings.svelte")} {params} />
+    <Lazy component={import("@pages/Settings/SettingsLayout.svelte")} {params} />
   </Route>
   <Route path="/cubedb" let:params>
-    <Lazy component={import("@components/CubeDB.svelte")} {params} />
+    <Lazy component={import("@pages/About_CubeDB/AboutCubeDBLayout.svelte")} {params} />
   </Route>
   <Route path="/tools" let:params>
-    <Lazy component={import("@components/tools/Tools.svelte")} {params} />
+    <Lazy component={import("@pages/Tools/ToolsLayout.svelte")} {params} />
   </Route>
 
   <!-- Notifications -->

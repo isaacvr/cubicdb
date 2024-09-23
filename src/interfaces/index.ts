@@ -6,6 +6,7 @@ import type { CubeMode, SCRAMBLE_MENU, ICONS } from "@constants";
 import type { Writable } from "svelte/store";
 import type { Display } from "electron";
 import type { HTMLImgAttributes } from "svelte/elements";
+import type { FILTER_OPERATOR } from "@pages/Timer/components/SessionsTab/components/AdvancedSearch/adaptors/types";
 
 export const PuzzleTypeName = [
   "rubik",
@@ -417,6 +418,7 @@ export interface TimerContext {
   decimals: Writable<boolean>;
   bluetoothList: Writable<BluetoothDeviceData[]>;
   bluetoothStatus: Writable<boolean>;
+  enableKeyboard: Writable<boolean>;
   STATS_WINDOW: Writable<(number | null)[][]>;
 
   setSolves: (rescramble?: boolean) => any;
@@ -822,6 +824,9 @@ export interface Language {
     showBackFace: string;
     filter: string;
     date: string;
+    invert: string;
+    true: string;
+    false: string;
   };
   TUTORIALS: {
     easy: string;
@@ -967,6 +972,7 @@ export interface Language {
     removeSession: string;
     select: string;
     addFilter: string;
+    addGroup: string;
 
     // Stats Tab
     totalTime: string;
@@ -995,6 +1001,10 @@ export interface Language {
       settings: string;
     };
     // ['Ao5', 'Ao12', 'Ao50', 'Ao100', 'Ao200', 'Ao500', 'Ao1k', 'Ao2k' ]
+
+    // Advanced Search Operators
+    operators: Record<FILTER_OPERATOR, string>;
+    gateResultIndicator: string[];
   };
   RECONSTRUCTIONS: {
     stepBack: string;

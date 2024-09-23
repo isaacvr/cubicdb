@@ -53,6 +53,9 @@ export const English: Language = {
     showBackFace: "Show back face",
     filter: "Filter",
     date: "Date",
+    invert: "Invert",
+    true: "True",
+    false: "False",
   },
   TUTORIALS: {
     easy: "Easy",
@@ -230,6 +233,7 @@ export const English: Language = {
     removeSession: "Do you want to delete this session?",
     select: "Select",
     addFilter: "Add filter",
+    addGroup: "Add group",
 
     // Stats Tab
     totalTime: "Total time",
@@ -268,6 +272,30 @@ export const English: Language = {
       "old-scrambles": "Old scramble",
       settings: "Settings",
     },
+
+    // Advanced Search Operators
+    operators: {
+      date_after: "After",
+      date_after_eq: "After-Equal",
+      date_before: "Before",
+      date_before_eq: "Before-Equal",
+      date_equal: "Equal",
+      number_between: "Between",
+      number_equal: "Equal",
+      number_gt: "Greater",
+      number_gte: "Greater-Equal",
+      number_lt: "Less",
+      number_lte: "Less-Equal",
+      number_nbetween: "Not Between",
+      number_nequal: "Not Equal",
+      string_contain: "Contains",
+      string_ends: "Ends",
+      string_equal: "Equal",
+      string_nequal: "Not Equal",
+      string_starts: "Starts",
+    },
+
+    gateResultIndicator: ["The result will be", "if some value is"],
   },
   RECONSTRUCTIONS: {
     stepBack: "Step back",
