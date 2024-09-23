@@ -237,9 +237,11 @@ export const TIMER_INPUT: TimerInput[] = [
   "Keyboard",
   "Manual",
   "StackMat",
-  "GAN Cube" /*, 'QY-Timer'*/,
+  "GAN Cube",
+  "QY-Timer",
   // "ExternalTimer",
 ];
+
 export const SESSION_TYPE: SessionType[] = ["mixed", "single", "multi-step"];
 
 export const DIALOG_MODES = [

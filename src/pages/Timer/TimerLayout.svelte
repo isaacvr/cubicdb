@@ -604,7 +604,7 @@
   onMount(() => {
     testPrediction();
     mounted = true;
-    tabs.nextTab();
+    // tabs.nextTab();
 
     if (timerOnly && scrambleOnly) {
       timerOnly = scrambleOnly = false;

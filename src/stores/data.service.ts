@@ -312,10 +312,20 @@ export class DataService {
     let filters =
       inp instanceof GANInput ? GANInput.BLUETOOTH_FILTERS : QiYiSmartTimerInput.BLUETOOTH_FILTERS;
 
+    console.log("searchBluetooth");
+
     return new Promise((res, rej) => {
       navigator.bluetooth
         .requestDevice(filters)
         .then(async device => {
+          device.addEventListener("advertisementreceived", ev =>
+            console.log("[advertisementreceived]: ", ev)
+          );
+
+          device.addEventListener("gattserverdisconnected", ev =>
+            console.log("[gattserverdisconnected]: ", ev)
+          );
+
           inp.fromDevice(device).then(res).catch(rej);
         })
         .catch(rej);

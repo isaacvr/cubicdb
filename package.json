@@ -2,7 +2,7 @@
   "name": "cube-db",
   "productName": "CubeDB",
   "version": "2.1.1",
-  "description": "The definitive speedcubing app",
+  "description": "Cubing with fun",
   "homepage": "https://github.com/isaacvr/cubedb-svelte",
   "repository": {
     "type": "git",
@@ -48,6 +48,36 @@
     "test": "vitest"
   },
   "license": "MIT",
+  "overrides": {
+    "electron-rebuild": {
+      "node-abi": "3.68.0"
+    }
+  },
+  "config": {
+    "forge": {
+      "electronRebuildConfig": {
+        "forceABI": 113
+      },
+      "makers": [
+        {
+          "name": "@electron-forge/maker-zip",
+          "platforms": [
+            "win32"
+          ]
+        },
+        {
+          "name": "@electron-forge/maker-squirrel",
+          "platforms": [
+            "win32"
+          ],
+          "config": {
+            "outputDirectory": "./release",
+            "noMsi": true
+          }
+        }
+      ]
+    }
+  },
   "dependencies": {
     "@electron/remote": "2.0.8",
     "@ffmpeg/ffmpeg": "0.12.10",
@@ -109,6 +139,7 @@
     "esbuild": "0.19.4",
     "flowbite": "2.2.1",
     "flowbite-svelte": "0.44.21",
+    "node-abi": "3.68.0",
     "oxlint": "0.4.4",
     "postcss": "8.4.31",
     "postcss-load-config": "4.0.1",

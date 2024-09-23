@@ -27,7 +27,7 @@ export default defineConfig(env => ({
     //     display: "standalone",
     //     display_override: ['fullscreen', 'standalone'],
     //     background_color: "#080a16",
-    //     description: "The definitive app for Speedcubing",
+    //     description: "Cubing with fun",
     //     theme_color: "#080a16",
     //     categories: [
     //       "education",
