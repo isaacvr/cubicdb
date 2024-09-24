@@ -44,7 +44,6 @@
     "web": "vite",
     "preview": "vite preview",
     "builder": "electron-builder build",
-    "buildWorker": "esbuild ./src/workers/imageWorker.ts --bundle --minify --outfile=./public/assets/imageWorker.js",
     "test": "vitest"
   },
   "license": "MIT",

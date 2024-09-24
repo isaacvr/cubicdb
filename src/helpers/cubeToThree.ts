@@ -12,7 +12,7 @@ import {
   MeshBasicMaterial,
   Object3D,
   BufferAttribute,
-  type Side
+  type Side,
 } from "three";
 import { loadImageToPiece } from "./loadImageToPiece";
 
@@ -51,7 +51,7 @@ export function piecesToTree(
         stickerMaterial = new MeshBasicMaterial({
           color,
           side,
-          vertexColors: true,
+          // vertexColors: true,
         });
 
         let f = sticker.faces;

@@ -10,10 +10,10 @@
     "target": [
       {
         "target": "nsis",
-        "arch": ["x64", "ia32"]
+        "arch": ["ia32"]
       }
     ],
-    "artifactName": "${productName}-Setup-${version}.${ext}"
+    "artifactName": "${productName}-Setup-${version}-${arch}.${ext}"
   },
   "asar": true,
   "directories": {

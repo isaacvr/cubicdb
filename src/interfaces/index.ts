@@ -165,6 +165,12 @@ export interface NavigationRoute {
   name: string;
 }
 
+export interface SequenceResult {
+  u: Vector3D;
+  ang: number;
+  pieces: string[];
+}
+
 export interface PuzzleInterface {
   pieces: Piece[];
   palette: any;
@@ -184,7 +190,7 @@ export interface PuzzleInterface {
   raw?: any;
   scramble?: () => any;
   toMove?: AnyCallback;
-  applySequence?: (...args: any[]) => { u: Vector3D; ang: number; pieces: string[] }[];
+  applySequence?: (...args: any[]) => SequenceResult[];
   vectorsFromCamera?: AnyCallback;
 }
 
