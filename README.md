@@ -1,4 +1,4 @@
-# CubeDB
+# CubicDB
 
 ¿Are you looking for a speedcubing application?
 
