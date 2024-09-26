@@ -91,15 +91,15 @@
 
   <!-- Name -->
   <section>
-    <span class="key bg-purple-700">{$localLang.CUBEDB.name}: </span>
-    <span class="value">CubeDB</span>
+    <span class="key bg-purple-700">{$localLang.CUBICDB.name}: </span>
+    <span class="value">CubicDB</span>
   </section>
 
   <hr />
 
   <!-- Version -->
   <section>
-    <span class="key bg-pink-700">{$localLang.CUBEDB.version}: </span>
+    <span class="key bg-pink-700">{$localLang.CUBICDB.version}: </span>
     <span class="value">{$version}</span>
   </section>
 
@@ -107,7 +107,7 @@
 
   <!-- Creator -->
   <section>
-    <span class="key bg-green-700">{$localLang.CUBEDB.creator}: </span>
+    <span class="key bg-green-700">{$localLang.CUBICDB.creator}: </span>
     <span class="value">Isaac Vega Rodríguez</span>
   </section>
 
@@ -117,7 +117,7 @@
   <section class="flex items-center justify-center flex-wrap">
     <Button
       class="bg-gray-600 text-gray-300 gap-2"
-      on:click={() => to("https://github.com/isaacvr/cubedb-svelte")}
+      on:click={() => to("https://github.com/isaacvr/cubicdb")}
     >
       <GithubIcon size="1.2rem" /> GitHub</Button
     >
@@ -145,7 +145,7 @@
 
   <!-- Donations -->
   <section class="flex-col w-full">
-    <h2 class="text-2xl text-gray-300 mb-6">{$localLang.CUBEDB.donations}</h2>
+    <h2 class="text-2xl text-gray-300 mb-6">{$localLang.CUBICDB.donations}</h2>
 
     <ul class="donation-container">
       {#each donations as dnt}

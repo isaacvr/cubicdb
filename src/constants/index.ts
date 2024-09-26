@@ -305,7 +305,7 @@ export const ICONS = [
   { icon: "333cross", name: "Cross", scrambler: "333cross" },
 ] as const;
 
-export const CubeDBICON = "/assets/logo_dark.svg";
+export const CubicDBICON = "/assets/logo_dark.svg";
 
 const OPTS: PuzzleOptions[] = [
   { type: "rubik", order: [2] },

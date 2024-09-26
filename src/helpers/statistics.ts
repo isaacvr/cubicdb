@@ -554,7 +554,7 @@ export function solveSummary(sv: Solve[]) {
   });
   let maxTime = svParts.reduce((acc, s) => Math.max(acc, s[1].length), 0);
 
-  return `${get(localLang).global.generatedByCubeDB} - ${moment().format("DD/MM/YYYY hh:mma")}
+  return `${get(localLang).global.generatedByCubicDB} - ${moment().format("DD/MM/YYYY hh:mma")}
   ${n === 3 ? "M" : "A"}o${n}: ${avg ? timer(avg, true, true) : "DNF"}
   
   ${svParts

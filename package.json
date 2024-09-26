@@ -1,12 +1,12 @@
 {
   "name": "cube-db",
-  "productName": "CubeDB",
+  "productName": "CubicDB",
   "version": "2.1.1",
   "description": "Cubing with fun",
-  "homepage": "https://github.com/isaacvr/cubedb-svelte",
+  "homepage": "https://github.com/isaacvr/cubicdb",
   "repository": {
     "type": "git",
-    "url": "https://github.com/isaacvr/cubedb-svelte.git"
+    "url": "https://github.com/isaacvr/cubicdb.git"
   },
   "private": true,
   "type": "module",
@@ -15,7 +15,7 @@
     "email": "isaacvega1996@gmail.com"
   },
   "keywords": [
-    "cubedb",
+    "cubicdb",
     "speed",
     "timer",
     "simulator",

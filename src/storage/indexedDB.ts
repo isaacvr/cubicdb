@@ -18,7 +18,7 @@ import _tuts from "../database/tutorials.db?raw";
 import { clone, getByteSize } from "@helpers/object";
 import { openDB, type IDBPDatabase } from "idb";
 
-const DBName = "CubeDB-data";
+const DBName = "CubicDB-data";
 const AlgorithmStore = "Algorithms";
 const TutorialStore = "Tutorials";
 const SessionStore = "Sessions";

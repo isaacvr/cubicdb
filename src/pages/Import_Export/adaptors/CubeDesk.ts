@@ -1,4 +1,4 @@
-import { Penalty, type CubeDBAdaptor, type CubeDBData } from "@interfaces";
+import { Penalty, type CubicDBAdaptor, type CubicDBData } from "@interfaces";
 import { genSettings } from "../common";
 
 interface CubeDeskSession {
@@ -29,7 +29,7 @@ const MODE_MAP: Map<string, string> = new Map([
   [ "sq1", "sqrs" ]
 ]);
 
-export class CubeDesk implements CubeDBAdaptor {
+export class CubeDesk implements CubicDBAdaptor {
   public modes: string[];
 
   constructor() {
@@ -40,7 +40,7 @@ export class CubeDesk implements CubeDBAdaptor {
     return "CubeDesk";
   }
 
-  toCubeDB(str: string): CubeDBData {
+  toCubicDB(str: string): CubicDBData {
     let { solves, sessions } = JSON.parse(str);
     return {
       sessions: (sessions as CubeDeskSession[]).map(s => ({
@@ -61,7 +61,7 @@ export class CubeDesk implements CubeDBAdaptor {
     };
   }
 
-  fromCubeDB(data: CubeDBData): string {
+  fromCubicDB(data: CubicDBData): string {
     return "";
   }
 }

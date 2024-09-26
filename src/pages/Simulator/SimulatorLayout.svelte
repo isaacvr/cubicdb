@@ -22,9 +22,10 @@
   export let enableRotation = true;
   export let gui = true;
   export let contained = false;
-  export let selectedPuzzle: PuzzleType = "rubik";
+  export let selectedPuzzle: PuzzleType = "gear";
   export let order = 3;
   export let animationTime = $screen.isMobile ? 150 : 200; /// Default animation time: 200ms
+  // export let animationTime = 1000; /// Default animation time: 200ms
   export let showBackFace = false;
   export let sequence: string[] = [];
   export let sequenceAlpha = 0;
@@ -57,7 +58,7 @@
   }
 
   export async function handleSequence(s: string[], scr: string) {
-    if (!mounted || (s.length === 0 && scr === "")) return;
+    if (!mounted) return;
 
     let nc: Puzzle;
 
@@ -115,6 +116,7 @@
   }
 
   function keyDownHandler(e: KeyboardEvent) {
+    if (!enableKeyboard) return;
     threeAdaptor.keyDownHandler(e);
     switch (e.code) {
       case "KeyB": {
@@ -172,7 +174,7 @@
   $: mounted && (threeAdaptor.order = order);
   $: mounted && (threeAdaptor.animationTime = animationTime);
   $: mounted && (threeAdaptor.showBackFace = showBackFace);
-  $: mounted && (threeAdaptor.zoom = zoom);
+  $: mounted && threeAdaptor.setZoom(zoom);
 </script>
 
 <svelte:window

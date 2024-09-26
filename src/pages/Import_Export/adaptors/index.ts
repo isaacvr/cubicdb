@@ -1,13 +1,8 @@
 import { TwistyTimer } from "./TwistyTimer";
 import { CSTimer } from "./CSTimer";
 import { CubeDesk } from "./CubeDesk";
-import { CubeDB } from "./CubeDB";
+import { CubicDB } from "./CubicDB";
 
-const Adaptors = [
-  new TwistyTimer,
-  new CSTimer,
-  new CubeDesk,
-  new CubeDB,
-]
+const Adaptors = [new TwistyTimer(), new CSTimer(), new CubeDesk(), new CubicDB()];
 
 export default Adaptors;

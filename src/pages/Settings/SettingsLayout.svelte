@@ -172,9 +172,9 @@
         if (!res) return;
 
         if (cmpVersions($version, res) >= 0) {
-          sendAlreadyUpdated("CubeDB");
+          sendAlreadyUpdated("CubicDB");
         } else {
-          sendUpdateAvailable("CubeDB", res, updateNow);
+          sendUpdateAvailable("CubicDB", res, updateNow);
         }
       })
       .catch(err => {
@@ -452,7 +452,7 @@
 
         <div class="grid gap-4 place-items-center w-max mx-auto">
           <div class="flex w-full gap-4 items-center">
-            <span>{$localLang.SETTINGS.version} (CubeDB):</span>
+            <span>{$localLang.SETTINGS.version} (CubicDB):</span>
             <mark class="ml-auto">{$version}</mark>
             <Button on:click={() => canCheckUpdate && checkUpdate()}>
               {#if !canCheckUpdate}

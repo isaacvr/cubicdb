@@ -1,5 +1,5 @@
 import { between } from "@helpers/math";
-import { Penalty, type CubeDBAdaptor, type CubeDBData, type Session } from "@interfaces";
+import { Penalty, type CubicDBAdaptor, type CubicDBData, type Session } from "@interfaces";
 import moment from "moment";
 import { genSettings, identifyPuzzle } from "../common";
 import { randomUUID } from "@helpers/strings";
@@ -18,7 +18,7 @@ const PUZZLE_CODE: Map<string, string> = new Map([
   ["sq1", "sqrs"],
 ]);
 
-export class TwistyTimer implements CubeDBAdaptor {
+export class TwistyTimer implements CubicDBAdaptor {
   public modes: string[];
 
   constructor() {
@@ -29,7 +29,7 @@ export class TwistyTimer implements CubeDBAdaptor {
     return "Twisty Timer";
   }
 
-  toCubeDB(str: string, mode?: number): CubeDBData {
+  toCubicDB(str: string, mode?: number): CubicDBData {
     let m = between(mode || 0, 0, this.modes.length - 1);
     if ( m === 0 ) {
       return this.fromBackup(str);
@@ -40,9 +40,9 @@ export class TwistyTimer implements CubeDBAdaptor {
     return { sessions: [], solves: [] };
   }
 
-  private fromBackup(str: string): CubeDBData {
+  private fromBackup(str: string): CubicDBData {
     let sessionMap: Map<string, string> = new Map();
-    let res: CubeDBData = {
+    let res: CubicDBData = {
       sessions: [],
       solves: [],
     };
@@ -89,8 +89,8 @@ export class TwistyTimer implements CubeDBAdaptor {
     return res;
   }
 
-  private fromTXT(str: string): CubeDBData {
-    let res: CubeDBData = {
+  private fromTXT(str: string): CubicDBData {
+    let res: CubicDBData = {
       sessions: [],
       solves: [],
     };
@@ -138,7 +138,7 @@ export class TwistyTimer implements CubeDBAdaptor {
     return res;
   }
 
-  fromCubeDB(data: CubeDBData, mode?: number): string {
+  fromCubicDB(data: CubicDBData, mode?: number): string {
     let m = between(mode || 0, 0, this.modes.length - 1);
     if ( m === 0 ) {
       return this.toBackup(data);
@@ -148,11 +148,11 @@ export class TwistyTimer implements CubeDBAdaptor {
     return "";
   }
 
-  private toBackup(data: CubeDBData): string {
+  private toBackup(data: CubicDBData): string {
     return "<not implemented yet>";
   }
 
-  private toTXT(data: CubeDBData): string {
+  private toTXT(data: CubicDBData): string {
     return "<not implemented yet>";
   }
 }

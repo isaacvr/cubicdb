@@ -48,8 +48,8 @@ export const Chinese: Language = {
     no: "否",
     saved: "已保存",
     settingsSaved: "设置已保存",
-    willRestart: "CubeDB 将在几秒钟内自动重新启动.",
-    generatedByCubeDB: "由 CubeDB 生成",
+    willRestart: "CubicDB 将在几秒钟内自动重新启动.",
+    generatedByCubicDB: "由 CubicDB 生成",
     showBackFace: "显示背面",
     filter: "篩選",
     date: "日期",
@@ -103,7 +103,7 @@ export const Chinese: Language = {
     importExport: "导入 / 导出",
     contest: "比赛",
     tools: "工具",
-    about: "关于 CubeDB",
+    about: "关于 CubicDB",
   },
   SETTINGS: {
     title: "设置",
@@ -122,7 +122,7 @@ export const Chinese: Language = {
     updateAvailableText: "有一个新的 $1 版本可用.",
     alreadyUpdated: "已是最新版本",
     alreadyUpdatedText: "你已经拥有最新的 $1 版本.",
-    needsUpdate: "有一个新的 $1 版本, 但你需要至少 $2 版本的 CubeDB. 请更新到最新版本的 CubeDB.",
+    needsUpdate: "有一个新的 $1 版本, 但你需要至少 $2 版本的 CubicDB. 请更新到最新版本的 CubicDB.",
 
     updateError: "更新错误",
     updateErrorText: "尝试更新时出错.",
@@ -360,14 +360,14 @@ export const Chinese: Language = {
     total: "总计",
     showingOnly50: "仅显示50条",
   },
-  CUBEDB: {
+  CUBICDB: {
     name: "名称",
     version: "版本",
     creator: "作者",
     donations: "捐赠",
   },
   TOOLS: {
-    cubedbBatch: "CubeDB 打乱",
+    cubicdbBatch: "CubicDB 打乱",
     timerOnly: "仅计时器",
     scrambleOnly: "仅打乱",
     batchScramble: "批量打乱",

@@ -13,6 +13,7 @@ import {
   Object3D,
   BufferAttribute,
   type Side,
+  Vector3,
 } from "three";
 import { loadImageToPiece } from "./loadImageToPiece";
 
@@ -30,7 +31,10 @@ export function piecesToTree(
     let stickers: Sticker[] = sTrans(pieces[p].stickers);
     let piece = new Object3D();
 
-    piece.userData = pieces[p];
+    piece.userData = {
+      data: pieces[p],
+      anchor: pieces[p].anchor.clone(),
+    };
 
     for (let s = 0, maxs = stickers.length; s < maxs; s += 1) {
       let sticker = stickers[s].mul(F);
@@ -73,7 +77,10 @@ export function piecesToTree(
       stickerGeometry.setAttribute("position", new BufferAttribute(new Float32Array(vertices), 3));
 
       let box = new Mesh(stickerGeometry, stickerMaterial);
-      box.userData = stickers[s];
+
+      box.userData = {
+        data: stickers[s],
+      };
 
       piece.add(box);
       meshes.push(box);

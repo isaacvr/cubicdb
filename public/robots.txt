@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://cubedb.netlify.app/sitemap.xml
+Sitemap: https://cubicdb.netlify.app/sitemap.xml

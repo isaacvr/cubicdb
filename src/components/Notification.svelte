@@ -4,14 +4,14 @@
   import { NotificationService } from "@stores/notification.service";
   import { Avatar, Button, Toast } from "flowbite-svelte";
   import { fly } from "svelte/transition";
-  import { CubeDBICON } from "@constants";
+  import { CubicDBICON } from "@constants";
 
   export let key: string = "";
   export let timeout = 5000;
   export let header = "Header";
   export let text = "Text";
   export let html = "";
-  export let icon: any = CubeDBICON;
+  export let icon: any = CubicDBICON;
   export let fixed = false;
   export let actions: NotificationAction[] = [];
 

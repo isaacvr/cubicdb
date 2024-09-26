@@ -518,7 +518,7 @@ export interface SheetRegistry {
   addSheet: (s: Sheet) => any;
 }
 
-export interface CubeDBData {
+export interface CubicDBData {
   sessions: Session[];
   solves: Solve[];
 }
@@ -532,11 +532,11 @@ export interface Tab {
 }
 
 // This is for import/export adaptors to implement
-export interface CubeDBAdaptor {
+export interface CubicDBAdaptor {
   name: string;
   modes: string[];
-  toCubeDB: (scr: string, mode?: number) => CubeDBData;
-  fromCubeDB: (data: CubeDBData, mode?: number) => string;
+  toCubicDB: (scr: string, mode?: number) => CubicDBData;
+  fromCubicDB: (data: CubicDBData, mode?: number) => string;
 }
 
 export interface AlgorithmOptions {
@@ -828,7 +828,7 @@ export interface Language {
     saved: string;
     settingsSaved: string;
     willRestart: string;
-    generatedByCubeDB: string;
+    generatedByCubicDB: string;
     showBackFace: string;
     filter: string;
     date: string;
@@ -1078,14 +1078,14 @@ export interface Language {
     total: string;
     showingOnly50: string;
   };
-  CUBEDB: {
+  CUBICDB: {
     name: string;
     version: string;
     creator: string;
     donations: string;
   };
   TOOLS: {
-    cubedbBatch: string;
+    cubicdbBatch: string;
     timerOnly: string;
     scrambleOnly: string;
     batchScramble: string;

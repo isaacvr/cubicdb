@@ -153,7 +153,7 @@
 
   function toClipboard() {
     let str =
-      `${$localLang.TOOLS.cubedbBatch} (${$mode[0]}${$prob > -1 ? " > " + filters[$prob] : ""})\n\n` +
+      `${$localLang.TOOLS.cubicdbBatch} (${$mode[0]}${$prob > -1 ? " > " + filters[$prob] : ""})\n\n` +
       scrambleBatch.map((s, p) => `${p + 1}- ${s}`).join("\n\n");
 
     copyToClipboard(str).then(() => {

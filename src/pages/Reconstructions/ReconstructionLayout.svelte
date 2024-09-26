@@ -11,7 +11,7 @@
   import { screen } from "@stores/screen.store";
   import { localLang } from "@stores/language.service";
   import { NotificationService } from "@stores/notification.service";
-  import { map, minmax } from "@helpers/math";
+  import { isBetween, map, minmax } from "@helpers/math";
   import { copyToClipboard, parseReconstruction } from "@helpers/strings";
 
   import { errorIndex } from "./ReconstructionC";
@@ -38,10 +38,11 @@
   if (type === "full") {
     import("../../database/reconstructions.json").then(res => {
       recs = (res.default || []).slice(0, 4300).filter(r => errorIndex.indexOf(r.id) < 0);
+      console.log("RECS: ", recs.length);
     });
   }
 
-  let recIndex = 0;
+  let recIndex = 1;
   let showRecSearch = false;
   let recSearch = "";
 
@@ -326,7 +327,7 @@
   }
 
   function copyReconstruction() {
-    let rec = `https://cubedb.netlify.app/reconstructions?puzzle=${puzzle.puzzle}&order=${
+    let rec = `https://cubicdb.netlify.app/reconstructions?puzzle=${puzzle.puzzle}&order=${
       puzzle.order
     }&scramble=${encodeURIComponent(scramble)}&reconstruction=${encodeURIComponent(
       reconstruction
@@ -351,8 +352,28 @@
     parse(reconstruction, true);
   }
 
+  // function handleTextareaClick(ev: MouseEvent, textarea: HTMLTextAreaElement, pre: HTMLPreElement) {
+  //   const spans = pre.querySelectorAll('span[data-cursor]:not([data-cursor="-1"])');
+  //   const pos = { x: ev.x, y: ev.y };
+  //   for (let i = 0, maxi = spans.length; i < maxi; i += 1) {
+  //     let rec = spans[i].getBoundingClientRect();
+  //     if (
+  //       isBetween(pos.x, rec.x, rec.x + rec.width) &&
+  //       isBetween(pos.y, rec.y, rec.y + rec.height)
+  //     ) {
+  //       sequenceAlpha = +(spans[i].getAttribute("data-cursor") || "");
+  //       return;
+  //     }
+  //   }
+  // }
+
   onMount(() => {
     mounted = true;
+
+    // let elem = rTextarea.getTextArea();
+    // let pre = rTextarea.getContentEdit();
+
+    // elem.addEventListener("click", ev => handleTextareaClick(ev, elem, pre));
   });
 
   $: recomputeTimeBounds(speed);

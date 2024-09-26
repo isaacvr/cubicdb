@@ -135,7 +135,7 @@
     <Lazy component={import("@pages/Simulator/SimulatorLayout.svelte")} {params} />
   </Route>
   <Route path="/contest" let:params>
-    <Lazy component={import("@pcomponents/Contest.svelte")} {params} />
+    <Lazy component={import("@components/Contest.svelte")} {params} />
   </Route>
   <Route path="/import-export" let:params>
     <Lazy component={import("@pages/Import_Export/ImportExportLayout.svelte")} {params} />
@@ -143,8 +143,8 @@
   <Route path="/settings" let:params>
     <Lazy component={import("@pages/Settings/SettingsLayout.svelte")} {params} />
   </Route>
-  <Route path="/cubedb" let:params>
-    <Lazy component={import("@pages/About_CubeDB/AboutCubeDBLayout.svelte")} {params} />
+  <Route path="/cubicdb" let:params>
+    <Lazy component={import("@pages/About_CubicDB/AboutCubicDBLayout.svelte")} {params} />
   </Route>
   <Route path="/tools" let:params>
     <Lazy component={import("@pages/Tools/ToolsLayout.svelte")} {params} />

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { CubeDBData, Language, Session, Solve } from "@interfaces";
+  import type { CubicDBData, Language, Session, Solve } from "@interfaces";
   import Select from "@material/Select.svelte";
   import { onMount } from "svelte";
   import Adaptors from "./adaptors";
@@ -26,8 +26,8 @@
 
   let parser = 0;
   let mode = 0;
-  let cubeData: CubeDBData | null = null;
-  let ownData: CubeDBData = { sessions: [], solves: [] };
+  let cubeData: CubicDBData | null = null;
+  let ownData: CubicDBData = { sessions: [], solves: [] };
   let sSession: Session;
   let oSession: Session;
   let fSolves: Solve[] = [];
@@ -40,7 +40,7 @@
     let fr = new FileReader();
 
     fr.addEventListener("loadend", e => {
-      cubeData = Adaptors[parser].toCubeDB(fr.result as string, mode);
+      cubeData = Adaptors[parser].toCubicDB(fr.result as string, mode);
       cubeData.sessions = cubeData.sessions.filter(ss =>
         cubeData?.solves.reduce((acc, e) => acc + (e.session === ss._id ? 1 : 0), 0)
       );
@@ -125,7 +125,7 @@
   }
 
   function exportData() {
-    let dt: CubeDBData = {
+    let dt: CubicDBData = {
       sessions: [],
       solves: [],
     };
@@ -140,7 +140,7 @@
 
     const blob = new Blob([JSON.stringify(dt)], { type: "text/plain" });
     const a = document.createElement("a");
-    a.download = `CubeDB-backup-${Date.now()}.json`;
+    a.download = `CubicDB-backup-${Date.now()}.json`;
     a.href = window.URL.createObjectURL(blob);
     a.click();
   }

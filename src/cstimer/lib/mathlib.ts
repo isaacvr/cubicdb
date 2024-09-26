@@ -1,5 +1,4 @@
 import { Isaac } from "@helpers/isaac";
-import { MersenneTwisterObject } from "./mersennetwister";
 
 export const Cnk: number[][] = [];
 export const fact = [1];

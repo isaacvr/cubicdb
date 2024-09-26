@@ -101,7 +101,7 @@ async function createPDF(width, height, html) {
       show: false,
     });
 
-    const tmpDir = join(tmpdir(), "/CubeDB/");
+    const tmpDir = join(tmpdir(), "/CubicDB/");
 
     if (!existsSync(tmpDir)) {
       mkdirSync(tmpDir, { recursive: true });
@@ -157,7 +157,7 @@ ipcMain.handle("generate-contest-pdf", async (_, arg) => {
 
 ipcMain.handle("zip-pdf", async (event, data) => {
   return await new Promise((res, rej) => {
-    const tmpDir = join(tmpdir(), "/CubeDB/");
+    const tmpDir = join(tmpdir(), "/CubicDB/");
     const { name, files } = data;
 
     if (!existsSync(tmpDir)) {

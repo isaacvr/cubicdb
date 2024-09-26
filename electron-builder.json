@@ -1,6 +1,6 @@
 {
-  "productName": "CubeDB",
-  "appId": "com.isaacvr.cubedb",
+  "productName": "CubicDB",
+  "appId": "com.isaacvr.cubicdb",
   "compression": "maximum",
   "electronDownload": {
     "cache": "cache",

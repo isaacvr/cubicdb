@@ -81,7 +81,7 @@
       },
       {
         title: HOME.about,
-        route: "/cubedb",
+        route: "/cubicdb",
         cube: "/assets/logo_dark.svg",
         ready: true,
       },

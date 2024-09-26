@@ -22,7 +22,7 @@
   import { Link, navigate, useLocation } from "svelte-routing";
   import { screen } from "@stores/screen.store";
   import type { RouteLocation } from "svelte-routing/types/Route";
-  import { CubeDBICON } from "@constants";
+  import { CubicDBICON } from "@constants";
   import FlagIcon from "./FlagIcon.svelte";
   import { ArrowUpRightDownLeftOutline } from "flowbite-svelte-icons";
   import Select from "./material/Select.svelte";
@@ -121,13 +121,13 @@
       <div class="flex">
         <img
           draggable="false"
-          src={CubeDBICON}
+          src={CubicDBICON}
           alt=""
           width="100%"
           height="100%"
           class="ml-1 w-8 flex my-auto"
         />
-        <Span class="self-center whitespace-nowrap text-base font-semibold ml-2">CubeDB</Span>
+        <Span class="self-center whitespace-nowrap text-base font-semibold ml-2">CubicDB</Span>
       </div>
     </Link>
 

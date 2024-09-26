@@ -3,7 +3,6 @@ import { Vector2D } from "@classes/vector2-d";
 import { Vector3D } from "@classes/vector3d";
 import { EPS } from "@constants";
 import { Quaternion, Vector3 } from "three";
-import FFT from "fft.js";
 
 export function map(v: number, a: number, b: number, A: number, B: number): number {
   return b === a ? A : ((v - a) * (B - A)) / (b - a) + A;
@@ -211,6 +210,15 @@ export function toInt(n: number, d: number): number {
   return Math.floor(n / pot) * pot;
 }
 
+export function getLagrangeInterpolation(pts: Vector2D[]) {
+  let funcs = pts.map((pt, pos) => {
+    let otherPts = pts.filter((_, pos1) => pos1 != pos);
+    return (x: number) => pt.y * otherPts.reduce((acc, p) => (acc * (x - p.x)) / (pt.x - p.x), 1);
+  });
+
+  return (x: number) => funcs.reduce((acc, f) => acc + f(x), 0);
+}
+
 // Animation Timing Functions
 export function cubicBezier(t: number, x1: number, y1: number, x2: number, y2: number): number {
   let p1 = new Vector2D(0, 0);
@@ -256,48 +264,3 @@ export function bitLength(n: number): number {
   while (1 << bits <= n) bits += 1;
   return bits;
 }
-
-// export function getFFT(values: number[]) {
-//   const N = 2 ** Math.ceil(Math.log2(Math.max(2, values.length)));
-//   const fft = new FFT(N);
-//   const N_2 = values.length >> 1;
-
-//   const out = fft.createComplexArray();
-//   const nVal = values.map(v => v / 1000);
-
-//   while (nVal.length < N) nVal.push(0);
-
-//   fft.realTransform(out, nVal);
-//   fft.completeSpectrum(out);
-
-//   const amps: number[] = [];
-
-//   for (let i = 0, maxi = out.length; i < maxi; i += 2) {
-//     const re = out[i]; // Parte real
-//     const im = out[i + 1]; // Parte imaginaria
-//     const mag = Math.sqrt(re * re + im * im); // Magnitud
-//     amps.push(mag);
-//   }
-
-//   let freqs = amps
-//     .map((v, p) => ({ freq: p, period: 1 / p, val: v }))
-//     .filter(t => t.period <= N_2)
-//     .sort((a, b) => b.val - a.val)
-//     .slice(0, 5);
-
-//   console.log(
-//     freqs,
-//     freqs.map(f => N / f.freq)
-//   );
-
-//   // const maxIndex = amps
-//   //   .slice(1, N_2)
-//   //   .reduce((maxIdx, value, idx) => (value > amps[maxIdx] ? idx + 1 : maxIdx), 1);
-
-//   // Calcula la frecuencia dominante
-//   // const dominantFrequency = maxIndex / values.length;
-
-//   // console.log("FREQ: ", maxIndex, values.length, dominantFrequency, 1 / dominantFrequency);
-
-//   return [];
-// }

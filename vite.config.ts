@@ -22,7 +22,7 @@ export default defineConfig(env => ({
     svelte(), //basicSSL(),
     //   VitePWA({
     //   manifest: {
-    //     name: "CubeDB",
+    //     name: "CubicDB",
     //     start_url: ".",
     //     display: "standalone",
     //     display_override: ['fullscreen', 'standalone'],
@@ -106,10 +106,6 @@ export default defineConfig(env => ({
       "@lang": resolve(__dirname, "./src/lang"),
       "@pages": resolve(__dirname, "./src/pages"),
       "@public": resolve(__dirname, "./public"),
-
-      // PREMIUM
-      "@pcomponents": resolve(__dirname, "./src/cubedb-premium/components"),
-      "@pclasses": resolve(__dirname, "./src/cubedb-premium/classes"),
     },
     // dedupe: ["three"]
   },

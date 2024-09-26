@@ -1,4 +1,4 @@
-import { Penalty, type CubeDBAdaptor, type CubeDBData } from "@interfaces";
+import { Penalty, type CubicDBAdaptor, type CubicDBData } from "@interfaces";
 import { genSettings, identifyPuzzle } from "../common";
 import { randomUUID } from "@helpers/strings";
 
@@ -14,7 +14,7 @@ interface CSTimerSessionProperty {
   stats: number[];
 }
 
-export class CSTimer implements CubeDBAdaptor {
+export class CSTimer implements CubicDBAdaptor {
   public modes: string[];
 
   constructor() {
@@ -25,10 +25,10 @@ export class CSTimer implements CubeDBAdaptor {
     return "CSTimer";
   }
 
-  toCubeDB(str: string): CubeDBData {
+  toCubicDB(str: string): CubicDBData {
     let data = JSON.parse(str);
     let sessionNames = Object.keys(data).filter(s => s != "properties");
-    let res: CubeDBData = {
+    let res: CubicDBData = {
       sessions: [],
       solves: [],
     };
@@ -75,7 +75,7 @@ export class CSTimer implements CubeDBAdaptor {
     return res;
   }
 
-  fromCubeDB(data: CubeDBData): string {
+  fromCubicDB(data: CubicDBData): string {
     return "";
   }
 }

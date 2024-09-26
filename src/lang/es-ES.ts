@@ -48,8 +48,8 @@ export const Spanish: Language = {
     no: "No",
     saved: "Guardado!",
     settingsSaved: "Configuración guardada",
-    willRestart: "CubeDB va a reiniciar de forma automática en unos segundos.",
-    generatedByCubeDB: "Generado por CubeDB",
+    willRestart: "CubicDB va a reiniciar de forma automática en unos segundos.",
+    generatedByCubicDB: "Generado por CubicDB",
     showBackFace: "Caras traseras",
     filter: "Filtrar",
     date: "Fecha",
@@ -103,7 +103,7 @@ export const Spanish: Language = {
     importExport: "Importar / Exportar",
     contest: "Concursos",
     tools: "Herramientas",
-    about: "Sobre CubeDB",
+    about: "Sobre CubicDB",
   },
   SETTINGS: {
     title: "Configuración",
@@ -123,7 +123,7 @@ export const Spanish: Language = {
     alreadyUpdated: "Actualizado",
     alreadyUpdatedText: "Ya tienes la última versión de $1.",
     needsUpdate:
-      "Hay una nueva versión de $1, pero necesitas al menos la versión $2 de CubeDB. Por favor, actualiza CubeDB para tener la última versión.",
+      "Hay una nueva versión de $1, pero necesitas al menos la versión $2 de CubicDB. Por favor, actualiza CubicDB para tener la última versión.",
 
     updateError: "Error",
     updateErrorText: "Hubo un error al intentar actualizar.",
@@ -363,14 +363,14 @@ export const Spanish: Language = {
     total: "Total",
     showingOnly50: "mostrando solo 50",
   },
-  CUBEDB: {
+  CUBICDB: {
     name: "Nombre",
     version: "Versión",
     creator: "Creador",
     donations: "Donaciones",
   },
   TOOLS: {
-    cubedbBatch: "CubeDB Scrambles",
+    cubicdbBatch: "CubicDB Scrambles",
     timerOnly: "Solo Temporizador",
     scrambleOnly: "Solo Scrambles",
     batchScramble: "Grupos de Scrambles",
