@@ -1,6 +1,6 @@
 import { LEFT, UP, BACK, RIGHT, FRONT, DOWN, CENTER } from "./../vector3d";
 import { Vector3D } from "../../classes/vector3d";
-import type { PuzzleInterface } from "@interfaces";
+import type { PuzzleInterface, VectorLike3D } from "@interfaces";
 import { EPS, STANDARD_PALETTE } from "@constants";
 import { Piece } from "./Piece";
 import { Sticker } from "./Sticker";
@@ -36,30 +36,25 @@ function getType(p: Piece): number {
 
 function edgeCallback(
   p: Piece,
-  center: Vector3D,
-  dir: Vector3D,
+  center: VectorLike3D,
+  dir: VectorLike3D,
   ang: number,
   three?: boolean,
-  vc?: any
+  vc?: any,
+  ignoreUserData?: boolean
 ) {
+  let c = new Vector3D(center.x, center.y, center.z);
+  let dir1 = new Vector3D(dir.x, dir.y, dir.z).toNormal();
+
   if (three) {
     let p1 = <any>p;
-    let dir1 = new Vector3D(dir.x, dir.y, dir.z).toNormal();
-    let c = new Vector3D(center.x, center.y, center.z);
-    let a = (<Piece>p1.userData).anchor.rotate(c, dir1, ang);
+    let a = (<Piece>(ignoreUserData ? p1.userData : p1.userData.data)).anchor.rotate(c, dir1, ang);
     let u1 = new vc(a.x, a.y, a.z);
     let u1n = u1.clone().normalize();
-    p1.rotateOnWorldAxis(<any>dir, ang);
+    p1.rotateOnWorldAxis(dir, ang);
     p1.rotateOnWorldAxis(u1n, (-ang * 4) / 3);
   } else {
-    p.rotate(center, p.anchor, (-ang * 4) / 3, true).rotate(
-      center,
-      dir.clone().toNormal(),
-      ang,
-      true
-    );
-
-    console.log("anchor: ", p.anchor.toString());
+    p.rotate(c, p.anchor, (-ang * 4) / 3, true).rotate(c, dir1.toNormal(), ang, true);
   }
 }
 

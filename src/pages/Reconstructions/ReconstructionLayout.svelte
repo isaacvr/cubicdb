@@ -11,7 +11,7 @@
   import { screen } from "@stores/screen.store";
   import { localLang } from "@stores/language.service";
   import { NotificationService } from "@stores/notification.service";
-  import { isBetween, map, minmax } from "@helpers/math";
+  import { map, minmax } from "@helpers/math";
   import { copyToClipboard, parseReconstruction } from "@helpers/strings";
 
   import { errorIndex } from "./ReconstructionC";
@@ -38,7 +38,6 @@
   if (type === "full") {
     import("../../database/reconstructions.json").then(res => {
       recs = (res.default || []).slice(0, 4300).filter(r => errorIndex.indexOf(r.id) < 0);
-      console.log("RECS: ", recs.length);
     });
   }
 

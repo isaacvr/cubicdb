@@ -1215,3 +1215,9 @@ export interface ROUND {
   round: number;
   average: number;
 }
+
+export interface VectorLike3D {
+  x: number;
+  y: number;
+  z: number;
+}

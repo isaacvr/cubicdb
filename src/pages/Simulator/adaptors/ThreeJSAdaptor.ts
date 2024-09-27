@@ -3,10 +3,10 @@ import { Piece } from "@classes/puzzle/Piece";
 import type { Sticker } from "@classes/puzzle/Sticker";
 import { Puzzle } from "@classes/puzzle/puzzle";
 import { Vector2D } from "@classes/vector2-d";
-import { CENTER, UP, Vector3D } from "@classes/vector3d";
+import { CENTER, Vector3D } from "@classes/vector3d";
 import { CubeMode, EPS } from "@constants";
 import { cubeToThree, piecesToTree } from "@helpers/cubeToThree";
-import { getLagrangeInterpolation, map } from "@helpers/math";
+import { getLagrangeInterpolation } from "@helpers/math";
 import type { PuzzleType } from "@interfaces";
 import {
   FrontSide,
@@ -35,10 +35,15 @@ interface ThreeJSAdaptorConfig {
   zoom: number;
 }
 
+interface UserData {
+  data: Piece | Sticker;
+  anchor?: Vector3D;
+}
+
 interface DragResult {
   buffer: Object3D[][];
-  userData: any[][];
-  u: any;
+  userData: UserData[][];
+  u: Vector3D;
   dir: number;
   ang: number[];
   animationTime: number[];
@@ -46,7 +51,7 @@ interface DragResult {
 
 interface PuzzleAnimation {
   animBuffer: Object3D[][];
-  userData: any[][];
+  userData: UserData[][];
   u: Vector3D;
   angs: number[];
   from: Matrix4[][];
@@ -106,13 +111,6 @@ export class ThreeJSAdaptor {
   controls: TrackballControls;
 
   // Animations
-  // timeIni: number = 0;
-  // animationTimes: number[] = [];
-  // from: Matrix4[][] = [];
-  // animBuffer: Object3D[][] = [];
-  // userData: any[][] = [];
-  // u: Vector3D = UP.clone();
-  // angs: number[] = [];
   currentAnimation: PuzzleAnimation | null = null;
   animationQueue: PuzzleAnimation[] = [];
   moveQueue: any[] = [];
@@ -183,7 +181,7 @@ export class ThreeJSAdaptor {
 
   dataFromGroup(pc: any, best: Vector3D, vv: Vector3D, dir: number, fp = findPiece): DragResult {
     let animationBuffer: Object3D[][] = [];
-    let userData: any[][] = [];
+    let userData: UserData[][] = [];
     let angs: number[] = [];
     let animationTimes: number[] = [];
 
@@ -201,14 +199,14 @@ export class ThreeJSAdaptor {
 
       let pieces: Piece[] = g.pieces;
       let subBuffer: Object3D[] = [];
-      let subUserData: any[] = [];
+      let subUserData: UserData[] = [];
 
       this.group.children.forEach((p: Object3D, pos: number) => {
         if (fp(<Piece>p.userData.data, pieces)) {
-          subUserData.push(p.userData.data);
+          subUserData.push(p.userData as UserData);
           subBuffer.push(p);
 
-          subUserData.push(new Piece([]));
+          subUserData.push({ data: new Piece([]) });
           subBuffer.push(this.backFace.children[pos]);
         }
       });
@@ -289,6 +287,17 @@ export class ThreeJSAdaptor {
       } else if (this.animationQueue.length) {
         this.setAnimationData();
         this.animating = true;
+        let { userData, ignoreUserData } = this.currentAnimation!;
+
+        !ignoreUserData &&
+          userData.forEach(dataList =>
+            dataList.forEach(({ data, anchor }) => {
+              if (data instanceof Piece && anchor && data.anchor.abs()) {
+                let a = data.anchor;
+                anchor.setCoords(a.x, a.y, a.z);
+              }
+            })
+          );
       }
     }
 
@@ -310,11 +319,13 @@ export class ThreeJSAdaptor {
           this.interpolate(currAnim, i, 1);
 
           !currAnim.ignoreUserData &&
-            currAnim.userData[i].forEach((p: Piece) => {
-              if (p.hasCallback) {
-                p.callback(p, this.cube.p.center, currAnim.u, currAnim.angs[i]);
+            currAnim.userData[i].forEach((dt: UserData) => {
+              const { data } = dt;
+
+              if (data instanceof Piece && data.hasCallback) {
+                data.callback(data, this.cube.p.center, currAnim.u, currAnim.angs[i]);
               } else {
-                p.rotate(this.cube.p.center, currAnim.u, currAnim.angs[i], true);
+                data.rotate(this.cube.p.center, currAnim.u, currAnim.angs[i], true);
               }
             });
         } else {
@@ -346,11 +357,12 @@ export class ThreeJSAdaptor {
     let ang = angs[pos] * alpha;
 
     userData[pos].forEach((p, idx) => {
+      const { data } = p;
       let d = animBuffer[pos][idx];
       d.rotation.setFromRotationMatrix(from[pos][idx]);
       d.position.setFromMatrixPosition(from[pos][idx]);
-      if (p.hasCallback) {
-        p.callback(d, new Vector3(0, 0, 0), u, ang, true, Vector3);
+      if (data instanceof Piece && data.hasCallback) {
+        data.callback(d, new Vector3(0, 0, 0), u, ang, true, Vector3, animation.ignoreUserData);
       } else {
         d.parent?.localToWorld(d.position);
         d.position.sub(c);
@@ -391,7 +403,7 @@ export class ThreeJSAdaptor {
     let piece = this.cube.pieces.find(p => p.direction1(u, u) === 0 && p.stickers.length > 4);
     let sticker = piece?.stickers.find(s => s.vecs.length === 3);
 
-    let data: any = this.dataFromGroup([piece, sticker], u, u, dir);
+    let data = this.dataFromGroup([piece, sticker], u, u, dir);
     data && this.prepareFromDrag(data);
     return true;
   }
@@ -432,7 +444,7 @@ export class ThreeJSAdaptor {
 
     if (!piece) return;
 
-    let data: any = this.drag(piece, new Vector2(this.mcx, this.mcy), vec, this.camera);
+    let data = this.drag(piece, new Vector2(this.mcx, this.mcy), vec, this.camera);
 
     if (data && pos) {
       this.prepareFromDrag(data);
@@ -457,24 +469,26 @@ export class ThreeJSAdaptor {
       .sub(this.ini as Vector2)
       .length();
 
-    if (this.rotating && this.rotationData && this.animation) {
+    let animation = this.animation;
+
+    if (this.rotating && this.rotationData && animation) {
       let vec = vectorsFromCamera([this.rotationData.u], this.camera)[0];
       let vNormal = new Vector2D(vec.x, vec.y).unit().mul(0.2);
       let dirNormal = new Vector2D(fin.x, fin.y).sub(new Vector2D(this.ini!.x, this.ini!.y));
 
       let dir = Vector2D.cross(vNormal, dirNormal) * this.rotationData.dir;
 
-      let { animBuffer } = this.animation;
+      let { animBuffer, angs } = animation;
       let total = animBuffer.length;
-
-      let factor = dir / lagrange(this.distance);
+      let maxAng = Math.PI / (2 * angs.reduce((a, b) => Math.max(Math.abs(a), Math.abs(b)), 0));
+      let factor = (dir * maxAng) / lagrange(this.distance);
       this.angleFactor = factor;
 
       for (let i = 0; i < total; i += 1) {
-        this.interpolate({ ...this.animation, u: this.rotationData.u }, i, factor);
+        this.interpolate({ ...animation, u: this.rotationData.u }, i, factor);
       }
     } else if (!this.rotating && this.piece && len > MOVE_THRESHOLD) {
-      let data: any = this.drag(this.piece, this.ini as Vector2, fin, this.camera);
+      let data = this.drag(this.piece, this.ini as Vector2, fin, this.camera);
 
       if (data) {
         let anim = this.prepareFromDrag(data, false);
@@ -543,33 +557,37 @@ export class ThreeJSAdaptor {
       const { animBuffer, angs, userData, animationTimes } = this.animation;
 
       let from1 = animBuffer.map((g: any[]) => g.map(e => e.matrixWorld.clone()));
-      let u = this.rotationData.u;
+      let u = this.rotationData.u.clone();
 
       this.animationQueue.push({
         animBuffer: animBuffer.map((objList, pos) =>
           objList.map(obj => {
-            if (obj.userData.anchor) {
-              obj.userData.anchor.rotate(CENTER, u, angs[pos] * this.angleFactor, true);
+            let data = obj.userData as UserData;
+
+            if (data.anchor && data.data instanceof Piece) {
+              let newAnchor = data.data.anchor.rotate(CENTER, u, angs[pos] * this.angleFactor);
+              data.anchor.setCoords(newAnchor.x, newAnchor.y, newAnchor.z);
             }
 
             return obj;
           })
         ),
+        // animBuffer,
         angs: angs.map(a => a * (N - this.angleFactor)),
         animationTimes: animationTimes.map(t => (t * Math.abs(N - this.angleFactor)) / 0.5),
         from: from1,
         timeIni: performance.now(),
-        u: this.rotationData.u,
+        u,
         userData,
         ignoreUserData: true,
       });
 
-      this.animation.u = this.rotationData.u;
+      this.animation.u = u;
       this.animation.timeIni = performance.now();
-      this.animation.animationTimes = this.animation.animationTimes.map(() => 10);
+      this.animation.animationTimes = this.animation.animationTimes.map(() => 0);
       this.animation.angs = this.animation.angs.map(ang => ang * N);
       this.animationQueue.push(this.animation);
-      this.setAnimationData();
+      // this.setAnimationData();
     }
 
     this.dragging = false;
@@ -579,7 +597,7 @@ export class ThreeJSAdaptor {
     this.animation = null;
   }
 
-  prepareFromDrag(data: any, push = true) {
+  prepareFromDrag(data: DragResult, push = true) {
     let animation: PuzzleAnimation = {
       animBuffer: data.buffer,
       userData: data.userData,
@@ -588,6 +606,7 @@ export class ThreeJSAdaptor {
       from: data.buffer.map((g: any[]) => g.map(e => e.matrixWorld.clone())),
       animationTimes: data.animationTime.map((e: any) => e || this.animationTime),
       timeIni: performance.now(),
+      ignoreUserData: false,
     };
 
     push && this.animationQueue.push(animation);

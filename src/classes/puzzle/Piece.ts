@@ -3,12 +3,23 @@ import { CENTER, Vector3D } from "../vector3d";
 import type { Sticker } from "./Sticker";
 import { rotateBundle } from "@helpers/math";
 import { EPS } from "@constants";
+import type { VectorLike3D } from "@interfaces";
+
+type CallbackFunction = (
+  p: any,
+  center: VectorLike3D,
+  dir: VectorLike3D,
+  ang: number,
+  three?: boolean,
+  vc?: any,
+  ignoreUserData?: boolean
+) => void;
 
 export class Piece {
   stickers: Sticker[];
   boundingBox: Vector3D[];
   hasCallback: boolean;
-  callback: Function;
+  callback: CallbackFunction;
   anchor: Vector3D;
   _cached_mass_center: Vector3D;
   raw: any;
@@ -91,7 +102,7 @@ export class Piece {
       this.stickers.forEach(s => s.add(ref, true));
       this.boundingBox.forEach(s => s.add(ref, true));
       this._cached_mass_center.add(ref, true);
-      this.anchor && this.anchor.add(ref, true);
+      this.anchor.add(ref, true);
       return this;
     }
     return this.clone().add(ref, true);
@@ -103,7 +114,7 @@ export class Piece {
       this.stickers.forEach(s => s.sub(ref, true));
       this.boundingBox.forEach(s => s.sub(ref, true));
       this._cached_mass_center.sub(ref, true);
-      this.anchor && this.anchor.sub(ref, true);
+      this.anchor.sub(ref, true);
       return this;
     }
     return this.clone().sub(ref, true);
@@ -115,7 +126,7 @@ export class Piece {
       this.stickers.forEach(s => s.mul(f, true));
       this.boundingBox.forEach(s => s.mul(f, true));
       this._cached_mass_center.mul(f, true);
-      this.anchor && this.anchor.mul(f, true);
+      this.anchor.mul(f, true);
       return this;
     }
     return this.clone().mul(f, true);
@@ -126,7 +137,7 @@ export class Piece {
       this.stickers.forEach(s => s.div(f, true));
       this.boundingBox.forEach(s => s.div(f, true));
       this._cached_mass_center.div(f, true);
-      this.anchor && this.anchor.div(f, true);
+      this.anchor.div(f, true);
       return this;
     }
 
@@ -160,14 +171,14 @@ export class Piece {
       // pts.forEach((e, p) => e.setCoords(pts1[p].x, pts1[p].y, pts1[p].z));
       // this.stickers.map(s => s.partialRotation(ref, dir, ang, true));
       this._cached_mass_center.rotate(ref, dir, ang, true);
-      this.anchor && this.anchor.rotate(ref, dir, ang, true).toNormal();
+      this.anchor.rotate(ref, dir, ang, true).toNormal();
       return this;
     }
 
     let pc = new Piece();
     pc.stickers = st.map(s => s.rotateBundle(ref, dir, ang));
     pc._cached_mass_center = this._cached_mass_center.rotate(ref, dir, ang);
-    this.anchor && (pc.anchor = this.anchor.rotate(ref, dir, ang).toNormal());
+    pc.anchor = this.anchor.rotate(ref, dir, ang).toNormal();
     return pc;
   }
 
@@ -257,7 +268,7 @@ export class Piece {
       res.hasCallback = this.hasCallback;
       res.callback = this.callback;
     }
-    this.anchor && (res.anchor = this.anchor.clone());
+    res.anchor = this.anchor.clone();
     res.allPointsRef = this.allPointsRef.map(e => e.slice());
     return res;
   }

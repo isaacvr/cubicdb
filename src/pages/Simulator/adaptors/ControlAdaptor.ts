@@ -57,7 +57,8 @@ export class ControlAdaptor {
   }
 
   applySequence(nc: Puzzle, seq: SequenceResult[]) {
-    let cubeIDs = this.threeAdaptor.cube.p.pieces.map(p => p.id);
+    let cube = this.threeAdaptor.cube;
+    let cubeIDs = cube.p.pieces.map(p => p.id);
     let ncIDs = nc.p.pieces.map(p => p.id);
     let idMap: Map<string, string> = new Map(ncIDs.map((id, pos) => [id, cubeIDs[pos]]));
 
@@ -69,17 +70,18 @@ export class ControlAdaptor {
 
     this.states.push(getMatrices(allObjects));
 
+    let center = cube.p.center;
+    let c = new Vector3(center.x, center.y, center.z);
+
     for (let i = 0, maxi = seq.length; i < maxi; i += 1) {
       let s = seq[i];
       let nu = new Vector3(s.u.x, s.u.y, s.u.z).normalize();
       let ang = s.ang;
       let ids = s.pieces;
-      let center = this.threeAdaptor.cube.p.center;
-      let c = new Vector3(center.x, center.y, center.z);
 
       this.stateFilter.push(
         allObjects.map(d => {
-          if (!ids.some(id => idMap.get(id) === (d.userData as Piece).id)) {
+          if (!ids.some(id => idMap.get(id) === (d.userData.data as Piece).id)) {
             return false;
           }
 
@@ -90,9 +92,6 @@ export class ControlAdaptor {
           d.parent?.worldToLocal(d.position);
           d.rotateOnWorldAxis(nu, ang);
           d.updateMatrixWorld();
-
-          // }
-
           return true;
         })
       );

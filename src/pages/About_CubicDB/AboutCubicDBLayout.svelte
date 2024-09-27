@@ -124,7 +124,7 @@
 
     <Button
       class="bg-pink-600 text-gray-300 gap-2"
-      on:click={() => to("https://instagram.com/isaacvr96")}
+      on:click={() => to("https://instagram.com/cubicdb")}
     >
       <InstagramIcon size="1.2rem" /> Instagram</Button
     >

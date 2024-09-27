@@ -22,7 +22,7 @@
   export let enableRotation = true;
   export let gui = true;
   export let contained = false;
-  export let selectedPuzzle: PuzzleType = "gear";
+  export let selectedPuzzle: PuzzleType = "rubik";
   export let order = 3;
   export let animationTime = $screen.isMobile ? 150 : 200; /// Default animation time: 200ms
   // export let animationTime = 1000; /// Default animation time: 200ms
@@ -122,6 +122,12 @@
       case "KeyB": {
         if (e.ctrlKey) {
           showBackFace = !showBackFace;
+        }
+        break;
+      }
+      case "KeyD": {
+        if (e.ctrlKey) {
+          threeAdaptor.resetPuzzle();
         }
         break;
       }

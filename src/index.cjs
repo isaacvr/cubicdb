@@ -37,7 +37,7 @@ let dbFixedPath = join.apply(null, params);
 let dbPath = app.getPath("userData");
 
 // Fixed resources
-const fixedResources = ["algs.db", "tutorials.db"];
+const fixedResources = ["algs.db", "tutorials.db", "algversion.json", "tutversion.json"];
 
 fixedResources.forEach(res => {
   if (!existsSync(join(dbPath, res))) {
