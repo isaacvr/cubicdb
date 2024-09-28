@@ -65,7 +65,12 @@
   $: emitStatus(showOptions);
 </script>
 
-<Button color="alternative" class={"gap-1 h-9 py-1 px-2 " + cl} on:click={handleClick}>
+<Button
+  color="alternative"
+  class={"gap-1 h-9 py-1 px-2 " + cl}
+  on:click={handleClick}
+  {...$$restProps}
+>
   {#if items.some((a, p, i) => transform(a, p, i) === value)}
     {@const item = items.find((e, p, i) => transform(e, p, i) === value)}
 

@@ -1,116 +1,114 @@
 <script lang="ts">
   import { Link } from "svelte-routing";
-  import { globalLang } from "@stores/language.service";
-  import { getLanguage } from "@lang/index";
-  import type { ICard } from "@interfaces";
+  import { localLang } from "@stores/language.service";
   import { screen } from "@stores/screen.store";
-
-  let cards: ICard[] = [];
-
-  function updateTexts() {
-    const HOME = getLanguage($globalLang).HOME;
-
-    const showPrivate = false;
-
-    cards = [
-      {
-        title: HOME.tutorials,
-        route: "/tutorials",
-        ready: true,
-        cube: "/assets/tutorials.png",
-      },
-      {
-        title: HOME.algorithms,
-        route: "/algorithms",
-        ready: true,
-        cube: "/assets/algorithms.png",
-      },
-      {
-        title: HOME.timer,
-        route: "/timer",
-        ready: true,
-        cube: "/assets/timer.png",
-      },
-      {
-        title: HOME.reconstructions,
-        route: "/reconstructions",
-        ready: true,
-        cube: "/assets/reconstructions.png",
-      },
-      {
-        title: HOME.battle,
-        route: "/battle",
-        ready: true,
-        cube: "/assets/battle.png",
-      },
-      {
-        title: HOME.pll_recognition,
-        route: "/pll-trainer",
-        ready: true,
-        cube: "/assets/pll.png",
-      },
-      {
-        title: HOME.simulator,
-        route: "/simulator",
-        ready: true,
-        cube: "/assets/megaminx.png",
-      },
-      {
-        title: HOME.contest,
-        route: "/contest",
-        cube: "/assets/logo_dark.svg",
-        ready: showPrivate,
-      },
-      {
-        title: HOME.tools,
-        route: "/tools",
-        cube: "/assets/tools.png",
-        ready: true,
-      },
-      {
-        title: HOME.importExport,
-        route: "/import-export",
-        cube: "/assets/import-export.png",
-        ready: true,
-      },
-      {
-        title: HOME.settings,
-        route: "/settings",
-        ready: true,
-        cube: "/assets/settings.png",
-      },
-      {
-        title: HOME.about,
-        route: "/cubicdb",
-        cube: "/assets/logo_dark.svg",
-        ready: true,
-      },
-      {
-        title: "Remote",
-        route: "/remote",
-        cube: "/assets/logo_dark.svg",
-        ready: false,
-      },
-    ].filter(c => c.ready);
-  }
-
-  $: $globalLang, updateTexts();
 </script>
 
 <main class="container-mini relative">
   <ul class="w-full grid place-items-center" class:isMobile={$screen.isMobile}>
-    {#each cards as card (card.route)}
-      <li
-        class="w-full max-w-[12rem] h-48 shadow-md rounded-md select-none cursor-pointer card
-          transition-all duration-200 grid place-items-center justify-center py-3 px-2
-          bg-backgroundLv1 hover:shadow-2xl hover:bg-backgroundLv2 hover:shadow-primary-900 relative"
-      >
-        <Link class="flex flex-col items-center justify-between w-full h-full" to={card.route}>
-          <img class="mx-auto" src={card.puzzle ? card.puzzle.img : card.cube} alt={card.title} />
-          <h2 class="text-sm text-center">{card.title}</h2>
-        </Link>
-      </li>
-    {/each}
+    <!-- Tutorials -->
+    <li>
+      <Link class="flex flex-col items-center justify-between w-full h-full" to="/tutorials">
+        <img class="mx-auto" src="/assets/tutorials.png" alt="" />
+        <h2 class="text-sm text-center">{$localLang.HOME.tutorials}</h2>
+      </Link>
+    </li>
+
+    <!-- Algorithms -->
+    <li>
+      <Link class="flex flex-col items-center justify-between w-full h-full" to="/algorithms">
+        <img class="mx-auto" src="/assets/algorithms.png" alt="" />
+        <h2 class="text-sm text-center">{$localLang.HOME.algorithms}</h2>
+      </Link>
+    </li>
+
+    <!-- Timer -->
+    <li>
+      <Link class="flex flex-col items-center justify-between w-full h-full" to="/timer">
+        <img class="mx-auto" src="/assets/timer.png" alt="" />
+        <h2 class="text-sm text-center">{$localLang.HOME.timer}</h2>
+      </Link>
+    </li>
+
+    <!-- Reconstructions -->
+    <li>
+      <Link class="flex flex-col items-center justify-between w-full h-full" to="/reconstructions">
+        <img class="mx-auto" src="/assets/reconstructions.png" alt="" />
+        <h2 class="text-sm text-center">{$localLang.HOME.reconstructions}</h2>
+      </Link>
+    </li>
+
+    <!-- Battle -->
+    <li>
+      <Link class="flex flex-col items-center justify-between w-full h-full" to="/battle">
+        <img class="mx-auto" src="/assets/battle.png" alt="" />
+        <h2 class="text-sm text-center">{$localLang.HOME.battle}</h2>
+      </Link>
+    </li>
+
+    <!-- PLL Recognition -->
+    <li>
+      <Link class="flex flex-col items-center justify-between w-full h-full" to="/pll-trainer">
+        <img class="mx-auto" src="/assets/pll.png" alt="" />
+        <h2 class="text-sm text-center">{$localLang.HOME.pll_recognition}</h2>
+      </Link>
+    </li>
+
+    <!-- Simulator -->
+    <li>
+      <Link class="flex flex-col items-center justify-between w-full h-full" to="/simulator">
+        <img class="mx-auto" src="/assets/megaminx.png" alt="" />
+        <h2 class="text-sm text-center">{$localLang.HOME.simulator}</h2>
+      </Link>
+    </li>
+
+    <!-- Contest -->
+    <!-- <li>
+      <Link class="flex flex-col items-center justify-between w-full h-full" to="/contest">
+        <img class="mx-auto" src="/assets/logo_dark.svg" alt="" />
+        <h2 class="text-sm text-center">{$localLang.HOME.contest}</h2>
+      </Link>
+    </li> -->
+
+    <!-- Tools -->
+    <li>
+      <Link class="flex flex-col items-center justify-between w-full h-full" to="/tools">
+        <img class="mx-auto" src="/assets/tools.png" alt="" />
+        <h2 class="text-sm text-center">{$localLang.HOME.tools}</h2>
+      </Link>
+    </li>
+
+    <!-- Import / Export -->
+    <li>
+      <Link class="flex flex-col items-center justify-between w-full h-full" to="/import-export">
+        <img class="mx-auto" src="/assets/import-export.png" alt="" />
+        <h2 class="text-sm text-center">{$localLang.HOME.importExport}</h2>
+      </Link>
+    </li>
+
+    <!-- Settings -->
+    <li>
+      <Link class="flex flex-col items-center justify-between w-full h-full" to="/settings">
+        <img class="mx-auto" src="/assets/settings.png" alt="" />
+        <h2 class="text-sm text-center">{$localLang.HOME.settings}</h2>
+      </Link>
+    </li>
+
+    <!-- About -->
+    <li>
+      <Link class="flex flex-col items-center justify-between w-full h-full" to="/cubicdb">
+        <img class="mx-auto" src="/assets/logo_dark.svg" alt="" />
+        <h2 class="text-sm text-center">{$localLang.HOME.about}</h2>
+      </Link>
+    </li>
+
+    <!-- Remote -->
+    <!-- <li>
+      <Link class="flex flex-col items-center justify-between w-full h-full" to="/remote">
+        <img class="mx-auto" src="/assets/logo_dark.svg" alt="" />
+        <h2 class="text-sm text-center">Remote</h2>
+      </Link>
+    </li> -->
   </ul>
 </main>
 
@@ -127,7 +125,9 @@
   }
 
   ul li {
-    @apply w-40 h-48;
+    @apply w-40 h-48 max-w-[12rem] shadow-md rounded-md select-none cursor-pointer
+      transition-all duration-200 grid place-items-center justify-center py-3 px-2
+      bg-backgroundLv1 hover:shadow-2xl hover:bg-backgroundLv2 hover:shadow-primary-900 relative;
   }
 
   ul img {

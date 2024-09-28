@@ -56,6 +56,10 @@ export const Spanish: Language = {
     invert: "Invertir",
     true: "Verdadero",
     false: "Falso",
+    minimize: "Minimizar",
+    maximize: "Maximizar",
+    close: "Cerrar",
+    selectLanguage: "Seleccionar idioma",
   },
   TUTORIALS: {
     easy: "Fácil",

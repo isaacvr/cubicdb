@@ -56,6 +56,10 @@ export const Chinese: Language = {
     invert: "反转",
     true: "真",
     false: "假",
+    minimize: "最小化",
+    maximize: "最大化",
+    close: "关闭",
+    selectLanguage: "选择语言",
   },
   TUTORIALS: {
     easy: "简单",

@@ -835,6 +835,10 @@ export interface Language {
     invert: string;
     true: string;
     false: string;
+    minimize: string;
+    maximize: string;
+    close: string;
+    selectLanguage: string;
   };
   TUTORIALS: {
     easy: string;

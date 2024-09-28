@@ -47,7 +47,7 @@
         { text: $localLang.global.accept, callback: () => {}, color: "alternative" },
         { text: $localLang.global.restart, callback: () => dataService.close(), color: "purple" },
       ],
-      fixed: true
+      fixed: true,
     });
   }
 
@@ -173,6 +173,7 @@
           iconComponent={FlagIcon}
           onChange={() => localStorage.setItem("language", $globalLang)}
           preferIcon
+          aria-label={$localLang.global.selectLanguage}
         />
 
         {#if dataService.isElectron && $screen.width > 640}
@@ -181,13 +182,16 @@
           <Button
             color="none"
             class="ml-2 cursor-pointer rounded-sm hover:bg-primary-600 hover:text-white"
+            aria-label={$localLang.global.minimize}
             on:click={minimize}
           >
             <Minus />
           </Button>
+
           <Button
             color="none"
             class="cursor-pointer rounded-sm hover:bg-red-600 hover:text-white"
+            aria-label={$localLang.global.close}
             on:click={close}
           >
             <Close height="100%" />
