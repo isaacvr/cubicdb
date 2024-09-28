@@ -4,7 +4,7 @@ import type { PuzzleInterface } from "@interfaces";
 import { EPS, STANDARD_PALETTE } from "@constants";
 import { Piece } from "./Piece";
 import { Sticker } from "./Sticker";
-import { assignColors, getAllStickers, random, scaleSticker } from "./puzzleUtils";
+import { assignColors, getAllStickers, scaleSticker } from "./puzzleUtils";
 import { getRandomScramble } from "@cstimer/scramble/scramble_333";
 import { ScrambleParser } from "@classes/scramble-parser";
 import { ImageSticker } from "./ImageSticker";

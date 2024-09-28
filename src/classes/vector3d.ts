@@ -1,25 +1,25 @@
-import { EPS } from '@constants';
-import { Vector3 } from 'three';
+import { EPS } from "@constants";
+import { Vector3 } from "three";
 
 const PI = Math.PI;
 const TAU = PI * 2;
 
 function getCanonical(v: Vector3D) {
-  let dirs = [ UP, RIGHT, FRONT, DOWN, LEFT, BACK ];
+  let dirs = [UP, RIGHT, FRONT, DOWN, LEFT, BACK];
 
   for (let i = 0, maxi = dirs.length; i < maxi; i += 1) {
-    if ( dirs[i].sub(v).abs() < EPS ) {
+    if (dirs[i].sub(v).abs() < EPS) {
       return dirs[i].clone();
     }
   }
 
-  let cmps = [ v.x, v.y, v.z ];
+  let cmps = [v.x, v.y, v.z];
 
   cmps = cmps
-    .map(n => Math.abs(n - Math.round(n)) < EPS ? Math.round(n) : n)
+    .map(n => (Math.abs(n - Math.round(n)) < EPS ? Math.round(n) : n))
     .map(n => {
       for (let i = 2; i <= 100; i += 1) {
-        if ( Math.abs(n * i - Math.round(n * i)) < EPS * i ) {
+        if (Math.abs(n * i - Math.round(n * i)) < EPS * i) {
           return Math.round(n * i) / i;
         }
       }
@@ -35,7 +35,7 @@ export class Vector3D {
   z: number;
   private isConstant: boolean;
 
-  constructor(x ?: number, y ?: number, z ?: number, isConstant = false) {
+  constructor(x?: number, y?: number, z?: number, isConstant = false) {
     this.x = x || 0;
     this.y = y || 0;
     this.z = z || 0;
@@ -49,9 +49,9 @@ export class Vector3D {
   }
 
   static crossValue(a: Vector3D, b: Vector3D, c: Vector3D): number {
-    return a.x * ( b.y * c.z - c.y * b.z ) - 
-           a.y * ( b.x * c.z - c.x * b.z ) +
-           a.z * ( b.x * c.y - c.x * b.y );
+    return (
+      a.x * (b.y * c.z - c.y * b.z) - a.y * (b.x * c.z - c.x * b.z) + a.z * (b.x * c.y - c.x * b.y)
+    );
   }
 
   static direction(p1: Vector3D, p2: Vector3D, p3: Vector3D, vec: Vector3D): -1 | 0 | 1 {
@@ -59,11 +59,11 @@ export class Vector3D {
   }
 
   static direction1(anchor: Vector3D, u: Vector3D, pt: Vector3D): -1 | 0 | 1 {
-    let dot = u.dot( pt.sub(anchor) );
-    if ( Math.abs(dot) < EPS ) {
+    let dot = u.dot(pt.sub(anchor));
+    if (Math.abs(dot) < EPS) {
       return 0;
     }
-    return <-1 | 0 | 1> Math.sign(dot);
+    return <-1 | 0 | 1>Math.sign(dot);
   }
 
   static project(pt: Vector3D, a: Vector3D, b: Vector3D, c: Vector3D): Vector3D {
@@ -73,7 +73,7 @@ export class Vector3D {
   static project1(pt: Vector3D, a: Vector3D, u: Vector3D): Vector3D {
     let v = pt.sub(a);
     let dist = u.dot(v);
-    return pt.add( u.mul(-dist) );
+    return pt.add(u.mul(-dist));
   }
 
   setConstant(cnt: boolean) {
@@ -89,7 +89,7 @@ export class Vector3D {
   }
 
   reflect(a: Vector3D, b: Vector3D, c: Vector3D, self?: boolean): Vector3D {
-    if ( self && this.isConstant ) {
+    if (self && this.isConstant) {
       console.log("Trying to modify a constant vector");
       return this;
     }
@@ -97,89 +97,103 @@ export class Vector3D {
   }
 
   reflect1(a: Vector3D, u: Vector3D, self?: boolean): Vector3D {
-    if ( self && this.isConstant ) {
+    if (self && this.isConstant) {
       console.log("Trying to modify a constant vector");
       return this;
     }
 
-    return this.add( u.mul( -2 * this.sub(a).dot(u) ), self );
+    return this.add(u.mul(-2 * this.sub(a).dot(u)), self);
   }
 
   cross(v: Vector3D): Vector3D {
-    return getCanonical(new Vector3D(
-      this.y * v.z - this.z * v.y,
-      this.z * v.x - this.x * v.z,
-      this.x * v.y - this.y * v.x
-    ));
+    return getCanonical(
+      new Vector3D(
+        this.y * v.z - this.z * v.y,
+        this.z * v.x - this.x * v.z,
+        this.x * v.y - this.y * v.x
+      )
+    );
   }
 
   dot(v: Vector3D): number {
     return this.x * v.x + this.y * v.y + this.z * v.z;
   }
 
-  add(v: Vector3D, self ?: boolean): Vector3D {
-    if ( self && this.isConstant ) {
+  add(v: Vector3D, self?: boolean): Vector3D {
+    if (self && this.isConstant) {
       console.log("Trying to modify a constant vector");
       return this;
     }
 
-    if ( self ) {
-      this.x += v.x; this.y += v.y; this.z += v.z;
+    if (self) {
+      this.x += v.x;
+      this.y += v.y;
+      this.z += v.z;
       return this;
     }
     return new Vector3D(this.x + v.x, this.y + v.y, this.z + v.z);
   }
 
-  sub(v: Vector3D, self ?: boolean): Vector3D {
-    if ( self && this.isConstant ) {
+  sub(v: Vector3D, self?: boolean): Vector3D {
+    if (self && this.isConstant) {
       console.log("Trying to modify a constant vector");
       return this;
     }
 
-    if ( self ) {
-      this.x -= v.x; this.y -= v.y; this.z -= v.z;
+    if (self) {
+      this.x -= v.x;
+      this.y -= v.y;
+      this.z -= v.z;
       return this;
     }
     return new Vector3D(this.x - v.x, this.y - v.y, this.z - v.z);
   }
 
-  mul(f: number, self ?: boolean): Vector3D {
-    if ( self && this.isConstant ) {
+  mul(f: number, self?: boolean): Vector3D {
+    if (self && this.isConstant) {
       console.log("Trying to modify a constant vector");
       return this;
     }
 
-    if ( self ) {
-      this.x *= f; this.y *= f; this.z *= f;
+    if (self) {
+      this.x *= f;
+      this.y *= f;
+      this.z *= f;
       return this;
     }
     return new Vector3D(this.x * f, this.y * f, this.z * f);
   }
 
-  div(f: number, self ?: boolean): Vector3D {
-    if ( self && this.isConstant ) {
+  div(f: number, self?: boolean): Vector3D {
+    if (self && this.isConstant) {
       console.log("Trying to modify a constant vector");
       return this;
     }
 
-    if ( self ) {
-      this.x /= f; this.y /= f; this.z /= f;
+    if (self) {
+      this.x /= f;
+      this.y /= f;
+      this.z /= f;
       return this;
     }
     return new Vector3D(this.x / f, this.y / f, this.z / f);
   }
 
-  rotate(O: Vector3D, u: Vector3D, ang: number, self ?: boolean): Vector3D {
-    if ( self && this.isConstant ) {
+  rotate(O: Vector3D, u: Vector3D, ang: number, self?: boolean): Vector3D {
+    if (self && this.isConstant) {
       console.log("Trying to modify a constant vector");
       return this;
     }
 
     const vecs = [0, 1, 2].map(n => [[RIGHT, UP, FRONT][n], n]);
-    const fAngs = [0, 1, 2, 3].map(n => [n * PI / 2, n]);
+    const fAngs = [0, 1, 2, 3].map(n => [(n * PI) / 2, n]);
     const rAng = ((ang % TAU) + TAU) % TAU;
 
-    if ( O.abs() < EPS && vecs.some(v => (v[0] as Vector3D).cross(u).abs() < EPS) && fAngs.some(a => Math.abs(a[0] - rAng) < EPS) ) {
+    if (
+      O.abs() < EPS &&
+      vecs.some(v => (v[0] as Vector3D).cross(u).abs() < EPS) &&
+      fAngs.some(a => Math.abs(a[0] - rAng) < EPS)
+    ) {
       let idx = [
         (vt: Vector3D) => new Vector3D(vt.x, -vt.z, vt.y), // RIGHT => (x, y, z) => (x, -z, y)
         (vt: Vector3D) => new Vector3D(vt.z, vt.y, -vt.x), // UP    => (x, y, z) => (z, y, -x)
@@ -195,7 +209,7 @@ export class Vector3D {
         vt = idx[vIndex](vt);
       }
 
-      if ( self ) {
+      if (self) {
         this.x = vt.x;
         this.y = vt.y;
         this.z = vt.z;
@@ -208,9 +222,9 @@ export class Vector3D {
     let nu = new Vector3(u.x, u.y, u.z).setLength(1);
 
     let v3 = new Vector3(this.x - O.x, this.y - O.y, this.z - O.z);
-    v3.applyAxisAngle(nu, ang).add( new Vector3(O.x, O.y, O.z) );
+    v3.applyAxisAngle(nu, ang).add(new Vector3(O.x, O.y, O.z));
 
-    if ( self ) {
+    if (self) {
       this.x = v3.x;
       this.y = v3.y;
       this.z = v3.z;
@@ -225,23 +239,23 @@ export class Vector3D {
   }
 
   abs(): number {
-    return this.abs2() ** .5;
+    return this.abs2() ** 0.5;
   }
 
   abs2(): number {
-    return (this.x ** 2 + this.y ** 2 + this.z ** 2);
+    return this.x ** 2 + this.y ** 2 + this.z ** 2;
   }
 
   unit(): Vector3D {
     let len = this.abs();
-    if ( len != 0 ) {
-      return getCanonical( this.div(len) );
+    if (len != 0) {
+      return getCanonical(this.div(len));
     }
     return new Vector3D(0, 0, 0);
   }
 
   proj(a: Vector3D): Vector3D {
-    return a.setLength( this.dot(a) / a.abs() );
+    return a.setLength(this.dot(a) / a.abs());
   }
 
   setLength(n: number): Vector3D {
@@ -253,7 +267,7 @@ export class Vector3D {
   }
 
   toNormal(): Vector3D {
-    let coords = [ this.x, this.y, this.z ].map(e => Math.abs(e) < EPS ? 0 : Math.sign(e) );
+    let coords = [this.x, this.y, this.z].map(e => (Math.abs(e) < EPS ? 0 : Math.sign(e)));
     this.x = coords[0];
     this.y = coords[1];
     this.z = coords[2];

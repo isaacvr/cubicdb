@@ -147,11 +147,13 @@
 
   onMount(() => {
     dataService.getSolves().then(solves => {
-      oSolves = solves.map(s => {
-        let cp = { ...s };
-        delete cp._id;
-        return cp;
-      }).sort((a, b) => a.session < b.session ? -1 : 1);
+      oSolves = solves
+        .map(s => {
+          let cp = { ...s };
+          delete cp._id;
+          return cp;
+        })
+        .sort((a, b) => (a.session < b.session ? -1 : 1));
     });
 
     dataService.getSessions().then(sessions => {

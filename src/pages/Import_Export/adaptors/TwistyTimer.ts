@@ -22,7 +22,7 @@ export class TwistyTimer implements CubicDBAdaptor {
   public modes: string[];
 
   constructor() {
-    this.modes = [ "From backup", "From txt" ];
+    this.modes = ["From backup", "From txt"];
   }
 
   get name(): string {
@@ -31,9 +31,9 @@ export class TwistyTimer implements CubicDBAdaptor {
 
   toCubicDB(str: string, mode?: number): CubicDBData {
     let m = between(mode || 0, 0, this.modes.length - 1);
-    if ( m === 0 ) {
+    if (m === 0) {
       return this.fromBackup(str);
-    } else if ( m === 1 ) {
+    } else if (m === 1) {
       return this.fromTXT(str);
     }
 
@@ -46,27 +46,27 @@ export class TwistyTimer implements CubicDBAdaptor {
       sessions: [],
       solves: [],
     };
-    let rows = str.split('\n').slice(1);
+    let rows = str.split("\n").slice(1);
 
     for (let i = 0, maxi = rows.length; i < maxi; i += 1) {
       let parts: string[] = rows[i].trim().split(";");
 
-      if ( parts.length < 7 ) {
+      if (parts.length < 7) {
         continue;
       }
 
-      let cat: string = parts.shift()?.slice(1, -1) || '';
-      let session: string = cat + '_' + (parts.shift()?.slice(1, -1) || '');
+      let cat: string = parts.shift()?.slice(1, -1) || "";
+      let session: string = cat + "_" + (parts.shift()?.slice(1, -1) || "");
       let time = +(parts.shift()?.slice(1, -1) || 0);
       let date = +(parts.shift()?.slice(1, -1) || 0);
-      let scramble: string = parts.shift()?.slice(1, -1) || '';
+      let scramble: string = parts.shift()?.slice(1, -1) || "";
       let penalty = +(parts.shift()?.slice(1, -1) || 0);
       let comments = parts.join(";").slice(1, -1);
 
-      if ( !sessionMap.has(session) ) {
+      if (!sessionMap.has(session)) {
         sessionMap.set(session, randomUUID());
         res.sessions.push({
-          _id: sessionMap.get(session) || '',
+          _id: sessionMap.get(session) || "",
           name: session,
           settings: genSettings(),
         });
@@ -74,16 +74,15 @@ export class TwistyTimer implements CubicDBAdaptor {
 
       res.solves.push({
         date,
-        penalty: [ Penalty.NONE, Penalty.P2, Penalty.DNF ][penalty],
+        penalty: [Penalty.NONE, Penalty.P2, Penalty.DNF][penalty],
         scramble,
         selected: false,
-        session: sessionMap.get(session) || '',
+        session: sessionMap.get(session) || "",
         time,
         _id: randomUUID(),
         comments,
         mode: PUZZLE_CODE.get(cat),
       });
-
     }
 
     return res;
@@ -94,31 +93,31 @@ export class TwistyTimer implements CubicDBAdaptor {
       sessions: [],
       solves: [],
     };
-    let rows = str.split('\n');
+    let rows = str.split("\n");
     let s: Session = {
       _id: randomUUID(),
       name: "My session",
       settings: genSettings(),
     };
 
-    res.sessions.push( s );
+    res.sessions.push(s);
 
     for (let i = 0, maxi = rows.length; i < maxi; i += 1) {
       let parts = rows[i].trim().split(";");
 
-      if ( parts.length < 3 ) {
+      if (parts.length < 3) {
         continue;
       }
 
       let time = +(parts.shift()?.slice(1, -1) || 0) * 1000;
-      let scramble: string = parts.shift()?.slice(1, -1) || '';
+      let scramble: string = parts.shift()?.slice(1, -1) || "";
       let date = moment(parts.shift()?.slice(1, -1)).toDate().getTime();
-      let penalty: string = parts.shift() || '';
+      let penalty: string = parts.shift() || "";
       let pz = identifyPuzzle(scramble);
 
-      if  ( s.name == 'My session' ) {
+      if (s.name == "My session") {
         console.log("PZ: ", pz);
-        s.name = pz.name + '-' + Math.random().toString().slice(-4);
+        s.name = pz.name + "-" + Math.random().toString().slice(-4);
       }
 
       res.solves.push({
@@ -134,15 +133,15 @@ export class TwistyTimer implements CubicDBAdaptor {
         len: pz.len,
       });
     }
-    
+
     return res;
   }
 
   fromCubicDB(data: CubicDBData, mode?: number): string {
     let m = between(mode || 0, 0, this.modes.length - 1);
-    if ( m === 0 ) {
+    if (m === 0) {
       return this.toBackup(data);
-    } else if ( m === 1 ) {
+    } else if (m === 1) {
       return this.toTXT(data);
     }
     return "";

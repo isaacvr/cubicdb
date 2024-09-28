@@ -84,6 +84,6 @@ test("getAverage function", () => {
     null,
     null,
     null,
-    40
+    40,
   ]);
 });

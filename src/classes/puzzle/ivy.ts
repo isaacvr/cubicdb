@@ -1,13 +1,12 @@
-import { LEFT, UP, BACK, RIGHT, FRONT, DOWN, CENTER } from './../vector3d';
-import { Vector3D } from '../../classes/vector3d';
-import type { PuzzleInterface } from '@interfaces';
+import { LEFT, UP, BACK, RIGHT, FRONT, DOWN, CENTER } from "./../vector3d";
+import { Vector3D } from "../../classes/vector3d";
+import type { PuzzleInterface } from "@interfaces";
 import { EPS, STANDARD_PALETTE } from "@constants";
-import { Piece } from './Piece';
-import { Sticker } from './Sticker';
-import { assignColors, getAllStickers, random } from './puzzleUtils';
+import { Piece } from "./Piece";
+import { Sticker } from "./Sticker";
+import { assignColors, getAllStickers, random } from "./puzzleUtils";
 
 export function IVY(): PuzzleInterface {
-
   const ivy: PuzzleInterface = {
     pieces: [],
     palette: STANDARD_PALETTE,
@@ -15,7 +14,7 @@ export function IVY(): PuzzleInterface {
     center: new Vector3D(0, 0, 0),
     faceVectors: [],
     getAllStickers: () => [],
-    faceColors: [ 'w', 'r', 'g', 'y', 'o', 'b' ],
+    faceColors: ["w", "r", "g", "y", "o", "b"],
     move: () => true,
     roundParams: [],
   };
@@ -24,7 +23,7 @@ export function IVY(): PuzzleInterface {
 
   const PI = Math.PI;
   const PI_2 = PI / 2;
-  const ANG = 2 * PI / 3;
+  const ANG = (2 * PI) / 3;
 
   let p1 = LEFT.add(UP).add(BACK);
   let p2 = LEFT.add(UP).add(FRONT);
@@ -33,17 +32,13 @@ export function IVY(): PuzzleInterface {
   let p5 = RIGHT.add(DOWN).add(FRONT);
   let p6 = LEFT.add(DOWN).add(BACK);
 
-  let cornerSticker = new Sticker([
-    p1,
-  ]);
+  let cornerSticker = new Sticker([p1]);
 
   let curvePoints: Vector3D[] = [];
 
   for (let i = 0, maxi = 25; i <= maxi; i += 1) {
     let alpha = i / maxi;
-    curvePoints.push(
-      p3.add( LEFT.mul(2).rotate(CENTER, DOWN, alpha * PI_2) )
-    );
+    curvePoints.push(p3.add(LEFT.mul(2).rotate(CENTER, DOWN, alpha * PI_2)));
   }
 
   cornerSticker.points.push(...curvePoints.map(e => e.clone()));
@@ -51,22 +46,21 @@ export function IVY(): PuzzleInterface {
   let centerPiece = new Piece([
     new Sticker([
       ...curvePoints.map(e => e.clone()).reverse(),
-      ...curvePoints.map((e: Vector3D) => e.rotate(CENTER, UP, PI)).reverse()
-    ])
+      ...curvePoints.map((e: Vector3D) => e.rotate(CENTER, UP, PI)).reverse(),
+    ]),
   ]);
 
-  centerPiece.stickers[0].vecs = [ p1.unit(), p3.unit(),
-  ];
+  centerPiece.stickers[0].vecs = [p1.unit(), p3.unit()];
 
   centerPiece.stickers[0].points.pop();
 
   let corner = new Piece([
     cornerSticker,
     cornerSticker.rotate(CENTER, p1, ANG),
-    cornerSticker.rotate(CENTER, p1, -ANG)
+    cornerSticker.rotate(CENTER, p1, -ANG),
   ]);
 
-  corner.stickers.forEach(s => s.vecs = [ p1.unit() ]);
+  corner.stickers.forEach(s => (s.vecs = [p1.unit()]));
 
   let pieces = ivy.pieces;
 
@@ -80,7 +74,7 @@ export function IVY(): PuzzleInterface {
     centerPiece.rotate(CENTER, UP, PI_2).rotate(CENTER, LEFT, PI_2),
     centerPiece.rotate(CENTER, UP, PI_2).rotate(CENTER, FRONT, PI_2),
     centerPiece.rotate(CENTER, UP, PI_2).rotate(CENTER, BACK, PI_2),
-    centerPiece.rotate(CENTER, UP, PI).rotate(CENTER, RIGHT, PI),
+    centerPiece.rotate(CENTER, UP, PI).rotate(CENTER, RIGHT, PI)
   );
 
   // Fix Ivy orientation to match real cube
@@ -93,26 +87,26 @@ export function IVY(): PuzzleInterface {
     [0, 1, 2].map(n => p3.rotate(CENTER, p2, ANG * n)), // L
     [0, 1, 2].map(n => p3.rotate(CENTER, p5, ANG * n)), // D
     [0, 1, 2].map(n => p1.rotate(CENTER, p6, ANG * n)), // B
-    [ CENTER, UP, FRONT ].map(v => v.add(LEFT.mul(2))), // x
-    [ CENTER, FRONT, RIGHT ].map(v => v.add(DOWN.mul(2))), // y
-    [ CENTER, UP, LEFT ].map(v => v.add(BACK.mul(2))), // z
+    [CENTER, UP, FRONT].map(v => v.add(LEFT.mul(2))), // x
+    [CENTER, FRONT, RIGHT].map(v => v.add(DOWN.mul(2))), // y
+    [CENTER, UP, LEFT].map(v => v.add(BACK.mul(2))), // z
   ];
 
-  ivy.move = function(scramble: string[]) {
-    let moves = scramble[0].match(new RegExp(`[${moveMap}]'?`, 'g'));
+  ivy.move = function (scramble: string[]) {
+    let moves = scramble[0].match(new RegExp(`[${moveMap}]'?`, "g"));
 
-    if ( moves ) {
+    if (moves) {
       for (let i = 0, maxi = moves.length; i < maxi; i += 1) {
         let mv = moves[i];
         let moveId = moveMap.indexOf(mv[0]);
         let plane = planes[moveId];
         let u = Vector3D.cross(plane[0], plane[1], plane[2]).unit();
         let pcs = pieces.filter(p => p.direction1(plane[0], u) >= 0);
-        let ang = Math.sign(mv.indexOf("'") + .1) * ANG;
+        let ang = Math.sign(mv.indexOf("'") + 0.1) * ANG;
 
         // Accept only double movements on x, y and z.
-        if ( moveId > 3 ) {
-          ang = ANG * 3 / 2;
+        if (moveId > 3) {
+          ang = (ANG * 3) / 2;
         }
 
         pcs.forEach(p => p.rotate(CENTER, u, ang, true));
@@ -121,24 +115,24 @@ export function IVY(): PuzzleInterface {
 
     return true;
   };
-  
-  ivy.toMove = function(piece: Piece, sticker: Sticker, dir: Vector3D) {
+
+  ivy.toMove = function (piece: Piece, sticker: Sticker, dir: Vector3D) {
     let mc = sticker.updateMassCenter();
     let toMovePieces = pieces.filter(p => p.direction1(mc, dir) === 0);
     return {
       pieces: toMovePieces,
-      ang: ANG
+      ang: ANG,
     };
   };
 
-  ivy.scramble = function() {
-    if ( !ivy.toMove ) return;
+  ivy.scramble = function () {
+    if (!ivy.toMove) return;
 
     const MOVES = 10;
     const corners = pieces.slice(0, 4);
 
     for (let i = 0; i < MOVES; i += 1) {
-      let p = random( corners ) as Piece;
+      let p = random(corners) as Piece;
       let s = random(p.stickers.filter(s => !/^[xd]{1}$/.test(s.color))) as Sticker;
       let vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > EPS));
       let pcs = ivy.toMove(p, s, vec);
@@ -152,14 +146,11 @@ export function IVY(): PuzzleInterface {
     y: -PI / 4,
     z: 0,
   };
-  
-  ivy.faceVectors = [
-    UP, RIGHT, FRONT, DOWN, LEFT, BACK
-  ];
+
+  ivy.faceVectors = [UP, RIGHT, FRONT, DOWN, LEFT, BACK];
 
   assignColors(ivy, ivy.faceColors);
   // roundCorners(ivy, 0.05, 0.97);
 
   return ivy;
-
 }

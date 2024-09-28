@@ -52,7 +52,7 @@ export async function rotateBundleGPU(points: Vector3D[], O: Vector3D, u: Vector
         binding: 0,
         visibility: GPUShaderStage.COMPUTE,
         buffer: {
-          type: 'storage',
+          type: "storage",
           hasDynamicOffset: false,
           minBindingSize: 0,
         },
@@ -61,7 +61,7 @@ export async function rotateBundleGPU(points: Vector3D[], O: Vector3D, u: Vector
         binding: 1,
         visibility: GPUShaderStage.COMPUTE,
         buffer: {
-          type: 'storage',
+          type: "storage",
           hasDynamicOffset: false,
           minBindingSize: 0,
         },

@@ -1,5 +1,5 @@
 import type { Actor } from "@helpers/stateMachine";
-import type { AblyContext, Game } from "@interfaces";
+import type { AblyContext } from "@interfaces";
 import { createActor, setup } from "xstate";
 import {
   createBattle,

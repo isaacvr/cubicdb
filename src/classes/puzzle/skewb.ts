@@ -1,11 +1,11 @@
-import { RIGHT, LEFT, DOWN, FRONT } from './../vector3d';
-import { Vector3D, CENTER, BACK, UP } from '../../classes/vector3d';
-import type { PuzzleInterface } from '@interfaces';
+import { RIGHT, LEFT, DOWN, FRONT } from "./../vector3d";
+import { Vector3D, CENTER, BACK, UP } from "../../classes/vector3d";
+import type { PuzzleInterface } from "@interfaces";
 import { EPS, STANDARD_PALETTE } from "@constants";
-import { Piece } from './Piece';
-import { Sticker } from './Sticker';
-import { assignColors, getAllStickers, random } from './puzzleUtils';
-import { ScrambleParser } from '@classes/scramble-parser';
+import { Piece } from "./Piece";
+import { Sticker } from "./Sticker";
+import { assignColors, getAllStickers, random } from "./puzzleUtils";
+import { ScrambleParser } from "@classes/scramble-parser";
 
 export function SKEWB(): PuzzleInterface {
   let skewb: PuzzleInterface = {
@@ -15,7 +15,7 @@ export function SKEWB(): PuzzleInterface {
     center: new Vector3D(0, 0, 0),
     faceVectors: [],
     getAllStickers: () => [],
-    faceColors: [ 'w', 'r', 'g', 'y', 'o', 'b' ],
+    faceColors: ["w", "r", "g", "y", "o", "b"],
     move: () => true,
     roundParams: [],
   };
@@ -26,27 +26,16 @@ export function SKEWB(): PuzzleInterface {
   const PI_2 = PI / 2;
   const PI_3 = PI / 3;
 
-  let center = new Piece([
-    new Sticker([
-      UP.add(BACK),
-      UP.add(LEFT),
-      UP.add(FRONT),
-      UP.add(RIGHT),
-    ])
-  ]);
+  let center = new Piece([new Sticker([UP.add(BACK), UP.add(LEFT), UP.add(FRONT), UP.add(RIGHT)])]);
 
   center.stickers[0].vecs = [
-    UP.add( BACK ).add(LEFT).unit(),
-    UP.add( BACK ).add(RIGHT).unit(),
-    UP.add( FRONT ).add(LEFT).unit(),
-    UP.add( FRONT ).add(RIGHT).unit(),
+    UP.add(BACK).add(LEFT).unit(),
+    UP.add(BACK).add(RIGHT).unit(),
+    UP.add(FRONT).add(LEFT).unit(),
+    UP.add(FRONT).add(RIGHT).unit(),
   ];
 
-  let cornerSticker = new Sticker([
-    UP.add(RIGHT),
-    UP.add(FRONT),
-    UP.add(FRONT).add(RIGHT)
-  ]);
+  let cornerSticker = new Sticker([UP.add(RIGHT), UP.add(FRONT), UP.add(FRONT).add(RIGHT)]);
 
   let anchor = UP.add(FRONT).add(RIGHT);
 
@@ -65,14 +54,14 @@ export function SKEWB(): PuzzleInterface {
   });
 
   for (let i = 0; i < 4; i += 1) {
-    skewb.pieces.push(center.rotate(CENTER, RIGHT, i * PI_2) );
+    skewb.pieces.push(center.rotate(CENTER, RIGHT, i * PI_2));
   }
-  skewb.pieces.push(center.rotate(CENTER, BACK, PI_2) );
-  skewb.pieces.push(center.rotate(CENTER, FRONT, PI_2) );
+  skewb.pieces.push(center.rotate(CENTER, BACK, PI_2));
+  skewb.pieces.push(center.rotate(CENTER, FRONT, PI_2));
 
   for (let i = 0; i <= 1; i += 1) {
     for (let j = 0; j < 4; j += 1) {
-      skewb.pieces.push( corner.rotate(CENTER, RIGHT, i * PI_2).rotate(CENTER, UP, j * PI_2) );
+      skewb.pieces.push(corner.rotate(CENTER, RIGHT, i * PI_2).rotate(CENTER, UP, j * PI_2));
     }
   }
 
@@ -81,28 +70,28 @@ export function SKEWB(): PuzzleInterface {
   let pieces = skewb.pieces;
 
   let planes = [
-    [ FRONT.add(LEFT), FRONT.add(UP), RIGHT.add(UP) ],    // F
-    [ RIGHT.add(UP), FRONT.add(UP), FRONT.add(LEFT) ],    // U
-    [ BACK.add(UP), RIGHT.add(FRONT), RIGHT.add(UP) ],    // R
-    [ RIGHT.add(FRONT), LEFT.add(UP), UP.add(FRONT) ],    // L
-    [ LEFT.add(UP), RIGHT.add(BACK), BACK.add(UP) ],      // B
-    [ LEFT.add(UP), BACK.add(UP), RIGHT.add(BACK) ],      // f
-    [ FRONT.add(RIGHT), FRONT.add(UP), LEFT.add(UP) ],    // r
-    [ RIGHT.add(UP), FRONT.add(RIGHT), FRONT.add(DOWN) ], // l
-    [ RIGHT.add(UP), FRONT.add(UP), FRONT.add(LEFT) ],    // b
+    [FRONT.add(LEFT), FRONT.add(UP), RIGHT.add(UP)], // F
+    [RIGHT.add(UP), FRONT.add(UP), FRONT.add(LEFT)], // U
+    [BACK.add(UP), RIGHT.add(FRONT), RIGHT.add(UP)], // R
+    [RIGHT.add(FRONT), LEFT.add(UP), UP.add(FRONT)], // L
+    [LEFT.add(UP), RIGHT.add(BACK), BACK.add(UP)], // B
+    [LEFT.add(UP), BACK.add(UP), RIGHT.add(BACK)], // f
+    [FRONT.add(RIGHT), FRONT.add(UP), LEFT.add(UP)], // r
+    [RIGHT.add(UP), FRONT.add(RIGHT), FRONT.add(DOWN)], // l
+    [RIGHT.add(UP), FRONT.add(UP), FRONT.add(LEFT)], // b
 
-    [ BACK, UP, FRONT ].map(e => e.add(RIGHT.mul(2))),    // x
-    [ RIGHT, BACK, LEFT ].map(e => e.add(UP.mul(2))),     // y
-    [ RIGHT, UP, LEFT ].map(e => e.add(FRONT.mul(2))),    // z
+    [BACK, UP, FRONT].map(e => e.add(RIGHT.mul(2))), // x
+    [RIGHT, BACK, LEFT].map(e => e.add(UP.mul(2))), // y
+    [RIGHT, UP, LEFT].map(e => e.add(FRONT.mul(2))), // z
   ];
 
-  let trySingleMove = (mv: any): { pieces: Piece[], u: Vector3D, ang: number } | null => {
+  let trySingleMove = (mv: any): { pieces: Piece[]; u: Vector3D; ang: number } | null => {
     let moveId = mv[0];
     let turns = mv[1];
     let pts1 = planes[moveId];
 
-    if ( moveId >= planes.length - 3 ) {
-      turns = -turns * 3 / 4;
+    if (moveId >= planes.length - 3) {
+      turns = (-turns * 3) / 4;
     }
 
     const u = Vector3D.cross(pts1[0], pts1[1], pts1[2]).unit();
@@ -114,33 +103,33 @@ export function SKEWB(): PuzzleInterface {
 
     for (let i = 0, maxi = pieces.length; i < maxi; i += 1) {
       let d = pieces[i].direction1(pts1[0], u);
-      if ( d === 0 ) {
+      if (d === 0) {
         console.log("Invalid move. Piece intersection detected.", MOVE_MAP[moveId], turns, mv);
         console.log("Piece: ", i, pieces[i], pts1);
         return null;
       }
 
-      if ( d < 0 ) {
-        pcs.push( pieces[i] );
+      if (d < 0) {
+        pcs.push(pieces[i]);
       }
     }
 
     return {
       pieces: pcs,
       u: mu,
-      ang
+      ang,
     };
   };
 
-  skewb.move = function(moves: any[]) {
+  skewb.move = function (moves: any[]) {
     for (let m = 0, maxm = moves.length; m < maxm; m += 1) {
       let mv = moves[m];
       let pcs = trySingleMove(mv);
 
-      if ( !pcs ) {
+      if (!pcs) {
         return false;
       }
-      
+
       let { u, ang } = pcs;
       pcs.pieces.forEach(p => p.rotate(CENTER, u, ang, true));
     }
@@ -148,22 +137,22 @@ export function SKEWB(): PuzzleInterface {
     return true;
   };
 
-  skewb.toMove = function(piece: Piece, sticker: Sticker, dir: Vector3D) {
+  skewb.toMove = function (piece: Piece, sticker: Sticker, dir: Vector3D) {
     let mc = sticker.updateMassCenter();
     let toMovePieces = pieces.filter(p => p.direction1(mc, dir) >= 0);
     return {
       pieces: toMovePieces,
-      ang: 2 * PI_3
+      ang: 2 * PI_3,
     };
   };
 
-  skewb.scramble = function() {
-    if ( !skewb.toMove ) return;
+  skewb.scramble = function () {
+    if (!skewb.toMove) return;
 
     const MOVES = 30;
 
     for (let i = 0; i < MOVES; i += 1) {
-      let p = random( pieces ) as Piece;
+      let p = random(pieces) as Piece;
       let s = random(p.stickers.filter(s => !/^[xd]{1}$/.test(s.color))) as Sticker;
       let vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > EPS));
       let pcs = skewb.toMove(p, s, vec);
@@ -172,29 +161,28 @@ export function SKEWB(): PuzzleInterface {
     }
   };
 
-  skewb.applySequence = function(seq: string[]) {
-    let moves = seq.map( mv => ScrambleParser.parseSkewb( mv )[0]);
-    let res: { u: Vector3D, ang: number, pieces: string[] }[] = [];
+  skewb.applySequence = function (seq: string[]) {
+    let moves = seq.map(mv => ScrambleParser.parseSkewb(mv)[0]);
+    let res: { u: Vector3D; ang: number; pieces: string[] }[] = [];
 
     for (let i = 0, maxi = moves.length; i < maxi; i += 1) {
       let pcs;
-      
+
       try {
         pcs = trySingleMove(moves[i]);
-      } catch(e) {
+      } catch (e) {
         console.log("ERROR: ", seq[i], moves[i], e);
       }
 
-      if ( !pcs ) {
+      if (!pcs) {
         continue;
       }
 
       let { u, ang } = pcs;
-      
+
       res.push({ u, ang, pieces: pcs.pieces.map(p => p.id) });
 
       pcs.pieces.forEach(p => p.rotate(CENTER, u, ang, true));
-
     }
 
     return res;
@@ -206,13 +194,10 @@ export function SKEWB(): PuzzleInterface {
     z: 0,
   };
 
-  skewb.faceVectors = [
-    UP, RIGHT, FRONT, DOWN, LEFT, BACK
-  ];
+  skewb.faceVectors = [UP, RIGHT, FRONT, DOWN, LEFT, BACK];
 
   assignColors(skewb, skewb.faceColors);
   // roundCorners(skewb, null, 0.95);
 
   return skewb;
-
 }

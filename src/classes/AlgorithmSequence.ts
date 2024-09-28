@@ -6,7 +6,7 @@ const RECOVERY_MAX_LENGTH = 10;
 function getMoveParts(move: string) {
   return {
     move: move[0],
-    dir: move.endsWith("'") ? -1 : move.endsWith("2") ? 2 : 1
+    dir: move.endsWith("'") ? -1 : move.endsWith("2") ? 2 : 1,
   };
 }
 
@@ -20,23 +20,24 @@ export class AlgorithmSequence {
     this.recovery = [];
     this.cursor = 0;
 
-    this.setScramble(s || '');
+    this.setScramble(s || "");
   }
 
   setScramble(s: string) {
     this.cursor = 0;
     this.recovery.length = 0;
-    return this.scramble = (s || '').split(/\s+/g).filter(m => MOVE_REG.test(m));
+    return (this.scramble = (s || "").split(/\s+/g).filter(m => MOVE_REG.test(m)));
   }
 
   getRecoveryScramble(): string {
-    if (this.cursor >= this.scramble.length || this.recovery.length === 0) return '';
-    if (this.recovery.length === 1 && this.recovery[0][0] === this.scramble[this.cursor][0][0]) return '';
+    if (this.cursor >= this.scramble.length || this.recovery.length === 0) return "";
+    if (this.recovery.length === 1 && this.recovery[0][0] === this.scramble[this.cursor][0][0])
+      return "";
     return Puzzle.inverse("rubik", this.recovery.slice().reverse().join(" "));
   }
 
   clear() {
-    this.setScramble('');
+    this.setScramble("");
     this.cursor = this.recovery.length = 0;
   }
 
@@ -67,7 +68,8 @@ export class AlgorithmSequence {
       }
     };
 
-    let isParallel = false, lasti = -1;
+    let isParallel = false,
+      lasti = -1;
 
     for (let i = 0, maxi = this.recovery.length; i < maxi; i += 1) {
       let rdata = getMoveParts(this.recovery[i]);
@@ -95,7 +97,7 @@ export class AlgorithmSequence {
       break;
     }
 
-    if ( isParallel && lasti === this.recovery.length - 1 && m === move ) {
+    if (isParallel && lasti === this.recovery.length - 1 && m === move) {
       this.cursor += 1;
       discardTopRecovery();
     } else {

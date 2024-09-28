@@ -1,4 +1,3 @@
-import type { Moment } from "moment";
 import type { InternalFilter, LogicBlock, SearchFilter } from "./types";
 import moment from "moment";
 import { isBetween } from "@helpers/math";

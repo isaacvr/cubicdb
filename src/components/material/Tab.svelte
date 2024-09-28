@@ -1,11 +1,11 @@
 <script lang="ts">
-  import type { Tab } from '@interfaces';
-  import { getContext, onMount, onDestroy } from 'svelte';
-  import { randomUUID } from '@helpers/strings';
+  import type { Tab } from "@interfaces";
+  import { getContext, onMount, onDestroy } from "svelte";
+  import { randomUUID } from "@helpers/strings";
 
   export let name: string;
   export let icon: any = null;
-  export let ariaLabel = '';
+  export let ariaLabel = "";
   const id = randomUUID();
   const { registerTab, unregisterTab, selectedTab } = getContext("TABS") as any;
   let tab: Tab = { name: "", id: "", index: 0, icon: null, ariaLabel };
@@ -21,9 +21,10 @@
 </script>
 
 <section
-  class="absolute w-full h-full inset-0 flex { tab.index != $selectedTab ? 'invisible' : '' }"
-  style="--index: {tab.index}; --selected-tab: {$selectedTab};">
-  <slot/>
+  class="absolute w-full h-full inset-0 flex {tab.index != $selectedTab ? 'invisible' : ''}"
+  style="--index: {tab.index}; --selected-tab: {$selectedTab};"
+>
+  <slot />
 </section>
 
 <style>

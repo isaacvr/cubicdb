@@ -78,7 +78,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
   cacheSaveVideo: async (hash, data) => ipc.invoke("save-video", hash, data),
   clearCache: async db => {
     console.log("DB: ", db);
-    
+
     switch (db) {
       case "Cache": {
         return await ipc.invoke("clear-cache");

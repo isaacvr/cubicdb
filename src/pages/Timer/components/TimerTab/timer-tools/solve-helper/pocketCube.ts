@@ -56,8 +56,8 @@ export function pocketCube(scramble: string): string[][] {
 
   for (let i = 0; i < scr.length; i++) {
     let m = scr[i] as any[];
-    
-    state = pocketMove(state, "URF".charAt( "URF".indexOf(m[1])) + "'  2".charAt(m[2] + 1));
+
+    state = pocketMove(state, "URF".charAt("URF".indexOf(m[1])) + "'  2".charAt(m[2] + 1));
   }
 
   for (let face = 0; face < 6; face++) {

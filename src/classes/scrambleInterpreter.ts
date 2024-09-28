@@ -1,7 +1,7 @@
 /**
  * Isaac Vega Rodriguez (isaacvega1996@gmail.com)
  * Advanced scramble parser for NxNxN cubes
- * 
+ *
  * NOTE: Recursive approach can be dangerous.
  * Consider to use stacks or another non-recursive approach.
  */
@@ -15,119 +15,125 @@ import { Puzzle } from "./puzzle/puzzle";
  */
 const RubikSpec = [
   // Whitespaces:
-  [ /^[\s\n\r\t]+/, 'SPACE' ],
-  [ /^\./, null ],
+  [/^[\s\n\r\t]+/, "SPACE"],
+  [/^\./, null],
 
   // Comments:
-  [ /^\/\/.*/, 'COMMENT' ],
+  [/^\/\/.*/, "COMMENT"],
 
   // Conmutator separator:
-  [ /^,/, ',' ],
-  [ /^:/, ':' ],
+  [/^,/, ","],
+  [/^:/, ":"],
 
   // Symbols-delimiters:
-  [ /^\(/, '(' ],
-  [ /^\)([1-9]\d{0,1})?/, ')' ],
-  [ /^\[/, '[' ],
-  [ /^\]([1-9]\d{0,1})?/, ']' ],
+  [/^\(/, "("],
+  [/^\)([1-9]\d{0,1})?/, ")"],
+  [/^\[/, "["],
+  [/^\]([1-9]\d{0,1})?/, "]"],
 
   // Move:
-  [ /^([\d]+)?([FRUBLDfrubldzxySME])(?:([w])|&sup([\d]);)?('|2'|2|3'|3)?/, 'MOVE' ],
+  [/^([\d]+)?([FRUBLDfrubldzxySME])(?:([w])|&sup([\d]);)?('|2'|2|3'|3)?/, "MOVE"],
 ] as const;
 
 const SquareOneSpec = [
   // Whitespaces:
-  [ /^[\s\n\r\t]+/, 'SPACE' ],
+  [/^[\s\n\r\t]+/, "SPACE"],
 
   // Comments:
-  [ /^-[^\d].*/, 'COMMENT' ],
+  [/^-[^\d].*/, "COMMENT"],
 
   // Conmutator separator:
-  [ /^,/, ',' ],
-  [ /^:/, ':' ],
+  [/^,/, ","],
+  [/^:/, ":"],
 
   // Move:
-  [ /^\//, 'MOVE' ],
-  [ /^\(\s*(-?\d),\s*(-?\d)\s*\)/, 'MOVE' ],
-  [ /^(-?\d),\s*(-?\d)/, 'MOVE' ],
-  [ /^(-?\d)(-?\d)/, 'MOVE' ],
-  [ /^(-?\d)/, 'MOVE' ],
-  [ /^([xyz])2/, 'MOVE' ],
+  [/^\//, "MOVE"],
+  [/^\(\s*(-?\d),\s*(-?\d)\s*\)/, "MOVE"],
+  [/^(-?\d),\s*(-?\d)/, "MOVE"],
+  [/^(-?\d)(-?\d)/, "MOVE"],
+  [/^(-?\d)/, "MOVE"],
+  [/^([xyz])2/, "MOVE"],
 ] as const;
 
 const MegaminxSpec = [
   // Whitespaces:
-  [ /^[\s\n\r\t]+/, 'SPACE' ],
+  [/^[\s\n\r\t]+/, "SPACE"],
 
   // Comments:
-  [ /^\/\/.*/, 'COMMENT' ],
+  [/^\/\/.*/, "COMMENT"],
 
   // Conmutator separator:
-  [ /^,/, ',' ],
-  [ /^:/, ':' ],
+  [/^,/, ","],
+  [/^:/, ":"],
 
   // /((DB[RL]\d*'?)|([dbDB][RL]\d*'?)|(\[[ulfrbd]\d*'?\])|([RDrd](\+|-){1,2})|([ULFRBDy]\d*'?))/g
 
   // Move:
-  [ /^DB[RL]\d*'?/, 'MOVE' ], // Single moves back side
-  [ /^[dbDB][RL]\d*'?/, 'MOVE' ], // Side faces move
-  [ /^\[[ulfrbd]\d*'?\]/, 'MOVE' ], // Rotation moves
-  [ /^[LRDlrd](\+|-){1,2}/, 'MOVE' ], // WCA moves
-  [ /^[ULFRBDy]\d*'?/, 'MOVE' ], // Single moves
+  [/^DB[RL]\d*'?/, "MOVE"], // Single moves back side
+  [/^[dbDB][RL]\d*'?/, "MOVE"], // Side faces move
+  [/^\[[ulfrbd]\d*'?\]/, "MOVE"], // Rotation moves
+  [/^[LRDlrd](\+|-){1,2}/, "MOVE"], // WCA moves
+  [/^[ULFRBDy]\d*'?/, "MOVE"], // Single moves
 
   // Symbols-delimiters:
-  [ /^\(/, '(' ],
-  [ /^\)([1-9]\d{0,1})?/, ')' ],
-  [ /^\[/, '[' ],
-  [ /^\]([1-9]\d{0,1})?/, ']' ],
-  
+  [/^\(/, "("],
+  [/^\)([1-9]\d{0,1})?/, ")"],
+  [/^\[/, "["],
+  [/^\]([1-9]\d{0,1})?/, "]"],
 ] as const;
 
 const PyraminxSpec = [
   // Whitespaces:
-  [ /^[\s\n\r\t]+/, 'SPACE' ],
-  [ /^\./, null ],
+  [/^[\s\n\r\t]+/, "SPACE"],
+  [/^\./, null],
 
   // Comments:
-  [ /^\/\/.*/, 'COMMENT' ],
+  [/^\/\/.*/, "COMMENT"],
 
   // Conmutator separator:
-  [ /^,/, ',' ],
-  [ /^:/, ':' ],
+  [/^,/, ","],
+  [/^:/, ":"],
 
   // Symbols-delimiters:
-  [ /^\(/, '(' ],
-  [ /^\)([1-9]\d{0,1})?/, ')' ],
-  [ /^\[/, '[' ],
-  [ /^\]([1-9]\d{0,1})?/, ']' ],
+  [/^\(/, "("],
+  [/^\)([1-9]\d{0,1})?/, ")"],
+  [/^\[/, "["],
+  [/^\]([1-9]\d{0,1})?/, "]"],
 
   // Moves
-  [ /^(([ULRB]w?)|(o?[ULRB])|[urlbdyz])['2]?/, "MOVE" ]
+  [/^(([ULRB]w?)|(o?[ULRB])|[urlbdyz])['2]?/, "MOVE"],
 ] as const;
 
 const HelicopterSpec = [
   // Whitespaces:
-  [ /^[\s\n\r\t]+/, 'SPACE' ],
-  [ /^\./, null ],
+  [/^[\s\n\r\t]+/, "SPACE"],
+  [/^\./, null],
 
   // Comments:
-  [ /^\/\/.*/, 'COMMENT' ],
+  [/^\/\/.*/, "COMMENT"],
 
   // Conmutator separator:
-  [ /^,/, ',' ],
-  [ /^:/, ':' ],
+  [/^,/, ","],
+  [/^:/, ":"],
 
   // Symbols-delimiters:
-  [ /^\(/, '(' ],
-  [ /^\)([1-9]\d{0,1})?/, ')' ],
-  [ /^\[/, '[' ],
-  [ /^\]([1-9]\d{0,1})?/, ']' ],
+  [/^\(/, "("],
+  [/^\)([1-9]\d{0,1})?/, ")"],
+  [/^\[/, "["],
+  [/^\]([1-9]\d{0,1})?/, "]"],
 
   // Moves
-  [ /^(UR|UF|UL|UB|DR|DF|DL|DB|FR|FL|BL|BR)/, "MOVE" ]
+  [/^(UR|UF|UL|UB|DR|DF|DL|DB|FR|FL|BL|BR)/, "MOVE"],
 ] as const;
 
-type InterpreterNode = 'Program' | 'Expression' | 'Space' | 'Comment' | 'ParentesizedExpression' | 'ConmutatorExpression' | 'Move';
+type InterpreterNode =
+  | "Program"
+  | "Expression"
+  | "Space"
+  | "Comment"
+  | "ParentesizedExpression"
+  | "ConmutatorExpression"
+  | "Move";
 
 interface TToken {
   type: (typeof RubikSpec)[number][1];
@@ -150,26 +156,26 @@ interface Tokenizer {
 }
 
 const SpecMap: any = {
-  "rubik": RubikSpec,
-  "square1": SquareOneSpec,
-  "megaminx": MegaminxSpec,
-  "pyraminx": PyraminxSpec,
-  "helicopter": HelicopterSpec,
+  rubik: RubikSpec,
+  square1: SquareOneSpec,
+  megaminx: MegaminxSpec,
+  pyraminx: PyraminxSpec,
+  helicopter: HelicopterSpec,
 };
 
 class BaseTokenizer implements Tokenizer {
-  private _string: string = '';
+  private _string: string = "";
   private _cursor: number = 0;
   private throwErrors: boolean;
   private spec: typeof RubikSpec;
 
   constructor(throwErrors = true, puzzle: PuzzleType) {
     this.throwErrors = throwErrors;
-    this.spec = (puzzle in SpecMap) ? SpecMap[puzzle] : RubikSpec;
+    this.spec = puzzle in SpecMap ? SpecMap[puzzle] : RubikSpec;
   }
 
   private _throwCursor() {
-    if ( !this.throwErrors ) {
+    if (!this.throwErrors) {
       throw this.getCursor();
     }
   }
@@ -192,28 +198,28 @@ class BaseTokenizer implements Tokenizer {
   }
 
   getNextToken(): TToken | null {
-    if ( !this.hasMoreTokens() ) {
+    if (!this.hasMoreTokens()) {
       return null;
     }
 
     const string = this._string.slice(this._cursor);
-    
-    for (const [ regexp, tokenType ] of this.spec) {
+
+    for (const [regexp, tokenType] of this.spec) {
       let tokenValue = this._match(regexp, string);
 
-      if ( tokenValue == null ) continue;
-      if ( tokenType == null ) return this.getNextToken();
+      if (tokenValue == null) continue;
+      if (tokenType == null) return this.getNextToken();
 
       return { type: tokenType, value: tokenValue };
     }
-   
+
     this._throwCursor();
     throw new SyntaxError(`Unexpected token: ${string[0]}`);
   }
 
   _match(regexp: RegExp, string: string) {
     const matched = regexp.exec(string);
-    if ( matched == null ) {
+    if (matched == null) {
       return null;
     }
     this._cursor += matched[0].length;
@@ -224,7 +230,7 @@ class BaseTokenizer implements Tokenizer {
 class Solver {
   tokenizerType: PuzzleType;
 
-  constructor(tokenizerType: PuzzleType){
+  constructor(tokenizerType: PuzzleType) {
     this.tokenizerType = tokenizerType;
   }
 
@@ -234,14 +240,14 @@ class Solver {
 
   invertFlat(seq: IToken[]): IToken[] {
     let res: IToken[] = [];
-    
+
     for (let i = seq.length - 1; i >= 0; i -= 1) {
-      if ( seq[i].type === 'Move' ) {
+      if (seq[i].type === "Move") {
         let cp = clone(seq[i]) as IToken;
         cp.value = Puzzle.inverse(this.tokenizerType, cp.value);
-        res.push( cp );
+        res.push(cp);
       } else {
-        res.push( seq[i] );
+        res.push(seq[i]);
       }
     }
 
@@ -251,19 +257,31 @@ class Solver {
   simplify(seq: string[]): string[] {
     let mp = new Map<number, string>();
     let mp1 = new Map<string, number>();
-    mp.set(-3, ""); mp.set(-2, "2"); mp.set(-1, "'"); mp.set(1, ""); mp.set(2, "2"); mp.set(3, "'");
-    mp1.set("2", -2); mp1.set("'", -1); mp1.set("", 1); mp1.set("2", 2); mp1.set("2'", 2); mp1.set("3", -1); mp1.set("3'", 1);
+    mp.set(-3, "");
+    mp.set(-2, "2");
+    mp.set(-1, "'");
+    mp.set(1, "");
+    mp.set(2, "2");
+    mp.set(3, "'");
+    mp1.set("2", -2);
+    mp1.set("'", -1);
+    mp1.set("", 1);
+    mp1.set("2", 2);
+    mp1.set("2'", 2);
+    mp1.set("3", -1);
+    mp1.set("3'", 1);
 
     let s1 = seq.map(s => {
-      let p: any = s.replace(/^(\d*)([a-zA-Z]+)('|2'|2|3'|3)?$/, '$1$2 $3').split(" ");
+      let p: any = s.replace(/^(\d*)([a-zA-Z]+)('|2'|2|3'|3)?$/, "$1$2 $3").split(" ");
       return [p[0], mp1.get(p[1])];
     });
 
-    for(let i = 1, maxi = s1.length; i < maxi; i += 1) {
-      if ( s1[i][0] === s1[i-1][0] ) {
+    for (let i = 1, maxi = s1.length; i < maxi; i += 1) {
+      if (s1[i][0] === s1[i - 1][0]) {
         s1[i - 1][1] = (s1[i - 1][1] + s1[i][1]) % 4;
         s1.splice(i, 1);
-        i--; maxi--;
+        i--;
+        maxi--;
       }
     }
 
@@ -271,31 +289,33 @@ class Solver {
   }
 
   solve(ast: IToken): string | string[] {
-    switch(ast.type) {
-      case 'Program':
-        return this.simplify( this.solve(ast.value) as string[] ).join(" ");
-      case 'Expression':
-        return ast.value.map((e: IToken) => this.solve(e)).reduce((acc: string[], e: string) => [...acc, ...e], []);
-      case 'Space':
-      case 'Comment':
+    switch (ast.type) {
+      case "Program":
+        return this.simplify(this.solve(ast.value) as string[]).join(" ");
+      case "Expression":
+        return ast.value
+          .map((e: IToken) => this.solve(e))
+          .reduce((acc: string[], e: string) => [...acc, ...e], []);
+      case "Space":
+      case "Comment":
         return [];
-      case 'Move':
-        return [ ast.value ];
-      case 'ParentesizedExpression':
+      case "Move":
+        return [ast.value];
+      case "ParentesizedExpression":
         let seq = this.solve(ast.value.expr);
         let res: string[] = [];
         for (let i = 1, maxi = ast.value.cant; i <= maxi; i += 1) {
-          res = [ ...res, ...seq ];
+          res = [...res, ...seq];
         }
         return res;
-      case 'ConmutatorExpression': {
+      case "ConmutatorExpression": {
         let seq;
-        
-        if ( ast.value.setup ){
-          let setup = this.solve( ast.value.setup );
-          let conmutator = this.solve( ast.value.conmutator );
-          let setupInv = this.invert( setup as string[] );
-          seq = [ ...setup, ...conmutator, ...setupInv ];
+
+        if (ast.value.setup) {
+          let setup = this.solve(ast.value.setup);
+          let conmutator = this.solve(ast.value.conmutator);
+          let setupInv = this.invert(setup as string[]);
+          seq = [...setup, ...conmutator, ...setupInv];
         } else {
           let s1 = this.solve(ast.value.expr1);
           let s2 = this.solve(ast.value.expr2);
@@ -303,48 +323,50 @@ class Solver {
           let s2i = this.invert(s2 as string[]);
           seq = [...s1, ...s2, ...s1i, ...s2i];
         }
-        
+
         let res: string[] = [];
 
         for (let i = 1, maxi = ast.value.cant; i <= maxi; i += 1) {
-          res = [ ...res, ...seq ];
+          res = [...res, ...seq];
         }
         return res;
       }
       default: {
-        throw new SyntaxError(`Unexpected type: "${ ast.type }"`);
+        throw new SyntaxError(`Unexpected type: "${ast.type}"`);
       }
     }
   }
 
   flat(ast: IToken): IToken[] {
-    switch(ast.type) {
-      case 'Program':
+    switch (ast.type) {
+      case "Program":
         return this.flat(ast.value);
-      case 'Expression':
-        return ast.value.map((e: IToken) => this.flat(e)).reduce((acc: string[], e: string) => [...acc, ...e], []);
-      case 'Space':
-      case 'Comment':
-        return [ ast ];
-      case 'Move':
-        return [ ast ];
-      case 'ParentesizedExpression':
+      case "Expression":
+        return ast.value
+          .map((e: IToken) => this.flat(e))
+          .reduce((acc: string[], e: string) => [...acc, ...e], []);
+      case "Space":
+      case "Comment":
+        return [ast];
+      case "Move":
+        return [ast];
+      case "ParentesizedExpression":
         let seq = this.flat(ast.value.expr);
         let res: IToken[] = [];
 
         for (let i = 1, maxi = ast.value.cant; i <= maxi; i += 1) {
-          res = [ ...res, ...seq ];
+          res = [...res, ...seq];
         }
 
         return res;
-      case 'ConmutatorExpression': {
+      case "ConmutatorExpression": {
         let seq: IToken[];
-        
-        if ( ast.value.setup ){
-          let setup = this.flat( ast.value.setup );
-          let conmutator = this.flat( ast.value.conmutator );
-          let setupInv = this.invertFlat( setup );
-          seq = [ ...setup, ...conmutator, ...setupInv ];
+
+        if (ast.value.setup) {
+          let setup = this.flat(ast.value.setup);
+          let conmutator = this.flat(ast.value.conmutator);
+          let setupInv = this.invertFlat(setup);
+          seq = [...setup, ...conmutator, ...setupInv];
         } else {
           let s1 = this.flat(ast.value.expr1);
           let s2 = this.flat(ast.value.expr2);
@@ -352,16 +374,16 @@ class Solver {
           let s2i = this.invertFlat(s2 as IToken[]);
           seq = [...s1, ...s2, ...s1i, ...s2i];
         }
-        
+
         let res: IToken[] = [];
 
         for (let i = 1, maxi = ast.value.cant; i <= maxi; i += 1) {
-          res = [ ...res, ...seq ];
+          res = [...res, ...seq];
         }
         return res;
       }
       default: {
-        throw new SyntaxError(`Unexpected type: "${ ast.type }"`);
+        throw new SyntaxError(`Unexpected type: "${ast.type}"`);
       }
     }
   }
@@ -373,8 +395,8 @@ export class Interpreter {
   private _lookahead: TToken | null;
   private throwErrors: boolean;
   private moveCursor: number = 0;
-  
-  constructor(throwErrors: boolean = true, tokenizerType: PuzzleType = 'rubik') {
+
+  constructor(throwErrors: boolean = true, tokenizerType: PuzzleType = "rubik") {
     this._tokenizer = new BaseTokenizer(throwErrors, tokenizerType);
     this._solver = new Solver(tokenizerType);
     this._lookahead = null;
@@ -387,45 +409,45 @@ export class Interpreter {
 
     let pr = this.Program();
 
-    if ( this._lookahead ) {
+    if (this._lookahead) {
       throw new SyntaxError(`Missing operators`);
     }
 
     return this._solver.solve(pr);
   }
 
-  getTree(string: string): { error: boolean | null, cursor: any, program: IToken } {
+  getTree(string: string): { error: boolean | null; cursor: any; program: IToken } {
     let pr;
 
     try {
       this._tokenizer.init(string.replaceAll("’", "'"));
       this._lookahead = this._tokenizer.getNextToken();
-  
+
       pr = this.Program();
-  
-      if ( this._lookahead ) {
+
+      if (this._lookahead) {
         return {
           error: true,
           cursor: this._tokenizer.getCursor(),
-          program: pr
+          program: pr,
         };
       }
-    } catch(cur) {
+    } catch (cur) {
       return {
         error: true,
         cursor: cur,
         program: {
           type: "Program",
-          value: { type: 'Expression', value: [], cursor: -1 } as IToken,
-          cursor: -1
-        }
-      }
+          value: { type: "Expression", value: [], cursor: -1 } as IToken,
+          cursor: -1,
+        },
+      };
     }
 
     return {
       error: null,
       cursor: -1,
-      program: pr
+      program: pr,
     };
   }
 
@@ -436,11 +458,11 @@ export class Interpreter {
   /**
    * Program
    * ; Expression
-   * 
+   *
    * This is util only for converting the last sequence to string
    */
   Program(): IToken {
-    return { type: 'Program', value: this.Expression(), cursor: -1 };
+    return { type: "Program", value: this.Expression(), cursor: -1 };
   }
 
   /**
@@ -453,22 +475,38 @@ export class Interpreter {
    *  ;
    */
   Expression(): IToken {
-    if ( !this._lookahead ) return { type: 'Expression', value: [], cursor: -1 };
+    if (!this._lookahead) return { type: "Expression", value: [], cursor: -1 };
 
     let moves: IToken[] = [];
 
-    while( this._lookahead ) {
-      switch(this._lookahead.type) {
-        case 'MOVE':    { moves.push( this.Move() );                   break; }
-        case 'SPACE':   { moves.push( this.Space() );                  break; }
-        case 'COMMENT': { moves.push( this.Comment() );                break; }
-        case '(':       { moves.push( this.ParentesizedExpression() ); break; }
-        case '[':       { moves.push( this.ConmutatorExpression() );   break; }
-        default: return moves.length === 1 ? moves[0] : { type: 'Expression', value: moves, cursor: -1 };
+    while (this._lookahead) {
+      switch (this._lookahead.type) {
+        case "MOVE": {
+          moves.push(this.Move());
+          break;
+        }
+        case "SPACE": {
+          moves.push(this.Space());
+          break;
+        }
+        case "COMMENT": {
+          moves.push(this.Comment());
+          break;
+        }
+        case "(": {
+          moves.push(this.ParentesizedExpression());
+          break;
+        }
+        case "[": {
+          moves.push(this.ConmutatorExpression());
+          break;
+        }
+        default:
+          return moves.length === 1 ? moves[0] : { type: "Expression", value: moves, cursor: -1 };
       }
     }
 
-    return moves.length === 1 ? moves[0] : { type: 'Expression', value: moves, cursor: -1 };
+    return moves.length === 1 ? moves[0] : { type: "Expression", value: moves, cursor: -1 };
   }
 
   /**
@@ -476,7 +514,7 @@ export class Interpreter {
    *  ; " "
    */
   Space(): IToken {
-    return { type: 'Space', value: this._eat('SPACE').value, cursor: -1 };
+    return { type: "Space", value: this._eat("SPACE").value, cursor: -1 };
   }
 
   /**
@@ -484,7 +522,7 @@ export class Interpreter {
    *  ; " "
    */
   Comment(): IToken {
-    return { type: 'Comment', value: this._eat('COMMENT').value, cursor: -1 };
+    return { type: "Comment", value: this._eat("COMMENT").value, cursor: -1 };
   }
 
   /**
@@ -492,11 +530,11 @@ export class Interpreter {
    *  ; '(' Expression ')'
    */
   ParentesizedExpression(): IToken {
-    this._eat('(');
+    this._eat("(");
     let expr = this.Expression();
-    let n = +this._eat(')').value.slice(1);
+    let n = +this._eat(")").value.slice(1);
     let cant = n || 1;
-    return { type: 'ParentesizedExpression', value: { expr, cant, explicit: !!n }, cursor: -1};
+    return { type: "ParentesizedExpression", value: { expr, cant, explicit: !!n }, cursor: -1 };
   }
 
   /**
@@ -504,23 +542,31 @@ export class Interpreter {
    *  ; '[' Expression ',' Expression ']'
    */
   ConmutatorExpression(): IToken {
-    this._eat('[');
+    this._eat("[");
     let expr1 = this.Expression();
 
-    if ( this._lookahead?.type === ':' ) {
-      this._eat(':');
+    if (this._lookahead?.type === ":") {
+      this._eat(":");
 
       let conmutator = this.Expression();
-      let n = +this._eat(']').value.slice(1);
+      let n = +this._eat("]").value.slice(1);
       let cant = n || 1;
-      return { type: 'ConmutatorExpression', value: { setup: expr1, conmutator, cant, explicit: !!n }, cursor: -1 };
+      return {
+        type: "ConmutatorExpression",
+        value: { setup: expr1, conmutator, cant, explicit: !!n },
+        cursor: -1,
+      };
     }
 
-    this._eat(',');
+    this._eat(",");
     let expr2 = this.Expression();
-    let n = +this._eat(']').value.slice(1);
+    let n = +this._eat("]").value.slice(1);
     let cant = n || 1;
-    return { type: 'ConmutatorExpression', value: { expr1, expr2, cant, explicit: !!n }, cursor: -1 };
+    return {
+      type: "ConmutatorExpression",
+      value: { expr1, expr2, cant, explicit: !!n },
+      cursor: -1,
+    };
   }
 
   /**
@@ -533,31 +579,31 @@ export class Interpreter {
   }
 
   private _throwCursor() {
-    if ( !this.throwErrors ) {
+    if (!this.throwErrors) {
       throw this._tokenizer.getCursor();
     }
   }
 
-  _eat(tokenType: any, tokenValue ?: any) {
+  _eat(tokenType: any, tokenValue?: any) {
     let token = this._lookahead;
 
-    if ( token == null ) {
+    if (token == null) {
       this._throwCursor();
-      throw new SyntaxError( `Unexpected end of input, expected: ${tokenType}` );
+      throw new SyntaxError(`Unexpected end of input, expected: ${tokenType}`);
     }
 
-    if ( token.type != tokenType ) {
+    if (token.type != tokenType) {
       this._throwCursor();
-      throw new SyntaxError( `Unexpected token: ${token.type}, expected: ${tokenType}` );
+      throw new SyntaxError(`Unexpected token: ${token.type}, expected: ${tokenType}`);
     }
 
-    if ( tokenValue && token.value != tokenValue ) {
+    if (tokenValue && token.value != tokenValue) {
       this._throwCursor();
-      throw new SyntaxError( `Error, expected "${tokenValue}" but got "${token.value}"` );
+      throw new SyntaxError(`Error, expected "${tokenValue}" but got "${token.value}"`);
     }
 
     this._lookahead = this._tokenizer.getNextToken();
-    
+
     return token;
   }
 }

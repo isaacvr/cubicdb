@@ -7,5 +7,5 @@
 
 <div class="grid">
   Metronome Tool
-  { get(context.scramble) }
+  {get(context.scramble)}
 </div>

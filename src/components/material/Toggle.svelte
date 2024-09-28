@@ -5,23 +5,31 @@
   export let tabindex = 0;
 
   const dispatch = createEventDispatcher();
-  
+
   function toggle() {
     checked = !checked;
-    checked && dispatch('checked');
-    !checked && dispatch('unchecked');
-    dispatch('change', { value: checked });
+    checked && dispatch("checked");
+    !checked && dispatch("unchecked");
+    dispatch("change", { value: checked });
   }
 
   function handleKeydown(ev: KeyboardEvent) {
-    if ( ev.code === 'Space' ) {
+    if (ev.code === "Space") {
       toggle();
     }
   }
 </script>
 
-<button role="checkbox" class:checked class="wrapper" on:click={ toggle } on:keydown={ handleKeydown }
-  { tabindex } aria-disabled={ false } aria-checked={ checked }>
+<button
+  role="checkbox"
+  class:checked
+  class="wrapper"
+  on:click={toggle}
+  on:keydown={handleKeydown}
+  {tabindex}
+  aria-disabled={false}
+  aria-checked={checked}
+>
   <div class="mark"></div>
 </button>
 

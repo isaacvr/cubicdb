@@ -127,7 +127,7 @@ export function pyraminxSolver(scramble: string): string[][] {
     out: for (let depth = 0; depth < 99; depth += 1) {
       for (let j = 0; j < 3; j += 1) {
         let moveMap = moveMaps[i][j];
-        
+
         curScrambleStrArr.length = 0;
 
         for (let m = 0; m < scr.length; m += 1) {
@@ -149,7 +149,7 @@ export function pyraminxSolver(scramble: string): string[][] {
     if (sol1) {
       res.push([faceStr[i], adjustScramble(sol1)]);
     } else {
-      res.push([faceStr[i], '-']);
+      res.push([faceStr[i], "-"]);
     }
   }
 

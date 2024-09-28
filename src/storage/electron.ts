@@ -1,4 +1,3 @@
-import { getByteSize } from "@helpers/object";
 import type {
   Algorithm,
   AlgorithmOptions,
@@ -114,7 +113,7 @@ export class ElectronAdaptor implements IPC {
   removeTutorial(t: ITutorial) {
     return this.ipc.removeTutorial(t);
   }
-  
+
   tutorialsVersion() {
     return this.ipc.tutorialsVersion();
   }

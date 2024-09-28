@@ -2,85 +2,86 @@ function types(arr: any[]) {
   let res = [];
 
   for (let i = 0, maxi = arr.length; i < maxi; i += 1) {
-    if ( Array.isArray(arr[i]) ) {
-      res.push('a');
-    } else switch( typeof arr[i] ) {
-      case 'number':
-      case 'string':
-      case 'object':
-      case 'undefined':
-      case 'function': {
-        res.push( ( typeof arr[i] )[0] );
-        break;
+    if (Array.isArray(arr[i])) {
+      res.push("a");
+    } else
+      switch (typeof arr[i]) {
+        case "number":
+        case "string":
+        case "object":
+        case "undefined":
+        case "function": {
+          res.push((typeof arr[i])[0]);
+          break;
+        }
+        default: {
+          res.push("?");
+          break;
+        }
       }
-      default: {
-        res.push('?');
-        break;
-      }
-    }
   }
 
-  return res.join('');
+  return res.join("");
 }
 
-function adjust(val: number, a ?: number, b ?: number) {
+function adjust(val: number, a?: number, b?: number) {
   let ini = a || 0;
   let fin = b || 255;
-  if ( ini > fin ) {
+  if (ini > fin) {
     ini += fin;
     fin = ini - fin;
     ini = ini - fin;
   }
-  return Math.min( Math.max(ini, val), fin);
+  return Math.min(Math.max(ini, val), fin);
 }
 
 export class Color {
   color: number[];
   constructor(a?: any, b?: any, c?: any, d?: any, e?: any) {
-    let tp = types([ a, b, c, d, e ]);
+    let tp = types([a, b, c, d, e]);
 
-    this.color = [0, 1, 2].map(_ => Math.round(Math.random() * 255) );
-    this.color[0]= adjust( this.color[0] );
-    this.color[1]= adjust( this.color[1] );
-    this.color[2]= adjust( this.color[2] );
-    this.color[3]= 1;
+    this.color = [0, 1, 2].map(_ => Math.round(Math.random() * 255));
+    this.color[0] = adjust(this.color[0]);
+    this.color[1] = adjust(this.color[1]);
+    this.color[2] = adjust(this.color[2]);
+    this.color[3] = 1;
 
-    switch( tp ) {
-      case 'nnnns': {
-        if ( e.match(/cmyk/i) ) {
+    switch (tp) {
+      case "nnnns": {
+        if (e.match(/cmyk/i)) {
           this.fromCMYK(a, b, c, d);
-        } else if ( e.match(/rgba/i) ) {
+        } else if (e.match(/rgba/i)) {
           this.fromRGBA(a, b, c, d);
         } else {
           throw new TypeError(`Unknown format color ${e}`);
         }
         break;
       }
-      case 'nnnnu': {
+      case "nnnnu": {
         this.fromRGBA(a, b, c, d);
         break;
       }
-      case 'nnnsu': {
-        if ( d.match(/cmy/i) ) {
+      case "nnnsu": {
+        if (d.match(/cmy/i)) {
           this.fromCMY(a, b, c);
-        } else if ( d.match(/ryb/i) ) {
+        } else if (d.match(/ryb/i)) {
           this.fromRYB(a, b, c);
-        } else if ( d.match(/hsv/i) ) {
+        } else if (d.match(/hsv/i)) {
           this.fromHSV(a, b, c);
         } else {
           throw new TypeError(`Unknown format color ${e}`);
         }
         break;
       }
-      case 'nnnuu': {
+      case "nnnuu": {
         this.fromRGB(a, b, c);
         break;
       }
-      case 'suuuu': {
+      case "suuuu": {
         this.fromString(a);
         break;
       }
-      case 'uuuuu': {
+      case "uuuuu": {
         /// Allow for random generation
         break;
       }
@@ -88,7 +89,6 @@ export class Color {
         // throw new TypeError(`Invalid parameters`);
       }
     }
-
   }
 
   set(k: number, v: number) {
@@ -96,19 +96,19 @@ export class Color {
   }
 
   fromCMY(C: number, M: number, Y: number) {
-    throw new ReferenceError('CMY not supported yet');
+    throw new ReferenceError("CMY not supported yet");
   }
 
   fromCMYK(C: number, M: number, Y: number, K: number) {
-    throw new ReferenceError('CMYK not supported yet');
+    throw new ReferenceError("CMYK not supported yet");
   }
 
   fromRYB(R: number, Y: number, B: number) {
-    throw new ReferenceError('RYB not supported yet');
+    throw new ReferenceError("RYB not supported yet");
   }
 
   fromHSV(HL: number, S: number, V: number) {
-    throw new ReferenceError('HSV not supported yet');
+    throw new ReferenceError("HSV not supported yet");
   }
 
   fromRGB(r: number, g: number, b: number) {
@@ -129,28 +129,40 @@ export class Color {
     let hex1Reg = /^#(\w{1})(\w{1})(\w{1})$/;
     let hexaReg = /^#(\w{2})(\w{2})(\w{2})(\w{2})$/;
     let hexa1Reg = /^#(\w{1})(\w{1})(\w{1})(\w{1})$/;
-    let str = s.replace(/\s/g, '');
+    let str = s.replace(/\s/g, "");
 
-    if ( rgbaReg.test(str) ) {
-      let [r, g, b, a] = str.replace(rgbaReg, '$1 $2 $3 $4').split(' ').map(Number);
+    if (rgbaReg.test(str)) {
+      let [r, g, b, a] = str.replace(rgbaReg, "$1 $2 $3 $4").split(" ").map(Number);
       this.fromRGBA(r, g, b, a);
-    } else if ( rgbReg.test(str) ) {
-      let [r, g, b] = str.replace(rgbReg, '$1 $2 $3').split(' ').map(Number);
+    } else if (rgbReg.test(str)) {
+      let [r, g, b] = str.replace(rgbReg, "$1 $2 $3").split(" ").map(Number);
       this.fromRGB(r, g, b);
-    } else if ( hexaReg.test(str) ) {
-      let [r, g, b, a] = str.replace(hexaReg, '$1 $2 $3 $4').split(' ').map(e => parseInt(e, 16));
+    } else if (hexaReg.test(str)) {
+      let [r, g, b, a] = str
+        .replace(hexaReg, "$1 $2 $3 $4")
+        .split(" ")
+        .map(e => parseInt(e, 16));
       this.fromRGBA(r, g, b, a);
-    } else if ( hexReg.test(str) ) {
-      let [r, g, b] = str.replace(hexReg, '$1 $2 $3').split(' ').map(e => parseInt(e, 16));
+    } else if (hexReg.test(str)) {
+      let [r, g, b] = str
+        .replace(hexReg, "$1 $2 $3")
+        .split(" ")
+        .map(e => parseInt(e, 16));
       this.fromRGB(r, g, b);
-    } else if ( hexa1Reg.test(str) ) {
-      let [r, g, b, a] = str.replace(hexa1Reg, '$1$1 $2$2 $3$3 $4$4').split(' ').map(e => parseInt(e, 16));
+    } else if (hexa1Reg.test(str)) {
+      let [r, g, b, a] = str
+        .replace(hexa1Reg, "$1$1 $2$2 $3$3 $4$4")
+        .split(" ")
+        .map(e => parseInt(e, 16));
       this.fromRGBA(r, g, b, a);
-    } else if ( hex1Reg.test(str) ) {
-      let [r, g, b] = str.replace(hex1Reg, '$1$1 $2$2 $3$3').split(' ').map(e => parseInt(e, 16));
+    } else if (hex1Reg.test(str)) {
+      let [r, g, b] = str
+        .replace(hex1Reg, "$1$1 $2$2 $3$3")
+        .split(" ")
+        .map(e => parseInt(e, 16));
       this.fromRGB(r, g, b);
     } else {
-      throw new TypeError('String format other than rgb() or rgba() not supported yet');
+      throw new TypeError("String format other than rgb() or rgba() not supported yet");
     }
   }
 
@@ -170,7 +182,7 @@ export class Color {
     let t = this.color.map(e => e);
     t[3] = ~~adjust(t[3] * 255);
     !alpha && t.pop();
-    return '#' + t.map(e => ('00' + e.toString(16)).substr(-2, 2)).join('');
+    return "#" + t.map(e => ("00" + e.toString(16)).substr(-2, 2)).join("");
   }
 
   toNumber(): number {
@@ -187,7 +199,7 @@ export class Color {
   }
 
   toRGBAStr(): string {
-    return `rgba(${this.color[0]}, ${this.color[1]}, ${this.color[2]}, ${~~(this.color[3] * 255) })`;
+    return `rgba(${this.color[0]}, ${this.color[1]}, ${this.color[2]}, ${~~(this.color[3] * 255)})`;
   }
 
   toArray(): number[] {

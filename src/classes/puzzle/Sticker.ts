@@ -1,8 +1,6 @@
 import { EPS } from "@constants";
 import { Vector3D, CENTER } from "./../vector3d";
-import { BufferGeometry, Group, Matrix4, Points, PointsMaterial, Vector3 } from "three";
 import { rotateBundle } from "@helpers/math";
-import { mean } from "@helpers/statistics";
 
 export class Sticker {
   points: Vector3D[];

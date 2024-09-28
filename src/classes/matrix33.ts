@@ -1,8 +1,7 @@
-import { Vector3D } from './vector3d';
+import { Vector3D } from "./vector3d";
 export class Matrix33 {
+  data: number[][];
 
- data: number[][];
-  
   constructor() {
     this.data = [];
 
@@ -13,9 +12,23 @@ export class Matrix33 {
       }
     }
   }
-  
-  setData(v00: number, v01: number, v02: number, v10: number, v11: number, v12: number, v20: number, v21: number, v22: number) {
-    this.data = [ [ v00, v01, v02 ], [ v10, v11, v12 ], [ v20, v21, v22 ] ];
+
+  setData(
+    v00: number,
+    v01: number,
+    v02: number,
+    v10: number,
+    v11: number,
+    v12: number,
+    v20: number,
+    v21: number,
+    v22: number
+  ) {
+    this.data = [
+      [v00, v01, v02],
+      [v10, v11, v12],
+      [v20, v21, v22],
+    ];
   }
 
   add(m: Matrix33): Matrix33 {
@@ -28,7 +41,7 @@ export class Matrix33 {
     }
     return newMat;
   }
-  
+
   sub(m: Matrix33): Matrix33 {
     let newMat = new Matrix33();
 
@@ -39,7 +52,7 @@ export class Matrix33 {
     }
     return newMat;
   }
-  
+
   mulScalar(f: number): Matrix33 {
     let newMat = new Matrix33();
     for (let i = 0; i < 3; i += 1) {
@@ -49,7 +62,7 @@ export class Matrix33 {
     }
     return newMat;
   }
-  
+
   mulVector(p: Vector3D): Vector3D {
     let res = new Vector3D(0, 0, 0);
     res.x = this.data[0][0] * p.x + this.data[0][1] * p.y + this.data[0][2] * p.z;
@@ -57,20 +70,20 @@ export class Matrix33 {
     res.z = this.data[2][0] * p.x + this.data[2][1] * p.y + this.data[2][2] * p.z;
     return res;
   }
-  
+
   mulMat(m: Matrix33): Matrix33 {
     let res = new Matrix33();
 
-    for(let i = 0; i < 3; i += 1) {
-      for(let j = 0; j < 3; j += 1) {
-        for(let k = 0; k < 3; k += 1) {
-          res.data[i][j] += this.data[i][k] * m.data[k][j]; 
+    for (let i = 0; i < 3; i += 1) {
+      for (let j = 0; j < 3; j += 1) {
+        for (let k = 0; k < 3; k += 1) {
+          res.data[i][j] += this.data[i][k] * m.data[k][j];
         }
       }
     }
     return res;
   }
-  
+
   div(f: number): Matrix33 {
     let newMat = new Matrix33();
 
@@ -81,7 +94,6 @@ export class Matrix33 {
     }
     return newMat;
   }
-
 }
 
 function createRotationMatrixX(ang: number): Matrix33 {
@@ -89,11 +101,11 @@ function createRotationMatrixX(ang: number): Matrix33 {
   res.data[0][0] = 1;
   res.data[0][1] = 0;
   res.data[0][2] = 0;
-  
+
   res.data[1][0] = 0;
   res.data[1][1] = Math.cos(ang);
   res.data[1][2] = -Math.sin(ang);
-  
+
   res.data[2][0] = 0;
   res.data[2][1] = Math.sin(ang);
   res.data[2][2] = Math.cos(ang);
@@ -105,11 +117,11 @@ function createRotationMatrixY(ang: number): Matrix33 {
   res.data[0][0] = Math.cos(ang);
   res.data[0][1] = 0;
   res.data[0][2] = Math.sin(ang);
-  
+
   res.data[1][0] = 0;
   res.data[1][1] = 1;
   res.data[1][2] = 0;
-  
+
   res.data[2][0] = -Math.sin(ang);
   res.data[2][1] = 0;
   res.data[2][2] = Math.cos(ang);
@@ -121,11 +133,11 @@ function createRotationMatrixZ(ang: number): Matrix33 {
   res.data[0][0] = Math.cos(ang);
   res.data[0][1] = -Math.sin(ang);
   res.data[0][2] = 0;
-  
+
   res.data[1][0] = Math.sin(ang);
   res.data[1][1] = Math.cos(ang);
   res.data[1][2] = 0;
-  
+
   res.data[2][0] = 0;
   res.data[2][1] = 0;
   res.data[2][2] = 1;

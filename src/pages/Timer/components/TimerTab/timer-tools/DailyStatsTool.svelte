@@ -5,7 +5,6 @@
   import * as echarts from "echarts";
   import { localLang } from "@stores/language.service";
   import { infinitePenalty, sTime, sTimer, timer } from "@helpers/timer";
-  import { screen } from "@stores/screen.store";
   import { onMount } from "svelte";
 
   export let context: TimerContext;
@@ -158,7 +157,13 @@
 <div class="grid place-items-center gap-2">
   <div class="flex justify-center items-center gap-2">
     Period:
-    <Select class="py-2 !bg-gray-800" placement="right" items={periods} bind:value={period} transform={e => e} />
+    <Select
+      class="py-2 !bg-gray-800"
+      placement="right"
+      items={periods}
+      bind:value={period}
+      transform={e => e}
+    />
     <span> Solves: {total}</span>
   </div>
 

@@ -9,12 +9,6 @@ import { square1SolverGetRandomScramble } from "@cstimer/scramble/scramble_sq1";
 import { ScrambleParser } from "@classes/scramble-parser";
 
 export function SQUARE1(): PuzzleInterface {
-  const edgePoint = (p: Vector3D) =>
-    [p.x, p.y, p.z].reduce(
-      (acc, n) => ([-1, 0, 1].some(d => Math.abs(d - n) < EPS) ? acc + 1 : acc),
-      0
-    );
-
   const sq1: PuzzleInterface = {
     pieces: [],
     palette: STANDARD_PALETTE,

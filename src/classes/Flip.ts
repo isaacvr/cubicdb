@@ -38,27 +38,35 @@ export class Flip {
   invert(el: Element, from: Rect, to: Rect, options: Options = {}) {
     this.animating = true;
 
-    let anim = el.animate([
-      {
-        width: `${from.width}px`,
-        height: `${from.height}px`,
-        maxWidth: 'unset'
-      },
-      {
-        width: `${to.width}px`,
-        height: `${to.height}px`,
-      }
-    ], { fill: 'backwards', duration: options.duration, delay: options.delay });
+    let anim = el.animate(
+      [
+        {
+          width: `${from.width}px`,
+          height: `${from.height}px`,
+          maxWidth: "unset",
+        },
+        {
+          width: `${to.width}px`,
+          height: `${to.height}px`,
+        },
+      ],
+      { fill: "backwards", duration: options.duration, delay: options.delay }
+    );
 
-    anim.addEventListener('finish', () => {
+    anim.addEventListener("finish", () => {
       this.animating = false;
     });
   }
 
   flip(options: Options = {}) {
-    if ( this.animating ) return;
+    if (this.animating) return;
 
-    const { duration = 1000, delay = 0, stagger = 0, easing = linear } = { ...this.defaults, ...options };
+    const {
+      duration = 1000,
+      delay = 0,
+      stagger = 0,
+      easing = linear,
+    } = { ...this.defaults, ...options };
 
     const from = this.measure();
 

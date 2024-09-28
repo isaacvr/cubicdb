@@ -9,7 +9,7 @@
     TableHead,
     TableHeadCell,
   } from "flowbite-svelte";
-  import { isMo3, sTimer, timer } from "@helpers/timer";
+  import { isMo3, timer } from "@helpers/timer";
   import Award from "@components/Award.svelte";
 
   // export let roundGroup: ROUND[][][] = [];

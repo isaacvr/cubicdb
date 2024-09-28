@@ -1,7 +1,13 @@
 <script lang="ts">
   import type { TimerContext } from "@interfaces";
   import * as all from "@cstimer/scramble";
-  import { SCHEMAS, SPEFFZ_SCH, getOldPochman, type ISchema, type OldPochmanResult } from "./bld-helper/old-pochman";
+  import {
+    SCHEMAS,
+    SPEFFZ_SCH,
+    getOldPochman,
+    type ISchema,
+    type OldPochmanResult,
+  } from "./bld-helper/old-pochman";
   import ClockwiseIcon from "@icons/CogClockwise.svelte";
   import CounterClockwiseIcon from "@icons/CogCounterclockwise.svelte";
   import Select from "@material/Select.svelte";
@@ -14,9 +20,9 @@
 
   let schema = SCHEMAS[0];
 
-  let cornerBuffer = '';
-  let edgeBuffer = '';
-  let centerBuffer = '';
+  let cornerBuffer = "";
+  let edgeBuffer = "";
+  let centerBuffer = "";
 
   let op: OldPochmanResult = {
     centers: [],

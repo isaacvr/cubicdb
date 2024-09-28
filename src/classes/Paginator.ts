@@ -12,14 +12,14 @@ export class Paginator {
   public labels: number[];
 
   constructor(dt?: any[], limit?: number, paginatorWidth?: number) {
-    this.data = Array.isArray(dt) ? dt :[];
+    this.data = Array.isArray(dt) ? dt : [];
     this.len = this.data.length;
-    this._limit = Math.abs( ~~(limit || 0) ) || 10;
+    this._limit = Math.abs(~~(limit || 0)) || 10;
     this.offset = 0;
     this._page = 0;
     this._pages = 0;
     this.width = paginatorWidth || 5;
-    
+
     this.labels = [];
 
     this.update();
@@ -61,7 +61,6 @@ export class Paginator {
     for (let i = minL; i <= maxL; i += 1) {
       this.labels.push(i);
     }
-
   }
 
   setData(d: any[]) {

@@ -10,39 +10,39 @@ export class Emitter {
   }
 
   on(eventName: string, callback: Callback) {
-    if ( !this.callbackSet.has(eventName) ) {
-      this.callBackObject[ eventName ] = [];
+    if (!this.callbackSet.has(eventName)) {
+      this.callBackObject[eventName] = [];
     }
 
-    this.callbackSet.add( eventName );
-    this.callBackObject[ eventName ].push( callback );
+    this.callbackSet.add(eventName);
+    this.callBackObject[eventName].push(callback);
   }
 
   off(eventName?: string, callback?: Callback) {
-    if ( !eventName ) {
+    if (!eventName) {
       this.callbackSet.clear();
       this.callBackObject = {};
       return;
     }
 
-    if ( !callback ) {
+    if (!callback) {
       this.callbackSet.delete(eventName);
-      delete this.callBackObject[ eventName ];
+      delete this.callBackObject[eventName];
       return;
     }
 
-    if ( !this.callbackSet.has(eventName) ) return;
+    if (!this.callbackSet.has(eventName)) return;
 
-    this.callBackObject[ eventName ] = this.callBackObject[ eventName ].filter(cb => cb != callback);
-    
-    if ( this.callBackObject[ eventName ].length === 0 ) {
-      this.callbackSet.delete( eventName );
-      delete this.callBackObject[ eventName ];
+    this.callBackObject[eventName] = this.callBackObject[eventName].filter(cb => cb != callback);
+
+    if (this.callBackObject[eventName].length === 0) {
+      this.callbackSet.delete(eventName);
+      delete this.callBackObject[eventName];
     }
   }
 
   emit<T extends string>(eventName: T, ...args: any[]) {
-    if ( !this.callbackSet.has(eventName) ) {
+    if (!this.callbackSet.has(eventName)) {
       // console.log(`Unknown event "${eventName}"`)
       return;
     }

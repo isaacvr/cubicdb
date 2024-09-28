@@ -28,11 +28,11 @@
   }
 
   function updateResult(scr: string, sv: StepSolver | null, o: string, md: string) {
-    if ( !sv ) return;
+    if (!sv) return;
 
     let res = getSolver(sv, scr, o, md);
 
-    if ( !res ) {
+    if (!res) {
       autoSelect();
       result = [];
     } else {

@@ -8,9 +8,9 @@ export class SocketIOHandler {
 
   constructor(server: string) {
     this.socket = io(server);
-    this.username = '';
-    this.userID = '';
-    this.gameID = '';
+    this.username = "";
+    this.userID = "";
+    this.gameID = "";
   }
 
   get connected() {
@@ -24,21 +24,21 @@ export class SocketIOHandler {
   create(username: string, userID: string) {
     this.username = username;
     this.userID = userID;
-    this.socket.emit('CREATE', username, userID);
+    this.socket.emit("CREATE", username, userID);
   }
 
   look(gameID: string, username: string, userID: string) {
     this.gameID = gameID;
     this.username = username;
     this.userID = userID;
-    this.socket.emit('LOOK', gameID, username, userID);
+    this.socket.emit("LOOK", gameID, username, userID);
   }
 
   join(gameID: string, username: string, userID: string) {
     this.gameID = gameID;
     this.username = username;
     this.userID = userID;
-    this.socket.emit('JOIN', gameID, username, userID);
+    this.socket.emit("JOIN", gameID, username, userID);
   }
 
   time(time: number, round: number) {
@@ -46,35 +46,35 @@ export class SocketIOHandler {
   }
 
   rematch() {
-    this.socket.emit('REMATCH', this.gameID);
+    this.socket.emit("REMATCH", this.gameID);
   }
 
   start() {
-    this.socket.emit('START');
+    this.socket.emit("START");
   }
 
   reconnect(round: number) {
-    this.socket.emit('RECONNECT', this.gameID, this.userID, round);
+    this.socket.emit("RECONNECT", this.gameID, this.userID, round);
   }
 
   gameOver() {
-    this.socket.emit('GAME_OVER', this.gameID)
+    this.socket.emit("GAME_OVER", this.gameID);
   }
 
   scramble(scramble: string) {
-    this.socket.emit('SCRAMBLE', scramble);
+    this.socket.emit("SCRAMBLE", scramble);
   }
 
   nextRound() {
-    this.socket.emit('NEXT_ROUND', this.gameID);
+    this.socket.emit("NEXT_ROUND", this.gameID);
   }
 
   exit() {
-    this.socket.emit('EXIT', this.gameID);
+    this.socket.emit("EXIT", this.gameID);
   }
 
   connect(force = false) {
-    if ( this.socket.connected && !force ) return;
+    if (this.socket.connected && !force) return;
 
     this.socket.disconnect();
     this.socket.connect();

@@ -4,11 +4,11 @@ const path = require("node:path");
 /**
  * @typedef {import('electron').IpcMain} IpcMain
  * @typedef {import('nedb')} NeDB
- * 
- * @param {IpcMain} ipcMain 
- * @param {NeDB} Sessions 
- * @param {NeDB} Solves 
- * @param {string} dbPath 
+ *
+ * @param {IpcMain} ipcMain
+ * @param {NeDB} Sessions
+ * @param {NeDB} Solves
+ * @param {string} dbPath
  */
 module.exports = (ipcMain, Sessions, Solves, dbPath) => {
   ipcMain.handle("get-sessions", async () => {

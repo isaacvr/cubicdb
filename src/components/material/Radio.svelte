@@ -1,10 +1,10 @@
 <script lang="ts">
   // export let checked = true;
-  export let name = '';
+  export let name = "";
   export let value: any = null;
 </script>
 
-<input type="radio" { name }  {value} class="wrapper m-0 p-0" />
+<input type="radio" {name} {value} class="wrapper m-0 p-0" />
 
 <style lang="postcss">
   .wrapper {

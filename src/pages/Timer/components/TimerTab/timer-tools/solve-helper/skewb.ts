@@ -150,8 +150,7 @@ export function skewbSolver(scramble: string): string[][] {
   curScrambleStrArr.length = 0;
 
   for (let i = 0; i < curScramble.length; i++) {
-    curScrambleStrArr[i] =
-      "RULB".charAt(curScramble[i][0]) + "'  2".charAt(curScramble[i][1] + 1);
+    curScrambleStrArr[i] = "RULB".charAt(curScramble[i][0]) + "'  2".charAt(curScramble[i][1] + 1);
   }
 
   let faceStr = ["U", "R", "F", "D", "L", "B"];
@@ -181,11 +180,11 @@ export function skewbSolver(scramble: string): string[][] {
     let sol1 = solv.search(stateInit(skewbMove, faceSolved[i]), 0);
 
     if (sol1) {
-      let suff = sol[0] ? sol[0].replace("'", "2").replace("*", "'") : '';
+      let suff = sol[0] ? sol[0].replace("'", "2").replace("*", "'") : "";
 
       res.push([faceStr[i], adjustScramble([suff, ...sol1])]);
     } else {
-      res.push([faceStr[i], '-']);
+      res.push([faceStr[i], "-"]);
     }
   }
 

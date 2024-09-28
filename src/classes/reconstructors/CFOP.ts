@@ -1,10 +1,7 @@
 import type { Piece } from "@classes/puzzle/Piece";
-import type { Sticker } from "@classes/puzzle/Sticker";
 import { Puzzle } from "@classes/puzzle/puzzle";
-import { ScrambleParser } from "@classes/scramble-parser";
 import { BACK, DOWN, FRONT, LEFT, RIGHT, UP, type Vector3D } from "@classes/vector3d";
-import { CubeMode, EPS, STANDARD_PALETTE } from "@constants";
-import { solvFacelet } from "@cstimer/scramble/scramble_333";
+import { CubeMode, EPS } from "@constants";
 import { calcPercents, sum } from "@helpers/math";
 import type { Algorithm } from "@interfaces";
 import { DataService } from "@stores/data.service";

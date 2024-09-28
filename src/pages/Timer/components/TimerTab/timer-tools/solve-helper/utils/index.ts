@@ -10,5 +10,5 @@ export function appendSuffix(moves: Record<string, number>, suffix = " 2'") {
 }
 
 export function adjustScramble(s: string[]): string {
-  return s.join(" ").replace(/\s+/g, ' ').trim();
+  return s.join(" ").replace(/\s+/g, " ").trim();
 }

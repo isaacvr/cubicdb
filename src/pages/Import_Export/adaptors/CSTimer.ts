@@ -18,7 +18,7 @@ export class CSTimer implements CubicDBAdaptor {
   public modes: string[];
 
   constructor() {
-    this.modes = [ "Normal" ];
+    this.modes = ["Normal"];
   }
 
   get name(): string {
@@ -32,13 +32,15 @@ export class CSTimer implements CubicDBAdaptor {
       sessions: [],
       solves: [],
     };
-    
-    let props = JSON.parse(data.properties.sessionData) as { [key: string]: CSTimerSessionProperty };
+
+    let props = JSON.parse(data.properties.sessionData) as {
+      [key: string]: CSTimerSessionProperty;
+    };
 
     for (let i = 0, maxi = sessionNames.length; i < maxi; i += 1) {
-      let prop = props[ (i + 1).toString() ];
+      let prop = props[(i + 1).toString()];
       let name = sessionNames[i];
-      let sessionName = (typeof prop.name === 'number') ? name : prop.name.trim();
+      let sessionName = typeof prop.name === "number" ? name : prop.name.trim();
       let mode = prop.opt.scrType;
       let id = randomUUID();
       let solves = data[name];
@@ -48,12 +50,12 @@ export class CSTimer implements CubicDBAdaptor {
         settings: genSettings(),
       };
 
-      if ( prop.opt.scrType ) {
-        session.settings.sessionType = 'single';
+      if (prop.opt.scrType) {
+        session.settings.sessionType = "single";
         session.settings.mode = prop.opt.scrType;
       }
 
-      res.sessions.push( session );
+      res.sessions.push(session);
 
       for (let j = 0, maxj = solves.length; j < maxj; j += 1) {
         let pz = identifyPuzzle(solves[j][1]);

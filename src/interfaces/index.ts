@@ -1,7 +1,7 @@
-import type { Puzzle } from "./../classes/puzzle/puzzle";
-import type { Sticker } from "./../classes/puzzle/Sticker";
-import type { Piece } from "./../classes/puzzle/Piece";
-import type { Vector3D } from "../classes/vector3d";
+import type { Puzzle } from "@classes/puzzle/puzzle";
+import type { Sticker } from "@classes/puzzle/Sticker";
+import type { Piece } from "@classes/puzzle/Piece";
+import type { Vector3D } from "@classes/vector3d";
 import type { CubeMode, SCRAMBLE_MENU, ICONS } from "@constants";
 import type { Writable } from "svelte/store";
 import type { Display } from "electron";

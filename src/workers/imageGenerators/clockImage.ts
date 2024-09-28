@@ -97,7 +97,7 @@ function drawSingleClock(
 export function clockImage(cube: Puzzle, DIM: number, format: "raster" | "svg" = "svg"): string {
   const W = DIM * 2.2;
   const H = DIM;
-  const ctx = format === 'svg' ? new SVGGenerator(W, H) : new CanvasGenerator(W, H);
+  const ctx = format === "svg" ? new SVGGenerator(W, H) : new CanvasGenerator(W, H);
 
   const PINS1 = cube.p.raw[0];
   const PINS2 = cube.p.raw[0].map((e: any, p: number) => !PINS1[((p >> 1) << 1) + 1 - (p & 1)]);

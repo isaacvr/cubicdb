@@ -45,7 +45,7 @@
   }
 </script>
 
-<ol class="grid list-decimal ml-6 mt-4 gap-2 relative " start={block.start || 1}>
+<ol class="grid list-decimal ml-6 mt-4 gap-2 relative" start={block.start || 1}>
   {#if editing}
     {#each tempList as item, pos}
       <li class="flex gap-2">
@@ -85,7 +85,7 @@
         color="alternative"
         class="w-8 h-8 !p-2 border-none absolute right-0 top-1/2 translate-y-[-50%]"
       >
-        <DotsIcon size="1.2rem" class="text-orange-400"/>
+        <DotsIcon size="1.2rem" class="text-orange-400" />
       </Button>
 
       <Dropdown placement="right" class="z-50 relative" bind:open={showDropdown}>

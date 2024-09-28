@@ -4,7 +4,7 @@ export class CubicDB implements CubicDBAdaptor {
   public modes: string[];
 
   constructor() {
-    this.modes = [ "Normal" ];
+    this.modes = ["Normal"];
   }
 
   get name(): string {

@@ -1,7 +1,5 @@
-import { Puzzle } from "@classes/puzzle/puzzle";
 import { ScrambleParser } from "@classes/scramble-parser";
 import { CubieCube, Solver, circle } from "@cstimer/lib/mathlib";
-import { solvFacelet } from "@cstimer/scramble/scramble_333";
 import { adjustScramble } from "./utils";
 
 export function roux_s1(scramble: string): string[][] {

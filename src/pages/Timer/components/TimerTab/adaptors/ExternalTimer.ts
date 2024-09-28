@@ -40,7 +40,7 @@
 //   state.set(TimerState.INSPECTION);
 //   ready.set(false);
 //   decimals.set(false);
-  
+
 //   let { settings } = get(session);
 
 //   let ref = performance.now() + (settings.hasInspection ? (settings.inspection || 15) * 1000 : 0);
@@ -84,10 +84,10 @@
 // const saveSolve = ({ time, state, lastSolve, addSolve, initScrambler }: InputContext) => {
 //   state.set(TimerState.STOPPED);
 //   initScrambler();
-  
+
 //   let t = get(time);
 //   let ls = get(lastSolve) as Solve;
-  
+
 //   t > 0 && addSolve(t, ls?.penalty);
 //   time.set(0);
 // }
@@ -204,7 +204,7 @@
 //       rightDown: writable(false),
 //       locked: writable(false)
 //     };
-    
+
 //     this.interpreter = interpret(ExternalMachine.withContext(this.ctx));
 //     this.interpreter.onTransition((state) => {
 //       console.log("STATE: ", state.value);
@@ -219,7 +219,7 @@
 //   init() {
 //     console.log("[external]: init");
 //     this.isActive = true;
-    
+
 //     this.disconnect();
 //     this.interpreter = interpret(ExternalMachine.withContext(this.ctx));
 //     this.interpreter.onTransition((state) => {

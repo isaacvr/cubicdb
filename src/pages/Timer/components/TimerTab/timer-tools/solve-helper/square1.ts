@@ -15,7 +15,7 @@ export function square1Solver(scramble: string): string[][] {
     for (let i = 0; i < curScramble.length; i += 1) {
       state = doMove(state, curScramble[i]);
     }
-    
+
     return state;
   }
 
@@ -50,7 +50,7 @@ export function square1Solver(scramble: string): string[][] {
         if (u == 0 && d == 0) {
           ret.push("/");
         } else {
-          ret.push("("  + (((u + 5) % 12) - 5) + ", " + (((d + 5) % 12) - 5) + ") /");
+          ret.push("(" + (((u + 5) % 12) - 5) + ", " + (((d + 5) % 12) - 5) + ") /");
         }
         u = d = 0;
       } else if (+sol[i] > 0) {
@@ -114,10 +114,10 @@ export function square1Solver(scramble: string): string[][] {
 
   let sol1 = solv1.search(stateInit(sq1Move, "0Aa0Aa0Aa0Aa|Aa0Aa0Aa0Aa0"), 0);
   let sol2 = solv2.search(stateInit(sq1Move, "0Aa0Aa0Aa0Aa|Bb1Bb1Bb1Bb1"), 0);
-  
+
   return [
-    [ 'CS', adjustScramble(prettySq1Arr(sol1 || [])) ],
-    [ 'CS + OBL', adjustScramble(prettySq1Arr(sol2 || [])) ],
+    ["CS", adjustScramble(prettySq1Arr(sol1 || []))],
+    ["CS + OBL", adjustScramble(prettySq1Arr(sol2 || []))],
   ];
   // span.append("Shape: ", tools.getSolutionSpan(prettySq1Arr(sol1)), "<br>");
   // span.append("Color: ", prettySq1Arr(sol2), "<br>");

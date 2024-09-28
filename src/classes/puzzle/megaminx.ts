@@ -1,4 +1,4 @@
-import { UP, BACK, DOWN, CENTER, RIGHT, FRONT } from "./../vector3d";
+import { UP, BACK, CENTER, RIGHT, FRONT } from "./../vector3d";
 import { Vector3D } from "../../classes/vector3d";
 import type { PuzzleInterface } from "@interfaces";
 import { Piece } from "./Piece";
@@ -7,7 +7,7 @@ import { assignColors, getAllStickers, random } from "./puzzleUtils";
 import { EPS, STANDARD_PALETTE } from "@constants";
 import { ScrambleParser } from "@classes/scramble-parser";
 
-export function MEGAMINX(_n: number, headless?: false): PuzzleInterface {
+export function MEGAMINX(_n: number): PuzzleInterface {
   const n = Math.max(2, ~~_n);
   const n_2 = ~~(n / 2);
 

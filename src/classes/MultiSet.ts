@@ -10,17 +10,18 @@ export class MultiSet<T = number> {
   }
 
   private search(v: T, toInsert?: boolean): number {
-    let ini = 0, fin = this.data.length;
+    let ini = 0,
+      fin = this.data.length;
 
     while (ini < fin) {
       let mid = (ini + fin) >> 1;
 
-      if ( this.data[mid] === v ) {
+      if (this.data[mid] === v) {
         return mid;
       }
 
-      ini = this.data[mid] < v ? mid + 1 : ini; 
-      fin = this.data[mid] > v ? mid : fin; 
+      ini = this.data[mid] < v ? mid + 1 : ini;
+      fin = this.data[mid] > v ? mid : fin;
     }
 
     return toInsert ? ini : -1;
@@ -36,34 +37,50 @@ export class MultiSet<T = number> {
   }
 
   // add alias
-  push(v: T) { this.add(v); }
-  insert(v: T) { this.add(v); }
+  push(v: T) {
+    this.add(v);
+  }
+  insert(v: T) {
+    this.add(v);
+  }
 
   delete(v: T) {
     let pos = this.search(v);
 
-    if ( pos > -1 ) {
+    if (pos > -1) {
       this.data.splice(pos, 1);
     }
   }
 
   // delete alias
-  del(v: T) { this.delete(v); }
-  remove(v: T) { this.delete(v); }
-  rem(v: T) { this.delete(v); }
+  del(v: T) {
+    this.delete(v);
+  }
+  remove(v: T) {
+    this.delete(v);
+  }
+  rem(v: T) {
+    this.delete(v);
+  }
 
   deleteAll(v: T) {
     while (true) {
       let pos = this.search(v);
-      if ( pos === -1 ) break;
+      if (pos === -1) break;
       this.data.splice(pos, 1);
     }
   }
 
   // deleteAll alias
-  delAll(v: T) { this.deleteAll(v); }
-  removeAll(v: T) { this.deleteAll(v); }
-  remAll(v: T) { this.deleteAll(v); }
+  delAll(v: T) {
+    this.deleteAll(v);
+  }
+  removeAll(v: T) {
+    this.deleteAll(v);
+  }
+  remAll(v: T) {
+    this.deleteAll(v);
+  }
 
   clear() {
     this.data.length = 0;
@@ -76,5 +93,4 @@ export class MultiSet<T = number> {
   toArray(): T[] {
     return this.data.slice();
   }
-
 }

@@ -36,7 +36,7 @@ export function birdView(cube: Puzzle, DIM: number, format: "raster" | "svg" = "
     .map(st => adjustRotation(st.rotate(new Vector3D(1, 1, -1), UP, -PI_2), true));
 
   let restStickers = allStickers
-    .filter(st => !pointing(st, LEFT) && !pointing(st, BACK) && st.color != 'd')
+    .filter(st => !pointing(st, LEFT) && !pointing(st, BACK) && st.color != "d")
     .map(st => adjustRotation(st));
 
   ctx.strokeStyle = "#000000";

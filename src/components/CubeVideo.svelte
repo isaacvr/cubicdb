@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { ITutorialAlg } from "@interfaces";
-  import { Button, Range, Spinner } from "flowbite-svelte";
+  import { Button, Spinner } from "flowbite-svelte";
   import PlayIcon from "@icons/Play.svelte";
   import PauseIcon from "@icons/Pause.svelte";
   import { genVideo } from "@helpers/genVideo";
