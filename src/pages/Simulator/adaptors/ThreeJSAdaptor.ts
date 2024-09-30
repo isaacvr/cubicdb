@@ -10,6 +10,7 @@ import { getLagrangeInterpolation } from "@helpers/math";
 import type { PuzzleType } from "@interfaces";
 import {
   FrontSide,
+  Matrix3,
   Matrix4,
   Object3D,
   PCFSoftShadowMap,
@@ -47,6 +48,7 @@ interface DragResult {
   dir: number;
   ang: number[];
   animationTime: number[];
+  centers: Vector3D[];
 }
 
 interface PuzzleAnimation {
@@ -56,6 +58,7 @@ interface PuzzleAnimation {
   angs: number[];
   from: Matrix4[][];
   animationTimes: number[];
+  centers: Vector3D[];
   timeIni: number;
   ignoreUserData?: boolean;
 }
@@ -74,6 +77,13 @@ function vectorsFromCamera(vecs: any[], cam: PerspectiveCamera) {
   return vecs.map(e => {
     let vp = new Vector3(e.x, e.y, e.z).project(cam);
     return new Vector3D(vp.x, -vp.y, 0);
+  });
+}
+
+function vectorsFromCameraInv(vecs: any[], cam: PerspectiveCamera) {
+  return vecs.map(e => {
+    let vp = new Vector3(e.x, e.y, e.z).unproject(cam);
+    return new Vector3D(vp.x, vp.y, vp.z);
   });
 }
 
@@ -184,6 +194,7 @@ export class ThreeJSAdaptor {
     let userData: UserData[][] = [];
     let angs: number[] = [];
     let animationTimes: number[] = [];
+    let centers: Vector3D[] = [];
 
     let toMove = this.cube.p.toMove ? this.cube.p.toMove(pc[0], pc[1], best) : [];
     let groupToMove = Array.isArray(toMove) ? toMove : [toMove];
@@ -195,6 +206,12 @@ export class ThreeJSAdaptor {
         let cr = vv.cross(vectorsFromCamera([g.dir], this.camera)[0]);
         dir = -Math.sign(cr.z);
         u = g.dir;
+      }
+
+      if ("center" in g) {
+        centers.push(g.center);
+      } else {
+        centers.push(this.cube.p.center.clone());
       }
 
       let pieces: Piece[] = g.pieces;
@@ -224,6 +241,7 @@ export class ThreeJSAdaptor {
       dir,
       ang: angs,
       animationTime: animationTimes,
+      centers,
     };
   }
 
@@ -323,9 +341,9 @@ export class ThreeJSAdaptor {
               const { data } = dt;
 
               if (data instanceof Piece && data.hasCallback) {
-                data.callback(data, this.cube.p.center, currAnim.u, currAnim.angs[i]);
+                data.callback(data, currAnim.centers[i], currAnim.u, currAnim.angs[i]);
               } else {
-                data.rotate(this.cube.p.center, currAnim.u, currAnim.angs[i], true);
+                data.rotate(currAnim.centers[i], currAnim.u, currAnim.angs[i], true);
               }
             });
         } else {
@@ -349,10 +367,10 @@ export class ThreeJSAdaptor {
   }
 
   interpolate(animation: PuzzleAnimation, pos: number, alpha: number) {
-    const { angs, animBuffer, from, u, userData } = animation;
+    const { angs, animBuffer, from, u, userData, centers } = animation;
 
     let nu = new Vector3(u.x, u.y, u.z).normalize();
-    let center = this.cube.p.center;
+    let center = centers[pos];
     let c = new Vector3(center.x, center.y, center.z);
     let ang = angs[pos] * alpha;
 
@@ -427,10 +445,6 @@ export class ThreeJSAdaptor {
 
     if (intersects.length > 0) {
       for (let i = 0, maxi = intersects.length; i < maxi; i += 1) {
-        if ((intersects[i].object.userData.data as Sticker).nonInteractive) {
-          continue;
-        }
-
         if ((<any>intersects[i].object).material.color.getHex()) {
           piece = intersects[i];
           pos = intersects[i].point;
@@ -463,6 +477,10 @@ export class ThreeJSAdaptor {
       return;
     }
 
+    if (this.cube.type === "clock") {
+      return;
+    }
+
     let fin = new Vector2(event.clientX, event.clientY);
     let len = fin
       .clone()
@@ -472,20 +490,41 @@ export class ThreeJSAdaptor {
     let animation = this.animation;
 
     if (this.rotating && this.rotationData && animation) {
+      let { animBuffer, angs } = animation;
+
+      // if (this.cube.type === "clock") {
+      // const pc = this.piece!;
+      // let raycaster = new Raycaster();
+      // let vec = new Vector2();
+      // vec.x = (event.clientX / window.innerWidth) * 2 - 1;
+      // vec.y = -(event.clientY / window.innerHeight) * 2 + 1;
+      // raycaster.setFromCamera(vec, this.camera);
+      // const intersects = raycaster.intersectObject(pc!.object);
+      // if (intersects.length > 0) {
+      //   const point = intersects[0].point;
+      //   const center = new Vector3(0, 0, 0);
+      //   let mc = pc.object.userData.data.updateMassCenter();
+      //   mc.z = 0;
+      //   center.x = mc.x;
+      //   center.y = mc.y;
+      //   // Calcular el ángulo entre el centro del reloj y el punto de intersección
+      //   const angle = Math.atan2(point.y - center.y, point.x - center.x);
+      //   this.angleFactor = angle / animation.angs[0];
+      // }
+      // } else {
       let vec = vectorsFromCamera([this.rotationData.u], this.camera)[0];
       let vNormal = new Vector2D(vec.x, vec.y).unit().mul(0.2);
       let dirNormal = new Vector2D(fin.x, fin.y).sub(new Vector2D(this.ini!.x, this.ini!.y));
-
       let dir = Vector2D.cross(vNormal, dirNormal) * this.rotationData.dir;
-
-      let { animBuffer, angs } = animation;
-      let total = animBuffer.length;
       let maxAng = Math.PI / (2 * angs.reduce((a, b) => Math.max(Math.abs(a), Math.abs(b)), 0));
       let factor = (dir * maxAng) / lagrange(this.distance);
       this.angleFactor = factor;
+      // }
+
+      let total = animBuffer.length;
 
       for (let i = 0; i < total; i += 1) {
-        this.interpolate({ ...animation, u: this.rotationData.u }, i, factor);
+        this.interpolate({ ...animation, u: this.rotationData.u }, i, this.angleFactor);
       }
     } else if (!this.rotating && this.piece && len > MOVE_THRESHOLD) {
       let data = this.drag(this.piece, this.ini as Vector2, fin, this.camera);
@@ -533,12 +572,27 @@ export class ThreeJSAdaptor {
 
     if (intersects.length > 0) {
       for (let i = 0, maxi = intersects.length; i < maxi; i += 1) {
-        if ((intersects[i].object.userData.data as Sticker).nonInteractive) {
-          continue;
-        }
-
         if ((<any>intersects[i].object).material.color.getHex()) {
           this.piece = intersects[i];
+
+          if (this.cube.type === "clock") {
+            let data = this.drag(this.piece, new Vector2(0, 0), new Vector2(1, 0), this.camera);
+
+            // if (this.piece.object.userData.data.name === "pin") {
+            //   console.log("PIN_DATA: ", this.piece.object.userData.data.userData);
+            // } else if (data) {
+
+            if (data) {
+              let anim = this.prepareFromDrag(data, false);
+              let factor = event.ctrlKey ? 1 : -1;
+              anim.angs = anim.angs.map(a => Math.abs(a) * factor);
+              anim.timeIni = performance.now();
+              anim.animationTimes = anim.animationTimes.map(_ => 0);
+              this.animationQueue.push(anim);
+            }
+
+            return;
+          }
         } else {
           break;
         }
@@ -572,13 +626,13 @@ export class ThreeJSAdaptor {
             return obj;
           })
         ),
-        // animBuffer,
         angs: angs.map(a => a * (N - this.angleFactor)),
         animationTimes: animationTimes.map(t => (t * Math.abs(N - this.angleFactor)) / 0.5),
         from: from1,
         timeIni: performance.now(),
         u,
         userData,
+        centers: angs.map(() => this.cube.p.center.clone()),
         ignoreUserData: true,
       });
 
@@ -601,6 +655,7 @@ export class ThreeJSAdaptor {
     let animation: PuzzleAnimation = {
       animBuffer: data.buffer,
       userData: data.userData,
+      centers: data.centers,
       u: data.u,
       angs: data.ang.map((a: number) => a * data.dir),
       from: data.buffer.map((g: any[]) => g.map(e => e.matrixWorld.clone())),
@@ -618,7 +673,30 @@ export class ThreeJSAdaptor {
     let mouse = new Vector2(mx, my);
     let raycaster = new Raycaster();
     raycaster.setFromCamera(mouse, camera);
-    return raycaster.intersectObjects(arr);
+
+    return raycaster.intersectObjects(arr).filter(e => {
+      const object = e.object;
+      const face = e.face;
+
+      // Check visibility
+      if (!object.visible || !face) {
+        return false;
+      }
+
+      if (object.userData.data.nonInteractive) {
+        return false;
+      }
+
+      const cameraDirection = new Vector3();
+      camera.getWorldDirection(cameraDirection);
+
+      // Get the normal matrix
+      const normalMatrix = new Matrix3().getNormalMatrix(object.matrixWorld);
+      const faceNormal = face.normal.clone().applyMatrix3(normalMatrix).normalize();
+
+      // If the dot product of the camera direction and face normal is greater than 0, it's a backface
+      return cameraDirection.dot(faceNormal) < 0;
+    });
   }
 
   resetCamera() {

@@ -215,7 +215,7 @@ function backSubstitution(arr: number[][]) {
 
 let turns = ["UR", "DR", "DL", "UL", "U", "R", "D", "L", "ALL"];
 
-function getScramble(type?: any) {
+export function getScramble(type?: any) {
 	let rndarr = randomState();
 	let solution: number[] = [];
 	solution.length = 18;

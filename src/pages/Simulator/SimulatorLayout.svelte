@@ -25,7 +25,6 @@
   export let selectedPuzzle: PuzzleType = "rubik";
   export let order = 3;
   export let animationTime = $screen.isMobile ? 150 : 200; /// Default animation time: 200ms
-  // export let animationTime = 1000; /// Default animation time: 200ms
   export let showBackFace = false;
   export let sequence: string[] = [];
   export let sequenceAlpha = 0;
@@ -41,7 +40,7 @@
   let controlAdaptor: ControlAdaptor;
 
   /// GUI
-  let excludedPuzzles: PuzzleType[] = ["icarry", "clock"];
+  let excludedPuzzles: PuzzleType[] = ["icarry"];
   let puzzles: { name: string; value: string; order: boolean }[] = [];
   let hasOrder = true;
   let GUIExpanded = false;
