@@ -171,7 +171,36 @@ export function CLOCK(): PuzzleInterface {
     const R_PIN = circles.points[0].x * 2.3;
 
     if (extrude) {
-      pushExtrudedCircle(X, Y, RAD, WHITE, "darkGray", 0, CROSS_LAYER);
+      // Big background circle
+      let st = new Sticker();
+      let ang1 = -CLOCK_ANG * 0.96;
+      let ang2 = CLOCK_ANG * 0.96;
+      let a = UP.mul(RAD - BORDER1)
+        .rotate(CENTER, FRONT, ang1, true)
+        .add(LAYER_V.mul(1), true);
+
+      for (let i = 0, maxi = 20; i <= maxi; i += 1) {
+        let alpha = i / maxi;
+        st.points.push(a.rotate(CENTER, FRONT, (ang2 - ang1) * alpha));
+      }
+
+      st.updateMassCenter();
+      st.nonInteractive = true;
+
+      let fst = extrudeSticker(st, LAYER_V.mul(CROSS_LAYER / 2), false, false);
+      fst.color = WHITE;
+      fst.nonInteractive = true;
+
+      for (let i = 0; i < 4; i += 1) {
+        pieces.push(new Piece([fst.rotate(CENTER, FRONT, PI_2 * i)]));
+      }
+
+      fst.color = BLACK;
+      fst.add(LAYER_V.mul(-CROSS_LAYER / 2), true);
+
+      for (let i = 0; i < 4; i += 1) {
+        pieces.push(new Piece([fst.rotate(CENTER, FRONT, PI_2 * i)]));
+      }
     } else {
       pieces.push(f(circle(X, Y, RAD, WHITE, 0)));
     }
@@ -179,15 +208,26 @@ export function CLOCK(): PuzzleInterface {
     for (let i = -1; i < 2; i += 2) {
       for (let j = -1; j < 2; j += 2) {
         if (extrude) {
-          pushExtrudedCircle(
-            X + W * i,
-            Y + W * j,
-            RAD_CLOCK + BORDER + BORDER1,
-            WHITE,
-            "darkGray",
-            0,
-            CROSS_LAYER
+          // Wheel
+          let wheelHandle = circle(0, 0, 0.1, BLACK, -CROSS_LAYER / 2);
+          wheelHandle.stickers[0].points.forEach(p =>
+            p.setCoords(X + W * i + p.x * 0.7, Y + W * j + p.y * 3, p.z)
           );
+          wheelHandle.updateMassCenter();
+          let wheel = extrudeSticker(wheelHandle.stickers[0], LAYER_V.mul(CROSS_LAYER), true, true);
+          wheel.points.forEach(pt => pt.setCoords(pt.x, pt.y, pt.z * 0.98));
+          wheel.updateMassCenter();
+          wheel.color = WHITE;
+          wheel.nonInteractive = true;
+
+          for (let ang = 0; ang < 6; ang += 1) {
+            let pcs = new Piece([
+              wheel.rotate(new Vector3D(X + W * i, Y + W * j, 0), FRONT, ang * CLOCK_ANG),
+            ]);
+
+            pcs.stickers.forEach(st => (st.nonInteractive = true));
+            pieces.push(pcs);
+          }
         } else {
           pieces.push(f(circle(X + W * i, Y + W * j, RAD_CLOCK + BORDER + BORDER1, WHITE, 0)));
         }

@@ -169,14 +169,6 @@ export class ThreeJSAdaptor {
     this.canvas.addEventListener("pointerleave", () => this.upHandler());
     this.canvas.addEventListener("pointermove", ev => this.moveHandler(ev));
 
-    this.canvas.addEventListener("touchstart", e => this.downHandler(e.touches[0] as any), {
-      passive: true,
-    });
-    this.canvas.addEventListener("touchend", () => this.upHandler());
-    this.canvas.addEventListener("touchmove", e => this.moveHandler(e.touches[0] as any), {
-      passive: true,
-    });
-
     this.controls = new TrackballControls(this.camera, this.canvas);
     this.controls.rotateSpeed = 3;
     this.controls.noPan = true;
@@ -279,8 +271,8 @@ export class ThreeJSAdaptor {
   }
 
   resizeHandler(contained: boolean) {
-    this.W = window.innerWidth;
-    this.H = window.innerHeight;
+    this.W = Math.min(window.innerWidth, window.screen.availWidth);
+    this.H = Math.min(window.innerHeight, window.screen.availHeight);
 
     if (contained && this.canvas?.parentElement) {
       this.W = (this.canvas.parentElement as any).clientWidth;
@@ -541,6 +533,7 @@ export class ThreeJSAdaptor {
   }
 
   downHandler(event: MouseEvent) {
+    console.trace();
     event.preventDefault && event.preventDefault();
 
     if (this.animating) {
@@ -577,10 +570,6 @@ export class ThreeJSAdaptor {
 
           if (this.cube.type === "clock") {
             let data = this.drag(this.piece, new Vector2(0, 0), new Vector2(1, 0), this.camera);
-
-            // if (this.piece.object.userData.data.name === "pin") {
-            //   console.log("PIN_DATA: ", this.piece.object.userData.data.userData);
-            // } else if (data) {
 
             if (data) {
               let anim = this.prepareFromDrag(data, false);

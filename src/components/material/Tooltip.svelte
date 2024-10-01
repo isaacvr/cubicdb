@@ -2,6 +2,7 @@
   import { getStackingContext } from "@helpers/DOM";
   import { minmax } from "@helpers/math";
   import { processKey } from "@helpers/strings";
+  import { screen } from "@stores/screen.store";
   import { createEventDispatcher, onMount } from "svelte";
 
   type Direction = "right" | "left" | "top" | "bottom";
@@ -117,7 +118,7 @@
 
 <style lang="postcss">
   .tooltip {
-    @apply fixed bg-gray-700 px-3 py-2 rounded-md flex
+    @apply fixed bg-gray-700 px-3 py-2 rounded-md flex max-sm:hidden
       transition-all text-neutral-200 items-center justify-center text-center;
     width: max-content;
     max-width: 35ch;
