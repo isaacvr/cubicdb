@@ -15,16 +15,7 @@ function getCanonical(v: Vector3D) {
 
   let cmps = [v.x, v.y, v.z];
 
-  cmps = cmps
-    .map(n => (Math.abs(n - Math.round(n)) < EPS ? Math.round(n) : n))
-    .map(n => {
-      for (let i = 2; i <= 100; i += 1) {
-        if (Math.abs(n * i - Math.round(n * i)) < EPS * i) {
-          return Math.round(n * i) / i;
-        }
-      }
-      return n;
-    });
+  cmps = cmps.map(n => (Math.abs(n - Math.round(n)) < EPS ? Math.round(n) : n));
 
   return new Vector3D(cmps[0], cmps[1], cmps[2]);
 }

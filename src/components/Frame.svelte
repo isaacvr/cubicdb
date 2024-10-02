@@ -80,6 +80,9 @@
 
     let arr = rt.pathname.split("/").filter(s => s);
 
+    document.title =
+      "CubicDB | " + (arr[0] ? $localLang.NAVBAR.routeMap(arr[0]) : "Cubing with fun");
+
     parts = arr.map((e: string, p: number) => ({
       link: "/" + arr.slice(0, p + 1).join("/"),
       name: $localLang.NAVBAR.routeMap(e),

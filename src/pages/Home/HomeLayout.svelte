@@ -39,12 +39,12 @@
     </li>
 
     <!-- Battle -->
-    <li>
+    <!-- <li>
       <Link class="flex flex-col items-center justify-between w-full h-full" to="/battle">
         <img class="mx-auto" src="/assets/battle.png" alt="" />
         <h2 class="text-sm text-center">{$localLang.HOME.battle}</h2>
       </Link>
-    </li>
+    </li> -->
 
     <!-- PLL Recognition -->
     <li>

@@ -33,15 +33,15 @@ export class ScrambleParser {
       p = -(parseInt(m[5]) || 1) * Math.sign(moves[s].indexOf("'") + 0.2);
 
       if (f > 14) {
-        // p = "2'".indexOf(m[5] || 'X') + 2;
         f = [0, 4, 5][f % 3];
         moveseq.push([moveMap.indexOf("FRUBLD".charAt(f)), 2, p, 1, 0]);
         continue;
       }
 
       w = f < 12 ? ~~m[1] || ~~m[4] || ((m[3] == "w" || f > 5) && 2) || 1 : -1;
-      // p = f < 12 ? turns : -("2'".indexOf(m[5] || 'X') + 2);
-      moveseq.push([moveMap.indexOf("FRUBLD".charAt(f % 6)), w, p, 0, f < 12 ? 0 : 1]); // Move Index, Face Index, Direction
+
+      // Move Index, Face Index, Direction
+      moveseq.push([moveMap.indexOf("FRUBLD".charAt(f % 6)), w, p, 0, f < 12 ? 0 : 1]);
     }
     return moveseq;
   }

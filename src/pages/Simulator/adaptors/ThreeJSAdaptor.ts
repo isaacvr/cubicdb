@@ -533,7 +533,6 @@ export class ThreeJSAdaptor {
   }
 
   downHandler(event: MouseEvent) {
-    console.trace();
     event.preventDefault && event.preventDefault();
 
     if (this.animating) {
@@ -736,6 +735,7 @@ export class ThreeJSAdaptor {
       this.cube,
       1,
       (st: Sticker[]) => {
+        if (this.cube.type === "clock") return [];
         return st
           .filter(s => this.cube.p.faceColors.indexOf(s.color) > -1 && !(s instanceof ImageSticker))
           .map(s =>

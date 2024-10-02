@@ -203,8 +203,6 @@ export function parseReconstruction(s: string, puzzle: PuzzleType, order: number
   try {
     let tree = itp.getTree(s);
 
-    // console.log("TREE: ", tree);
-
     if (tree.error) {
       errorCursor = typeof tree.cursor === "number" ? tree.cursor : 0;
     } else {

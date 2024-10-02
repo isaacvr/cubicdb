@@ -1,6 +1,6 @@
 <script lang="ts">
   import { defaultInner } from "@helpers/strings";
-  import { createEventDispatcher } from "svelte";
+  import { createEventDispatcher, tick } from "svelte";
 
   export let value = "";
   export let cClass = "";
@@ -26,8 +26,9 @@
     return cedit;
   }
 
-  export function updateInnerText() {
-    innerText = getInnerText(value);
+  export function updateInnerText(v: string = value) {
+    let rnd = Math.random().toString(16);
+    innerText = getInnerText(v);
   }
 
   function keyup(e: KeyboardEvent) {
@@ -63,7 +64,7 @@
     return () => (A.scrollTop = B.scrollTop);
   }
 
-  $: innerText = getInnerText(value);
+  $: updateInnerText(value);
 </script>
 
 <div class="relative {cClass || ''}" on:focus={focusTextArea}>

@@ -126,6 +126,28 @@ const HelicopterSpec = [
   [/^(UR|UF|UL|UB|DR|DF|DL|DB|FR|FL|BL|BR)/, "MOVE"],
 ] as const;
 
+const ClockSpec = [
+  // Whitespaces:
+  [/^[\s\n\r\t]+/, "SPACE"],
+  [/^\./, null],
+
+  // Comments:
+  [/^\/\/.*/, "COMMENT"],
+
+  // Conmutator separator:
+  [/^,/, ","],
+  [/^:/, ":"],
+
+  // Symbols-delimiters:
+  [/^\(/, "("],
+  [/^\)([1-9]\d{0,1})?/, ")"],
+  [/^\[/, "["],
+  [/^\]([1-9]\d{0,1})?/, "]"],
+
+  // Moves
+  [/^((UR|DR|DL|UL|R|D|L|U|ALL)[0-6][+-]|y2|x2|UR|DR|DL|UL)/, "MOVE"],
+] as const;
+
 type InterpreterNode =
   | "Program"
   | "Expression"
@@ -161,6 +183,7 @@ const SpecMap: any = {
   megaminx: MegaminxSpec,
   pyraminx: PyraminxSpec,
   helicopter: HelicopterSpec,
+  clock: ClockSpec,
 };
 
 class BaseTokenizer implements Tokenizer {

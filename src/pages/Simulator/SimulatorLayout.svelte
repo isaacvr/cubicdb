@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { CubeMode } from "@constants";
   import { Puzzle } from "@classes/puzzle/puzzle";
   import type { PuzzleType } from "@interfaces";
   import { puzzleReg } from "@classes/puzzle/puzzleRegister";
@@ -16,6 +15,7 @@
   import Select from "@material/Select.svelte";
   import { ThreeJSAdaptor } from "./adaptors/ThreeJSAdaptor";
   import { ControlAdaptor } from "./adaptors/ControlAdaptor";
+  import { CubeMode } from "@constants";
 
   export let enableKeyboard = true;
   export let enableDrag = true;
@@ -45,6 +45,9 @@
   let hasOrder = true;
   let GUIExpanded = false;
   let mounted = false;
+  let lastS: string[] = [];
+  let lastScr: string = "";
+  let timer: any;
 
   for (let [key, value] of puzzleReg) {
     if (excludedPuzzles.indexOf(key as PuzzleType) === -1) {
@@ -59,28 +62,36 @@
   export async function handleSequence(s: string[], scr: string) {
     if (!mounted) return;
 
-    let nc: Puzzle;
+    lastS = s;
+    lastScr = scr;
 
-    try {
-      threeAdaptor.resetPuzzle("", false, scr);
+    clearTimeout(timer);
 
-      nc = Puzzle.fromSequence(scr, {
-        type: selectedPuzzle,
-        view: "trans",
-        order: Array.isArray(order) ? order : [order, order, order],
-        mode: CubeMode.NORMAL,
-      });
+    timer = setTimeout(() => {
+      console.log("NEW");
+      let nc: Puzzle;
 
-      controlAdaptor.reset();
+      try {
+        threeAdaptor.resetPuzzle("", false, lastScr);
 
-      if (nc.p.applySequence) {
-        let seq = nc.p.applySequence(s);
-        controlAdaptor.applySequence(nc, seq);
-        sequenceAlpha = 0;
+        nc = Puzzle.fromSequence(lastScr, {
+          type: selectedPuzzle,
+          view: "trans",
+          order: Array.isArray(order) ? order : [order, order, order],
+          mode: CubeMode.NORMAL,
+        });
+
+        controlAdaptor.reset();
+
+        if (nc.p.applySequence) {
+          let seq = nc.p.applySequence(lastS);
+          controlAdaptor.applySequence(nc, seq);
+          sequenceAlpha = 0;
+        }
+      } catch (err) {
+        console.log("ERROR: ", err);
       }
-    } catch (err) {
-      console.log("ERROR: ", err);
-    }
+    }, 500);
   }
 
   export function resetCamera() {

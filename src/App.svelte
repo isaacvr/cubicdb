@@ -18,6 +18,9 @@
   import { screen } from "@stores/screen.store";
   import { DataService } from "@stores/data.service";
   import { version } from "@stores/version.store";
+  import AboutCubicDbLayout from "@pages/About_CubicDB/AboutCubicDBLayout.svelte";
+  import SettingsLayout from "@pages/Settings/SettingsLayout.svelte";
+  import PllRecognitionLayout from "@pages/PLL_Recognition/PLLRecognitionLayout.svelte";
 
   let dataService = DataService.getInstance();
   let notService = NotificationService.getInstance();
@@ -128,9 +131,7 @@
   <Route path="/battle" let:params>
     <Lazy component={import("@pages/Battles/BattleLayout.svelte")} {params} />
   </Route>
-  <Route path="/pll-trainer" let:params>
-    <Lazy component={import("@pages/PLL_Recognition/PLLRecognitionLayout.svelte")} {params} />
-  </Route>
+  <Route path="/pll-trainer" component={PllRecognitionLayout} />
   <Route path="/simulator" let:params>
     <Lazy component={import("@pages/Simulator/SimulatorLayout.svelte")} {params} />
   </Route>
@@ -140,12 +141,8 @@
   <Route path="/import-export" let:params>
     <Lazy component={import("@pages/Import_Export/ImportExportLayout.svelte")} {params} />
   </Route>
-  <Route path="/settings" let:params>
-    <Lazy component={import("@pages/Settings/SettingsLayout.svelte")} {params} />
-  </Route>
-  <Route path="/cubicdb" let:params>
-    <Lazy component={import("@pages/About_CubicDB/AboutCubicDBLayout.svelte")} {params} />
-  </Route>
+  <Route path="/settings" component={SettingsLayout} />
+  <Route path="/cubicdb" component={AboutCubicDbLayout} />
   <Route path="/tools" let:params>
     <Lazy component={import("@pages/Tools/ToolsLayout.svelte")} {params} />
   </Route>
