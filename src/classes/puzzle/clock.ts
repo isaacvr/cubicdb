@@ -1,6 +1,6 @@
 // import { STANDARD_PALETTE } from '@constants';
 import { BACK, CENTER, DOWN, FRONT, RIGHT, UP, Vector3D } from "@classes/vector3d";
-import type { PuzzleInterface } from "@interfaces";
+import type { PiecesToMove, PuzzleInterface, SequenceResult } from "@interfaces";
 import { Sticker } from "./Sticker";
 import { Piece } from "./Piece";
 import { FaceSticker } from "./FaceSticker";
@@ -29,36 +29,17 @@ export function CLOCK(): PuzzleInterface {
     isRounded: true,
   };
 
-  let pins: boolean[] = [false, false, false, false];
-  let clocks = [
-    [
-      [0, 0, 0],
-      [0, 0, 0],
-      [0, 0, 0],
-    ],
-    [
-      [0, 0, 0],
-      [0, 0, 0],
-      [0, 0, 0],
-    ],
-  ];
-
-  let add = function (i: number, j: number, k: number, val: number) {
-    clocks[i][j][k] = (((clocks[i][j][k] + val) % 12) + 12) % 12;
-  };
-
-  let mat = [
-    [0, 0, 0],
-    [0, 0, 0],
-    [0, 0, 0],
-  ];
-
   let pieces = clock.pieces;
+  let pinsArr: Piece[] = [];
+  let dialsArr: Piece[] = [];
+  let upFace = 0;
 
   const WIDTH = 0.2;
   const PI = Math.PI;
   const PI_2 = PI / 2;
   const CLOCK_ANG = PI / 6;
+  const PIN_ANG = 0.0001;
+  const PIN_ANCHOR = new Vector3D(1000);
   const TAU = PI * 2;
   const RAD = 1;
   const W = RAD * 0.582491582491582;
@@ -100,7 +81,6 @@ export function CLOCK(): PuzzleInterface {
   }
 
   function drawSingleClock(
-    MAT: number[][],
     PINS: boolean[],
     BLACK: string,
     WHITE: string,
@@ -147,7 +127,7 @@ export function CLOCK(): PuzzleInterface {
       c1.stickers[0].color = col1;
 
       c.stickers.forEach(s => (s.nonInteractive = nonInteractive));
-      c1.stickers.forEach(s => (s.nonInteractive = nonInteractive));
+      c1.stickers.forEach(s => (s.nonInteractive = true));
 
       pieces.push(f(c), f(c1));
     }
@@ -219,16 +199,23 @@ export function CLOCK(): PuzzleInterface {
           wheel.points.forEach(pt => pt.setCoords(pt.x, pt.y, pt.z * 0.98));
           wheel.updateMassCenter();
           wheel.color = WHITE;
-          wheel.nonInteractive = true;
+
+          let weelPiece = new Piece([]);
 
           for (let ang = 0; ang < 6; ang += 1) {
-            let pcs = new Piece([
-              wheel.rotate(new Vector3D(X + W * i, Y + W * j, 0), FRONT, ang * CLOCK_ANG),
-            ]);
-
-            pcs.stickers.forEach(st => (st.nonInteractive = true));
-            pieces.push(pcs);
+            weelPiece.stickers.push(
+              wheel.rotate(new Vector3D(X + W * i, Y + W * j, 0), FRONT, CLOCK_ANG * ang)
+            );
           }
+
+          weelPiece.stickers.forEach(st => {
+            st.nonInteractive = true;
+            st.name = "wheel";
+          });
+
+          weelPiece.updateMassCenter();
+
+          pieces.push(weelPiece);
         } else {
           pieces.push(f(circle(X + W * i, Y + W * j, RAD_CLOCK + BORDER + BORDER1, WHITE, 0)));
         }
@@ -241,22 +228,21 @@ export function CLOCK(): PuzzleInterface {
     for (let i = -1; i < 2; i += 1) {
       for (let j = -1; j < 2; j += 1) {
         // Dial background - interactive
-        pushExtrudedCircle(X + W * i, Y + W * j, RAD_CLOCK, WHITE, GRAY, 6, 2, false);
+        pushExtrudedCircle(X + W * i, Y - W * j, RAD_CLOCK, WHITE, GRAY, 6, 2, false);
+
+        if (i && j) {
+          dialsArr.push(pieces[pieces.length - 2]);
+        }
 
         const ANCHOR = new Vector3D(X + W * i, Y + W * j);
-        let angId = MAT[j + 1][i + 1];
-        let ang = angId * CLOCK_ANG;
 
-        let arrowPiece = new Piece([
-          levelSticker(arrow.rotate(CENTER, FRONT, ang).add(ANCHOR), 10, true),
-        ]);
+        let arrowPiece = new Piece([levelSticker(arrow.add(ANCHOR), 10)]);
 
         let eArrowPiece = new Piece([extrudeSticker(arrowPiece.stickers[0], LAYER_V.mul(6 - 10))]);
 
         eArrowPiece.stickers[0].color = GRAY;
 
         let combinedArrow = new Piece([...arrowPiece.stickers, ...eArrowPiece.stickers]);
-        combinedArrow.stickers.forEach(st => (st.userData = [i, j]));
 
         pieces.push(f(combinedArrow));
 
@@ -276,7 +262,11 @@ export function CLOCK(): PuzzleInterface {
         // Pins
         if (BLACK === "black") {
           if (i <= 0 && j <= 0) {
-            let val = PINS[(j + 1) * 2 + i + 1];
+            let px = Math.sign(ANCHOR.x + W / 2);
+            let py = Math.sign(ANCHOR.y + W / 2);
+            let pos = (px + 1) / 2 + 2 - (py + 1);
+            let val = PINS[pos];
+
             pieces.push(
               f(circle(ANCHOR.x + W / 2, ANCHOR.y + W / 2, R_PIN, val ? WHITE : GRAY, 3))
             );
@@ -291,28 +281,25 @@ export function CLOCK(): PuzzleInterface {
             pin.stickers.forEach(st => {
               st.vecs = [RIGHT.clone()];
               st.name = "pin";
-              st.userData = val;
             });
 
             if (val) {
-              pin.rotate(new Vector3D(1000, 0, 0), UP, 0.0001, true);
+              pin.rotate(PIN_ANCHOR, UP, PIN_ANG, true);
             }
 
             pieces.push(pin);
+            pinsArr.push(pin);
           }
         }
       }
     }
   }
 
-  function generatePieces() {
-    pieces.length = 0;
+  const V1 = FRONT.mul(WIDTH);
 
-    const PINS1 = pins.map((_, p: number) => !pins[((p >> 1) << 1) + 1 - (p & 1)]);
-    const V1 = FRONT.mul(WIDTH);
-    drawSingleClock(clocks[0], pins, "black", "white", "gray", true, (e: Piece) => e.add(V1, true));
-
-    drawSingleClock(clocks[1], PINS1, "white", "black", "gray", false, (e: Piece) => {
+  const FUNCS = [
+    (e: Piece) => e.add(V1, true),
+    (e: Piece) => {
       e.stickers.forEach(st => {
         st.points.forEach(pt => {
           pt.setCoords(-(pt.x + V1.x), pt.y + V1.y, -(pt.z + V1.z));
@@ -323,73 +310,128 @@ export function CLOCK(): PuzzleInterface {
         st.updateMassCenter();
       });
       return e;
+    },
+  ];
+
+  drawSingleClock([!1, !1, !1, !1], "black", "white", "gray", true, FUNCS[upFace]);
+  drawSingleClock([!0, !0, !0, !0], "white", "black", "gray", false, FUNCS[1 - upFace]);
+
+  pieces.forEach(pc => {
+    pc.stickers.forEach(st => {
+      if (st.nonInteractive) return;
+      if (st instanceof FaceSticker) {
+        st.vecs = [UP.clone()];
+        return;
+      }
+      let v = st.getOrientation();
+      v.setCoords(v.z, v.y, -v.x);
+      st.vecs = [v];
     });
 
-    pieces.forEach(pc =>
-      pc.stickers.forEach(st => {
-        if (st.nonInteractive) return;
-        if (st instanceof FaceSticker) {
-          st.vecs = [UP.clone()];
-          return;
-        }
-        let v = st.getOrientation();
-        v.setCoords(v.z, v.y, -v.x);
-        st.vecs = [v];
-      })
-    );
+    pc.updateMassCenter();
+  });
+
+  function sortActor(arr: Piece[]) {
+    arr.sort((p1, p2) => {
+      let c1 = p1.getMassCenter();
+      let c2 = p2.getMassCenter();
+      let P1 = [c1.x, c1.y].map(Math.sign);
+      let P2 = [c2.x, c2.y].map(Math.sign);
+
+      if (P1[1] != P2[1]) {
+        return P2[1] - P1[1];
+      }
+
+      return P1[0] - P2[0];
+    });
   }
 
-  generatePieces();
+  function getPinValue(pos: number, _pinCode: any) {
+    sortActor(pinsArr);
+    return _pinCode ? !!(_pinCode & (1 << (3 - pos))) : pinsArr[pos].getMassCenter().z > 0;
+  }
 
-  clock.move = function (moves: any[]) {
-    let first = true;
-    let upFace = 0;
-    for (let i = 0, maxi = moves.length; i < maxi; i += 1) {
-      let mv = moves[i];
-      let pinCode = mv[0];
-      let up = mv[1];
-      let down = mv[2];
+  let trySingleMove = (mv: any): PiecesToMove[] | null => {
+    let pinCode = mv[0];
 
-      if (mv[0] === -1) {
-        upFace ^= 1;
-        continue;
+    if (pinCode < 0) {
+      return [
+        {
+          pieces,
+          u: [UP, RIGHT][-pinCode - 1],
+          ang: PI,
+          center: CENTER,
+        },
+      ];
+    }
+
+    let res: PiecesToMove[] = [];
+
+    sortActor(pinsArr);
+
+    for (let i = 3; i >= 0; i -= 1) {
+      let pinV = pinsArr[3 - i].getMassCenter().z > 0;
+      let pin1V = !!(pinCode & (1 << i));
+
+      if (pinV != pin1V) {
+        res.push({
+          pieces: [pinsArr[3 - i]],
+          ang: PIN_ANG,
+          center: PIN_ANCHOR,
+          u: pin1V ? UP : DOWN,
+          easing: "fastEasing",
+        });
       }
+    }
 
-      mat.forEach(m => m.fill(0));
+    for (let pos = 1; pos <= 2; pos += 1) {
+      if (!isNaN(mv[pos])) {
+        let dials = dialsArr.filter(d => d.stickers[0].points[0].z > 0);
+        sortActor(dials);
 
-      for (let j = 0, mask = 8; j < 4; j += 1, mask >>= 1) {
-        if (isNaN(up) || isNaN(down)) {
-          if (first) {
-            pins.length = 0;
-            pins.push(false, false, false, false);
-            first = false;
-          }
-          pins[j] = pinCode & mask ? true : pins[j];
-        } else {
-          pins[j] = !!(pinCode & mask);
-        }
-        if (pins[j]) {
-          let x = j >> 1;
-          let y = j & 1;
-          mat[x][y] = mat[x + 1][y] = mat[x][y + 1] = mat[x + 1][y + 1] = 1;
-        }
-      }
+        for (let i = 3; i >= 0; i -= 1) {
+          let val = !!(pinCode & (1 << i));
+          val = pos === 1 ? val : !val;
 
-      if (!isNaN(up) && !isNaN(down)) {
-        for (let x = 0; x < 3; x += 1) {
-          for (let y = 0; y < 3; y += 1) {
-            if (mat[x][y]) {
-              add(upFace, x, y, up);
+          if (val) {
+            let rotationInfo: any[] = clock.toMove!(
+              dials[3 - i],
+              dials[3 - i].stickers[0],
+              null,
+              pinCode
+            );
 
-              // Handle back corners
-              if ((x & 1) == 0 && (y & 1) == 0) {
-                add(1 - upFace, x, 2 - y, -up);
-              }
-            }
+            rotationInfo.forEach(info => {
+              res.push({
+                pieces: info.pieces,
+                ang: -info.ang * mv[pos],
+                u: info.dir,
+                center: info.center,
+              });
+            });
+
+            break;
           }
         }
       }
     }
+
+    return res;
+  };
+
+  clock.move = function (moves: any[]) {
+    for (let m = 0, maxm = moves.length; m < maxm; m += 1) {
+      let mv = moves[m];
+      let pcMoves = trySingleMove(mv);
+
+      if (!pcMoves) {
+        return false;
+      }
+
+      pcMoves.forEach(pcm => pcm.pieces.forEach(pc => pc.rotate(pcm.center, pcm.u, pcm.ang, true)));
+    }
+
+    return true;
   };
 
   let anchors: Vector3D[] = [];
@@ -445,21 +487,17 @@ export function CLOCK(): PuzzleInterface {
     ];
   }
 
-  clock.toMove = function (piece: Piece, sticker: Sticker) {
+  clock.toMove = function (piece: Piece, sticker: Sticker, _dir: any, _pinCode: any) {
     let mc = sticker.getMassCenter();
 
     if (sticker.name === "pin") {
-      let px = (Math.sign(mc.x) - 1) / 2;
-      let py = (Math.sign(mc.y) - 1) / 2;
-      let pos = (py + 1) * 2 + px + 1;
-      pins[pos] = !pins[pos];
-      sticker.userData = pins[pos];
+      let val = piece.getMassCenter().z < 0;
 
       return {
         pieces: [piece],
-        ang: 0.0001,
-        dir: pins[pos] ? DOWN : UP,
-        center: new Vector3D(1000, 0, 0),
+        ang: PIN_ANG,
+        dir: val ? DOWN : UP,
+        center: PIN_ANCHOR,
       };
     }
 
@@ -467,33 +505,31 @@ export function CLOCK(): PuzzleInterface {
 
     if (coords[0] === 0 || coords[1] === 0) return { pieces: [], ang: CLOCK_ANG };
 
-    let pos = (coords[0] + 1) / 2 + coords[1] + 1;
+    let pos = -(coords[1] - 1) + (coords[0] + 1) / 2;
     let arrows = pieces.filter(pc => pc.stickers.some(st => st.name === "arrow"));
     let u = sticker.getOrientation();
     let pinCoord = [
-      [-1, -1],
-      [1, -1],
       [-1, 1],
       [1, 1],
+      [-1, -1],
+      [1, -1],
     ];
 
     let arrowPieces: Piece[] = [];
 
     for (let i = 0; i < 4; i += 1) {
-      if (pins[i] === pins[pos]) {
+      if (getPinValue(i, _pinCode) === getPinValue(pos, _pinCode)) {
         let cd = getClocks(pinCoord[i]);
         arrowPieces = arrowPieces.concat(
           arrows.filter(pc => {
-            let coord = pc.stickers[0].userData;
+            let coord = getCoords(pc.stickers[0].getMassCenter());
             let side = Math.sign(pc.stickers[0].getMassCenter().z);
-            let pinMult = pins[pos] ? 1 : -1;
+            let pinMult = getPinValue(pos, _pinCode) ? 1 : -1;
 
             if (Math.abs(coord[0]) === 1 && Math.abs(coord[1]) === 1) {
-              return cd.some(c => c[0] === coord[0] * side && c[1] === coord[1]);
+              return cd.some(c => c[0] === coord[0] && c[1] === coord[1]);
             }
-            return (
-              cd.some(c => c[0] === coord[0] * side && c[1] === coord[1]) && side * pinMult > 0
-            );
+            return cd.some(c => c[0] === coord[0] && c[1] === coord[1]) && side * pinMult > 0;
           })
         );
       }
@@ -510,9 +546,25 @@ export function CLOCK(): PuzzleInterface {
     return arrowPieces.map(p => {
       let ct = p.stickers.find(st => st.name === "arrow")!.updateMassCenter();
       let dial = getClosestDial(ct);
+      let pcs = [p];
+
+      if (Math.abs(dial.x) > EPS && Math.abs(dial.y) > EPS) {
+        let wheels = pieces.filter(pc => pc.stickers.some(st => st.name === "wheel"));
+        let coords = [Math.sign(dial.x), Math.sign(dial.y)];
+
+        for (let i = 0, maxi = wheels.length; i < maxi; i += 1) {
+          let wmc = wheels[i].getMassCenter();
+          let wCoords = [Math.sign(wmc.x), Math.sign(wmc.y)];
+
+          if (wCoords[0] === coords[0] && wCoords[1] === coords[1]) {
+            pcs.push(wheels[i]);
+            break;
+          }
+        }
+      }
 
       return {
-        pieces: [p],
+        pieces: pcs,
         ang: CLOCK_ANG,
         dir: u,
         center: dial.clone(),
@@ -522,38 +574,47 @@ export function CLOCK(): PuzzleInterface {
 
   clock.scramble = function () {
     clock.move(ScrambleParser.parseClock(getScramble()));
-    generatePieces();
   };
 
   clock.applySequence = function (seq: string[]) {
-    // let moves = seq.map(mv => ScrambleParser.parseNNN(mv, { a, b, c })[0]);
-    let res: { u: Vector3D; ang: number; pieces: string[] }[] = [];
-    console.log("SEQ: ", seq);
+    let moves = seq.reduce(
+      (acc, mv) => [...acc, ...ScrambleParser.parseClock(mv)],
+      [] as number[][]
+    );
+    let res: SequenceResult[][] = [];
 
-    // for (let i = 0, maxi = moves.length; i < maxi; i += 1) {
-    //   let pcs;
+    console.log("MOVES: ", seq, moves);
 
-    //   try {
-    //     pcs = trySingleMove(moves[i]);
-    //   } catch (e) {
-    //     console.log("ERROR: ", seq[i], moves[i], e);
-    //   }
+    for (let i = 0, maxi = moves.length; i < maxi; i += 1) {
+      let pcMoves: PiecesToMove[] | null = null;
 
-    //   if (!pcs) {
-    //     continue;
-    //   }
+      try {
+        pcMoves = trySingleMove(moves[i]);
+      } catch (e) {
+        console.log("ERROR: ", seq[i], moves[i], e);
+      }
 
-    //   let { u, ang } = pcs;
+      if (!pcMoves) {
+        continue;
+      }
 
-    //   res.push({ u, ang, pieces: pcs.pieces.map(p => p.id) });
+      res.push(
+        pcMoves.map(pcm => ({
+          u: pcm.u,
+          ang: pcm.ang,
+          pieces: pcm.pieces.map(p => p.id),
+          center: pcm.center,
+          easing: pcm.easing,
+        }))
+      );
 
-    //   pcs.pieces.forEach(p => p.rotate(CENTER, u, ang, true));
-    // }
+      pcMoves.forEach(pcm => {
+        pcm.pieces.forEach(pc => pc.rotate(pcm.center, pcm.u, pcm.ang, true));
+      });
+    }
 
     return res;
   };
-
-  clock.raw = [pins, clocks, anchors];
 
   return clock;
 }

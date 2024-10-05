@@ -44,13 +44,18 @@ export class Piece {
   }
 
   updateMassCenter(recursive?: boolean): Vector3D {
-    let pts = this.getAllGeneratorPoints();
-    let sum = pts.reduce((s, e) => s.add(e), new Vector3D());
-    this._cached_mass_center = sum.div(pts.length || 1);
-
     if (recursive) {
       this.stickers.forEach(s => s.updateMassCenter());
     }
+
+    let sum = this.stickers.reduce(
+      (s, st) => s.add(st.getMassCenter().mul(st.points.length), true),
+      new Vector3D()
+    );
+
+    let points = this.stickers.reduce((acc, st) => acc + st.points.length, 0);
+
+    this._cached_mass_center = sum.div(points || 1);
 
     return this._cached_mass_center;
   }

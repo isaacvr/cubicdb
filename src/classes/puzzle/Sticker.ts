@@ -58,7 +58,9 @@ export class Sticker {
 
   updateMassCenter(): Vector3D {
     let pts = this.points;
-    this._cached_mass_center = pts.reduce((s, e) => s.add(e), new Vector3D()).div(pts.length || 1);
+    this._cached_mass_center = pts
+      .reduce((s, e) => s.add(e, true), new Vector3D())
+      .div(pts.length || 1);
     return this._cached_mass_center;
   }
 

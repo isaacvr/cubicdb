@@ -186,6 +186,11 @@ function getMoveLength(sequence: string[], puzzle: PuzzleType, order: number): n
           .length;
       }
 
+      case "clock": {
+        return sequence.reduce((acc: any[], e) => [...acc, ...ScrambleParser.parseClock(e)], [])
+          .length;
+      }
+
       case "helicopter": {
         return sequence.reduce((acc: any[], e) => [...acc, ...e.split(/\s+/)], []).length;
       }
@@ -281,4 +286,24 @@ export function replaceParams(str: string, params: string[]): string {
   }
 
   return s1;
+}
+
+export function formatMoves(moves: string[]): string[] {
+  let res: string[] = [];
+
+  for (let i = 0, maxi = moves.length; i < maxi;) {
+    let cant = 0;
+    let mv = moves[i].trim();
+    for (let j = i; j < maxi && moves[j] === moves[i]; j += 1) cant += 1;
+
+    if (cant === 1) {
+      res.push(mv);
+    } else {
+      res.push(mv.endsWith("'") ? mv.slice(0, -1) + cant + "'" : mv + cant);
+    }
+
+    i += cant;
+  }
+
+  return res;
 }

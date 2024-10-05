@@ -5,6 +5,7 @@ import { Vector3D } from "@classes/vector3d";
 import { piecesCorrectRelative, pieceInCenterColor, getColoredStickers, nonGray } from "./utils";
 import { EPS } from "@constants";
 import { calcPercents, sum } from "@helpers/math";
+import { formatMoves } from "@helpers/strings";
 
 enum Stage {
   SCRAMBLED = 0,
@@ -448,7 +449,7 @@ export class Roux implements IReconstructor {
         {
           name: "Block 1",
           moveCount: moveCounts[0][0],
-          moves: moves[0][0],
+          moves: formatMoves(moves[0][0]),
           case: null,
           percent: percents[0],
           skip: !moveCounts[0][0],
@@ -458,7 +459,7 @@ export class Roux implements IReconstructor {
         {
           name: "Block 2",
           moveCount: moveCounts[1][0],
-          moves: moves[1][0],
+          moves: formatMoves(moves[1][0]),
           case: null,
           percent: percents[1],
           skip: !moveCounts[1][0],
@@ -476,7 +477,7 @@ export class Roux implements IReconstructor {
             {
               name: "CO",
               moveCount: moveCounts[2][0],
-              moves: moves[2][0],
+              moves: formatMoves(moves[2][0]),
               case: null,
               percent: CMLLPercents[0],
               skip: !moveCounts[2][0],
@@ -486,7 +487,7 @@ export class Roux implements IReconstructor {
             {
               name: "CP",
               moveCount: moveCounts[2][1],
-              moves: moves[2][1],
+              moves: formatMoves(moves[2][1]),
               case: null,
               percent: CMLLPercents[1],
               skip: !moveCounts[2][1],
@@ -507,7 +508,7 @@ export class Roux implements IReconstructor {
             {
               name: "EO",
               moveCount: moveCounts[3][0],
-              moves: moves[3][0],
+              moves: formatMoves(moves[3][0]),
               case: null,
               percent: LSEPercents[0],
               skip: !moveCounts[3][0],
@@ -517,7 +518,7 @@ export class Roux implements IReconstructor {
             {
               name: "UL/UR",
               moveCount: moveCounts[3][1],
-              moves: moves[3][1],
+              moves: formatMoves(moves[3][1]),
               case: null,
               percent: LSEPercents[1],
               skip: !moveCounts[3][1],
@@ -527,7 +528,7 @@ export class Roux implements IReconstructor {
             {
               name: "EP",
               moveCount: moveCounts[3][2],
-              moves: moves[3][2],
+              moves: formatMoves(moves[3][2]),
               case: null,
               percent: LSEPercents[2],
               skip: !moveCounts[3][2],

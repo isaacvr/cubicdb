@@ -1,18 +1,19 @@
-import { CENTER, type Vector3D } from "@classes/vector3d";
-import { easeIn } from "@helpers/math";
+import { CENTER, Vector3D } from "@classes/vector3d";
+import { easeIn, getEasing } from "@helpers/math";
 import { Object3D, Vector3, type Matrix4 } from "three";
 import type { ThreeJSAdaptor } from "./ThreeJSAdaptor";
-import type { SequenceResult } from "@interfaces";
+import type { EasingFunction, SequenceResult } from "@interfaces";
 import type { Puzzle } from "@classes/puzzle/puzzle";
 import type { Piece } from "@classes/puzzle/Piece";
 
 export class ControlAdaptor {
   // Reconstruction
   states: Matrix4[][] = [];
-  stateAngle: number[] = [];
-  stateCenter: Vector3D[] = [];
-  stateDir: Vector3D[] = [];
-  stateFilter: boolean[][] = [];
+  stateAngle: number[][] = [];
+  stateCenter: Vector3D[][] = [];
+  stateDir: Vector3D[][] = [];
+  stateFilter: boolean[][][] = [];
+  easings: EasingFunction[][] = [];
 
   constructor(private threeAdaptor: ThreeJSAdaptor) {}
 
@@ -22,6 +23,7 @@ export class ControlAdaptor {
     this.stateCenter.length = 0;
     this.stateDir.length = 0;
     this.stateFilter.length = 0;
+    this.easings.length = 0;
   }
 
   handleAlpha(a: number, mounted: boolean) {
@@ -29,15 +31,13 @@ export class ControlAdaptor {
     if (a < 0 || a >= this.states.length) return;
 
     let id = ~~a;
-    let alpha = easeIn(a - id);
-
     let state = this.states[id];
-    let ang = this.stateAngle[id];
-    let center = this.stateCenter[id];
-    let u = this.stateDir[id];
-    let filter = this.stateFilter[id];
-    let c = new Vector3(center.x, center.y, center.z);
-    let nu = new Vector3(u.x, u.y, u.z);
+    let angs = this.stateAngle[id];
+    let centers = this.stateCenter[id];
+    let us = this.stateDir[id];
+    let filters = this.stateFilter[id];
+    let easings = this.easings[id];
+    let alphas = easings.map(e => getEasing(e)(a - id));
 
     let allObjects = [...this.threeAdaptor.group.children, ...this.threeAdaptor.backFace.children];
 
@@ -45,18 +45,32 @@ export class ControlAdaptor {
       d.rotation.setFromRotationMatrix(state[idx]);
       d.position.setFromMatrixPosition(state[idx]);
 
-      if (!filter[idx]) return;
+      if (filters.every(f => !f[idx])) {
+        return;
+      }
 
-      d.parent?.localToWorld(d.position);
-      d.position.sub(c);
-      d.position.applyAxisAngle(nu, ang * alpha);
-      d.position.add(c);
-      d.parent?.worldToLocal(d.position);
-      d.rotateOnWorldAxis(nu, ang * alpha);
+      for (let i = 0, maxi = filters.length; i < maxi; i += 1) {
+        if (filters[i][idx]) {
+          let alpha = alphas[i];
+          let center = centers[i];
+          let u = us[i];
+          let c = new Vector3(center.x, center.y, center.z);
+          let nu = new Vector3(u.x, u.y, u.z);
+          let ang = angs[i];
+
+          d.parent?.localToWorld(d.position);
+          d.position.sub(c);
+          d.position.applyAxisAngle(nu, ang * alpha);
+          d.position.add(c);
+          d.parent?.worldToLocal(d.position);
+          d.rotateOnWorldAxis(nu, ang * alpha);
+          break;
+        }
+      }
     });
   }
 
-  applySequence(nc: Puzzle, seq: SequenceResult[]) {
+  applySequence(nc: Puzzle, seq: (SequenceResult | SequenceResult[])[]) {
     let cube = this.threeAdaptor.cube;
     let cubeIDs = cube.p.pieces.map(p => p.id);
     let ncIDs = nc.p.pieces.map(p => p.id);
@@ -71,35 +85,55 @@ export class ControlAdaptor {
     this.states.push(getMatrices(allObjects));
 
     let center = cube.p.center;
-    let c = new Vector3(center.x, center.y, center.z);
 
     for (let i = 0, maxi = seq.length; i < maxi; i += 1) {
-      let s = seq[i];
-      let nu = new Vector3(s.u.x, s.u.y, s.u.z).normalize();
-      let ang = s.ang;
-      let ids = s.pieces;
+      let s = (Array.isArray(seq[i]) ? seq[i] : [seq[i]]) as SequenceResult[];
 
-      this.stateFilter.push(
-        allObjects.map(d => {
-          if (!ids.some(id => idMap.get(id) === (d.userData.data as Piece).id)) {
-            return false;
-          }
+      let stateFilter: boolean[][] = [];
+      let stateAngle: number[] = [];
+      let stateCenter: Vector3D[] = [];
+      let stateDir: Vector3D[] = [];
+      let easings: EasingFunction[] = [];
 
-          d.parent?.localToWorld(d.position);
-          d.position.sub(c);
-          d.position.applyAxisAngle(nu, ang);
-          d.position.add(c);
-          d.parent?.worldToLocal(d.position);
-          d.rotateOnWorldAxis(nu, ang);
-          d.updateMatrixWorld();
-          return true;
-        })
-      );
+      for (let j = 0, maxj = s.length; j < maxj; j += 1) {
+        let ss = s[j];
+        let nu = new Vector3(ss.u.x, ss.u.y, ss.u.z).normalize();
+        let ang = ss.ang;
+        let ids = ss.pieces;
+        let c = ss.center
+          ? new Vector3(ss.center.x, ss.center.y, ss.center.z)
+          : new Vector3(center.x, center.y, center.z);
+        let e = ss.easing || "easeIn";
 
+        stateFilter.push(
+          allObjects.map(d => {
+            if (!ids.some(id => idMap.get(id) === (d.userData.data as Piece).id)) {
+              return false;
+            }
+
+            d.parent?.localToWorld(d.position);
+            d.position.sub(c);
+            d.position.applyAxisAngle(nu, ang);
+            d.position.add(c);
+            d.parent?.worldToLocal(d.position);
+            d.rotateOnWorldAxis(nu, ang);
+            d.updateMatrixWorld();
+            return true;
+          })
+        );
+
+        easings.push(e);
+        stateAngle.push(ang);
+        stateCenter.push(new Vector3D(c.x, c.y, c.z));
+        stateDir.push(ss.u.clone());
+      }
+
+      this.stateFilter.push(stateFilter);
       this.states.push(getMatrices(allObjects));
-      this.stateAngle.push(ang);
-      this.stateCenter.push(center.clone());
-      this.stateDir.push(s.u.clone());
+      this.stateAngle.push(stateAngle);
+      this.stateCenter.push(stateCenter);
+      this.stateDir.push(stateDir);
+      this.easings.push(easings);
     }
 
     allObjects.forEach((d, idx) => {
@@ -107,9 +141,12 @@ export class ControlAdaptor {
       d.position.setFromMatrixPosition(this.states[0][idx]);
     });
 
-    this.stateAngle.push(0);
-    this.stateCenter.push(CENTER);
-    this.stateDir.push(CENTER);
+    let lastST = this.states[this.states.length - 1];
+
+    this.stateAngle.push(lastST.map(() => 0));
+    this.stateCenter.push(lastST.map(() => CENTER));
+    this.stateDir.push(lastST.map(() => CENTER));
     this.stateFilter.push([]);
+    this.easings.push(lastST.map(() => "easeIn"));
   }
 }

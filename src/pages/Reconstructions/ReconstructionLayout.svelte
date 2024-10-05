@@ -62,7 +62,7 @@
       { puzzle: "pyraminx", name: "Pyraminx", order: 3, scrambler: "pyrso" }, // 8
       { puzzle: "skewb", name: "Skewb", order: -1, scrambler: "skbso" }, // 9
       { puzzle: "megaminx", name: "Megaminx", order: 3, scrambler: "mgmp" }, // 10
-      // { puzzle: "clock", name: "Clock", order: -1, scrambler: "clkwca" }, // 11
+      { puzzle: "clock", name: "Clock", order: -1, scrambler: "clkwca" }, // 11
     ];
 
   let puzzle = PUZZLES[0];
@@ -273,13 +273,13 @@
       }
     }
 
-    // puzzle = PUZZLES[11];
-    // scramble = `UR5- DR5- DL2+ UL3- U3- R0+ D3+ L2- ALL1+ y2 U5- R3- D6+ L4- ALL4+ UR DR DL`;
-    // reconstruction = ``;
-
-    puzzle = PUZZLES[1];
-    scramble = ``;
+    puzzle = PUZZLES[11];
+    scramble = `UR5- DR5- DL2+ UL3- U3- R0+ D3+ L2- ALL1+ y2 U5- R3- D6+ L4- ALL4+ UR DR DL`;
     reconstruction = ``;
+
+    // puzzle = PUZZLES[1];
+    // scramble = ``;
+    // reconstruction = ``;
   }
 
   function setRecIndex() {

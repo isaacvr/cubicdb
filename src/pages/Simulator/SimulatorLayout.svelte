@@ -68,7 +68,6 @@
     clearTimeout(timer);
 
     timer = setTimeout(() => {
-      console.log("NEW");
       let nc: Puzzle;
 
       try {

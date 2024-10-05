@@ -165,10 +165,22 @@ export interface NavigationRoute {
   name: string;
 }
 
+export type EasingFunction = "ease" | "linear" | "easeIn" | "fastEasing" | "easeOut" | "easeInOut";
+
 export interface SequenceResult {
   u: Vector3D;
   ang: number;
   pieces: string[];
+  center?: Vector3D;
+  easing?: EasingFunction;
+}
+
+export interface PiecesToMove {
+  pieces: Piece[];
+  u: Vector3D;
+  ang: number;
+  center: Vector3D;
+  easing?: EasingFunction;
 }
 
 export interface PuzzleInterface {
@@ -190,7 +202,7 @@ export interface PuzzleInterface {
   raw?: any;
   scramble?: () => any;
   toMove?: AnyCallback;
-  applySequence?: (...args: any[]) => SequenceResult[];
+  applySequence?: (...args: any[]) => (SequenceResult | SequenceResult[])[];
   vectorsFromCamera?: AnyCallback;
 }
 

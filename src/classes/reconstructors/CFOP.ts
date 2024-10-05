@@ -7,6 +7,7 @@ import type { Algorithm } from "@interfaces";
 import { DataService } from "@stores/data.service";
 import type { IReconstructor, ReconstructorMethod, ReconstructorStep } from "./interfaces";
 import { centerStickerAligned, getColoredStickers, pieceInCenter, pieceInPlace } from "./utils";
+import { formatMoves } from "@helpers/strings";
 
 interface CrossResult {
   vec: Vector3D;
@@ -539,7 +540,7 @@ export class CFOP implements IReconstructor {
         time: t,
         name: "F2L pair " + (p + 1),
         moveCount: moveCounts[1][p],
-        moves: moves[1][p],
+        moves: formatMoves(moves[1][p]),
         case: null,
         percent: f2lPercents[p],
         skip: !t,
@@ -558,7 +559,7 @@ export class CFOP implements IReconstructor {
         {
           name: "Cross",
           moveCount: moveCounts[0][0],
-          moves: moves[0][0],
+          moves: formatMoves(moves[0][0]),
           case: cross,
           percent: percents[0],
           skip: false,
@@ -579,7 +580,7 @@ export class CFOP implements IReconstructor {
         {
           name: "OLL",
           moveCount: moveCounts[2][0],
-          moves: moves[2][0],
+          moves: formatMoves(moves[2][0]),
           case: oll,
           percent: percents[2],
           skip: false,
@@ -589,7 +590,7 @@ export class CFOP implements IReconstructor {
         {
           name: "PLL",
           moveCount: sum(moveCounts[3]),
-          moves: moves[3].reduce((acc, e) => [...acc, ...e], []),
+          moves: formatMoves(moves[3].reduce((acc, e) => [...acc, ...e], [])),
           case: pll,
           percent: percents[3],
           skip: false,

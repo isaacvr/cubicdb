@@ -145,7 +145,11 @@ const ClockSpec = [
   [/^\]([1-9]\d{0,1})?/, "]"],
 
   // Moves
+  // WCA
   [/^((UR|DR|DL|UL|R|D|L|U|ALL)[0-6][+-]|y2|x2|UR|DR|DL|UL)/, "MOVE"],
+
+  // Jaap
+  [/^[Ud]{2}\s+([ud]=?[+-]?[0-6]\s+)*[Ud]{2}(\s+[ud]=?[+-]?[0-6])*/, "MOVE"],
 ] as const;
 
 type InterpreterNode =
