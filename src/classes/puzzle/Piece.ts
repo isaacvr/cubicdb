@@ -173,15 +173,17 @@ export class Piece {
         st[i].partialRotation(ref, dir, ang, true);
       }
 
-      // pts.forEach((e, p) => e.setCoords(pts1[p].x, pts1[p].y, pts1[p].z));
-      // this.stickers.map(s => s.partialRotation(ref, dir, ang, true));
       this._cached_mass_center.rotate(ref, dir, ang, true);
       this.anchor.rotate(ref, dir, ang, true).toNormal();
       return this;
     }
 
     let pc = new Piece();
-    pc.stickers = st.map(s => s.rotateBundle(ref, dir, ang));
+    pc.stickers = st.map(s => {
+      let res = s.rotateBundle(ref, dir, ang);
+      res.name = s.name;
+      return res;
+    });
     pc._cached_mass_center = this._cached_mass_center.rotate(ref, dir, ang);
     pc.anchor = this.anchor.rotate(ref, dir, ang).toNormal();
     return pc;

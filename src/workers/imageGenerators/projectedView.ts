@@ -7,6 +7,7 @@ import type { PuzzleType } from "@interfaces";
 import { drawStickers } from "./utils";
 import { CanvasGenerator } from "./classes/CanvasGenerator";
 import { SVGGenerator } from "./classes/SVGGenerator";
+import { FaceSticker } from "@classes/puzzle/FaceSticker";
 
 const PI = Math.PI;
 const PI_2 = PI / 2;
@@ -111,7 +112,10 @@ export function projectedView(cube: Puzzle, DIM: number, format: "raster" | "svg
     colorFilter = ["d"];
   }
 
-  let stickers = cube.getAllStickers().filter(s => colorFilter.indexOf(s.color) === -1);
+  let stickers = cube.getAllStickers().filter(s => {
+    if (cube.type === "clock") return !(s instanceof FaceSticker);
+    return colorFilter.indexOf(s.color) === -1;
+  });
 
   let sideStk: { [name: string]: Sticker[] } = {};
 
@@ -180,6 +184,12 @@ export function projectedView(cube: Puzzle, DIM: number, format: "raster" | "svg
       [CENTER, UP, PI_2, LEFT, (sideMult * unit * (ORDER.a + ORDER.b + 1)) / 2],
       [CENTER, UP, PI, RIGHT, sideMult * unit * (ORDER.a + ORDER.b + 1)],
     ];
+  } else if (cube.type === "clock") {
+    faceName = ["FRONT", "BACK"];
+    fcTr = [
+      [CENTER, UP, 0, UP, 0], // NO action
+      [CENTER, UP, PI, RIGHT, 1],
+    ];
   }
 
   for (let i = 0, maxi = faceName.length; i < maxi; i += 1) {
@@ -232,12 +242,29 @@ export function projectedView(cube: Puzzle, DIM: number, format: "raster" | "svg
       uv = [UP, FRONT, RIGHT, LEFT, BACK, DOWN].sort((a, b) => b.dot(uv) - a.dot(uv))[0];
     }
 
+    if (cube.type === "clock" && st.name === "pin") {
+      let ori = st.getOrientation();
+      let face = ori.z > 0 ? 0 : 1;
+      let on = Math.abs(st.getMassCenter().z) > 0.27;
+
+      let arr = sideStk[faceName[face]];
+
+      sideStk[faceName[face]].push(st);
+
+      const onColor = "black";
+      const offColor = "gray";
+
+      arr[arr.length - 1].color = on ? onColor : offColor;
+
+      continue;
+    }
+
     // Find the face of the sticker
     for (let j = 0, maxj = faceVectors.length; j < maxj && !ok; j += 1) {
       if (faceVectors[j].sub(uv).abs() < EPS) {
         if (normalCubes.indexOf(cube.type) > -1) {
           sideStk[faceName[j]].push(
-            st.rotate(fcTr[j][0], fcTr[j][1], fcTr[j][2]).add(fcTr[j][3].mul(fcTr[j][4]))
+            st.rotate(fcTr[j][0], fcTr[j][1], fcTr[j][2]).add(fcTr[j][3].mul(fcTr[j][4]), true)
           );
         } else {
           sideStk[faceName[j]].push(st);
@@ -376,6 +403,8 @@ export function projectedView(cube: Puzzle, DIM: number, format: "raster" | "svg
     faceName
       .slice(4)
       .forEach(name => sideStk[name].forEach(st => st.rotate(RIGHT.mul(1.1), UP, PI, true)));
+  } else if (cube.type === "clock") {
+    sideStk[faceName[1]].forEach(st => st.rotate(RIGHT.mul(1.1), UP, PI, true));
   }
 
   let allStickers: Sticker[] = [];

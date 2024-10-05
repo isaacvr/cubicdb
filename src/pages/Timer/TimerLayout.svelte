@@ -384,7 +384,7 @@
       // let cfop = new CFOP(Puzzle.fromSequence($scramble, { type: 'rubik' }).toFacelet());
       // cfop.getAnalysis();
 
-      console.log("MODE: ", md);
+      // console.log("MODE: ", md);
       if (all.pScramble.options.has(md) && $session?.settings?.genImage) {
         // console.log("HAS", md);
         updateImage(md);

@@ -483,27 +483,6 @@ export class ThreeJSAdaptor {
 
     if (this.rotating && this.rotationData && animation) {
       let { animBuffer, angs } = animation;
-
-      // if (this.cube.type === "clock") {
-      // const pc = this.piece!;
-      // let raycaster = new Raycaster();
-      // let vec = new Vector2();
-      // vec.x = (event.clientX / window.innerWidth) * 2 - 1;
-      // vec.y = -(event.clientY / window.innerHeight) * 2 + 1;
-      // raycaster.setFromCamera(vec, this.camera);
-      // const intersects = raycaster.intersectObject(pc!.object);
-      // if (intersects.length > 0) {
-      //   const point = intersects[0].point;
-      //   const center = new Vector3(0, 0, 0);
-      //   let mc = pc.object.userData.data.updateMassCenter();
-      //   mc.z = 0;
-      //   center.x = mc.x;
-      //   center.y = mc.y;
-      //   // Calcular el ángulo entre el centro del reloj y el punto de intersección
-      //   const angle = Math.atan2(point.y - center.y, point.x - center.x);
-      //   this.angleFactor = angle / animation.angs[0];
-      // }
-      // } else {
       let vec = vectorsFromCamera([this.rotationData.u], this.camera)[0];
       let vNormal = new Vector2D(vec.x, vec.y).unit().mul(0.2);
       let dirNormal = new Vector2D(fin.x, fin.y).sub(new Vector2D(this.ini!.x, this.ini!.y));
@@ -511,7 +490,6 @@ export class ThreeJSAdaptor {
       let maxAng = Math.PI / (2 * angs.reduce((a, b) => Math.max(Math.abs(a), Math.abs(b)), 0));
       let factor = (dir * maxAng) / lagrange(this.distance);
       this.angleFactor = factor;
-      // }
 
       let total = animBuffer.length;
 
@@ -567,6 +545,8 @@ export class ThreeJSAdaptor {
         if ((<any>intersects[i].object).material.color.getHex()) {
           this.piece = intersects[i];
 
+          this.controls.enabled = false;
+
           if (this.cube.type === "clock") {
             let data = this.drag(this.piece, new Vector2(0, 0), new Vector2(1, 0), this.camera);
 
@@ -585,8 +565,6 @@ export class ThreeJSAdaptor {
           break;
         }
       }
-
-      this.controls.enabled = false;
     }
   }
 

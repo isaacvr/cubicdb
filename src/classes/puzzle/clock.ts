@@ -7,6 +7,7 @@ import { FaceSticker } from "./FaceSticker";
 import { EPS } from "@constants";
 import { getScramble } from "@cstimer/scramble/clock";
 import { ScrambleParser } from "@classes/scramble-parser";
+import { getAllStickers } from "./puzzleUtils";
 
 export function CLOCK(): PuzzleInterface {
   let clock: PuzzleInterface = {
@@ -28,6 +29,8 @@ export function CLOCK(): PuzzleInterface {
     roundParams: [],
     isRounded: true,
   };
+
+  clock.getAllStickers = getAllStickers.bind(clock);
 
   let pieces = clock.pieces;
   let pinsArr: Piece[] = [];
@@ -135,11 +138,11 @@ export function CLOCK(): PuzzleInterface {
     const arrow = new Sticker(
       [
         new Vector3D(0.0, 1.0),
-        new Vector3D(0.1491, 0.4056),
-        new Vector3D(0.0599, 0.2551),
-        new Vector3D(0.0, 0.0),
-        new Vector3D(-0.0599, 0.2551),
         new Vector3D(-0.1491, 0.4056),
+        new Vector3D(-0.0599, 0.2551),
+        new Vector3D(0.0, 0.0),
+        new Vector3D(0.0599, 0.2551),
+        new Vector3D(0.1491, 0.4056),
       ],
       BLACK,
       [],
@@ -267,15 +270,13 @@ export function CLOCK(): PuzzleInterface {
             let pos = (px + 1) / 2 + 2 - (py + 1);
             let val = PINS[pos];
 
-            pieces.push(
-              f(circle(ANCHOR.x + W / 2, ANCHOR.y + W / 2, R_PIN, val ? WHITE : GRAY, 3))
-            );
-
             let pinPiece = f(circle(ANCHOR.x + W / 2, ANCHOR.y + W / 2, R_PIN * 0.8, GRAY, 16));
             let pinPiece1 = f(circle(ANCHOR.x + W / 2, ANCHOR.y + W / 2, R_PIN * 0.8, BLACK, -139));
             let pin = new Piece([
               extrudeSticker(pinPiece.stickers[0], LAYER_V.mul(-123), true, true),
               extrudeSticker(pinPiece1.stickers[0], LAYER_V.mul(-123), true, true),
+              pinPiece.stickers[0],
+              pinPiece1.stickers[0].add(LAYER_V.mul(-123)).reverse(true),
             ]);
 
             pin.stickers.forEach(st => {

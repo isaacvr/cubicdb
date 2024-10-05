@@ -275,7 +275,7 @@
 
     puzzle = PUZZLES[11];
     scramble = `UR5- DR5- DL2+ UL3- U3- R0+ D3+ L2- ALL1+ y2 U5- R3- D6+ L4- ALL4+ UR DR DL`;
-    reconstruction = ``;
+    reconstruction = `Ud dd u+4 dU dd u+1 dd dU u+2 dd UU u+4 UU UU u+3 y2 Ud dd u+3 dU dd u-4 dU dU u+2 dU UU u-5 UU dU u-1 UU Ud u-1 UU UU u+6`;
 
     // puzzle = PUZZLES[1];
     // scramble = ``;
