@@ -602,7 +602,7 @@
             </li>
           </ul>
 
-          <div class="hidden justify-evenly">
+          <div class="actions hidden justify-evenly">
             <Input type="number" class="max-w-[6rem]" bind:value={recIndex} min={0} />
             <Button
               on:click={() => {

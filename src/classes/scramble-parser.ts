@@ -386,8 +386,9 @@ export class ScrambleParser {
               if (parts[i].includes("(")) {
                 let mvs = parts[i].slice(letters[j].length).match(/\(([0-6][+-]),\s*([0-6][+-])\)/);
                 if (mvs && mvs.length >= 3) {
-                  cmd[1] = parseInt(mvs[1][1] + mvs[1][0]);
-                  cmd[2] = parseInt(mvs[2][1] + mvs[2][0]);
+                  let upPos = (cmd[0] & 0xc) === 0xc ? 2 : cmd[0] & 0x8 ? 1 : 2;
+                  cmd[upPos] = parseInt(mvs[1][1] + mvs[1][0]);
+                  cmd[3 - upPos] = parseInt(mvs[2][1] + mvs[2][0]);
                 }
               } else {
                 let turns = parseInt(parts[i].slice(letters[j].length, letters[j].length + 1));

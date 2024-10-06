@@ -3922,13 +3922,17 @@ const reconstructionData = [
   },
 ];
 
+function getTitle(title) {
+  return /average/i.test(title) ? title.split("-")[1].trim() : title.split(" ")[0];
+}
+
 fs.writeFile(
   join(__dirname, "bundle.json"),
   JSON.stringify(
     reconstructionData.map((r, p) => {
       return {
         id: 5338 + p,
-        title: `${r.title.split(" ")[0]} Clock solve by ${r.name} at ${r.competitionName}`,
+        title: `${getTitle(r.title)} Clock solve by ${r.name} at ${r.competitionName}`,
         scramble: r.scramble,
         solution: `${r.inspection} // Inspection\n\n${r.solution}`,
       };
