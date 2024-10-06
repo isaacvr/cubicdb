@@ -65,32 +65,32 @@
     lastS = s;
     lastScr = scr;
 
-    clearTimeout(timer);
+    // clearTimeout(timer);
 
-    timer = setTimeout(() => {
-      let nc: Puzzle;
+    // timer = setTimeout(() => {
+    let nc: Puzzle;
 
-      try {
-        threeAdaptor.resetPuzzle("", false, lastScr);
+    try {
+      threeAdaptor.resetPuzzle("", false, lastScr);
 
-        nc = Puzzle.fromSequence(lastScr, {
-          type: selectedPuzzle,
-          view: "trans",
-          order: Array.isArray(order) ? order : [order, order, order],
-          mode: CubeMode.NORMAL,
-        });
+      nc = Puzzle.fromSequence(lastScr, {
+        type: selectedPuzzle,
+        view: "trans",
+        order: Array.isArray(order) ? order : [order, order, order],
+        mode: CubeMode.NORMAL,
+      });
 
-        controlAdaptor.reset();
+      controlAdaptor.reset();
 
-        if (nc.p.applySequence) {
-          let seq = nc.p.applySequence(lastS);
-          controlAdaptor.applySequence(nc, seq);
-          sequenceAlpha = 0;
-        }
-      } catch (err) {
-        console.log("ERROR: ", err);
+      if (nc.p.applySequence) {
+        let seq = nc.p.applySequence(lastS);
+        controlAdaptor.applySequence(nc, seq);
+        sequenceAlpha = 0;
       }
-    }, 500);
+    } catch (err) {
+      console.log("ERROR: ", err);
+    }
+    // }, 500);
   }
 
   export function resetCamera() {

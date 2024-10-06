@@ -256,7 +256,7 @@ export const TIMER_INPUT: TimerInput[] = [
   "Manual",
   "StackMat",
   "GAN Cube",
-  "QY-Timer",
+  // "QY-Timer",
   // "ExternalTimer",
 ];
 

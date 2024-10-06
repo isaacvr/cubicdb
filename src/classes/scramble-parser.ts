@@ -295,7 +295,7 @@ export class ScrambleParser {
     let parts = scramble.replace(/\n+/g, " ").split(/\s+/g);
     let res: number[][] = [];
 
-    if (scramble.indexOf("/") > -1) {
+    if (/-\d/.test(scramble)) {
       /// Concise notation
       const pins = [0xc, 0x5, 0x3, 0xa, 0x7, 0xb, 0xe, 0xd, 0xf, 0x0, 0];
 
@@ -338,11 +338,27 @@ export class ScrambleParser {
         }
       }
     } else if (!/([Ud]{2})/.test(scramble)) {
-      /// WCA notation
+      /// Extended WCA notation
       const MOVE_REG =
-        /^((UR|DR|DL|UL|ur|dr|dl|ul|R|D|L|U|ALL)[0-6][+-]|y2|x2|z[2']?|UR|DR|DL|UL)$/;
-      const letters = ["UL", "UR", "DL", "DR", "ALL", "U", "R", "D", "L", "ul", "ur", "dl", "dr"];
-      const pins = [0x8, 0x4, 0x2, 0x1, 0xf, 0xc, 0x5, 0x3, 0xa, 0x7, 0xb, 0xd, 0xe];
+        /^((UR|DR|DL|UL|ur|dr|dl|ul|R|D|L|U|ALL|\/|\\)(\([0-6][+-],\s*[0-6][+-]\)|[0-6][+-])|y2|x2|z[2']?|UR|DR|DL|UL)$/;
+      const letters = [
+        "UL",
+        "UR",
+        "DL",
+        "DR",
+        "ALL",
+        "U",
+        "R",
+        "D",
+        "L",
+        "ul",
+        "ur",
+        "dl",
+        "dr",
+        "/",
+        "\\",
+      ];
+      const pins = [0x8, 0x4, 0x2, 0x1, 0xf, 0xc, 0x5, 0x3, 0xa, 0x7, 0xb, 0xd, 0xe, 0x6, 0x9];
       let first = true;
       let pinCode = 0x0;
 
@@ -362,16 +378,27 @@ export class ScrambleParser {
           first = true;
         } else {
           let cmd = [0, 0, 0];
+
           for (let j = 0, maxj = letters.length; j < maxj; j += 1) {
             if (parts[i].startsWith(letters[j])) {
-              let turns = parseInt(parts[i].slice(letters[j].length, letters[j].length + 1));
-              if (parts[i].indexOf("-") > -1) {
-                turns = -turns;
-              }
               cmd[0] = pins[j];
-              cmd[1] = turns;
 
-              if (cmd[1] != 0) {
+              if (parts[i].includes("(")) {
+                let mvs = parts[i].slice(letters[j].length).match(/\(([0-6][+-]),\s*([0-6][+-])\)/);
+                if (mvs && mvs.length >= 3) {
+                  cmd[1] = parseInt(mvs[1][1] + mvs[1][0]);
+                  cmd[2] = parseInt(mvs[2][1] + mvs[2][0]);
+                }
+              } else {
+                let turns = parseInt(parts[i].slice(letters[j].length, letters[j].length + 1));
+                if (parts[i].indexOf("-") > -1) {
+                  turns = -turns;
+                }
+
+                cmd[1] = turns;
+              }
+
+              if (cmd[1] != 0 || cmd[2] != 0) {
                 res.push(cmd);
 
                 if (isNaN(cmd[1])) {

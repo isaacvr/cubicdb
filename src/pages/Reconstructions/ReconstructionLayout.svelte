@@ -43,7 +43,7 @@
     });
   }
 
-  let recIndex = 1;
+  let recIndex = 5347;
   let showRecSearch = false;
   let recSearch = "";
 
@@ -67,7 +67,7 @@
       { puzzle: "clock", name: "Clock", order: -1, scrambler: "clkwca" }, // 11
     ];
 
-  let puzzle = PUZZLES[0];
+  let puzzle = PUZZLES[1];
 
   let simulator: Simulator;
   let sTextarea: TextArea;
@@ -180,8 +180,10 @@
       if (type === "full") {
         let allMoves = rTextarea.getContentEdit().querySelectorAll(".move:not(.silent)");
         allMoves.forEach(mv => mv.classList.remove("current"));
-        allMoves[id].classList.add("current");
-        drawerOpen && allMoves[id].scrollIntoView({ block: "nearest" });
+        if (allMoves[id]) {
+          allMoves[id].classList.add("current");
+          drawerOpen && allMoves[id].scrollIntoView({ block: "nearest" });
+        }
       }
       lastId = id;
     }
@@ -216,12 +218,12 @@
       }
 
       // case "Comma": {
-      //   ev.ctrlKey && (recIndex -= 1, setRecIndex());
+      //   ev.ctrlKey && ((recIndex -= 1), setRecIndex());
       //   break;
       // }
 
       // case "Period": {
-      //   ev.ctrlKey && (recIndex += 1, setRecIndex());
+      //   ev.ctrlKey && ((recIndex += 1), setRecIndex());
       //   break;
       // }
 
@@ -240,8 +242,6 @@
   function handleKeydown(ev: KeyboardEvent) {
     if (ev.code === "KeyP" && (ev.ctrlKey || ev.metaKey)) {
       ev.preventDefault();
-      // ev.stopPropagation();
-      // ev.stopImmediatePropagation();
       return false;
     }
   }
@@ -253,14 +253,34 @@
     rTextarea.updateInnerText();
   }
 
-  function handleLocation(loc: any) {
+  async function handleLocation(loc: any) {
     let map = new URL(loc.href).searchParams;
     let p = map.get("puzzle");
     let o = parseInt(map.get("order") || "-1");
     let s = map.get("scramble") || "";
     let r = map.get("reconstruction") || "";
+    let id = parseInt(map.get("recIndex") || "-1");
 
     backURL = (map.get("returnTo") || "").trim();
+
+    if (id) {
+      await new Promise(res => {
+        let itv = setInterval(() => {
+          if (recs.length != 0) {
+            clearInterval(itv);
+            res(true);
+          }
+        }, 30);
+      });
+
+      let rec = recs.find(rec => rec.id === id);
+
+      if (rec) {
+        recIndex = id;
+        setRecIndex();
+        return;
+      }
+    }
 
     for (let i = 0, maxi = PUZZLES.length; i < maxi; i += 1) {
       let pz = PUZZLES[i];
@@ -275,15 +295,9 @@
       }
     }
 
-    puzzle = PUZZLES[11];
-    scramble = `UR4- DR2- DL5- UL5- U4+ R5- D6+ L1+ ALL5+ y2 U2- R5+ D5- L2- ALL5+ UR DL`;
-    reconstruction = `y2 // Inspection
-
-UR2- DR1+ UL3- U2- dl1- x2 DR2+ UL5- U2- dl1+ ul5- ur4-`;
-
-    // puzzle = PUZZLES[1];
-    // scramble = ``;
-    // reconstruction = ``;
+    puzzle = PUZZLES[1];
+    scramble = ``;
+    reconstruction = ``;
   }
 
   function setRecIndex() {
@@ -307,21 +321,21 @@ UR2- DR1+ UL3- U2- dl1- x2 DR2+ UL5- U2- dl1+ ul5- ur4-`;
     }
   }
 
-  // function saveToIndex() {
-  //   recs[recIndex].title = title;
-  //   recs[recIndex].scramble = scramble;
-  //   recs[recIndex].solution = reconstruction;
-  // }
+  function saveToIndex() {
+    recs[recIndex].title = title;
+    recs[recIndex].scramble = scramble;
+    recs[recIndex].solution = reconstruction;
+  }
 
-  // function downloadRecs() {
-  //   let a = document.createElement('a');
-  //   let b = new Blob([ JSON.stringify(recs) ], { type: 'application/json' });
-  //   a.href = URL.createObjectURL(b);
-  //   a.download = 'reconstructions.json';
-  //   document.body.appendChild( a );
-  //   a.click();
-  //   a.remove();
-  // }
+  function downloadRecs() {
+    let a = document.createElement("a");
+    let b = new Blob([JSON.stringify(recs)], { type: "application/json" });
+    a.href = URL.createObjectURL(b);
+    a.download = "reconstructions.json";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  }
 
   function findReconstructions(inp: string) {
     if (!inp.trim()) return [];
@@ -335,11 +349,18 @@ UR2- DR1+ UL3- U2- dl1- x2 DR2+ UL5- U2- dl1+ ul5- ur4-`;
   }
 
   function copyReconstruction() {
-    let rec = `https://cubicdb.netlify.app/reconstructions?puzzle=${puzzle.puzzle}&order=${
-      puzzle.order
-    }&scramble=${encodeURIComponent(scramble)}&reconstruction=${encodeURIComponent(
-      reconstruction
-    )}`;
+    let rec1 = recs.find(r => r.id === recIndex) || recs[0];
+    let rec = "";
+
+    if (rec1.scramble === scramble && rec1.solution === reconstruction) {
+      rec = `https://cubicdb.netlify.app/reconstructions?recIndex=${recIndex}`;
+    } else {
+      rec = `https://cubicdb.netlify.app/reconstructions?puzzle=${puzzle.puzzle}&order=${
+        puzzle.order
+      }&scramble=${encodeURIComponent(scramble)}&reconstruction=${encodeURIComponent(
+        reconstruction
+      )}`;
+    }
 
     copyToClipboard(rec).then(() => {
       NotificationService.getInstance().addNotification({
@@ -377,6 +398,7 @@ UR2- DR1+ UL3- U2- dl1- x2 DR2+ UL5- U2- dl1+ ul5- ur4-`;
 
   onMount(() => {
     mounted = true;
+    // setRecIndex();
 
     // let elem = rTextarea.getTextArea();
     // let pre = rTextarea.getContentEdit();
@@ -580,14 +602,24 @@ UR2- DR1+ UL3- U2- dl1- x2 DR2+ UL5- U2- dl1+ ul5- ur4-`;
             </li>
           </ul>
 
-          <!-- <div class="flex justify-evenly">
-          <Input type="number" class="max-w-[5rem]" bind:value={ recIndex } min={0} max={ recs.length - 1 }/>
-          <Button on:click={ () => { recIndex -= 1; setRecIndex()} }>&lt;</Button>
-          <Button on:click={ () => { recIndex += 1; setRecIndex()} }>&gt;</Button>
-          <Button on:click={ () => setRecIndex() }>Set</Button>
-          <Button on:click={ () => saveToIndex() }>Save</Button>
-          <Button on:click={ () => downloadRecs() }>Download</Button>
-        </div> -->
+          <div class="hidden justify-evenly">
+            <Input type="number" class="max-w-[6rem]" bind:value={recIndex} min={0} />
+            <Button
+              on:click={() => {
+                recIndex -= 1;
+                setRecIndex();
+              }}>&lt;</Button
+            >
+            <Button
+              on:click={() => {
+                recIndex += 1;
+                setRecIndex();
+              }}>&gt;</Button
+            >
+            <Button on:click={() => setRecIndex()}>Set</Button>
+            <Button on:click={() => saveToIndex()}>Save</Button>
+            <Button on:click={() => downloadRecs()}>Download</Button>
+          </div>
         </div>
       </div>
 
