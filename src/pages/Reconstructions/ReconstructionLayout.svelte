@@ -37,7 +37,9 @@
 
   if (type === "full") {
     import("../../database/reconstructions.json").then(res => {
-      recs = (res.default || []).slice(0, 4300).filter(r => errorIndex.indexOf(r.id) < 0);
+      recs = (res.default || []).filter(
+        (r, p) => (p < 4300 || p >= 5338) && errorIndex.indexOf(r.id) < 0
+      );
     });
   }
 
@@ -274,8 +276,10 @@
     }
 
     puzzle = PUZZLES[11];
-    scramble = `UR5- DR5- DL2+ UL3- U3- R0+ D3+ L2- ALL1+ y2 U5- R3- D6+ L4- ALL4+ UR DR DL`;
-    reconstruction = `Ud dd u+4 dU dd u+1 dd dU u+2 dd UU u+4 UU UU u+3 y2 Ud dd u+3 dU dd u-4 dU dU u+2 dU UU u-5 UU dU u-1 UU Ud u-1 UU UU u+6`;
+    scramble = `UR4- DR2- DL5- UL5- U4+ R5- D6+ L1+ ALL5+ y2 U2- R5+ D5- L2- ALL5+ UR DL`;
+    reconstruction = `y2 // Inspection
+
+UR2- DR1+ UL3- U2- dl1- x2 DR2+ UL5- U2- dl1+ ul5- ur4-`;
 
     // puzzle = PUZZLES[1];
     // scramble = ``;

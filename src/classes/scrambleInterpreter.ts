@@ -146,7 +146,7 @@ const ClockSpec = [
 
   // Moves
   // WCA
-  [/^((UR|DR|DL|UL|R|D|L|U|ALL)[0-6][+-]|y2|x2|UR|DR|DL|UL)/, "MOVE"],
+  [/^((UR|DR|DL|UL|ur|dr|dl|ul|R|D|L|U|ALL)[0-6][+-]|y2|x2|z[2']?|UR|DR|DL|UL)/, "MOVE"],
 
   // Jaap
   [/^[Ud]{2}\s+([ud]=?[+-]?[0-6]\s+)*[Ud]{2}(\s+[ud]=?[+-]?[0-6])*/, "MOVE"],

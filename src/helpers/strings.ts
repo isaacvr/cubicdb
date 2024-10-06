@@ -187,8 +187,7 @@ function getMoveLength(sequence: string[], puzzle: PuzzleType, order: number): n
       }
 
       case "clock": {
-        return sequence.reduce((acc: any[], e) => [...acc, ...ScrambleParser.parseClock(e)], [])
-          .length;
+        return ScrambleParser.parseClock(sequence.join(" ")).length;
       }
 
       case "helicopter": {
@@ -291,7 +290,7 @@ export function replaceParams(str: string, params: string[]): string {
 export function formatMoves(moves: string[]): string[] {
   let res: string[] = [];
 
-  for (let i = 0, maxi = moves.length; i < maxi;) {
+  for (let i = 0, maxi = moves.length; i < maxi; ) {
     let cant = 0;
     let mv = moves[i].trim();
     for (let j = i; j < maxi && moves[j] === moves[i]; j += 1) cant += 1;

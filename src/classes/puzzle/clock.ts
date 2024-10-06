@@ -359,8 +359,8 @@ export function CLOCK(): PuzzleInterface {
       return [
         {
           pieces,
-          u: [UP, RIGHT][-pinCode - 1],
-          ang: PI,
+          u: [UP, RIGHT, FRONT][-pinCode - 1],
+          ang: [PI, PI, -(mv[1] * PI) / 2][-pinCode - 1],
           center: CENTER,
         },
       ];
@@ -578,13 +578,8 @@ export function CLOCK(): PuzzleInterface {
   };
 
   clock.applySequence = function (seq: string[]) {
-    let moves = seq.reduce(
-      (acc, mv) => [...acc, ...ScrambleParser.parseClock(mv)],
-      [] as number[][]
-    );
+    let moves = ScrambleParser.parseClock(seq.join(" "));
     let res: SequenceResult[][] = [];
-
-    console.log("MOVES: ", seq, moves);
 
     for (let i = 0, maxi = moves.length; i < maxi; i += 1) {
       let pcMoves: PiecesToMove[] | null = null;

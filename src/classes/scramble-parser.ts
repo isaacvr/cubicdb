@@ -337,15 +337,17 @@ export class ScrambleParser {
           res.push([pin, NaN, NaN]);
         }
       }
-    } else if (!/(u|d)/.test(scramble)) {
+    } else if (!/([Ud]{2})/.test(scramble)) {
       /// WCA notation
-      const letters = ["UL", "UR", "DL", "DR", "ALL", "U", "R", "D", "L"];
-      const pins = [0x8, 0x4, 0x2, 0x1, 0xf, 0xc, 0x5, 0x3, 0xa];
+      const MOVE_REG =
+        /^((UR|DR|DL|UL|ur|dr|dl|ul|R|D|L|U|ALL)[0-6][+-]|y2|x2|z[2']?|UR|DR|DL|UL)$/;
+      const letters = ["UL", "UR", "DL", "DR", "ALL", "U", "R", "D", "L", "ul", "ur", "dl", "dr"];
+      const pins = [0x8, 0x4, 0x2, 0x1, 0xf, 0xc, 0x5, 0x3, 0xa, 0x7, 0xb, 0xd, 0xe];
       let first = true;
       let pinCode = 0x0;
 
       for (let i = 0, maxi = parts.length; i < maxi; i += 1) {
-        if (!/^((UR|DR|DL|UL|R|D|L|U|ALL)[0-6][+-]|y2|x2|UR|DR|DL|UL)$/.test(parts[i])) {
+        if (!MOVE_REG.test(parts[i])) {
           continue;
         }
 
@@ -354,6 +356,9 @@ export class ScrambleParser {
           first = true;
         } else if (parts[i] === "x2") {
           res.push([-2, 0]);
+          first = true;
+        } else if (parts[i][0] === "z") {
+          res.push([-3, parts[i][1] === "2" ? 2 : parts[i][1] === "'" ? -1 : 1]);
           first = true;
         } else {
           let cmd = [0, 0, 0];
@@ -365,21 +370,21 @@ export class ScrambleParser {
               }
               cmd[0] = pins[j];
               cmd[1] = turns;
-              break;
-            }
-          }
 
-          if (cmd[1] != 0) {
-            res.push(cmd);
+              if (cmd[1] != 0) {
+                res.push(cmd);
 
-            if (isNaN(cmd[1])) {
-              if (!first) {
-                pinCode |= cmd[0];
-                cmd[0] = pinCode;
-              } else {
-                pinCode = cmd[0];
+                if (isNaN(cmd[1])) {
+                  if (!first) {
+                    pinCode |= cmd[0];
+                    cmd[0] = pinCode;
+                  } else {
+                    pinCode = cmd[0];
+                  }
+                  first = false;
+                }
               }
-              first = false;
+              break;
             }
           }
         }
@@ -395,6 +400,8 @@ export class ScrambleParser {
           res.push([-1, 0, 0]);
         } else if (parts[i] === "x2") {
           res.push([-2, 0, 0]);
+        } else if (parts[i][0] === "z") {
+          res.push([-3, parts[i][1] === "2" ? 2 : parts[i][1] === "'" ? -1 : 1]);
         } else if (/\d+/.test(parts[i])) {
           let turns = parseInt(parts[i].replace("=", "").slice(1, 3));
           parts[i][0] === "d" ? (d = turns) : (u = turns);
