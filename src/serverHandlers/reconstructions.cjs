@@ -58,8 +58,10 @@ module.exports = (ipcMain, Reconstructions, dbPath) => {
 
   ipcMain.handle("reconstructions-check", async () => {
     try {
-      let data = await fetch(FOREIGN_PATH + "/recversion.json").then(res => res.json());
-
+      let data = await fetch(FOREIGN_PATH + "/recversion.json", { cache: "no-store" }).then(res =>
+        res.json()
+      );
+      console.log("DATA: ", data);
       if (data) {
         return data;
       }
@@ -69,10 +71,14 @@ module.exports = (ipcMain, Reconstructions, dbPath) => {
 
   ipcMain.handle("update-reconstructions", async () => {
     try {
-      let data = await fetch(FOREIGN_PATH + "/reconstructions.db").then(res => res.text());
+      let data = await fetch(FOREIGN_PATH + "/reconstructions.db", { cache: "no-store" }).then(
+        res => res.text()
+      );
       await fsp.writeFile(path.join(dbPath, "reconstructions.db"), data, { encoding: "utf8" });
 
-      let tutVersion = await fetch(FOREIGN_PATH + "/recversion.json").then(res => res.text());
+      let tutVersion = await fetch(FOREIGN_PATH + "/recversion.json", { cache: "no-store" }).then(
+        res => res.text()
+      );
       await fsp.writeFile(path.join(dbPath, "recversion.json"), tutVersion, { encoding: "utf8" });
 
       setTimeout(() => {

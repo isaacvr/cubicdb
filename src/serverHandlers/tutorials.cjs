@@ -95,7 +95,9 @@ module.exports = (ipcMain, Tutorials, dbPath) => {
 
   ipcMain.handle("tutorials-check", async () => {
     try {
-      let data = await fetch(FOREIGN_PATH + "/tutversion.json").then(res => res.json());
+      let data = await fetch(FOREIGN_PATH + "/tutversion.json", { cache: "no-store" }).then(res =>
+        res.json()
+      );
 
       if (data) {
         return data;
@@ -106,10 +108,14 @@ module.exports = (ipcMain, Tutorials, dbPath) => {
 
   ipcMain.handle("update-tutorials", async () => {
     try {
-      let data = await fetch(FOREIGN_PATH + "/tutorials.db").then(res => res.text());
+      let data = await fetch(FOREIGN_PATH + "/tutorials.db", { cache: "no-store" }).then(res =>
+        res.text()
+      );
       await fsp.writeFile(path.join(dbPath, "tutorials.db"), data, { encoding: "utf8" });
 
-      let tutVersion = await fetch(FOREIGN_PATH + "/tutversion.json").then(res => res.text());
+      let tutVersion = await fetch(FOREIGN_PATH + "/tutversion.json", { cache: "no-store" }).then(
+        res => res.text()
+      );
       await fsp.writeFile(path.join(dbPath, "tutversion.json"), tutVersion, { encoding: "utf8" });
 
       setTimeout(() => {
