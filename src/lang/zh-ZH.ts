@@ -28,6 +28,7 @@ export const Chinese: Language = {
     search: "搜索",
     toScramble: "打乱谜题",
     reconstruction: "重建",
+    reconstructions: "重建",
     clickToCopy: "点击复制",
     settings: "设置",
     downloading: "下载中",

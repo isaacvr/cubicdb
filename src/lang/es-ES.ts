@@ -28,6 +28,7 @@ export const Spanish: Language = {
     search: "Buscar",
     toScramble: "Mezclar cubo",
     reconstruction: "Reconstrucción",
+    reconstructions: "Reconstrucciones",
     clickToCopy: "Click para copiar",
     settings: "Configuración",
     downloading: "Descargando",

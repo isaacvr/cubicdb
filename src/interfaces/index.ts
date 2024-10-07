@@ -827,6 +827,7 @@ export interface Language {
     search: string;
     toScramble: string;
     reconstruction: string;
+    reconstructions: string;
     clickToCopy: string;
     settings: string;
     downloading: string;

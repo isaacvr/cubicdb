@@ -28,6 +28,7 @@ export const English: Language = {
     search: "Search",
     toScramble: "Scramble puzzle",
     reconstruction: "Reconstruction",
+    reconstructions: "Reconstructions",
     clickToCopy: "Click to copy",
     settings: "Settings",
     downloading: "Downloading",

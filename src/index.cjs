@@ -91,7 +91,7 @@ require("./serverHandlers/tutorials.cjs")(ipcMain, Tutorials, dbPath);
 require("./serverHandlers/sessions.cjs")(ipcMain, Sessions, Solves, dbPath);
 require("./serverHandlers/solves.cjs")(ipcMain, Solves, dbPath);
 require("./serverHandlers/contests.cjs")(ipcMain, Contests);
-require("./serverHandlers/reconstructions.cjs")(ipcMain, Reconstructions);
+require("./serverHandlers/reconstructions.cjs")(ipcMain, Reconstructions, dbPath);
 require("./serverHandlers/cache.cjs")(ipcMain, dbPath);
 require("./serverHandlers/vCache.cjs")(ipcMain, dbPath);
 

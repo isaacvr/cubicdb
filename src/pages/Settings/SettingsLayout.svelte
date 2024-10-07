@@ -243,6 +243,12 @@
       { name: "solves", clean: true, length: storage.solves, db: "Solves" },
       { name: "algorithms", clean: false, length: storage.algorithms, db: "Algorithms" },
       { name: "tutorials", clean: false, length: storage.tutorials, db: "Tutorials" },
+      {
+        name: "reconstructions",
+        clean: false,
+        length: storage.reconstructions,
+        db: "Reconstructions",
+      },
     ].filter(s => s.length);
   }
 
@@ -254,7 +260,6 @@
   }
 
   async function clearCache(db: ICacheDB) {
-    console.log("[clearCache]: ", db);
     showDelete = false;
 
     try {
@@ -295,6 +300,7 @@
     callback: any
   ) {
     return pr.then(res => {
+      console.log("NAME_RES: ", name, res);
       if (res.version === "0.0.0") {
         return sendUpdateError();
       }
