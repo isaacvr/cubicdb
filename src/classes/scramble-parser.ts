@@ -13,6 +13,10 @@ function _moveToOrder(mv: string, order: IPuzzleOrder): number {
   return order.a;
 }
 
+function checkBit(n: number, b: number) {
+  return !!(n & (1 << b));
+}
+
 export class ScrambleParser {
   constructor() {}
 
@@ -340,7 +344,7 @@ export class ScrambleParser {
     } else if (!/([Ud]{2})/.test(scramble)) {
       /// Extended WCA notation
       const MOVE_REG =
-        /^((UR|DR|DL|UL|ur|dr|dl|ul|R|D|L|U|ALL|\/|\\)(\([0-6][+-],\s*[0-6][+-]\)|[0-6][+-])|y2|x2|z[2']?|UR|DR|DL|UL)$/;
+        /^((UR|DR|DL|UL|ur|dr|dl|ul|R|D|L|U|ALL|\/|\\)(\(\d[+-],\s*\d[+-]\)|\d[+-])|y2|x2|z[2']?|UR|DR|DL|UL)$/;
       const letters = [
         "UL",
         "UR",
@@ -384,9 +388,17 @@ export class ScrambleParser {
               cmd[0] = pins[j];
 
               if (parts[i].includes("(")) {
-                let mvs = parts[i].slice(letters[j].length).match(/\(([0-6][+-]),\s*([0-6][+-])\)/);
+                let mvs = parts[i].slice(letters[j].length).match(/\((\d[+-]),\s*(\d[+-])\)/);
                 if (mvs && mvs.length >= 3) {
-                  let upPos = (cmd[0] & 0xc) === 0xc ? 2 : cmd[0] & 0x8 ? 1 : 2;
+                  let upPos =
+                    checkBit(cmd[0], 3) === checkBit(cmd[0], 1)
+                      ? [2, 1][(cmd[0] & 0x8) >> 3]
+                      : checkBit(cmd[0], 3) === checkBit(cmd[0], 2)
+                      ? [2, 2, 1, 1][cmd[0] & 0x3]
+                      : cmd[0] & 0x8
+                      ? 1
+                      : 2;
+
                   cmd[upPos] = parseInt(mvs[1][1] + mvs[1][0]);
                   cmd[3 - upPos] = parseInt(mvs[2][1] + mvs[2][0]);
                 }

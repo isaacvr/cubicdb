@@ -148,12 +148,12 @@ const ClockSpec = [
 
   // WCA
   [
-    /^((UR|DR|DL|UL|ur|dr|dl|ul|R|D|L|U|ALL|\/|\\)(\([0-6][+-],\s*[0-6][+-]\)|[0-6][+-])|y2|x2|z[2']?|UR|DR|DL|UL)/,
+    /^((UR|DR|DL|UL|ur|dr|dl|ul|R|D|L|U|ALL|\/|\\)(\(\d[+-],\s*\d[+-]\)|\d[+-])|y2|x2|z[2']?|UR|DR|DL|UL)/,
     "MOVE",
   ],
 
   // Jaap
-  [/^[Ud]{2}\s+([ud]=?[+-]?[0-6]\s+)*[Ud]{2}(\s+[ud]=?[+-]?[0-6])*/, "MOVE"],
+  [/^[Ud]{2}\s+([ud]=?[+-]?\d\s+)*[Ud]{2}(\s+[ud]=?[+-]?\d)*/, "MOVE"],
 ] as const;
 
 type InterpreterNode =

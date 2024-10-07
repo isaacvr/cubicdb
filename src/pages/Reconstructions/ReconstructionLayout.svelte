@@ -37,13 +37,14 @@
 
   if (type === "full") {
     import("../../database/reconstructions.json").then(res => {
-      recs = (res.default || []).filter(
-        (r, p) => (p < 4300 || p >= 5338) && errorIndex.indexOf(r.id) < 0
-      );
+      recs = res.default || [];
+      // .filter(
+      //   (r, p) => (p < 4300 || p >= 5338) && errorIndex.indexOf(r.id) < 0
+      // );
     });
   }
 
-  let recIndex = 5347;
+  let recIndex = 4733;
   let showRecSearch = false;
   let recSearch = "";
 
@@ -203,10 +204,11 @@
     play();
   }
 
-  function handleKeyup(ev: KeyboardEvent) {
+  function handleKeydown(ev: KeyboardEvent) {
     switch (ev.code) {
       case "KeyP": {
         if (ev.ctrlKey || ev.metaKey) {
+          ev.preventDefault();
           handlePlay();
         }
         break;
@@ -217,15 +219,15 @@
         break;
       }
 
-      // case "Comma": {
-      //   ev.ctrlKey && ((recIndex -= 1), setRecIndex());
-      //   break;
-      // }
+      case "Comma": {
+        ev.ctrlKey && ((recIndex -= 1), setRecIndex());
+        break;
+      }
 
-      // case "Period": {
-      //   ev.ctrlKey && ((recIndex += 1), setRecIndex());
-      //   break;
-      // }
+      case "Period": {
+        ev.ctrlKey && ((recIndex += 1), setRecIndex());
+        break;
+      }
 
       case "ArrowLeft": {
         ev.ctrlKey && step(-1);
@@ -236,13 +238,6 @@
         ev.ctrlKey && step(1);
         break;
       }
-    }
-  }
-
-  function handleKeydown(ev: KeyboardEvent) {
-    if (ev.code === "KeyP" && (ev.ctrlKey || ev.metaKey)) {
-      ev.preventDefault();
-      return false;
     }
   }
 
@@ -413,7 +408,7 @@
   $: type === "controlled" && handleControlled(puzzleType, ~~puzzleOrder);
 </script>
 
-<svelte:window on:keyup={handleKeyup} on:keydown={handleKeydown} />
+<svelte:window on:keydown={handleKeydown} />
 
 <main class:full={type === "full"}>
   <section>
@@ -602,7 +597,7 @@
             </li>
           </ul>
 
-          <div class="actions hidden justify-evenly">
+          <div class="actions flex justify-evenly">
             <Input type="number" class="max-w-[6rem]" bind:value={recIndex} min={0} />
             <Button
               on:click={() => {
