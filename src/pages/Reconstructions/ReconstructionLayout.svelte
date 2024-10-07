@@ -3,7 +3,7 @@
   import { navigate, useLocation } from "svelte-routing";
   import { ArrowKeyLeft, ArrowKeyRight, Button, Kbd, Modal, Range, Tooltip } from "flowbite-svelte";
   import Simulator from "@pages/Simulator/SimulatorLayout.svelte";
-  import type { PuzzleType, Scrambler } from "@interfaces";
+  import type { IDBReconstruction, PuzzleType, Scrambler } from "@interfaces";
   import TextArea from "@material/TextArea.svelte";
   import Checkbox from "@material/Checkbox.svelte";
   import Input from "@material/Input.svelte";
@@ -26,6 +26,7 @@
   import SearchIcon from "@icons/SearchWeb.svelte";
   import ChevronLeft from "@icons/ChevronLeft.svelte";
   import CopyIcon from "@icons/ClipboardOutline.svelte";
+  import { DataService } from "@stores/data.service";
 
   export let type: "full" | "controlled" = "full";
   export let scramble = "";
@@ -33,18 +34,11 @@
   export let puzzleType: PuzzleType = "rubik";
   export let puzzleOrder = 3;
 
-  let recs: any[] = [];
+  let recs: IDBReconstruction[] = [];
 
-  if (type === "full") {
-    import("../../database/reconstructions.json").then(res => {
-      recs = res.default || [];
-      // .filter(
-      //   (r, p) => (p < 4300 || p >= 5338) && errorIndex.indexOf(r.id) < 0
-      // );
-    });
-  }
+  const dataService = DataService.getInstance();
 
-  let recIndex = 4733;
+  let recIndex = 1;
   let showRecSearch = false;
   let recSearch = "";
 
@@ -268,7 +262,7 @@
         }, 30);
       });
 
-      let rec = recs.find(rec => rec.id === id);
+      let rec = recs.find(rec => rec.num === id);
 
       if (rec) {
         recIndex = id;
@@ -297,7 +291,7 @@
 
   function setRecIndex() {
     for (let i = 0, maxi = recs.length; i < maxi; i += 1) {
-      if (recs[i].id != recIndex) continue;
+      if (recs[i].num != recIndex) continue;
 
       title = recs[i].title;
       scramble = recs[i].scramble;
@@ -344,7 +338,7 @@
   }
 
   function copyReconstruction() {
-    let rec1 = recs.find(r => r.id === recIndex) || recs[0];
+    let rec1 = recs.find(r => r.num === recIndex) || recs[0];
     let rec = "";
 
     if (rec1.scramble === scramble && rec1.solution === reconstruction) {
@@ -393,12 +387,12 @@
 
   onMount(() => {
     mounted = true;
-    // setRecIndex();
 
-    // let elem = rTextarea.getTextArea();
-    // let pre = rTextarea.getContentEdit();
-
-    // elem.addEventListener("click", ev => handleTextareaClick(ev, elem, pre));
+    if (type === "full") {
+      dataService.getReconstructions().then(r => {
+        recs = r.filter(rec => errorIndex.indexOf(rec.num) < 0);
+      });
+    }
   });
 
   $: recomputeTimeBounds(speed);
@@ -641,14 +635,14 @@
   <Input bind:value={recSearch} />
 
   <ul
-    class="mt-4 max-h-[10rem] overflow-x-clip overflow-y-scroll pr-4"
+    class="mt-4 max-h-[10rem] overflow-x-clip overflow-y-scroll pr-4 overscroll-contain"
     style="scrollbar-gutter: stable;"
   >
     {#each findReconstructions(recSearch).slice(0, 500) as rec}
       <li>
         <button
           on:click={() => {
-            recIndex = rec.id;
+            recIndex = rec.num;
             setRecIndex();
             showRecSearch = false;
           }}

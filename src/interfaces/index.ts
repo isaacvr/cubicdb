@@ -564,6 +564,7 @@ export interface IStorageInfo {
   algorithms: number;
   solves: number;
   sessions: number;
+  reconstructions: number;
 }
 
 export interface IPC {
@@ -588,6 +589,12 @@ export interface IPC {
   tutorialsVersion: () => Promise<{ version: string; minVersion: string }>;
   checkTutorials: () => Promise<{ version: string; minVersion: string }>;
   updateTutorials: () => Promise<boolean>;
+
+  addReconstruction: (r: IDBReconstruction) => Promise<IDBReconstruction>;
+  getReconstructions: () => Promise<IDBReconstruction[]>;
+  updateReconstructions: () => Promise<boolean>;
+  reconstructionsVersion: () => Promise<{ version: string; minVersion: string }>;
+  checkReconstructions: () => Promise<{ version: string; minVersion: string }>;
 
   getSolves: () => Promise<Solve[]>;
   addSolve: (s: Solve) => Promise<Solve>;
@@ -647,6 +654,7 @@ export interface IPC {
   sessionsStorage: () => any;
   solvesStorage: () => any;
   tutorialsStorage: () => any;
+  reconstructionsStorage: () => any;
 }
 
 export interface PDFOptions {
@@ -1177,6 +1185,14 @@ export interface IReconstruction {
   finalAlpha: number;
   result: string;
   hasError: boolean;
+}
+
+export interface IDBReconstruction {
+  _id?: string;
+  num: number;
+  title: string;
+  scramble: string;
+  solution: string;
 }
 
 export type Scrambler =

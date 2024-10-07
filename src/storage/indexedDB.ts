@@ -12,9 +12,11 @@ import type {
   PDFOptions,
   IStorageInfo,
   ICacheDB,
+  IDBReconstruction,
 } from "@interfaces";
 import _algs from "../database/algs.db?raw";
 import _tuts from "../database/tutorials.db?raw";
+import _recs from "../database/reconstructions.db?raw";
 import { clone, getByteSize } from "@helpers/object";
 import { openDB, type IDBPDatabase } from "idb";
 
@@ -38,6 +40,16 @@ const algs: Algorithm[] = _algs
   .filter(e => e);
 
 const tuts: ITutorial[] = _tuts
+  .split("\n")
+  .map(s => {
+    try {
+      return JSON.parse(s);
+    } catch {}
+    return "";
+  })
+  .filter(e => e);
+
+const recs: any[] = _recs
   .split("\n")
   .map(s => {
     try {
@@ -233,6 +245,26 @@ export class IndexedDBAdaptor implements IPC {
   }
 
   updateTutorials() {
+    return Promise.resolve(false);
+  }
+
+  addReconstruction(r: IDBReconstruction) {
+    return Promise.reject();
+  }
+
+  getReconstructions() {
+    return Promise.resolve(recs);
+  }
+
+  reconstructionsVersion() {
+    return Promise.resolve({ version: "0.0.0", minVersion: "0.0.0" });
+  }
+
+  checkReconstructions() {
+    return Promise.resolve({ version: "0.0.0", minVersion: "0.0.0" });
+  }
+
+  updateReconstructions() {
     return Promise.resolve(false);
   }
 
@@ -511,11 +543,20 @@ export class IndexedDBAdaptor implements IPC {
   sessionsStorage() {}
   solvesStorage() {}
   tutorialsStorage() {}
+  reconstructionsStorage() {}
 
   async getStorageInfo(): Promise<IStorageInfo> {
     await this.init();
     if (!this.DB)
-      return { algorithms: 0, cache: 0, sessions: 0, solves: 0, tutorials: 0, vcache: 0 };
+      return {
+        algorithms: 0,
+        cache: 0,
+        sessions: 0,
+        solves: 0,
+        tutorials: 0,
+        vcache: 0,
+        reconstructions: 0,
+      };
 
     let cache = await this.DB.getAll(CacheStore);
     let sessions = await this.DB.getAll(SessionStore);
@@ -528,6 +569,7 @@ export class IndexedDBAdaptor implements IPC {
       sessions: getByteSize(sessions),
       solves: getByteSize(solves),
       tutorials: getByteSize(tuts),
+      reconstructions: getByteSize(recs),
     };
   }
 

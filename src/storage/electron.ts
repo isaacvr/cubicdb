@@ -12,6 +12,7 @@ import type {
   PDFOptions,
   IStorageInfo,
   ICacheDB,
+  IDBReconstruction,
 } from "@interfaces";
 
 export class ElectronAdaptor implements IPC {
@@ -124,6 +125,26 @@ export class ElectronAdaptor implements IPC {
 
   updateTutorials() {
     return this.ipc.updateTutorials();
+  }
+
+  addReconstruction(r: IDBReconstruction) {
+    return this.ipc.addReconstruction(r);
+  }
+
+  getReconstructions() {
+    return this.ipc.getReconstructions();
+  }
+
+  reconstructionsVersion() {
+    return this.ipc.reconstructionsVersion();
+  }
+
+  checkReconstructions() {
+    return this.ipc.checkReconstructions();
+  }
+
+  updateReconstructions() {
+    return this.ipc.updateReconstructions();
   }
 
   getSolves() {
@@ -293,6 +314,7 @@ export class ElectronAdaptor implements IPC {
   sessionsStorage() {}
   solvesStorage() {}
   tutorialsStorage() {}
+  reconstructionsStorage() {}
 
   async getStorageInfo(): Promise<IStorageInfo> {
     let algorithms = await this.ipc.algorithmsStorage();
@@ -301,6 +323,7 @@ export class ElectronAdaptor implements IPC {
     let sessions = await this.ipc.sessionsStorage();
     let solves = await this.ipc.solvesStorage();
     let tutorials = await this.ipc.tutorialsStorage();
+    let reconstructions = await this.ipc.reconstructionsStorage();
 
     return {
       algorithms,
@@ -309,6 +332,7 @@ export class ElectronAdaptor implements IPC {
       sessions,
       solves,
       tutorials,
+      reconstructions,
     };
   }
 

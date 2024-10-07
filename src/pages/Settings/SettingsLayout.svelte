@@ -61,6 +61,7 @@
   let canCheckUpdate = true;
   let canCheckAlgs = true;
   let canCheckTuts = true;
+  let canCheckRecs = true;
   let dTime = 10587;
   let itv: NodeJS.Timeout;
   let displays: Display[] = [];
@@ -71,6 +72,7 @@
     sessions: 0,
     solves: 0,
     tutorials: 0,
+    reconstructions: 0,
   };
 
   let storeList: any[] = [];
@@ -79,6 +81,7 @@
   let sName = "";
   let algVersion = "0.0.0";
   let tutVersion = "0.0.0";
+  let recVersion = "0.0.0";
 
   function save() {
     localStorage.setItem("app-font", appFont);
@@ -196,28 +199,23 @@
       });
   }
 
+  function updatePart(pr: Promise<any>, errorStr: string) {
+    pr.then(() => sendWillRestart()).catch(err => {
+      console.log(errorStr);
+      console.dir(err);
+    });
+  }
+
   function updateAlgs() {
-    dataService
-      .updateAlgorithms()
-      .then(() => {
-        sendWillRestart();
-      })
-      .catch(err => {
-        console.log("update algs error: ");
-        console.dir(err);
-      });
+    updatePart(dataService.updateAlgorithms(), "update algs error: ");
   }
 
   function updateTuts() {
-    dataService
-      .updateTutorials()
-      .then(() => {
-        sendWillRestart();
-      })
-      .catch(err => {
-        console.log("update tuts error: ");
-        console.dir(err);
-      });
+    updatePart(dataService.updateTutorials(), "update tuts error: ");
+  }
+
+  function updateRecs() {
+    updatePart(dataService.updateReconstructions(), "update recs error: ");
   }
 
   function updateDisplays() {
@@ -283,62 +281,61 @@
     let versions = await Promise.all([
       dataService.algorithmsVersion(),
       dataService.tutorialsVersion(),
+      dataService.reconstructionsVersion(),
     ]);
 
     algVersion = versions[0].version;
     tutVersion = versions[1].version;
+    recVersion = versions[2].version;
+  }
+
+  async function checkPart(
+    pr: Promise<{ minVersion: string; version: string }>,
+    name: string,
+    callback: any
+  ) {
+    return pr.then(res => {
+      if (res.version === "0.0.0") {
+        return sendUpdateError();
+      }
+
+      let cmpRes = cmpVersions(algVersion, res.version);
+
+      if (cmpRes >= 0) {
+        return sendAlreadyUpdated(name);
+      }
+
+      let cmpvRes = cmpVersions(res.minVersion, $version);
+
+      if (cmpvRes > 0) {
+        return sendNeedsUpdate(name, res.minVersion);
+      }
+
+      sendUpdateAvailable(name, res.version, callback);
+    });
   }
 
   function checkAlgs() {
     canCheckAlgs = false;
-    dataService
-      .checkAlgorithms()
-      .then(res => {
-        if (res.version === "0.0.0") {
-          return sendUpdateError();
-        }
-
-        let cmpRes = cmpVersions(algVersion, res.version);
-
-        if (cmpRes >= 0) {
-          return sendAlreadyUpdated($localLang.HOME.algorithms);
-        }
-
-        let cmpvRes = cmpVersions(res.minVersion, $version);
-
-        if (cmpvRes > 0) {
-          return sendNeedsUpdate($localLang.HOME.algorithms, res.minVersion);
-        }
-
-        sendUpdateAvailable($localLang.HOME.algorithms, res.version, updateAlgs);
-      })
-      .finally(() => (canCheckAlgs = true));
+    checkPart(dataService.checkAlgorithms(), $localLang.HOME.algorithms, updateAlgs).finally(
+      () => (canCheckAlgs = true)
+    );
   }
 
   function checkTuts() {
     canCheckTuts = false;
-    dataService
-      .checkAlgorithms()
-      .then(res => {
-        if (res.version === "0.0.0") {
-          return sendUpdateError();
-        }
+    checkPart(dataService.checkTutorials(), $localLang.HOME.tutorials, updateTuts).finally(
+      () => (canCheckTuts = true)
+    );
+  }
 
-        let cmpRes = cmpVersions(tutVersion, res.version);
-
-        if (cmpRes >= 0) {
-          return sendAlreadyUpdated($localLang.HOME.tutorials);
-        }
-
-        let cmpvRes = cmpVersions(res.minVersion, $version);
-
-        if (cmpvRes > 0) {
-          return sendNeedsUpdate($localLang.HOME.tutorials, res.minVersion);
-        }
-
-        sendUpdateAvailable($localLang.HOME.tutorials, res.version, updateTuts);
-      })
-      .finally(() => (canCheckTuts = true));
+  function checkRecs() {
+    canCheckRecs = false;
+    checkPart(
+      dataService.checkReconstructions(),
+      $localLang.HOME.reconstructions,
+      updateRecs
+    ).finally(() => (canCheckRecs = true));
   }
 
   onMount(() => {
@@ -451,6 +448,7 @@
         </div>
 
         <div class="grid gap-4 place-items-center w-max mx-auto">
+          <!-- CubicDB -->
           <div class="flex w-full gap-4 items-center">
             <span>{$localLang.SETTINGS.version} (CubicDB):</span>
             <mark class="ml-auto">{$version}</mark>
@@ -464,6 +462,7 @@
             <Tooltip>{$localLang.SETTINGS.checkUpdate}</Tooltip>
           </div>
 
+          <!-- Algorithms -->
           <div class="flex w-full gap-4 items-center">
             <span>{$localLang.HOME.algorithms}:</span>
             <mark class="ml-auto">{algVersion}</mark>
@@ -477,11 +476,26 @@
             <Tooltip>{$localLang.SETTINGS.checkUpdate}</Tooltip>
           </div>
 
+          <!-- Tutorials -->
           <div class="flex w-full gap-4 items-center">
             <span>{$localLang.HOME.tutorials}:</span>
             <mark class="ml-auto">{tutVersion}</mark>
             <Button on:click={() => canCheckTuts && checkTuts()}>
               {#if !canCheckTuts}
+                <Spinner size="4" color="white" />
+              {:else}
+                <UpdateIcon size="1.2rem" />
+              {/if}
+            </Button>
+            <Tooltip>{$localLang.SETTINGS.checkUpdate}</Tooltip>
+          </div>
+
+          <!-- Reconstructions -->
+          <div class="flex w-full gap-4 items-center">
+            <span>{$localLang.HOME.reconstructions}:</span>
+            <mark class="ml-auto">{recVersion}</mark>
+            <Button on:click={() => canCheckRecs && checkRecs()}>
+              {#if !canCheckRecs}
                 <Spinner size="4" color="white" />
               {:else}
                 <UpdateIcon size="1.2rem" />

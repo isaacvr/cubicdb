@@ -37,7 +37,14 @@ let dbFixedPath = join.apply(null, params);
 let dbPath = app.getPath("userData");
 
 // Fixed resources
-const fixedResources = ["algs.db", "tutorials.db", "algversion.json", "tutversion.json"];
+const fixedResources = [
+  "algs.db",
+  "algversion.json",
+  "tutorials.db",
+  "tutversion.json",
+  "reconstructions.db",
+  "recversion.json",
+];
 
 fixedResources.forEach(res => {
   if (!existsSync(join(dbPath, res))) {
@@ -77,12 +84,14 @@ let Sessions = new NeDB({ filename: resolve(dbPath, "sessions.db"), autoload: tr
 let Solves = new NeDB({ filename: resolve(dbPath, "solves.db"), autoload: true });
 let Contests = new NeDB({ filename: resolve(dbPath, "contests.db"), autoload: true });
 let Tutorials = new NeDB({ filename: resolve(dbPath, "tutorials.db"), autoload: true });
+let Reconstructions = new NeDB({ filename: resolve(dbPath, "reconstructions.db"), autoload: true });
 
 require("./serverHandlers/algorithms.cjs")(ipcMain, Algorithms, dbPath);
 require("./serverHandlers/tutorials.cjs")(ipcMain, Tutorials, dbPath);
 require("./serverHandlers/sessions.cjs")(ipcMain, Sessions, Solves, dbPath);
 require("./serverHandlers/solves.cjs")(ipcMain, Solves, dbPath);
 require("./serverHandlers/contests.cjs")(ipcMain, Contests);
+require("./serverHandlers/reconstructions.cjs")(ipcMain, Reconstructions);
 require("./serverHandlers/cache.cjs")(ipcMain, dbPath);
 require("./serverHandlers/vCache.cjs")(ipcMain, dbPath);
 

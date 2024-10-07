@@ -15,6 +15,7 @@ import type {
   UpdateCommand,
   PDFOptions,
   ICacheDB,
+  IDBReconstruction,
 } from "@interfaces";
 import { ElectronAdaptor, IndexedDBAdaptor } from "@storage/index";
 import type { Display } from "electron";
@@ -170,6 +171,26 @@ export class DataService {
 
   checkTutorials() {
     return this.ipc.checkTutorials();
+  }
+
+  addReconstruction(rec: IDBReconstruction) {
+    return this.ipc.addReconstruction(rec);
+  }
+
+  getReconstructions() {
+    return this.ipc.getReconstructions();
+  }
+
+  updateReconstructions() {
+    return this.ipc.updateReconstructions();
+  }
+
+  reconstructionsVersion() {
+    return this.ipc.reconstructionsVersion();
+  }
+
+  checkReconstructions() {
+    return this.ipc.checkReconstructions();
   }
 
   getSolves() {
