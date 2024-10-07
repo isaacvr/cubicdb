@@ -185,9 +185,9 @@ export function CLOCK(): PuzzleInterface {
       for (let i = 0; i < 4; i += 1) {
         pieces.push(new Piece([fst.rotate(CENTER, FRONT, PI_2 * i)]));
       }
-    } else {
-      pieces.push(f(circle(X, Y, RAD, WHITE, 0)));
     }
+
+    pieces.push(f(circle(X, Y, RAD, WHITE, 0)));
 
     for (let i = -1; i < 2; i += 2) {
       for (let j = -1; j < 2; j += 2) {
@@ -219,9 +219,9 @@ export function CLOCK(): PuzzleInterface {
           weelPiece.updateMassCenter();
 
           pieces.push(weelPiece);
-        } else {
-          pieces.push(f(circle(X + W * i, Y + W * j, RAD_CLOCK + BORDER + BORDER1, WHITE, 0)));
         }
+
+        pieces.push(f(circle(X + W * i, Y + W * j, RAD_CLOCK + BORDER + BORDER1, WHITE, 0)));
         pieces.push(f(circle(X + W * i, Y + W * j, RAD_CLOCK + BORDER, BLACK, 1)));
       }
     }

@@ -14,9 +14,6 @@ import type {
   ICacheDB,
   IDBReconstruction,
 } from "@interfaces";
-import _algs from "../database/algs.db?raw";
-import _tuts from "../database/tutorials.db?raw";
-import _recs from "../database/reconstructions.db?raw";
 import { clone, getByteSize } from "@helpers/object";
 import { openDB, type IDBPDatabase } from "idb";
 
@@ -29,35 +26,26 @@ const ContestStore = "Contests";
 const CacheStore = "Cache";
 const dbVersion = 1;
 const debug = true;
-const algs: Algorithm[] = _algs
-  .split("\n")
-  .map(s => {
-    try {
-      return JSON.parse(s);
-    } catch {}
-    return "";
-  })
-  .filter(e => e);
 
-const tuts: ITutorial[] = _tuts
-  .split("\n")
-  .map(s => {
-    try {
-      return JSON.parse(s);
-    } catch {}
-    return "";
-  })
-  .filter(e => e);
+let algs: Algorithm[] = [];
+let tuts: ITutorial[] = [];
+let recs: IDBReconstruction[] = [];
 
-const recs: any[] = _recs
-  .split("\n")
-  .map(s => {
-    try {
-      return JSON.parse(s);
-    } catch {}
-    return "";
-  })
-  .filter(e => e);
+function parseDB(strDB: string): any[] {
+  return strDB
+    .split("\n")
+    .map(s => {
+      try {
+        return JSON.parse(s);
+      } catch {}
+      return "";
+    })
+    .filter(e => e);
+}
+
+import("../database/algs.db?raw").then(_algs => (algs = parseDB(_algs.default || "")));
+import("../database/tutorials.db?raw").then(_tuts => (tuts = parseDB(_tuts.default || "")));
+import("../database/reconstructions.db?raw").then(_recs => (recs = parseDB(_recs.default || "")));
 
 interface ICacheImg {
   hash: string;
