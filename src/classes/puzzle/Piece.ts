@@ -1,13 +1,25 @@
-import { randomUUID } from '@helpers/strings';
-import { CENTER, Vector3D } from '../vector3d';
-import type { Sticker } from './Sticker';
-import { rotateBundle } from '@helpers/math';
+import { randomUUID } from "@helpers/strings";
+import { CENTER, Vector3D } from "../vector3d";
+import type { Sticker } from "./Sticker";
+import { rotateBundle } from "@helpers/math";
+import { EPS } from "@constants";
+import type { VectorLike3D } from "@interfaces";
+
+type CallbackFunction = (
+  p: any,
+  center: VectorLike3D,
+  dir: VectorLike3D,
+  ang: number,
+  three?: boolean,
+  vc?: any,
+  ignoreUserData?: boolean
+) => void;
 
 export class Piece {
   stickers: Sticker[];
   boundingBox: Vector3D[];
   hasCallback: boolean;
-  callback: Function;
+  callback: CallbackFunction;
   anchor: Vector3D;
   _cached_mass_center: Vector3D;
   raw: any;
@@ -18,7 +30,7 @@ export class Piece {
     this._id = randomUUID();
     this.stickers = (stickers || []).map(e => e.clone());
     this.hasCallback = false;
-    this.callback = () => { };
+    this.callback = () => {};
     this.allPointsRef = [];
     this.boundingBox = [];
     this.anchor = CENTER.clone();
@@ -32,13 +44,18 @@ export class Piece {
   }
 
   updateMassCenter(recursive?: boolean): Vector3D {
-    let pts = this.getAllGeneratorPoints();
-    let sum = pts.reduce((s, e) => s.add(e), new Vector3D());
-    this._cached_mass_center = sum.div(pts.length || 1);
-
     if (recursive) {
       this.stickers.forEach(s => s.updateMassCenter());
     }
+
+    let sum = this.stickers.reduce(
+      (s, st) => s.add(st.getMassCenter().mul(st.points.length), true),
+      new Vector3D()
+    );
+
+    let points = this.stickers.reduce((acc, st) => acc + st.points.length, 0);
+
+    this._cached_mass_center = sum.div(points || 1);
 
     return this._cached_mass_center;
   }
@@ -90,7 +107,7 @@ export class Piece {
       this.stickers.forEach(s => s.add(ref, true));
       this.boundingBox.forEach(s => s.add(ref, true));
       this._cached_mass_center.add(ref, true);
-      this.anchor && this.anchor.add(ref, true);
+      this.anchor.add(ref, true);
       return this;
     }
     return this.clone().add(ref, true);
@@ -102,7 +119,7 @@ export class Piece {
       this.stickers.forEach(s => s.sub(ref, true));
       this.boundingBox.forEach(s => s.sub(ref, true));
       this._cached_mass_center.sub(ref, true);
-      this.anchor && this.anchor.sub(ref, true);
+      this.anchor.sub(ref, true);
       return this;
     }
     return this.clone().sub(ref, true);
@@ -114,40 +131,23 @@ export class Piece {
       this.stickers.forEach(s => s.mul(f, true));
       this.boundingBox.forEach(s => s.mul(f, true));
       this._cached_mass_center.mul(f, true);
-      this.anchor && this.anchor.mul(f, true);
+      this.anchor.mul(f, true);
       return this;
     }
     return this.clone().mul(f, true);
-    // return new Piece(this.stickers.map(s => s.mul(f)));
   }
 
-  div(f: number): Piece {
+  div(f: number, self?: boolean): Piece {
     if (self) {
       this.stickers.forEach(s => s.div(f, true));
       this.boundingBox.forEach(s => s.div(f, true));
       this._cached_mass_center.div(f, true);
-      this.anchor && this.anchor.div(f, true);
+      this.anchor.div(f, true);
       return this;
     }
-    return this.clone().div(f);
-    // return new Piece( this.stickers.map(s => s.div(f) ));
-  }
 
-  // rotate(ref: Vector3D, dir: Vector3D, ang: number, self?: boolean): Piece {
-  //   if (self) {
-  //     this.stickers.map(s => s.rotate(ref, dir, ang, true));
-  //     this._cached_mass_center.rotate(ref, dir, ang, true);
-  //     // this.computeBoundingBox();
-  //     this.anchor && this.anchor.rotate(ref, dir, ang, true).toNormal();
-  //     return this;
-  //   }
-  //   let p = new Piece();
-  //   p.stickers = this.stickers.map(s => s.rotate(ref, dir, ang));
-  //   p._cached_mass_center = this._cached_mass_center.rotate(ref, dir, ang);
-  //   this.anchor && (p.anchor = this.anchor.rotate(ref, dir, ang).toNormal());
-  //   // p.computeBoundingBox();
-  //   return p;
-  // }
+    return this.clone().div(f, true);
+  }
 
   rotate(ref: Vector3D, dir: Vector3D, ang: number, self?: boolean): Piece {
     let st = this.stickers;
@@ -169,88 +169,33 @@ export class Piece {
         pts[i].setCoords(pts1[i].x, pts1[i].y, pts1[i].z);
       }
 
-
       for (let i = 0, maxi = st.length; i < maxi; i += 1) {
         st[i].partialRotation(ref, dir, ang, true);
       }
 
-      // pts.forEach((e, p) => e.setCoords(pts1[p].x, pts1[p].y, pts1[p].z));
-      // this.stickers.map(s => s.partialRotation(ref, dir, ang, true));
       this._cached_mass_center.rotate(ref, dir, ang, true);
-      this.anchor && this.anchor.rotate(ref, dir, ang, true).toNormal();
+      this.anchor.rotate(ref, dir, ang, true).toNormal();
       return this;
     }
 
     let pc = new Piece();
-    pc.stickers = st.map(s => s.rotateBundle(ref, dir, ang));
+    pc.stickers = st.map(s => {
+      let res = s.rotateBundle(ref, dir, ang);
+      res.name = s.name;
+      return res;
+    });
     pc._cached_mass_center = this._cached_mass_center.rotate(ref, dir, ang);
-    this.anchor && (pc.anchor = this.anchor.rotate(ref, dir, ang).toNormal());
+    pc.anchor = this.anchor.rotate(ref, dir, ang).toNormal();
     return pc;
   }
 
-  // async rotateGPU(ref: Vector3D, dir: Vector3D, ang: number, self?: boolean): Promise<Piece> {
-  //   if (!navigator.gpu) {
-  //     console.log('GPU not supported');
-  //     return this;
-  //   }
-
-  //   const adapter = navigator.gpu.requestAdapter();
-
-  //   if (!adapter) {
-  //     console.log("Could not find any GPU adapter");
-  //   }
-
-  //   const device = await adapter.requestDevice();
-
-  //   const BUFFER_SIZE = 1000;
-
-  //   const shader = /* wgsl */`
-  //   @group(0) @binding(0)
-  //   var<storage, read_write> output: array<f32>;
-
-  //   @compute @workgroup_size(64)
-  //   fn main(
-  //     @builtin(global_invocation_id)
-  //     global_id: vec3u,
-
-  //     @builtin(global_invocation_id)
-  //     local_id: vec3u,
-  //   ) {
-  //     if ( global_id.x >= ${BUFFER_SIZE} ) {
-  //       return;
-  //     }
-
-  //     output[global_id.x] = f32(global_id.x) * 1000. + f32(local_id.x);
-  //   }
-  //   `;
-
-  //   const output = device.createBuffer({
-  //     size: BUFFER_SIZE,
-  //     usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
-  //   });
-
-  //   const stagingBuffer = device.createBuffer({
-  //     size: BUFFER_SIZE,
-  //     usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
-  //   });
-
-  //   return this;
-  //   // if ( self ) {
-  //   //   this.stickers.map(s => s.rotate(ref, dir, ang, true));
-  //   //   this._cached_mass_center.rotate(ref, dir, ang, true);
-  //   //   // this.computeBoundingBox();
-  //   //   this.anchor && this.anchor.rotate(ref, dir, ang, true).toNormal();
-  //   //   return this;
-  //   // }
-  //   // let p = new Piece();
-  //   // p.stickers = this.stickers.map(s => s.rotate(ref, dir, ang));
-  //   // p._cached_mass_center = this._cached_mass_center.rotate(ref, dir, ang);
-  //   // this.anchor && (p.anchor = this.anchor.rotate(ref, dir, ang).toNormal());
-  //   // // p.computeBoundingBox();
-  //   // return p;
-  // }
-
-  direction(p1: Vector3D, p2: Vector3D, p3: Vector3D, useMassCenter?: boolean, disc?: Function): -1 | 0 | 1 {
+  direction(
+    p1: Vector3D,
+    p2: Vector3D,
+    p3: Vector3D,
+    useMassCenter?: boolean,
+    disc?: Function
+  ): -1 | 0 | 1 {
     return this.direction1(p1, Vector3D.cross(p1, p2, p3), useMassCenter, disc);
   }
 
@@ -311,9 +256,7 @@ export class Piece {
   }
 
   reverse(): Piece {
-    return new Piece(
-      this.stickers.map(s => s.reverse())
-    );
+    return new Piece(this.stickers.map(s => s.reverse()));
   }
 
   contains(col: string): boolean {
@@ -332,7 +275,7 @@ export class Piece {
       res.hasCallback = this.hasCallback;
       res.callback = this.callback;
     }
-    this.anchor && (res.anchor = this.anchor.clone());
+    res.anchor = this.anchor.clone();
     res.allPointsRef = this.allPointsRef.map(e => e.slice());
     return res;
   }
@@ -354,23 +297,71 @@ export class Piece {
     return true;
   }
 
+  cutPlane(p0: Vector3D, n: Vector3D) {
+    if (this.direction1(p0, n) != 0) return [];
+
+    let inters = [];
+    const stickers = this.stickers;
+
+    for (let i = 0, maxi = stickers.length; i < maxi; i += 1) {
+      let it = stickers[i].cutPlane(p0, n);
+
+      if (it.intersection) {
+        inters.push(it);
+      }
+    }
+
+    function simplify(path: Vector3D[][]): Vector3D[][] {
+      let sPath: Vector3D[][] = [];
+
+      for (let i = 0, maxi = path.length; i < maxi; i += 1) {
+        let fnd = false;
+
+        for (let j = 0, maxj = sPath.length; j < maxj && !fnd; j += 1) {
+          if (sPath[j][0].sub(path[i][0]).abs() < EPS) {
+            sPath[j].unshift(path[i][1]);
+            fnd = true;
+          } else if (sPath[j][path[j].length - 1].sub(path[i][0]).abs() < EPS) {
+            sPath[j].push(path[i][1]);
+            fnd = true;
+          }
+        }
+
+        if (!fnd) {
+          sPath.push(path[i]);
+        }
+      }
+
+      if (sPath.length <= 1) return sPath;
+      return simplify(sPath);
+    }
+
+    console.log("sPath: ", simplify(inters.map(it => it.points)));
+
+    return inters;
+  }
+
   exact(p1: Piece): boolean {
     return this.id === p1.id;
   }
 
   computeBoundingBox(): Vector3D[] {
     let bbs = this.stickers.map(s => s.computeBoundingBox());
-    let box = bbs.reduce((ac, p) => {
-      return [
-        Math.min(ac[0], p[0].x), Math.min(ac[1], p[0].y), Math.min(ac[2], p[0].z),
-        Math.max(ac[3], p[1].x), Math.max(ac[4], p[1].y), Math.max(ac[5], p[1].z),
-      ]
-    }, [Infinity, Infinity, Infinity, -Infinity, -Infinity, -Infinity]);
+    let box = bbs.reduce(
+      (ac, p) => {
+        return [
+          Math.min(ac[0], p[0].x),
+          Math.min(ac[1], p[0].y),
+          Math.min(ac[2], p[0].z),
+          Math.max(ac[3], p[1].x),
+          Math.max(ac[4], p[1].y),
+          Math.max(ac[5], p[1].z),
+        ];
+      },
+      [Infinity, Infinity, Infinity, -Infinity, -Infinity, -Infinity]
+    );
 
-    this.boundingBox = [
-      new Vector3D(box[0], box[1], box[2]),
-      new Vector3D(box[3], box[4], box[5])
-    ];
+    this.boundingBox = [new Vector3D(box[0], box[1], box[2]), new Vector3D(box[3], box[4], box[5])];
 
     return this.boundingBox;
   }

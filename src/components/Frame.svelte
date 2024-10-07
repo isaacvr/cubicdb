@@ -22,7 +22,7 @@
   import { Link, navigate, useLocation } from "svelte-routing";
   import { screen } from "@stores/screen.store";
   import type { RouteLocation } from "svelte-routing/types/Route";
-  import { CubeDBICON } from "@constants";
+  import { CubicDBICON } from "@constants";
   import FlagIcon from "./FlagIcon.svelte";
   import { ArrowUpRightDownLeftOutline } from "flowbite-svelte-icons";
   import Select from "./material/Select.svelte";
@@ -47,7 +47,7 @@
         { text: $localLang.global.accept, callback: () => {}, color: "alternative" },
         { text: $localLang.global.restart, callback: () => dataService.close(), color: "purple" },
       ],
-      fixed: true
+      fixed: true,
     });
   }
 
@@ -79,6 +79,9 @@
     }
 
     let arr = rt.pathname.split("/").filter(s => s);
+
+    document.title =
+      "CubicDB | " + (arr[0] ? $localLang.NAVBAR.routeMap(arr[0]) : "Cubing with fun");
 
     parts = arr.map((e: string, p: number) => ({
       link: "/" + arr.slice(0, p + 1).join("/"),
@@ -121,13 +124,13 @@
       <div class="flex">
         <img
           draggable="false"
-          src={CubeDBICON}
+          src={CubicDBICON}
           alt=""
           width="100%"
           height="100%"
           class="ml-1 w-8 flex my-auto"
         />
-        <Span class="self-center whitespace-nowrap text-base font-semibold ml-2">CubeDB</Span>
+        <Span class="self-center whitespace-nowrap text-base font-semibold ml-2">CubicDB</Span>
       </div>
     </Link>
 
@@ -173,6 +176,7 @@
           iconComponent={FlagIcon}
           onChange={() => localStorage.setItem("language", $globalLang)}
           preferIcon
+          aria-label={$localLang.global.selectLanguage}
         />
 
         {#if dataService.isElectron && $screen.width > 640}
@@ -181,13 +185,16 @@
           <Button
             color="none"
             class="ml-2 cursor-pointer rounded-sm hover:bg-primary-600 hover:text-white"
+            aria-label={$localLang.global.minimize}
             on:click={minimize}
           >
             <Minus />
           </Button>
+
           <Button
             color="none"
             class="cursor-pointer rounded-sm hover:bg-red-600 hover:text-white"
+            aria-label={$localLang.global.close}
             on:click={close}
           >
             <Close height="100%" />

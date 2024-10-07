@@ -37,7 +37,14 @@ let dbFixedPath = join.apply(null, params);
 let dbPath = app.getPath("userData");
 
 // Fixed resources
-const fixedResources = ["algs.db", "tutorials.db"];
+const fixedResources = [
+  "algs.db",
+  "algversion.json",
+  "tutorials.db",
+  "tutversion.json",
+  "reconstructions.db",
+  "recversion.json",
+];
 
 fixedResources.forEach(res => {
   if (!existsSync(join(dbPath, res))) {
@@ -77,12 +84,14 @@ let Sessions = new NeDB({ filename: resolve(dbPath, "sessions.db"), autoload: tr
 let Solves = new NeDB({ filename: resolve(dbPath, "solves.db"), autoload: true });
 let Contests = new NeDB({ filename: resolve(dbPath, "contests.db"), autoload: true });
 let Tutorials = new NeDB({ filename: resolve(dbPath, "tutorials.db"), autoload: true });
+let Reconstructions = new NeDB({ filename: resolve(dbPath, "reconstructions.db"), autoload: true });
 
 require("./serverHandlers/algorithms.cjs")(ipcMain, Algorithms, dbPath);
 require("./serverHandlers/tutorials.cjs")(ipcMain, Tutorials, dbPath);
 require("./serverHandlers/sessions.cjs")(ipcMain, Sessions, Solves, dbPath);
 require("./serverHandlers/solves.cjs")(ipcMain, Solves, dbPath);
 require("./serverHandlers/contests.cjs")(ipcMain, Contests);
+require("./serverHandlers/reconstructions.cjs")(ipcMain, Reconstructions, dbPath);
 require("./serverHandlers/cache.cjs")(ipcMain, dbPath);
 require("./serverHandlers/vCache.cjs")(ipcMain, dbPath);
 
@@ -101,7 +110,7 @@ async function createPDF(width, height, html) {
       show: false,
     });
 
-    const tmpDir = join(tmpdir(), "/CubeDB/");
+    const tmpDir = join(tmpdir(), "/CubicDB/");
 
     if (!existsSync(tmpDir)) {
       mkdirSync(tmpDir, { recursive: true });
@@ -157,7 +166,7 @@ ipcMain.handle("generate-contest-pdf", async (_, arg) => {
 
 ipcMain.handle("zip-pdf", async (event, data) => {
   return await new Promise((res, rej) => {
-    const tmpDir = join(tmpdir(), "/CubeDB/");
+    const tmpDir = join(tmpdir(), "/CubicDB/");
     const { name, files } = data;
 
     if (!existsSync(tmpDir)) {
@@ -232,7 +241,7 @@ function createWindow() {
       backgroundThrottling: false,
       preload: join(__dirname, "preload.js"),
     },
-    icon: join(__dirname, "../public/assets", "icon-big.png"),
+    icon: join(__dirname, "../public/assets", "icon.png"),
   });
 
   // Enable SharedArrayBuffer

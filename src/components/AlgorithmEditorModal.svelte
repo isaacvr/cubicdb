@@ -1,16 +1,14 @@
 <script lang="ts">
   import { CubeViewMap, type Algorithm, type ITutorialAlg, type Solution } from "@interfaces";
-  import Modal from "./Modal.svelte";
-  import Select from "./material/Select.svelte";
+  import Modal from "@components/Modal.svelte";
+  import Select from "@material/Select.svelte";
   import { Button, Input, Range } from "flowbite-svelte";
   import { CubeModeMap } from "@constants";
-  import PuzzleImage from "./PuzzleImage.svelte";
+  import PuzzleImage from "@components/PuzzleImage.svelte";
   import DeleteIcon from "@icons/Delete.svelte";
   import { createEventDispatcher } from "svelte";
 
-  type AlgProp = 
-    | { tutorial: false; alg: Algorithm }
-    | { tutorial: true; alg: ITutorialAlg };
+  type AlgProp = { tutorial: false; alg: Algorithm } | { tutorial: true; alg: ITutorialAlg };
 
   export let show: boolean;
   export let isAdding: boolean;
@@ -18,7 +16,7 @@
   export let solTemp: Solution[];
   export let img;
   export let alg: AlgProp;
-  
+
   const dispatch = createEventDispatcher();
 
   const rotStep = Math.PI / 12;

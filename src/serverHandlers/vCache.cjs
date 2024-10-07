@@ -68,7 +68,7 @@ module.exports = (ipcMain, dbPath) => {
 
   ipcMain.handle("clear-vcache", async () => {
     console.log("CLEAR VCACHE");
-    
+
     let list = await fsp.readdir(cachePath);
 
     for (let i = 0, maxi = list.length; i < maxi; i += 1) {

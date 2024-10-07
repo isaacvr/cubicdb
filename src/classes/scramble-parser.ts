@@ -13,6 +13,10 @@ function _moveToOrder(mv: string, order: IPuzzleOrder): number {
   return order.a;
 }
 
+function checkBit(n: number, b: number) {
+  return !!(n & (1 << b));
+}
+
 export class ScrambleParser {
   constructor() {}
 
@@ -33,15 +37,15 @@ export class ScrambleParser {
       p = -(parseInt(m[5]) || 1) * Math.sign(moves[s].indexOf("'") + 0.2);
 
       if (f > 14) {
-        // p = "2'".indexOf(m[5] || 'X') + 2;
         f = [0, 4, 5][f % 3];
         moveseq.push([moveMap.indexOf("FRUBLD".charAt(f)), 2, p, 1, 0]);
         continue;
       }
 
       w = f < 12 ? ~~m[1] || ~~m[4] || ((m[3] == "w" || f > 5) && 2) || 1 : -1;
-      // p = f < 12 ? turns : -("2'".indexOf(m[5] || 'X') + 2);
-      moveseq.push([moveMap.indexOf("FRUBLD".charAt(f % 6)), w, p, 0, f < 12 ? 0 : 1]); // Move Index, Face Index, Direction
+
+      // Move Index, Face Index, Direction
+      moveseq.push([moveMap.indexOf("FRUBLD".charAt(f % 6)), w, p, 0, f < 12 ? 0 : 1]);
     }
     return moveseq;
   }
@@ -274,11 +278,28 @@ export class ScrambleParser {
     return res;
   }
 
+  static parseFTO(scramble: string) {
+    let res = [];
+    let moveReg = /(BL|BR|[URFDLB])'?/g;
+    let moves = scramble.match(moveReg);
+    const moveMap = ["U", "R", "F", "D", "L", "B", "BR", "BL"];
+
+    if (!moves) return [];
+
+    for (let i = 0, maxi = moves.length; i < maxi; i += 1) {
+      let mv = moves[i];
+      let turns = mv.endsWith("'") ? -1 : 1;
+      res.push([moveMap.indexOf(turns < 0 ? mv.slice(0, -1) : mv), -turns]);
+    }
+
+    return res;
+  }
+
   static parseClock(scramble: string) {
-    let parts = scramble.replace("\\n", " ").split(/\s+/g);
+    let parts = scramble.replace(/\n+/g, " ").split(/\s+/g);
     let res: number[][] = [];
 
-    if (scramble.indexOf("/") > -1) {
+    if (/-\d/.test(scramble)) {
       /// Concise notation
       const pins = [0xc, 0x5, 0x3, 0xa, 0x7, 0xb, 0xe, 0xd, 0xf, 0x0, 0];
 
@@ -320,54 +341,125 @@ export class ScrambleParser {
           res.push([pin, NaN, NaN]);
         }
       }
-    } else if (!/(u|d)/.test(scramble)) {
-      /// WCA notation
-      const letters = ["UL", "UR", "DL", "DR", "ALL", "U", "R", "D", "L"];
-      const pins = [0x8, 0x4, 0x2, 0x1, 0xf, 0xc, 0x5, 0x3, 0xa];
-      const up = 1;
+    } else if (!/([Ud]{2})/.test(scramble)) {
+      /// Extended WCA notation
+      const MOVE_REG =
+        /^((UR|DR|DL|UL|ur|dr|dl|ul|R|D|L|U|ALL|\/|\\)(\(\d[+-],\s*\d[+-]\)|\d[+-])|y2|x2|z[2']?|UR|DR|DL|UL)$/;
+      const letters = [
+        "UL",
+        "UR",
+        "DL",
+        "DR",
+        "ALL",
+        "U",
+        "R",
+        "D",
+        "L",
+        "ul",
+        "ur",
+        "dl",
+        "dr",
+        "/",
+        "\\",
+      ];
+      const pins = [0x8, 0x4, 0x2, 0x1, 0xf, 0xc, 0x5, 0x3, 0xa, 0x7, 0xb, 0xd, 0xe, 0x6, 0x9];
+      let first = true;
+      let pinCode = 0x0;
 
       for (let i = 0, maxi = parts.length; i < maxi; i += 1) {
+        if (!MOVE_REG.test(parts[i])) {
+          continue;
+        }
+
         if (parts[i] === "y2") {
-          res.push([-1, -1, -1]);
+          res.push([-1, 0]);
+          first = true;
+        } else if (parts[i] === "x2") {
+          res.push([-2, 0]);
+          first = true;
+        } else if (parts[i][0] === "z") {
+          res.push([-3, parts[i][1] === "2" ? 2 : parts[i][1] === "'" ? -1 : 1]);
+          first = true;
         } else {
           let cmd = [0, 0, 0];
+
           for (let j = 0, maxj = letters.length; j < maxj; j += 1) {
             if (parts[i].startsWith(letters[j])) {
-              let turns = parseInt(parts[i].slice(letters[j].length, letters[j].length + 1));
-              if (parts[i].indexOf("-") > -1) {
-                turns = -turns;
-              }
               cmd[0] = pins[j];
-              cmd[up] = turns;
+
+              if (parts[i].includes("(")) {
+                let mvs = parts[i].slice(letters[j].length).match(/\((\d[+-]),\s*(\d[+-])\)/);
+                if (mvs && mvs.length >= 3) {
+                  let upPos =
+                    checkBit(cmd[0], 3) === checkBit(cmd[0], 1)
+                      ? [2, 1][(cmd[0] & 0x8) >> 3]
+                      : checkBit(cmd[0], 3) === checkBit(cmd[0], 2)
+                      ? [2, 2, 1, 1][cmd[0] & 0x3]
+                      : cmd[0] & 0x8
+                      ? 1
+                      : 2;
+
+                  cmd[upPos] = parseInt(mvs[1][1] + mvs[1][0]);
+                  cmd[3 - upPos] = parseInt(mvs[2][1] + mvs[2][0]);
+                }
+              } else {
+                let turns = parseInt(parts[i].slice(letters[j].length, letters[j].length + 1));
+                if (parts[i].indexOf("-") > -1) {
+                  turns = -turns;
+                }
+
+                cmd[1] = turns;
+              }
+
+              if (cmd[1] != 0 || cmd[2] != 0) {
+                res.push(cmd);
+
+                if (isNaN(cmd[1])) {
+                  if (!first) {
+                    pinCode |= cmd[0];
+                    cmd[0] = pinCode;
+                  } else {
+                    pinCode = cmd[0];
+                  }
+                  first = false;
+                }
+              }
               break;
             }
-          }
-          if (cmd[1] != 0 || cmd[2] != 0) {
-            res.push(cmd);
           }
         }
       }
     } else {
       /// JAAP notation
-      // let pins = '';
-      // let d = 0;
-      // let u = 0;
-      // for (let i = 0, maxi = parts.length; i < maxi; i += 1) {
-      //   if ( /\d+/.test(parts[i]) ) {
-      //     let turns = parseInt(parts[i].replace('=', '').substr(1, 2));
-      //     ( parts[i][0] === 'd' ) ? d = turns : u = turns;
-      //   } else {
-      //     if ( pins.length === 4 ) {
-      //       res.push([ parseInt(pins.replace('U', '1').replace('d', '0'), 2), d, u ]);
-      //       d = 0; u = 0; pins = '';
-      //     } else {
-      //       pins += parts[i];
-      //     }
-      //   }
-      // }
-      // if ( pins.length === 4 ) {
-      //   res.push([ parseInt(pins.replace('U', '1').replace('d', '0'), 2), d, u ]);
-      // }
+      let pins = "";
+      let d = 0;
+      let u = 0;
+
+      for (let i = 0, maxi = parts.length; i < maxi; i += 1) {
+        if (parts[i] === "y2") {
+          res.push([-1, 0, 0]);
+        } else if (parts[i] === "x2") {
+          res.push([-2, 0, 0]);
+        } else if (parts[i][0] === "z") {
+          res.push([-3, parts[i][1] === "2" ? 2 : parts[i][1] === "'" ? -1 : 1]);
+        } else if (/\d+/.test(parts[i])) {
+          let turns = parseInt(parts[i].replace("=", "").slice(1, 3));
+          parts[i][0] === "d" ? (d = turns) : (u = turns);
+        } else {
+          if (pins.length === 4) {
+            res.push([parseInt(pins.replace(/U/g, "1").replace(/d/g, "0"), 2), u, d]);
+            d = 0;
+            u = 0;
+            pins = "";
+          } else {
+            pins += parts[i];
+          }
+        }
+      }
+
+      if (pins.length === 4) {
+        res.push([parseInt(pins.replace(/U/g, "1").replace(/d/g, "0"), 2), u, d]);
+      }
     }
 
     return res;
@@ -420,8 +512,19 @@ export class ScrambleParser {
       case "233":
       case "334":
       case "336":
-      case "ssq1t": {
+      case "ssq1t":
+      case "fto":
+      case "sfl": {
         return [scramble];
+      }
+
+      case "133": {
+        return [
+          scramble
+            .split(" ")
+            .map(mv => mv[0] + "2")
+            .join(" "),
+        ];
       }
 
       default: {

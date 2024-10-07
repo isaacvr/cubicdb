@@ -1,5 +1,5 @@
-const plugins = [ require('tailwindcss') ];
+const plugins = [require("tailwindcss")];
 
 module.exports = {
-  plugins
+  plugins,
 };

@@ -28,6 +28,7 @@ export const Spanish: Language = {
     search: "Buscar",
     toScramble: "Mezclar cubo",
     reconstruction: "Reconstrucción",
+    reconstructions: "Reconstrucciones",
     clickToCopy: "Click para copiar",
     settings: "Configuración",
     downloading: "Descargando",
@@ -48,8 +49,18 @@ export const Spanish: Language = {
     no: "No",
     saved: "Guardado!",
     settingsSaved: "Configuración guardada",
-    willRestart: "CubeDB va a reiniciar de forma automática en unos segundos.",
-    generatedByCubeDB: "Generado por CubeDB",
+    willRestart: "CubicDB va a reiniciar de forma automática en unos segundos.",
+    generatedByCubicDB: "Generado por CubicDB",
+    showBackFace: "Caras traseras",
+    filter: "Filtrar",
+    date: "Fecha",
+    invert: "Invertir",
+    true: "Verdadero",
+    false: "Falso",
+    minimize: "Minimizar",
+    maximize: "Maximizar",
+    close: "Cerrar",
+    selectLanguage: "Seleccionar idioma",
   },
   TUTORIALS: {
     easy: "Fácil",
@@ -97,6 +108,7 @@ export const Spanish: Language = {
     importExport: "Importar / Exportar",
     contest: "Concursos",
     tools: "Herramientas",
+    about: "Sobre CubicDB",
   },
   SETTINGS: {
     title: "Configuración",
@@ -105,7 +117,7 @@ export const Spanish: Language = {
     timerFont: "Fuente del timer",
     screen: "Pantalla",
     zoomFactor: "Factor de zoom",
-    deleteStorage: "¿Está seguro que desea eliminar \"$1\"?",
+    deleteStorage: '¿Está seguro que desea eliminar "$1"?',
 
     // Update
     update: "Actualización",
@@ -115,7 +127,8 @@ export const Spanish: Language = {
     updateAvailableText: "Hay una nueva versión disponible de $1.",
     alreadyUpdated: "Actualizado",
     alreadyUpdatedText: "Ya tienes la última versión de $1.",
-    needsUpdate: "Hay una nueva versión de $1, pero necesitas al menos la versión $2 de CubeDB. Por favor, actualiza CubeDB para tener la última versión.",
+    needsUpdate:
+      "Hay una nueva versión de $1, pero necesitas al menos la versión $2 de CubicDB. Por favor, actualiza CubicDB para tener la última versión.",
 
     updateError: "Error",
     updateErrorText: "Hubo un error al intentar actualizar.",
@@ -224,6 +237,8 @@ export const Spanish: Language = {
     removeAllSolves: "¿Deseas eliminar todos los tiempos?",
     removeSession: "¿Desea eliminar esta sesión?",
     select: "Seleccionar",
+    addFilter: "Añadir filtro",
+    addGroup: "Añadir grupo",
 
     // Stats Tab
     totalTime: "Tiempo total",
@@ -262,6 +277,30 @@ export const Spanish: Language = {
       "old-scrambles": "Mezcla anterior",
       settings: "Configuración",
     },
+
+    // Advanced Search Operators
+    operators: {
+      date_after: "Después",
+      date_after_eq: "Desde",
+      date_before: "Antes",
+      date_before_eq: "Hasta",
+      date_equal: "Igual",
+      number_between: "Entre",
+      number_equal: "Igual",
+      number_gt: "Mayor",
+      number_gte: "Mayor-Igual",
+      number_lt: "Menor",
+      number_lte: "Menor-Igual",
+      number_nbetween: "No Entre",
+      number_nequal: "Distinto",
+      string_contain: "Contiene",
+      string_ends: "Termina",
+      string_equal: "Igual",
+      string_nequal: "No Igual",
+      string_starts: "Comienza",
+    },
+
+    gateResultIndicator: ["El resultado es", "si algún valor es"],
   },
   RECONSTRUCTIONS: {
     stepBack: "Paso atrás",
@@ -317,7 +356,6 @@ export const Spanish: Language = {
     puzzle: "Puzzle",
     order: "Orden",
     setPuzzle: "Establecer",
-    showBackFace: "Caras traseras",
   },
   IMPORT_EXPORT: {
     title: "Importar / Exportar",
@@ -330,14 +368,15 @@ export const Spanish: Language = {
     total: "Total",
     showingOnly50: "mostrando solo 50",
   },
-  CUBEDB: {
+  CUBICDB: {
     name: "Nombre",
     version: "Versión",
     creator: "Creador",
     donations: "Donaciones",
+    acknowledgements: "Reconocimientos",
   },
   TOOLS: {
-    cubedbBatch: "CubeDB Scrambles",
+    cubicdbBatch: "CubicDB Scrambles",
     timerOnly: "Solo Temporizador",
     scrambleOnly: "Solo Scrambles",
     batchScramble: "Grupos de Scrambles",
@@ -673,6 +712,6 @@ export const Spanish: Language = {
         ["234567", "r234567", 0],
       ],
     ],
-    ["Otros", [["FTO (Face-Turning Octahedron)", "fto", 25]]],
+    ["FTO (Face-Turning Octahedron)", [["Aleatorio", "fto", 25]]],
   ],
 };

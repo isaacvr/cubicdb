@@ -1,12 +1,11 @@
-import './App.css'
-// import './cubedb-premium/premium.css';
-import App from './App.svelte'
-import { DataService } from '@stores/data.service';
+import "./App.css";
+import App from "./App.svelte";
+import { DataService } from "@stores/data.service";
 
 DataService.getInstance();
 
 const app = new App({
-  target: document.getElementById('app') || document.body
-})
+  target: document.getElementById("app") || document.body,
+});
 
-export default app
+export default app;

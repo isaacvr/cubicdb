@@ -1,12 +1,19 @@
 {
-  "productName": "CubeDB",
-  "appId": "com.isaacvr.cubedb",
+  "productName": "CubicDB",
+  "appId": "com.isaacvr.cubicdb",
   "compression": "maximum",
   "electronDownload": {
     "cache": "cache",
-    "isVerifyChecksum": false,
-    "platform": "win32",
-    "arch": "x64"
+    "isVerifyChecksum": false
+  },
+  "win": {
+    "target": [
+      {
+        "target": "nsis",
+        "arch": ["x64"]
+      }
+    ],
+    "artifactName": "${productName}-Setup-${version}.${ext}"
   },
   "asar": true,
   "directories": {
@@ -42,6 +49,7 @@
   "extraResources": [
     "src/database/algs.db",
     "src/database/tutorials.db",
-    "src/database/versions.json"
+    "src/database/algversion.json",
+    "src/database/tutversion.json"
   ]
 }

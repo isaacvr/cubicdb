@@ -1,7 +1,4 @@
 import { IndexedDBAdaptor } from "./indexedDB";
 import { ElectronAdaptor } from "./electron";
 
-export {
-  IndexedDBAdaptor,
-  ElectronAdaptor
-}
+export { IndexedDBAdaptor, ElectronAdaptor };

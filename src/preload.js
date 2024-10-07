@@ -40,6 +40,12 @@ contextBridge.exposeInMainWorld("electronAPI", {
   checkTutorials: async () => ipc.invoke("tutorials-check"),
   updateTutorials: async () => ipc.invoke("update-tutorials"),
 
+  addReconstruction: async r => ipc.invoke("add-reconstruction", r),
+  getReconstructions: async () => ipc.invoke("get-reconstructions"),
+  reconstructionsVersion: async () => ipc.invoke("reconstructions-version"),
+  checkReconstructions: async () => ipc.invoke("reconstructions-check"),
+  updateReconstructions: async () => ipc.invoke("update-reconstructions"),
+
   // Misc functions
   minimize: async () => ipc.invoke("minimize"),
   maximize: async () => ipc.invoke("maximize"),
@@ -77,8 +83,6 @@ contextBridge.exposeInMainWorld("electronAPI", {
   cacheGetVideoBundle: async hashes => ipc.invoke("get-video-bundle", hashes),
   cacheSaveVideo: async (hash, data) => ipc.invoke("save-video", hash, data),
   clearCache: async db => {
-    console.log("DB: ", db);
-    
     switch (db) {
       case "Cache": {
         return await ipc.invoke("clear-cache");
@@ -110,4 +114,5 @@ contextBridge.exposeInMainWorld("electronAPI", {
   sessionsStorage: async () => ipc.invoke("sessions-storage"),
   solvesStorage: async () => ipc.invoke("solves-storage"),
   tutorialsStorage: async () => ipc.invoke("tutorials-storage"),
+  reconstructionsStorage: async () => ipc.invoke("reconstructions-storage"),
 });

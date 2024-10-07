@@ -1,11 +1,12 @@
-import type { Puzzle } from "./../classes/puzzle/puzzle";
-import type { Sticker } from "./../classes/puzzle/Sticker";
-import type { Piece } from "./../classes/puzzle/Piece";
-import type { Vector3D } from "../classes/vector3d";
+import type { Puzzle } from "@classes/puzzle/puzzle";
+import type { Sticker } from "@classes/puzzle/Sticker";
+import type { Piece } from "@classes/puzzle/Piece";
+import type { Vector3D } from "@classes/vector3d";
 import type { CubeMode, SCRAMBLE_MENU, ICONS } from "@constants";
 import type { Writable } from "svelte/store";
 import type { Display } from "electron";
 import type { HTMLImgAttributes } from "svelte/elements";
+import type { FILTER_OPERATOR } from "@pages/Timer/components/SessionsTab/components/AdvancedSearch/adaptors/types";
 
 export const PuzzleTypeName = [
   "rubik",
@@ -38,6 +39,7 @@ export const PuzzleTypeName = [
   "windmill",
   "helicopter",
   "supersquare1",
+  "fto",
 ] as const;
 
 export declare type PuzzleType = (typeof PuzzleTypeName)[number];
@@ -163,6 +165,24 @@ export interface NavigationRoute {
   name: string;
 }
 
+export type EasingFunction = "ease" | "linear" | "easeIn" | "fastEasing" | "easeOut" | "easeInOut";
+
+export interface SequenceResult {
+  u: Vector3D;
+  ang: number;
+  pieces: string[];
+  center?: Vector3D;
+  easing?: EasingFunction;
+}
+
+export interface PiecesToMove {
+  pieces: Piece[];
+  u: Vector3D;
+  ang: number;
+  center: Vector3D;
+  easing?: EasingFunction;
+}
+
 export interface PuzzleInterface {
   pieces: Piece[];
   palette: any;
@@ -182,7 +202,7 @@ export interface PuzzleInterface {
   raw?: any;
   scramble?: () => any;
   toMove?: AnyCallback;
-  applySequence?: (...args: any[]) => { u: Vector3D; ang: number; pieces: string[] }[];
+  applySequence?: (...args: any[]) => (SequenceResult | SequenceResult[])[];
   vectorsFromCamera?: AnyCallback;
 }
 
@@ -235,9 +255,11 @@ export const TIMER_INPUT: TimerInput[] = [
   "Keyboard",
   "Manual",
   "StackMat",
-  "GAN Cube" /*, 'QY-Timer'*/,
+  "GAN Cube",
+  // "QY-Timer",
   // "ExternalTimer",
 ];
+
 export const SESSION_TYPE: SessionType[] = ["mixed", "single", "multi-step"];
 
 export const DIALOG_MODES = [
@@ -266,6 +288,7 @@ export interface SessionSettings {
   showBackFace?: boolean;
   sessionType?: SessionType;
   mode?: string;
+  prob?: number;
   steps?: number;
   stepNames?: string[];
 }
@@ -408,8 +431,6 @@ export interface TimerContext {
   scramble: Writable<string>;
   group: Writable<number>;
   mode: Writable<{ 0: string; 1: string; 2: number }>;
-  hintDialog: Writable<boolean>;
-  hint: Writable<boolean>;
   preview: Writable<HTMLImgAttributes[]>;
   prob: Writable<number>;
   isRunning: Writable<boolean>;
@@ -417,6 +438,7 @@ export interface TimerContext {
   decimals: Writable<boolean>;
   bluetoothList: Writable<BluetoothDeviceData[]>;
   bluetoothStatus: Writable<boolean>;
+  enableKeyboard: Writable<boolean>;
   STATS_WINDOW: Writable<(number | null)[][]>;
 
   setSolves: (rescramble?: boolean) => any;
@@ -508,7 +530,7 @@ export interface SheetRegistry {
   addSheet: (s: Sheet) => any;
 }
 
-export interface CubeDBData {
+export interface CubicDBData {
   sessions: Session[];
   solves: Solve[];
 }
@@ -522,11 +544,11 @@ export interface Tab {
 }
 
 // This is for import/export adaptors to implement
-export interface CubeDBAdaptor {
+export interface CubicDBAdaptor {
   name: string;
   modes: string[];
-  toCubeDB: (scr: string, mode?: number) => CubeDBData;
-  fromCubeDB: (data: CubeDBData, mode?: number) => string;
+  toCubicDB: (scr: string, mode?: number) => CubicDBData;
+  fromCubicDB: (data: CubicDBData, mode?: number) => string;
 }
 
 export interface AlgorithmOptions {
@@ -542,6 +564,7 @@ export interface IStorageInfo {
   algorithms: number;
   solves: number;
   sessions: number;
+  reconstructions: number;
 }
 
 export interface IPC {
@@ -566,6 +589,12 @@ export interface IPC {
   tutorialsVersion: () => Promise<{ version: string; minVersion: string }>;
   checkTutorials: () => Promise<{ version: string; minVersion: string }>;
   updateTutorials: () => Promise<boolean>;
+
+  addReconstruction: (r: IDBReconstruction) => Promise<IDBReconstruction>;
+  getReconstructions: () => Promise<IDBReconstruction[]>;
+  updateReconstructions: () => Promise<boolean>;
+  reconstructionsVersion: () => Promise<{ version: string; minVersion: string }>;
+  checkReconstructions: () => Promise<{ version: string; minVersion: string }>;
 
   getSolves: () => Promise<Solve[]>;
   addSolve: (s: Solve) => Promise<Solve>;
@@ -625,6 +654,7 @@ export interface IPC {
   sessionsStorage: () => any;
   solvesStorage: () => any;
   tutorialsStorage: () => any;
+  reconstructionsStorage: () => any;
 }
 
 export interface PDFOptions {
@@ -652,11 +682,13 @@ export interface ContestPDFResult extends PDFResult {
 }
 
 export interface Game {
-  players: { 0: string; 1: { name: string; times: number[]; connected: boolean } }[];
+  players: { 0: string; 1: { name: string; times: any[]; connected: boolean } }[];
   observers: { 0: string; 1: { name: string } }[];
   round: number;
   total: number;
   started: boolean;
+  owner: string;
+  mode: string;
 }
 
 export type StackmatSignalHeader = "I" | "S" | "L" | "R" | "A" | "C" | " ";
@@ -731,6 +763,7 @@ export interface InputContext {
   scramble: Writable<string>;
   sequenceParts: Writable<string[]>;
   recoverySequence: Writable<string>;
+  keyboardEnabled: Writable<boolean>;
 
   reset: () => void;
   initScrambler: (scr?: string, _mode?: string) => void;
@@ -748,6 +781,13 @@ export interface KeyboardContext extends InputContext {
   timeRef: Writable<number>;
 }
 
+export interface AblyContext {
+  isOwner: Writable<boolean>;
+  clientID: Writable<string>;
+  game: Writable<Game>;
+  isConnected: Writable<boolean>;
+}
+
 export interface TimerInputHandler {
   init: AnyCallback;
   disconnect: () => void;
@@ -757,7 +797,7 @@ export interface TimerInputHandler {
   newRecord: () => void;
 }
 
-export type LanguageCode = "EN" | "ES";
+export type LanguageCode = "EN" | "ES" | "ZH";
 
 export interface Language {
   name: string;
@@ -787,6 +827,7 @@ export interface Language {
     search: string;
     toScramble: string;
     reconstruction: string;
+    reconstructions: string;
     clickToCopy: string;
     settings: string;
     downloading: string;
@@ -808,7 +849,17 @@ export interface Language {
     saved: string;
     settingsSaved: string;
     willRestart: string;
-    generatedByCubeDB: string;
+    generatedByCubicDB: string;
+    showBackFace: string;
+    filter: string;
+    date: string;
+    invert: string;
+    true: string;
+    false: string;
+    minimize: string;
+    maximize: string;
+    close: string;
+    selectLanguage: string;
   };
   TUTORIALS: {
     easy: string;
@@ -834,6 +885,7 @@ export interface Language {
     importExport: string;
     contest: string;
     tools: string;
+    about: string;
   };
   SETTINGS: {
     title: string;
@@ -886,7 +938,7 @@ export interface Language {
       deviation: string;
       mo3: string;
       ao5: string;
-    },
+    };
 
     // Stackmat
     stackmatAvailableHeader: string;
@@ -952,6 +1004,8 @@ export interface Language {
     removeAllSolves: string;
     removeSession: string;
     select: string;
+    addFilter: string;
+    addGroup: string;
 
     // Stats Tab
     totalTime: string;
@@ -980,6 +1034,10 @@ export interface Language {
       settings: string;
     };
     // ['Ao5', 'Ao12', 'Ao50', 'Ao100', 'Ao200', 'Ao500', 'Ao1k', 'Ao2k' ]
+
+    // Advanced Search Operators
+    operators: Record<FILTER_OPERATOR, string>;
+    gateResultIndicator: string[];
   };
   RECONSTRUCTIONS: {
     stepBack: string;
@@ -1033,7 +1091,6 @@ export interface Language {
     puzzle: string;
     order: string;
     setPuzzle: string;
-    showBackFace: string;
   };
   IMPORT_EXPORT: {
     title: string;
@@ -1046,14 +1103,15 @@ export interface Language {
     total: string;
     showingOnly50: string;
   };
-  CUBEDB: {
+  CUBICDB: {
     name: string;
     version: string;
     creator: string;
     donations: string;
+    acknowledgements: string;
   };
   TOOLS: {
-    cubedbBatch: string;
+    cubicdbBatch: string;
     timerOnly: string;
     scrambleOnly: string;
     batchScramble: string;
@@ -1131,6 +1189,14 @@ export interface IReconstruction {
   hasError: boolean;
 }
 
+export interface IDBReconstruction {
+  _id?: string;
+  num: number;
+  title: string;
+  scramble: string;
+  solution: string;
+}
+
 export type Scrambler =
   | "222so"
   | "333"
@@ -1165,4 +1231,27 @@ export interface ToolItem {
 export interface ActiveTool {
   tool: ToolItem;
   open: boolean;
+}
+
+export interface ROUND {
+  contestant: {
+    id: string;
+    name: string;
+  };
+  scrambler: string;
+  t1: Solve;
+  t2: Solve;
+  t3: Solve;
+  t4: Solve;
+  t5: Solve;
+  e1: Solve;
+  e2: Solve;
+  round: number;
+  average: number;
+}
+
+export interface VectorLike3D {
+  x: number;
+  y: number;
+  z: number;
 }

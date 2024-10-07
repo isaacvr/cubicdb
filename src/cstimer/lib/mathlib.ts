@@ -1,4 +1,25 @@
-import { MersenneTwisterObject } from "./mersennetwister";
+/**
+ * Copyright (C) 2023  Shuang Chen
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+  -----------------------------------------------------------------------
+  
+  Modified by Isaac Vega <isaacvega1996@gmail.com>
+ */
+
+import { Isaac } from "@helpers/isaac";
 
 export const Cnk: number[][] = [];
 export const fact = [1];
@@ -168,12 +189,12 @@ export class coord {
   }
 
   get(arr: number[]) {
-    if (this.type === 'p') return get8Perm(arr, this.length, this.evenbase);
+    if (this.type === "p") return get8Perm(arr, this.length, this.evenbase);
     return getNOri(arr, this.length, this.evenbase);
   }
-  
+
   set(arr: number[], idx: number) {
-    if (this.type === 'p') return set8Perm(arr, idx, this.length, this.evenbase);
+    if (this.type === "p") return set8Perm(arr, idx, this.length, this.evenbase);
     return setNOri(arr, idx, this.length, this.evenbase);
   }
 }
@@ -1145,16 +1166,16 @@ export class gSolver {
 }
 
 let randGen = (function () {
-  let rndFunc: MersenneTwisterObject;
+  let isaac = new Isaac();
   let rndCnt: number;
   let seedStr: string; // '' + new Date().getTime();
 
   function random() {
     rndCnt++;
-    return rndFunc.randomReal53();
+    return isaac.random();
   }
 
-  function getSeed() {
+  function getSeed(): any[] {
     return [rndCnt, seedStr];
   }
 
@@ -1164,12 +1185,12 @@ let randGen = (function () {
       for (let i = 0; i < _seedStr.length; i++) {
         seed[i] = _seedStr.charCodeAt(i);
       }
-      rndFunc = new MersenneTwisterObject(seed[0], seed);
+      isaac.seed(seed);
       rndCnt = 0;
       seedStr = _seedStr;
     }
     while (rndCnt < _rndCnt) {
-      rndFunc.randomReal53();
+      isaac.random();
       rndCnt++;
     }
   }

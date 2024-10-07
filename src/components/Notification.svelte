@@ -4,14 +4,14 @@
   import { NotificationService } from "@stores/notification.service";
   import { Avatar, Button, Toast } from "flowbite-svelte";
   import { fly } from "svelte/transition";
-  import { CubeDBICON } from "@constants";
+  import { CubicDBICON } from "@constants";
 
   export let key: string = "";
   export let timeout = 5000;
   export let header = "Header";
   export let text = "Text";
   export let html = "";
-  export let icon: any = CubeDBICON;
+  export let icon: any = CubicDBICON;
   export let fixed = false;
   export let actions: NotificationAction[] = [];
 
@@ -54,9 +54,9 @@
 >
   {#if icon}
     {#if typeof icon === "string"}
-      <Avatar slot="icon" src={icon} class="text-gray-300"/>
+      <Avatar slot="icon" src={icon} class="text-gray-300 aspect-square" />
     {:else}
-      <svelte:component this={icon} slot="icon" size="1.2rem" class="text-gray-300"/>
+      <svelte:component this={icon} slot="icon" size="1.2rem" class="text-gray-300 aspect-square" />
     {/if}
   {/if}
 

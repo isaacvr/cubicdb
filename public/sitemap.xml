@@ -1,53 +1,53 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://cubedb.netlify.app/</loc>
+    <loc>https://cubicdb.netlify.app/</loc>
     <lastmod>2024-01-18</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://cubedb.netlify.app/algorithms</loc>
+    <loc>https://cubicdb.netlify.app/algorithms</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://cubedb.netlify.app/timer</loc>
+    <loc>https://cubicdb.netlify.app/timer</loc>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://cubedb.netlify.app/reconstructions</loc>
+    <loc>https://cubicdb.netlify.app/reconstructions</loc>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
   </url>
   <url>
-    <loc>https://cubedb.netlify.app/pll-trainer</loc>
+    <loc>https://cubicdb.netlify.app/pll-trainer</loc>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://cubedb.netlify.app/simulator</loc>
+    <loc>https://cubicdb.netlify.app/simulator</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://cubedb.netlify.app/tools</loc>
+    <loc>https://cubicdb.netlify.app/tools</loc>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://cubedb.netlify.app/import-export</loc>
+    <loc>https://cubicdb.netlify.app/import-export</loc>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
   </url>
   <url>
-    <loc>https://cubedb.netlify.app/settings</loc>
+    <loc>https://cubicdb.netlify.app/settings</loc>
     <changefreq>monthly</changefreq>
     <priority>0.2</priority>
   </url>
   <url>
-    <loc>https://cubedb.netlify.app/cubedb</loc>
+    <loc>https://cubicdb.netlify.app/cubicdb</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>

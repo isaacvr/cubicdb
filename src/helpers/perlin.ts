@@ -12,7 +12,7 @@ let perlin_amp_falloff = 0.5; // 50% reduction/octave
 
 function scaled_cosine(i: number): number {
   return 0.5 * (1.0 - Math.cos(i * Math.PI));
-};
+}
 
 let perlin: any[] | null; // will be initialized lazily by noise() or noiseSeed()
 
@@ -50,7 +50,7 @@ let perlin: any[] | null; // will be initialized lazily by noise() or noiseSeed(
  * @param  {Number} [z] z-coordinate in noise space
  * @return {Number}     Perlin noise value (between 0 and 1) at specified
  *                      coordinates
- * 
+ *
  * @alt
  * vertical line moves left to right with updating noise values.
  * horizontal wave pattern effected by mouse x-position & updating noise values.
@@ -135,7 +135,7 @@ export function perlin2(x: number, y?: number, z?: number): number {
     }
   }
   return r;
-};
+}
 
 /**
  *
@@ -159,7 +159,7 @@ export function perlin2(x: number, y?: number, z?: number): number {
  * @method noiseDetail
  * @param {Number} lod number of octaves to be used by the noise
  * @param {Number} falloff falloff factor for each octave
- * 
+ *
  * @alt
  * 2 vertical grey smokey patterns affected my mouse x-position and noise.
  *
@@ -171,7 +171,7 @@ export function noiseDetail(lod: number, falloff: number): void {
   if (falloff > 0) {
     perlin_amp_falloff = falloff;
   }
-};
+}
 
 /**
  * Sets the seed value for <b>noise()</b>. By default, <b>noise()</b>
@@ -205,7 +205,7 @@ export function noiseDetail(lod: number, falloff: number): void {
 export function noiseSeed(seed: number) {
   // Linear Congruential Generator
   // Variant of a Lehman Generator
-  let lcg = (function() {
+  let lcg = (function () {
     // Set to values from http://en.wikipedia.org/wiki/Numerical_Recipes
     // m is basically chosen to be large (as it is the max period)
     // and for its relationships to a and c
@@ -230,7 +230,7 @@ export function noiseSeed(seed: number) {
         // return a float in [0, 1)
         // if z = m then z / m = 0 therefore (z % m) / m < 1 always
         return z / m;
-      }
+      },
     };
   })();
 
@@ -239,4 +239,4 @@ export function noiseSeed(seed: number) {
   for (let i = 0; i < PERLIN_SIZE + 1; i++) {
     perlin[i] = lcg.rand();
   }
-};
+}

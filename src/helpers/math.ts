@@ -2,6 +2,7 @@ import { Color } from "@classes/Color";
 import { Vector2D } from "@classes/vector2-d";
 import { Vector3D } from "@classes/vector3d";
 import { EPS } from "@constants";
+import type { EasingFunction } from "@interfaces";
 import { Quaternion, Vector3 } from "three";
 
 export function map(v: number, a: number, b: number, A: number, B: number): number {
@@ -43,7 +44,9 @@ export function rotateSegment(
 }
 
 export function between(n: number, a: number, b: number): number {
-  return Math.min(b, Math.max(a, n));
+  let na = Math.min(a, b);
+  let nb = Math.max(a, b);
+  return Math.min(nb, Math.max(na, n));
 }
 
 export function isBetween(n: number, a: number, b: number, inclusive = true): boolean {
@@ -208,6 +211,15 @@ export function toInt(n: number, d: number): number {
   return Math.floor(n / pot) * pot;
 }
 
+export function getLagrangeInterpolation(pts: Vector2D[]) {
+  let funcs = pts.map((pt, pos) => {
+    let otherPts = pts.filter((_, pos1) => pos1 != pos);
+    return (x: number) => pt.y * otherPts.reduce((acc, p) => (acc * (x - p.x)) / (pt.x - p.x), 1);
+  });
+
+  return (x: number) => funcs.reduce((acc, f) => acc + f(x), 0);
+}
+
 // Animation Timing Functions
 export function cubicBezier(t: number, x1: number, y1: number, x2: number, y2: number): number {
   let p1 = new Vector2D(0, 0);
@@ -240,10 +252,31 @@ export function easeIn(t: number): number {
   return cubicBezier(t, 0.42, 0, 1, 1);
 }
 
+export function fastEasing(t: number): number {
+  const DIVIDER = 10;
+  const THRESHOLD = 1 / DIVIDER;
+  return t < THRESHOLD ? cubicBezier(t * DIVIDER, 0.44, 0.48, 0, 1) : 1;
+}
+
 export function easeOut(t: number): number {
   return cubicBezier(t, 0, 0, 0.58, 1);
 }
 
 export function easeInOut(t: number): number {
   return cubicBezier(t, 0.42, 0, 0.58, 1);
+}
+
+export function getEasing(name: EasingFunction) {
+  if (name === "ease") return ease;
+  if (name === "easeIn") return easeIn;
+  if (name === "easeInOut") return easeInOut;
+  if (name === "easeOut") return easeOut;
+  if (name === "fastEasing") return fastEasing;
+  return linear;
+}
+
+export function bitLength(n: number): number {
+  let bits = 0;
+  while (1 << bits <= n) bits += 1;
+  return bits;
 }

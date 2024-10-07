@@ -2,7 +2,7 @@ const fsp = require("node:fs/promises");
 const path = require("node:path");
 const { app } = require("electron");
 
-const FOREIGN_PATH = "https://raw.githubusercontent.com/isaacvr/cubedb-svelte/beta/src/database";
+const FOREIGN_PATH = "https://raw.githubusercontent.com/isaacvr/cubicdb/beta/src/database";
 
 /**
  * @typedef {import('electron').IpcMain} IpcMain
@@ -139,7 +139,9 @@ module.exports = (ipcMain, Algorithms, dbPath) => {
 
   ipcMain.handle("algorithms-check", async () => {
     try {
-      let data = await fetch(FOREIGN_PATH + "/algversion.json").then(res => res.json());
+      let data = await fetch(FOREIGN_PATH + "/algversion.json", { cache: "no-store" }).then(res =>
+        res.json()
+      );
 
       if (data) {
         return data;
@@ -150,10 +152,14 @@ module.exports = (ipcMain, Algorithms, dbPath) => {
 
   ipcMain.handle("update-algorithms", async () => {
     try {
-      let data = await fetch(FOREIGN_PATH + "/algs.db").then(res => res.text());
+      let data = await fetch(FOREIGN_PATH + "/algs.db", { cache: "no-store" }).then(res =>
+        res.text()
+      );
       await fsp.writeFile(path.join(dbPath, "algs.db"), data, { encoding: "utf8" });
 
-      let algVersion = await fetch(FOREIGN_PATH + "/algversion.json").then(res => res.text());
+      let algVersion = await fetch(FOREIGN_PATH + "/algversion.json", { cache: "no-store" }).then(
+        res => res.text()
+      );
       await fsp.writeFile(path.join(dbPath, "algversion.json"), algVersion, { encoding: "utf8" });
 
       setTimeout(() => {

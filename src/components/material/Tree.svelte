@@ -1,9 +1,9 @@
 <script lang="ts">
   import type { AlgorithmTree } from "@interfaces";
-  import ArrowIcon from '@icons/ChevronRight.svelte';
-  import PencilIcon from '@icons/Pencil.svelte';
-  import PlusIcon from '@icons/Plus.svelte';
-  import DeleteIcon from '@icons/Delete.svelte';
+  import ArrowIcon from "@icons/ChevronRight.svelte";
+  import PencilIcon from "@icons/Pencil.svelte";
+  import PlusIcon from "@icons/Plus.svelte";
+  import DeleteIcon from "@icons/Delete.svelte";
   import { createEventDispatcher } from "svelte";
 
   export let obj: AlgorithmTree;
@@ -15,40 +15,48 @@
   }
 
   function editAlgorithm(a: Algorithm) {
-    dispatch('edit-step', a);
+    dispatch("edit-step", a);
   }
 
   function addSection(a: Algorithm) {
-    dispatch('add', a);
+    dispatch("add", a);
   }
 
   function deleteSection(a: Algorithm) {
-    dispatch('delete', a);
+    dispatch("delete", a);
   }
 </script>
 
-<section class="tree relative" class:expanded={ obj.expanded }>
-  <button class="header" on:click|stopPropagation={ toggleExpanded }>
+<section class="tree relative" class:expanded={obj.expanded}>
+  <button class="header" on:click|stopPropagation={toggleExpanded}>
     <div class="name">
-      <div class="icon" class:hidden={ !obj.children.length }>
-        <ArrowIcon size="1.2rem"/>
+      <div class="icon" class:hidden={!obj.children.length}>
+        <ArrowIcon size="1.2rem" />
       </div>
-      { obj.name + (obj.children.length ? ` (${ obj.children.length })` : '') }
+      {obj.name + (obj.children.length ? ` (${obj.children.length})` : "")}
     </div>
     <div class="actions pr-4">
-      <button on:click|stopPropagation={ () => editAlgorithm(obj.alg) }><PencilIcon size="1.2rem"/></button>
-      <button on:click|stopPropagation={ () => addSection(obj.alg) }><PlusIcon size="1.2rem"/></button>
-      <button on:click|stopPropagation={ () => deleteSection(obj.alg) }><DeleteIcon size="1.2rem"/></button>
+      <button on:click|stopPropagation={() => editAlgorithm(obj.alg)}
+        ><PencilIcon size="1.2rem" /></button
+      >
+      <button on:click|stopPropagation={() => addSection(obj.alg)}
+        ><PlusIcon size="1.2rem" /></button
+      >
+      <button on:click|stopPropagation={() => deleteSection(obj.alg)}
+        ><DeleteIcon size="1.2rem" /></button
+      >
     </div>
   </button>
 
   <div class="content">
     <div>
-      {#each obj.children as child (child.alg.parentPath + '/' + child.route)}
-        <svelte:self obj={ child }
-          on:edit-step={ (ev) => editAlgorithm(ev.detail) }
-          on:add={ (ev) => addSection(ev.detail) }
-          on:delete={ (ev) => deleteSection(ev.detail) }/>
+      {#each obj.children as child (child.alg.parentPath + "/" + child.route)}
+        <svelte:self
+          obj={child}
+          on:edit-step={ev => editAlgorithm(ev.detail)}
+          on:add={ev => addSection(ev.detail)}
+          on:delete={ev => deleteSection(ev.detail)}
+        />
       {/each}
     </div>
   </div>
@@ -111,7 +119,7 @@
   .tree > .header .icon {
     transition: all var(--anim-t);
   }
-  
+
   .tree:not(.expanded) > .header .icon {
     rotate: 0deg;
   }

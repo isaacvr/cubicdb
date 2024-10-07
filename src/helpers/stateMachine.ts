@@ -6,11 +6,11 @@ export interface Actor<Context = InputContext> {
 }
 
 export const isSpace = <Context = InputContext>({ event }: Actor<Context>) => {
-  return event.code === 'Space';
+  return event.code === "Space";
 };
 
 export const isEscape = <Context = InputContext>({ event }: Actor<Context>) => {
-  return event.code === 'Escape';
+  return event.code === "Escape";
 };
 
 export const notEscape = <Context = InputContext>({ context, event }: Actor<Context>) => {

@@ -1,4 +1,4 @@
-const qDimensions: ('x' | 'y' | 'z' | 'w')[] = ["w", "x", "y", "z"];
+const qDimensions: ("x" | "y" | "z" | "w")[] = ["w", "x", "y", "z"];
 const qProductSign = [
   [1, 1, 1, 1],
   [1, -1, 1, -1],

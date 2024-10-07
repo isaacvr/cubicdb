@@ -1,3 +1,24 @@
+/**
+ * Copyright (C) 2023  Shuang Chen
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+  -----------------------------------------------------------------------
+  
+  Modified by Isaac Vega <isaacvega1996@gmail.com>
+ */
+
 class AudioProcessor extends AudioWorkletProcessor {
   constructor(params) {
     super();
@@ -6,7 +27,7 @@ class AudioProcessor extends AudioWorkletProcessor {
     this.last_power = 1;
     this.bitAnalyzer = null;
     this.state = {
-      device: '',
+      device: "",
       time_milli: 0,
       unit: 10,
       on: false,
@@ -15,9 +36,9 @@ class AudioProcessor extends AudioWorkletProcessor {
       rightHand: false,
       running: false,
       unknownRunning: true,
-      signalHeader: 'I',
+      signalHeader: "I",
       noise: 1,
-      power: 1
+      power: 1,
     };
     this.multiplier = 1;
 
@@ -37,7 +58,7 @@ class AudioProcessor extends AudioWorkletProcessor {
     this.last_bit_length = 0;
     this.no_state_length = 0;
 
-    if ( params?.parameterData?.curTimer ) {
+    if (params?.parameterData?.curTimer) {
       this.sample_rate = (params.parameterData?.sampleRate || 44100) / 8000;
       this.bitAnalyzer = this.appendBitMoyu;
     } else {
@@ -52,14 +73,14 @@ class AudioProcessor extends AudioWorkletProcessor {
   process(inputs) {
     let input = inputs[0] || [];
 
-    if ( !input || !input[0] ) return true;
+    if (!input || !input[0]) return true;
 
     // let sm = [0, 0];
     // let c = [0, 0];
 
     // for (let i = 0, maxi = input[0].length; i < maxi; i++) {
     //   let signal = input[1][i] - input[0][i];
-      
+
     //   if ( signal > 0 ) {
     //     sm[1] += signal;
     //     c[1] += 1;
@@ -83,8 +104,11 @@ class AudioProcessor extends AudioWorkletProcessor {
     for (let i = 0, maxi = input[0].length; i < maxi; i++) {
       let signal = (input[1][i] - input[0][i]) * this.multiplier;
       let power = signal ** 2;
-      this.last_power = Math.max(0.0001, this.last_power + (power - this.last_power) * this.agc_factor);
-      let gain = 1 / Math.sqrt( this.last_power );
+      this.last_power = Math.max(
+        0.0001,
+        this.last_power + (power - this.last_power) * this.agc_factor
+      );
+      let gain = 1 / Math.sqrt(this.last_power);
       this.procSignal(signal * gain);
     }
 
@@ -93,179 +117,181 @@ class AudioProcessor extends AudioWorkletProcessor {
 
   procSignal(signal) {
     this.lastVal.unshift(signal);
-  
-    let isEdge = ((this.lastVal.pop() || 0) - signal) * (this.lastSgn ? 1 : -1) > this.THRESHOLD_EDGE &&
+
+    let isEdge =
+      ((this.lastVal.pop() || 0) - signal) * (this.lastSgn ? 1 : -1) > this.THRESHOLD_EDGE &&
       Math.abs(signal - (this.lastSgn ? 1 : -1)) - 1 > this.THRESHOLD_SCHM &&
       this.lenVoltageKeep > this.sample_rate * 0.6;
-  
-    if ( isEdge ) {
+
+    if (isEdge) {
       for (let i = 0, maxi = Math.round(this.lenVoltageKeep / this.sample_rate); i < maxi; i += 1) {
-        this.bitAnalyzer( this.lastSgn );
+        this.bitAnalyzer(this.lastSgn);
       }
 
       this.lastSgn ^= 1;
       this.lenVoltageKeep = 0;
-    } else if ( this.lenVoltageKeep > this.sample_rate * 2 ) {
-      this.bitAnalyzer( this.lastSgn );
+    } else if (this.lenVoltageKeep > this.sample_rate * 2) {
+      this.bitAnalyzer(this.lastSgn);
       this.lenVoltageKeep -= this.sample_rate;
     }
 
     this.lenVoltageKeep++;
-  
-    if ( this.last_bit_length < 10 ) {
+
+    if (this.last_bit_length < 10) {
       this.distortionStat = Math.max(
         0.0001,
-        this.distortionStat + (Math.pow(signal - (this.lastSgn ? 1 : -1), 2) - this.distortionStat) * this.agc_factor
+        this.distortionStat +
+          (Math.pow(signal - (this.lastSgn ? 1 : -1), 2) - this.distortionStat) * this.agc_factor
       );
-    } else if ( this.last_bit_length > 100 ) {
+    } else if (this.last_bit_length > 100) {
       this.distortionStat = 1;
     }
   }
 
   appendBit(bit) {
     this.bitBuffer.push(bit);
-    
+
     if (bit != this.last_bit) {
       this.last_bit = bit;
       this.last_bit_length = 1;
     } else {
       this.last_bit_length += 1;
     }
-  
+
     this.no_state_length++;
-     
-    if ( this.last_bit_length > 10 ) {
+
+    if (this.last_bit_length > 10) {
       this.idle_val = bit;
-      
+
       this.bitBuffer.length = 0;
-  
-      if ( this.byteBuffer.length != 0 ) {
+
+      if (this.byteBuffer.length != 0) {
         this.byteBuffer.length = 0;
       }
-  
-      if ( this.last_bit_length > 100 && this.state.on ) {
+
+      if (this.last_bit_length > 100 && this.state.on) {
         this.state.on = false;
         this.state.noise = Math.min(1, this.distortionStat) || 0;
         this.state.power = this.last_power;
-        this.port.postMessage( this.state );
-      } else if ( this.no_state_length > 700 ) {
+        this.port.postMessage(this.state);
+      } else if (this.no_state_length > 700) {
         this.no_state_length = 100;
         this.state.noise = Math.min(1, this.distortionStat) || 0;
         this.state.power = this.last_power;
-        this.port.postMessage( this.state );
+        this.port.postMessage(this.state);
       }
-    } else if ( this.bitBuffer.length == 10 ) {
-      if ( this.bitBuffer[0] == this.idle_val || this.bitBuffer[9] != this.idle_val) {
+    } else if (this.bitBuffer.length == 10) {
+      if (this.bitBuffer[0] == this.idle_val || this.bitBuffer[9] != this.idle_val) {
         this.bitBuffer = this.bitBuffer.slice(1);
       } else {
         let val = 0;
         for (let i = 8; i > 0; i--) {
-          val = val << 1 | (this.bitBuffer[i] == this.idle_val ? 1 : 0);
+          val = (val << 1) | (this.bitBuffer[i] == this.idle_val ? 1 : 0);
         }
-        this.byteBuffer.push( String.fromCharCode(val) );
-        this.decode( this.byteBuffer );
+        this.byteBuffer.push(String.fromCharCode(val));
+        this.decode(this.byteBuffer);
         this.bitBuffer.length = 0;
       }
     }
   }
- 
+
   appendBitMoyu(bit) {
-    if ( this.last_bit != this.idle_val && this.last_bit_length == 1 ) {
-      this.bitBuffer.push( bit );
-      
-      if ( this.bitBuffer.length == 24 ) {
+    if (this.last_bit != this.idle_val && this.last_bit_length == 1) {
+      this.bitBuffer.push(bit);
+
+      if (this.bitBuffer.length == 24) {
         let time_milli = 0;
-        
+
         for (let i = 5; i >= 0; i--) {
           time_milli *= 10;
-          
+
           for (let j = 0; j < 4; j++) {
             time_milli += this.bitBuffer[i * 4 + j] << j;
           }
         }
 
         this.bitBuffer.length = 0;
-        this.pushNewState('S', time_milli, 1);
+        this.pushNewState("S", time_milli, 1);
       }
     }
 
-    if ( bit != this.last_bit ) {
+    if (bit != this.last_bit) {
       this.last_bit = bit;
       this.last_bit_length = 1;
     } else {
       this.last_bit_length++;
     }
 
-    if ( this.last_bit_length > 10 ) { //IDLE
+    if (this.last_bit_length > 10) {
+      //IDLE
       this.idle_val = bit;
       this.bitBuffer.length = 0;
       this.byteBuffer.length = 0;
 
-      if ( this.last_bit_length > 1000 && this.state.on ) {
+      if (this.last_bit_length > 1000 && this.state.on) {
         this.state.on = false;
         this.state.noise = Math.min(1, this.distortionStat) || 0;
         this.state.power = this.last_power;
-        this.port.postMessage( this.state );
-      } else if ( this.last_bit_length > 4000 ) {
+        this.port.postMessage(this.state);
+      } else if (this.last_bit_length > 4000) {
         this.last_bit_length = 1000;
         this.state.noise = Math.min(1, this.distortionStat) || 0;
         this.state.power = this.last_power;
-        this.port.postMessage( this.state );
+        this.port.postMessage(this.state);
       }
     }
   }
 
   decode(byteBuffer) {
-  
-    if ( byteBuffer.length != 9 && byteBuffer.length != 10 ) {
+    if (byteBuffer.length != 9 && byteBuffer.length != 10) {
       return;
     }
-    
+
     let re_head = /[ SILRCA]/;
     let re_number = /[0-9]/;
     let head = byteBuffer[0];
 
-    if ( !re_head.exec(head) ) {
+    if (!re_head.exec(head)) {
       return;
     }
 
     let checksum = 64;
-    
+
     for (let i = 1; i < byteBuffer.length - 3; i++) {
-      if ( !re_number.exec(byteBuffer[i]) ) {
+      if (!re_number.exec(byteBuffer[i])) {
         return;
       }
 
-      checksum += ~~(byteBuffer[i]);
+      checksum += ~~byteBuffer[i];
     }
 
-    if ( checksum != byteBuffer[byteBuffer.length - 3].charCodeAt(0) ) {
+    if (checksum != byteBuffer[byteBuffer.length - 3].charCodeAt(0)) {
       return;
     }
 
-    let time_milli = ~~byteBuffer[1] * 60000 +
+    let time_milli =
+      ~~byteBuffer[1] * 60000 +
       ~~(byteBuffer[2] + byteBuffer[3]) * 1000 +
-      ~~(byteBuffer[4] + byteBuffer[5] + (byteBuffer.length == 10 ? byteBuffer[6] : '0'));
-    
-    this.pushNewState(head, time_milli, byteBuffer.length == 9 ? 10 : 1);
+      ~~(byteBuffer[4] + byteBuffer[5] + (byteBuffer.length == 10 ? byteBuffer[6] : "0"));
 
+    this.pushNewState(head, time_milli, byteBuffer.length == 9 ? 10 : 1);
   }
 
   pushNewState(head, time_milli, unit) {
-    let is_time_inc = unit == this.state.unit ?
-      time_milli > this.state.time_milli :
-      Math.floor(time_milli / 10) > Math.floor(this.state.time_milli / 10);
+    let is_time_inc =
+      unit == this.state.unit
+        ? time_milli > this.state.time_milli
+        : Math.floor(time_milli / 10) > Math.floor(this.state.time_milli / 10);
 
     let new_state = {
-      device: '',
+      device: "",
       time_milli,
       unit,
       on: true,
-      greenLight: head === 'A',
-      leftHand: head == 'L' || head == 'A' || head == 'C',
-      rightHand: head == 'R' || head == 'A' || head == 'C',
-      running: (head != 'S' || this.state.signalHeader == 'S') &&
-      (head == ' ' || is_time_inc),
+      greenLight: head === "A",
+      leftHand: head == "L" || head == "A" || head == "C",
+      rightHand: head == "R" || head == "A" || head == "C",
+      running: (head != "S" || this.state.signalHeader == "S") && (head == " " || is_time_inc),
       signalHeader: head,
       unknownRunning: !this.state.on,
       noise: Math.min(1, this.distortionStat) || 0,
@@ -275,10 +301,10 @@ class AudioProcessor extends AudioWorkletProcessor {
     this.state = new_state;
     this.no_state_length = 0;
 
-    this.port.postMessage( this.state );
+    this.port.postMessage(this.state);
   }
 }
 
-registerProcessor('stackmat-processor', AudioProcessor);
+registerProcessor("stackmat-processor", AudioProcessor);
 
 export {};

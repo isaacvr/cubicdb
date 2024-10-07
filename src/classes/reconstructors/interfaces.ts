@@ -19,5 +19,5 @@ export interface ReconstructorMethod {
 
 export interface IReconstructor {
   getAnalysis: (totalTime: number) => Promise<ReconstructorMethod>;
-  feed: (seq: { move: string, time: number }) => void;
+  feed: (seq: { move: string; time: number }) => void;
 }

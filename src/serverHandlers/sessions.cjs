@@ -4,11 +4,11 @@ const path = require("node:path");
 /**
  * @typedef {import('electron').IpcMain} IpcMain
  * @typedef {import('nedb')} NeDB
- * 
- * @param {IpcMain} ipcMain 
- * @param {NeDB} Sessions 
- * @param {NeDB} Solves 
- * @param {string} dbPath 
+ *
+ * @param {IpcMain} ipcMain
+ * @param {NeDB} Sessions
+ * @param {NeDB} Solves
+ * @param {string} dbPath
  */
 module.exports = (ipcMain, Sessions, Solves, dbPath) => {
   ipcMain.handle("get-sessions", async () => {
@@ -109,8 +109,6 @@ module.exports = (ipcMain, Sessions, Solves, dbPath) => {
       if (err1) {
         return console.log("Error reading solves");
       }
-
-      let count = 0;
 
       for (let i = 0, maxi = svs.length; i < maxi; i += 1) {
         if (!ids.has(svs[i].session)) {

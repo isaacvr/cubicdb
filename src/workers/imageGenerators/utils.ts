@@ -93,6 +93,20 @@ export function drawStickers(
   }
 
   allStickers.sort((a, b) => {
+    if (cube.type === "clock") {
+      if (a.name === "pin" && b.name === "pin") {
+        return 0;
+      }
+
+      if (a.name === "pin") {
+        return 1;
+      }
+
+      if (b.name === "pin") {
+        return -1;
+      }
+    }
+
     let za = a.points.reduce((acc, e) => (acc.z > e.z ? acc : e), new Vector3D(0, 0, -1000));
     let zb = b.points.reduce((acc, e) => (acc.z > e.z ? acc : e), new Vector3D(0, 0, -1000));
 
@@ -102,6 +116,15 @@ export function drawStickers(
   for (let i = 0, maxi = allStickers.length; i < maxi; i += 1) {
     let st = allStickers[i];
     ctx.fillStyle = cube.getHexStrColor(st.color);
+
+    if (cube.type === "clock") {
+      if (st.name != "pin") {
+        ctx.strokeStyle = "transparent";
+      } else {
+        ctx.strokeStyle = "gray";
+      }
+    }
+
     let pts = st.points;
 
     ctx.beginPath();

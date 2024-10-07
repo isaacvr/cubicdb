@@ -80,22 +80,28 @@ export function getTreeString(token: IToken, puzzle: PuzzleType): string {
               .slice(1)
               .map(s =>
                 operators.test(s)
-                  ? `<span class="operator">${s}</span>`
+                  ? `<span class="operator" data-cursor="${token.cursor}">${s}</span>`
                   : /\d$/.test(s)
                   ? s === "0"
                     ? `<span class="move silent">${s}</span>`
-                    : `<span class="move">${s}</span>`
+                    : `<span class="move" data-cursor="${token.cursor}">${s}</span>`
                   : defaultInner(s, false)
               )
               .join("");
           }
         }
       }
-      return `<span class="move">${defaultInner(value, false)}</span>`;
+      return `<span class="move" data-cursor="${token.cursor}">${defaultInner(
+        value,
+        false
+      )}</span>`;
     }
 
     case "Comment": {
-      return `<span class="comment">${defaultInner(value, false)}</span>`;
+      return `<span class="comment" data-cursor="${token.cursor}">${defaultInner(
+        value,
+        false
+      )}</span>`;
     }
 
     case "Space": {
@@ -108,31 +114,38 @@ export function getTreeString(token: IToken, puzzle: PuzzleType): string {
 
     case "ParentesizedExpression": {
       return (
-        '<span class="operator">(</span>' +
+        `<span class="operator" data-cursor="${token.cursor}">(</span>` +
         getTreeString(value.expr, puzzle) +
-        '<span class="operator">)</span>' +
-        (value.cant != 1 || value.explicit ? `<span class="operator">${value.cant}</span>` : "")
+        `<span class="operator" data-cursor="${token.cursor}">)</span>` +
+        (value.cant != 1 || value.explicit
+          ? `<span class="operator" data-cursor="${token.cursor}">${value.cant}</span>`
+          : "")
       );
     }
 
     case "ConmutatorExpression": {
       if (value.setup) {
         return (
-          '<span class="operator">[</span>' +
+          `<span class="operator" data-cursor="${token.cursor}">[</span>` +
           getTreeString(value.setup, puzzle) +
-          '<span class="operator">:</span>' +
+          `<span class="operator" data-cursor="${token.cursor}">:</span>` +
           getTreeString(value.conmutator, puzzle) +
-          '<span class="operator">]</span>' +
-          (value.cant != 1 || value.explicit ? `<span class="operator">${value.cant}</span>` : "")
+          `<span class="operator" data-cursor="${token.cursor}">]</span>` +
+          (value.cant != 1 || value.explicit
+            ? `<span class="operator" data-cursor="${token.cursor}">${value.cant}</span>`
+            : "")
         );
       }
+
       return (
-        '<span class="operator">[</span>' +
+        `<span class="operator" data-cursor="${token.cursor}">[</span>` +
         getTreeString(value.expr1, puzzle) +
-        '<span class="operator">,</span>' +
+        `<span class="operator" data-cursor="${token.cursor}">,</span>` +
         getTreeString(value.expr2, puzzle) +
-        '<span class="operator">]</span>' +
-        (value.cant != 1 || value.explicit ? `<span class="operator">${value.cant}</span>` : "")
+        `<span class="operator" data-cursor="${token.cursor}">]</span>` +
+        (value.cant != 1 || value.explicit
+          ? `<span class="operator" data-cursor="${token.cursor}">${value.cant}</span>`
+          : "")
       );
     }
   }
@@ -173,6 +186,10 @@ function getMoveLength(sequence: string[], puzzle: PuzzleType, order: number): n
           .length;
       }
 
+      case "clock": {
+        return ScrambleParser.parseClock(sequence.join(" ")).length;
+      }
+
       case "helicopter": {
         return sequence.reduce((acc: any[], e) => [...acc, ...e.split(/\s+/)], []).length;
       }
@@ -189,8 +206,6 @@ export function parseReconstruction(s: string, puzzle: PuzzleType, order: number
 
   try {
     let tree = itp.getTree(s);
-
-    // console.log("TREE: ", tree);
 
     if (tree.error) {
       errorCursor = typeof tree.cursor === "number" ? tree.cursor : 0;
@@ -270,4 +285,24 @@ export function replaceParams(str: string, params: string[]): string {
   }
 
   return s1;
+}
+
+export function formatMoves(moves: string[]): string[] {
+  let res: string[] = [];
+
+  for (let i = 0, maxi = moves.length; i < maxi; ) {
+    let cant = 0;
+    let mv = moves[i].trim();
+    for (let j = i; j < maxi && moves[j] === moves[i]; j += 1) cant += 1;
+
+    if (cant === 1) {
+      res.push(mv);
+    } else {
+      res.push(mv.endsWith("'") ? mv.slice(0, -1) + cant + "'" : mv + cant);
+    }
+
+    i += cant;
+  }
+
+  return res;
 }

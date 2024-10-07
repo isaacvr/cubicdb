@@ -12,13 +12,12 @@ import type {
   PDFOptions,
   IStorageInfo,
   ICacheDB,
+  IDBReconstruction,
 } from "@interfaces";
-import _algs from "../database/algs.db?raw";
-import _tuts from "../database/tutorials.db?raw";
 import { clone, getByteSize } from "@helpers/object";
 import { openDB, type IDBPDatabase } from "idb";
 
-const DBName = "CubeDB-data";
+const DBName = "CubicDB-data";
 const AlgorithmStore = "Algorithms";
 const TutorialStore = "Tutorials";
 const SessionStore = "Sessions";
@@ -27,25 +26,26 @@ const ContestStore = "Contests";
 const CacheStore = "Cache";
 const dbVersion = 1;
 const debug = true;
-const algs: Algorithm[] = _algs
-  .split("\n")
-  .map(s => {
-    try {
-      return JSON.parse(s);
-    } catch {}
-    return "";
-  })
-  .filter(e => e);
 
-const tuts: ITutorial[] = _tuts
-  .split("\n")
-  .map(s => {
-    try {
-      return JSON.parse(s);
-    } catch {}
-    return "";
-  })
-  .filter(e => e);
+let algs: Algorithm[] = [];
+let tuts: ITutorial[] = [];
+let recs: IDBReconstruction[] = [];
+
+function parseDB(strDB: string): any[] {
+  return strDB
+    .split("\n")
+    .map(s => {
+      try {
+        return JSON.parse(s);
+      } catch {}
+      return "";
+    })
+    .filter(e => e);
+}
+
+import("../database/algs.db?raw").then(_algs => (algs = parseDB(_algs.default || "")));
+import("../database/tutorials.db?raw").then(_tuts => (tuts = parseDB(_tuts.default || "")));
+import("../database/reconstructions.db?raw").then(_recs => (recs = parseDB(_recs.default || "")));
 
 interface ICacheImg {
   hash: string;
@@ -233,6 +233,26 @@ export class IndexedDBAdaptor implements IPC {
   }
 
   updateTutorials() {
+    return Promise.resolve(false);
+  }
+
+  addReconstruction(r: IDBReconstruction) {
+    return Promise.reject();
+  }
+
+  getReconstructions() {
+    return Promise.resolve(recs);
+  }
+
+  reconstructionsVersion() {
+    return Promise.resolve({ version: "0.0.0", minVersion: "0.0.0" });
+  }
+
+  checkReconstructions() {
+    return Promise.resolve({ version: "0.0.0", minVersion: "0.0.0" });
+  }
+
+  updateReconstructions() {
     return Promise.resolve(false);
   }
 
@@ -511,11 +531,20 @@ export class IndexedDBAdaptor implements IPC {
   sessionsStorage() {}
   solvesStorage() {}
   tutorialsStorage() {}
+  reconstructionsStorage() {}
 
   async getStorageInfo(): Promise<IStorageInfo> {
     await this.init();
     if (!this.DB)
-      return { algorithms: 0, cache: 0, sessions: 0, solves: 0, tutorials: 0, vcache: 0 };
+      return {
+        algorithms: 0,
+        cache: 0,
+        sessions: 0,
+        solves: 0,
+        tutorials: 0,
+        vcache: 0,
+        reconstructions: 0,
+      };
 
     let cache = await this.DB.getAll(CacheStore);
     let sessions = await this.DB.getAll(SessionStore);
@@ -528,6 +557,7 @@ export class IndexedDBAdaptor implements IPC {
       sessions: getByteSize(sessions),
       solves: getByteSize(solves),
       tutorials: getByteSize(tuts),
+      reconstructions: getByteSize(recs),
     };
   }
 

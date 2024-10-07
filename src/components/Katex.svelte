@@ -6,9 +6,9 @@
   let katexString = "";
 
   const options = {
-  	displayMode: displayMode,
-  	throwOnError: false
-  }
+    displayMode: displayMode,
+    throwOnError: false,
+  };
 
   $: katexString = katex.renderToString(math, options);
 </script>

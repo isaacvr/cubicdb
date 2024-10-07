@@ -23,6 +23,8 @@
   export let placement: Side | Placement = "bottom";
   export let useFixed = false;
   export let iconComponent: any = WcaCategory;
+  export let iconKey = "icon";
+  export let iconSize: string | null = "1.2rem";
   export let preferIcon = false;
 
   const selectID = "s" + weakRandomUUID().replace(/-/g, "");
@@ -49,7 +51,7 @@
     let pos = findValuePosition();
 
     if (pos > -1) {
-      list.children[0].children[pos * 2].scrollIntoView({ block: "center" });
+      list.children[0].children[pos * 2].scrollIntoView({ block: "nearest" });
     }
   }
 
@@ -63,12 +65,21 @@
   $: emitStatus(showOptions);
 </script>
 
-<Button color="alternative" class={"gap-1 h-9 py-1 px-2 " + cl} on:click={handleClick}>
+<Button
+  color="alternative"
+  class={"gap-1 h-9 py-1 px-2 " + cl}
+  on:click={handleClick}
+  {...$$restProps}
+>
   {#if items.some((a, p, i) => transform(a, p, i) === value)}
     {@const item = items.find((e, p, i) => transform(e, p, i) === value)}
 
     {#if hasIcon && iconComponent}
-      <svelte:component this={iconComponent} icon={hasIcon(item)} noFallback size="1.1rem" />
+      {@const iconProps = Object.assign(iconSize ? { size: iconSize } : {}, {
+        [iconKey]: hasIcon(item),
+      })}
+
+      <svelte:component this={iconComponent} {...iconProps} noFallback />
     {/if}
 
     {#if !(hasIcon && iconComponent && preferIcon)}
@@ -84,7 +95,7 @@
 <Dropdown
   bind:open={showOptions}
   id={selectID}
-  containerClass={"max-h-[20rem] overflow-y-scroll z-10 w-max " + (useFixed ? "!fixed" : "")}
+  containerClass={"max-h-[20rem] overflow-y-auto z-50 w-max " + (useFixed ? "!fixed" : "")}
   {placement}
 >
   {#each items as item, pos}
@@ -108,7 +119,10 @@
       }}
     >
       {#if hasIcon && iconComponent}
-        <svelte:component this={iconComponent} icon={hasIcon(item)} noFallback size="1.1rem" />
+        {@const iconProps = Object.assign(iconSize ? { size: iconSize } : {}, {
+          [iconKey]: hasIcon(item),
+        })}
+        <svelte:component this={iconComponent} {...iconProps} noFallback />
       {/if}
 
       {#if label(item).trim()}

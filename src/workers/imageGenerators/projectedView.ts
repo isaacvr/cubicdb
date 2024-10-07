@@ -1,19 +1,18 @@
-import type { Piece } from "@classes/puzzle/Piece";
 import type { Sticker } from "@classes/puzzle/Sticker";
 import type { Puzzle } from "@classes/puzzle/puzzle";
 import { roundStickerCorners } from "@classes/puzzle/puzzleUtils";
-import { Vector2D } from "@classes/vector2-d";
 import { BACK, CENTER, DOWN, FRONT, LEFT, RIGHT, UP, Vector3D } from "@classes/vector3d";
 import { CubeMode, EPS } from "@constants";
 import type { PuzzleType } from "@interfaces";
 import { drawStickers } from "./utils";
-import { getColoredFromList } from "@classes/reconstructors/utils";
 import { CanvasGenerator } from "./classes/CanvasGenerator";
 import { SVGGenerator } from "./classes/SVGGenerator";
+import { FaceSticker } from "@classes/puzzle/FaceSticker";
 
 const PI = Math.PI;
 const PI_2 = PI / 2;
 const PI_3 = PI / 3;
+const PI_4 = PI / 4;
 const PI_6 = PI / 6;
 
 function getRoundedSQ1Sticker(
@@ -67,14 +66,12 @@ function getRoundedSQ1Sticker(
 }
 
 export function projectedView(cube: Puzzle, DIM: number, format: "raster" | "svg" = "svg"): string {
-  // const canvas = document.createElement("canvas");
-  // const ctx = canvas.getContext("2d", { willReadFrequently: true })!;
-
   let W = (DIM * 4) / 2;
   let H = (DIM * 3) / 2;
   const FACTOR = 2.1;
   let LW = DIM * 0.007;
   const SPECIAL_SQ1 = [CubeMode.CS, CubeMode.EO, CubeMode.CO];
+  const ORDER = cube.order;
 
   const getFactor = () => {
     if (
@@ -87,6 +84,7 @@ export function projectedView(cube: Puzzle, DIM: number, format: "raster" | "svg
     return FACTOR;
   };
 
+  // Set dimensions
   if (cube.type === "pyraminx") {
     H = W / 1.1363636363636365;
   } else if (cube.type === "square1" || cube.type === "square2") {
@@ -114,7 +112,10 @@ export function projectedView(cube: Puzzle, DIM: number, format: "raster" | "svg
     colorFilter = ["d"];
   }
 
-  let stickers = cube.getAllStickers().filter(s => colorFilter.indexOf(s.color) === -1);
+  let stickers = cube.getAllStickers().filter(s => {
+    if (cube.type === "clock") return !(s instanceof FaceSticker);
+    return colorFilter.indexOf(s.color) === -1;
+  });
 
   let sideStk: { [name: string]: Sticker[] } = {};
 
@@ -139,6 +140,7 @@ export function projectedView(cube: Puzzle, DIM: number, format: "raster" | "svg
     SQ1_A2.push(BACK.rotate(CENTER, UP, PI_6 * i + PI_6 / 2).mul(1.88561808632825));
   }
 
+  // Set face names and transformations
   if (cube.type === "pyraminx") {
     faceName = ["F", "R", "D", "L"];
   } else if (cube.type === "square1" || cube.type === "square2") {
@@ -162,6 +164,32 @@ export function projectedView(cube: Puzzle, DIM: number, format: "raster" | "svg
     }
   } else if (cube.type === "supersquare1") {
     faceName = ["U", "U1", "D1", "D"];
+  } else if (cube.type === "fto") {
+    faceName = ["F1", "F2", "F3", "F4", "B1", "B2", "B3", "B4"];
+    fcTr = [];
+
+    for (let i = 0; i < 8; i += 1) {
+      fcTr.push([CENTER, RIGHT, Math.asin(0.5773502691896258), CENTER, 0]);
+    }
+  } else if (cube.type === "rubik") {
+    let unit = 2 / Math.max(ORDER.a, ORDER.b, ORDER.c);
+    let sideMult = ORDER.a === 3 && ORDER.b === 1 && ORDER.c === 3 ? 2 : 1;
+
+    fcTr = [
+      // rotate([0], [1], [2]).add([3].mul([4]))
+      [CENTER, RIGHT, PI_2, UP, (sideMult * unit * (ORDER.b + ORDER.c + 1)) / 2],
+      [CENTER, UP, -PI_2, RIGHT, (sideMult * unit * (ORDER.a + ORDER.b + 1)) / 2],
+      [CENTER, RIGHT, 0, UP, 0], /// F = no transform
+      [CENTER, LEFT, PI_2, DOWN, (sideMult * unit * (ORDER.b + ORDER.c + 1)) / 2],
+      [CENTER, UP, PI_2, LEFT, (sideMult * unit * (ORDER.a + ORDER.b + 1)) / 2],
+      [CENTER, UP, PI, RIGHT, sideMult * unit * (ORDER.a + ORDER.b + 1)],
+    ];
+  } else if (cube.type === "clock") {
+    faceName = ["FRONT", "BACK"];
+    fcTr = [
+      [CENTER, UP, 0, UP, 0], // NO action
+      [CENTER, UP, PI, RIGHT, 1],
+    ];
   }
 
   for (let i = 0, maxi = faceName.length; i < maxi; i += 1) {
@@ -178,6 +206,7 @@ export function projectedView(cube: Puzzle, DIM: number, format: "raster" | "svg
     "pyraminxCrystal",
     "redi",
     "helicopter",
+    "fto",
   ];
 
   for (let i = 0, maxi = stickers.length; i < maxi; i += 1) {
@@ -213,12 +242,29 @@ export function projectedView(cube: Puzzle, DIM: number, format: "raster" | "svg
       uv = [UP, FRONT, RIGHT, LEFT, BACK, DOWN].sort((a, b) => b.dot(uv) - a.dot(uv))[0];
     }
 
+    if (cube.type === "clock" && st.name === "pin") {
+      let ori = st.getOrientation();
+      let face = ori.z > 0 ? 0 : 1;
+      let on = Math.abs(st.getMassCenter().z) > 0.27;
+
+      let arr = sideStk[faceName[face]];
+
+      sideStk[faceName[face]].push(st);
+
+      const onColor = "black";
+      const offColor = "gray";
+
+      arr[arr.length - 1].color = on ? onColor : offColor;
+
+      continue;
+    }
+
     // Find the face of the sticker
     for (let j = 0, maxj = faceVectors.length; j < maxj && !ok; j += 1) {
       if (faceVectors[j].sub(uv).abs() < EPS) {
         if (normalCubes.indexOf(cube.type) > -1) {
           sideStk[faceName[j]].push(
-            st.rotate(fcTr[j][0], fcTr[j][1], fcTr[j][2]).add(fcTr[j][3].mul(fcTr[j][4]))
+            st.rotate(fcTr[j][0], fcTr[j][1], fcTr[j][2]).add(fcTr[j][3].mul(fcTr[j][4]), true)
           );
         } else {
           sideStk[faceName[j]].push(st);
@@ -353,6 +399,12 @@ export function projectedView(cube: Puzzle, DIM: number, format: "raster" | "svg
         }
       }
     }
+  } else if (cube.type === "fto") {
+    faceName
+      .slice(4)
+      .forEach(name => sideStk[name].forEach(st => st.rotate(RIGHT.mul(1.1), UP, PI, true)));
+  } else if (cube.type === "clock") {
+    sideStk[faceName[1]].forEach(st => st.rotate(RIGHT.mul(1.1), UP, PI, true));
   }
 
   let allStickers: Sticker[] = [];

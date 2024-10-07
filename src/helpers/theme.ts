@@ -1,9 +1,15 @@
 import { Color } from "@classes/Color";
 import { noiseSeed, perlin2 } from "./perlin";
 
-export function generateRandomImage(from: string, to: string, W: number, H: number, factor?: number): string {
-  let canvas = document.createElement('canvas');
-  let ctx = canvas.getContext('2d')!;
+export function generateRandomImage(
+  from: string,
+  to: string,
+  W: number,
+  H: number,
+  factor?: number
+): string {
+  let canvas = document.createElement("canvas");
+  let ctx = canvas.getContext("2d")!;
 
   canvas.width = W;
   canvas.height = H;
@@ -11,9 +17,9 @@ export function generateRandomImage(from: string, to: string, W: number, H: numb
   let data = ctx.createImageData(W, H);
 
   const f = factor || 0.001;
-  let rgb1 = (new Color(from)).toArray();
-  let rgb2 = (new Color(to)).toArray();
-  
+  let rgb1 = new Color(from).toArray();
+  let rgb2 = new Color(to).toArray();
+
   noiseSeed(Date.now());
 
   for (let x = 0; x < W; x += 1) {
@@ -21,9 +27,9 @@ export function generateRandomImage(from: string, to: string, W: number, H: numb
       let noise = perlin2(x * f, y * f);
       let pos = 4 * (W * y + x);
       for (let k = 0; k < 3; k += 1) {
-        data.data[ pos + k ] = rgb1[k] * (1 - noise) + rgb2[k] * noise;
+        data.data[pos + k] = rgb1[k] * (1 - noise) + rgb2[k] * noise;
       }
-      data.data[ pos + 3 ] = 255;
+      data.data[pos + 3] = 255;
     }
   }
 

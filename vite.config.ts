@@ -22,12 +22,12 @@ export default defineConfig(env => ({
     svelte(), //basicSSL(),
     //   VitePWA({
     //   manifest: {
-    //     name: "CubeDB",
+    //     name: "CubicDB",
     //     start_url: ".",
     //     display: "standalone",
     //     display_override: ['fullscreen', 'standalone'],
     //     background_color: "#080a16",
-    //     description: "The definitive app for Speedcubing",
+    //     description: "Cubing with fun",
     //     theme_color: "#080a16",
     //     categories: [
     //       "education",
@@ -104,11 +104,8 @@ export default defineConfig(env => ({
       "@storage": resolve(__dirname, "./src/storage"),
       "@workers": resolve(__dirname, "./src/workers"),
       "@lang": resolve(__dirname, "./src/lang"),
+      "@pages": resolve(__dirname, "./src/pages"),
       "@public": resolve(__dirname, "./public"),
-
-      // PREMIUM
-      "@pcomponents": resolve(__dirname, "./src/cubedb-premium/components"),
-      "@pclasses": resolve(__dirname, "./src/cubedb-premium/classes"),
     },
     // dedupe: ["three"]
   },

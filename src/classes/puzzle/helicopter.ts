@@ -3,9 +3,8 @@ import { Vector3D } from '../../classes/vector3d';
 import type { PuzzleInterface } from '@interfaces';
 import { Piece } from './Piece';
 import { Sticker } from './Sticker';
-import { assignColors, getAllStickers, random, scaleSticker } from './puzzleUtils';
-import { EPS, STANDARD_PALETTE } from '@constants';
-import { ScrambleParser } from '@classes/scramble-parser';
+import { assignColors, getAllStickers } from './puzzleUtils';
+import { STANDARD_PALETTE } from '@constants';
 import { utilscramble } from '@cstimer/scramble/utilscramble';
 
 export function HELICOPTER(): PuzzleInterface {

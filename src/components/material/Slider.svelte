@@ -12,13 +12,13 @@
   let mark: HTMLButtonElement;
   let moving = false;
   let isMounted = false;
-  let cl = '';
+  let cl = "";
   export { cl as class };
 
   function mousedownHandler(ev: MouseEvent) {
     moving = true;
     xToValue(ev.x);
-    dispatch('mousedown', ev);
+    dispatch("mousedown", ev);
   }
 
   function mouseupHandler() {
@@ -28,27 +28,27 @@
   function xToValue(x: number) {
     let box = wrapper.getBoundingClientRect();
     let percent = minmax(map(x, box.x, box.x + box.width, 0, 100), 0, 100);
-    mark.style.setProperty('--left', percent + '%');
-    value = min + percent * (max - min) / 100;
+    mark.style.setProperty("--left", percent + "%");
+    value = min + (percent * (max - min)) / 100;
   }
 
   function mousemoveHandler(ev: MouseEvent) {
-    if ( !moving ) return;
+    if (!moving) return;
     xToValue(ev.x);
   }
 
   function valueToPercent(v: number) {
-    let percent = 100 * (v - min) / (max - min);
+    let percent = (100 * (v - min)) / (max - min);
 
-    if ( percent < 0 ) {
+    if (percent < 0) {
       value = min;
       percent = 0;
-    } else if ( percent > 100 ) {
+    } else if (percent > 100) {
       value = max;
       percent = 100;
     }
 
-    mark.style.setProperty('--left', percent + '%');
+    mark.style.setProperty("--left", percent + "%");
   }
 
   function wrapperClickHandler(ev: MouseEvent) {
@@ -63,17 +63,22 @@
   $: isMounted && valueToPercent(value);
 </script>
 
-<svelte:window on:mousemove={ mousemoveHandler } on:mouseup={ mouseupHandler }/>
+<svelte:window on:mousemove={mousemoveHandler} on:mouseup={mouseupHandler} />
 
-<button bind:this={ wrapper } class={"wrapper " + (cl || '')} on:click={ wrapperClickHandler } on:mousedown={ mousedownHandler }>
-  <button bind:this={ mark } class="mark"></button>
+<button
+  bind:this={wrapper}
+  class={"wrapper " + (cl || "")}
+  on:click={wrapperClickHandler}
+  on:mousedown={mousedownHandler}
+>
+  <button bind:this={mark} class="mark"></button>
 </button>
 
 <style lang="postcss">
   .wrapper {
     @apply flex items-center w-full h-1 bg-gray-500 cursor-pointer rounded-full my-3 relative;
   }
-  
+
   .mark {
     @apply w-4 h-4 bg-current rounded-full shadow-md absolute -translate-x-1/2;
     --left: 0%;

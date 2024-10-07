@@ -1,7 +1,6 @@
 import { Puzzle } from "@classes/puzzle/puzzle";
 import { DataService } from "@stores/data.service";
 import { sha1 } from "object-hash";
-import { clockImage } from "@workers/imageGenerators/clockImage";
 import { planView } from "@workers/imageGenerators/plainView";
 import { projectedView } from "@workers/imageGenerators/projectedView";
 import { transView } from "@workers/imageGenerators/transView";
@@ -51,10 +50,7 @@ export async function pGenerateCubeBundle(
           roundCorners(cube.p, ...cube.p.roundParams);
         }
 
-        if (cube.type === "clock") {
-          cube.img = clockImage(cube, 500, format);
-          cache && dataService.cacheSaveImage(sha1(cube.options), cube.img);
-        } else if (["plan", "2d", "bird"].indexOf(cube.view) > -1) {
+        if (["plan", "2d", "bird"].indexOf(cube.view) > -1) {
           cube.img =
             cube.view === "plan"
               ? planView(cube, W, format)
@@ -70,7 +66,9 @@ export async function pGenerateCubeBundle(
       }
     }
 
+    renderer.domElement.remove();
     renderer.dispose();
+    renderer.forceContextLoss();
 
     if (inCube) return resolve([]);
     return resolve(cubes.map(c => c.img));

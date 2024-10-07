@@ -1,8 +1,8 @@
 /// <reference types="web-bluetooth" />
 
 import { Emitter } from "@classes/Emitter";
-import { GANInput } from "@components/timer/input-handlers/GAN";
-import { QiYiSmartTimerInput } from "@components/timer/input-handlers/QY-Timer";
+import { GANInput } from "@pages/Timer/components/TimerTab/adaptors/GAN";
+import { QiYiSmartTimerInput } from "@pages/Timer/components/TimerTab/adaptors/QY-Timer";
 import type {
   Algorithm,
   Solve,
@@ -15,6 +15,7 @@ import type {
   UpdateCommand,
   PDFOptions,
   ICacheDB,
+  IDBReconstruction,
 } from "@interfaces";
 import { ElectronAdaptor, IndexedDBAdaptor } from "@storage/index";
 import type { Display } from "electron";
@@ -172,6 +173,26 @@ export class DataService {
     return this.ipc.checkTutorials();
   }
 
+  addReconstruction(rec: IDBReconstruction) {
+    return this.ipc.addReconstruction(rec);
+  }
+
+  getReconstructions() {
+    return this.ipc.getReconstructions();
+  }
+
+  updateReconstructions() {
+    return this.ipc.updateReconstructions();
+  }
+
+  reconstructionsVersion() {
+    return this.ipc.reconstructionsVersion();
+  }
+
+  checkReconstructions() {
+    return this.ipc.checkReconstructions();
+  }
+
   getSolves() {
     return this.ipc.getSolves();
   }
@@ -312,10 +333,20 @@ export class DataService {
     let filters =
       inp instanceof GANInput ? GANInput.BLUETOOTH_FILTERS : QiYiSmartTimerInput.BLUETOOTH_FILTERS;
 
+    console.log("searchBluetooth");
+
     return new Promise((res, rej) => {
       navigator.bluetooth
         .requestDevice(filters)
         .then(async device => {
+          device.addEventListener("advertisementreceived", ev =>
+            console.log("[advertisementreceived]: ", ev)
+          );
+
+          device.addEventListener("gattserverdisconnected", ev =>
+            console.log("[gattserverdisconnected]: ", ev)
+          );
+
           inp.fromDevice(device).then(res).catch(rej);
         })
         .catch(rej);

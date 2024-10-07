@@ -1,9 +1,9 @@
 {
-  "name": "CubeDB",
+  "name": "CubicDB",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#080a16",
-  "description": "The definitive app for Speedcubing",
+  "description": "Cubing with fun",
   "theme_color": "#080a16",
   "categories": [
     "education",
@@ -13,32 +13,32 @@
   ],
   "icons": [
     {
-      "src": "logo-100.png",
-      "sizes": "100x100",
+      "src": "logo_x96.png",
+      "sizes": "96x96",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "logo-200.png",
-      "sizes": "200x200",
+      "src": "logo_x128.png",
+      "sizes": "128x128",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "logo-500.png",
-      "sizes": "500x500",
+      "src": "logo_x192.png",
+      "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "logo-512.png",
+      "src": "logo_x384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "logo_x512.png",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "logo-1000.png",
-      "sizes": "1000x1000",
       "type": "image/png",
       "purpose": "any maskable"
     }

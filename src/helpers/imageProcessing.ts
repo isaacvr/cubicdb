@@ -1,4 +1,4 @@
-import { isBetween, minmax } from "./math";
+import { minmax } from "./math";
 
 export interface RGBAColor {
   red: number;
@@ -33,17 +33,16 @@ interface LABColor {
   blueYellow: number;
 }
 
-export type IColorDistance = 'XYZ' | 'CMYK' | 'HSL' | 'DELTA_E' | 'RGB';
-export type IMethod = 'CLOSEST_COLOR' | 'ORDERED' | 'ERROR_DIFFUSION';
+export type IColorDistance = "XYZ" | "CMYK" | "HSL" | "DELTA_E" | "RGB";
+export type IMethod = "CLOSEST_COLOR" | "ORDERED" | "ERROR_DIFFUSION";
 
 export function convertRgbToXyz(rgbColor: RGBAColor): XYZColor {
-
   const convert = (color: number) => {
     color = color / 255;
-    color = color > 0.04045 ? Math.pow(((color + 0.055) / 1.055), 2.4) : color / 12.92;
+    color = color > 0.04045 ? Math.pow((color + 0.055) / 1.055, 2.4) : color / 12.92;
     color = color * 100;
     return color;
-  }
+  };
 
   let { red, green, blue } = rgbColor;
 
@@ -51,16 +50,16 @@ export function convertRgbToXyz(rgbColor: RGBAColor): XYZColor {
   green = convert(green);
   blue = convert(blue);
 
-  const x = (red * 0.4124564) + (green * 0.3575761) + (blue * 0.1804375);
-  const y = (red * 0.2126729) + (green * 0.7151522) + (blue * 0.0721750);
-  const z = (red * 0.0193339) + (green * 0.1191920) + (blue * 0.9503041);
+  const x = red * 0.4124564 + green * 0.3575761 + blue * 0.1804375;
+  const y = red * 0.2126729 + green * 0.7151522 + blue * 0.072175;
+  const z = red * 0.0193339 + green * 0.119192 + blue * 0.9503041;
 
   return {
     x,
     y,
     z,
   };
-};
+}
 
 export function convertRgbToCmyk(rgbColor: RGBAColor): CMYKColor {
   const { red, green, blue } = rgbColor;
@@ -83,7 +82,7 @@ export function convertRgbToCmyk(rgbColor: RGBAColor): CMYKColor {
     yellow,
     key,
   };
-};
+}
 
 export function convertRgbToHsl(rgbcolor: RGBAColor): HSLColor {
   let { red, green, blue } = rgbcolor;
@@ -105,7 +104,8 @@ export function convertRgbToHsl(rgbcolor: RGBAColor): HSLColor {
     saturation = 0;
   } else {
     const difference = maximum - minimum;
-    saturation = lightness > 0.5 ? difference / (2 - maximum - minimum) : difference / (maximum + minimum);
+    saturation =
+      lightness > 0.5 ? difference / (2 - maximum - minimum) : difference / (maximum + minimum);
     switch (maximum) {
       case red:
         hue = (green - blue) / difference + (green < blue ? 6 : 0);
@@ -131,10 +131,11 @@ export function convertRgbToHsl(rgbcolor: RGBAColor): HSLColor {
 export function convertRgbToLab(rgbColor: RGBAColor) {
   const xyzColor = convertRgbToXyz(rgbColor);
   return convertXyzToLab(xyzColor);
-};
+}
 
 export function convertXyzToLab(xyzColor: XYZColor): LABColor {
-  const adjust = (value: number) => value > 0.008856 ? Math.pow(value, (1 / 3)) : (7.787 * value) + (16 / 116);
+  const adjust = (value: number) =>
+    value > 0.008856 ? Math.pow(value, 1 / 3) : 7.787 * value + 16 / 116;
 
   let { x, y, z } = xyzColor;
   // using 10o Observer (CIE 1964)
@@ -151,7 +152,7 @@ export function convertXyzToLab(xyzColor: XYZColor): LABColor {
   z = adjust(z);
 
   // step 3
-  const lightness = (116 * y) - 16;
+  const lightness = 116 * y - 16;
   const redGreen = 500 * (x - y);
   const blueYellow = 200 * (y - z);
 
@@ -160,19 +161,19 @@ export function convertXyzToLab(xyzColor: XYZColor): LABColor {
     redGreen,
     blueYellow,
   };
-};
+}
 
 export function calculateDeltaE2000(labColor1: LABColor, labColor2: LABColor) {
   const { lightness: lightness1, redGreen: redGreen1, blueYellow: blueYellow1 } = labColor1;
   const { lightness: lightness2, redGreen: redGreen2, blueYellow: blueYellow2 } = labColor2;
 
   function rad2deg(rad: number) {
-    return 360 * rad / (2 * Math.PI);
-  };
+    return (360 * rad) / (2 * Math.PI);
+  }
 
   function deg2rad(deg: number) {
     return (2 * Math.PI * deg) / 360;
-  };
+  }
 
   // Start Equation
   // Equation exist on the following URL http://www.brucelindbloom.com/index.html?Eqn_DeltaE_CIE2000.html
@@ -199,11 +200,12 @@ export function calculateDeltaE2000(labColor1: LABColor, labColor2: LABColor) {
   }
 
   const avghp = Math.abs(h1p - h2p) > 180 ? (h1p + h2p + 360) / 2 : (h1p + h2p) / 2;
-  const t = 1 -
-    0.17 * Math.cos(deg2rad(avghp - 30))
-    + 0.24 * Math.cos(deg2rad(2 * avghp))
-    + 0.32 * Math.cos(deg2rad(3 * avghp + 6))
-    - 0.2 * Math.cos(deg2rad(4 * avghp - 63));
+  const t =
+    1 -
+    0.17 * Math.cos(deg2rad(avghp - 30)) +
+    0.24 * Math.cos(deg2rad(2 * avghp)) +
+    0.32 * Math.cos(deg2rad(3 * avghp + 6)) -
+    0.2 * Math.cos(deg2rad(4 * avghp - 63));
 
   let deltahp = h2p - h1p;
 
@@ -219,23 +221,29 @@ export function calculateDeltaE2000(labColor1: LABColor, labColor2: LABColor) {
 
   deltahp = 2 * Math.sqrt(c1p * c2p) * Math.sin(deg2rad(deltahp) / 2);
 
-  const sl = 1 + ((0.015 * Math.pow(avgL - 50, 2)) / Math.sqrt(20 + Math.pow(avgL - 50, 2)));
+  const sl = 1 + (0.015 * Math.pow(avgL - 50, 2)) / Math.sqrt(20 + Math.pow(avgL - 50, 2));
   const sc = 1 + 0.045 * avgCp;
   const sh = 1 + 0.015 * avgCp * t;
-  const deltaro = 30 * Math.exp(-(Math.pow((avghp - 275) / 25, 2)));
+  const deltaro = 30 * Math.exp(-Math.pow((avghp - 275) / 25, 2));
   const rc = 2 * Math.sqrt(Math.pow(avgCp, 7) / (Math.pow(avgCp, 7) + Math.pow(25, 7)));
   const rt = -rc * Math.sin(2 * deg2rad(deltaro));
   const kl = 1;
   const kc = 1;
   const kh = 1;
 
-  return Math.sqrt(Math.pow(deltalp / (kl * sl), 2)
-    + Math.pow(deltacp / (kc * sc), 2)
-    + Math.pow(deltahp / (kh * sh), 2)
-    + rt * (deltacp / (kc * sc)) * (deltahp / (kh * sh)));
-};
+  return Math.sqrt(
+    Math.pow(deltalp / (kl * sl), 2) +
+      Math.pow(deltacp / (kc * sc), 2) +
+      Math.pow(deltahp / (kh * sh), 2) +
+      rt * (deltacp / (kc * sc)) * (deltahp / (kh * sh))
+  );
+}
 
-export function getClosestColorInThePalette(referenceColor: RGBAColor, palette: RGBAColor[], algorithm: IColorDistance) {
+export function getClosestColorInThePalette(
+  referenceColor: RGBAColor,
+  palette: RGBAColor[],
+  algorithm: IColorDistance
+) {
   const key = `${referenceColor.red},${referenceColor.green},${referenceColor.blue}`;
 
   let closestColor: RGBAColor = {
@@ -248,49 +256,66 @@ export function getClosestColorInThePalette(referenceColor: RGBAColor, palette: 
   let shortestDistance = Number.MAX_SAFE_INTEGER;
 
   palette.forEach(paletteColor => {
-    if (shortestDistance === 0)
-      return;
+    if (shortestDistance === 0) return;
     let distance;
     switch (algorithm) {
-      case 'XYZ':
+      case "XYZ":
         const { x: paletteX, y: paletteY, z: paletteZ } = convertRgbToXyz(paletteColor);
         const { x: referenceX, y: referenceY, z: referenceZ } = convertRgbToXyz(referenceColor);
         distance = Math.sqrt(
-          Math.pow(referenceX - paletteX, 2)
-          + Math.pow(referenceY - paletteY, 2)
-          + Math.pow(referenceZ - paletteZ, 2)
+          Math.pow(referenceX - paletteX, 2) +
+            Math.pow(referenceY - paletteY, 2) +
+            Math.pow(referenceZ - paletteZ, 2)
         );
         break;
-      case 'CMYK':
-        const { cyan: paletteCyan, magenta: paletteMagenta, yellow: paletteYellow, key: paletteKey } = convertRgbToCmyk(paletteColor);
-        const { cyan: referenceCyan, magenta: referenceMagenta, yellow: referenceYellow, key: referenceKey } = convertRgbToCmyk(referenceColor);
+      case "CMYK":
+        const {
+          cyan: paletteCyan,
+          magenta: paletteMagenta,
+          yellow: paletteYellow,
+          key: paletteKey,
+        } = convertRgbToCmyk(paletteColor);
+        const {
+          cyan: referenceCyan,
+          magenta: referenceMagenta,
+          yellow: referenceYellow,
+          key: referenceKey,
+        } = convertRgbToCmyk(referenceColor);
         distance = Math.sqrt(
-          Math.pow(referenceCyan - paletteCyan, 2)
-          + Math.pow(referenceMagenta - paletteMagenta, 2)
-          + Math.pow(referenceYellow - paletteYellow, 2)
-          + Math.pow(referenceKey - paletteKey, 2)
+          Math.pow(referenceCyan - paletteCyan, 2) +
+            Math.pow(referenceMagenta - paletteMagenta, 2) +
+            Math.pow(referenceYellow - paletteYellow, 2) +
+            Math.pow(referenceKey - paletteKey, 2)
         );
         break;
-      case 'HSL':
-        const { hue: paletteHue, saturation: paletteSaturation, lightness: paletteLightness } = convertRgbToHsl(paletteColor);
-        const { hue: referenceHue, saturation: referenceSaturation, lightness: referenceLightness } = convertRgbToHsl(referenceColor);
+      case "HSL":
+        const {
+          hue: paletteHue,
+          saturation: paletteSaturation,
+          lightness: paletteLightness,
+        } = convertRgbToHsl(paletteColor);
+        const {
+          hue: referenceHue,
+          saturation: referenceSaturation,
+          lightness: referenceLightness,
+        } = convertRgbToHsl(referenceColor);
         distance = Math.sqrt(
-          Math.pow(referenceHue - paletteHue, 2)
-          + Math.pow(referenceSaturation - paletteSaturation, 2)
-          + Math.pow(referenceLightness - paletteLightness, 2)
+          Math.pow(referenceHue - paletteHue, 2) +
+            Math.pow(referenceSaturation - paletteSaturation, 2) +
+            Math.pow(referenceLightness - paletteLightness, 2)
         );
         break;
-      case 'DELTA_E':
+      case "DELTA_E":
         const paletteLabColor = convertRgbToLab(paletteColor);
         const referenceLabColor = convertRgbToLab(referenceColor);
         distance = calculateDeltaE2000(paletteLabColor, referenceLabColor);
         break;
-      case 'RGB':
+      case "RGB":
       default:
         distance = Math.sqrt(
-          Math.pow(paletteColor.red - referenceColor.red, 2)
-          + Math.pow(paletteColor.green - referenceColor.green, 2)
-          + Math.pow(paletteColor.blue - referenceColor.blue, 2)
+          Math.pow(paletteColor.red - referenceColor.red, 2) +
+            Math.pow(paletteColor.green - referenceColor.green, 2) +
+            Math.pow(paletteColor.blue - referenceColor.blue, 2)
         );
         break;
     }
@@ -302,7 +327,7 @@ export function getClosestColorInThePalette(referenceColor: RGBAColor, palette: 
   });
 
   return closestColor;
-};
+}
 
 export function applyDithering(noise: RGBAColor[][], color: RGBAColor, x: number, y: number) {
   const ditheredColor: RGBAColor = { ...color };
@@ -321,8 +346,8 @@ export function applyDithering(noise: RGBAColor[][], color: RGBAColor, x: number
 }
 
 export function getPixelIndex(imageData: ImageData, x: number, y: number) {
-  return ((imageData.width * y) + x) * 4;
-};
+  return (imageData.width * y + x) * 4;
+}
 
 export function getPixelFromImageData(imageData: ImageData, x: number, y: number) {
   const index = getPixelIndex(imageData, x, y);
@@ -335,7 +360,7 @@ export function getPixelFromImageData(imageData: ImageData, x: number, y: number
     x,
     y,
   };
-};
+}
 
 export function getRgbFromImageData(imageData: ImageData, x: number, y: number): RGBAColor {
   const pixelObject = getPixelFromImageData(imageData, x, y);
@@ -349,11 +374,17 @@ export function getRgbFromImageData(imageData: ImageData, x: number, y: number):
     green,
     blue,
     alpha,
-    name: '',
-  }
+    name: "",
+  };
 }
 
-export function calculateAverageColor(imageData: RGBAColor[][], _x: number, _y: number, blockX: number, blockY: number): RGBAColor {
+export function calculateAverageColor(
+  imageData: RGBAColor[][],
+  _x: number,
+  _y: number,
+  blockX: number,
+  blockY: number
+): RGBAColor {
   let redSum = 0;
   let greenSum = 0;
   let blueSum = 0;
@@ -376,9 +407,16 @@ export function calculateAverageColor(imageData: RGBAColor[][], _x: number, _y: 
     blue: Math.round(blueSum / counter),
     alpha: Math.round(alphaSum / counter),
   };
-};
+}
 
-export function recordNoise(noise: RGBAColor[][], color1: RGBAColor, color2: RGBAColor, x: number, y: number, block: number) {
+export function recordNoise(
+  noise: RGBAColor[][],
+  color1: RGBAColor,
+  color2: RGBAColor,
+  x: number,
+  y: number,
+  block: number
+) {
   const redError = color1.red - color2.red;
   const greenError = color1.green - color2.green;
   const blueError = color1.blue - color2.blue;
@@ -386,48 +424,47 @@ export function recordNoise(noise: RGBAColor[][], color1: RGBAColor, color2: RGB
     red: 0,
     green: 0,
     blue: 0,
-    alpha: 255
-  }
+    alpha: 255,
+  };
 
-  if ( !Object.hasOwn(noise, y) ) {
+  if (!Object.hasOwn(noise, y)) {
     noise[y] = [];
   }
 
-  if ( !Object.hasOwn(noise, y + block) ) {
+  if (!Object.hasOwn(noise, y + block)) {
     noise[y + block] = [];
   }
 
-  if ( !Object.hasOwn(noise[y], x + block) ) {
+  if (!Object.hasOwn(noise[y], x + block)) {
     noise[y][x + block] = { ...noiseObject };
   }
 
-  if ( !Object.hasOwn(noise[y + block], x - block) ) {
+  if (!Object.hasOwn(noise[y + block], x - block)) {
     noise[y + block][x - block] = { ...noiseObject };
   }
 
-  if ( !Object.hasOwn(noise[y + block], x) ) {
+  if (!Object.hasOwn(noise[y + block], x)) {
     noise[y + block][x] = { ...noiseObject };
   }
 
-  if ( !Object.hasOwn(noise[y + block], x + block) ) {
+  if (!Object.hasOwn(noise[y + block], x + block)) {
     noise[y + block][x + block] = { ...noiseObject };
   }
 
-  noise[y][x + block].red += redError * 7 / 16;
-  noise[y][x + block].green += greenError * 7 / 16;
-  noise[y][x + block].blue += blueError * 7 / 16;
-  noise[y + block][x - block].red += redError * 3 / 16;
-  noise[y + block][x - block].green += greenError * 3 / 16;
-  noise[y + block][x - block].blue += blueError * 3 / 16;
-  noise[y + block][x].red += redError * 5 / 16;
-  noise[y + block][x].green += greenError * 5 / 16;
-  noise[y + block][x].blue += blueError * 5 / 16;
+  noise[y][x + block].red += (redError * 7) / 16;
+  noise[y][x + block].green += (greenError * 7) / 16;
+  noise[y][x + block].blue += (blueError * 7) / 16;
+  noise[y + block][x - block].red += (redError * 3) / 16;
+  noise[y + block][x - block].green += (greenError * 3) / 16;
+  noise[y + block][x - block].blue += (blueError * 3) / 16;
+  noise[y + block][x].red += (redError * 5) / 16;
+  noise[y + block][x].green += (greenError * 5) / 16;
+  noise[y + block][x].blue += (blueError * 5) / 16;
   noise[y + block][x + block].red += redError / 16;
   noise[y + block][x + block].green += greenError / 16;
   noise[y + block][x + block].blue += blueError / 16;
 
   return noise;
-
 }
 
 export function getLuminance(color: RGBAColor) {
@@ -436,9 +473,9 @@ export function getLuminance(color: RGBAColor) {
 
 export function getClosesLuminanceColor(color: RGBAColor, ranges: number[]): number {
   let value = getLuminance(color);
-  
+
   for (let i = 0, maxi = ranges.length - 1; i < maxi; i += 1) {
-    if ( ranges[i] <= value && value <= ranges[i + 1] ) {
+    if (ranges[i] <= value && value <= ranges[i + 1]) {
       return i;
     }
   }
@@ -450,7 +487,12 @@ export function cloneRGBMatrix(imageData: RGBAColor[][]): RGBAColor[][] {
   return imageData.map(row => row.map((color): RGBAColor => ({ ...color })));
 }
 
-export function orderedDither(imageData: RGBAColor[][], palette: RGBAColor[], ratio: number, algorithm: IColorDistance) {
+export function orderedDither(
+  imageData: RGBAColor[][],
+  palette: RGBAColor[],
+  ratio: number,
+  algorithm: IColorDistance
+) {
   let data: RGBAColor[][] = cloneRGBMatrix(imageData);
   let w = imageData[0].length;
   let h = imageData.length;
@@ -458,9 +500,8 @@ export function orderedDither(imageData: RGBAColor[][], palette: RGBAColor[], ra
     [1, 9, 3, 11],
     [13, 5, 15, 7],
     [4, 12, 2, 10],
-    [16, 8, 14, 6]
+    [16, 8, 14, 6],
   ];
-
 
   for (let y = 0; y < h; y += 1) {
     for (let x = 0; x < w; x += 1) {
@@ -478,24 +519,29 @@ export function orderedDither(imageData: RGBAColor[][], palette: RGBAColor[], ra
   return data;
 }
 
-export function errorDiffusionDither(imageData: ImageData, palette: RGBAColor[], algorithm: IColorDistance, ratioDenom = 3) {
+export function errorDiffusionDither(
+  imageData: ImageData,
+  palette: RGBAColor[],
+  algorithm: IColorDistance,
+  ratioDenom = 3
+) {
   let d = new Uint8ClampedArray(imageData.data);
-  let out = getColorMatrix( imageData );
+  let out = getColorMatrix(imageData);
   let w = imageData.width;
   let h = imageData.height;
   let step = 1;
-  let ratioDenomScaled = 1.5 + (ratioDenom / 5 * (15 - 1.5));
+  let ratioDenomScaled = 1.5 + (ratioDenom / 5) * (15 - 1.5);
   let ratio = 1 / (ratioDenomScaled * 4);
 
   let $i = function (x: number, y: number) {
-    return (4 * x) + (4 * y * w);
+    return 4 * x + 4 * y * w;
   };
 
   let r, g, b, a, q, i, approx, tr, tg, tb, dx, dy, di;
 
   for (let y = 0; y < h; y += step) {
     for (let x = 0; x < w; x += step) {
-      i = (4 * x) + (4 * y * w);
+      i = 4 * x + 4 * y * w;
 
       // Define bytes
       r = i;
@@ -542,9 +588,9 @@ export function getColorMatrix(data: ImageData): RGBAColor[][] {
 
   for (let y = 0; y < height; y += 1) {
     let row: RGBAColor[] = [];
-    
+
     for (let x = 0; x < width; x += 1) {
-      row.push( getRgbFromImageData(data, x, y) );
+      row.push(getRgbFromImageData(data, x, y));
     }
 
     res.push(row);
@@ -553,8 +599,14 @@ export function getColorMatrix(data: ImageData): RGBAColor[][] {
   return res;
 }
 
-export function closestColorMethod(imageData: RGBAColor[][], palette: RGBAColor[],
-  algorithm: IColorDistance, ranges: number[], dithering: boolean, useLuminance: boolean) {
+export function closestColorMethod(
+  imageData: RGBAColor[][],
+  palette: RGBAColor[],
+  algorithm: IColorDistance,
+  ranges: number[],
+  dithering: boolean,
+  useLuminance: boolean
+) {
   let width = imageData[0].length;
   let height = imageData.length;
   let noise: RGBAColor[][] = [];
@@ -566,14 +618,14 @@ export function closestColorMethod(imageData: RGBAColor[][], palette: RGBAColor[
     for (let x = 0; x < width; x += 1) {
       let averageColor: RGBAColor = imageData[y][x];
 
-      if ( dithering ) {
+      if (dithering) {
         averageColor = applyDithering(noise, averageColor, x, y);
       }
 
       let referenceColor: RGBAColor = { ...averageColor };
 
       const closestColor = useLuminance
-        ? palette[ getClosesLuminanceColor(referenceColor, ranges) ]
+        ? palette[getClosesLuminanceColor(referenceColor, ranges)]
         : getClosestColorInThePalette(referenceColor, palette, algorithm);
 
       row.push(closestColor);
@@ -588,19 +640,24 @@ export function closestColorMethod(imageData: RGBAColor[][], palette: RGBAColor[
 }
 
 export async function pixelate(
-  cnv: HTMLCanvasElement, ctx: CanvasRenderingContext2D, method: IMethod,
-  algorithm: IColorDistance, dithering: boolean, useLuminance: boolean, ratioDenom: number
+  cnv: HTMLCanvasElement,
+  ctx: CanvasRenderingContext2D,
+  method: IMethod,
+  algorithm: IColorDistance,
+  dithering: boolean,
+  useLuminance: boolean,
+  ratioDenom: number
 ) {
   const palette: RGBAColor[] = [
-    { name: "Blue", red: 61,  green: 129, blue: 246, alpha: 255 },
-    { name: "Red", red: 220, green: 66,  blue: 47, alpha: 255 },
+    { name: "Blue", red: 61, green: 129, blue: 246, alpha: 255 },
+    { name: "Red", red: 220, green: 66, blue: 47, alpha: 255 },
     { name: "Orange", red: 232, green: 112, blue: 0, alpha: 255 },
     { name: "Yellow", red: 255, green: 235, blue: 59, alpha: 255 },
     { name: "White", red: 230, green: 230, blue: 230, alpha: 255 },
   ];
-  
-  const ranges = [ 0, 91, 121, 151, 180, 255 ];
-  
+
+  const ranges = [0, 91, 121, 151, 180, 255];
+
   // const palette: RGBColor[] = [
   //   { red: 182, green: 18, blue: 52 },
   //   { red: 0, green: 70, blue: 173 },
@@ -612,13 +669,13 @@ export async function pixelate(
 
   const { height, width } = cnv;
   let imageData = ctx.getImageData(0, 0, width, height);
-  let data = getColorMatrix( imageData );
-  
-  switch( method ) {
-    case 'ERROR_DIFFUSION': {
+  let data = getColorMatrix(imageData);
+
+  switch (method) {
+    case "ERROR_DIFFUSION": {
       return errorDiffusionDither(imageData, palette, algorithm, ratioDenom);
     }
   }
 
   return closestColorMethod(data, palette, algorithm, ranges, dithering, useLuminance);
-};
+}

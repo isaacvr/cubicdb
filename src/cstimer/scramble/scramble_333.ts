@@ -1,8 +1,39 @@
-import { getEasyXCross } from '@cstimer/lib/cross';
-import { getNPerm, setNPerm, set8Perm, getNParity, rn, rndEl, valuedArray, idxArray } from '../lib/mathlib';
-import { Search } from '../lib/min2phase';
-import { getEasyCross } from '../tools/cross';
-import { fixCase, regScrambler } from './scramble';
+/**
+ * Copyright (C) 2023  Shuang Chen
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+  -----------------------------------------------------------------------
+  
+  Modified by Isaac Vega <isaacvega1996@gmail.com>
+ */
+
+import { getEasyXCross } from "@cstimer/lib/cross";
+import {
+  getNPerm,
+  setNPerm,
+  set8Perm,
+  getNParity,
+  rn,
+  rndEl,
+  valuedArray,
+  idxArray,
+} from "../lib/mathlib";
+import { Search } from "../lib/min2phase";
+import { getEasyCross } from "../tools/cross";
+import { fixCase, regScrambler } from "./scramble";
+import { between } from "@helpers/math";
 
 const Ux1 = 0;
 const Ux2 = 1;
@@ -27,7 +58,7 @@ function $setFlip(obj: CubieCube1, idx: number) {
   let i, parity;
   parity = 0;
   for (i = 10; i >= 0; --i) {
-    parity ^= obj.eo[i] = (idx & 1);
+    parity ^= obj.eo[i] = idx & 1;
     idx >>= 1;
   }
   obj.eo[11] = parity;
@@ -52,7 +83,7 @@ function CornMult(a: CubieCube1, b: CubieCube1, prod: CubieCube1) {
     ori = oriA;
     ori += oriA < 3 ? oriB : 6 - oriB;
     ori %= 3;
-    ((oriA >= 3) !== (oriB >= 3)) && (ori += 3);
+    oriA >= 3 !== oriB >= 3 && (ori += 3);
     prod.co[corn] = ori;
   }
 }
@@ -67,7 +98,7 @@ class CubieCube {
     this.cp = [0, 1, 2, 3, 4, 5, 6, 7];
     this.co = [0, 0, 0, 0, 0, 0, 0, 0];
     this.ep = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
-    this.eo = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]; 
+    this.eo = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
   }
 }
 
@@ -76,20 +107,19 @@ class CubieCube1 {
   co: number[];
   ep: number[];
   eo: number[];
-  
+
   constructor(cperm: number, twist: number, eperm: number, flip: number) {
     this.cp = [0, 1, 2, 3, 4, 5, 6, 7];
     this.co = [0, 0, 0, 0, 0, 0, 0, 0];
     this.ep = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
     this.eo = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-    
+
     set8Perm(this.cp, cperm);
     $setTwist(this, twist);
     setNPerm(this.ep, eperm, 12);
     $setFlip(this, flip);
   }
 }
-
 
 function EdgeMult(a: CubieCube1, b: CubieCube1, prod: CubieCube1) {
   let ed;
@@ -102,10 +132,10 @@ function EdgeMult(a: CubieCube1, b: CubieCube1, prod: CubieCube1) {
 let ret = false;
 
 function initMove() {
-  if ( ret ) {
+  if (ret) {
     return;
   }
-  
+
   ret = true;
   let a, p;
   moveCube[0] = new CubieCube1(15120, 0, 119750400, 0);
@@ -116,7 +146,7 @@ function initMove() {
   moveCube[15] = new CubieCube1(224, 137, 328552, 137);
   for (a = 0; a < 18; a += 3) {
     for (p = 0; p < 2; ++p) {
-      moveCube[a + p + 1] = new CubieCube;
+      moveCube[a + p + 1] = new CubieCube();
       EdgeMult(moveCube[a + p], moveCube[a], moveCube[a + p + 1]);
       CornMult(moveCube[a + p], moveCube[a], moveCube[a + p + 1]);
     }
@@ -132,7 +162,7 @@ let cornerFacelet = [
   [29, 26, 15],
   [27, 44, 24],
   [33, 53, 42],
-  [35, 17, 51]
+  [35, 17, 51],
 ];
 let edgeFacelet = [
   [5, 10],
@@ -146,7 +176,7 @@ let edgeFacelet = [
   [23, 12],
   [21, 41],
   [50, 39],
-  [48, 14]
+  [48, 14],
 ];
 
 function toFaceCube(cc: CubieCube1) {
@@ -159,18 +189,15 @@ function toFaceCube(cc: CubieCube1) {
   for (c = 0; c < 8; ++c) {
     j = cc.cp[c];
     ori = cc.co[c];
-    for (n = 0; n < 3; ++n)
-      f[cornerFacelet[c][(n + ori) % 3]] = ts[~~(cornerFacelet[j][n] / 9)];
+    for (n = 0; n < 3; ++n) f[cornerFacelet[c][(n + ori) % 3]] = ts[~~(cornerFacelet[j][n] / 9)];
   }
   for (e = 0; e < 12; ++e) {
     j = cc.ep[e];
     ori = cc.eo[e];
-    for (n = 0; n < 2; ++n)
-      f[edgeFacelet[e][(n + ori) % 2]] = ts[~~(edgeFacelet[j][n] / 9)];
+    for (n = 0; n < 2; ++n) f[edgeFacelet[e][(n + ori) % 2]] = ts[~~(edgeFacelet[j][n] / 9)];
   }
   return String.fromCharCode.apply(null, f);
 }
-
 
 // SCRAMBLERS
 // @ts-ignore
@@ -182,10 +209,13 @@ export function getRandomScramble() {
 
 export function getFMCScramble() {
   let scramble = "",
-    axis1, axis2, axisl1, axisl2;
+    axis1,
+    axis2,
+    axisl1,
+    axisl2;
   do {
     scramble = getRandomScramble();
-    let moveseq = scramble.split(' ');
+    let moveseq = scramble.split(" ");
     if (moveseq.length < 3) {
       continue;
     }
@@ -194,15 +224,18 @@ export function getFMCScramble() {
     axisl1 = moveseq[moveseq.length - 2][0];
     axisl2 = moveseq[moveseq.length - 3][0];
   } while (
-    axis1 == 'F' || axis1 == 'B' && axis2 == 'F' ||
-    axisl1 == 'R' || axisl1 == 'L' && axisl2 == 'R');
+    axis1 == "F" ||
+    (axis1 == "B" && axis2 == "F") ||
+    axisl1 == "R" ||
+    (axisl1 == "L" && axisl2 == "R")
+  );
   return "R' U' F " + scramble + "R' U' F";
 }
 
 function cntU(b: any) {
   let c, a;
-  for (c = 0, a = 0; a < b.length; a++) - 1 == b[a] && c++;
-  return c
+  for (c = 0, a = 0; a < b.length; a++) -1 == b[a] && c++;
+  return c;
 }
 
 function fixOri(arr: number[], cntU: number, base: number) {
@@ -265,7 +298,7 @@ function fixPerm(arr: number[], cntU: number, parity: number) {
 
 //arr: 53 bit integer
 function parseMask(arr: any, length: number) {
-  if ('number' !== typeof arr) {
+  if ("number" !== typeof arr) {
     return arr;
   }
   let ret = [];
@@ -277,27 +310,22 @@ function parseMask(arr: any, length: number) {
   return ret;
 }
 
-let aufsuff = [
-  [],
-  [Ux1],
-  [Ux2],
-  [Ux3]
-];
+let aufsuff = [[], [Ux1], [Ux2], [Ux3]];
 
-let rlpresuff = [
-  [],
-  [Rx1, Lx3],
-  [Rx2, Lx2],
-  [Rx3, Lx1]
-];
+let rlpresuff = [[], [Rx1, Lx3], [Rx2, Lx2], [Rx3, Lx1]];
 
 let rlappsuff = ["", "x'", "x2", "x"];
 
-let emptysuff = [
-  []
-];
+let emptysuff = [[]];
 
-function getAnyScramble(_ep: any, _eo: any, _cp: number, _co: number, _rndapp?: any, _rndpre?: any) {
+function getAnyScramble(
+  _ep: any,
+  _eo: any,
+  _cp: number,
+  _co: number,
+  _rndapp?: any,
+  _rndpre?: any
+) {
   initMove();
   _rndapp = _rndapp || emptysuff;
   _rndpre = _rndpre || emptysuff;
@@ -333,7 +361,7 @@ function getAnyScramble(_ep: any, _eo: any, _cp: number, _co: number, _rndapp?: 
       continue;
     }
     let cc = new CubieCube1(ncp, nco, nep, neo);
-    let cc2 = new CubieCube;
+    let cc2 = new CubieCube();
     let rndpre = rndEl(_rndpre);
     let rndapp = rndEl(_rndapp);
     for (let i = 0; i < rndpre.length; i++) {
@@ -355,7 +383,7 @@ function getAnyScramble(_ep: any, _eo: any, _cp: number, _co: number, _rndapp?: 
     let search0 = new Search();
     solution = search0.solution(posit, 21, 1e9, 50, 2);
   } while (solution.length <= 3);
-  return solution.replace(/ +/g, ' ');
+  return solution.replace(/ +/g, " ");
 }
 
 export function getEdgeScramble() {
@@ -370,7 +398,7 @@ export function getLLScramble() {
   return getAnyScramble(0xba987654ffff, 0x00000000ffff, 0x7654ffff, 0x0000ffff);
 }
 
-let f2l_map: any[] = [
+const f2l_map: any[] = [
   0x2000, // Easy-01
   0x1011, // Easy-02
   0x2012, // Easy-03
@@ -412,28 +440,101 @@ let f2l_map: any[] = [
   0x2408, // ECP-39
   0x1418, // ECP-40
   0x2418, // ECP-41
-  0x0408	// Solved-42
+  0x0408, // Solved-42
 ];
 
-let f2lprobs = [
-  4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 1, 1, 1, 1, 1, 1
+const f2lprobs = [
+  4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+  4, 4, 4, 1, 1, 1, 1, 1, 1,
 ];
 
-let f2lfilter = [
-  'Easy-01', 'Easy-02', 'Easy-03', 'Easy-04', 'RE-05', 'RE-06', 'RE-07', 'RE-08', 'REFC-09', 'REFC-10', 'REFC-11', 'REFC-12', 'REFC-13', 'REFC-14', 'SPGO-15', 'SPGO-16', 'SPGO-17', 'SPGO-18', 'PMS-19', 'PMS-20', 'PMS-21', 'PMS-22', 'Weird-23', 'Weird-24', 'CPEU-25', 'CPEU-26', 'CPEU-27', 'CPEU-28', 'CPEU-29', 'CPEU-30', 'EPCU-31', 'EPCU-32', 'EPCU-33', 'EPCU-34', 'EPCU-35', 'EPCU-36', 'ECP-37', 'ECP-38', 'ECP-39', 'ECP-40', 'ECP-41', 'Solved-42'
+const f2lfilter = [
+  "Easy-01",
+  "Easy-02",
+  "Easy-03",
+  "Easy-04",
+  "RE-05",
+  "RE-06",
+  "RE-07",
+  "RE-08",
+  "REFC-09",
+  "REFC-10",
+  "REFC-11",
+  "REFC-12",
+  "REFC-13",
+  "REFC-14",
+  "SPGO-15",
+  "SPGO-16",
+  "SPGO-17",
+  "SPGO-18",
+  "PMS-19",
+  "PMS-20",
+  "PMS-21",
+  "PMS-22",
+  "Weird-23",
+  "Weird-24",
+  "CPEU-25",
+  "CPEU-26",
+  "CPEU-27",
+  "CPEU-28",
+  "CPEU-29",
+  "CPEU-30",
+  "EPCU-31",
+  "EPCU-32",
+  "EPCU-33",
+  "EPCU-34",
+  "EPCU-35",
+  "EPCU-36",
+  "ECP-37",
+  "ECP-38",
+  "ECP-39",
+  "ECP-40",
+  "ECP-41",
+  "Solved-42",
 ];
 
 export function getLSLLScramble(type: any, length: any, cases: any) {
-  let caze = f2l_map[ fixCase(cases, f2lprobs) ];
+  let caze = f2l_map[fixCase(cases, f2lprobs)];
   let ep = Math.pow(16, caze & 0xf);
-  let eo = 0xf ^ (caze >> 4 & 1);
-  let cp = Math.pow(16, caze >> 8 & 0xf);
-  let co = 0xf ^ (caze >> 12 & 3);
-  return getAnyScramble(0xba9f7654ffff - 7 * ep, 0x000f0000ffff - eo * ep, 0x765fffff - 0xb * cp, 0x000fffff - co * cp);
+  let eo = 0xf ^ ((caze >> 4) & 1);
+  let cp = Math.pow(16, (caze >> 8) & 0xf);
+  let co = 0xf ^ ((caze >> 12) & 3);
+  return getAnyScramble(
+    0xba9f7654ffff - 7 * ep,
+    0x000f0000ffff - eo * ep,
+    0x765fffff - 0xb * cp,
+    0x000fffff - co * cp
+  );
 }
 
-export function getF2LScramble() {
-  return getAnyScramble(0xffff7654ffff, 0xffff0000ffff, 0xffffffff, 0xffffffff);
+const crossProbs = [
+  [0xffffffff3210, 0xffffffff0000],
+  [0xbff8fff4fff0, 0x0ff0fff0fff0],
+  [0xff98ff5fff1f, 0xff00ff0fff0f],
+  [0xffff7654ffff, 0xffff0000ffff],
+  [0xfa9ff6fff2ff, 0xf00ff0fff0ff],
+  [0xbaff7fff3fff, 0x00ff0fff0fff],
+];
+
+const crossFilter = ["U", "R", "F", "D", "L", "B"];
+
+export function getF2LScramble(_type: any, _length: any, prob: any) {
+  /*
+  0xabcdefghijkl
+
+  a = BR    b = BL    c = FL    d = FR
+  e = DB    f = DL    g = DF    h = DR
+  i = UB    j = UL    k = UF    l = UR
+
+  */
+  let p = between(prob || 0, 0, crossProbs.length - 1);
+  let _prob = crossProbs[p];
+
+  if (typeof prob != "number" || prob < 0 || prob >= crossProbs.length) {
+    _prob = rndEl(crossProbs);
+  }
+
+  return getAnyScramble(_prob[0], _prob[1], 0xffffffff, 0xffffffff);
 }
 
 let zbll_map = [
@@ -477,57 +578,102 @@ let zbll_map = [
   [0x3021, 0x1101], // aS-FRLF
   [0x3210, 0x1101], // aS-LFRF
   [0x3201, 0x1101], // aS-RFFL
-  [0xffff, 0x0000] // PLL
+  [0xffff, 0x0000], // PLL
 ];
 
-let zbprobs = [1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3];
+let zbprobs = [
+  1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+  2, 2, 2, 2, 2, 2, 2, 3,
+];
 
-let zbfilter = ['H-BBFF', 'H-FBFB', 'H-RFLF', 'H-RLFF', 'L-FBRL', 'L-LBFF', 'L-LFFB', 'L-LFFR', 'L-LRFF', 'L-RFBL', 'Pi-BFFB', 'Pi-FBFB', 'Pi-FRFL', 'Pi-FRLF', 'Pi-LFRF', 'Pi-RFFL', 'S-FBBF', 'S-FBFB', 'S-FLFR', 'S-FLRF', 'S-LFFR', 'S-LFRF', 'T-BBFF', 'T-FBFB', 'T-FFLR', 'T-FLFR', 'T-RFLF', 'T-RLFF', 'U-BBFF', 'U-BFFB', 'U-FFLR', 'U-FRLF', 'U-LFFR', 'U-LRFF', 'aS-FBBF', 'aS-FBFB', 'aS-FRFL', 'aS-FRLF', 'aS-LFRF', 'aS-RFFL', 'PLL'];
+let zbfilter = [
+  "H-BBFF",
+  "H-FBFB",
+  "H-RFLF",
+  "H-RLFF",
+  "L-FBRL",
+  "L-LBFF",
+  "L-LFFB",
+  "L-LFFR",
+  "L-LRFF",
+  "L-RFBL",
+  "Pi-BFFB",
+  "Pi-FBFB",
+  "Pi-FRFL",
+  "Pi-FRLF",
+  "Pi-LFRF",
+  "Pi-RFFL",
+  "S-FBBF",
+  "S-FBFB",
+  "S-FLFR",
+  "S-FLRF",
+  "S-LFFR",
+  "S-LFRF",
+  "T-BBFF",
+  "T-FBFB",
+  "T-FFLR",
+  "T-FLFR",
+  "T-RFLF",
+  "T-RLFF",
+  "U-BBFF",
+  "U-BFFB",
+  "U-FFLR",
+  "U-FRLF",
+  "U-LFFR",
+  "U-LRFF",
+  "aS-FBBF",
+  "aS-FBFB",
+  "aS-FRFL",
+  "aS-FRLF",
+  "aS-LFRF",
+  "aS-RFFL",
+  "PLL",
+];
 
 let coll_map: any[] = [
-  [0x3210, 0x2121, 'FeFeeeBeBLGRDGDRGLDGD', 2, 'H-1'],
-  [0x2301, 0x1212, 'ReLeeeReLBGBDGDFGFDGD', 2, 'H-2'],
-  [0x1203, 0x1212, 'ReBeeeLeBFGRDGDLGFDGD', 4, 'H-3'],
-  [0x2013, 0x1212, 'LeReeeFeFRGLDGDBGBDGD', 4, 'H-4'],
-  [0x3021, 0x1020, 'DeLeeeReDBGRFGBDGFLGD', 4, 'L-1'],
-  [0x1203, 0x0201, 'DeReeeLeDFDBRDFDGLBGD', 4, 'L-2'],
-  [0x2301, 0x0102, 'DeBeeeLeDFGRFGRDGLBGD', 4, 'L-3'],
-  [0x3210, 0x1020, 'DeLeeeFeDRGFLGBDGBRGD', 4, 'L-4'],
-  [0x3102, 0x1020, 'DeLeeeLeDFGBRGBDGRFGD', 4, 'L-5'],
-  [0x2013, 0x0201, 'DeReeeReDBGLBGFDGFLGD', 4, 'L-6'],
-  [0x3210, 0x1122, 'LeFeeeReFBGDRGLDGBDGD', 4, 'Pi-1'],
-  [0x2301, 0x2112, 'FeLeeeFeRRGDBGBDGLDGD', 4, 'Pi-2'],
-  [0x1203, 0x1221, 'ReLeeeReLBGDFGBDGFDGD', 4, 'Pi-3'],
-  [0x3102, 0x1122, 'BeFeeeFeBRGDLGLDGRDGD', 4, 'Pi-4'],
-  [0x2013, 0x1221, 'BeLeeeLeFFGDRGBDGRDGD', 4, 'Pi-5'],
-  [0x3021, 0x1122, 'BeReeeLeBFGDLGFDGRDGD', 4, 'Pi-6'],
-  [0x3210, 0x2220, 'ReBeeeFeDRGFLGDLGDBGD', 4, 'S-1'],
-  [0x2301, 0x0222, 'BeReeeLeDFGRFGDBGDLGD', 4, 'S-2'],
-  [0x3021, 0x2220, 'BeReeeFeDRGFLGDBGDLGD', 4, 'S-3'],
-  [0x2013, 0x2202, 'ReBeeeLeDFGRFGDLGDBGD', 4, 'S-4'],
-  [0x3102, 0x2220, 'FeBeeeLeDFGBRGDLGDRGD', 4, 'S-5'],
-  [0x1203, 0x2202, 'LeReeeFeDRGLBGDBGDFGD', 4, 'S-6'],
-  [0x1203, 0x1002, 'BeLeeeDeDBGRFGDFGRDGL', 4, 'T-1'],
-  [0x3102, 0x2100, 'ReBeeeDeDLGBRGDLGFDGF', 4, 'T-2'],
-  [0x2301, 0x0210, 'BeFeeeDeDBGFLGDRGRDGL', 4, 'T-3'],
-  [0x3210, 0x2100, 'FeFeeeDeDBGBRGDRGLDGL', 4, 'T-4'],
-  [0x2013, 0x1002, 'BeBeeeDeDLGRFGDLGRDGF', 4, 'T-5'],
-  [0x3021, 0x2100, 'FeBeeeDeDRGRFGDLGLDGB', 4, 'T-6'],
-  [0x2301, 0x0120, 'LeLeeeDeDFGBRGBDGDFGR', 4, 'U-1'],
-  [0x3210, 0x1200, 'LeReeeDeDBGBRGFDGDFGL', 4, 'U-2'],
-  [0x3021, 0x1200, 'FeFeeeDeDBGBRGLDGDRGL', 4, 'U-3'],
-  [0x2013, 0x2001, 'BeFeeeDeDFGBRGLDGDLGR', 4, 'U-4'],
-  [0x1203, 0x2001, 'ReFeeeDeDBGRFGLDGDBGL', 4, 'U-5'],
-  [0x3102, 0x1200, 'LeBeeeDeDBGRFGRDGDFGL', 4, 'U-6'],
-  [0x3210, 0x1101, 'LeFeeeDeRRGFDGLDGBDGB', 4, 'aS-1'],
-  [0x2301, 0x1110, 'ReFeeeDeLRGBDGLDGFDGB', 4, 'aS-2'],
-  [0x3021, 0x1101, 'LeBeeeDeFFGLDGRDGBDGR', 4, 'aS-3'],
-  [0x2013, 0x1011, 'LeFeeeDeBFGRDGLDGBDGR', 4, 'aS-4'],
-  [0x1203, 0x1011, 'FeBeeeDeLFGBDGRDGLDGR', 4, 'aS-5'],
-  [0x3102, 0x1101, 'FeBeeeDeRBGFDGRDGLDGL', 4, 'aS-6'],
-  [0x3021, 0x0000, 'DeDeeeDeDBGRFGBRGFLGL', 4, 'O-Adj'],
-  [0x2301, 0x0000, 'DeDeeeDeDBGFLGRFGBRGL', 1, 'O-Diag'],
-  [0x3210, 0x0000, 'DeDeeeDeDBGBRGRFGFLGL', 1, 'O-AUF']
+  [0x3210, 0x2121, "FeFeeeBeBLGRDGDRGLDGD", 2, "H-1"],
+  [0x2301, 0x1212, "ReLeeeReLBGBDGDFGFDGD", 2, "H-2"],
+  [0x1203, 0x1212, "ReBeeeLeBFGRDGDLGFDGD", 4, "H-3"],
+  [0x2013, 0x1212, "LeReeeFeFRGLDGDBGBDGD", 4, "H-4"],
+  [0x3021, 0x1020, "DeLeeeReDBGRFGBDGFLGD", 4, "L-1"],
+  [0x1203, 0x0201, "DeReeeLeDFDBRDFDGLBGD", 4, "L-2"],
+  [0x2301, 0x0102, "DeBeeeLeDFGRFGRDGLBGD", 4, "L-3"],
+  [0x3210, 0x1020, "DeLeeeFeDRGFLGBDGBRGD", 4, "L-4"],
+  [0x3102, 0x1020, "DeLeeeLeDFGBRGBDGRFGD", 4, "L-5"],
+  [0x2013, 0x0201, "DeReeeReDBGLBGFDGFLGD", 4, "L-6"],
+  [0x3210, 0x1122, "LeFeeeReFBGDRGLDGBDGD", 4, "Pi-1"],
+  [0x2301, 0x2112, "FeLeeeFeRRGDBGBDGLDGD", 4, "Pi-2"],
+  [0x1203, 0x1221, "ReLeeeReLBGDFGBDGFDGD", 4, "Pi-3"],
+  [0x3102, 0x1122, "BeFeeeFeBRGDLGLDGRDGD", 4, "Pi-4"],
+  [0x2013, 0x1221, "BeLeeeLeFFGDRGBDGRDGD", 4, "Pi-5"],
+  [0x3021, 0x1122, "BeReeeLeBFGDLGFDGRDGD", 4, "Pi-6"],
+  [0x3210, 0x2220, "ReBeeeFeDRGFLGDLGDBGD", 4, "S-1"],
+  [0x2301, 0x0222, "BeReeeLeDFGRFGDBGDLGD", 4, "S-2"],
+  [0x3021, 0x2220, "BeReeeFeDRGFLGDBGDLGD", 4, "S-3"],
+  [0x2013, 0x2202, "ReBeeeLeDFGRFGDLGDBGD", 4, "S-4"],
+  [0x3102, 0x2220, "FeBeeeLeDFGBRGDLGDRGD", 4, "S-5"],
+  [0x1203, 0x2202, "LeReeeFeDRGLBGDBGDFGD", 4, "S-6"],
+  [0x1203, 0x1002, "BeLeeeDeDBGRFGDFGRDGL", 4, "T-1"],
+  [0x3102, 0x2100, "ReBeeeDeDLGBRGDLGFDGF", 4, "T-2"],
+  [0x2301, 0x0210, "BeFeeeDeDBGFLGDRGRDGL", 4, "T-3"],
+  [0x3210, 0x2100, "FeFeeeDeDBGBRGDRGLDGL", 4, "T-4"],
+  [0x2013, 0x1002, "BeBeeeDeDLGRFGDLGRDGF", 4, "T-5"],
+  [0x3021, 0x2100, "FeBeeeDeDRGRFGDLGLDGB", 4, "T-6"],
+  [0x2301, 0x0120, "LeLeeeDeDFGBRGBDGDFGR", 4, "U-1"],
+  [0x3210, 0x1200, "LeReeeDeDBGBRGFDGDFGL", 4, "U-2"],
+  [0x3021, 0x1200, "FeFeeeDeDBGBRGLDGDRGL", 4, "U-3"],
+  [0x2013, 0x2001, "BeFeeeDeDFGBRGLDGDLGR", 4, "U-4"],
+  [0x1203, 0x2001, "ReFeeeDeDBGRFGLDGDBGL", 4, "U-5"],
+  [0x3102, 0x1200, "LeBeeeDeDBGRFGRDGDFGL", 4, "U-6"],
+  [0x3210, 0x1101, "LeFeeeDeRRGFDGLDGBDGB", 4, "aS-1"],
+  [0x2301, 0x1110, "ReFeeeDeLRGBDGLDGFDGB", 4, "aS-2"],
+  [0x3021, 0x1101, "LeBeeeDeFFGLDGRDGBDGR", 4, "aS-3"],
+  [0x2013, 0x1011, "LeFeeeDeBFGRDGLDGBDGR", 4, "aS-4"],
+  [0x1203, 0x1011, "FeBeeeDeLFGBDGRDGLDGR", 4, "aS-5"],
+  [0x3102, 0x1101, "FeBeeeDeRBGFDGRDGLDGL", 4, "aS-6"],
+  [0x3021, 0x0000, "DeDeeeDeDBGRFGBRGFLGL", 4, "O-Adj"],
+  [0x2301, 0x0000, "DeDeeeDeDBGFLGRFGBRGL", 1, "O-Diag"],
+  [0x3210, 0x0000, "DeDeeeDeDBGBRGRFGFLGL", 1, "O-AUF"],
 ];
 
 let coprobs = idxArray(coll_map, 3);
@@ -548,7 +694,16 @@ export function getZBLSScramble() {
 
 export function getLSEScramble() {
   let rnd4 = rn(4);
-  return getAnyScramble(0xba98f6f4ffff, 0x0000f0f0ffff, 0x76543210, 0x00000000, [rlpresuff[rnd4]], aufsuff) + rlappsuff[rnd4];
+  return (
+    getAnyScramble(
+      0xba98f6f4ffff,
+      0x0000f0f0ffff,
+      0x76543210,
+      0x00000000,
+      [rlpresuff[rnd4]],
+      aufsuff
+    ) + rlappsuff[rnd4]
+  );
 }
 
 let cmll_map = [
@@ -559,10 +714,10 @@ let cmll_map = [
   0x0222, // S
   0x0021, // T
   0x0012, // U
-  0x0111 // aS
+  0x0111, // aS
 ];
 let cmprobs = [6, 12, 24, 24, 24, 24, 24, 24];
-let cmfilter = ['O', 'H', 'L', 'Pi', 'S', 'T', 'U', 'aS'];
+let cmfilter = ["O", "H", "L", "Pi", "S", "T", "U", "aS"];
 
 export function getCMLLScramble(type: any, length: any, cases: any) {
   let rnd4 = rn(4);
@@ -570,7 +725,16 @@ export function getCMLLScramble(type: any, length: any, cases: any) {
   for (let i = 0; i < aufsuff.length; i++) {
     presuff.push(aufsuff[i].concat(rlpresuff[rnd4]));
   }
-  return getAnyScramble(0xba98f6f4ffff, 0x0000f0f0ffff, 0x7654ffff, cmll_map[fixCase(cases, cmprobs)], presuff, aufsuff) + rlappsuff[rnd4];
+  return (
+    getAnyScramble(
+      0xba98f6f4ffff,
+      0x0000f0f0ffff,
+      0x7654ffff,
+      cmll_map[fixCase(cases, cmprobs)],
+      presuff,
+      aufsuff
+    ) + rlappsuff[rnd4]
+  );
 }
 
 export function getCLLScramble() {
@@ -606,28 +770,45 @@ let pll_map = [
   [0x2310, 0x3201], // Rb
   [0x1230, 0x3201], // T
   [0x3120, 0x3012], // V
-  [0x3201, 0x3012] // Y
+  [0x3201, 0x3012], // Y
 ];
 
-let pllprobs = [
-  1, 4, 4, 2,
-  4, 4, 2, 4,
-  4, 4, 4, 4,
-  4, 4, 1, 1,
-  4, 4, 4, 4, 4
-];
+let pllprobs = [1, 4, 4, 2, 4, 4, 2, 4, 4, 4, 4, 4, 4, 4, 1, 1, 4, 4, 4, 4, 4];
 
 export let pllfilter = [
-  'H', 'Ua', 'Ub', 'Z',
-  'Aa', 'Ab', 'E', 'F',
-  'Ga', 'Gb', 'Gc', 'Gd',
-  'Ja', 'Jb', 'Na', 'Nb',
-  'Ra', 'Rb', 'T', 'V', 'Y'
+  "H",
+  "Ua",
+  "Ub",
+  "Z",
+  "Aa",
+  "Ab",
+  "E",
+  "F",
+  "Ga",
+  "Gb",
+  "Gc",
+  "Gd",
+  "Ja",
+  "Jb",
+  "Na",
+  "Nb",
+  "Ra",
+  "Rb",
+  "T",
+  "V",
+  "Y",
 ];
 
 export function getPLLScramble(type: any, length: any, cases: any) {
   let pllcase = pll_map[fixCase(cases, pllprobs)];
-  return getAnyScramble(pllcase[0] + 0xba9876540000, 0x000000000000, pllcase[1] + 0x76540000, 0x00000000, aufsuff, aufsuff);
+  return getAnyScramble(
+    pllcase[0] + 0xba9876540000,
+    0x000000000000,
+    pllcase[1] + 0x76540000,
+    0x00000000,
+    aufsuff,
+    aufsuff
+  );
 }
 
 let oll_map = [
@@ -690,8 +871,70 @@ let oll_map = [
   [0x0101, 0x1212], // I-56
   [0x0101, 0x0000], // CO-57
 ];
-let ollprobs = [1, 2, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 1, 2, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 2, 2, 2];
-let ollfilter = ['PLL', 'Point-1', 'Point-2', 'Point-3', 'Point-4', 'Square-5', 'Square-6', 'SLBS-7', 'SLBS-8', 'Fish-9', 'Fish-10', 'SLBS-11', 'SLBS-12', 'Knight-13', 'Knight-14', 'Knight-15', 'Knight-16', 'Point-17', 'Point-18', 'Point-19', 'CO-20', 'OCLL-21', 'OCLL-22', 'OCLL-23', 'OCLL-24', 'OCLL-25', 'OCLL-26', 'OCLL-27', 'CO-28', 'Awkward-29', 'Awkward-30', 'P-31', 'P-32', 'T-33', 'C-34', 'Fish-35', 'W-36', 'Fish-37', 'W-38', 'BLBS-39', 'BLBS-40', 'Awkward-41', 'Awkward-42', 'P-43', 'P-44', 'T-45', 'C-46', 'L-47', 'L-48', 'L-49', 'L-50', 'I-51', 'I-52', 'L-53', 'L-54', 'I-55', 'I-56', 'CO-57'];
+let ollprobs = [
+  1, 2, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 1, 2, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+  4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 2, 2, 2,
+];
+let ollfilter = [
+  "PLL",
+  "Point-1",
+  "Point-2",
+  "Point-3",
+  "Point-4",
+  "Square-5",
+  "Square-6",
+  "SLBS-7",
+  "SLBS-8",
+  "Fish-9",
+  "Fish-10",
+  "SLBS-11",
+  "SLBS-12",
+  "Knight-13",
+  "Knight-14",
+  "Knight-15",
+  "Knight-16",
+  "Point-17",
+  "Point-18",
+  "Point-19",
+  "CO-20",
+  "OCLL-21",
+  "OCLL-22",
+  "OCLL-23",
+  "OCLL-24",
+  "OCLL-25",
+  "OCLL-26",
+  "OCLL-27",
+  "CO-28",
+  "Awkward-29",
+  "Awkward-30",
+  "P-31",
+  "P-32",
+  "T-33",
+  "C-34",
+  "Fish-35",
+  "W-36",
+  "Fish-37",
+  "W-38",
+  "BLBS-39",
+  "BLBS-40",
+  "Awkward-41",
+  "Awkward-42",
+  "P-43",
+  "P-44",
+  "T-45",
+  "C-46",
+  "L-47",
+  "L-48",
+  "L-49",
+  "L-50",
+  "I-51",
+  "I-52",
+  "L-53",
+  "L-54",
+  "I-55",
+  "I-56",
+  "CO-57",
+];
 
 export function getOLLScramble(type: any, length: any, cases: any) {
   let ollcase = oll_map[fixCase(cases, ollprobs)];
@@ -743,13 +986,24 @@ let daufrot = ["", "y", "y2", "y'"];
 
 function getMehta3QBScramble() {
   let rnd4 = rn(4);
-  return getAnyScramble(0xffff765fffff, 0xffff000fffff, 0xf65fffff, 0xf00fffff, [daufsuff[rnd4]]) + daufrot[rnd4];
+  return (
+    getAnyScramble(0xffff765fffff, 0xffff000fffff, 0xf65fffff, 0xf00fffff, [daufsuff[rnd4]]) +
+    daufrot[rnd4]
+  );
 }
 
 function getMehtaEOLEScramble() {
   let skip = rn(4);
   let rnd4 = rn(4);
-  return getAnyScramble(0xba98765fffff + (0x4567 & (0xf << skip * 4)) * 0x100000000, 0x0000000fffff + (0xf << skip * 4) * 0x100000000, 0xf65fffff, 0xf00fffff, [daufsuff[rnd4]]) + daufrot[rnd4];
+  return (
+    getAnyScramble(
+      0xba98765fffff + (0x4567 & (0xf << (skip * 4))) * 0x100000000,
+      0x0000000fffff + (0xf << (skip * 4)) * 0x100000000,
+      0xf65fffff,
+      0xf00fffff,
+      [daufsuff[rnd4]]
+    ) + daufrot[rnd4]
+  );
 }
 
 function getMehtaTDRScramble() {
@@ -768,87 +1022,108 @@ function getMehtaCDRLLScramble() {
   return getAnyScramble(0xba98765fffff, 0x000000000000, 0x7654ffff, 0x0000ffff);
 }
 
-let customfilter = ['UR', 'UF', 'UL', 'UB', 'DR', 'DF', 'DL', 'DB', 'RF', 'LF', 'LB', 'RB', 'URF', 'UFL', 'ULB', 'UBR', 'DFR', 'DLF', 'DBL', 'DRB'];
+let customfilter = [
+  "UR",
+  "UF",
+  "UL",
+  "UB",
+  "DR",
+  "DF",
+  "DL",
+  "DB",
+  "RF",
+  "LF",
+  "LB",
+  "RB",
+  "URF",
+  "UFL",
+  "ULB",
+  "UBR",
+  "DFR",
+  "DLF",
+  "DBL",
+  "DRB",
+];
 for (let i = 0; i < 20; i++) {
   let piece = customfilter[i];
-  customfilter[i + 20] = (piece.length == 2 ? 'OriE-' : 'OriC-') + piece;
-  customfilter[i] = (piece.length == 2 ? 'PermE-' : 'PermC-') + piece;
+  customfilter[i + 20] = (piece.length == 2 ? "OriE-" : "OriC-") + piece;
+  customfilter[i] = (piece.length == 2 ? "PermE-" : "PermC-") + piece;
 }
 let customprobs = valuedArray(40, 0);
 
-let ttll_map: { 0: number, 1: number, 2: string }[] = [
-  [0x32410, 0x3210, 'FBar-1'],
-  [0x32410, 0x3102, 'FBar-2'],
-  [0x32410, 0x3021, 'FBar-3'],
-  [0x32410, 0x2301, 'FBar-4'],
-  [0x32410, 0x2130, 'FBar-5'],
-  [0x32410, 0x2013, 'FBar-6'],
-  [0x32410, 0x1320, 'FBar-7'],
-  [0x32410, 0x1203, 'FBar-8'],
-  [0x32410, 0x1032, 'FBar-9'],
-  [0x32410, 0x0312, 'FBar-10'],
-  [0x32410, 0x0231, 'FBar-11'],
-  [0x32410, 0x0123, 'FBar-12'],
-  [0x32401, 0x3201, '2Opp-1'],
-  [0x32401, 0x3120, '2Opp-2'],
-  [0x32401, 0x3012, '2Opp-3'],
-  [0x32401, 0x2310, '2Opp-4'],
-  [0x32401, 0x2103, '2Opp-5'],
-  [0x32401, 0x2031, '2Opp-6'],
-  [0x32401, 0x1302, '2Opp-7'],
-  [0x32401, 0x1230, '2Opp-8'],
-  [0x32401, 0x1023, '2Opp-9'],
-  [0x32401, 0x0321, '2Opp-10'],
-  [0x32401, 0x0213, '2Opp-11'],
-  [0x32401, 0x0132, '2Opp-12'],
-  [0x31420, 0x3201, 'ROpp-1'],
-  [0x31420, 0x3120, 'ROpp-2'],
-  [0x31420, 0x3012, 'ROpp-3'],
-  [0x31420, 0x2310, 'ROpp-4'],
-  [0x31420, 0x2103, 'ROpp-5'],
-  [0x31420, 0x2031, 'ROpp-6'],
-  [0x31420, 0x1302, 'ROpp-7'],
-  [0x31420, 0x1230, 'ROpp-8'],
-  [0x31420, 0x1023, 'ROpp-9'],
-  [0x31420, 0x0321, 'ROpp-10'],
-  [0x31420, 0x0213, 'ROpp-11'],
-  [0x31420, 0x0132, 'ROpp-12'],
-  [0x31402, 0x3210, 'RBar-1'],
-  [0x31402, 0x3102, 'RBar-2'],
-  [0x31402, 0x3021, 'RBar-3'],
-  [0x31402, 0x2301, 'RBar-4'],
-  [0x31402, 0x2130, 'RBar-5'],
-  [0x31402, 0x2013, 'RBar-6'],
-  [0x31402, 0x1320, 'RBar-7'],
-  [0x31402, 0x1203, 'RBar-8'],
-  [0x31402, 0x1032, 'RBar-9'],
-  [0x31402, 0x0312, 'RBar-10'],
-  [0x31402, 0x0231, 'RBar-11'],
-  [0x31402, 0x0123, 'RBar-12'],
-  [0x30421, 0x3210, '2Bar-1'],
-  [0x30421, 0x3102, '2Bar-2'],
-  [0x30421, 0x3021, '2Bar-3'],
-  [0x30421, 0x2301, '2Bar-4'],
-  [0x30421, 0x2130, '2Bar-5'],
-  [0x30421, 0x2013, '2Bar-6'],
-  [0x30421, 0x1320, '2Bar-7'],
-  [0x30421, 0x1203, '2Bar-8'],
-  [0x30421, 0x1032, '2Bar-9'],
-  [0x30421, 0x0312, '2Bar-10'],
-  [0x30421, 0x0231, '2Bar-11'],
-  [0x30421, 0x0123, '2Bar-12'],
-  [0x30412, 0x3201, 'FOpp-1'],
-  [0x30412, 0x3120, 'FOpp-2'],
-  [0x30412, 0x3012, 'FOpp-3'],
-  [0x30412, 0x2310, 'FOpp-4'],
-  [0x30412, 0x2103, 'FOpp-5'],
-  [0x30412, 0x2031, 'FOpp-6'],
-  [0x30412, 0x1302, 'FOpp-7'],
-  [0x30412, 0x1230, 'FOpp-8'],
-  [0x30412, 0x1023, 'FOpp-9'],
-  [0x30412, 0x0321, 'FOpp-10'],
-  [0x30412, 0x0213, 'FOpp-11'],
-  [0x30412, 0x0132, 'FOpp-12']
+let ttll_map: { 0: number; 1: number; 2: string }[] = [
+  [0x32410, 0x3210, "FBar-1"],
+  [0x32410, 0x3102, "FBar-2"],
+  [0x32410, 0x3021, "FBar-3"],
+  [0x32410, 0x2301, "FBar-4"],
+  [0x32410, 0x2130, "FBar-5"],
+  [0x32410, 0x2013, "FBar-6"],
+  [0x32410, 0x1320, "FBar-7"],
+  [0x32410, 0x1203, "FBar-8"],
+  [0x32410, 0x1032, "FBar-9"],
+  [0x32410, 0x0312, "FBar-10"],
+  [0x32410, 0x0231, "FBar-11"],
+  [0x32410, 0x0123, "FBar-12"],
+  [0x32401, 0x3201, "2Opp-1"],
+  [0x32401, 0x3120, "2Opp-2"],
+  [0x32401, 0x3012, "2Opp-3"],
+  [0x32401, 0x2310, "2Opp-4"],
+  [0x32401, 0x2103, "2Opp-5"],
+  [0x32401, 0x2031, "2Opp-6"],
+  [0x32401, 0x1302, "2Opp-7"],
+  [0x32401, 0x1230, "2Opp-8"],
+  [0x32401, 0x1023, "2Opp-9"],
+  [0x32401, 0x0321, "2Opp-10"],
+  [0x32401, 0x0213, "2Opp-11"],
+  [0x32401, 0x0132, "2Opp-12"],
+  [0x31420, 0x3201, "ROpp-1"],
+  [0x31420, 0x3120, "ROpp-2"],
+  [0x31420, 0x3012, "ROpp-3"],
+  [0x31420, 0x2310, "ROpp-4"],
+  [0x31420, 0x2103, "ROpp-5"],
+  [0x31420, 0x2031, "ROpp-6"],
+  [0x31420, 0x1302, "ROpp-7"],
+  [0x31420, 0x1230, "ROpp-8"],
+  [0x31420, 0x1023, "ROpp-9"],
+  [0x31420, 0x0321, "ROpp-10"],
+  [0x31420, 0x0213, "ROpp-11"],
+  [0x31420, 0x0132, "ROpp-12"],
+  [0x31402, 0x3210, "RBar-1"],
+  [0x31402, 0x3102, "RBar-2"],
+  [0x31402, 0x3021, "RBar-3"],
+  [0x31402, 0x2301, "RBar-4"],
+  [0x31402, 0x2130, "RBar-5"],
+  [0x31402, 0x2013, "RBar-6"],
+  [0x31402, 0x1320, "RBar-7"],
+  [0x31402, 0x1203, "RBar-8"],
+  [0x31402, 0x1032, "RBar-9"],
+  [0x31402, 0x0312, "RBar-10"],
+  [0x31402, 0x0231, "RBar-11"],
+  [0x31402, 0x0123, "RBar-12"],
+  [0x30421, 0x3210, "2Bar-1"],
+  [0x30421, 0x3102, "2Bar-2"],
+  [0x30421, 0x3021, "2Bar-3"],
+  [0x30421, 0x2301, "2Bar-4"],
+  [0x30421, 0x2130, "2Bar-5"],
+  [0x30421, 0x2013, "2Bar-6"],
+  [0x30421, 0x1320, "2Bar-7"],
+  [0x30421, 0x1203, "2Bar-8"],
+  [0x30421, 0x1032, "2Bar-9"],
+  [0x30421, 0x0312, "2Bar-10"],
+  [0x30421, 0x0231, "2Bar-11"],
+  [0x30421, 0x0123, "2Bar-12"],
+  [0x30412, 0x3201, "FOpp-1"],
+  [0x30412, 0x3120, "FOpp-2"],
+  [0x30412, 0x3012, "FOpp-3"],
+  [0x30412, 0x2310, "FOpp-4"],
+  [0x30412, 0x2103, "FOpp-5"],
+  [0x30412, 0x2031, "FOpp-6"],
+  [0x30412, 0x1302, "FOpp-7"],
+  [0x30412, 0x1230, "FOpp-8"],
+  [0x30412, 0x1023, "FOpp-9"],
+  [0x30412, 0x0321, "FOpp-10"],
+  [0x30412, 0x0213, "FOpp-11"],
+  [0x30412, 0x0132, "FOpp-12"],
 ];
 
 let ttllprobs: number[] = [];
@@ -859,8 +1134,15 @@ for (let i = 0; i < ttll_map.length; i++) {
 }
 
 function getTTLLScramble(type: any, length: any, cases: any) {
-  let ttllcase = ttll_map[ fixCase(cases, ttllprobs) ];
-  return getAnyScramble(0xba9876540000 + ttllcase[1], 0x000000000000, 0x76500000 + ttllcase[0], 0x00000000, aufsuff, aufsuff);
+  let ttllcase = ttll_map[fixCase(cases, ttllprobs)];
+  return getAnyScramble(
+    0xba9876540000 + ttllcase[1],
+    0x000000000000,
+    0x76500000 + ttllcase[0],
+    0x00000000,
+    aufsuff,
+    aufsuff
+  );
 }
 
 let eols_map: number[] = [];
@@ -877,21 +1159,53 @@ for (let i = 0; i < f2l_map.length; i++) {
 }
 
 function getEOLSScramble(type: any, length: any, cases: any) {
-  let caze = eols_map[ fixCase(cases, eolsprobs)];
+  let caze = eols_map[fixCase(cases, eolsprobs)];
   let ep = Math.pow(16, caze & 0xf);
-  let cp = Math.pow(16, caze >> 8 & 0xf);
-  let co = 0xf ^ (caze >> 12 & 3);
-  return getAnyScramble(0xba9f7654ffff - 7 * ep, 0x000000000000, 0x765fffff - 0xb * cp, 0x000fffff - co * cp, aufsuff);
+  let cp = Math.pow(16, (caze >> 8) & 0xf);
+  let co = 0xf ^ ((caze >> 12) & 3);
+  return getAnyScramble(
+    0xba9f7654ffff - 7 * ep,
+    0x000000000000,
+    0x765fffff - 0xb * cp,
+    0x000fffff - co * cp,
+    aufsuff
+  );
 }
 
 let wvls_map: number[] = [];
 let wvlsprobs: any[] = [];
 let wvlsfilter = [
-  'Oriented', 'Rectangle-1', 'Rectangle-2', 'Tank-1', 'Bowtie-1', 'Bowtie-3', 'Tank-2', 'Bowtie-2', 'Bowtie-4', 'Snake-1', 'Adjacent-1', 'Adjacent-2', 'Gun-Far', 'Sune-1', 'Pi-Near', 'Gun-Back', 'Pi-Front', 'H-Side', 'Snake-2', 'Adjacent-3', 'Adjacent-4', 'Gun-Sides', 'H-Front', 'Pi-Back', 'Gun-Near', 'Pi-Far', 'Sune-2'
+  "Oriented",
+  "Rectangle-1",
+  "Rectangle-2",
+  "Tank-1",
+  "Bowtie-1",
+  "Bowtie-3",
+  "Tank-2",
+  "Bowtie-2",
+  "Bowtie-4",
+  "Snake-1",
+  "Adjacent-1",
+  "Adjacent-2",
+  "Gun-Far",
+  "Sune-1",
+  "Pi-Near",
+  "Gun-Back",
+  "Pi-Front",
+  "H-Side",
+  "Snake-2",
+  "Adjacent-3",
+  "Adjacent-4",
+  "Gun-Sides",
+  "H-Front",
+  "Pi-Back",
+  "Gun-Near",
+  "Pi-Far",
+  "Sune-2",
 ];
 
 for (let i = 0; i < 27; i++) {
-  wvls_map[i] = ~~(i / 9) << 12 | ~~(i / 3) % 3 << 8 | i % 3;
+  wvls_map[i] = (~~(i / 9) << 12) | (~~(i / 3) % 3 << 8) | i % 3;
   wvlsprobs[i] = 1;
 }
 
@@ -907,19 +1221,32 @@ let vlsfilter = [];
 for (let i = 0; i < 27 * 8; i++) {
   let co = i % 27;
   let eo = ~~(i / 27);
-  vls_map[i] = [~~(co / 9) % 3 << 12 | ~~(co / 3) % 3 << 8 | co % 3, (eo >> 2 & 1) << 12 | (eo >> 1 & 1) << 8 | eo & 1];
+  vls_map[i] = [
+    (~~(co / 9) % 3 << 12) | (~~(co / 3) % 3 << 8) | co % 3,
+    (((eo >> 2) & 1) << 12) | (((eo >> 1) & 1) << 8) | (eo & 1),
+  ];
   vlsprobs[i] = 1;
-  vlsfilter[i] = ["WVLS", "UB", "UF", "UF UB", "UL", "UB UL", "UF UL", "No Edge"][eo] + "-" + (co + 1);
+  vlsfilter[i] =
+    ["WVLS", "UB", "UF", "UF UB", "UL", "UB UL", "UF UL", "No Edge"][eo] + "-" + (co + 1);
 }
 
 function getVLSScramble(type: any, length: any, cases: any) {
   let caze = vls_map[fixCase(cases, vlsprobs)];
-  return getAnyScramble(0xba9f7654ff8f, 0x000f00000000 + caze[1], 0x765fff4f, 0x000f0020 + caze[0], [[Ux3]]);
+  return getAnyScramble(
+    0xba9f7654ff8f,
+    0x000f00000000 + caze[1],
+    0x765fff4f,
+    0x000f0020 + caze[0],
+    [[Ux3]]
+  );
 }
 
 function getSBRouxScramble() {
   let rnd4 = rn(4);
-  return getAnyScramble(0xfa9ff6ffffff, 0xf00ff0ffffff, 0xf65fffff, 0xf00fffff, [rlpresuff[rnd4]]) + rlappsuff[rnd4];
+  return (
+    getAnyScramble(0xfa9ff6ffffff, 0xf00ff0ffffff, 0xf65fffff, 0xf00fffff, [rlpresuff[rnd4]]) +
+    rlappsuff[rnd4]
+  );
 }
 
 function getEasyXCrossScramble(type: any, length: any) {
@@ -927,39 +1254,37 @@ function getEasyXCrossScramble(type: any, length: any) {
   return getAnyScramble(cases[0], cases[1], cases[2], cases[3]);
 }
 
-regScrambler('333', getRandomScramble)
-  ('333oh', getRandomScramble)
-  ('333ft', getRandomScramble)
-  ('333fm', getFMCScramble)
-  ('edges', getEdgeScramble)
-  ('corners', getCornerScramble)
-  ('ll', getLLScramble)
-  ('lsll2', getLSLLScramble, [f2lfilter, f2lprobs])
-  ('f2l', getF2LScramble)
-  ('zbll', getZBLLScramble, [zbfilter, zbprobs])
-  ('zzll', getZZLLScramble)
-  ('zbls', getZBLSScramble)
-  ('lse', getLSEScramble)
-  ('cmll', getCMLLScramble, [cmfilter, cmprobs])
-  ('cll', getCLLScramble)
-  ('ell', getELLScramble)
-  ('pll', getPLLScramble, [pllfilter, pllprobs])
-  ('oll', getOLLScramble, [ollfilter, ollprobs])
-  ('2gll', get2GLLScramble)
-  ('easyc', getEasyCrossScramble)
-  ('eoline', getEOLineScramble)
-
-  ('333custom', getCustomScramble, [customfilter, customprobs])
-  ('ttll', getTTLLScramble, [ttllfilter, ttllprobs])
-  ('eols', getEOLSScramble, [eolsfilter, eolsprobs])
-  ('wvls', getWVLSScramble, [wvlsfilter, wvlsprobs])
-  ('vls', getVLSScramble, [vlsfilter, vlsprobs])
-  ('coll', getZBLLScramble, [cofilter, coprobs])
-  ('sbrx', getSBRouxScramble)
-  ('mt3qb', getMehta3QBScramble)
-  ('mteole', getMehtaEOLEScramble)
-  ('mttdr', getMehtaTDRScramble)
-  ('mt6cp', getMehta6CPScramble)
-  ('mtl5ep', getMehtaL5EPScramble)
-  ('mtcdrll', getMehtaCDRLLScramble)
-  ('easyxc', getEasyXCrossScramble);
+regScrambler("333", getRandomScramble)("333oh", getRandomScramble)("333ft", getRandomScramble)(
+  "333fm",
+  getFMCScramble
+)("edges", getEdgeScramble)("corners", getCornerScramble)("ll", getLLScramble)(
+  "lsll2",
+  getLSLLScramble,
+  [f2lfilter, f2lprobs]
+)("f2l", getF2LScramble, [crossFilter, crossProbs])("zbll", getZBLLScramble, [zbfilter, zbprobs])(
+  "zzll",
+  getZZLLScramble
+)("zbls", getZBLSScramble)("lse", getLSEScramble)("cmll", getCMLLScramble, [cmfilter, cmprobs])(
+  "cll",
+  getCLLScramble
+)("ell", getELLScramble)("pll", getPLLScramble, [pllfilter, pllprobs])("oll", getOLLScramble, [
+  ollfilter,
+  ollprobs,
+])("2gll", get2GLLScramble)("easyc", getEasyCrossScramble)("eoline", getEOLineScramble)(
+  "333custom",
+  getCustomScramble,
+  [customfilter, customprobs]
+)("ttll", getTTLLScramble, [ttllfilter, ttllprobs])("eols", getEOLSScramble, [
+  eolsfilter,
+  eolsprobs,
+])("wvls", getWVLSScramble, [wvlsfilter, wvlsprobs])("vls", getVLSScramble, [vlsfilter, vlsprobs])(
+  "coll",
+  getZBLLScramble,
+  [cofilter, coprobs]
+)("sbrx", getSBRouxScramble)("mt3qb", getMehta3QBScramble)("mteole", getMehtaEOLEScramble)(
+  "mttdr",
+  getMehtaTDRScramble
+)("mt6cp", getMehta6CPScramble)("mtl5ep", getMehtaL5EPScramble)("mtcdrll", getMehtaCDRLLScramble)(
+  "easyxc",
+  getEasyXCrossScramble
+);

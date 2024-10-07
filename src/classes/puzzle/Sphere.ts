@@ -1,4 +1,4 @@
-import { Vector3D, UP, CENTER, BACK, DOWN } from './../vector3d';
+import { Vector3D, UP, CENTER, BACK, DOWN } from "./../vector3d";
 
 export class Sphere {
   points: Vector3D[];
@@ -11,7 +11,7 @@ export class Sphere {
   deltaTheta: number;
   verticalPoints: number;
   /**
-   * 
+   *
    * @param r Radius
    * @param p0 Initial phi
    * @param dp Delta phi
@@ -43,12 +43,13 @@ export class Sphere {
     for (let i = 0, maxi = V - 1; i <= maxi; i += 1) {
       for (let j = 0, maxj = H - 1; j <= maxj; j += 1) {
         this.points.push(
-          UP.mul( this.r ).rotate(CENTER, BACK, this.theta0 + i * dt)
+          UP.mul(this.r)
+            .rotate(CENTER, BACK, this.theta0 + i * dt)
             .rotate(CENTER, DOWN, this.phi0 + j * dp)
         );
-        if ( i < maxi && j < maxj ) {
-          i > 0 && this.faces.push([ i * H + j, i * H + j + 1, (i + 1) * H + j + 1 ]);
-          this.faces.push([ i * H + j, (i + 1) * H + j + 1, (i + 1) * H + j ]);
+        if (i < maxi && j < maxj) {
+          i > 0 && this.faces.push([i * H + j, i * H + j + 1, (i + 1) * H + j + 1]);
+          this.faces.push([i * H + j, (i + 1) * H + j + 1, (i + 1) * H + j]);
         }
       }
     }

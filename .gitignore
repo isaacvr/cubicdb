@@ -3,7 +3,6 @@
 /src/database/solves.db
 /src/database/sessions.db
 /src/database/contests.db
-/src/cubedb-premium
 /dist
 /cache
 /release

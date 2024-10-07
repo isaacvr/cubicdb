@@ -7,9 +7,12 @@ import {
   type Statistics,
   type TurnMetric,
 } from "@interfaces";
-import { adjustMillis, infinitePenalty, sTime } from "./timer";
+import { adjustMillis, infinitePenalty, sTime, sTimer, timer } from "./timer";
 import { scrambleReg } from "@classes/scramble-parser";
 import { newArr } from "./object";
+import moment from "moment";
+import { localLang } from "@stores/language.service";
+import { get } from "svelte/store";
 
 export const INITIAL_STATISTICS: Statistics = {
   best: { value: 0, better: false, prev: Infinity },
@@ -49,6 +52,20 @@ export function median(values: number[]): number {
   return v1[cant >> 1];
 }
 
+export function stdDev(values: number[], avg: number): number {
+  const len = values.length;
+  return len > 0 ? Math.sqrt(values.reduce((acc, e) => acc + (e - avg) ** 2 / len, 0)) : 0;
+}
+
+export function stdDevS(values: Solve[], avg: number): number {
+  const len = values.length;
+  return len > 0
+    ? Math.sqrt(
+        values.reduce((acc, e) => (infinitePenalty(e) ? acc : acc + (e.time - avg) ** 2 / len), 0)
+      )
+    : 0;
+}
+
 export function getAverage(n: number, arr: number[], calc: AverageSetting): (number | null)[] {
   let res: (number | null)[] = [];
   let set: MultiSet<number> = new MultiSet();
@@ -82,7 +99,14 @@ export function getAverage(n: number, arr: number[], calc: AverageSetting): (num
             .filter(isFinite)
             .forEach(v => (s -= v));
 
-        res.push(adjustMillis(s / (n - 2 * d), true));
+        if (
+          calc === AverageSetting.SEQUENTIAL ||
+          (calc === AverageSetting.GROUP && elems.length === n)
+        ) {
+          res.push(adjustMillis(s / (n - 2 * d), true));
+        } else {
+          res.push(null);
+        }
       }
 
       if (calc === AverageSetting.SEQUENTIAL) {
@@ -90,7 +114,7 @@ export function getAverage(n: number, arr: number[], calc: AverageSetting): (num
         set.rem(t1);
         infP -= isFinite(t1) ? 0 : 1;
         sum -= isFinite(t1) ? t1 : 0;
-      } else {
+      } else if (set.size === n) {
         set.clear();
         infP = sum = 0;
       }
@@ -117,8 +141,12 @@ export function bundleAverageS(
   arr: Solve[],
   calc: AverageSetting
 ): (number | null)[][] {
-  let res: (number | null)[][] = newArr(N.length).fill(0).map(_ => []);
-  let sets: MultiSet<number>[] = newArr(N.length).fill(0).map(_ => new MultiSet());
+  let res: (number | null)[][] = newArr(N.length)
+    .fill(0)
+    .map(_ => []);
+  let sets: MultiSet<number>[] = newArr(N.length)
+    .fill(0)
+    .map(_ => new MultiSet());
   let disc = N.map(n => (n === 3 ? 0 : Math.ceil(n * 0.05)));
   let len = arr.length - 1;
   let infP: number[] = newArr(N.length).fill(0);
@@ -214,7 +242,9 @@ export function decimateT<T>(arr: T[], width: number): T[] {
 
   const f = (arr.length - 1) / (MAXP - 1);
 
-  return newArr(MAXP).fill(0).map((e, p) => arr[Math.floor(p * f)]);
+  return newArr(MAXP)
+    .fill(0)
+    .map((e, p) => arr[Math.floor(p * f)]);
 }
 
 export function decimateN(arr: (number | null)[], width: number): (number | null)[] {
@@ -303,14 +333,7 @@ export function getUpdatedStatistics(
   );
 
   avg = len > 0 ? sum / len : 0;
-  dev =
-    len > 0
-      ? Math.sqrt(
-          solves.reduce((acc, e) => {
-            return infinitePenalty(e) ? acc : acc + (e.time - avg) ** 2 / len;
-          }, 0)
-        )
-      : 0;
+  dev = stdDevS(solves, avg);
 
   let avgs = bundleAverageS(
     AON,
@@ -474,4 +497,70 @@ export function statsReplaceId(stats: Statistics, prevId: string, currId: string
   stats.Ao2k.id = stats.Ao2k.id === prevId ? currId : stats.Ao2k.id;
   stats.best.id = stats.best.id === prevId ? currId : stats.best.id;
   stats.worst.id = stats.worst.id === prevId ? currId : stats.worst.id;
+}
+
+export function getAnomalies(solves: Solve[], threshold = 2): { pos: number; val: Solve }[] {
+  let times = solves.map((sv, pos) => ({ pos, val: sTime(sv) })).filter(t => t.val != Infinity);
+  let vals = times.map(t => t.val);
+  let m = mean(vals);
+  let s = stdDev(vals, m);
+  return times
+    .map((t, p) => ({ pos: t.pos, val: (vals[p] - m) / s }))
+    .sort((a, b) => b.val - a.val)
+    .filter(t => t.val > threshold)
+    .map(t => ({ pos: t.pos, val: solves[t.pos] }));
+}
+
+export function autocorrelate(values: number[]): number[] {
+  const result: number[] = [];
+  const maxVal = values.reduce((m, e) => Math.max(m, e), -Infinity);
+  const data = values.map(v => v / maxVal);
+  const N = data.length;
+  const N_2 = N >> 1;
+
+  for (let lag = 0; lag < N_2; lag += 1) {
+    let sum = 0;
+    for (let i = 0, maxi = N - lag; i < maxi; i += 1) {
+      sum += data[i] * data[i + lag];
+    }
+    result[lag] = sum / (N - lag);
+  }
+
+  return result;
+}
+
+export function solveSummary(sv: Solve[]) {
+  let n = sv.length;
+  let minTime = (a: Solve, b: Solve) => {
+    if (infinitePenalty(a)) return b;
+    if (infinitePenalty(b)) return a;
+    return a.time < b.time ? a : b;
+  };
+
+  let minMax = sv.reduce(
+    (acc, s) => [minTime(acc[0], s) === s ? s : acc[0], minTime(acc[1], s) === s ? acc[1] : s],
+    [sv[0], sv[0]]
+  );
+
+  let avg = getAverageS(n, sv, AverageSetting.SEQUENTIAL)[n - 1];
+  let svParts = sv.map((s, p) => {
+    return [
+      (sv.length >= 10 && p < 9 ? "0" : "") + (p + 1),
+      s === minMax[0] || s === minMax[1]
+        ? "(" + sTimer(s, true, true) + ")"
+        : sTimer(s, true, true),
+      s.scramble,
+    ];
+  });
+  let maxTime = svParts.reduce((acc, s) => Math.max(acc, s[1].length), 0);
+
+  return `${get(localLang).global.generatedByCubicDB} - ${moment().format("DD/MM/YYYY hh:mma")}
+  ${n === 3 ? "M" : "A"}o${n}: ${avg ? timer(avg, true, true) : "DNF"}
+  
+  ${svParts
+    .map((s, p) => s[0] + ". " + (s[1] + " ".repeat(maxTime)).slice(0, maxTime) + "  " + s[2])
+    .join("\n\n")}`
+    .split("\n")
+    .map(s => s.trimStart())
+    .join("\n");
 }
