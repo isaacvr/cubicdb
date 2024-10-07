@@ -385,6 +385,15 @@
   //   }
   // }
 
+  function handleResize() {
+    let controls = document.querySelector(".controls");
+
+    if (controls) {
+      let pw = controls.parentElement?.clientWidth;
+      (controls as any).style.width = pw + "px";
+    }
+  }
+
   onMount(() => {
     mounted = true;
 
@@ -393,6 +402,8 @@
         recs = r.filter(rec => errorIndex.indexOf(rec.num) < 0);
       });
     }
+
+    handleResize();
   });
 
   $: recomputeTimeBounds(speed);
@@ -402,7 +413,7 @@
   $: type === "controlled" && handleControlled(puzzleType, ~~puzzleOrder);
 </script>
 
-<svelte:window on:keydown={handleKeydown} />
+<svelte:window on:keydown={handleKeydown} on:resize={handleResize} />
 
 <main class:full={type === "full"}>
   <section>
@@ -422,10 +433,7 @@
       zoom={type === "full" ? 12 : 6}
     />
 
-    <div
-      class={"bg-backgroundLv2 absolute controls bottom-0 w-full " +
-        (type === "full" ? "grid h-16" : "flex items-center h-0")}
-    >
+    <div class={"controls " + (type === "full" ? "grid h-16" : "flex items-center h-0")}>
       <button class="flex px-3 py-2" on:mousedown={pause}>
         <Range
           bind:value={sequenceAlpha}
@@ -591,7 +599,7 @@
             </li>
           </ul>
 
-          <div class="actions flex justify-evenly">
+          <div class="actions hidden justify-evenly">
             <Input type="number" class="max-w-[6rem]" bind:value={recIndex} min={0} />
             <Button
               on:click={() => {
@@ -657,7 +665,7 @@
 
 <style lang="postcss">
   main {
-    @apply relative grid mt-1 w-full h-full overflow-hidden;
+    @apply relative grid mt-1 w-full h-[calc(100dvh-3.4rem)] overflow-hidden;
   }
 
   main.full {
@@ -685,7 +693,7 @@
   }
 
   .controls {
-    @apply transition-all duration-200;
+    @apply transition-all duration-200 bg-backgroundLv2 fixed bottom-0;
   }
 
   .settings {

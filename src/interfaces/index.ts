@@ -1108,6 +1108,7 @@ export interface Language {
     version: string;
     creator: string;
     donations: string;
+    acknowledgements: string;
   };
   TOOLS: {
     cubicdbBatch: string;

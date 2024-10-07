@@ -12,6 +12,7 @@
   import { DataService } from "@stores/data.service";
   import { Card } from "flowbite-svelte";
   import { localLang } from "@stores/language.service";
+  import { Link } from "svelte-routing";
 
   const notification = NotificationService.getInstance();
   const dataService = DataService.getInstance();
@@ -60,6 +61,49 @@
     },
   ];
 
+  const acknowledgements = [
+    {
+      name: "CSTimer",
+      logo: "/assets/cstimer.png",
+      link: "https://cstimer.net/",
+    },
+    {
+      name: "Twisty Timer",
+      logo: "/assets/twistyTimer.webp",
+      link: "https://play.google.com/store/apps/details?id=com.aricneto.twistytimer",
+    },
+    {
+      name: "Cubic Timer",
+      logo: "/assets/cubicTimer.webp",
+      link: "https://play.google.com/store/apps/details?id=com.hatopigeon.cubictimer",
+    },
+    {
+      name: "CubeDesk",
+      logo: "/assets/cubedesk.svg",
+      link: "https://www.cubedesk.io/",
+    },
+    {
+      name: "AlgDB",
+      logo: "/assets/algdb.png",
+      link: "https://algdb.net/",
+    },
+    {
+      name: "ClockDB",
+      logo: "/assets/clockdb.ico",
+      link: "https://clockdb.net/",
+    },
+    {
+      name: "CubeSolv",
+      logo: "/assets/cubesolv.png",
+      link: "https://www.cubesolv.es/",
+    },
+    {
+      name: "Magic Cube",
+      logo: "/assets/magicCube.webp",
+      link: "https://play.google.com/store/apps/details?id=org.distorted.magic",
+    },
+  ];
+
   (async () => {
     for (let i = 0, maxi = donations.length; i < maxi; i += 1) {
       donations[i].qr = await QRCode.toDataURL(donations[i].qrText);
@@ -93,14 +137,7 @@
   <section>
     <span class="key bg-purple-700">{$localLang.CUBICDB.name}: </span>
     <span class="value">CubicDB</span>
-  </section>
-
-  <hr />
-
-  <!-- Version -->
-  <section>
-    <span class="key bg-pink-700">{$localLang.CUBICDB.version}: </span>
-    <span class="value">{$version}</span>
+    <span class="value">(v{$version})</span>
   </section>
 
   <hr />
@@ -136,9 +173,30 @@
       <GmailIcon size="1.2rem" /> Gmail</Button
     >
 
-    <Button class="bg-blue-800 text-gray-300 gap-2" on:click={() => to("https://t.me/isaacvr")}>
+    <Button class="bg-blue-800 text-gray-300 gap-2" on:click={() => to("https://t.me/cubicdb")}>
       Telegram</Button
     >
+  </section>
+
+  <hr />
+
+  <!-- Acknowledgements -->
+  <section class="flex-col w-full">
+    <h2 class="text-2xl text-gray-300 mb-6">{$localLang.CUBICDB.acknowledgements}</h2>
+
+    <ul class="donation-container">
+      {#each acknowledgements as ack}
+        <li>
+          <Button
+            class="donation flex items-center gap-2 relative bg-black bg-opacity-30 p-4 rounded-md shadow-lg"
+            on:click={() => to(ack.link)}
+          >
+            <img src={ack.logo} alt="" class="donation-img small" />
+            {ack.name}
+          </Button>
+        </li>
+      {/each}
+    </ul>
   </section>
 
   <hr />
@@ -195,11 +253,17 @@
   }
 
   .donation {
-    @apply h-full grid place-items-center relative bg-black bg-opacity-30 p-4 rounded-md shadow-lg;
+    @apply h-full grid place-items-center relative bg-black
+    bg-opacity-30 p-4 rounded-md shadow-lg;
   }
 
-  .donation .donation-img {
-    @apply w-12 h-12 rounded-full object-contain shadow-md absolute top-0 left-1/2 -translate-x-[50%] -translate-y-[50%];
+  .donation-img {
+    @apply w-12 h-12 rounded-full object-contain shadow-md absolute
+    top-0 left-1/2 -translate-x-[50%] -translate-y-[50%] bg-white;
+  }
+
+  .donation-img.small {
+    @apply w-8 h-8 relative top-[unset] left-[unset] translate-x-0 translate-y-0 p-[1px];
   }
 
   .donation .donation-QR {
@@ -207,7 +271,8 @@
   }
 
   .donation .donation-address {
-    @apply flex flex-wrap justify-center py-1 items-center gap-2 cursor-pointer hover:text-pink-400;
+    @apply flex flex-wrap justify-center py-1 items-center gap-2
+    cursor-pointer hover:text-pink-400;
   }
 
   .donation .donation-address span {

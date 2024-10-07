@@ -686,7 +686,7 @@
 
 <main
   class={"w-full " +
-    (scrambleOnly || timerOnly || battle ? "h-full" : "h-[calc(100vh-3rem)] pt-14")}
+    (scrambleOnly || timerOnly || battle ? "h-full" : "h-[calc(100svh-3rem)] pt-14")}
 >
   {#if timerOnly || scrambleOnly}
     <TimerTab {timerOnly} {scrambleOnly} {context} {battle} />

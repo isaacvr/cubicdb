@@ -469,10 +469,6 @@ export class ThreeJSAdaptor {
       return;
     }
 
-    if (this.cube.type === "clock") {
-      return;
-    }
-
     let fin = new Vector2(event.clientX, event.clientY);
     let len = fin
       .clone()
@@ -544,19 +540,23 @@ export class ThreeJSAdaptor {
       for (let i = 0, maxi = intersects.length; i < maxi; i += 1) {
         if ((<any>intersects[i].object).material.color.getHex()) {
           this.piece = intersects[i];
-
           this.controls.enabled = false;
 
           if (this.cube.type === "clock") {
-            let data = this.drag(this.piece, new Vector2(0, 0), new Vector2(1, 0), this.camera);
+            if (this.piece.object.userData.data.name === "pin") {
+              let data = this.drag(this.piece, new Vector2(0, 0), new Vector2(1, 0), this.camera);
 
-            if (data) {
-              let anim = this.prepareFromDrag(data, false);
-              let factor = event.ctrlKey ? 1 : -1;
-              anim.angs = anim.angs.map(a => Math.abs(a) * factor);
-              anim.timeIni = performance.now();
-              anim.animationTimes = anim.animationTimes.map(_ => 0);
-              this.animationQueue.push(anim);
+              if (data) {
+                let anim = this.prepareFromDrag(data, false);
+                let factor = event.ctrlKey ? 1 : -1;
+                anim.angs = anim.angs.map(a => Math.abs(a) * factor);
+                anim.timeIni = performance.now();
+                anim.animationTimes = anim.animationTimes.map(_ => 0);
+                this.animationQueue.push(anim);
+              }
+
+              this.piece = null;
+              this.dragging = false;
             }
 
             return;
@@ -574,7 +574,7 @@ export class ThreeJSAdaptor {
       const N2 = Math.ceil(this.angleFactor);
       let N = Math.abs(N1 - this.angleFactor) < Math.abs(N2 - this.angleFactor) ? N1 : N2;
 
-      const { animBuffer, angs, userData, animationTimes } = this.animation;
+      const { animBuffer, angs, userData, animationTimes, centers } = this.animation;
 
       let from1 = animBuffer.map((g: any[]) => g.map(e => e.matrixWorld.clone()));
       let u = this.rotationData.u.clone();
@@ -598,7 +598,7 @@ export class ThreeJSAdaptor {
         timeIni: performance.now(),
         u,
         userData,
-        centers: angs.map(() => this.cube.p.center.clone()),
+        centers,
         ignoreUserData: true,
       });
 

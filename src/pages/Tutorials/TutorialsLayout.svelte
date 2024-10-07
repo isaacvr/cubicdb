@@ -132,6 +132,10 @@
       .getTutorials()
       .then(tuts => {
         tutorials = tuts;
+
+        if (!tutorials.some(t => t.lang === lang)) {
+          lang = tutorials[0].lang;
+        }
       })
       .catch(err => {
         console.log("ERROR: ", err);
@@ -185,7 +189,7 @@
 
     <Select
       class="mr-2 px-2"
-      items={LANGUAGES}
+      items={LANGUAGES.filter(lang => tutorials.some(t => t.lang === lang[2]))}
       bind:value={lang}
       transform={e => e[1].code}
       label={e => e[1].name}

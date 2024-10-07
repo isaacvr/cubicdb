@@ -373,6 +373,7 @@ export const Spanish: Language = {
     version: "Versión",
     creator: "Creador",
     donations: "Donaciones",
+    acknowledgements: "Reconocimientos",
   },
   TOOLS: {
     cubicdbBatch: "CubicDB Scrambles",

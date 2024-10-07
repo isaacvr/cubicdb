@@ -370,6 +370,7 @@ export const Chinese: Language = {
     version: "版本",
     creator: "作者",
     donations: "捐赠",
+    acknowledgements: "致谢",
   },
   TOOLS: {
     cubicdbBatch: "CubicDB 打乱",

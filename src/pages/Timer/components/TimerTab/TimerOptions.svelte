@@ -298,8 +298,6 @@
     options[2].text = `${$localLang.TIMER.useOldScramble} [Ctrl + O]`;
     options[3].text = `${$localLang.TIMER.copyScramble} [Ctrl + C]`;
     options[4].text = `${$localLang.TIMER.settings} [Ctrl + ,]`;
-    // options[4].text = `${ $localLang.TIMER.notes } [Ctrl + N]`;
-    // options[5].text = `${ $localLang.TIMER.settings } [Ctrl + ,]`;
   }
 
   function modalKeyupHandler(e: CustomEvent) {
@@ -340,11 +338,6 @@
         inputMethod.set(gn);
       })
       .catch(err => {
-        // notification.addNotification({
-        //   header: 'Search error',
-        //   text: 'Bluetooth error.',
-        // });
-
         console.log("ERROR: ", err);
       })
       .finally(() => {
@@ -399,10 +392,6 @@
     showSeedModal = true;
     saveEnableKeyboard();
   }
-
-  onMount(() => {
-    // addTool(tools[5]);
-  });
 
   $: $localLang, updateTexts();
 </script>
@@ -524,7 +513,7 @@
     </Dropdown>
   </li>
 
-  <li>
+  <!-- <li>
     <Button
       aria-label="Ao5"
       color="none"
@@ -533,7 +522,7 @@
     >
       <Ao5Icon width="100%" height="100%" />
     </Button>
-  </li>
+  </li> -->
 
   <li>
     <Tooltip text="Seed ">
