@@ -29,7 +29,7 @@ import {
   type Intersection,
 } from "three";
 import { TrackballControls } from "three/examples/jsm/controls/TrackballControls";
-import TEXTURE_URL from "@public/assets/textures/cube-texture.jpg?url";
+import TEXTURE_URL from "@public/assets/textures/cube-texture1.jpg?url";
 import { DataService } from "@stores/data.service";
 
 const textureLoader = new TextureLoader();
