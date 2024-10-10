@@ -41,6 +41,7 @@ export const PuzzleTypeName = [
   "supersquare1",
   "fto",
   "timemachine",
+  "masterskewb",
 ] as const;
 
 export declare type PuzzleType = (typeof PuzzleTypeName)[number];

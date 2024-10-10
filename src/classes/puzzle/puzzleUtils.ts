@@ -2,7 +2,7 @@ import { CENTER, Vector3D } from "./../vector3d";
 import { Sticker } from "./Sticker";
 import type { PuzzleInterface } from "@interfaces";
 import { FaceSticker } from "./FaceSticker";
-import { lineIntersection3D } from "@helpers/math";
+import { bezier, lineIntersection3D } from "@helpers/math";
 import { ImageSticker } from "./ImageSticker";
 import { EPS } from "@constants";
 import { TextSticker } from "./TextSticker";
@@ -186,14 +186,7 @@ export function roundStickerCorners(
       }
     }
 
-    for (let j = 0; j <= PPC; j += 1) {
-      let a = j / PPC;
-      newSt.points.push(
-        P.reduce((ac: Vector3D, p: Vector3D, pos: number) => {
-          return ac.add(p.mul(C2k[pos] * Math.pow(1 - a, 2 - pos) * Math.pow(a, pos)));
-        }, new Vector3D())
-      );
-    }
+    bezier(P, PPC).forEach(p => newSt.points.push(p));
   }
 
   return scaleSticker(newSt, SCALE);

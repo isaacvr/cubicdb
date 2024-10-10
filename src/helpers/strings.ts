@@ -190,6 +190,10 @@ function getMoveLength(sequence: string[], puzzle: PuzzleType, order: number): n
         return ScrambleParser.parseClock(sequence.join(" ")).length;
       }
 
+      case "masterskewb": {
+        return ScrambleParser.parseSkewb(sequence.join(" ")).length;
+      }
+
       case "helicopter": {
         return sequence.reduce((acc: any[], e) => [...acc, ...e.split(/\s+/)], []).length;
       }

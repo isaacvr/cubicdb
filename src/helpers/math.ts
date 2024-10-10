@@ -280,3 +280,34 @@ export function bitLength(n: number): number {
   while (1 << bits <= n) bits += 1;
   return bits;
 }
+
+export function pascal(n: number) {
+  if (n <= 0) return [1];
+
+  let res = [[1], []];
+  let cur = 1;
+
+  for (let i = 1; i <= n; i += 1) {
+    res[cur] = res[1 - cur].map((n, p, a) => (p === 0 ? 1 : n + a[p - 1]));
+    res[cur].push(1);
+    cur ^= 1;
+  }
+
+  return res[1 - cur];
+}
+
+export function bezier(pts: Vector3D[], points: number): Vector3D[] {
+  let res: Vector3D[] = [];
+  let Cnk = pascal(pts.length - 1);
+
+  for (let j = 0; j <= points; j += 1) {
+    let a = j / points;
+    res.push(
+      pts.reduce((ac: Vector3D, p: Vector3D, pos: number) => {
+        return ac.add(p.mul(Cnk[pos] * Math.pow(1 - a, 2 - pos) * Math.pow(a, pos)), true);
+      }, new Vector3D())
+    );
+  }
+
+  return res;
+}

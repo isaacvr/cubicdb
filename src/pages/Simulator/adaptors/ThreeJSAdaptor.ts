@@ -140,6 +140,7 @@ export class ThreeJSAdaptor {
   private animation: PuzzleAnimation | null = null;
   private distance: number;
   private angleFactor = 0;
+  private destroyed = false;
 
   constructor(config: ThreeJSAdaptorConfig) {
     this.enableKeyboard = config.enableKeyboard;
@@ -304,6 +305,7 @@ export class ThreeJSAdaptor {
   }
 
   renderScene() {
+    if (this.destroyed) return;
     this.backFace.visible = this.showBackFace;
     this.controls.update();
     this.distance = this.camera.position.distanceTo({ x: 0, y: 0, z: 0 });
@@ -311,6 +313,8 @@ export class ThreeJSAdaptor {
   }
 
   render() {
+    if (this.destroyed) return;
+
     if (!this.animating) {
       if (this.moveQueue.length) {
         if (this.addMove(this.moveQueue[0])) {
@@ -813,6 +817,7 @@ export class ThreeJSAdaptor {
   }
 
   destroy() {
+    this.destroyed = true;
     this.renderer.domElement.remove();
     this.renderer.dispose();
     this.renderer.forceContextLoss();

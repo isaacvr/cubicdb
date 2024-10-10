@@ -31,6 +31,7 @@ import { HELICOPTER } from "./helicopter";
 import { SUPER_SQUARE1 } from "./superSquare1";
 import { FTO } from "./fto";
 import { TIME_MACHINE } from "./timeMachine";
+import { MASTER_SKEWB } from "./masterSkewb";
 
 // NxN, Pyraminx, Megaminx, Skewb, Square-1, Clock
 registerPuzzle("rubik", "Rubik", RUBIK, true);
@@ -64,6 +65,7 @@ registerPuzzle("pyraminxCrystal", "Pyraminx Crystal", PYRAMINX_CRYSTAL, false);
 
 // Skewb Mods
 registerPuzzle("ultimateSkewb", "Ultimate Skewb", ULTIMATE_SKEWB, false);
+registerPuzzle("masterskewb", "Master Skewb", MASTER_SKEWB, false);
 
 // Square-1 Mods
 registerPuzzle("square2", "Square Two", SQUARE2, false);

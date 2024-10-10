@@ -718,7 +718,7 @@ export class Puzzle {
       moves = ScrambleParser.parseNNN(seq, this.order);
     } else if (this.type === "pyraminx") {
       moves = ScrambleParser.parsePyraminx(seq);
-    } else if (this.type === "skewb") {
+    } else if (this.type === "skewb" || this.type === "masterskewb") {
       moves = ScrambleParser.parseSkewb(seq);
     } else if (this.type === "square1" || this.type === "square2") {
       moves = ScrambleParser.parseSquare1(seq);

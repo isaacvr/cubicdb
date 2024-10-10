@@ -47,7 +47,6 @@
   const iconSize = "1.3rem";
   const PUZZLES: { puzzle: PuzzleType; name: string; order: number; scrambler: Scrambler | "" }[] =
     [
-      // { puzzle: "helicopter", name: "Helicopter", order: -1, scrambler: '' },       // 0
       { puzzle: "rubik", name: "2x2x2", order: 2, scrambler: "222so" }, // 0
       { puzzle: "rubik", name: "3x3x3", order: 3, scrambler: "333" }, // 1
       { puzzle: "rubik", name: "4x4x4", order: 4, scrambler: "444wca" }, // 2
@@ -60,6 +59,7 @@
       { puzzle: "skewb", name: "Skewb", order: -1, scrambler: "skbso" }, // 9
       { puzzle: "megaminx", name: "Megaminx", order: 3, scrambler: "mgmp" }, // 10
       { puzzle: "clock", name: "Clock", order: -1, scrambler: "clkwca" }, // 11
+      { puzzle: "masterskewb", name: "Master Skewb", order: -1, scrambler: "skbso" }, // 12
     ];
 
   let puzzle = PUZZLES[1];
