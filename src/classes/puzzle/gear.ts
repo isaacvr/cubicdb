@@ -1,6 +1,6 @@
 import { LEFT, UP, BACK, RIGHT, FRONT, DOWN, CENTER } from "./../vector3d";
 import { Vector3D } from "../../classes/vector3d";
-import type { PuzzleInterface, VectorLike3D } from "@interfaces";
+import type { PuzzleInterface, ToMoveResult, VectorLike3D } from "@interfaces";
 import { EPS, STANDARD_PALETTE } from "@constants";
 import { Piece } from "./Piece";
 import { Sticker } from "./Sticker";
@@ -248,7 +248,7 @@ export function GEAR(): PuzzleInterface {
       let p = random(fp) as Piece;
       let st = random(p.stickers.filter(s => s.color != "d")) as Sticker;
       let v = moves[pos];
-      let pcs = gear.toMove!(p, st, v);
+      let pcs = gear.toMove!(p, st, v) as ToMoveResult[];
 
       pcs.forEach((pc: any) => {
         pc.pieces.forEach((p: Piece) => {
@@ -275,7 +275,6 @@ export function GEAR(): PuzzleInterface {
   gear.faceVectors = [UP, RIGHT, FRONT, DOWN, LEFT, BACK];
 
   assignColors(gear, gear.faceColors);
-  // roundCorners(gear, 0.2, 0.9, null, (s: Sticker) => s.color != 'x');
 
   pieces.forEach(p =>
     p.stickers.forEach(s => {

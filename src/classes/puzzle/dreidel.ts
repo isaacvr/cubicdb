@@ -1,6 +1,6 @@
 import { LEFT, UP, BACK, RIGHT, FRONT, DOWN, CENTER } from "./../vector3d";
 import { Vector3D } from "../../classes/vector3d";
-import type { PuzzleInterface } from "@interfaces";
+import type { PuzzleInterface, ToMoveResult } from "@interfaces";
 import { EPS, STANDARD_PALETTE } from "@constants";
 import { Piece } from "./Piece";
 import { Sticker } from "./Sticker";
@@ -265,7 +265,7 @@ export function DREIDEL(): PuzzleInterface {
       let o = st.getOrientation();
 
       if (v.some(e => e.cross(o).abs() < EPS)) {
-        let pcs = dreidel.toMove!(pc, st, st.vecs[0]);
+        let pcs = dreidel.toMove!(pc, st, st.vecs[0]) as ToMoveResult;
         let cant = random(3) * 2 + 1;
         pcs.pieces.forEach((p: Piece) => p.rotate(CENTER, st.vecs[0], pcs.ang * cant, true));
       }
@@ -279,7 +279,7 @@ export function DREIDEL(): PuzzleInterface {
         let st = random(pc.stickers.filter(s => !/^[xd]{1}$/.test(s.color))) as Sticker;
         let vec = random(st.vecs);
         let cant = 1 + random(3);
-        let pcs = dreidel.toMove!(pc, st, vec);
+        let pcs = dreidel.toMove!(pc, st, vec) as ToMoveResult;
         pcs.pieces.forEach((p: Piece) => p.rotate(CENTER, vec, pcs.ang * cant, true));
       }
 
@@ -288,7 +288,7 @@ export function DREIDEL(): PuzzleInterface {
         let st = random(pc.stickers.filter(s => !/^[xd]{1}$/.test(s.color))) as Sticker;
         let vec = random(st.vecs);
         let cant = random(3);
-        let pcs = dreidel.toMove!(pc, st, vec);
+        let pcs = dreidel.toMove!(pc, st, vec) as ToMoveResult;
         pcs.pieces.forEach((p: Piece) => p.rotate(CENTER, vec, pcs.ang * cant * 2, true));
       }
     }
@@ -299,7 +299,7 @@ export function DREIDEL(): PuzzleInterface {
       let o = st.getOrientation();
 
       if (v.some(e => e.cross(o).abs() > EPS)) {
-        let pcs = dreidel.toMove!(pc, st, st.vecs[0]);
+        let pcs = dreidel.toMove!(pc, st, st.vecs[0]) as ToMoveResult;
         pcs.pieces.forEach((p: Piece) => p.rotate(CENTER, st.vecs[0], pcs.ang, true));
       }
     }
@@ -314,7 +314,6 @@ export function DREIDEL(): PuzzleInterface {
   dreidel.faceVectors = [UP, RIGHT, FRONT, DOWN, LEFT, BACK];
 
   assignColors(dreidel, dreidel.faceColors);
-  // roundCorners(dreidel, null, null, null, (s: Sticker) => !(s instanceof FaceSticker));
 
   dreidel.getAllStickers().forEach(s => {
     if (s instanceof FaceSticker) {

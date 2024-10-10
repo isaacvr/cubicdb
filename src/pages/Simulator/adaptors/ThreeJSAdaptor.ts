@@ -9,21 +9,32 @@ import { cubeToThree, piecesToTree } from "@helpers/cubeToThree";
 import { getLagrangeInterpolation } from "@helpers/math";
 import type { PuzzleType } from "@interfaces";
 import {
+  ACESFilmicToneMapping,
+  AmbientLight,
+  EquirectangularReflectionMapping,
+  EquirectangularRefractionMapping,
   FrontSide,
+  HemisphereLight,
   Matrix3,
   Matrix4,
+  MeshStandardMaterial,
   Object3D,
-  PCFSoftShadowMap,
   PerspectiveCamera,
-  PointLight,
   Raycaster,
   Scene,
+  TextureLoader,
   Vector2,
   Vector3,
   WebGLRenderer,
   type Intersection,
 } from "three";
 import { TrackballControls } from "three/examples/jsm/controls/TrackballControls";
+import TEXTURE_URL from "@public/assets/textures/cube-texture.jpg?url";
+import { DataService } from "@stores/data.service";
+
+const textureLoader = new TextureLoader();
+const texture = await textureLoader.loadAsync(TEXTURE_URL);
+texture.mapping = EquirectangularReflectionMapping;
 
 interface ThreeJSAdaptorConfig {
   canvas: HTMLCanvasElement;
@@ -77,13 +88,6 @@ function vectorsFromCamera(vecs: any[], cam: PerspectiveCamera) {
   return vecs.map(e => {
     let vp = new Vector3(e.x, e.y, e.z).project(cam);
     return new Vector3D(vp.x, -vp.y, 0);
-  });
-}
-
-function vectorsFromCameraInv(vecs: any[], cam: PerspectiveCamera) {
-  return vecs.map(e => {
-    let vp = new Vector3(e.x, e.y, e.z).unproject(cam);
-    return new Vector3D(vp.x, vp.y, vp.z);
   });
 }
 
@@ -155,10 +159,9 @@ export class ThreeJSAdaptor {
       canvas: this.canvas,
     });
 
-    this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = PCFSoftShadowMap;
-
     this.renderer.setPixelRatio(window.devicePixelRatio);
+    this.renderer.toneMapping = ACESFilmicToneMapping;
+    this.renderer.toneMappingExposure = 1;
 
     this.canvas.style.position = "absolute";
     this.canvas.style.top = "0";
@@ -181,7 +184,13 @@ export class ThreeJSAdaptor {
     this.distance = z;
   }
 
-  dataFromGroup(pc: any, best: Vector3D, vv: Vector3D, dir: number, fp = findPiece): DragResult {
+  dataFromGroup(
+    pc: any,
+    best: Vector3D,
+    vv: Vector3D,
+    dir: number,
+    fp = findPiece
+  ): DragResult | null {
     let animationBuffer: Object3D[][] = [];
     let userData: UserData[][] = [];
     let angs: number[] = [];
@@ -194,13 +203,14 @@ export class ThreeJSAdaptor {
     let u: any = best;
 
     groupToMove.forEach(g => {
+      if (g.pieces.length === 0) return;
       if ("dir" in g) {
         let cr = vv.cross(vectorsFromCamera([g.dir], this.camera)[0]);
         dir = -Math.sign(cr.z);
         u = g.dir;
       }
 
-      if ("center" in g) {
+      if (g.center) {
         centers.push(g.center);
       } else {
         centers.push(this.cube.p.center.clone());
@@ -223,8 +233,12 @@ export class ThreeJSAdaptor {
       userData.push(subUserData);
       animationBuffer.push(subBuffer);
       angs.push(g.ang);
-      animationTimes.push(g.animationTime);
+      animationTimes.push(g.animationTime || NaN);
     });
+
+    if (userData.length === 0) {
+      return null;
+    }
 
     return {
       buffer: animationBuffer,
@@ -271,8 +285,9 @@ export class ThreeJSAdaptor {
   }
 
   resizeHandler(contained: boolean) {
-    this.W = Math.min(window.innerWidth, window.screen.availWidth);
-    this.H = Math.min(window.innerHeight, window.screen.availHeight);
+    let isElectron = DataService.getInstance().isElectron;
+    this.W = Math.min(window.innerWidth, window.screen.availWidth * (isElectron ? 2 : 1));
+    this.H = Math.min(window.innerHeight, window.screen.availHeight * (isElectron ? 2 : 1));
 
     if (contained && this.canvas?.parentElement) {
       this.W = (this.canvas.parentElement as any).clientWidth;
@@ -294,7 +309,7 @@ export class ThreeJSAdaptor {
         }
 
         this.moveQueue.shift();
-      } else if (this.animationQueue.length) {
+      } else if (this.animationQueue.length > 0) {
         this.setAnimationData();
         this.animating = true;
         let { userData, ignoreUserData } = this.currentAnimation!;
@@ -561,7 +576,7 @@ export class ThreeJSAdaptor {
 
             return;
           }
-        } else {
+
           break;
         }
       }
@@ -607,7 +622,6 @@ export class ThreeJSAdaptor {
       this.animation.animationTimes = this.animation.animationTimes.map(() => 0);
       this.animation.angs = this.animation.angs.map(ang => ang * N);
       this.animationQueue.push(this.animation);
-      // this.setAnimationData();
     }
 
     this.dragging = false;
@@ -680,16 +694,20 @@ export class ThreeJSAdaptor {
     this.moveQueue.push([m, t]);
   }
 
-  resetPuzzle(facelet?: string, scramble = false, useScr = "") {
+  async resetPuzzle(facelet?: string, scramble = false, useScr = "") {
     let children = this.scene.children;
     this.scene.remove(...children);
 
     // Scene preparation
+    const ambientLight = new AmbientLight(0xffffff, 1);
+    this.scene.add(ambientLight);
 
-    let light = new PointLight("#ffffff", 3, 3, 1);
-    light.position.set(0, 2, 0);
-    light.castShadow = true;
-    this.scene.add(light);
+    const hemisphereLight = new HemisphereLight(0xffffff, 0xffffff, 1);
+    hemisphereLight.position.set(2, 0, 0);
+    this.scene.add(hemisphereLight);
+
+    // this.scene.background = texture1;
+    // this.scene.environment = texture1;
 
     // Puzzle setup
     if (facelet) {
@@ -707,13 +725,14 @@ export class ThreeJSAdaptor {
 
     // @ts-ignore
     // window.cube = cube;
+    const excludePuzzlesBF: PuzzleType[] = ["clock", "timemachine"];
 
     let ctt = cubeToThree(this.cube);
     let bfc = piecesToTree(
       this.cube,
       1,
       (st: Sticker[]) => {
-        if (this.cube.type === "clock") return [];
+        if (excludePuzzlesBF.some(p => p === this.cube.type)) return [];
         return st
           .filter(s => this.cube.p.faceColors.indexOf(s.color) > -1 && !(s instanceof ImageSticker))
           .map(s =>
@@ -728,6 +747,19 @@ export class ThreeJSAdaptor {
       },
       FrontSide
     );
+
+    [ctt.meshes, bfc.meshes].forEach(m => {
+      m.forEach(m => {
+        let mats = (
+          m.material instanceof Array ? m.material : [m.material]
+        ) as MeshStandardMaterial[];
+
+        mats.forEach(mt => {
+          mt.envMap = texture;
+          mt.envMapIntensity = 1;
+        });
+      });
+    });
 
     this.group = ctt.group;
     this.cube = ctt.nc;

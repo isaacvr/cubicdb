@@ -1,6 +1,6 @@
 import { RIGHT, LEFT, DOWN, FRONT } from "./../vector3d";
 import { Vector3D, CENTER, BACK, UP } from "../../classes/vector3d";
-import type { PuzzleInterface } from "@interfaces";
+import type { PuzzleInterface, ToMoveResult } from "@interfaces";
 import { EPS, STANDARD_PALETTE } from "@constants";
 import { Piece } from "./Piece";
 import { Sticker } from "./Sticker";
@@ -155,7 +155,7 @@ export function SKEWB(): PuzzleInterface {
       let p = random(pieces) as Piece;
       let s = random(p.stickers.filter(s => !/^[xd]{1}$/.test(s.color))) as Sticker;
       let vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > EPS));
-      let pcs = skewb.toMove(p, s, vec);
+      let pcs = skewb.toMove(p, s, vec) as ToMoveResult;
       let cant = 1 + random(2);
       pcs.pieces.forEach((p: Piece) => p.rotate(CENTER, vec, pcs.ang * cant, true));
     }
@@ -197,7 +197,6 @@ export function SKEWB(): PuzzleInterface {
   skewb.faceVectors = [UP, RIGHT, FRONT, DOWN, LEFT, BACK];
 
   assignColors(skewb, skewb.faceColors);
-  // roundCorners(skewb, null, 0.95);
 
   return skewb;
 }

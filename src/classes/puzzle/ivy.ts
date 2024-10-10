@@ -1,6 +1,6 @@
 import { LEFT, UP, BACK, RIGHT, FRONT, DOWN, CENTER } from "./../vector3d";
 import { Vector3D } from "../../classes/vector3d";
-import type { PuzzleInterface } from "@interfaces";
+import type { PuzzleInterface, ToMoveResult } from "@interfaces";
 import { EPS, STANDARD_PALETTE } from "@constants";
 import { Piece } from "./Piece";
 import { Sticker } from "./Sticker";
@@ -135,7 +135,7 @@ export function IVY(): PuzzleInterface {
       let p = random(corners) as Piece;
       let s = random(p.stickers.filter(s => !/^[xd]{1}$/.test(s.color))) as Sticker;
       let vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > EPS));
-      let pcs = ivy.toMove(p, s, vec);
+      let pcs = ivy.toMove(p, s, vec) as ToMoveResult;
       let cant = 1 + random(2);
       pcs.pieces.forEach((p: Piece) => p.rotate(CENTER, vec, pcs.ang * cant, true));
     }
@@ -150,7 +150,6 @@ export function IVY(): PuzzleInterface {
   ivy.faceVectors = [UP, RIGHT, FRONT, DOWN, LEFT, BACK];
 
   assignColors(ivy, ivy.faceColors);
-  // roundCorners(ivy, 0.05, 0.97);
 
   return ivy;
 }

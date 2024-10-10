@@ -1,13 +1,13 @@
 // import { STANDARD_PALETTE } from '@constants';
 import { BACK, CENTER, DOWN, FRONT, RIGHT, UP, Vector3D } from "@classes/vector3d";
-import type { PiecesToMove, PuzzleInterface, SequenceResult } from "@interfaces";
+import type { PiecesToMove, PuzzleInterface, SequenceResult, ToMoveResult } from "@interfaces";
 import { Sticker } from "./Sticker";
 import { Piece } from "./Piece";
 import { FaceSticker } from "./FaceSticker";
 import { EPS } from "@constants";
 import { getScramble } from "@cstimer/scramble/clock";
 import { ScrambleParser } from "@classes/scramble-parser";
-import { getAllStickers } from "./puzzleUtils";
+import { extrudeSticker, getAllStickers } from "./puzzleUtils";
 
 export function CLOCK(): PuzzleInterface {
   let clock: PuzzleInterface = {
@@ -52,36 +52,6 @@ export function CLOCK(): PuzzleInterface {
 
   const X = 0;
   const Y = 0;
-
-  function extrudeSticker(
-    s: Sticker,
-    u: Vector3D,
-    closeIni = false,
-    closeFin = false
-  ): FaceSticker {
-    let s1 = s.add(u);
-    let faces: number[][] = [];
-
-    for (let i = 0, maxi = s.points.length; i < maxi; i += 1) {
-      let ni = (i + 1) % maxi;
-      faces.push([i, maxi + i, maxi + ni]);
-      faces.push([i, maxi + ni, ni]);
-    }
-
-    if (closeIni) {
-      for (let i = 1, maxi = s.points.length - 1; i < maxi; i += 1) {
-        faces.push([0, i, i + 1]);
-      }
-    }
-
-    if (closeFin) {
-      for (let i = 1, maxi = s.points.length - 1; i < maxi; i += 1) {
-        faces.push([maxi + 1, maxi + i + 2, maxi + i + 1]);
-      }
-    }
-
-    return new FaceSticker([...s.points, ...s1.points], faces, s.color);
-  }
 
   function drawSingleClock(
     PINS: boolean[],
@@ -395,19 +365,19 @@ export function CLOCK(): PuzzleInterface {
           val = pos === 1 ? val : !val;
 
           if (val) {
-            let rotationInfo: any[] = clock.toMove!(
+            let rotationInfo = clock.toMove!(
               dials[3 - i],
               dials[3 - i].stickers[0],
-              null,
+              UP,
               pinCode
-            );
+            ) as ToMoveResult[];
 
             rotationInfo.forEach(info => {
               res.push({
                 pieces: info.pieces,
                 ang: -info.ang * mv[pos],
-                u: info.dir,
-                center: info.center,
+                u: info.dir!,
+                center: info.center!,
               });
             });
 

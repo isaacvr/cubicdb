@@ -23,7 +23,7 @@ export function loadImageToPiece(sticker: ImageSticker, piece: Object3D) {
 
   const mesh = new Mesh(geometry, material);
 
-  mesh.userData = sticker;
+  mesh.userData.data = sticker;
 
   piece.add(mesh);
 }

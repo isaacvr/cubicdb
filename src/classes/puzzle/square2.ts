@@ -1,7 +1,7 @@
 import { Piece } from "./Piece";
 import { RIGHT, LEFT, BACK, UP, FRONT, DOWN } from "./../vector3d";
 import { Vector3D, CENTER } from "../../classes/vector3d";
-import type { PuzzleInterface } from "@interfaces";
+import type { PuzzleInterface, ToMoveResult } from "@interfaces";
 import { EPS, STANDARD_PALETTE } from "@constants";
 import { Sticker } from "./Sticker";
 import { assignColors, getAllStickers, random } from "./puzzleUtils";
@@ -237,8 +237,8 @@ export function SQUARE2(): PuzzleInterface {
         )
       );
 
-      let pcs1 = sq2.toMove(pt, s1, UP);
-      let pcs2 = sq2.toMove(pb, s2, DOWN);
+      let pcs1 = sq2.toMove(pt, s1, UP) as ToMoveResult;
+      let pcs2 = sq2.toMove(pb, s2, DOWN) as ToMoveResult;
 
       let cant1 = random(12);
       let cant2 = random(12);
@@ -246,7 +246,7 @@ export function SQUARE2(): PuzzleInterface {
       pcs1.pieces.forEach((p: Piece) => p.rotate(CENTER, UP, pcs1.ang * cant1, true));
       pcs2.pieces.forEach((p: Piece) => p.rotate(CENTER, DOWN, pcs2.ang * cant2, true));
 
-      let pcs3 = sq2.toMove(EQ, EQ.stickers[0], EQ.stickers[0].vecs[0]);
+      let pcs3 = sq2.toMove(EQ, EQ.stickers[0], EQ.stickers[0].vecs[0]) as ToMoveResult;
       pcs3.pieces.forEach((p: Piece) => p.rotate(CENTER, EQ.stickers[0].vecs[0], pcs3.ang, true));
     }
   };
@@ -260,7 +260,6 @@ export function SQUARE2(): PuzzleInterface {
   sq2.faceVectors = [UP, RIGHT, FRONT, DOWN, LEFT, BACK];
 
   assignColors(sq2, sq2.faceColors);
-  // roundCorners(sq2, null, 0.95);
 
   return sq2;
 }

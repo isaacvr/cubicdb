@@ -1,6 +1,6 @@
 import { LEFT, UP, BACK, RIGHT, FRONT, DOWN, CENTER } from "./../vector3d";
 import { Vector3D } from "../../classes/vector3d";
-import type { PuzzleInterface } from "@interfaces";
+import type { PuzzleInterface, ToMoveResult } from "@interfaces";
 import { EPS, STANDARD_PALETTE } from "@constants";
 import { Piece } from "./Piece";
 import { Sticker } from "./Sticker";
@@ -138,7 +138,7 @@ export function REX(): PuzzleInterface {
       let p = random(pieces) as Piece;
       let s = random(p.stickers.filter(s => !/^[xd]{1}$/.test(s.color))) as Sticker;
       let vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > EPS));
-      let pcs = rex.toMove(p, s, vec);
+      let pcs = rex.toMove(p, s, vec) as ToMoveResult;
       let cant = 1 + random(2);
       pcs.pieces.forEach((p: Piece) => p.rotate(CENTER, vec, pcs.ang * cant, true));
     }
@@ -153,7 +153,6 @@ export function REX(): PuzzleInterface {
   rex.faceVectors = [UP, RIGHT, FRONT, DOWN, LEFT, BACK];
 
   assignColors(rex, rex.faceColors);
-  // roundCorners(rex, null, null, null, null, true);
 
   return rex;
 }

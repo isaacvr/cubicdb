@@ -1,6 +1,6 @@
 import { LEFT, UP, BACK, RIGHT, FRONT, DOWN } from "./../vector3d";
 import { Vector3D } from "../../classes/vector3d";
-import type { PuzzleInterface } from "@interfaces";
+import type { PuzzleInterface, ToMoveResult } from "@interfaces";
 import { EPS, STANDARD_PALETTE } from "@constants";
 import { Piece } from "./Piece";
 import { Sticker } from "./Sticker";
@@ -177,7 +177,9 @@ export function MIRROR(n: number): PuzzleInterface {
 
     for (let i = 0; i < MOVES; i += 1) {
       let dir = random(dirs);
-      let mv = mirror.toMove ? mirror.toMove(random(pieces), null, dir) : [];
+      let pc = random(pieces) as Piece;
+      let st = pc.stickers[0];
+      let mv = mirror.toMove!(pc, st, dir) as ToMoveResult;
       let cant = 1 + random(3);
       mv.pieces.forEach((p: Piece) => p.rotate(mirror.center, dir, mv.ang * cant, true));
     }
@@ -194,10 +196,6 @@ export function MIRROR(n: number): PuzzleInterface {
   mirror.faceColors = mirror.faceVectors.map(() => "lightGray");
 
   assignColors(mirror, mirror.faceColors);
-  // roundCorners(mirror, null, null, null, null, (s: Sticker) => s.color != 'x');
-  // roundCorners(mirror);
-
-  // pieces.forEach(p => p.stickers.forEach(s => s.color = (!s.color.match(/^[xd]$/)) ? 'lightGray' : s.color));
 
   return mirror;
 }

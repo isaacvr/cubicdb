@@ -2,7 +2,7 @@ import { Vector3D, UP, DOWN, FRONT, CENTER, RIGHT, LEFT } from "../vector3d";
 import { Sticker } from "./Sticker";
 import { Piece } from "./Piece";
 import { assignColors, getAllStickers, random } from "./puzzleUtils";
-import type { PuzzleInterface } from "@interfaces";
+import type { PuzzleInterface, ToMoveResult } from "@interfaces";
 import { EPS, STANDARD_PALETTE } from "@constants";
 import { ScrambleParser } from "@classes/scramble-parser";
 
@@ -163,7 +163,7 @@ export function FTO(): PuzzleInterface {
         continue;
       }
       let vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > EPS));
-      let pcs = fto.toMove(p, s, vec);
+      let pcs = fto.toMove(p, s, vec) as ToMoveResult;
       pcs.pieces.forEach((p: Piece) => p.rotate(CENTER, vec, pcs.ang, true));
     }
   };

@@ -1,5 +1,5 @@
 import { UP, BACK, CENTER, RIGHT, Vector3D, FRONT, DOWN } from "./../vector3d";
-import type { PuzzleInterface } from "@interfaces";
+import type { PuzzleInterface, ToMoveResult } from "@interfaces";
 import { EPS, STANDARD_PALETTE } from "@constants";
 import { Piece } from "./Piece";
 import { Sticker } from "./Sticker";
@@ -134,9 +134,9 @@ export function SQUARE1_STAR(): PuzzleInterface {
       let p = random(pieces) as Piece;
       let s = random(p.stickers.filter(s => !/^[xd]{1}$/.test(s.color))) as Sticker;
       let vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > EPS));
-      let pcs = sq1Star.toMove(p, s, vec);
-      let cant = FRONT.cross(pcs.dir).abs() < EPS ? random(2) : 1 + random(5);
-      pcs.pieces.forEach((p: Piece) => p.rotate(CENTER, pcs.dir, pcs.ang * cant, true));
+      let pcs = sq1Star.toMove(p, s, vec) as ToMoveResult;
+      let cant = FRONT.cross(pcs.dir!).abs() < EPS ? random(2) : 1 + random(5);
+      pcs.pieces.forEach((p: Piece) => p.rotate(CENTER, pcs.dir!, pcs.ang * cant, true));
     }
   };
 

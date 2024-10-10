@@ -1,6 +1,6 @@
 import { UP, BACK, CENTER, RIGHT, FRONT } from "./../vector3d";
 import { Vector3D } from "../../classes/vector3d";
-import type { PuzzleInterface } from "@interfaces";
+import type { PuzzleInterface, ToMoveResult } from "@interfaces";
 import { Piece } from "./Piece";
 import { Sticker } from "./Sticker";
 import { assignColors, getAllStickers, random } from "./puzzleUtils";
@@ -35,7 +35,7 @@ export function MEGAMINX(_n: number): PuzzleInterface {
     ],
     move: () => false,
     roundParams: [
-      (s: Sticker, i: number) => {
+      (s: Sticker) => {
         if (s.color === "d" || s.color === "x" || s.name === "center") return null;
         if (s.name === "star" && n % 2 === 0) {
           s.color = "d";
@@ -333,7 +333,7 @@ export function MEGAMINX(_n: number): PuzzleInterface {
         i -= 1;
         continue;
       }
-      let pcs = mega.toMove!(p, s, vec);
+      let pcs = mega.toMove!(p, s, vec) as ToMoveResult;
       let cant = 1 + random(3);
       pcs.pieces.forEach((p: Piece) => p.rotate(CENTER, vec, pcs.ang * cant, true));
     }

@@ -5,6 +5,7 @@ import { FaceSticker } from "./FaceSticker";
 import { lineIntersection3D } from "@helpers/math";
 import { ImageSticker } from "./ImageSticker";
 import { EPS } from "@constants";
+import { TextSticker } from "./TextSticker";
 
 export function assignColors(p: PuzzleInterface, cols?: string[], isCube = false) {
   let colors = cols || ["y", "o", "g", "w", "r", "b"];
@@ -13,7 +14,6 @@ export function assignColors(p: PuzzleInterface, cols?: string[], isCube = false
   let pieces = p.pieces;
 
   // Adjust -1, 0 and 1 values for better precision
-  // console.time("adjustCoords");
   for (let i = 0, maxi = stickers.length; i < maxi; i += 1) {
     let sticker = stickers[i];
     let points = sticker.points;
@@ -31,11 +31,14 @@ export function assignColors(p: PuzzleInterface, cols?: string[], isCube = false
       }
     }
   }
-  // console.timeEnd("adjustCoords");
 
-  // console.time("adjustColors");
   for (let i = 0, maxi = stickers.length; i < maxi; i += 1) {
-    if (stickers[i].nonInteractive || stickers[i] instanceof ImageSticker) continue;
+    if (
+      stickers[i].nonInteractive ||
+      stickers[i] instanceof ImageSticker ||
+      stickers[i] instanceof TextSticker
+    )
+      continue;
 
     let sticker = stickers[i];
     let p1 = sticker.getMassCenter();
@@ -79,7 +82,6 @@ export function assignColors(p: PuzzleInterface, cols?: string[], isCube = false
       }
     }
   }
-  // console.timeEnd("adjustColors");
 }
 
 export function getAllStickers(): Sticker[] {
@@ -97,6 +99,11 @@ export function getAllStickers(): Sticker[] {
 
 export function scaleSticker(st: Sticker, scale: number): Sticker {
   const SCALE = scale || 0.925;
+
+  if (SCALE < 0) {
+    return st;
+  }
+
   let n = st.getOrientation();
   let cm = st.updateMassCenter();
   return st.sub(cm).mul(SCALE).add(cm).add(n.mul(0.005));
@@ -134,6 +141,13 @@ export function roundStickerCorners(
     let seg_perc1 = isEllipse ? (typeof r[1] != "boolean" ? r[1] : r[0]) : isCircle ? r[0] : r;
     let v1 = pts[(i - 1 + maxi) % maxi].sub(pts[i]).mul(seg_perc);
     let v2 = pts[(i + 1) % maxi].sub(pts[i]).mul(seg_perc1);
+    let abs1 = v1.abs();
+    let abs2 = v2.abs();
+
+    if (abs1 < 0.01 && abs2 < 0.01) {
+      newSt.points.push(pts[i].clone());
+      continue;
+    }
 
     if (isEllipse && typeof r[1] === "boolean") {
       if (v1.abs() < v2.abs()) {
@@ -197,7 +211,8 @@ export function roundCorners(
     return;
   }
 
-  const CHECK = fn || ((s: Sticker) => !(s instanceof FaceSticker) && !(s instanceof ImageSticker));
+  const BANNED_CLASSES = [FaceSticker, ImageSticker, TextSticker];
+  const CHECK = fn || ((s: Sticker) => !BANNED_CLASSES.some(cl => s instanceof cl));
 
   p.isRounded = true;
   let pieces = p.pieces;
@@ -264,4 +279,34 @@ export function random(a: any) {
   }
 
   return ~~(Math.random() * a);
+}
+
+export function extrudeSticker(
+  s: Sticker,
+  u: Vector3D,
+  closeIni = false,
+  closeFin = false
+): FaceSticker {
+  let s1 = s.add(u);
+  let faces: number[][] = [];
+
+  for (let i = 0, maxi = s.points.length; i < maxi; i += 1) {
+    let ni = (i + 1) % maxi;
+    faces.push([i, maxi + i, maxi + ni]);
+    faces.push([i, maxi + ni, ni]);
+  }
+
+  if (closeIni) {
+    for (let i = 1, maxi = s.points.length - 1; i < maxi; i += 1) {
+      faces.push([0, i, i + 1]);
+    }
+  }
+
+  if (closeFin) {
+    for (let i = 1, maxi = s.points.length - 1; i < maxi; i += 1) {
+      faces.push([maxi + 1, maxi + i + 2, maxi + i + 1]);
+    }
+  }
+
+  return new FaceSticker([...s.points, ...s1.points], faces, s.color);
 }

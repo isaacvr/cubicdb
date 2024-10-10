@@ -40,6 +40,7 @@ export const PuzzleTypeName = [
   "helicopter",
   "supersquare1",
   "fto",
+  "timemachine",
 ] as const;
 
 export declare type PuzzleType = (typeof PuzzleTypeName)[number];
@@ -183,6 +184,14 @@ export interface PiecesToMove {
   easing?: EasingFunction;
 }
 
+export interface ToMoveResult {
+  pieces: Piece[];
+  ang: number;
+  center?: Vector3D;
+  dir?: Vector3D;
+  animationTime?: number;
+}
+
 export interface PuzzleInterface {
   pieces: Piece[];
   palette: any;
@@ -201,7 +210,7 @@ export interface PuzzleInterface {
   dims?: number[];
   raw?: any;
   scramble?: () => any;
-  toMove?: AnyCallback;
+  toMove?: (p: Piece, s: Sticker, dir: Vector3D, pinCode?: any) => ToMoveResult | ToMoveResult[];
   applySequence?: (...args: any[]) => (SequenceResult | SequenceResult[])[];
   vectorsFromCamera?: AnyCallback;
 }

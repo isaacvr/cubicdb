@@ -2,7 +2,7 @@ import { Vector3D, UP, DOWN, FRONT, CENTER } from "../vector3d";
 import { Sticker } from "./Sticker";
 import { Piece } from "./Piece";
 import { assignColors, getAllStickers, random } from "./puzzleUtils";
-import type { PuzzleInterface } from "@interfaces";
+import type { PuzzleInterface, ToMoveResult } from "@interfaces";
 import { EPS, STANDARD_PALETTE } from "@constants";
 
 export function PYRAMORPHIX(): PuzzleInterface {
@@ -120,14 +120,13 @@ export function PYRAMORPHIX(): PuzzleInterface {
       let p = random(pieces) as Piece;
       let s = random(p.stickers.filter(s => !/^[xd]{1}$/.test(s.color))) as Sticker;
       let vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > EPS));
-      let pcs = pyra.toMove(p, s, vec);
+      let pcs = pyra.toMove(p, s, vec) as ToMoveResult;
       let cant = 1 + random(3);
       pcs.pieces.forEach((p: Piece) => p.rotate(CENTER, vec, pcs.ang * cant, true));
     }
   };
 
   assignColors(pyra, pyra.faceColors);
-  // roundCorners(pyra);
 
   // Initial rotation
   pyra.rotation = {

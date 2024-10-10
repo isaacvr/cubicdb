@@ -2,12 +2,12 @@ import { Puzzle } from "@classes/puzzle/puzzle";
 import { cubeToThree } from "@helpers/cubeToThree";
 import { Material, PerspectiveCamera, Scene, WebGLRenderer } from "three";
 
-export function transView(
+export async function transView(
   renderer: WebGLRenderer,
   cv: HTMLCanvasElement,
   cube: Puzzle,
   width?: number
-): string {
+): Promise<string> {
   const W = width || 250;
   cv.width = W;
   cv.height = W;

@@ -30,6 +30,7 @@ import { GAN333 } from "./gan333";
 import { HELICOPTER } from "./helicopter";
 import { SUPER_SQUARE1 } from "./superSquare1";
 import { FTO } from "./fto";
+import { TIME_MACHINE } from "./timeMachine";
 
 // NxN, Pyraminx, Megaminx, Skewb, Square-1, Clock
 registerPuzzle("rubik", "Rubik", RUBIK, true);
@@ -49,6 +50,7 @@ registerPuzzle("pandora", "Pandora", PANDORA, false);
 registerPuzzle("mixup", "Mixup", MIXUP, false);
 registerPuzzle("gear", "Gear", GEAR, false);
 registerPuzzle("dreidel", "Dreidel", DREIDEL, false);
+registerPuzzle("timemachine", "Time Machine", TIME_MACHINE, false);
 registerPuzzle("bandaged222", "Bandaged 2x2x2", BDG, false);
 registerPuzzle("bicube", "Bicube", BICUBE, false);
 

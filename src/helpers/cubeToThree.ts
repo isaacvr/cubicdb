@@ -5,16 +5,18 @@ import type { Puzzle } from "@classes/puzzle/puzzle";
 import { roundCorners } from "@classes/puzzle/puzzleUtils";
 import { CubeMode } from "@constants";
 import {
-  DoubleSide,
   BufferGeometry,
-  Material,
   Mesh,
-  MeshBasicMaterial,
   Object3D,
   BufferAttribute,
   type Side,
+  MeshStandardMaterial,
+  FrontSide,
+  DoubleSide,
 } from "three";
 import { loadImageToPiece } from "./loadImageToPiece";
+import { TextSticker } from "@classes/puzzle/TextSticker";
+import { loadTextSticker } from "./loadTextSticker";
 
 export function piecesToTree(
   cube: Puzzle,
@@ -39,36 +41,36 @@ export function piecesToTree(
 
     for (let s = 0, maxs = stickers.length; s < maxs; s += 1) {
       let sticker = stickers[s].mul(F);
-      let color = cube.getHexColor(sticker.color);
-      let stickerGeometry = new BufferGeometry();
-      let stickerMaterial: Material;
-      let vertices: number[] = [];
-      let indices: number[] = [];
 
       if (sticker instanceof ImageSticker) {
         loadImageToPiece(sticker, piece);
         continue;
       }
 
+      if (sticker instanceof TextSticker) {
+        loadTextSticker(sticker, piece, cube);
+        continue;
+      }
+
+      let color = cube.getHexColor(sticker.color);
+      let stickerGeometry = new BufferGeometry();
+      let vertices: number[] = [];
+      let indices: number[] = [];
+
       sticker.points.forEach(p => vertices.push(p.x, p.y, p.z));
 
-      if (sticker instanceof FaceSticker) {
-        stickerMaterial = new MeshBasicMaterial({
-          color,
-          side,
-          // vertexColors: true,
-        });
+      let stickerMaterial = new MeshStandardMaterial({
+        color,
+        side,
+        ...(color ? { roughness: 0.5, metalness: 0.7 } : {}),
+      });
 
+      if (sticker instanceof FaceSticker) {
         let f = sticker.faces;
         for (let i = 0, maxi = f.length; i < maxi; i += 1) {
           indices.push(f[i][0], f[i][1], f[i][2]);
         }
       } else {
-        stickerMaterial = new MeshBasicMaterial({
-          color,
-          side,
-        });
-
         for (let i = 2, maxi = sticker.points.length; i < maxi; i += 1) {
           indices.push(0, i - 1, i);
         }
@@ -76,6 +78,7 @@ export function piecesToTree(
 
       stickerGeometry.setIndex(indices);
       stickerGeometry.setAttribute("position", new BufferAttribute(new Float32Array(vertices), 3));
+      stickerGeometry.computeVertexNormals();
 
       let box = new Mesh(stickerGeometry, stickerMaterial);
 

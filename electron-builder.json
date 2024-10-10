@@ -50,6 +50,8 @@
     "src/database/algs.db",
     "src/database/tutorials.db",
     "src/database/algversion.json",
-    "src/database/tutversion.json"
+    "src/database/tutversion.json",
+    "src/database/reconstructions.db",
+    "src/database/recversion.json"
   ]
 }

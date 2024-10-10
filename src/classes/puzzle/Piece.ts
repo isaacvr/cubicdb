@@ -4,6 +4,7 @@ import type { Sticker } from "./Sticker";
 import { rotateBundle } from "@helpers/math";
 import { EPS } from "@constants";
 import type { VectorLike3D } from "@interfaces";
+import { TextSticker } from "./TextSticker";
 
 type CallbackFunction = (
   p: any,
@@ -206,7 +207,7 @@ export class Piece {
     let fn = disc || (() => true);
 
     for (let i = 0, maxi = st.length; i < maxi; i += 1) {
-      if (st[i].nonInteractive) continue;
+      if (st[i].nonInteractive || st[i] instanceof TextSticker) continue;
 
       if (fn(st[i])) {
         len += 1;
@@ -214,18 +215,14 @@ export class Piece {
         dirs[d + 1] += 1;
 
         if (!useMassCenter && d === 0) {
-          // console.log('[direction1] 1: ', dirs, d, i, maxi);
           return 0;
         }
 
         if (dirs[0] > 0 && dirs[2] > 0) {
-          // console.log('[direction1] 2: ', dirs, i, maxi);
           return 0;
         }
       }
     }
-
-    // dirs[1] === len && console.log('[direction1] 3: ', dirs, len);
 
     return dirs[1] === len ? 0 : dirs[0] ? -1 : 1;
   }

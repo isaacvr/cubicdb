@@ -65,14 +65,9 @@
     lastS = s;
     lastScr = scr;
 
-    // clearTimeout(timer);
-
-    // timer = setTimeout(() => {
     let nc: Puzzle;
 
     try {
-      threeAdaptor.resetPuzzle("", false, lastScr);
-
       nc = Puzzle.fromSequence(lastScr, {
         type: selectedPuzzle,
         view: "trans",
@@ -80,6 +75,7 @@
         mode: CubeMode.NORMAL,
       });
 
+      threeAdaptor.resetPuzzle("", false, lastScr);
       controlAdaptor.reset();
 
       if (nc.p.applySequence) {
@@ -90,7 +86,6 @@
     } catch (err) {
       console.log("ERROR: ", err);
     }
-    // }, 500);
   }
 
   export function resetCamera() {
