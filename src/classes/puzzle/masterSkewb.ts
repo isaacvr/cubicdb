@@ -63,7 +63,7 @@ export function MASTER_SKEWB(): PuzzleInterface {
       ANCHOR.add(FRONT.mul(2 - CORNER_LEN)).add(new Vector3D(1, 0, -1).setLength(SQ_LEN), true),
     ],
     "",
-    vecs
+    vecs.slice(0, 2)
   );
 
   let edgePiece = new Piece([edgeSticker, edgeSticker.rotate(CENTER, new Vector3D(-1, 1, 0), PI)]);
@@ -108,7 +108,7 @@ export function MASTER_SKEWB(): PuzzleInterface {
   let centerSticker = new Sticker(
     [0, 1, 2, 3].map(n => centerRef.rotate(CENTER, UP, PI_2 * n)),
     "",
-    vecs
+    [...vecs, new Vector3D(1, 1, 1).unit()]
   );
   let centerPiece = new Piece([centerSticker]);
 
