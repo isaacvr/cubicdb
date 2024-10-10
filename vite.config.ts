@@ -87,6 +87,11 @@ export default defineConfig(env => ({
     rollupOptions: { output: { dir: "./dist" } },
     minify: true,
   },
+  esbuild: {
+    supported: {
+      "top-level-await": true,
+    },
+  },
   optimizeDeps: {
     exclude: ["@ffmpeg/ffmpeg", "@ffmpeg/util"],
   },

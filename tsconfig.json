@@ -2,8 +2,8 @@
   "extends": "@tsconfig/svelte/tsconfig.json",
   "compilerOptions": {
     "baseUrl": ".",
-    "target": "es2021",
-    "types": [ "vite/client" ],
+    "target": "ESNext",
+    "types": ["vite/client"],
     "useDefineForClassFields": true,
     "module": "ESNext",
     "resolveJsonModule": true,
@@ -14,7 +14,7 @@
     "allowJs": true,
     "checkJs": true,
     "isolatedModules": true,
-    "lib": [ "ESNext", "DOM", "DOM.Iterable" ],
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "importsNotUsedAsValues": "remove",
     "verbatimModuleSyntax": true,
     "preserveValueImports": false,
@@ -34,10 +34,16 @@
       "@workers/*": ["src/workers/*"],
       "@lang/*": ["src/lang/*"],
       "@pages/*": ["src/pages/*"],
-      "@public/*": ["public/*"],
+      "@public/*": ["public/*"]
     }
   },
-  "include": ["src/**/*.d.ts", "src/**/*.ts", "src/**/*.js", "src/**/*.svelte", "public/assets/audio-processor.js"],
+  "include": [
+    "src/**/*.d.ts",
+    "src/**/*.ts",
+    "src/**/*.js",
+    "src/**/*.svelte",
+    "public/assets/audio-processor.js"
+  ],
   "exclude": ["public/*"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
