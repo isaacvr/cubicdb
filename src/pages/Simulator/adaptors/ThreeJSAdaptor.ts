@@ -45,6 +45,7 @@ interface ThreeJSAdaptorConfig {
   order: number;
   animationTime: number;
   zoom: number;
+  renderer?: WebGLRenderer;
 }
 
 interface UserData {
@@ -152,12 +153,14 @@ export class ThreeJSAdaptor {
 
     this.cube = new Puzzle({ type: this.selectedPuzzle });
     this.canvas = config.canvas;
-    this.renderer = new WebGLRenderer({
-      antialias: true,
-      alpha: true,
-      powerPreference: "high-performance",
-      canvas: this.canvas,
-    });
+    this.renderer =
+      config.renderer ||
+      new WebGLRenderer({
+        antialias: true,
+        alpha: true,
+        powerPreference: "high-performance",
+        canvas: this.canvas,
+      });
 
     this.renderer.setPixelRatio(window.devicePixelRatio);
     this.renderer.toneMapping = ACESFilmicToneMapping;
@@ -300,6 +303,13 @@ export class ThreeJSAdaptor {
     this.controls.handleResize();
   }
 
+  renderScene() {
+    this.backFace.visible = this.showBackFace;
+    this.controls.update();
+    this.distance = this.camera.position.distanceTo({ x: 0, y: 0, z: 0 });
+    this.renderer.render(this.scene, this.camera);
+  }
+
   render() {
     if (!this.animating) {
       if (this.moveQueue.length) {
@@ -365,11 +375,7 @@ export class ThreeJSAdaptor {
       }
     }
 
-    this.backFace.visible = this.showBackFace;
-
-    this.controls.update();
-    this.distance = this.camera.position.distanceTo({ x: 0, y: 0, z: 0 });
-    this.renderer.render(this.scene, this.camera);
+    this.renderScene();
     requestAnimationFrame(() => this.render());
   }
 
@@ -694,7 +700,7 @@ export class ThreeJSAdaptor {
     this.moveQueue.push([m, t]);
   }
 
-  async resetPuzzle(facelet?: string, scramble = false, useScr = "") {
+  resetScene() {
     let children = this.scene.children;
     this.scene.remove(...children);
 
@@ -706,25 +712,6 @@ export class ThreeJSAdaptor {
     hemisphereLight.position.set(2, 0, 0);
     this.scene.add(hemisphereLight);
 
-    // this.scene.background = texture1;
-    // this.scene.environment = texture1;
-
-    // Puzzle setup
-    if (facelet) {
-      this.cube = Puzzle.fromFacelet(facelet, this.selectedPuzzle);
-    } else {
-      this.cube = Puzzle.fromSequence(useScr, {
-        type: this.selectedPuzzle,
-        view: "trans",
-        order: Array.isArray(this.order) ? this.order : [this.order, this.order, this.order],
-        mode: CubeMode.NORMAL,
-      });
-
-      scramble && this.cube.p.scramble && this.cube.p.scramble();
-    }
-
-    // @ts-ignore
-    // window.cube = cube;
     const excludePuzzlesBF: PuzzleType[] = ["clock", "timemachine"];
 
     let ctt = cubeToThree(this.cube);
@@ -773,7 +760,24 @@ export class ThreeJSAdaptor {
     this.group.rotation.x = 0;
     this.group.rotation.y = 0;
     this.group.rotation.z = 0;
+  }
 
+  async resetPuzzle(facelet?: string, scramble = false, useScr = "") {
+    // Puzzle setup
+    if (facelet) {
+      this.cube = Puzzle.fromFacelet(facelet, this.selectedPuzzle);
+    } else {
+      this.cube = Puzzle.fromSequence(useScr, {
+        type: this.selectedPuzzle,
+        view: "trans",
+        order: Array.isArray(this.order) ? this.order : [this.order, this.order, this.order],
+        mode: CubeMode.NORMAL,
+      });
+
+      scramble && this.cube.p.scramble && this.cube.p.scramble();
+    }
+
+    this.resetScene();
     this.resetCamera();
   }
 

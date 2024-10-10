@@ -1,5 +1,7 @@
 import { Puzzle } from "@classes/puzzle/puzzle";
 import { cubeToThree } from "@helpers/cubeToThree";
+import { ControlAdaptor } from "@pages/Simulator/adaptors/ControlAdaptor";
+import { ThreeJSAdaptor } from "@pages/Simulator/adaptors/ThreeJSAdaptor";
 import { Material, PerspectiveCamera, Scene, WebGLRenderer } from "three";
 
 export async function transView(
@@ -13,21 +15,30 @@ export async function transView(
   cv.height = W;
   renderer.setSize(W, W, false);
 
-  let scene = new Scene();
-  let camera = new PerspectiveCamera(40, 0.95, 2, 7);
+  let threeAdaptor = new ThreeJSAdaptor({
+    canvas: cv,
+    enableDrag: false,
+    order: cube.order.a,
+    enableKeyboard: false,
+    zoom: 8,
+    selectedPuzzle: cube.type,
+    animationTime: 100,
+    showBackFace: false,
+    renderer,
+  });
 
-  camera.position.z = 5.5;
+  threeAdaptor.camera.fov = 40;
+  threeAdaptor.camera.aspect = 0.95;
+  threeAdaptor.camera.near = 2;
+  threeAdaptor.camera.far = 20;
 
-  scene.add(camera);
+  threeAdaptor.cube = cube;
 
-  let ctt = cubeToThree(cube, cube.type === "megaminx" ? Math.sqrt(7) / 2 : 1);
-  scene.add(ctt.group);
-  renderer.render(scene, camera);
+  threeAdaptor.resetScene();
+  threeAdaptor.resetCamera();
+  threeAdaptor.camera.position.set(3, 3, 5.5);
 
-  // clean up
-  scene.children.length = 0;
-  ctt.meshes.map(m => (<Material>m.material).dispose());
-  ctt.meshes.map(m => m.geometry.dispose());
+  threeAdaptor.renderScene();
 
   return cv.toDataURL();
 }

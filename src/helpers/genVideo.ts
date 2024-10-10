@@ -1,7 +1,6 @@
 import { nameToPuzzle, type ITutorialAlg } from "@interfaces";
 import { algorithmToPuzzle } from "./object";
-import { Object3D, Scene, type Matrix4 } from "three";
-import { Vector3D } from "@classes/vector3d";
+import { Object3D, Scene } from "three";
 import { cubeToThree } from "./cubeToThree";
 import { parseReconstruction } from "./strings";
 import { Puzzle } from "@classes/puzzle/puzzle";
@@ -15,15 +14,14 @@ import { ControlAdaptor } from "@pages/Simulator/adaptors/ControlAdaptor";
 export async function genVideo(alg: ITutorialAlg, dims: number, FPS = 60): Promise<string | null> {
   const dataService = DataService.getInstance();
   const hash = sha1(alg);
-  let res = await dataService.cacheGetVideo(hash);
+  // let res = await dataService.cacheGetVideo(hash);
 
-  if (res) {
-    console.log("FOUND in cache");
-    let b = new Blob([res], { type: "video/mp4" });
-    return URL.createObjectURL(b);
-  }
+  // if (res) {
+  //   console.log("FOUND in cache");
+  //   let b = new Blob([res], { type: "video/mp4" });
+  //   return URL.createObjectURL(b);
+  // }
 
-  let scene = new Scene();
   let sequence = parseReconstruction(
     alg.scramble,
     nameToPuzzle(alg.puzzle || "333").type || "rubik",
@@ -31,17 +29,6 @@ export async function genVideo(alg: ITutorialAlg, dims: number, FPS = 60): Promi
   ).sequence;
 
   let cube = algorithmToPuzzle({ ...alg, scramble: "" }, false, false);
-
-  let ctt = cubeToThree(cube);
-  let group: Object3D = ctt.group;
-
-  cube = ctt.nc;
-
-  scene.add(group);
-
-  group.rotation.x = 0;
-  group.rotation.y = 0;
-  group.rotation.z = 0;
 
   try {
     let nc = Puzzle.fromSequence("", {
