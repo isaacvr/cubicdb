@@ -263,12 +263,14 @@ export function extrudeSticker(
   s: Sticker,
   u: Vector3D,
   closeIni = false,
-  closeFin = false
+  closeFin = false,
+  closePath = true
 ): FaceSticker {
   let s1 = s.add(u);
   let faces: number[][] = [];
 
   for (let i = 0, maxi = s.points.length; i < maxi; i += 1) {
+    if (!closePath && i + 1 === maxi) break;
     let ni = (i + 1) % maxi;
     faces.push([i, maxi + i, maxi + ni]);
     faces.push([i, maxi + ni, ni]);

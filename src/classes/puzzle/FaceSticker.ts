@@ -24,4 +24,23 @@ export class FaceSticker extends Sticker {
     s.vecs = this.vecs.map(e => e.clone());
     return s;
   }
+
+  reverse(self?: boolean): FaceSticker {
+    if (self) {
+      this.faces.forEach(fc => {
+        let parts = [fc[0], fc[1], fc[2]];
+        fc[1] = parts[2];
+        fc[2] = parts[1];
+      });
+      return this;
+    }
+
+    let s = this.clone();
+    s.faces.forEach(fc => {
+      let parts = [fc[0], fc[1], fc[2]];
+      fc[1] = parts[2];
+      fc[2] = parts[1];
+    });
+    return s;
+  }
 }

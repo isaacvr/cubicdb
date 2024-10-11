@@ -33,6 +33,7 @@ import { FTO } from "./fto";
 import { TIME_MACHINE } from "./timeMachine";
 import { MASTER_SKEWB } from "./masterSkewb";
 import { VOID } from "./void333";
+import { FISHER44 } from "./fisher44";
 
 // NxN, Pyraminx, Megaminx, Skewb, Square-1, Clock
 registerPuzzle("rubik", "Rubik", RUBIK, true);
@@ -48,6 +49,7 @@ registerPuzzle("mirror", "Mirror", MIRROR, true);
 registerPuzzle("void", "Void Cube", VOID, false);
 registerPuzzle("windmill", "Windmill", WINDMILL, false);
 registerPuzzle("fisher", "Fisher", FISHER, false);
+registerPuzzle("fisher44", "Fisher 4x4", FISHER44, false);
 registerPuzzle("axis", "Axis", AXIS, false);
 registerPuzzle("pandora", "Pandora", PANDORA, false);
 registerPuzzle("mixup", "Mixup", MIXUP, false);
