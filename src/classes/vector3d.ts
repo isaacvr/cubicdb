@@ -210,10 +210,16 @@ export class Vector3D {
       return vt;
     }
 
-    let nu = new Vector3(u.x, u.y, u.z).setLength(1);
+    // let nu = new Vector3(u.x, u.y, u.z).setLength(1);
 
-    let v3 = new Vector3(this.x - O.x, this.y - O.y, this.z - O.z);
-    v3.applyAxisAngle(nu, ang).add(new Vector3(O.x, O.y, O.z));
+    // let v3 = new Vector3(this.x - O.x, this.y - O.y, this.z - O.z);
+    // v3.applyAxisAngle(nu, ang).add(new Vector3(O.x, O.y, O.z));
+    let k = u.unit();
+    let v = this.sub(O);
+    let p1 = v.mul(Math.cos(ang));
+    let p2 = k.cross(v).mul(Math.sin(ang));
+    let p3 = k.mul(k.dot(v) * (1 - Math.cos(ang)));
+    let v3 = p1.add(p2, true).add(p3, true).add(O, true);
 
     if (self) {
       this.x = v3.x;

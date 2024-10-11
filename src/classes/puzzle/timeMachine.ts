@@ -65,30 +65,15 @@ export function TIME_MACHINE(): PuzzleInterface {
   ] as const;
 
   let _numberSticker = new Sticker(numberVecs, "w").add(UP.mul(0.01), true);
-  let numberSticker = roundStickerCorners(_numberSticker, 0.11, -1);
+  let numberSticker = roundStickerCorners(_numberSticker, 0.11, -1, PPC);
   let downSticker = numberSticker.add(DOWN.mul(NUMBER_HEIGHT));
   downSticker.points.forEach(pt => pt.setCoords(pt.x * 1.009, pt.y, pt.z * 1.009));
   downSticker.updateMassCenter();
   let extSticker = extrudeSticker(numberSticker, DOWN.mul(NUMBER_HEIGHT), false, false);
 
-  let borderSticker = new Sticker([]);
-
-  for (let i = 0; i <= PPC; i += PPC) {
-    let alpha = i / PPC;
-    let px = OUTER_RAD * Math.cos(PI_2 - TM_ANG * (1 - alpha));
-    let pz = OUTER_RAD * Math.sin(PI_2 - TM_ANG * (1 - alpha));
-    borderSticker.points.push(new Vector3D(px, 1 + NUMBER_HEIGHT + 0.01, -pz));
-    borderSticker.points.push(
-      new Vector3D(px, 1 + NUMBER_HEIGHT + 0.01, -pz).add(DOWN.mul(NUMBER_HEIGHT))
-    );
-  }
-
-  borderSticker.points.unshift(borderSticker.points[1]);
-  borderSticker.points.splice(2, 1);
-
   let numberPieces = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((n, p) => {
     let textSticker = new TextSticker(numberFrame, n.toString(), "d");
-    return new Piece([textSticker, numberSticker, extSticker, downSticker, borderSticker]).rotate(
+    return new Piece([textSticker, numberSticker, extSticker, downSticker]).rotate(
       CENTER,
       DOWN,
       p * TM_ANG,

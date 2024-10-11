@@ -1,4 +1,6 @@
-import { Vector3D, UP, DOWN, FRONT, CENTER, RIGHT, LEFT } from "../vector3d";
+// Distortion at 360+ moves
+
+import { Vector3D, UP, FRONT, CENTER, RIGHT, LEFT } from "../vector3d";
 import { Sticker } from "./Sticker";
 import { Piece } from "./Piece";
 import { assignColors, getAllStickers, random } from "./puzzleUtils";
@@ -26,6 +28,7 @@ export function FTO(): PuzzleInterface {
   let pieces = fto.pieces;
 
   const PI = Math.PI;
+  const TAU_3 = (2 * PI) / 3;
   const PI_2 = PI / 2;
   const PI_4 = PI / 4;
   const len = Math.SQRT2 / 3;
@@ -110,7 +113,7 @@ export function FTO(): PuzzleInterface {
     const pts1 = planes[moveId];
     const u = Vector3D.cross(pts1[0], pts1[1], pts1[2]).unit();
     const mu = u.mul(-1);
-    const ang = ((2 * Math.PI) / 3) * turns;
+    const ang = TAU_3 * turns;
 
     let pcs = [];
 
@@ -148,14 +151,14 @@ export function FTO(): PuzzleInterface {
     let toMovePieces = pieces.filter(p => p.direction1(mc, dir) === 0);
     return {
       pieces: toMovePieces,
-      ang: (2 * PI) / 3,
+      ang: TAU_3,
     };
   };
 
   fto.scramble = function () {
     if (!fto.toMove) return;
-    // const MOVES = n >= 2 ? (n - 2) * 20 + 10 : 0;
-    for (let i = 0; i < 50; i += 1) {
+
+    for (let i = 0; i < 20; i += 1) {
       let p = random(pieces) as Piece;
       let s = random(p.stickers.filter(s => /^[^xd]$/.test(s.color))) as Sticker;
       if (!s) {
@@ -164,7 +167,7 @@ export function FTO(): PuzzleInterface {
       }
       let vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > EPS));
       let pcs = fto.toMove(p, s, vec) as ToMoveResult;
-      pcs.pieces.forEach((p: Piece) => p.rotate(CENTER, vec, pcs.ang, true));
+      pcs.pieces.forEach((p: Piece) => p.rotate(pcs.center || CENTER, vec, pcs.ang, true));
     }
   };
 

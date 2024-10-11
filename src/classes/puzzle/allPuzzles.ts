@@ -32,6 +32,7 @@ import { SUPER_SQUARE1 } from "./superSquare1";
 import { FTO } from "./fto";
 import { TIME_MACHINE } from "./timeMachine";
 import { MASTER_SKEWB } from "./masterSkewb";
+import { VOID } from "./void333";
 
 // NxN, Pyraminx, Megaminx, Skewb, Square-1, Clock
 registerPuzzle("rubik", "Rubik", RUBIK, true);
@@ -44,6 +45,7 @@ registerPuzzle("clock", "Rubik's clock", CLOCK, false);
 // NxN Mods
 registerPuzzle("icarry", "GAN iCarry", GAN333, false);
 registerPuzzle("mirror", "Mirror", MIRROR, true);
+registerPuzzle("void", "Void Cube", VOID, true);
 registerPuzzle("windmill", "Windmill", WINDMILL, false);
 registerPuzzle("fisher", "Fisher", FISHER, false);
 registerPuzzle("axis", "Axis", AXIS, false);

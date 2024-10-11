@@ -1,3 +1,5 @@
+// Distortion at 330+ moves
+
 import { Sticker } from "./Sticker";
 import { LEFT, UP, BACK, FRONT, RIGHT, CENTER, DOWN } from "./../vector3d";
 import { EPS, STANDARD_PALETTE } from "@constants";
@@ -140,10 +142,19 @@ export function AXIS(): PuzzleInterface {
   pieces.forEach(p => p.stickers.forEach(s => (s.vecs = vdir.map(e => e.clone()))));
 
   axis.toMove = function (piece: Piece, sticker: Sticker, dir: Vector3D) {
+    let nDir = dir;
+
+    if (!vdir.some(v => v.sub(dir).abs() < EPS) && !vdir.some(v => v.add(dir).abs() < EPS)) {
+      let vdirs = [...vdir, ...vdir.map(v => v.mul(-1))];
+      vdirs.sort((a, b) => a.sub(dir).abs() - b.sub(dir).abs());
+      nDir = vdirs[0];
+    }
+
     let mc = piece.updateMassCenter();
     let toMovePieces = pieces.filter(p => p.direction1(mc, dir) === 0);
     return {
       pieces: toMovePieces,
+      dir: nDir,
       ang: PI_2,
     };
   };

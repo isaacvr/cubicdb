@@ -1,6 +1,6 @@
 import { Color } from "@classes/Color";
 import { Vector2D } from "@classes/vector2-d";
-import { Vector3D } from "@classes/vector3d";
+import { BACK, CENTER, DOWN, FRONT, LEFT, RIGHT, UP, Vector3D } from "@classes/vector3d";
 import { EPS } from "@constants";
 import type { EasingFunction } from "@interfaces";
 import { Quaternion, Vector3 } from "three";
@@ -195,11 +195,15 @@ export function rotateBundle(
   u: Vector3D,
   ang: number
 ): Vector3D[] {
-  let q = new Quaternion().setFromAxisAngle(new Vector3(u.x, u.y, u.z).setLength(1), ang);
-  return points.map(p => {
-    let p1 = new Vector3(p.x - O.x, p.y - O.y, p.z - O.z).applyQuaternion(q);
-    return new Vector3D(p1.x + O.x, p1.y + O.y, p1.z + O.z);
-  });
+  return points.map(p => p.rotate(O, u, ang));
+
+  // let q = new Quaternion()
+  //   .setFromAxisAngle(new Vector3(u.x, u.y, u.z).setLength(1), ang)
+  //   .normalize();
+  // return points.map(p => {
+  //   let p1 = new Vector3(p.x - O.x, p.y - O.y, p.z - O.z).applyQuaternion(q);
+  //   return new Vector3D(p1.x + O.x, p1.y + O.y, p1.z + O.z);
+  // });
 }
 
 export function sum(arr: number[]): number {
@@ -298,16 +302,76 @@ export function pascal(n: number) {
 
 export function bezier(pts: Vector3D[], points: number): Vector3D[] {
   let res: Vector3D[] = [];
-  let Cnk = pascal(pts.length - 1);
+  let n = pts.length - 1;
+  let Cnk = pascal(n);
 
   for (let j = 0; j <= points; j += 1) {
     let a = j / points;
     res.push(
       pts.reduce((ac: Vector3D, p: Vector3D, pos: number) => {
-        return ac.add(p.mul(Cnk[pos] * Math.pow(1 - a, 2 - pos) * Math.pow(a, pos)), true);
+        return ac.add(p.mul(Cnk[pos] * Math.pow(1 - a, n - pos) * Math.pow(a, pos)), true);
       }, new Vector3D())
     );
   }
 
   return res;
+}
+
+// Circle that goes through p1 and p3 with p1p2 and p2p3 being tangent to the circle
+export function circle(p1: Vector3D, p2: Vector3D, p3: Vector3D, PPC: number): Vector3D[] {
+  const PI_2 = Math.PI / 2;
+  let P = [p1, p2, p3];
+  let v1 = p1.sub(p2);
+  let v2 = p3.sub(p2);
+
+  let u = Vector3D.cross(P[0], P[1], P[2]).unit();
+
+  if (Math.abs(v1.abs() - v2.abs()) < EPS) {
+    let center = lineIntersection3D(
+      P[0],
+      v1.rotate(CENTER, u, PI_2),
+      P[2],
+      v2.rotate(CENTER, u, PI_2)
+    );
+
+    if (center) {
+      let sides = [v1.abs(), v2.abs(), v1.sub(v2).abs()];
+      let ang =
+        Math.PI -
+        Math.acos((sides[2] ** 2 - sides[0] ** 2 - sides[1] ** 2) / (-2 * sides[0] * sides[1]));
+      let pts: Vector3D[] = [];
+
+      for (let j = 0; j <= PPC; j += 1) {
+        let a = j / PPC;
+        pts.push(P[0].rotate(center, u, a * ang));
+      }
+
+      return pts;
+    }
+  }
+
+  return bezier(P, PPC);
+}
+
+export function cmd(command: string, command1: string = "", len: number = 0) {
+  const dirMap: any = {
+    U: UP,
+    R: RIGHT,
+    F: FRONT,
+    D: DOWN,
+    L: LEFT,
+    B: BACK,
+  };
+
+  let sum = command
+    .split("")
+    .filter(c => c in dirMap)
+    .reduce((acc, c) => acc.add(dirMap[c], true), new Vector3D());
+
+  let sum1 = command1
+    .split("")
+    .filter(c => c in dirMap)
+    .reduce((acc, c) => acc.add(dirMap[c], true), new Vector3D());
+
+  return sum.add(sum1.mul(len), true);
 }

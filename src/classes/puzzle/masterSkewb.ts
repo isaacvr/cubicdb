@@ -6,6 +6,7 @@ import { Piece } from "./Piece";
 import { Sticker } from "./Sticker";
 import { assignColors, getAllStickers, random } from "./puzzleUtils";
 import { ScrambleParser } from "@classes/scramble-parser";
+import { cmd } from "@helpers/math";
 
 export function MASTER_SKEWB(): PuzzleInterface {
   let mskewb: PuzzleInterface = {
@@ -123,29 +124,6 @@ export function MASTER_SKEWB(): PuzzleInterface {
   const MOVE_MAP = "FURLBfrlbxyz";
   const SS = CORNER_LEN; // Short side
   const LS = 2 - CORNER_LEN; // Long side
-
-  let cmd = (command: string, command1: string, len: number) => {
-    const dirMap: any = {
-      U: UP,
-      R: RIGHT,
-      F: FRONT,
-      D: DOWN,
-      L: LEFT,
-      B: BACK,
-    };
-
-    let sum = command
-      .split("")
-      .filter(c => c in dirMap)
-      .reduce((acc, c) => acc.add(dirMap[c], true), new Vector3D());
-
-    let sum1 = command1
-      .split("")
-      .filter(c => c in dirMap)
-      .reduce((acc, c) => acc.add(dirMap[c], true), new Vector3D());
-
-    return sum.add(sum1.mul(len), true);
-  };
 
   let planes = [
     [cmd("FLU", "D", LS), cmd("FLU", "R", LS), cmd("RUB", "F", LS)], // F

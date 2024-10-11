@@ -42,6 +42,11 @@ export const PuzzleTypeName = [
   "fto",
   "timemachine",
   "masterskewb",
+  "void",
+  "diamondcube",
+  "axis44",
+  "fisher44",
+  "redicilinder",
 ] as const;
 
 export declare type PuzzleType = (typeof PuzzleTypeName)[number];
@@ -181,7 +186,7 @@ export interface PiecesToMove {
   pieces: Piece[];
   u: Vector3D;
   ang: number;
-  center: Vector3D;
+  center?: Vector3D;
   easing?: EasingFunction;
 }
 

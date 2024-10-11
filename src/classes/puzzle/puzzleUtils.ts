@@ -2,7 +2,7 @@ import { CENTER, Vector3D } from "./../vector3d";
 import { Sticker } from "./Sticker";
 import type { PuzzleInterface } from "@interfaces";
 import { FaceSticker } from "./FaceSticker";
-import { bezier, lineIntersection3D } from "@helpers/math";
+import { bezier, circle, lineIntersection3D } from "@helpers/math";
 import { ImageSticker } from "./ImageSticker";
 import { EPS } from "@constants";
 import { TextSticker } from "./TextSticker";
@@ -118,9 +118,9 @@ export function roundStickerCorners(
   const RAD = rd || 0.11;
   const RAD_FN = typeof rd === "function" ? rd : () => RAD;
   const PPC = ppc || 10;
-  const C2k = [1, 2, 1];
   const SCALE = scale || 0.925;
   const PI_2 = Math.PI / 2;
+  const ROUND_THRESHOLD = 0.1;
 
   let st = s;
   let pts = st.points;
@@ -141,11 +141,23 @@ export function roundStickerCorners(
     let seg_perc1 = isEllipse ? (typeof r[1] != "boolean" ? r[1] : r[0]) : isCircle ? r[0] : r;
     let v1 = pts[(i - 1 + maxi) % maxi].sub(pts[i]).mul(seg_perc);
     let v2 = pts[(i + 1) % maxi].sub(pts[i]).mul(seg_perc1);
-    let abs1 = v1.abs();
-    let abs2 = v2.abs();
+    let abs1 = v1.abs() / seg_perc;
+    let abs2 = v2.abs() / seg_perc1;
 
-    if (abs1 < 0.01 && abs2 < 0.01) {
+    if (abs1 < ROUND_THRESHOLD && abs2 < ROUND_THRESHOLD) {
       newSt.points.push(pts[i].clone());
+      continue;
+    }
+
+    if (abs1 < ROUND_THRESHOLD) {
+      bezier([pts[(i - 1 + maxi) % maxi], pts[i], pts[i].add(v2)], PPC).forEach(p =>
+        newSt.points.push(p)
+      );
+      continue;
+    }
+
+    if (abs2 < ROUND_THRESHOLD) {
+      bezier([pts[i].add(v1), pts[i], pts[(i + 1) % maxi]], PPC).forEach(p => newSt.points.push(p));
       continue;
     }
 
@@ -159,34 +171,7 @@ export function roundStickerCorners(
       isCircle = true;
     }
 
-    let P = [pts[i].add(v1), pts[i], pts[i].add(v2)];
-
-    let u = Vector3D.cross(P[0], P[1], P[2]).unit();
-
-    if (isCircle && Math.abs(v1.abs() - v2.abs()) < EPS) {
-      let center = lineIntersection3D(
-        P[0],
-        v1.rotate(CENTER, u, PI_2),
-        P[2],
-        v2.rotate(CENTER, u, PI_2)
-      );
-
-      if (center) {
-        let sides = [v1.abs(), v2.abs(), v1.sub(v2).abs()];
-        let ang =
-          Math.PI -
-          Math.acos((sides[2] ** 2 - sides[0] ** 2 - sides[1] ** 2) / (-2 * sides[0] * sides[1]));
-
-        for (let j = 0; j <= PPC; j += 1) {
-          let a = j / PPC;
-          newSt.points.push(P[0].rotate(center, u, a * ang));
-        }
-
-        continue;
-      }
-    }
-
-    bezier(P, PPC).forEach(p => newSt.points.push(p));
+    circle(pts[i].add(v1), pts[i], pts[i].add(v2), PPC).forEach(p => newSt.points.push(p));
   }
 
   return scaleSticker(newSt, SCALE);

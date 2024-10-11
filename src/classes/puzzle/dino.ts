@@ -1,3 +1,5 @@
+// Distortion at 330+ moves
+
 import { LEFT, UP, BACK, RIGHT, FRONT, DOWN, CENTER } from "./../vector3d";
 import { Vector3D } from "../../classes/vector3d";
 import type { PuzzleInterface, ToMoveResult } from "@interfaces";
@@ -5,6 +7,7 @@ import { EPS, STANDARD_PALETTE } from "@constants";
 import { Piece } from "./Piece";
 import { Sticker } from "./Sticker";
 import { assignColors, getAllStickers, random } from "./puzzleUtils";
+import { cmd } from "@helpers/math";
 
 export function DINO(): PuzzleInterface {
   const dino: PuzzleInterface = {
@@ -26,16 +29,14 @@ export function DINO(): PuzzleInterface {
   const ANG = (2 * PI) / 3;
 
   let pieces = dino.pieces;
-  let ref = LEFT.add(UP).add(BACK);
+  let ref = cmd("LUB");
 
   let pieceLT = new Piece([
-    new Sticker([LEFT.add(UP).add(BACK), LEFT.add(UP).add(FRONT), UP]),
-    new Sticker([LEFT.add(UP).add(BACK), LEFT, LEFT.add(UP).add(FRONT)]),
+    new Sticker([cmd("LUB"), cmd("LUF"), UP]),
+    new Sticker([cmd("LUB"), LEFT, cmd("LUF")]),
   ]);
 
-  pieceLT.stickers.forEach(
-    s => (s.vecs = [LEFT.add(UP).add(BACK).unit(), LEFT.add(UP).add(FRONT).unit()])
-  );
+  pieceLT.stickers.forEach(s => (s.vecs = [cmd("LUB").unit(), cmd("LUF").unit()]));
 
   for (let i = 0; i < 4; i += 1) {
     pieces.push(pieceLT.rotate(CENTER, UP, PI_2 * i));

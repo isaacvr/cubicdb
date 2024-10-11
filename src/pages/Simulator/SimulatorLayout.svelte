@@ -22,7 +22,7 @@
   export let enableRotation = true;
   export let gui = true;
   export let contained = false;
-  export let selectedPuzzle: PuzzleType = "masterskewb";
+  export let selectedPuzzle: PuzzleType = "rubik";
   export let order = 3;
   export let animationTime = $screen.isMobile ? 150 : 200; /// Default animation time: 200ms
   export let showBackFace = false;
@@ -47,7 +47,6 @@
   let mounted = false;
   let lastS: string[] = [];
   let lastScr: string = "";
-  let timer: any;
 
   for (let [key, value] of puzzleReg) {
     if (excludedPuzzles.indexOf(key as PuzzleType) === -1) {
