@@ -45,7 +45,7 @@ registerPuzzle("clock", "Rubik's clock", CLOCK, false);
 // NxN Mods
 registerPuzzle("icarry", "GAN iCarry", GAN333, false);
 registerPuzzle("mirror", "Mirror", MIRROR, true);
-registerPuzzle("void", "Void Cube", VOID, true);
+registerPuzzle("void", "Void Cube", VOID, false);
 registerPuzzle("windmill", "Windmill", WINDMILL, false);
 registerPuzzle("fisher", "Fisher", FISHER, false);
 registerPuzzle("axis", "Axis", AXIS, false);
