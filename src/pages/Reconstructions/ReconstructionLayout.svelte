@@ -60,6 +60,7 @@
       { puzzle: "megaminx", name: "Megaminx", order: 3, scrambler: "mgmp" }, // 10
       { puzzle: "clock", name: "Clock", order: -1, scrambler: "clkwca" }, // 11
       { puzzle: "masterskewb", name: "Master Skewb", order: -1, scrambler: "skbso" }, // 12
+      { puzzle: "void", name: "Void Cube", order: 3, scrambler: "333" }, // 13
     ];
 
   let puzzle = PUZZLES[1];

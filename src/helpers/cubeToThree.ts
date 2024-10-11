@@ -11,7 +11,7 @@ import {
   BufferAttribute,
   type Side,
   MeshStandardMaterial,
-  FrontSide,
+  DoubleSide,
 } from "three";
 import { loadImageToPiece } from "./loadImageToPiece";
 import { TextSticker } from "@classes/puzzle/TextSticker";
@@ -21,7 +21,7 @@ export function piecesToTree(
   cube: Puzzle,
   F: number = 1,
   sTrans: Function = (s: Sticker[]) => s,
-  side: Side = FrontSide
+  side: Side = DoubleSide
 ) {
   let group = new Object3D();
   let pieces = cube.pieces;

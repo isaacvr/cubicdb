@@ -714,7 +714,7 @@ export class Puzzle {
   move(seq: string) {
     let moves: any[];
 
-    if (["rubik", "icarry", "axis", "fisher"].indexOf(this.type) > -1) {
+    if (["rubik", "icarry", "axis", "fisher", "void"].indexOf(this.type) > -1) {
       moves = ScrambleParser.parseNNN(seq, this.order);
     } else if (this.type === "pyraminx") {
       moves = ScrambleParser.parsePyraminx(seq);

@@ -1,6 +1,6 @@
 import { LEFT, UP, BACK, RIGHT, FRONT, DOWN, CENTER } from "@classes/vector3d";
 import { Vector3D } from "@classes/vector3d";
-import type { PuzzleInterface, ToMoveResult } from "@interfaces";
+import type { PiecesToMove, PuzzleInterface, ToMoveResult } from "@interfaces";
 import { EPS, STANDARD_PALETTE } from "@constants";
 import { Piece } from "./Piece";
 import { Sticker } from "./Sticker";
@@ -121,7 +121,7 @@ export function RUBIK(_a: number, _b: number, _c: number): PuzzleInterface {
     [ref, ref.add(RIGHT), ref.add(DOWN)],
   ];
 
-  let trySingleMove = (mv: any): { pieces: Piece[]; u: Vector3D; ang: number } | null => {
+  let trySingleMove = (mv: any): PiecesToMove | null => {
     let moveId = MOVE_MAP.indexOf(mv[1]);
     let layers = mv[0];
     let turns = mv[2];

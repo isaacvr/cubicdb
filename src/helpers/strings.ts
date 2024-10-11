@@ -156,7 +156,9 @@ export function getTreeString(token: IToken, puzzle: PuzzleType): string {
 function getMoveLength(sequence: string[], puzzle: PuzzleType, order: number): number {
   try {
     switch (puzzle) {
-      case "rubik": {
+      case "rubik":
+      case "mirror":
+      case "void": {
         return sequence.reduce(
           (acc: any[], e) => [
             ...acc,

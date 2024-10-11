@@ -16,7 +16,7 @@ export function VOID(): PuzzleInterface {
     center: new Vector3D(0, 0, 0, true),
     faceVectors: [],
     getAllStickers: () => [],
-    dims: [],
+    dims: [3, 3, 3],
     faceColors: ["w", "r", "g", "y", "o", "b"],
     move: () => false,
     roundParams: [
@@ -133,35 +133,62 @@ export function VOID(): PuzzleInterface {
   );
 
   // Interaction
-  let planes: Vector3D[][] = [];
+  const MOVE_MAP = "URFDLB";
+
+  const ref = cmd("LUB");
+  const ref1 = cmd("FRD");
+
+  let planes = [
+    [ref, ref.add(FRONT), ref.add(RIGHT)],
+    [ref1, ref1.add(BACK), ref1.add(UP)],
+    [ref1, ref1.add(UP), ref1.add(LEFT)],
+    [ref1, ref1.add(LEFT), ref1.add(BACK)],
+    [ref, ref.add(DOWN), ref.add(FRONT)],
+    [ref, ref.add(RIGHT), ref.add(DOWN)],
+  ];
 
   let trySingleMove = (mv: any): PiecesToMove | null => {
-    let moveId = mv[0];
-    let turns = mv[1];
+    let moveId = MOVE_MAP.indexOf(mv[1]);
+    let layers = mv[0];
+    let turns = mv[2];
+    let span = mv[3];
     const pts1 = planes[moveId];
     const u = Vector3D.cross(pts1[0], pts1[1], pts1[2]).unit();
-    const anc = pts1[0];
+    const mu = u.mul(-1);
+
+    // Check if the move involves the whole cube
+    layers = layers === 3 ? 4 : layers;
+
+    const pts2 = pts1.map(p => p.add(mu.mul(LEN * layers)));
+    const pts3 = pts2.map(p => p.add(u.mul(LEN * span)));
+    const ang = (Math.PI / 2) * turns;
 
     let pcs = [];
 
     for (let i = 0, maxi = pieces.length; i < maxi; i += 1) {
-      let d = pieces[i].direction1(anc, u, true);
+      let d = pieces[i].direction1(pts2[0], u, true);
 
       if (d === 0) {
-        console.log("Invalid move. Piece intersection detected.", mv, turns, mv);
-        console.log("Piece: ", i, pieces[i], pts1);
+        console.log("Invalid move. Piece intersection detected.", "URFDLB"[moveId], turns, mv);
+        console.log("Piece: ", i, pieces[i], pts2);
         return null;
       }
 
-      if (d * mv[2] > 0) {
+      if (span) {
+        let d1 = pieces[i].direction1(pts3[0], u, true);
+
+        if (d * d1 < 0) {
+          pcs.push(pieces[i]);
+        }
+      } else if (d > 0) {
         pcs.push(pieces[i]);
       }
     }
 
     return {
       pieces: pcs,
-      u,
-      ang: PI_2,
+      u: mu,
+      ang,
     };
   };
 
