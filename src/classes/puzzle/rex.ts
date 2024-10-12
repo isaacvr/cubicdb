@@ -121,7 +121,7 @@ export function REX(): PuzzleInterface {
   pieces.push(piece3.rotate(CENTER, RIGHT, PI_2), piece3.rotate(CENTER, LEFT, PI_2));
 
   rex.toMove = function (piece: Piece, sticker: Sticker, dir: Vector3D) {
-    let c = new Vector3D(Math.sign(dir.x) / 3, Math.sign(dir.y) / 3, Math.sign(dir.z) / 3);
+    let c = new Vector3D(Math.sign(dir.x), Math.sign(dir.y), Math.sign(dir.z)).mul(0.2);
     let toMovePieces = pieces.filter(p => p.direction1(c, dir, true) >= 0);
     return {
       pieces: toMovePieces,
