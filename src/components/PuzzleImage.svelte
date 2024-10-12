@@ -6,6 +6,7 @@
   export let src = "";
   export let glowOnHover = false;
   export let interactive = false;
+  export let size = "";
   export { _cl as class };
 
   type ImageType = "raster" | "svg";
@@ -39,6 +40,8 @@
   class={"rounded flex items-center justify-center puzzle-img " +
     (!src ? " bg-gray-700 animate-pulse " : " ") +
     (_cl || "")}
+  style:width={size || "100%"}
+  style:height={size || "100%"}
   class:interactive
   class:glow={glowOnHover}
   role={type === "svg" ? "document" : "img"}
@@ -67,13 +70,8 @@
 
 <style lang="postcss">
   .puzzle-img {
-    @apply w-full h-full transition-all duration-200;
+    @apply transition-all duration-200;
     filter: drop-shadow(0 0 0rem #1d4ed8);
-  }
-
-  .puzzle-img {
-    width: 100%;
-    height: 100%;
   }
 
   .puzzle-img.glow:hover {

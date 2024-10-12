@@ -16,6 +16,8 @@
   import { ThreeJSAdaptor } from "./adaptors/ThreeJSAdaptor";
   import { ControlAdaptor } from "./adaptors/ControlAdaptor";
   import { CubeMode } from "@constants";
+  import { pGenerateCubeBundle } from "@helpers/cube-draw";
+  import PuzzleImage from "@components/PuzzleImage.svelte";
 
   export let enableKeyboard = true;
   export let enableDrag = true;
@@ -41,7 +43,7 @@
 
   /// GUI
   let excludedPuzzles: PuzzleType[] = ["icarry"];
-  let puzzles: { name: string; value: string; order: boolean }[] = [];
+  let puzzles: { name: string; value: PuzzleType; order: boolean; img: string }[] = [];
   let hasOrder = true;
   let GUIExpanded = false;
   let mounted = false;
@@ -52,11 +54,16 @@
     if (excludedPuzzles.indexOf(key as PuzzleType) === -1) {
       puzzles.push({
         name: value.name,
-        value: key,
+        value: key as PuzzleType,
         order: value.order,
+        img: "",
       });
     }
   }
+
+  pGenerateCubeBundle(puzzles.map(p => new Puzzle({ type: p.value, order: [3] }))).then(res => {
+    res.forEach((img, pos) => (puzzles[pos].img = img));
+  });
 
   export async function handleSequence(s: string[], scr: string) {
     if (!mounted) return;
@@ -230,6 +237,10 @@
       bind:value={selectedPuzzle}
       onChange={setOrder}
       class="text-gray-400 w-full max-w-[unset]"
+      hasIcon={e => e.img}
+      iconComponent={PuzzleImage}
+      iconKey="src"
+      iconSize="3rem"
     />
 
     {#if hasOrder}

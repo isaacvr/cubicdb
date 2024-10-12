@@ -1,8 +1,30 @@
 import { Puzzle } from "@classes/puzzle/puzzle";
-import { cubeToThree } from "@helpers/cubeToThree";
-import { ControlAdaptor } from "@pages/Simulator/adaptors/ControlAdaptor";
+import type { PuzzleType } from "@interfaces";
 import { ThreeJSAdaptor } from "@pages/Simulator/adaptors/ThreeJSAdaptor";
-import { Material, PerspectiveCamera, Scene, WebGLRenderer } from "three";
+import { Mesh, Object3D, Sphere, Vector3, WebGLRenderer } from "three";
+import { degToRad } from "three/src/math/MathUtils";
+
+function calculateBoundingSphere(object: Object3D) {
+  const positions: Vector3[] = [];
+
+  object.traverse(function (child) {
+    if (child instanceof Mesh) {
+      const geometry = child.geometry;
+      const positionAttribute = geometry.attributes.position;
+      for (let i = 0, maxi = positionAttribute.count; i < maxi; i += 1) {
+        const vertex = new Vector3();
+        vertex.fromBufferAttribute(positionAttribute, i);
+        vertex.applyMatrix4(child.matrixWorld);
+        positions.push(vertex);
+      }
+    }
+  });
+
+  const boundingSphere = new Sphere();
+  boundingSphere.setFromPoints(positions);
+
+  return boundingSphere;
+}
 
 export async function transView(
   renderer: WebGLRenderer,
@@ -11,6 +33,11 @@ export async function transView(
   width?: number
 ): Promise<string> {
   const W = width || 250;
+  const F = (["pyraminx", "pyramorphix", "meierHalpernPyramid"] as PuzzleType[]).some(
+    t => t === cube.type
+  )
+    ? 1.3
+    : 1;
   cv.width = W;
   cv.height = W;
   renderer.setSize(W, W, false);
@@ -28,15 +55,27 @@ export async function transView(
   });
 
   threeAdaptor.camera.fov = 40;
-  threeAdaptor.camera.aspect = 0.95;
+  threeAdaptor.camera.aspect = 1;
   threeAdaptor.camera.near = 2;
   threeAdaptor.camera.far = 20;
 
   threeAdaptor.cube = cube;
 
   threeAdaptor.resetScene();
+
+  threeAdaptor.group;
+
+  const sphere = calculateBoundingSphere(threeAdaptor.group);
+
+  // Obtener el centro y el radio del bounding sphere
+  // const center = sphere.center;
+  const radius = sphere.radius;
+
+  // Calcular la distancia óptima de la cámara desde el objeto
+  const distance = radius / F / Math.sin(degToRad(threeAdaptor.camera.fov / 2));
+
+  threeAdaptor.zoom = distance;
   threeAdaptor.resetCamera();
-  threeAdaptor.camera.position.set(3, 3, 5.5);
 
   threeAdaptor.renderScene();
 
