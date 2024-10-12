@@ -313,11 +313,12 @@ export class Sticker {
     return true;
   }
 
-  cutPlane(p0: Vector3D, n: Vector3D): { intersection: boolean; points: Vector3D[] } {
+  cutPlane(p0: Vector3D, n: Vector3D) {
     const inters: Vector3D[] = [];
 
     // Iterate through pairs of points to form segments
     let p = this.points;
+    let interIndex: number[] = [];
 
     for (let i = 0, maxi = p.length; i < maxi; i += 1) {
       const p1 = p[i];
@@ -337,6 +338,7 @@ export class Sticker {
         // t in range [0, 1] means the intersection is within the segment
         if (t >= 0 && t <= 1) {
           inters.push(p1.add(lineVector.mul(t)));
+          interIndex.push(i);
         }
       }
     }
@@ -344,40 +346,35 @@ export class Sticker {
     for (let i = 0, maxi = inters.length; i < maxi && maxi > 1; i += 1) {
       if (inters[i].sub(inters[(i + 1) % maxi]).abs() < EPS) {
         inters.splice(i, 1);
+        interIndex.splice(i, 1);
         i -= 1;
         maxi -= 1;
+      }
+    }
+
+    let parts: Vector3D[][] = [[], []];
+
+    if (inters.length > 1) {
+      let pIndex = 0;
+      for (let i = 0, maxi = p.length; i < maxi; i += 1) {
+        parts[pIndex].push(p[i]);
+        let pos = interIndex.indexOf(i);
+
+        if (pos > -1) {
+          parts[pIndex].push(inters[pos]);
+          parts[pIndex].push(inters[1 - pos]);
+          pIndex ^= 1;
+        }
       }
     }
 
     return {
       intersection: inters.length > 1,
       points: inters,
+      sticker: this,
+      intersectionIndex: interIndex,
+      parts: parts.map(part => new Sticker(part)),
     };
-
-    // let inters: Vector3D[] = [];
-    // let p = this.points;
-
-    // for (let i = 0, maxi = p.length; i < maxi; i += 1) {
-    //   let l0 = p[i];
-    //   let l = p[(i + 1) % maxi].sub(l0);
-
-    //   let num = p0.sub(l0).dot(n);
-    //   let den = l.dot(n);
-
-    //   if (Math.abs(den) < EPS) {
-    //     continue;
-    //   }
-
-    //   console.log("NUM_DEN", num, den);
-
-    //   let d = num / den;
-    //   inters.push(l0.add(l.mul(d)));
-    // }
-
-    // return {
-    //   intersection: inters.length > 0,
-    //   points: inters,
-    // };
   }
 
   // scale(c: Vector3D, factor: number, self: boolean = false) {

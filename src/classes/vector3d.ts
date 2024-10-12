@@ -8,7 +8,7 @@ function getCanonical(v: Vector3D) {
   let dirs = [UP, RIGHT, FRONT, DOWN, LEFT, BACK];
 
   for (let i = 0, maxi = dirs.length; i < maxi; i += 1) {
-    if (dirs[i].sub(v).abs() < EPS) {
+    if (dirs[i].equals(v)) {
       return dirs[i].clone();
     }
   }
@@ -275,6 +275,10 @@ export class Vector3D {
     this.x = x;
     this.y = y;
     this.z = z;
+  }
+
+  equals(v: Vector3D) {
+    return this.sub(v).abs() < EPS;
   }
 }
 

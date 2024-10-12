@@ -375,3 +375,7 @@ export function cmd(command: string, command1: string = "", len: number = 0) {
 
   return sum.add(sum1.mul(len), true);
 }
+
+export function mod(n: number, m: number) {
+  return ((n % m) + m) % m;
+}

@@ -47,6 +47,7 @@ export const PuzzleTypeName = [
   "axis44",
   "fisher44",
   "redicilinder",
+  "ghost",
 ] as const;
 
 export declare type PuzzleType = (typeof PuzzleTypeName)[number];

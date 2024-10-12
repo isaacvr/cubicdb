@@ -98,7 +98,7 @@ export function PUZZLE(): PuzzleInterface {
   };
 
   puzzle.scramble = function () {
-    const MOVES = 100;
+    const MOVES = 50;
 
     for (let i = 0; i < MOVES; i += 1) {
       let p = random(pieces) as Piece;

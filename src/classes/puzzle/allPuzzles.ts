@@ -34,6 +34,7 @@ import { TIME_MACHINE } from "./timeMachine";
 import { MASTER_SKEWB } from "./masterSkewb";
 import { VOID } from "./void333";
 import { FISHER44 } from "./fisher44";
+import { GHOST } from "./ghost";
 
 // NxN, Pyraminx, Megaminx, Skewb, Square-1, Clock
 registerPuzzle("rubik", "Rubik", RUBIK, true);
@@ -56,6 +57,7 @@ registerPuzzle("mixup", "Mixup", MIXUP, false);
 registerPuzzle("gear", "Gear", GEAR, false);
 registerPuzzle("dreidel", "Dreidel", DREIDEL, false);
 registerPuzzle("timemachine", "Time Machine", TIME_MACHINE, false);
+registerPuzzle("ghost", "Ghost", GHOST, false);
 registerPuzzle("bandaged222", "Bandaged 2x2x2", BDG, false);
 registerPuzzle("bicube", "Bicube", BICUBE, false);
 

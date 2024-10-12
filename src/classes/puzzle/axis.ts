@@ -144,7 +144,7 @@ export function AXIS(): PuzzleInterface {
   axis.toMove = function (piece: Piece, sticker: Sticker, dir: Vector3D) {
     let nDir = dir;
 
-    if (!vdir.some(v => v.sub(dir).abs() < EPS) && !vdir.some(v => v.add(dir).abs() < EPS)) {
+    if (!vdir.some(v => v.equals(dir)) && !vdir.some(v => v.equals(dir.mul(-1)))) {
       let vdirs = [...vdir, ...vdir.map(v => v.mul(-1))];
       vdirs.sort((a, b) => a.sub(dir).abs() - b.sub(dir).abs());
       nDir = vdirs[0];

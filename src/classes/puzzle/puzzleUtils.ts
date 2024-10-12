@@ -2,7 +2,7 @@ import { CENTER, Vector3D } from "./../vector3d";
 import { Sticker } from "./Sticker";
 import type { PuzzleInterface } from "@interfaces";
 import { FaceSticker } from "./FaceSticker";
-import { bezier, circle, lineIntersection3D } from "@helpers/math";
+import { bezier, circle, lineIntersection3D, mod } from "@helpers/math";
 import { ImageSticker } from "./ImageSticker";
 import { EPS } from "@constants";
 import { TextSticker } from "./TextSticker";
@@ -119,7 +119,6 @@ export function roundStickerCorners(
   const RAD_FN = typeof rd === "function" ? rd : () => RAD;
   const PPC = ppc || 10;
   const SCALE = scale || 0.925;
-  const PI_2 = Math.PI / 2;
   const ROUND_THRESHOLD = 0.1;
 
   let st = s;
@@ -139,8 +138,8 @@ export function roundStickerCorners(
     let isEllipse = Array.isArray(r) && r.length > 1;
     let seg_perc = isCircle || isEllipse ? r[0] : r;
     let seg_perc1 = isEllipse ? (typeof r[1] != "boolean" ? r[1] : r[0]) : isCircle ? r[0] : r;
-    let v1 = pts[(i - 1 + maxi) % maxi].sub(pts[i]).mul(seg_perc);
-    let v2 = pts[(i + 1) % maxi].sub(pts[i]).mul(seg_perc1);
+    let v1 = pts[mod(i - 1, maxi)].sub(pts[i]).mul(seg_perc);
+    let v2 = pts[mod(i + 1, maxi)].sub(pts[i]).mul(seg_perc1);
     let abs1 = v1.abs() / seg_perc;
     let abs2 = v2.abs() / seg_perc1;
 
@@ -150,14 +149,27 @@ export function roundStickerCorners(
     }
 
     if (abs1 < ROUND_THRESHOLD) {
-      bezier([pts[(i - 1 + maxi) % maxi], pts[i], pts[i].add(v2)], PPC).forEach(p =>
+      bezier([pts[mod(i - 1, maxi)], pts[i], pts[i].add(v2)], PPC).forEach(p =>
         newSt.points.push(p)
       );
-      continue;
     }
 
     if (abs2 < ROUND_THRESHOLD) {
-      bezier([pts[i].add(v1), pts[i], pts[(i + 1) % maxi]], PPC).forEach(p => newSt.points.push(p));
+      let abs21 = pts[mod(i + 1, maxi)].sub(pts[mod(i + 2, maxi)]).abs();
+      let v22 = pts[mod(i + 2, maxi)].sub(pts[mod(i + 1, maxi)]).mul(seg_perc1);
+
+      if (abs21 < ROUND_THRESHOLD) {
+        bezier([pts[i].add(v1), pts[i], pts[mod(i + 1, maxi)]], PPC).forEach(p =>
+          newSt.points.push(p)
+        );
+      } else {
+        bezier(
+          [pts[i].add(v1), pts[i], pts[mod(i + 1, maxi)], pts[mod(i + 1, maxi)].add(v22)],
+          PPC
+        ).forEach(p => newSt.points.push(p));
+      }
+
+      i += 1;
       continue;
     }
 
@@ -271,7 +283,7 @@ export function extrudeSticker(
 
   for (let i = 0, maxi = s.points.length; i < maxi; i += 1) {
     if (!closePath && i + 1 === maxi) break;
-    let ni = (i + 1) % maxi;
+    let ni = mod(i + 1, maxi);
     faces.push([i, maxi + i, maxi + ni]);
     faces.push([i, maxi + ni, ni]);
   }

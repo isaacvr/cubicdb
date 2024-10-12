@@ -1,6 +1,6 @@
 import { randomUUID } from "@helpers/strings";
 import { CENTER, Vector3D } from "../vector3d";
-import type { Sticker } from "./Sticker";
+import { Sticker } from "./Sticker";
 import { rotateBundle } from "@helpers/math";
 import { EPS } from "@constants";
 import type { VectorLike3D } from "@interfaces";
@@ -295,47 +295,94 @@ export class Piece {
   }
 
   cutPlane(p0: Vector3D, n: Vector3D) {
-    if (this.direction1(p0, n) != 0) return [];
+    if (this.direction1(p0, n) != 0) return [this];
 
     let inters = [];
     const stickers = this.stickers;
+    let nonIntersStickers: Sticker[] = [];
 
     for (let i = 0, maxi = stickers.length; i < maxi; i += 1) {
       let it = stickers[i].cutPlane(p0, n);
 
       if (it.intersection) {
         inters.push(it);
+      } else {
+        nonIntersStickers.push(stickers[i]);
       }
     }
 
-    function simplify(path: Vector3D[][]): Vector3D[][] {
-      let sPath: Vector3D[][] = [];
+    function simplify(paths: Vector3D[][]): Vector3D[][] {
+      let sPaths: Vector3D[][] = [];
 
-      for (let i = 0, maxi = path.length; i < maxi; i += 1) {
+      for (let i = 0, maxi = paths.length; i < maxi; i += 1) {
         let fnd = false;
+        let path = paths[i];
+        let pIni = path[0];
+        let pFin = path[path.length - 1];
 
-        for (let j = 0, maxj = sPath.length; j < maxj && !fnd; j += 1) {
-          if (sPath[j][0].sub(path[i][0]).abs() < EPS) {
-            sPath[j].unshift(path[i][1]);
+        for (let j = 0, maxj = sPaths.length; j < maxj && !fnd; j += 1) {
+          let sPath = sPaths[j];
+          let spIni = sPath[0];
+          let spFin = sPath[sPath.length - 1];
+
+          if (pIni.equals(spIni)) {
+            path.slice(1).forEach(p => sPath.unshift(p));
             fnd = true;
-          } else if (sPath[j][path[j].length - 1].sub(path[i][0]).abs() < EPS) {
-            sPath[j].push(path[i][1]);
+          } else if (pIni.equals(spFin)) {
+            path.slice(1).forEach(p => sPath.push(p));
+            fnd = true;
+          } else if (pFin.equals(spIni)) {
+            path
+              .reverse()
+              .slice(1)
+              .forEach(p => sPath.unshift(p));
+            fnd = true;
+          } else if (pFin.equals(spFin)) {
+            path
+              .reverse()
+              .slice(1)
+              .forEach(p => sPath.push(p));
             fnd = true;
           }
         }
 
         if (!fnd) {
-          sPath.push(path[i]);
+          sPaths.push(paths[i]);
         }
       }
 
-      if (sPath.length <= 1) return sPath;
-      return simplify(sPath);
+      if (sPaths.length <= 1) return sPaths;
+      return simplify(sPaths);
     }
 
-    console.log("sPath: ", simplify(inters.map(it => it.points)));
+    let path = simplify(inters.map(it => it.points.slice()))[0];
 
-    return inters;
+    if (path.length > 1 && path[0].sub(path[path.length - 1]).abs() < EPS) {
+      path.pop();
+    }
+
+    if (inters.length) {
+      let allStickers = inters.reduce((acc, e) => [...acc, ...e.parts], nonIntersStickers);
+      let interSticker = new Sticker(path);
+      let o = interSticker.getOrientation();
+
+      // Same direction / Opposite direction
+      let res: Piece[] = [new Piece([interSticker]), new Piece([interSticker.reverse()])];
+
+      for (let i = 0, maxi = allStickers.length; i < maxi; i += 1) {
+        let mc = allStickers[i].getMassCenter();
+
+        if (o.dot(mc.sub(p0)) < 0) {
+          res[0].stickers.push(allStickers[i]);
+        } else {
+          res[1].stickers.push(allStickers[i]);
+        }
+      }
+
+      return res;
+    }
+
+    return [this];
   }
 
   exact(p1: Piece): boolean {

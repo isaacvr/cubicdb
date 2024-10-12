@@ -149,7 +149,7 @@ export class Puzzle {
       let u = allStickers[i].getOrientation();
 
       for (let j = 0, maxj = vecs.length; j < maxj; j += 1) {
-        if (vecs[j].sub(u).abs() < EPS) {
+        if (vecs[j].equals(u)) {
           stickers[j].push(allStickers[i]);
           break;
         }
@@ -630,7 +630,7 @@ export class Puzzle {
       let u = allStickers[i].getOrientation();
 
       for (let j = 0, maxj = vecs.length; j < maxj; j += 1) {
-        if (vecs[j].sub(u).abs() < EPS) {
+        if (vecs[j].equals(u)) {
           stickers[j].push(allStickers[i]);
           break;
         }

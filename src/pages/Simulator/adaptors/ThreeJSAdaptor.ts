@@ -716,7 +716,7 @@ export class ThreeJSAdaptor {
     hemisphereLight.position.set(2, 0, 0);
     this.scene.add(hemisphereLight);
 
-    const excludePuzzlesBF: PuzzleType[] = ["clock", "timemachine"];
+    const excludePuzzlesBF: PuzzleType[] = ["clock", "timemachine", "ghost"];
 
     let ctt = cubeToThree(this.cube);
     let bfc = piecesToTree(
