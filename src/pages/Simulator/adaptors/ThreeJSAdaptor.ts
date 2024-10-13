@@ -33,7 +33,8 @@ import TEXTURE_URL from "@public/assets/textures/cube-texture1.jpg?url";
 import { DataService } from "@stores/data.service";
 
 const textureLoader = new TextureLoader();
-const texture = await textureLoader.loadAsync(TEXTURE_URL);
+const texture = textureLoader.load(TEXTURE_URL);
+
 texture.mapping = EquirectangularReflectionMapping;
 
 interface ThreeJSAdaptorConfig {

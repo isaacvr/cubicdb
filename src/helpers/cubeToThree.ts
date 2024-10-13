@@ -61,7 +61,7 @@ export function piecesToTree(
       let stickerMaterial = new MeshStandardMaterial({
         color,
         side,
-        ...(color ? { roughness: 0.5, metalness: 0.7 } : {}),
+        ...(color ? { roughness: 0.5, metalness: 0.6 } : {}),
       });
 
       if (sticker instanceof FaceSticker) {
