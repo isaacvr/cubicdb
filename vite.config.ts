@@ -1,14 +1,13 @@
-import { defineConfig } from "vite";
-import { svelte } from "@sveltejs/vite-plugin-svelte";
+import { sveltekit } from '@sveltejs/kit/vite';
+import { defineConfig } from 'vitest/config';
 // import { VitePWA } from "vite-plugin-pwa";
-import { resolve } from "path";
 
 // import basicSSL from "@vitejs/plugin-basic-ssl";
 
 const headerPlugin = {
   name: "p",
-  configurePreviewServer(server) {
-    server.middlewares.use((req, res, next) => {
+  configurePreviewServer(server: any) {
+    server.middlewares.use((req: any, res: any, next: any) => {
       res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
       res.setHeader("Cross-Origin-Embedder-Policy", "require-corp");
       next();
@@ -19,7 +18,7 @@ const headerPlugin = {
 export default defineConfig(env => ({
   plugins: [
     headerPlugin,
-    svelte(), //basicSSL(),
+    sveltekit(), //basicSSL(),
     //   VitePWA({
     //   manifest: {
     //     name: "CubicDB",
@@ -73,7 +72,6 @@ export default defineConfig(env => ({
     //   }
     // })
   ],
-  publicDir: "public",
   base: env.mode === "production" ? "/" : "",
   server: {
     host: true,
@@ -87,31 +85,10 @@ export default defineConfig(env => ({
     rollupOptions: { output: { dir: "./dist" } },
     minify: true,
   },
-  esbuild: {
-    supported: {
-      "top-level-await": true,
-    },
-  },
   optimizeDeps: {
     exclude: ["@ffmpeg/ffmpeg", "@ffmpeg/util"],
   },
-  resolve: {
-    alias: {
-      "@icons": "svelte-material-icons",
-      "@components": resolve(__dirname, "./src/components"),
-      "@classes": resolve(__dirname, "./src/classes"),
-      "@helpers": resolve(__dirname, "./src/helpers"),
-      "@material": resolve(__dirname, "./src/components/material"),
-      "@constants": resolve(__dirname, "./src/constants/index.ts"),
-      "@cstimer": resolve(__dirname, "./src/cstimer"),
-      "@interfaces": resolve(__dirname, "./src/interfaces/index.ts"),
-      "@stores": resolve(__dirname, "./src/stores"),
-      "@storage": resolve(__dirname, "./src/storage"),
-      "@workers": resolve(__dirname, "./src/workers"),
-      "@lang": resolve(__dirname, "./src/lang"),
-      "@pages": resolve(__dirname, "./src/pages"),
-      "@public": resolve(__dirname, "./public"),
-    },
-    // dedupe: ["three"]
-  },
+  test: {
+    include: ['src/**/*.{test,spec}.{js,ts}']
+  }
 }));

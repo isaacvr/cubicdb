@@ -1,5 +1,4 @@
-cache
-release
-dist
-.vscode
-node_modules
+# Package Managers
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
