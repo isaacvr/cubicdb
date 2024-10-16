@@ -1,8 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { Button, Span, Spinner, Tooltip } from "flowbite-svelte";
-  import { Link, navigate, useLocation } from "svelte-routing";
-  import type { RouteLocation } from "svelte-routing/types/Route";
   import { CubeMode } from "@constants";
   import { type Algorithm, type ICard, type Solution } from "@interfaces";
   import { Puzzle } from "@classes/puzzle/puzzle";
@@ -21,8 +19,9 @@
   import EditIcon from "@icons/Pencil.svelte";
   import PuzzleImage from "@components/PuzzleImage.svelte";
   import AlgorithmEditorModal from "@components/AlgorithmEditorModal.svelte";
-
-  const location = useLocation();
+  import { page } from "$app/stores";
+  import { goto } from "$app/navigation";
+  import { browser } from "$app/environment";
 
   const dataService = DataService.getInstance();
   const notification = NotificationService.getInstance();
@@ -34,7 +33,7 @@
   let selectedCase: Algorithm | null = null;
   let allSolutions = false;
   let imgExpanded = false;
-  let listView = JSON.parse(localStorage.getItem("algs-list-view") || "true");
+  let listView = browser ? JSON.parse(localStorage.getItem("algs-list-view") || "true") : true;
   const NUMBER_REG = /^[+-]?[\d]+(\.[\d]+)?$/;
   let currentList: Algorithm[] = [];
   let allowAlgAdmin = false;
@@ -52,8 +51,8 @@
     if (list.length === 0) return;
 
     type = 0;
-    cards.length = 0;
-    cases.length = 0;
+    cards = [];
+    cases = [];
 
     currentList = list;
 
@@ -61,6 +60,7 @@
       let hasSolutions = list.find(
         l => l.hasOwnProperty("solutions") && Array.isArray(l.solutions)
       );
+
       if (hasSolutions) {
         for (let i = 0, maxi = list.length; i < maxi; i += 1) {
           if (!list[i].hasOwnProperty("solutions")) {
@@ -132,7 +132,7 @@
 
   function handlekeyDown(e: KeyboardEvent) {
     if (e.code === "Escape" && allSolutions) {
-      navigate($location.pathname.split("?")[0]);
+      goto($page.url.pathname.split("?")[0]);
     }
 
     if (e.code === "KeyL" && e.ctrlKey && !allSolutions && (type === 2 || type >= 4)) {
@@ -146,12 +146,10 @@
     }
   }
 
-  async function updateCases(loc: RouteLocation, force = false) {
-    if (!loc.pathname.startsWith("/algorithms")) return;
-
-    let paramMap = getSearchParams(loc.search);
-
+  function selectCase(loc: URL) {
+    let paramMap = loc.searchParams;
     let caseName = paramMap.get("case");
+
     let fCases = cases.filter(e => e.shortName === caseName);
 
     if (caseName && fCases.length) {
@@ -161,25 +159,30 @@
     } else {
       allSolutions = false;
     }
+  }
+
+  async function updateCases(loc: URL, force = false) {
+    if (!loc.pathname.startsWith("/algorithms")) return;
+
+    selectCase($page.url);
 
     let p1 = loc.pathname.split("/").slice(2).join("/");
+    console.log("UPDATE_CASES: ", loc.pathname, loc.search, force, p1, lastUrl);
 
     if (force || p1 != lastUrl || !p1) {
-      cards.length = 0;
-      cases.length = 0;
+      cards = [];
+      cases = [];
       lastUrl = p1;
 
       handleAlgorithms(await dataService.getAlgorithms(p1));
+
+      selectCase($page.url);
 
       let parts = p1.split("/");
       let shortName = parts.pop() || "";
 
       currentAlg = await dataService.getAlgorithm(parts.join("/"), shortName);
     }
-  }
-
-  function caseHandler(c: Algorithm) {
-    navigate(c.parentPath + "?case=" + c.shortName);
   }
 
   function toClipboard(s: string) {
@@ -228,9 +231,7 @@
               cases[pos] = alg;
             })
             .catch(err => console.log("ERROR: ", err));
-          // handleAlgorithms(currentList);
         }
-        // updateCases($location, true)
       }
     );
 
@@ -283,7 +284,7 @@
 
   async function removeAlg(a: Algorithm) {
     await dataService.removeAlgorithm(a);
-    updateCases($location, true);
+    updateCases($page.url, true);
   }
 
   function toArray(str: string, suff = "") {
@@ -297,13 +298,6 @@
         .replace(/[\s,]+/g, "_") + suff;
 
     const section = arr[0];
-
-    // res.push({
-    //   name: section,
-    //   shortName: toShortName(section),
-    //   parent: "skewb/l2l",
-    //   scramble: "",
-    // });
 
     for (let i = 1, maxi = arr.length; i < maxi; i += 1) {
       if (/^\d+$/i.test(arr[i])) {
@@ -339,8 +333,6 @@
   }
 
   onMount(() => {
-    // dataService.getAlgorithms("", true).then(res => console.log("Algorithms: ", res.length));
-
     toArray(``, "").forEach((e, p) => {
       let alg: Algorithm = {
         mode: CubeMode.L4E,
@@ -365,7 +357,7 @@
     });
   });
 
-  $: updateCases($location);
+  $: updateCases($page.url);
 </script>
 
 <svelte:window on:keydown={handlekeyDown} />
@@ -464,7 +456,7 @@
     {#if type < 2}
       <ul class="cards w-full grid py-4">
         {#each cards as card, pos (card.route)}
-          <Link to={card.route} class="flex w-full">
+          <a href={card.route} class="flex w-full">
             <li
               class="w-full max-w-[12rem] h-48 shadow-md rounded-md select-none cursor-pointer card
               transition-all duration-200 grid place-items-center justify-center py-3 px-2
@@ -494,7 +486,7 @@
                 </ul>
               {/if}
             </li>
-          </Link>
+          </a>
         {/each}
       </ul>
     {/if}
@@ -511,16 +503,16 @@
         {#each cases as c (c._id)}
           <div class="row min-h-[8rem] relative gap-2">
             <span class="font-bold text-center">{c.name}</span>
-            <button
+            <a
               class="img-btn flex items-center justify-center my-2"
-              on:click={() => caseHandler(c)}
+              href={c.parentPath + "?case=" + c.shortName}
             >
               {#if c?._puzzle?.img}
                 <PuzzleImage src={c._puzzle.img} glowOnHover />
               {:else}
                 <Spinner size="10" color="white" />
               {/if}
-            </button>
+            </a>
 
             <ul class="no-grid alg-list">
               {#each (c.solutions || []).slice(0, 4) as solution}
@@ -596,7 +588,7 @@
     grid-area: name;
   }
 
-  .cases.compact .row > button {
+  .cases.compact .row > a {
     grid-area: img;
   }
 

@@ -3,7 +3,6 @@ import type { LayoutServerLoad } from "./$types";
 import { getTitleMeta } from "$lib/meta/title";
 
 export const load: LayoutServerLoad = ({ request, url }) => {
-  console.log("REQ_URL: ", request, url);
   const acceptLanguage = request.headers.get("accept-language");
 
   const languages = acceptLanguage ? acceptLanguage.split(",") : ["EN"];
