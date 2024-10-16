@@ -1,8 +1,8 @@
 <script lang="ts">
+  import { onDestroy, onMount, createEventDispatcher } from "svelte";
   import { Puzzle } from "@classes/puzzle/puzzle";
   import type { PuzzleType } from "@interfaces";
   import { puzzleReg } from "@classes/puzzle/puzzleRegister";
-  import { onDestroy, onMount } from "svelte";
 
   import SettingsIcon from "@icons/Cog.svelte";
   import Refresh from "@icons/Refresh.svelte";
@@ -37,6 +37,8 @@
 
   export { _cl as class };
 
+  const dispatch = createEventDispatcher();
+
   let canvas: HTMLCanvasElement;
   let threeAdaptor: ThreeJSAdaptor;
   let controlAdaptor: ControlAdaptor;
@@ -66,10 +68,10 @@
   });
 
   export async function handleSequence(s: string[], scr: string) {
-    if (!mounted) return;
-
     lastS = s;
     lastScr = scr;
+
+    if (!mounted) return;
 
     let nc: Puzzle;
 
@@ -98,10 +100,6 @@
     threeAdaptor.resetCamera();
   }
 
-  function scramble() {
-    threeAdaptor.resetPuzzle(undefined, true);
-  }
-
   export function applyMove(m: string, t: number) {
     threeAdaptor.applyMove(m, t);
   }
@@ -110,7 +108,13 @@
     threeAdaptor.resetPuzzle(f);
   }
 
+  // export function 
+
   /// GUI
+  function scramble() {
+    threeAdaptor.resetPuzzle(undefined, true);
+  }
+
   function setOrder() {
     hasOrder = !!puzzles.find(p => p.value === selectedPuzzle)?.order;
   }
@@ -267,6 +271,7 @@
         on:click={() => {
           threeAdaptor.resetPuzzle();
           hideGUI();
+          dispatch("config", { puzzle: selectedPuzzle, order: order });
         }}
       >
         {$localLang.SIMULATOR.setPuzzle}
