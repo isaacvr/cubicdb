@@ -1,11 +1,20 @@
 <script lang="ts">
   import { onMount, tick } from "svelte";
-  import { navigate, useLocation } from "svelte-routing";
-  import { ArrowKeyLeft, ArrowKeyRight, Button, Kbd, Modal, Range, Tooltip } from "flowbite-svelte";
-  import Simulator from "@pages/Simulator/SimulatorLayout.svelte";
+  import {
+    ArrowKeyLeft,
+    ArrowKeyRight,
+    Button,
+    Dropdown,
+    DropdownItem,
+    Kbd,
+    Modal,
+    Range,
+    Toggle,
+    Tooltip,
+  } from "flowbite-svelte";
+  import Simulator from "$lib/simulator/Simulator.svelte";
   import type { IDBReconstruction, PuzzleType, Scrambler } from "@interfaces";
   import TextArea from "@material/TextArea.svelte";
-  import Checkbox from "@material/Checkbox.svelte";
   import Input from "@material/Input.svelte";
   import Select from "@material/Select.svelte";
   import { screen } from "@stores/screen.store";
@@ -26,7 +35,11 @@
   import SearchIcon from "@icons/SearchWeb.svelte";
   import ChevronLeft from "@icons/ChevronLeft.svelte";
   import CopyIcon from "@icons/ClipboardOutline.svelte";
+  import SettingsIcon from "@icons/Cog.svelte";
+  import CameraIcon from "@icons/Cctv.svelte";
   import { DataService } from "@stores/data.service";
+  import { page } from "$app/stores";
+  import { goto } from "$app/navigation";
 
   export let type: "full" | "controlled" = "full";
   export let scramble = "";
@@ -41,8 +54,6 @@
   let recIndex = 1;
   let showRecSearch = false;
   let recSearch = "";
-
-  const location = useLocation();
 
   const iconSize = "1.3rem";
   const PUZZLES: { puzzle: PuzzleType; name: string; order: number; scrambler: Scrambler | "" }[] =
@@ -243,8 +254,8 @@
     rTextarea.updateInnerText();
   }
 
-  async function handleLocation(loc: any) {
-    let map = new URL(loc.href).searchParams;
+  async function handleLocation(loc: URL) {
+    let map = loc.searchParams;
     let p = map.get("puzzle");
     let o = parseInt(map.get("order") || "-1");
     let s = map.get("scramble") || "";
@@ -400,6 +411,7 @@
 
     if (type === "full") {
       dataService.getReconstructions().then(r => {
+        console.log("R: ", r);
         recs = r.filter(rec => errorIndex.indexOf(rec.num) < 0);
       });
     }
@@ -409,7 +421,7 @@
 
   $: recomputeTimeBounds(speed);
   $: handleSequenceAlpha(sequenceAlpha);
-  $: type === "full" && handleLocation($location);
+  $: type === "full" && handleLocation($page.url);
   $: drawerOpen = !$screen.isMobile ? true : drawerOpen;
   $: type === "controlled" && handleControlled(puzzleType, ~~puzzleOrder);
 </script>
@@ -547,16 +559,44 @@
         </div>
 
         <div>
-          <h2>{$localLang.global.settings}</h2>
+          <h2 class="flex gap-2 items-center">
+            {$localLang.global.settings}
+
+            <SettingsIcon class="text-inherit cursor-pointer" size={iconSize} />
+
+            <Dropdown>
+              {@const dropdownItemClass = "grid grid-cols-[3rem_auto]"}
+              <DropdownItem
+                class={dropdownItemClass}
+                on:click={() => (showBackFace = !showBackFace)}
+              >
+                <Toggle bind:checked={showBackFace} size="small"></Toggle>
+                <span>
+                  {$localLang.global.showBackFace}
+                </span>
+              </DropdownItem>
+
+              <DropdownItem class={dropdownItemClass} on:click={() => simulator.resetCamera()}>
+                <CameraIcon size={iconSize} />
+                {$localLang.RECONSTRUCTIONS.resetCamera}
+              </DropdownItem>
+
+              <DropdownItem
+                class={dropdownItemClass}
+                on:click={() => (scramble = reconstruction = title = "")}
+              >
+                <RestartIcon size={iconSize} />
+                {$localLang.global.reset}
+              </DropdownItem>
+
+              <DropdownItem class={dropdownItemClass} on:click={copyReconstruction}>
+                <CopyIcon size={iconSize} />
+                {$localLang.global.copy}
+              </DropdownItem>
+            </Dropdown>
+          </h2>
 
           <ul class="setting-list no-grid p-2 gap-4 place-items-center">
-            <li>
-              <Checkbox
-                label={$localLang.global.showBackFace + " [Ctrl + B]"}
-                hasKeybinding
-                bind:checked={showBackFace}
-              />
-            </li>
             <li>
               <Select
                 bind:value={puzzle}
@@ -567,11 +607,9 @@
                 hasIcon={e => e.scrambler}
               />
             </li>
-            <li>
-              <Button color="green" on:click={() => simulator.resetCamera()}>
-                <RestartIcon size={iconSize} />
-                {$localLang.RECONSTRUCTIONS.resetCamera}
-              </Button>
+            <li class="w-full max-w-[15rem] flex flex-col">
+              <span> {$localLang.RECONSTRUCTIONS.speed}: {Math.floor(speed * 10) / 10}x</span>
+              <Range bind:value={speed} min={0.1} max={10} step="0.1" />
             </li>
             <li>
               <Button color="purple" on:click={() => (showRecSearch = true)}>
@@ -579,25 +617,15 @@
                 {$localLang.RECONSTRUCTIONS.findReconstruction}
               </Button>
             </li>
-            <li>
-              <Button on:click={() => (scramble = reconstruction = title = "")}>
-                {$localLang.global.reset}
-              </Button>
-            </li>
 
             {#if backURL}
               <li>
-                <Button on:click={() => navigate(backURL)}>
+                <Button on:click={() => goto(backURL)}>
                   <BackIcon size={iconSize} />
                   {$localLang.RECONSTRUCTIONS.return}
                 </Button>
               </li>
             {/if}
-
-            <li class="w-full flex flex-col">
-              <span> {$localLang.RECONSTRUCTIONS.speed}: {Math.floor(speed * 10) / 10}x</span>
-              <Range bind:value={speed} min={0.1} max={10} step="0.1" />
-            </li>
           </ul>
 
           <div class="actions hidden justify-evenly">
@@ -725,9 +753,8 @@
 
   .setting-list {
     min-height: 4rem;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(10rem, max-content));
-    justify-content: space-evenly;
+    display: flex;
+    flex-wrap: wrap;
     overflow: hidden;
   }
 

@@ -194,7 +194,7 @@
 <svelte:window on:keyup={handleKeyUp} />
 
 <Card
-  class="flex flex-col relative items-center mt-4 max-w-2xl w-[calc(100%-2rem)] max-h-[calc(100vh-3rem)] mx-auto mb-8"
+  class="flex flex-col relative items-center mt-4 max-w-2xl w-[calc(100%-2rem)] max-h-[calc(100svh-6rem)] mx-auto mb-8"
 >
   <Heading class="text-center text-3xl mb-4 text-gray-300 font-bold">{$localLang.PLL.title}</Heading
   >

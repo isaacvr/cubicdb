@@ -153,11 +153,11 @@ export class IndexedDBAdaptor implements IPC {
           tx.done,
         ]);
       }
+
+      await loadData();
     } catch (err) {
       console.log("ERROR: ", err);
     }
-
-    await loadData();
 
     this.initialized = true;
     this.isInit = false;

@@ -178,7 +178,7 @@
   });
 
   onDestroy(() => {
-    threeAdaptor.destroy();
+    threeAdaptor?.destroy();
   });
 
   $: mounted && threeAdaptor.controls && (threeAdaptor.controls.noRotate = !enableRotation);
