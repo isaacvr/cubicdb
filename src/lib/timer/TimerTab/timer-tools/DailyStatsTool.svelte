@@ -111,7 +111,11 @@
             output += `<tr>
               <td>${param.marker}</td>
               <td>${name}</td>
-              <td style="text-align: right; font-weight: bold; padding-left: .5rem;">${timer(+value, true, true)}</td>
+              <td style="text-align: right; font-weight: bold; padding-left: .5rem;">${timer(
+                +value,
+                true,
+                true
+              )}</td>
             </tr>`;
           });
 
@@ -122,6 +126,7 @@
       animationDuration: 500,
     };
 
+    // @ts-ignore
     timeChart.setOption(options);
     timeChart.resize();
 

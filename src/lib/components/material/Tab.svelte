@@ -7,11 +7,11 @@
   export let icon: any = null;
   export let ariaLabel = "";
   const id = randomUUID();
-  const { registerTab, unregisterTab, selectedTab } = getContext("TABS") as any;
-  let tab: Tab = { name: "", id: "", index: 0, icon: null, ariaLabel };
+  const { registerTab, unregisterTab, selectedTab } = getContext("TAB") as any;
+  let tab: Tab = { name: "", id: "", index: 1, icon: null, ariaLabel };
 
   onMount(() => {
-    tab = { name, id, index: 0, icon, ariaLabel };
+    tab = { name, id, index: 1, icon, ariaLabel };
     registerTab(tab);
   });
 

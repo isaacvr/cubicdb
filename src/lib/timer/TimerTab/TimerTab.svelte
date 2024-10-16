@@ -31,17 +31,17 @@
   import { localLang } from "@stores/language.service";
 
   // Handlers
-  import { StackmatInput } from "./adaptors/Stackmat";
-  import { ManualInput } from "./adaptors/Manual";
-  import { GANInput } from "./adaptors/GAN";
-  import { KeyboardInput } from "./adaptors/Keyboard";
-  import { QiYiSmartTimerInput } from "./adaptors/QY-Timer";
+  import { StackmatInput } from "$lib/timer/adaptors/Stackmat";
+  import { ManualInput } from "$lib/timer/adaptors/Manual";
+  import { GANInput } from "$lib/timer/adaptors/GAN";
+  import { KeyboardInput } from "$lib/timer/adaptors/Keyboard";
+  import { QiYiSmartTimerInput } from "$lib/timer/adaptors/QY-Timer";
   // import { ExternalTimerInput } from "./adaptors/ExternalTimer";
 
   // Others
   import { randomUUID } from "@helpers/strings";
-  import { minmax } from "@helpers/math";
-  import Simulator from "@pages/Simulator/SimulatorLayout.svelte";
+  import { isBetween, minmax } from "@helpers/math";
+  import Simulator from "$lib/simulator/Simulator.svelte";
   import { statsReplaceId } from "@helpers/statistics";
   import { Button, Modal, StepIndicator, TextPlaceholder } from "flowbite-svelte";
   import Tooltip from "@material/Tooltip.svelte";
@@ -509,6 +509,17 @@
   }
 
   function handleMouseUp(ev: MouseEvent) {
+    if (ev.target) {
+      let br = (ev.target as Element).getBoundingClientRect();
+
+      if (
+        !isBetween(ev.pageX, br.left, br.left + br.width) ||
+        !isBetween(ev.pageY, br.top, br.top + br.height)
+      ) {
+        return;
+      }
+    }
+
     if (dataService.isElectron) return;
 
     ev.preventDefault();
@@ -518,6 +529,9 @@
         type: "keyup",
         code: "Space",
       } as KeyboardEvent);
+
+      ev.stopPropagation();
+      ev.stopImmediatePropagation();
     }
   }
 
@@ -527,21 +541,34 @@
     }
   }
 
+  function handlePointerUp(ev: any) {
+    if (dataService.isElectron) return;
+
+    ev.preventDefault();
+
+    if ($inputMethod instanceof KeyboardInput) {
+      $inputMethod.keyDownHandler({
+        type: "keydown",
+        code: "Escape",
+      } as KeyboardEvent);
+    }
+  }
+
   onMount(() => {
     if (timerOnly || scrambleOnly) {
       return;
     }
 
-    navigator.mediaDevices?.addEventListener("devicechange", updateDevices);
-    updateDevices();
+    // navigator.mediaDevices?.addEventListener("devicechange", updateDevices);
+    // updateDevices();
     dataService.on("bluetooth", bluetoothHandler);
     dataService.on("new-record", handleNewRecord);
   });
 
   onDestroy(() => {
     $inputMethod.disconnect();
-    navigator.mediaDevices?.removeEventListener("devicechange", updateDevices);
-    document.querySelectorAll("#stackmat-signal").forEach(e => e.remove());
+    // navigator.mediaDevices?.removeEventListener("devicechange", updateDevices);
+    // document.querySelectorAll("#stackmat-signal").forEach(e => e.remove());
     dataService.off("bluetooth", bluetoothHandler);
     dataService.off("new-record", handleNewRecord);
   });
@@ -554,7 +581,7 @@
   $: $mode && (selectedImg = 0);
 </script>
 
-<svelte:window on:keyup={keyUp} on:keydown={keyDown} />
+<svelte:window on:keyup={keyUp} on:keydown={keyDown} on:pointerup={handlePointerUp} />
 
 <div
   class:timerOnly
@@ -610,7 +637,9 @@
         />
       </div>
     {:else}
-      <div class="flex flex-col items-center transition-all duration-200 mx-auto">
+      <div
+        class="flex flex-col pointer-events-none items-center transition-all duration-200 mx-auto"
+      >
         {#if $state === TimerState.RUNNING}
           <span
             class="timer text-gray-300 max-sm:text-7xl max-sm:[line-height:8rem]"
@@ -638,7 +667,11 @@
           </span>
 
           {#if $state === TimerState.INSPECTION && !dataService.isElectron}
-            <Button color="alternative" class="w-min mx-auto" on:click={stopTimer}>
+            <Button
+              color="alternative"
+              class="w-min mx-auto pointer-events-auto"
+              on:click={stopTimer}
+            >
               {$localLang.global.cancel}
             </Button>
           {/if}
@@ -653,7 +686,9 @@
                 <Tooltip class="cursor-pointer" position="top" text={control.text}>
                   <Button
                     color="none"
-                    class="flex mx-1 w-5 h-5 p-0 {control.highlight($solves[0] || {})
+                    class="flex mx-1 w-5 h-5 p-0 pointer-events-auto {control.highlight(
+                      $solves[0] || {}
+                    )
                       ? 'text-red-500'
                       : ''}"
                     on:click={control.handler}
@@ -968,14 +1003,13 @@
 
   .hide {
     @apply transition-all duration-200 pointer-events-none opacity-0;
+    user-select: none;
+    pointer-events: none;
+    touch-action: none;
+    -webkit-touch-callout: none;
   }
 
   .cube-3d {
     @apply w-full h-full bg-white bg-opacity-20 max-w-md shadow-md rounded-md mx-auto overflow-hidden;
-    /* @apply bg-white bg-opacity-20 overflow-hidden shadow-md rounded-md mx-auto
-    w-[calc(100vw-20rem)] max-md:w-[calc(100vw-3rem)]
-    h-[45vh] max-md:h-[calc(100vh-25rem)]; */
-
-    /* height: calc(100vh - 25rem); */
   }
 </style>

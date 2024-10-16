@@ -13,7 +13,7 @@
   export { cl as class };
   export let onChange = (tab?: number) => {};
 
-  setContext("TABS", {
+  setContext("TAB", {
     registerTab(tab: Tab) {
       tabs.push(tab);
       tabs.forEach((e, p) => (e.index = p));

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { between, calcPercents } from "@helpers/math";
-  import { getAnomalies, getAverageS, trendLSV } from "@helpers/statistics";
-  import { formatHour, infinitePenalty, sTime, timer } from "@helpers/timer";
+  import { getAverageS, trendLSV } from "@helpers/statistics";
+  import { formatHour, infinitePenalty, timer } from "@helpers/timer";
   import { newArr } from "@helpers/object";
   import {
     AverageSetting,
@@ -267,6 +267,7 @@
       animationDuration: 500,
     };
 
+    // @ts-ignore
     timeChart.setOption(options);
 
     timeChart.off("dataZoom");
@@ -303,6 +304,7 @@
         hTrend.areaStyle!.color = "#fff4";
       }
 
+      // @ts-ignore
       timeChart.setOption(options);
     });
 
@@ -357,6 +359,7 @@
       },
     };
 
+    // @ts-ignore
     hourChart.setOption(hourOptions);
 
     // WEEK CHART
@@ -396,6 +399,7 @@
       },
     };
 
+    // @ts-ignore
     weekChart.setOption(weekOptions);
   }
 
@@ -450,6 +454,7 @@
       tooltip: { ...tooltipStyle },
     };
 
+    // @ts-ignore
     distChart.setOption(distOption);
 
     if (!$session.settings || $session.settings.sessionType != "multi-step") {
@@ -658,6 +663,7 @@
         },
       };
 
+      // @ts-ignore
       stepTimeChart.setOption(stepOption);
     }
 
@@ -699,6 +705,7 @@
         },
       };
 
+      // @ts-ignore
       stepPercentChart.setOption(stepOption);
     }
   }

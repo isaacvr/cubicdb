@@ -4,9 +4,9 @@
   import Select from "@material/Select.svelte";
   import DeleteIcon from "@icons/Delete.svelte";
   import ChevronIcon from "@icons/ChevronDown.svelte";
-  import { FieldAdaptor, GateAdaptor } from "./adaptors";
+  import { FieldAdaptor, GateAdaptor } from "$lib/timer/SessionsTab/AdvancedSearch/adaptors";
   import type { Writable } from "svelte/store";
-  import type { SearchFilter } from "./adaptors/types";
+  import type { SearchFilter } from "$lib/timer/SessionsTab/AdvancedSearch/adaptors/types";
   import { createEventDispatcher, getContext } from "svelte";
   import FieldSearch from "./FieldSearch.svelte";
 
@@ -69,9 +69,13 @@
       <mark> {$localLang.global[gate.type === "or" ? "true" : "false"]}</mark>
     </span>
 
-    <Button color="none" class="p-1 ml-auto" on:click={() => (expanded = !expanded)}>
-      <ChevronIcon size="1.2rem" class={"action " + (expanded ? "expanded" : "")} />
-    </Button>
+    <button
+      color="none"
+      class={"p-1 ml-auto action " + (expanded ? "expanded" : "")}
+      on:click={() => (expanded = !expanded)}
+    >
+      <ChevronIcon size="1.2rem" />
+    </button>
   </div>
 
   <div class="content">

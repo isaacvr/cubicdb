@@ -23,10 +23,10 @@
   import TabGroup from "@material/TabGroup.svelte";
   import Tab from "@material/Tab.svelte";
   import Select from "@material/Select.svelte";
-  import TimerTab from "./components/TimerTab/TimerTab.svelte";
-  import SessionsTab from "./components/SessionsTab/SessionsTab.svelte";
-  import StatsTab from "./components/StatsTab/StatsTab.svelte";
-  import TimerSessionIcon from "./components/TimerSessionIcon.svelte";
+  import TimerTab from "$lib/timer/TimerTab/TimerTab.svelte";
+  import SessionsTab from "$lib/timer/SessionsTab/SessionsTab.svelte";
+  import StatsTab from "$lib/timer/StatsTab/StatsTab.svelte";
+  import TimerSessionIcon from "$lib/timer/TimerSessionIcon.svelte";
 
   /// Types
   import {
@@ -140,7 +140,7 @@
 
   let lastPreview = 0;
 
-  let confetti = new JSConfetti();
+  let confetti: JSConfetti;
 
   $: $isRunning = $state === TimerState.INSPECTION || $state === TimerState.RUNNING;
 
@@ -602,9 +602,10 @@
   }
 
   onMount(() => {
-    testPrediction();
     mounted = true;
-    // tabs.nextTab();
+
+    testPrediction();
+    confetti = new JSConfetti();
 
     if (timerOnly && scrambleOnly) {
       timerOnly = scrambleOnly = false;

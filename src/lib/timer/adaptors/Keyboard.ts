@@ -12,11 +12,12 @@ import { createActor, fromCallback, setup } from "xstate";
 
 type KBActor = (data: Actor<KeyboardContext>) => any;
 
-const clear: KBActor = ({ context: { state, time, decimals, stepsTime } }) => {
+const clear: KBActor = ({ context: { state, time, decimals, stepsTime, ready } }) => {
   state.set(TimerState.CLEAN);
   time.set(0);
   decimals.set(true);
   stepsTime.set([]);
+  ready.set(false);
 };
 
 const checkPrevention = fromCallback(
@@ -184,6 +185,10 @@ const KeyboardMachine = setup({
       on: {
         keyup: "CLEAR",
         READY: "READY",
+        keydown: {
+          target: "CLEAR",
+          guard: isEscape,
+        },
       },
 
       after: {
@@ -202,6 +207,10 @@ const KeyboardMachine = setup({
         keyup: {
           target: "INSPECTION",
           guard: isSpace,
+        },
+        keydown: {
+          target: "CLEAR",
+          guard: isEscape,
         },
       },
     },

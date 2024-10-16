@@ -34,11 +34,10 @@
   import Checkbox from "@material/Checkbox.svelte";
   import Tooltip from "@material/Tooltip.svelte";
   import { timer } from "@helpers/timer";
-  import { GANInput } from "./adaptors/GAN";
-  import { QiYiSmartTimerInput } from "./adaptors/QY-Timer";
+  import { GANInput } from "$lib/timer/adaptors/GAN";
+  import { QiYiSmartTimerInput } from "$lib/timer/adaptors/QY-Timer";
   import ToolFrame from "./timer-tools/ToolFrame.svelte";
   import CrossTool from "./timer-tools/CrossTool.svelte";
-  import { onMount } from "svelte";
   import BldHelperTool from "./timer-tools/BLDHelperTool.svelte";
   import DailyStatsTool from "./timer-tools/DailyStatsTool.svelte";
   import MetronomeTool from "./timer-tools/MetronomeTool.svelte";
@@ -274,12 +273,15 @@
       case 0: {
         if (code != "Space" && !$isRunning && !battle && event.ctrlKey) {
           if (code === "KeyS") {
+            event.preventDefault();
             initScrambler();
           } else if (code === "KeyE") {
+            event.preventDefault();
             if (!show || (show && type != "edit-scramble")) {
               openDialog("edit-scramble", $scramble, (scr: string) => scr && initScrambler(scr));
             }
           } else if (code === "KeyO") {
+            event.preventDefault();
             openDialog("old-scrambles", null, () => {});
           } else if (code === "KeyC") {
             toClipboard();
@@ -440,7 +442,6 @@
         aria-label={"GAN Cube"}
         color="none"
         class="{BUTTON_CLASS} {$bluetoothStatus ? 'text-blue-500' : 'text-gray-400'}"
-        on:click={() => {}}
         on:keydown={e => (e.code === "Space" ? e.preventDefault() : null)}
       >
         <svelte:component

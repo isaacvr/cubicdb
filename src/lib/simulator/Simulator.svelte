@@ -13,8 +13,8 @@
   import { screen } from "@stores/screen.store";
   import { Button, Modal, Toggle } from "flowbite-svelte";
   import Select from "@material/Select.svelte";
-  import { ThreeJSAdaptor } from "./adaptors/ThreeJSAdaptor";
-  import { ControlAdaptor } from "./adaptors/ControlAdaptor";
+  import { ThreeJSAdaptor } from "$lib/simulator/adaptors/ThreeJSAdaptor";
+  import { ControlAdaptor } from "$lib/simulator/adaptors/ControlAdaptor";
   import { CubeMode } from "@constants";
   import { pGenerateCubeBundle } from "@helpers/cube-draw";
   import PuzzleImage from "@components/PuzzleImage.svelte";

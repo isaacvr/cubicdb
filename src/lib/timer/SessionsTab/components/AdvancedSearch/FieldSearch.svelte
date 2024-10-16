@@ -2,10 +2,13 @@
   import { Button, Input } from "flowbite-svelte";
   import DeleteIcon from "@icons/Delete.svelte";
   import Select from "@material/Select.svelte";
-  import type { InternalFilter, SearchFilter } from "./adaptors/types";
+  import type {
+    InternalFilter,
+    SearchFilter,
+  } from "$lib/timer/SessionsTab/AdvancedSearch/adaptors/types";
   import type { Writable } from "svelte/store";
   import { createEventDispatcher, getContext } from "svelte";
-  import { FieldAdaptor } from "./adaptors";
+  import { FieldAdaptor } from "$lib/timer/SessionsTab/AdvancedSearch/adaptors";
   import OperatorIcon from "./OperatorIcon.svelte";
   import { localLang } from "@stores/language.service";
 

@@ -53,8 +53,8 @@
   import PuzzleImage from "@components/PuzzleImage.svelte";
   import AdvancedSearch from "./components/AdvancedSearch/AdvancedSearch.svelte";
   import PaginatorComponent from "@components/PaginatorComponent.svelte";
-  import { GateAdaptor } from "./components/AdvancedSearch/adaptors";
-  import type { SearchFilter } from "./components/AdvancedSearch/adaptors/types";
+  import { GateAdaptor } from "$lib/timer/SessionsTab/AdvancedSearch/adaptors";
+  import type { SearchFilter } from "$lib/timer/SessionsTab/AdvancedSearch/adaptors/types";
 
   let localLang: Readable<Language> = derived(globalLang, $lang => getLanguage($lang));
 
