@@ -2,7 +2,7 @@
   import { onMount } from "svelte";
   import { derived, writable, type Readable } from "svelte/store";
   import Select from "@material/Select.svelte";
-  import Timer from "@pages/Timer/TimerLayout.svelte";
+  import Timer from "$lib/timer/Timer.svelte";
   import {
     Penalty,
     type Language,
@@ -23,7 +23,7 @@
   import { copyToClipboard, parseReconstruction, randomUUID } from "@helpers/strings";
   import { NotificationService } from "@stores/notification.service";
   import { sTimer, timerToMilli } from "@helpers/timer";
-  import StatsTab from "@pages/Timer/components/StatsTab/StatsTab.svelte";
+  import StatsTab from "$lib/timer/StatsTab/StatsTab.svelte";
   import { INITIAL_STATISTICS, computeMoves, getUpdatedStatistics } from "@helpers/statistics";
   import TextArea from "@material/TextArea.svelte";
   import { solvFacelet } from "@cstimer/scramble/scramble_333";
@@ -72,7 +72,7 @@
   // Timer and Scramble Only
   let modes: { 0: string; 1: string; 2: number }[] = [];
   let filters: string[] = [];
-  let option: ToolOption = "timer-only";
+  let option: ToolOption = "solver";
   let timer: Timer;
 
   // Batch
@@ -103,6 +103,8 @@
   // UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB
   const fMap = "URFDLB";
   let colors = STANDARD_PALETTE;
+  let solverDiv: HTMLDivElement;
+  let dim: string;
   const DEFAULT_COLOR = colors.gray;
   let fColors = [colors.w, colors.r, colors.g, colors.y, colors.o, colors.b];
   let facelets: string[][] = [0, 1, 2, 3, 4, 5].map(_ => [
@@ -153,8 +155,9 @@
 
   function toClipboard() {
     let str =
-      `${$localLang.TOOLS.cubicdbBatch} (${$mode[0]}${$prob > -1 ? " > " + filters[$prob] : ""})\n\n` +
-      scrambleBatch.map((s, p) => `${p + 1}- ${s}`).join("\n\n");
+      `${$localLang.TOOLS.cubicdbBatch} (${$mode[0]}${
+        $prob > -1 ? " > " + filters[$prob] : ""
+      })\n\n` + scrambleBatch.map((s, p) => `${p + 1}- ${s}`).join("\n\n");
 
     copyToClipboard(str).then(() => {
       notification.addNotification({
@@ -309,6 +312,37 @@
     return res.result;
   }
 
+  function updateDim() {
+    if (option != "solver" || !solverDiv) return;
+
+    if (window.innerWidth >= 640) {
+      dim = `min(calc((${solverDiv.clientWidth}px - 6rem - 3 * 0.5rem)/4/var(--order)), calc((${solverDiv.clientHeight}px - 6rem - 2*0.5rem)/3/var(--order)))`;
+    } else {
+      dim = `calc((${solverDiv.clientWidth}px - 3rem) /4/var(--order))`;
+    }
+  }
+
+  function getSectionLabel(option: ToolOption): string {
+    switch (option) {
+      case "metrics":
+        return $localLang.TOOLS.metrics;
+      case "mosaic":
+        return $localLang.TOOLS.mosaic;
+      case "remote-timer":
+        $localLang.TOOLS.remoteTimer;
+      case "scramble-batch":
+        return $localLang.TOOLS.batchScramble;
+      case "scramble-only":
+        return $localLang.TOOLS.scrambleOnly;
+      case "solver":
+        return $localLang.TOOLS.solver;
+      case "statistics":
+        return $localLang.TOOLS.statistics;
+      case "timer-only":
+        return $localLang.TOOLS.timerOnly;
+    }
+  }
+
   onMount(() => {
     selectedGroup();
     // fromFacelet('UBBLURBBRFDUURDDDLDUURFFFULRRBFDFLLDLURDLFFLDRRBLBBFBU');
@@ -322,12 +356,18 @@
   } as unknown as TimerContext;
 
   $: updateMetrics(eMetricString, selectedMetric);
+  $: option === "solver" && solverDiv && updateDim();
 </script>
+
+<svelte:head>
+  <title>{$localLang.HOME.tools} - {getSectionLabel(option)}</title>
+</svelte:head>
 
 <svelte:window
   on:keyup={handleKeyup}
   on:mousedown={() => (md = true)}
   on:mouseup={() => (md = false)}
+  on:resize={updateDim}
 />
 
 <!-- Selection -->
@@ -343,7 +383,7 @@
       [$localLang.TOOLS.mosaic, "mosaic"],
       // [$localLang.TOOLS.remoteTimer, "remote-timer"],
     ]}
-    label={e => e[0]}
+    label={e => getSectionLabel(e[1])}
     transform={e => e[1]}
     bind:value={option}
   />
@@ -527,12 +567,10 @@
       <!-- <TextArea bind:value={metricString}  class="bg-white bg-opacity-10 w-full" /> -->
     </div>
   {:else if option === "solver"}
-    <h2 class="text-2xl text-center mt-4">{$localLang.TOOLS.colors}</h2>
-
-    <div class="flex flex-wrap justify-center items-center gap-2">
+    <div class="solver" bind:this={solverDiv} style={`--fcw: ${dim};`}>
       <div class="colors">
         {#each fColors as f, p}
-          <Tooltip position="bottom" text={keys[p]} hasKeybinding>
+          <Tooltip text={keys[p]} hasKeybinding>
             <button
               class="color"
               on:click={() => (color = p)}
@@ -542,28 +580,27 @@
           </Tooltip>
         {/each}
       </div>
-      <div class="flex gap-2 h-10 items-center">
+
+      <div class="cube-grid">
+        {#each faces as face}
+          <div class={face[1]}>
+            {#each facelets[+face[0]] as f, p}
+              <button
+                class="facelet"
+                style={`background-color: ${f === "-" ? DEFAULT_COLOR : f}`}
+                on:click={() => assignColor(+face[0], p)}
+                on:mousemove={() =>
+                  md && facelets[+face[0]][p] != fColors[color] && assignColor(+face[0], p)}
+              ></button>
+            {/each}
+          </div>
+        {/each}
+      </div>
+
+      <div class="actions">
         <Button color="purple" on:click={solve} class="ml-4">{$localLang.TOOLS.solve}</Button>
         <Button color="red" on:click={clearCube}>{$localLang.global.clear}</Button>
       </div>
-    </div>
-
-    <h2 class="text-2xl text-center mt-4">{$localLang.TOOLS.stickers}</h2>
-
-    <div class="cube-grid">
-      {#each faces as face}
-        <div class={face[1]}>
-          {#each facelets[+face[0]] as f, p}
-            <button
-              class="facelet"
-              style={`background-color: ${f === "-" ? DEFAULT_COLOR : f}`}
-              on:click={() => assignColor(+face[0], p)}
-              on:mousemove={() =>
-                md && facelets[+face[0]][p] != fColors[color] && assignColor(+face[0], p)}
-            ></button>
-          {/each}
-        </div>
-      {/each}
     </div>
   {:else if option === "mosaic"}
     <Mosaic />
@@ -572,21 +609,56 @@
   {/if}
 </div>
 
-<style>
+<style lang="postcss">
   #grid {
     grid-template-columns: repeat(auto-fill, minmax(6rem, 1fr));
   }
 
+  .solver {
+    --order: 3;
+    display: grid;
+    grid-template-areas:
+      "colors"
+      "cubegrid"
+      "actions";
+    grid-template-rows: 3rem 1fr 3rem;
+    width: 100%;
+  }
+
+  @media not all and (max-width: 640px) {
+    .solver {
+      display: grid;
+      grid-template-areas:
+        "colors cubegrid"
+        "actions actions";
+      grid-template-columns: 3rem 1fr;
+      grid-template-rows: 1fr 3rem;
+      height: calc(100svh - 6rem);
+      width: 100%;
+    }
+  }
+
+  .colors-title {
+    grid-area: colorstitle;
+  }
+
+  .stickers-title {
+    grid-area: stickerstitle;
+  }
+
+  .actions {
+    @apply flex gap-2 items-center justify-center;
+    grid-area: actions;
+  }
+
   .colors {
-    display: flex;
-    gap: 0.5rem;
-    justify-content: center;
-    cursor: pointer;
+    @apply flex flex-wrap gap-2 items-center justify-center cursor-pointer sm:flex-col;
+    grid-area: colors;
   }
 
   .colors .color {
-    width: 3rem;
-    height: 3rem;
+    width: 2rem;
+    height: 2rem;
     border-radius: 0.3rem;
     border: 0.15rem solid black;
   }
@@ -596,23 +668,34 @@
   }
 
   .cube-grid {
-    --order: 3;
     display: grid;
+    grid-area: cubegrid;
     grid-template-areas:
       ". u . ."
       "l f r b"
       ". d . .";
-    max-width: 40rem;
-    width: calc(100% - 2rem);
-    margin: 1rem auto;
-    gap: 1rem;
+    gap: 0.5rem;
+    object-fit: contain;
+    padding: 1rem;
+    margin: auto;
+    width: 100%;
+    height: 100%;
+    place-content: center;
   }
 
   .cube-grid [class*="cube-"] {
     display: grid;
-    grid-template-columns: repeat(var(--order), 1fr);
-    grid-template-rows: repeat(var(--order), 1fr);
-    gap: 0.2rem;
+    grid-template-columns: repeat(var(--order), minmax(0, 1fr));
+    grid-template-rows: repeat(var(--order), minmax(0, 1fr));
+    gap: 0.1rem;
+  }
+
+  .cube-grid .facelet {
+    border-radius: 0.3rem;
+    border: 0.15rem solid black;
+    cursor: pointer;
+    width: var(--fcw, 10px);
+    aspect-ratio: 1;
   }
 
   .cube-grid .cube-u {
@@ -637,12 +720,5 @@
 
   .cube-grid .cube-d {
     grid-area: d;
-  }
-
-  .cube-grid .facelet {
-    aspect-ratio: 1 / 1;
-    border-radius: 0.3rem;
-    border: 0.15rem solid black;
-    cursor: pointer;
   }
 </style>
