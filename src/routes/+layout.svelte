@@ -1,5 +1,5 @@
 <script lang="ts">
-  import "../app.css";
+  import "../App.css";
 
   import moment from "moment";
   import Minus from "@icons/Minus.svelte";
