@@ -319,13 +319,15 @@ class Solver {
     return s1.filter(p => p[1]).map(p => p[0] + mp.get(p[1]));
   }
 
-  solve(ast: IToken): string | string[] {
+  solve(ast: IToken, simplify = true): string | string[] {
     switch (ast.type) {
       case "Program":
-        return this.simplify(this.solve(ast.value) as string[]).join(" ");
+        return (simplify ? this.simplify : (e: any) => e)(
+          this.solve(ast.value, simplify) as string[]
+        ).join(" ");
       case "Expression":
         return ast.value
-          .map((e: IToken) => this.solve(e))
+          .map((e: IToken) => this.solve(e, simplify))
           .reduce((acc: string[], e: string) => [...acc, ...e], []);
       case "Space":
       case "Comment":
@@ -333,7 +335,7 @@ class Solver {
       case "Move":
         return [ast.value];
       case "ParentesizedExpression":
-        let seq = this.solve(ast.value.expr);
+        let seq = this.solve(ast.value.expr, simplify);
         let res: string[] = [];
         for (let i = 1, maxi = ast.value.cant; i <= maxi; i += 1) {
           res = [...res, ...seq];
@@ -343,13 +345,13 @@ class Solver {
         let seq;
 
         if (ast.value.setup) {
-          let setup = this.solve(ast.value.setup);
-          let conmutator = this.solve(ast.value.conmutator);
+          let setup = this.solve(ast.value.setup, simplify);
+          let conmutator = this.solve(ast.value.conmutator, simplify);
           let setupInv = this.invert(setup as string[]);
           seq = [...setup, ...conmutator, ...setupInv];
         } else {
-          let s1 = this.solve(ast.value.expr1);
-          let s2 = this.solve(ast.value.expr2);
+          let s1 = this.solve(ast.value.expr1, simplify);
+          let s2 = this.solve(ast.value.expr2, simplify);
           let s1i = this.invert(s1 as string[]);
           let s2i = this.invert(s2 as string[]);
           seq = [...s1, ...s2, ...s1i, ...s2i];
@@ -434,7 +436,7 @@ export class Interpreter {
     this.throwErrors = throwErrors;
   }
 
-  input(string: string) {
+  input(string: string, simplify = true) {
     this._tokenizer.init(string.replaceAll("’", "'"));
     this._lookahead = this._tokenizer.getNextToken();
 
@@ -444,7 +446,7 @@ export class Interpreter {
       throw new SyntaxError(`Missing operators`);
     }
 
-    return this._solver.solve(pr);
+    return this._solver.solve(pr, simplify);
   }
 
   getTree(string: string): { error: boolean | null; cursor: any; program: IToken } {

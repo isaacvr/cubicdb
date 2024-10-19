@@ -496,7 +496,7 @@
   }
 
   function handleMouseDown(ev: MouseEvent) {
-    if (dataService.isElectron) return;
+    if (dataService.isElectron || ev.button) return;
 
     ev.preventDefault();
 

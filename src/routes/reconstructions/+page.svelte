@@ -40,6 +40,7 @@
   import { DataService } from "@stores/data.service";
   import { page } from "$app/stores";
   import { goto } from "$app/navigation";
+  import { DOMAIN } from "@constants";
 
   export let type: "full" | "controlled" = "full";
   export let scramble = "";
@@ -354,9 +355,9 @@
     let rec = "";
 
     if (rec1.scramble === scramble && rec1.solution === reconstruction) {
-      rec = `https://cubicdb.netlify.app/reconstructions?recIndex=${recIndex}`;
+      rec = `${DOMAIN}/reconstructions?recIndex=${recIndex}`;
     } else {
-      rec = `https://cubicdb.netlify.app/reconstructions?puzzle=${puzzle.puzzle}&order=${
+      rec = `${DOMAIN}/reconstructions?puzzle=${puzzle.puzzle}&order=${
         puzzle.order
       }&scramble=${encodeURIComponent(scramble)}&reconstruction=${encodeURIComponent(
         reconstruction
@@ -411,7 +412,6 @@
 
     if (type === "full") {
       dataService.getReconstructions().then(r => {
-        console.log("R: ", r);
         recs = r.filter(rec => errorIndex.indexOf(rec.num) < 0);
       });
     }
@@ -432,6 +432,7 @@
   <section>
     <Simulator
       contained
+      controlled
       enableDrag={false}
       enableRotation={type === "full"}
       gui={false}
@@ -612,9 +613,11 @@
               <Range bind:value={speed} min={0.1} max={10} step="0.1" />
             </li>
             <li>
-              <Button color="purple" on:click={() => (showRecSearch = true)}>
+              <Button color="purple" class="!p-2" on:click={() => (showRecSearch = true)}>
                 <SearchIcon size={iconSize} />
-                {$localLang.RECONSTRUCTIONS.findReconstruction}
+                <Tooltip>
+                  {$localLang.RECONSTRUCTIONS.findReconstruction}
+                </Tooltip>
               </Button>
             </li>
 
@@ -754,7 +757,7 @@
   .setting-list {
     min-height: 4rem;
     display: flex;
-    flex-wrap: wrap;
+    /* flex-wrap: wrap; */
     overflow: hidden;
   }
 

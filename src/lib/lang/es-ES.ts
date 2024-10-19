@@ -76,27 +76,76 @@ export const Spanish: Language = {
   NAVBAR: {
     home: "Inicio",
     routeMap: (r: string) => {
-      let mp: [RegExp, string][] = [
-        [/tutorials/i, "Tutoriales"],
-        [/algorithms/i, "Algoritmos"],
-        [/timer/i, "Temporizador"],
-        [/battle/i, "Batalla"],
-        [/pll-trainer/i, "Reconocimiento PLL"],
-        [/simulator/i, "Simulador"],
-        [/contest/i, "Concursos"],
-        [/import-export/i, "Importar-Exportar"],
-        [/settings/i, "Configuración"],
-        [/tools/i, "Herramientas"],
-        [/reconstructions/i, "Reconstrucciones"],
+      let mp: [RegExp, string, string][] = [
+        [
+          /tutorials/i,
+          "Tutoriales",
+          "Aprende a resolver y mejorar tus habilidades en el speedcubing con nuestros completos tutoriales.",
+        ],
+        [
+          /algorithms/i,
+          "Algoritmos",
+          "Explora una vasta colección de algoritmos para el speedcubing y resuelve los puzzles más rápido.",
+        ],
+        [
+          /timer/i,
+          "Temporizador",
+          "Usa nuestro cronómetro para registrar tus tiempos de resolución y analizar tu rendimiento.",
+        ],
+        [
+          /battle/i,
+          "Batalla",
+          "Compite con otros cuberos en batallas en tiempo real y demuestra tus habilidades.",
+        ],
+        [
+          /pll-trainer/i,
+          "Reconocimiento PLL",
+          "Practica y mejora tu reconocimiento PLL con nuestro entrenador especializado.",
+        ],
+        [
+          /simulator/i,
+          "Simulador",
+          "Simula diferentes puzzles y practica resolviéndolos virtualmente.",
+        ],
+        [
+          /contest/i,
+          "Concursos",
+          "Participa en concursos en línea y desafíate contra los mejores.",
+        ],
+        [
+          /import-export/i,
+          "Importar-Exportar",
+          "Importa y exporta fácilmente tus datos de resolución y configuraciones.",
+        ],
+        [
+          /settings/i,
+          "Configuración",
+          "Personaliza tu experiencia con varias configuraciones y preferencias.",
+        ],
+        [
+          /tools/i,
+          "Herramientas",
+          "Accede a una variedad de herramientas para mejorar tu práctica y rendimiento en el speedcubing.",
+        ],
+        [
+          /reconstructions/i,
+          "Reconstrucciones",
+          "Analiza y aprende de detalladas reconstrucciones de resoluciones por los mejores cuberos.",
+        ],
+        [
+          /about-cubicdb/i,
+          "Sobre CubicDB",
+          "Conoce más sobre CubicDB, sus características y cómo puede ayudarte a mejorar en el speedcubing.",
+        ],
       ];
 
       for (let i = 0, maxi = mp.length; i < maxi; i += 1) {
         if (mp[i][0].test(r)) {
-          return mp[i][1];
+          return mp[i].slice(1) as string[];
         }
       }
 
-      return r;
+      return [r, ""];
     },
   },
   HOME: {

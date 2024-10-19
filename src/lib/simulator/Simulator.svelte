@@ -18,6 +18,8 @@
   import { CubeMode } from "@constants";
   import { pGenerateCubeBundle } from "@helpers/cube-draw";
   import PuzzleImage from "@components/PuzzleImage.svelte";
+  import { DataService } from "@stores/data.service";
+  import { sha1 } from "object-hash";
 
   export let enableKeyboard = true;
   export let enableDrag = true;
@@ -32,12 +34,14 @@
   export let sequenceAlpha = 0;
   export let useScramble = "";
   export let zoom = 12;
+  export let controlled = false;
 
   let _cl = "";
 
   export { _cl as class };
 
   const dispatch = createEventDispatcher();
+  const dataService = DataService.getInstance();
 
   let canvas: HTMLCanvasElement;
   let threeAdaptor: ThreeJSAdaptor;
@@ -63,9 +67,21 @@
     }
   }
 
-  pGenerateCubeBundle(puzzles.map(p => new Puzzle({ type: p.value, order: [3] }))).then(res => {
-    res.forEach((img, pos) => (puzzles[pos].img = img));
-  });
+  (async () => {
+    for (let i = 0, maxi = puzzles.length; i < maxi; i += 1) {
+      let hash = sha1(puzzles[i]);
+      let inCache = await dataService.cacheCheckImage(hash);
+
+      if (inCache) {
+        puzzles[i].img = await dataService.cacheGetImage(hash);
+      } else {
+        puzzles[i].img = (
+          await pGenerateCubeBundle([new Puzzle({ type: puzzles[i].value, order: [3] })])
+        )[0];
+        await dataService.cacheSaveImage(hash, puzzles[i].img);
+      }
+    }
+  })();
 
   export async function handleSequence(s: string[], scr: string) {
     lastS = s;
@@ -108,7 +124,7 @@
     threeAdaptor.resetPuzzle(f);
   }
 
-  // export function 
+  // export function
 
   /// GUI
   function scramble() {
@@ -170,8 +186,6 @@
 
     controlAdaptor = new ControlAdaptor(threeAdaptor);
 
-    threeAdaptor.resetPuzzle();
-
     handleSequence(sequence, useScramble);
     controlAdaptor.handleAlpha(sequenceAlpha, mounted);
 
@@ -186,8 +200,8 @@
   });
 
   $: mounted && threeAdaptor.controls && (threeAdaptor.controls.noRotate = !enableRotation);
-  $: mounted && handleSequence(sequence, useScramble);
-  $: mounted && controlAdaptor.handleAlpha(sequenceAlpha, mounted);
+  $: mounted && controlled && handleSequence(sequence, useScramble);
+  $: mounted && controlled && controlAdaptor.handleAlpha(sequenceAlpha, mounted);
   $: mounted && (threeAdaptor.enableKeyboard = enableKeyboard);
   $: mounted && (threeAdaptor.enableDrag = enableDrag);
   $: mounted && (threeAdaptor.selectedPuzzle = selectedPuzzle);
@@ -232,7 +246,7 @@
 {/if}
 
 <Modal bind:open={GUIExpanded} size="xs" title={$localLang.SIMULATOR.puzzleSettings} outsideclose>
-  <div class="grid grid-cols-2 gap-4 place-items-center text-gray-400">
+  <div class="grid grid-cols-[auto_auto] gap-4 place-items-center text-gray-400">
     <span>{$localLang.SIMULATOR.puzzle}</span>
 
     <Select

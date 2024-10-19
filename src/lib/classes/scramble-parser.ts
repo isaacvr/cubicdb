@@ -47,6 +47,7 @@ export class ScrambleParser {
       // Move Index, Face Index, Direction
       moveseq.push([moveMap.indexOf("FRUBLD".charAt(f % 6)), w, p, 0, f < 12 ? 0 : 1]);
     }
+
     return moveseq;
   }
 
@@ -73,9 +74,10 @@ export class ScrambleParser {
     scramble: string,
     order: IPuzzleOrder,
     MOVE_MAP = "URFDLB",
-    moveToOrder = _moveToOrder
+    moveToOrder = _moveToOrder,
+    simplify = false
   ) {
-    let scr = ScrambleParser.parseNNNString(scramble);
+    let scr = ScrambleParser.parseNNNString(scramble, simplify);
     let moves = ScrambleParser.parseScramble(scr, MOVE_MAP);
     let res = [];
 
@@ -394,10 +396,10 @@ export class ScrambleParser {
                     checkBit(cmd[0], 3) === checkBit(cmd[0], 1)
                       ? [2, 1][(cmd[0] & 0x8) >> 3]
                       : checkBit(cmd[0], 3) === checkBit(cmd[0], 2)
-                      ? [2, 2, 1, 1][cmd[0] & 0x3]
-                      : cmd[0] & 0x8
-                      ? 1
-                      : 2;
+                        ? [2, 2, 1, 1][cmd[0] & 0x3]
+                        : cmd[0] & 0x8
+                          ? 1
+                          : 2;
 
                   cmd[upPos] = parseInt(mvs[1][1] + mvs[1][0]);
                   cmd[3 - upPos] = parseInt(mvs[2][1] + mvs[2][0]);
@@ -465,8 +467,8 @@ export class ScrambleParser {
     return res;
   }
 
-  static parseNNNString(scramble: string): string {
-    return new Interpreter(false).input(scramble) as string;
+  static parseNNNString(scramble: string, simplify = true): string {
+    return new Interpreter(false).input(scramble, simplify) as string;
   }
 
   static parsePyraminxString(scramble: string): string {

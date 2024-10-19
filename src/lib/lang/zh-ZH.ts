@@ -76,27 +76,28 @@ export const Chinese: Language = {
   NAVBAR: {
     home: "主页",
     routeMap: (r: string) => {
-      let mp: [RegExp, string][] = [
-        [/tutorials/i, "教程"],
-        [/algorithms/i, "算法"],
-        [/timer/i, "计时器"],
-        [/battle/i, "战斗"],
-        [/pll-trainer/i, "PLL 识别"],
-        [/simulator/i, "模拟器"],
-        [/contest/i, "比赛"],
-        [/import-export/i, "导入-导出"],
-        [/settings/i, "设置"],
-        [/tools/i, "工具"],
-        [/reconstructions/i, "重建"],
+      let mp: [RegExp, string, string][] = [
+        [/tutorials/i, "教程", "通过我们的综合教程学习如何解决和提高你的速解魔方技能."],
+        [/algorithms/i, "算法", "探索大量的速解魔方算法, 帮助你更快地解决谜题."],
+        [/timer/i, "计时器", "使用我们的计时器跟踪你的解题时间并分析你的表现."],
+        [/battle/i, "战斗", "与其他魔方爱好者进行实时战斗, 展示你的技能."],
+        [/pll-trainer/i, "PLL 识别", "通过我们的专业训练器练习和提高你的 PLL 识别能力."],
+        [/simulator/i, "模拟器", "模拟不同的谜题并在虚拟环境中练习解决它们."],
+        [/contest/i, "比赛", "参加在线比赛, 挑战自己与最好的选手竞争."],
+        [/import-export/i, "导入-导出", "轻松导入和导出你的解题数据和设置."],
+        [/settings/i, "设置", "通过各种设置和偏好自定义你的体验."],
+        [/tools/i, "工具", "访问一系列工具, 以提高你的速解魔方练习和表现."],
+        [/reconstructions/i, "重建", "通过顶级魔方选手的详细重构分析和学习."],
+        [/about-cubicdb/i, "关于 CubicDB", "了解有关 CubicDB 的更多信息, 其功能及如何帮助你提高速解魔方."],
       ];
-
+      
       for (let i = 0, maxi = mp.length; i < maxi; i += 1) {
         if (mp[i][0].test(r)) {
-          return mp[i][1];
+          return mp[i].slice(1) as string[];
         }
       }
 
-      return r;
+      return [r, ""];
     },
   },
   HOME: {
@@ -384,7 +385,7 @@ export const Chinese: Language = {
     solver: "解题器 3x3",
     mosaic: "马赛克",
     remoteTimer: "远程计时器",
-    portraitWarning: "旋转手机并激活全屏模式以获得更好的体验。",
+    portraitWarning: "旋转手机并激活全屏模式以获得更好的体验.",
 
     // 统计
     writeYourTime: "在此输入你的时间",
@@ -394,24 +395,24 @@ export const Chinese: Language = {
     writeYourScramble: "在此输入你的打乱",
 
     // 描述
-    ETM: "ETM (执行转动指标) :在此指标中，外层、块或旋转的每个移动都计为1步。",
-    QTM: "QTM (90度转动指标) :在此指标中，外层每90度的移动计为1步。双重移动计为2步。",
-    HTM: "HTM (半圈转动指标) :外层每旋转任意角度计为1步。中间层计为2步。",
-    OBTM: "OBTM (外层块转动指标) :外层或块的每个旋转计为1步。中间层计为2步。",
-    STM: "STM (切片转动指标) :每个切片计为1步。",
+    ETM: "ETM (执行转动指标) :在此指标中, 外层、块或旋转的每个移动都计为1步.",
+    QTM: "QTM (90度转动指标) :在此指标中, 外层每90度的移动计为1步.双重移动计为2步.",
+    HTM: "HTM (半圈转动指标) :外层每旋转任意角度计为1步.中间层计为2步.",
+    OBTM: "OBTM (外层块转动指标) :外层或块的每个旋转计为1步.中间层计为2步.",
+    STM: "STM (切片转动指标) :每个切片计为1步.",
 
     // 解题器
     colors: "颜色",
     solve: "解决",
     stickers: "贴纸",
     error: "错误",
-    invalidCube: "无效的魔方。",
-    missingEdges: "有一些缺少的边。",
-    flippedEdge: "有一个翻转的边。",
-    missingCorners: "有一些缺少的角。",
-    twistedCornerClockwise: "有一个顺时针扭曲的角。",
-    twistedCornerCounterclockwise: "有一个逆时针扭曲的角。",
-    parity: "存在奇偶性 (两个角或边被交换) 。",
+    invalidCube: "无效的魔方.",
+    missingEdges: "有一些缺少的边.",
+    flippedEdge: "有一个翻转的边.",
+    missingCorners: "有一些缺少的角.",
+    twistedCornerClockwise: "有一个顺时针扭曲的角.",
+    twistedCornerCounterclockwise: "有一个逆时针扭曲的角.",
+    parity: "存在奇偶性 (两个角或边被交换) .",
     solutionFound: "找到解决方案",
     solutionInstruction: "以绿色中心在前面和白色中心在顶部为例:",
 
@@ -423,7 +424,7 @@ export const Chinese: Language = {
     selectImage: "选择图片",
 
     // 远程计时器
-    clickToAuth: "服务器使用自签名的网络证书，因此您需要在浏览器上手动接受它，点击下面的链接。",
+    clickToAuth: "服务器使用自签名的网络证书, 因此您需要在浏览器上手动接受它, 点击下面的链接.",
   },
   MENU: [
     [

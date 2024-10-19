@@ -32,6 +32,7 @@
   import UpdateIcon from "@icons/Update.svelte";
   import StorageIcon from "@icons/Harddisk.svelte";
   import CleanIcon from "@icons/DeleteAlert.svelte";
+  import { browser } from "$app/environment";
 
   const notService = NotificationService.getInstance();
 
@@ -54,9 +55,16 @@
   const tabActiveClass = "text-primary-400 p-4 border-b-2 border-b-primary-400";
   const ZOOM_FACTORS = [25, 50, 75, 100, 125, 150, 175, 200];
 
-  let appFont = localStorage.getItem("app-font") || DEFAULT_APP_FONT;
-  let timerFont = localStorage.getItem("timer-font") || DEFAULT_TIMER_FONT;
-  let zoomFactor: number = ~~(localStorage.getItem("zoom-factor") || DEFAULT_ZOOM_FACTOR);
+  let appFont = browser ? localStorage.getItem("app-font") || DEFAULT_APP_FONT : DEFAULT_APP_FONT;
+
+  let timerFont = browser
+    ? localStorage.getItem("timer-font") || DEFAULT_TIMER_FONT
+    : DEFAULT_TIMER_FONT;
+
+  let zoomFactor: number = ~~(browser
+    ? localStorage.getItem("zoom-factor") || DEFAULT_ZOOM_FACTOR
+    : DEFAULT_ZOOM_FACTOR);
+
   let initialZoomFactor = zoomFactor;
   let canCheckUpdate = true;
   let canCheckAlgs = true;
@@ -356,7 +364,7 @@
 
   onDestroy(() => {
     clearInterval(itv);
-    document.documentElement.style.setProperty("--zoom-factor", "" + initialZoomFactor);
+    browser && document.documentElement.style.setProperty("--zoom-factor", "" + initialZoomFactor);
   });
 
   $: $localLang && [updateDisplays(), updateStorageNames()];
@@ -558,7 +566,7 @@
 
 <Modal bind:show={showDelete} onClose={() => (showDelete = false)} closeOnClickOutside>
   <h1 class="text-gray-400 mb-4 text-lg">
-    {$localLang.SETTINGS.deleteStorage.replace("$1", getName(sName))}
+    {$localLang.global.deleteWarning.replace("$1", getName(sName))}
   </h1>
   <div class="flex justify-evenly">
     <Button

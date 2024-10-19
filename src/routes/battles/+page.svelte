@@ -1,8 +1,8 @@
 <script lang="ts">
   import { AverageSetting, type Game, type Language, type Solve } from "@interfaces";
   import Select from "@material/Select.svelte";
-  import Timer from "@pages/Timer/TimerLayout.svelte";
-  import { infinitePenalty, isMo3, timer } from "@helpers/timer";
+  import Timer from "$lib/timer/Timer.svelte";
+  import { infinitePenalty, isMo3 } from "@helpers/timer";
   import * as all from "@cstimer/scramble";
   import { onDestroy, onMount } from "svelte";
   import Tooltip from "@material/Tooltip.svelte";

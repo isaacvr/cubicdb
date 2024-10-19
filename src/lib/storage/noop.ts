@@ -85,7 +85,7 @@ export class NoopAdaptor implements IPC {
   async getAlgorithm(options: AlgorithmOptions): Promise<Algorithm | null> {
     await this.init();
     let fAlgs = algs.filter(
-      a => a.parentPath === options.path && a.parentPath === options.shortName
+      a => a.parentPath === options.path && a.shortName === options.shortName
     ) as Algorithm[];
     return fAlgs.length === 0 ? null : clone(fAlgs[0]);
   }
@@ -160,8 +160,9 @@ export class NoopAdaptor implements IPC {
     return Promise.reject();
   }
 
-  getReconstructions() {
-    return Promise.resolve(recs);
+  async getReconstructions() {
+    await this.init();
+    return recs;
   }
 
   reconstructionsVersion() {

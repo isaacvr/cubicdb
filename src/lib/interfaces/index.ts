@@ -890,7 +890,7 @@ export interface Language {
   };
   NAVBAR: {
     home: string;
-    routeMap: (route: string) => string;
+    routeMap: (route: string) => string[];
   };
   HOME: {
     tutorials: string;

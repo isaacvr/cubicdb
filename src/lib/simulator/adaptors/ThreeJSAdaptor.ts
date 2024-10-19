@@ -6,7 +6,7 @@ import { Vector2D } from "@classes/vector2-d";
 import { CENTER, Vector3D } from "@classes/vector3d";
 import { CubeMode, EPS } from "@constants";
 import { cubeToThree, piecesToTree } from "@helpers/cubeToThree";
-import { getLagrangeInterpolation } from "@helpers/math";
+import { between, getLagrangeInterpolation } from "@helpers/math";
 import type { PuzzleType } from "@interfaces";
 import {
   ACESFilmicToneMapping,
@@ -106,7 +106,7 @@ const MOVE_THRESHOLD = 10;
 
 export class ThreeJSAdaptor {
   // Internal data
-  cube: Puzzle;
+  cube: Puzzle | null = null;
   animationTime: number;
   selectedPuzzle: PuzzleType = "rubik";
   order = 3;
@@ -155,7 +155,6 @@ export class ThreeJSAdaptor {
     this.zoom = config.zoom;
     this.distance = config.zoom;
 
-    this.cube = new Puzzle({ type: this.selectedPuzzle });
     this.canvas = config.canvas;
     this.renderer =
       config.renderer ||
@@ -204,7 +203,7 @@ export class ThreeJSAdaptor {
     let animationTimes: number[] = [];
     let centers: Vector3D[] = [];
 
-    let toMove = this.cube.p.toMove ? this.cube.p.toMove(pc[0], pc[1], best) : [];
+    let toMove = this.cube?.p.toMove ? this.cube.p.toMove(pc[0], pc[1], best) : [];
     let groupToMove = Array.isArray(toMove) ? toMove : [toMove];
 
     let u: any = best;
@@ -220,7 +219,7 @@ export class ThreeJSAdaptor {
       if (g.center) {
         centers.push(g.center);
       } else {
-        centers.push(this.cube.p.center.clone());
+        centers.push(this.cube?.p.center.clone() || CENTER);
       }
 
       let pieces: Piece[] = g.pieces;
@@ -438,7 +437,7 @@ export class ThreeJSAdaptor {
 
     let dir = m[1] === "'" ? 1 : -1;
     let u: any = mc[pos];
-    let piece = this.cube.pieces.find(p => p.direction1(u, u) === 0 && p.stickers.length > 4);
+    let piece = this.cube!.pieces.find(p => p.direction1(u, u) === 0 && p.stickers.length > 4);
     let sticker = piece?.stickers.find(s => s.vecs.length === 3);
 
     let data = this.dataFromGroup([piece, sticker], u, u, dir);
@@ -513,7 +512,7 @@ export class ThreeJSAdaptor {
       let dir = Vector2D.cross(vNormal, dirNormal) * this.rotationData.dir;
       let maxAng = Math.PI / (2 * angs.reduce((a, b) => Math.max(Math.abs(a), Math.abs(b)), 0));
       let factor = (dir * maxAng) / lagrange(this.distance);
-      this.angleFactor = factor;
+      this.angleFactor = factor * (this.cube?.type === "clock" ? 3 : 1);
 
       let total = animBuffer.length;
 
@@ -570,7 +569,7 @@ export class ThreeJSAdaptor {
           this.piece = intersects[i];
           this.controls.enabled = false;
 
-          if (this.cube.type === "clock") {
+          if (this.cube?.type === "clock") {
             if (this.piece.object.userData.data.name === "pin") {
               let data = this.drag(this.piece, new Vector2(0, 0), new Vector2(1, 0), this.camera);
 
@@ -703,7 +702,7 @@ export class ThreeJSAdaptor {
   }
 
   applyMove(m: string, t: number) {
-    if (this.cube.type != "icarry" && this.cube.type != "rubik") return;
+    if (this.cube?.type != "icarry" && this.cube?.type != "rubik") return;
     this.moveQueue.push([m, t]);
   }
 
@@ -721,14 +720,16 @@ export class ThreeJSAdaptor {
 
     const excludePuzzlesBF: PuzzleType[] = ["clock", "timemachine", "ghost"];
 
-    let ctt = cubeToThree(this.cube);
+    let ctt = cubeToThree(this.cube!);
     let bfc = piecesToTree(
-      this.cube,
+      this.cube!,
       1,
       (st: Sticker[]) => {
-        if (excludePuzzlesBF.some(p => p === this.cube.type)) return [];
+        if (excludePuzzlesBF.some(p => p === this.cube?.type)) return [];
         return st
-          .filter(s => this.cube.p.faceColors.indexOf(s.color) > -1 && !(s instanceof ImageSticker))
+          .filter(
+            s => this.cube!.p.faceColors.indexOf(s.color) > -1 && !(s instanceof ImageSticker)
+          )
           .map(s =>
             s
               .reflect1(

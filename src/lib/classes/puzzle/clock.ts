@@ -399,7 +399,9 @@ export function CLOCK(): PuzzleInterface {
         return false;
       }
 
-      pcMoves.forEach(pcm => pcm.pieces.forEach(pc => pc.rotate(pcm.center, pcm.u, pcm.ang, true)));
+      pcMoves.forEach(pcm =>
+        pcm.pieces.forEach(pc => pc.rotate(pcm.center || clock.center, pcm.u, pcm.ang, true))
+      );
     }
 
     return true;
@@ -575,7 +577,7 @@ export function CLOCK(): PuzzleInterface {
       );
 
       pcMoves.forEach(pcm => {
-        pcm.pieces.forEach(pc => pc.rotate(pcm.center, pcm.u, pcm.ang, true));
+        pcm.pieces.forEach(pc => pc.rotate(pcm.center || clock.center, pcm.u, pcm.ang, true));
       });
     }
 

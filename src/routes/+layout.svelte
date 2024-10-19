@@ -4,7 +4,7 @@
   import moment from "moment";
   import Minus from "@icons/Minus.svelte";
   import Close from "@icons/Close.svelte";
-  import { afterUpdate, onDestroy, onMount } from "svelte";
+  import { onDestroy, onMount } from "svelte";
   import { DataService } from "@stores/data.service";
   import {
     Breadcrumb,
@@ -22,7 +22,7 @@
   import { globalLang, localLang } from "@stores/language.service";
   import { NotificationService } from "@stores/notification.service";
   import { screen } from "@stores/screen.store";
-  import { CubicDBICON } from "@constants";
+  import { CubicDBICON, DOMAIN } from "@constants";
   import FlagIcon from "../lib/components/FlagIcon.svelte";
   import { ArrowUpRightDownLeftOutline } from "flowbite-svelte-icons";
   import Select from "@material/Select.svelte";
@@ -33,6 +33,7 @@
   import { page } from "$app/stores";
   import type { Unsubscriber } from "svelte/store";
   import type { LayoutServerData } from "./$types";
+  import { getTitleMeta } from "$lib/meta/title";
 
   export let data: LayoutServerData;
 
@@ -45,6 +46,7 @@
   let date: string, itv: any;
   let progress = 0;
   let parts: { link: string; name: string }[] = [];
+  let jsonld = "";
 
   function handleProgress(p: number) {
     progress = Math.round(p * 100) / 100;
@@ -85,6 +87,25 @@
     document.documentElement.requestFullscreen();
   }
 
+  function updateJSONLD() {
+    jsonld = `<${"script"} type="application/ld+json">${JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      name: data.title,
+      description: data.description,
+      applicationCategory: "Utility",
+      operatingSystem: "all",
+      url: `${DOMAIN}/timer`,
+      offers: {
+        "@type": "Offer",
+        price: "0",
+        priceCurrency: "USD",
+      },
+    })}</${"script"}>`;
+  }
+
+  updateJSONLD();
+
   function updateParts(rt: URL) {
     parts.length = 0;
 
@@ -97,7 +118,7 @@
 
     parts = arr.map((e: string, p: number) => ({
       link: "/" + arr.slice(0, p + 1).join("/"),
-      name: $localLang.NAVBAR.routeMap(e),
+      name: getTitleMeta(e, $localLang).title,
     }));
   }
 
@@ -149,12 +170,13 @@
   $: $localLang, updateParts($page.url);
 </script>
 
-<svelte:window on:resize={handleResize} />
 <svelte:head>
-  <link rel="icon" href="/assets/favicon.ico" type="image/x-icon" />
   <title>{data.title}</title>
   <meta name="description" content={data.description} />
+  {@html jsonld}
 </svelte:head>
+
+<svelte:window on:resize={handleResize} />
 
 <div class="relative py-6">
   <Navbar
@@ -253,7 +275,7 @@
       </div>
 
       {#if parts.length}
-        <NavHamburger on:click={toggle} />
+        <NavHamburger class="!p-1" menuClass="h-full w-full shrink-0" on:click={toggle} />
       {/if}
     </div>
   </Navbar>

@@ -2,6 +2,8 @@ import { AverageSetting, type PuzzleOptions, type SessionSettings } from "@inter
 import { options } from "@cstimer/scramble/scramble";
 import { readable } from "svelte/store";
 
+export const DOMAIN = "https://cubicdb.netlify.app";
+
 export const CubicDBICON = "/assets/logo_dark.svg";
 
 export const EPS = 1e-6;

@@ -76,27 +76,76 @@ export const English: Language = {
   NAVBAR: {
     home: "Home",
     routeMap: (r: string) => {
-      let mp: [RegExp, string][] = [
-        [/tutorials/i, "Tutorials"],
-        [/algorithms/i, "Algorithms"],
-        [/timer/i, "Timer"],
-        [/battle/i, "Battle"],
-        [/pll-trainer/i, "PLL Recognition"],
-        [/simulator/i, "Simulator"],
-        [/contest/i, "Contests"],
-        [/import-export/i, "Import-Export"],
-        [/settings/i, "Settings"],
-        [/tools/i, "Tools"],
-        [/reconstructions/i, "Reconstructions"],
+      let mp: [RegExp, string, string][] = [
+        [
+          /tutorials/i,
+          "Tutorials",
+          "Learn how to solve and improve your speedcubing skills with our comprehensive tutorials.",
+        ],
+        [
+          /algorithms/i,
+          "Algorithms",
+          "Explore a vast collection of algorithms for speedcubing to help you solve puzzles faster.",
+        ],
+        [
+          /timer/i,
+          "Timer",
+          "Use our timer to track your solving times and analyze your performance.",
+        ],
+        [
+          /battle/i,
+          "Battle",
+          "Compete with other cubers in real-time battles and showcase your skills.",
+        ],
+        [
+          /pll-trainer/i,
+          "PLL Recognition",
+          "Practice and improve your PLL recognition with our specialized trainer.",
+        ],
+        [
+          /simulator/i,
+          "Simulator",
+          "Simulate different puzzles and practice solving them virtually.",
+        ],
+        [
+          /contest/i,
+          "Contests",
+          "Participate in online contests and challenge yourself against the best.",
+        ],
+        [
+          /import-export/i,
+          "Import-Export",
+          "Easily import and export your solving data and settings.",
+        ],
+        [
+          /settings/i,
+          "Settings",
+          "Customize your experience with various settings and preferences.",
+        ],
+        [
+          /tools/i,
+          "Tools",
+          "Access a range of tools to enhance your speedcubing practice and performance.",
+        ],
+        [
+          /reconstructions/i,
+          "Reconstructions",
+          "Analyze and learn from detailed reconstructions of solves by top cubers.",
+        ],
+        [
+          /about-cubicdb/i,
+          "About CubicDB",
+          "Learn more about CubicDB, its features, and how it can help you improve your speedcubing.",
+        ],
       ];
 
       for (let i = 0, maxi = mp.length; i < maxi; i += 1) {
         if (mp[i][0].test(r)) {
-          return mp[i][1];
+          return mp[i].slice(1) as string[];
         }
       }
 
-      return r;
+      return [r, ""];
     },
   },
   HOME: {

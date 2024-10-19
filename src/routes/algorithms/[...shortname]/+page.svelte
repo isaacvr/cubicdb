@@ -2,7 +2,7 @@
   import { onMount } from "svelte";
   import { Button, Span, Spinner, Tooltip } from "flowbite-svelte";
   import { CubeMode } from "@constants";
-  import { type Algorithm, type ICard, type Solution } from "@interfaces";
+  import { type Algorithm, type ICard, type Language, type Solution } from "@interfaces";
   import { Puzzle } from "@classes/puzzle/puzzle";
   import { pGenerateCubeBundle } from "@helpers/cube-draw";
   import { copyToClipboard, getSearchParams } from "@helpers/strings";
@@ -22,6 +22,7 @@
   import { page } from "$app/stores";
   import { goto } from "$app/navigation";
   import { browser } from "$app/environment";
+  import { getTitleMeta } from "$lib/meta/title";
 
   const dataService = DataService.getInstance();
   const notification = NotificationService.getInstance();
@@ -38,6 +39,7 @@
   let currentList: Algorithm[] = [];
   let allowAlgAdmin = false;
   let currentAlg: Algorithm | null = null;
+  let meta = getTitleMeta($page.url.pathname, $localLang);
 
   // Modal
   let show = false;
@@ -161,13 +163,22 @@
     }
   }
 
+  function updateMeta(lang: Language) {
+    if (selectedCase && allSolutions) {
+      meta.title = [lang.HOME.algorithms, selectedCase.name].join(" - ");
+      meta.description = lang.ALGORITHMS.case + " - " + selectedCase.name;
+    } else if (currentAlg) {
+      meta.title = [lang.HOME.algorithms, currentAlg.name].join(" - ");
+      meta.description = lang.ALGORITHMS.algorithms + " - " + currentAlg.name;
+    }
+  }
+
   async function updateCases(loc: URL, force = false) {
     if (!loc.pathname.startsWith("/algorithms")) return;
 
     selectCase($page.url);
 
     let p1 = loc.pathname.split("/").slice(2).join("/");
-    console.log("UPDATE_CASES: ", loc.pathname, loc.search, force, p1, lastUrl);
 
     if (force || p1 != lastUrl || !p1) {
       cards = [];
@@ -182,6 +193,8 @@
       let shortName = parts.pop() || "";
 
       currentAlg = await dataService.getAlgorithm(parts.join("/"), shortName);
+
+      updateMeta($localLang);
     }
   }
 
@@ -268,14 +281,11 @@
       shortName: "",
       _id: "",
       group: "",
-      // parentPath: "",
       view: "plan",
-      // puzzle: "megaminx",
 
       parentPath: [currentAlg?.parentPath || "", currentAlg?.shortName || ""]
         .filter(e => e && e.trim())
         .join("/"),
-      // view: currentAlg?.view || "plan",
       puzzle: currentAlg?.puzzle || "clock",
     });
 
@@ -358,7 +368,13 @@
   });
 
   $: updateCases($page.url);
+  $: updateMeta($localLang);
 </script>
+
+<svelte:head>
+  <title>{meta.title}</title>
+  <meta name="description" content={meta.description} />
+</svelte:head>
 
 <svelte:window on:keydown={handlekeyDown} />
 

@@ -12,7 +12,6 @@
   import { DataService } from "@stores/data.service";
   import { Card } from "flowbite-svelte";
   import { localLang } from "@stores/language.service";
-  import { Link } from "svelte-routing";
   import { CubicDBICON } from "@constants";
 
   const notification = NotificationService.getInstance();
@@ -126,10 +125,14 @@
   }
 </script>
 
+<svelte:head>
+  <title>{$localLang.HOME.about}</title>
+</svelte:head>
+
 <Card class="mx-auto w-full max-w-3xl mt-8 flex flex-col gap-2 items-center mb-8">
   <!-- Logo -->
   <section>
-    <img src={CubicDBICON} alt="" class="w-[10rem] h-[10rem]" />
+    <img src={CubicDBICON} alt="" class="w-[7rem] h-[7rem] bg-gray-950 rounded-xl" />
   </section>
 
   <hr />
@@ -154,27 +157,27 @@
   <!-- RRSS -->
   <section class="flex items-center justify-center flex-wrap">
     <Button
-      class="bg-gray-600 text-gray-300 gap-2"
+      class="bg-gray-600 text-white gap-2"
       on:click={() => to("https://github.com/isaacvr/cubicdb")}
     >
       <GithubIcon size="1.2rem" /> GitHub</Button
     >
 
     <Button
-      class="bg-pink-600 text-gray-300 gap-2"
+      class="bg-pink-600 text-white gap-2"
       on:click={() => to("https://instagram.com/cubicdb")}
     >
       <InstagramIcon size="1.2rem" /> Instagram</Button
     >
 
     <Button
-      class="bg-blue-600 text-gray-300 gap-2"
+      class="bg-blue-600 text-white gap-2"
       on:click={() => to("mailto:isaacvega1996@gmail.com")}
     >
       <GmailIcon size="1.2rem" /> Gmail</Button
     >
 
-    <Button class="bg-blue-800 text-gray-300 gap-2" on:click={() => to("https://t.me/cubicdb")}>
+    <Button class="bg-blue-800 text-white gap-2" on:click={() => to("https://t.me/cubicdb")}>
       Telegram</Button
     >
   </section>
@@ -209,7 +212,7 @@
     <ul class="donation-container">
       {#each donations as dnt}
         <li class="donation">
-          <img src={dnt.logo} alt="" class="donation-img" />
+          <img src={dnt.logo} alt="" class="donation-img border" />
           <img src={dnt.qr} alt="" class="donation-QR" />
           <button class="donation-address" on:click={() => toClipboard(dnt.address)}
             ><span>{dnt.address}</span> <CopyIcon size="1.2rem" />
@@ -237,7 +240,7 @@
   }
 
   .key {
-    @apply p-2 rounded-md text-gray-300;
+    @apply p-2 rounded-md text-white;
   }
 
   .value {

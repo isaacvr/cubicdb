@@ -96,7 +96,7 @@
 
     <!-- About -->
     <li>
-      <a class="flex flex-col items-center justify-between w-full h-full" href="/cubicdb">
+      <a class="flex flex-col items-center justify-between w-full h-full" href="/about-cubicdb">
         <img class="mx-auto" src={CubicDBICON} alt="" />
         <h2 class="text-sm text-center">{$localLang.HOME.about}</h2>
       </a>
