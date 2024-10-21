@@ -1,6 +1,0 @@
-{
-  "svelte.plugin.svelte.compilerWarnings": {
-    "a11y-no-noninteractive-tabindex": "ignore",
-  },
-  "typescript.tsdk": "node_modules\\typescript\\lib"
-}

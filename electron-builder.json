@@ -17,7 +17,7 @@
   },
   "asar": true,
   "directories": {
-    "buildResources": "public/assets",
+    "buildResources": "static/assets",
     "output": "release/"
   },
   "files": [
@@ -39,19 +39,18 @@
     "!tsconfig.node.json",
     "!vite.config.ts",
     "package.json",
-    "dist/**/*",
-    "public/assets/**/*",
-    "src/index.cjs",
-    "src/preload.js",
-    "src/cert/*",
-    "src/serverHandlers/*"
+    "build/**/*",
+    "src/electron/**/*"
   ],
   "extraResources": [
-    "src/database/algs.db",
-    "src/database/tutorials.db",
-    "src/database/algversion.json",
-    "src/database/tutversion.json",
-    "src/database/reconstructions.db",
-    "src/database/recversion.json"
+    "src/lib/fixed/algs.db",
+    "src/lib/fixed/tutorials.db",
+    "src/lib/fixed/algversion.json",
+    "src/lib/fixed/tutversion.json",
+    "src/lib/fixed/reconstructions.db",
+    "src/lib/fixed/recversion.json",
+    "src/lib/fixed/cert.pem",
+    "src/lib/fixed/csr.pem",
+    "src/lib/fixed/key.pem"
   ]
 }
