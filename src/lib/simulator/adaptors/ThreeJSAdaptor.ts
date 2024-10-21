@@ -35,7 +35,11 @@ const textureLoader = new TextureLoader();
 let texture: any = null;
 
 if (browser) {
-  texture = textureLoader.load("/assets/textures/cube-texture1.jpg");
+  if (DataService.getInstance().isElectron) {
+    texture = await textureLoader.loadAsync("/assets/textures/cube-texture.jpg");
+  } else {
+    texture = await textureLoader.loadAsync("/assets/textures/cube-texture2.jpg");
+  }
   texture.mapping = EquirectangularReflectionMapping;
 }
 

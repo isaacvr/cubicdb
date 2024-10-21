@@ -30,6 +30,11 @@ export default defineConfig(env => ({
   build: {
     minify: true,
   },
+  esbuild: {
+    supported: {
+      "top-level-await": true,
+    },
+  },
   optimizeDeps: {
     exclude: ["@ffmpeg/ffmpeg", "@ffmpeg/util"],
   },
