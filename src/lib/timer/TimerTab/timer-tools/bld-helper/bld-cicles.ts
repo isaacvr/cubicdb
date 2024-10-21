@@ -1,7 +1,7 @@
 import { Puzzle } from "@classes/puzzle/puzzle";
 import { FRONT, Vector3D } from "@classes/vector3d";
 
-export interface OldPochmanResult {
+export interface BLDCicleResult {
   centers: string[][];
 
   edges: string[][];
@@ -513,7 +513,7 @@ function getCornerCicles(
   facelet: string,
   solvedFacelet: string,
   cicles: string[][],
-  twistedCorners: OldPochmanResult["twistedCorners"],
+  twistedCorners: BLDCicleResult["twistedCorners"],
   order: number,
   scheme: string[]
 ) {
@@ -616,14 +616,14 @@ function getCenterCicles(
   }
 }
 
-export function getOldPochman(
+export function getBLDCicles(
   scramble: string,
   eBuffer: string,
   cBuffer: string,
   cnBuffer: string,
   order: number,
   schema: ISchema["code"]
-): OldPochmanResult {
+): BLDCicleResult {
   let pz = Puzzle.fromSequence(scramble, { type: "rubik", order: [order] }, false, true);
   let facelet = pz.toFacelet();
   let solvedFacelet = getSolvedFacelet(facelet, order);
@@ -632,7 +632,7 @@ export function getOldPochman(
   let cCicles: string[][] = [];
   let cnCicles: string[][][] = [];
   let flippedEdges: string[][] = [];
-  let twistedCorners: OldPochmanResult["twistedCorners"] = [];
+  let twistedCorners: BLDCicleResult["twistedCorners"] = [];
 
   let cornerScheme: string[] = SPEFFZ_SCH[0];
   let edgeScheme: string[] = SPEFFZ_SCH[1];

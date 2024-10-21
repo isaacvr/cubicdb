@@ -59,9 +59,9 @@
     order = o;
 
     if (pInfo.order) {
-      goto($page.url.pathname + `/?puzzle=${p}&order=${o}`);
+      goto($page.url.pathname + `/?puzzle=${p}&order=${o}`, { replaceState: true });
     } else {
-      goto($page.url.pathname + `/?puzzle=${p}`);
+      goto($page.url.pathname + `/?puzzle=${p}`, { replaceState: true });
     }
   }
 

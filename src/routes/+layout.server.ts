@@ -1,7 +1,6 @@
 import { getLanguage } from "@lang";
 import type { LayoutServerLoad } from "./$types";
 import { getTitleMeta } from "$lib/meta/title";
-import { globalLang } from "@stores/language.service";
 
 export const load: LayoutServerLoad = ({ request, url }) => {
   const acceptLanguage = request.headers.get("accept-language");

@@ -438,13 +438,13 @@
     >
       {#if type === 2 || type >= 4}
         <Button
-          id="list-view"
           color="purple"
           class={`grid place-items-center !p-0 cursor-pointer ` +
             ($screen.isMobile
               ? "w-12 h-12 !rounded-full shadow-xl border border-black"
               : "w-8 h-8")}
           on:click={toggleListView}
+          aria-label={$localLang.ALGORITHMS.toggleView}
         >
           {#if listView}
             <ViewListIcon size="1.2rem" class="pointer-events-none" />
@@ -452,12 +452,6 @@
             <ViewGridIcon size="1.2rem" class="pointer-events-none" />
           {/if}
         </Button>
-        <Tooltip reference="#list-view" placement="left" class="w-max">
-          <div class="flex items-center gap-2">
-            {$localLang.ALGORITHMS.toggleView}
-            <div class="text-yellow-400">[Ctrl + L]</div>
-          </div>
-        </Tooltip>
       {/if}
 
       {#if allowAlgAdmin}

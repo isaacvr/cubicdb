@@ -2,3 +2,9 @@
 package-lock.json
 pnpm-lock.yaml
 yarn.lock
+
+cache
+release
+dist
+.vscode
+node_modules

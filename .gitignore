@@ -1,8 +1,8 @@
 # Internal data
 /src/scrappers/data
-/src/database/solves.db
-/src/database/sessions.db
-/src/database/contests.db
+/src/lib/fixed/solves.db
+/src/lib/fixed/sessions.db
+/src/lib/fixed/contests.db
 /dist
 /build
 /cache

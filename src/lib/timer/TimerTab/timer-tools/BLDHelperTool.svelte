@@ -4,10 +4,10 @@
   import {
     SCHEMAS,
     SPEFFZ_SCH,
-    getOldPochman,
+    getBLDCicles,
+    type BLDCicleResult,
     type ISchema,
-    type OldPochmanResult,
-  } from "./bld-helper/old-pochman";
+  } from "./bld-helper/bld-cicles";
   import ClockwiseIcon from "@icons/CogClockwise.svelte";
   import CounterClockwiseIcon from "@icons/CogCounterclockwise.svelte";
   import Select from "@material/Select.svelte";
@@ -23,8 +23,9 @@
   let cornerBuffer = "";
   let edgeBuffer = "";
   let centerBuffer = "";
+  let order = 3;
 
-  let op: OldPochmanResult = {
+  let cicle: BLDCicleResult = {
     centers: [],
 
     edges: [],
@@ -48,15 +49,15 @@
   // Speffz by default
   setSchema(SCHEMAS[0]);
 
-  function cleanOP() {
-    op.centers = [];
-    op.edges = [];
-    op.flippedEdges = [];
-    op.edgeBufferState = [];
-    op.corners = [];
-    op.twistedCorners = [];
-    op.twistedCornerBuffer = 0;
-    op.parity = false;
+  function cleanCicle() {
+    cicle.centers = [];
+    cicle.edges = [];
+    cicle.flippedEdges = [];
+    cicle.edgeBufferState = [];
+    cicle.corners = [];
+    cicle.twistedCorners = [];
+    cicle.twistedCornerBuffer = 0;
+    cicle.parity = false;
   }
 
   function getPairs(letters: string[]): string {
@@ -75,17 +76,29 @@
       option = option[0];
     }
 
-    if (!option || Array.isArray(option)) return cleanOP();
-    if (option.type != "rubik") return cleanOP();
+    if (!option || Array.isArray(option)) return cleanCicle();
+    if (option.type != "rubik") return cleanCicle();
 
-    op = getOldPochman(
-      scr,
-      edgeBuffer,
-      cornerBuffer,
-      centerBuffer,
-      option.order ? option.order[0] : 3,
-      schema.code
-    );
+    order = option.order ? option.order[0] : 3;
+    cicle = getBLDCicles(scr, edgeBuffer, cornerBuffer, centerBuffer, order, schema.code);
+  }
+
+  function getName(type: "center" | "edge", pos: number, o: number) {
+    if (o > 5) {
+      return type === "center" ? "Centers " + (pos + 1) : "Edges " + (pos + 1);
+    }
+
+    if (o === 5) {
+      return type === "center"
+        ? pos === 0
+          ? "x Centers"
+          : "+ Centers"
+        : pos === 0
+          ? "Midges"
+          : "Wings";
+    }
+
+    return type === "center" ? "Centers" : "Edges";
   }
 
   $: $scramble &&
@@ -114,13 +127,14 @@
   <h2 class="text-center w-full text-orange-200">Buffers</h2>
 
   <ul class="buffer-list">
+    <!-- Corners -->
     <li>
       <span class="flex items-center gap-2">
         Corners
-        {#if op.twistedCornerBuffer === -1}
+        {#if cicle.twistedCornerBuffer === -1}
           <ClockwiseIcon class="cursor-help" />
           <Tooltip class="!bg-green-700">The buffer should be rotated clockwise at the end</Tooltip>
-        {:else if op.twistedCornerBuffer === 1}
+        {:else if cicle.twistedCornerBuffer === 1}
           <CounterClockwiseIcon class="cursor-help" />
           <Tooltip class="!bg-green-700">
             The buffer should be rotated counterclockwise at the end
@@ -136,6 +150,8 @@
         transform={e => e}
       />
     </li>
+
+    <!-- Edges -->
     <li>
       <span class="flex items-center gap-2"> Edges </span>
       <Select
@@ -146,6 +162,8 @@
         transform={e => e}
       />
     </li>
+
+    <!-- Centers -->
     <li>
       <span class="flex items-center gap-2"> Centers </span>
       <Select
@@ -162,18 +180,18 @@
 
   <table class="w-full">
     <!-- CORNERS -->
-    {#if op.corners.length}
+    {#if cicle.corners.length}
       <tr>
         <td class="text-green-300">Corners: </td>
-        <td>{getPairs(op.corners)}</td>
+        <td>{getPairs(cicle.corners)}</td>
       </tr>
 
-      {#if op.twistedCorners.length > 0}
+      {#if cicle.twistedCorners.length > 0}
         <tr>
           <td class="text-yellow-300">Twisted: </td>
           <td>
             <ul class="flex gap-3">
-              {#each op.twistedCorners as cn}
+              {#each cicle.twistedCorners as cn}
                 <li class="flex items-center gap-2 border-b">
                   {cn.letter}
 
@@ -197,14 +215,14 @@
     {/if}
 
     <!-- EDGES -->
-    {#if op.edges.reduce((a, b) => a + b.length, 0)}
-      {#if op.corners.length}
+    {#if cicle.edges.reduce((a, b) => a + b.length, 0)}
+      {#if cicle.corners.length}
         <tr>
           <td colspan="2"><hr class="border-gray-500 my-2" /></td>
         </tr>
       {/if}
 
-      {#each op.edges as edge, pos}
+      {#each cicle.edges as edge, pos}
         {#if pos}
           <tr>
             <td><hr class="border-gray-400" /></td>
@@ -213,9 +231,9 @@
 
         <tr>
           <td class="text-green-300 flex items-center">
-            Edges{op.edges.length > 1 ? " " + (pos + 1) : ""}:
+            {getName("edge", pos, order)}:
 
-            {#if op.edgeBufferState[pos] != "normal"}
+            {#if cicle.edgeBufferState[pos] != "normal"}
               <FlippedIcon class="outline-none cursor-help" />
               <Tooltip class="!bg-green-700">The buffer will be flipped at the end</Tooltip>
             {/if}
@@ -223,26 +241,28 @@
           <td>{getPairs(edge)}</td>
         </tr>
 
-        {#if op.flippedEdges[pos] && op.flippedEdges[pos].length > 0}
+        {#if cicle.flippedEdges[pos] && cicle.flippedEdges[pos].length > 0}
           <tr>
-            <td class="text-yellow-300">Flipped{op.edges.length > 1 ? " " + (pos + 1) : ""}: </td>
-            <td>{op.flippedEdges[pos].join(", ")}</td>
+            <td class="text-yellow-300"
+              >Flipped{cicle.edges.length > 1 ? " " + (pos + 1) : ""}:
+            </td>
+            <td>{cicle.flippedEdges[pos].join(", ")}</td>
           </tr>
         {/if}
       {/each}
     {/if}
 
     <!-- CENTERS -->
-    {#if op.centers.length}
-      {#if op.corners.length || op.edges.reduce((a, b) => a + b.length, 0)}
+    {#if cicle.centers.length}
+      {#if cicle.corners.length || cicle.edges.reduce((a, b) => a + b.length, 0)}
         <tr>
           <td colspan="2"><hr class="border-gray-500 my-2" /></td>
         </tr>
       {/if}
 
-      {#each op.centers as center, pos}
+      {#each cicle.centers as center, pos}
         <tr>
-          <td class="text-green-300">Centers{op.centers.length > 1 ? " " + (pos + 1) : ""}: </td>
+          <td class="text-green-300">{getName("center", pos, order)}: </td>
           <td>{getPairs(center)}</td>
         </tr>
       {/each}

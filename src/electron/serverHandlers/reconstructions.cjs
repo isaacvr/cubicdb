@@ -2,7 +2,7 @@ const fsp = require("node:fs/promises");
 const path = require("node:path");
 const { app } = require("electron");
 
-const FOREIGN_PATH = "https://raw.githubusercontent.com/isaacvr/cubicdb/beta/src/database";
+const FOREIGN_PATH = "https://raw.githubusercontent.com/isaacvr/cubicdb/beta/src/lib/fixed";
 /**
  * @typedef {import('electron').IpcMain} IpcMain
  * @typedef {import('nedb')} NeDB

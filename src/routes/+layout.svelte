@@ -35,7 +35,7 @@
   import type { LayoutServerData } from "./$types";
   import { getTitleMeta } from "$lib/meta/title";
 
-  export let data: LayoutServerData;
+  // export let data: LayoutServerData;
 
   const dataService = DataService.getInstance();
   let notifications: INotification[] = [];
@@ -88,20 +88,20 @@
   }
 
   function updateJSONLD() {
-    jsonld = `<${"script"} type="application/ld+json">${JSON.stringify({
-      "@context": "https://schema.org",
-      "@type": "WebApplication",
-      name: data.title,
-      description: data.description,
-      applicationCategory: "Utility",
-      operatingSystem: "all",
-      url: `${DOMAIN}/timer`,
-      offers: {
-        "@type": "Offer",
-        price: "0",
-        priceCurrency: "USD",
-      },
-    })}</${"script"}>`;
+    // jsonld = `<${"script"} type="application/ld+json">${JSON.stringify({
+    //   "@context": "https://schema.org",
+    //   "@type": "WebApplication",
+    //   name: data.title,
+    //   description: data.description,
+    //   applicationCategory: "Utility",
+    //   operatingSystem: "all",
+    //   url: `${DOMAIN}/timer`,
+    //   offers: {
+    //     "@type": "Offer",
+    //     price: "0",
+    //     priceCurrency: "USD",
+    //   },
+    // })}</${"script"}>`;
   }
 
   updateJSONLD();
@@ -170,11 +170,11 @@
   $: $localLang, updateParts($page.url);
 </script>
 
-<svelte:head>
+<!-- <svelte:head>
   <title>{data.title}</title>
   <meta name="description" content={data.description} />
   {@html jsonld}
-</svelte:head>
+</svelte:head> -->
 
 <svelte:window on:resize={handleResize} />
 

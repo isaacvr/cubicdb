@@ -1,10 +1,9 @@
 import adapter from "@sveltejs/adapter-netlify";
+// import adapter from "@sveltejs/adapter-static";
 import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
-  // Consult https://kit.svelte.dev/docs/integrations#preprocessors
-  // for more information about preprocessors
   preprocess: vitePreprocess({
     postcss: true,
   }),
@@ -14,19 +13,12 @@ const config = {
   },
 
   kit: {
-    // adapter-auto only supports some environments, see https://kit.svelte.dev/docs/adapter-auto for a list.
-    // If your environment is not supported, or you settled on a specific environment, switch out the adapter.
-    // See https://kit.svelte.dev/docs/adapters for more information about adapters.
+    // For Electron
+    // adapter: adapter({ fallback: "index.html" }),
+
+    // For Netlify
     adapter: adapter(),
-    // prerender: {
-    //   handleHttpError: ({ path, referrer, message }) => {
-    //     if (path === "/battles") {
-    //       return;
-    //     }
-    //     throw new Error(message);
-    //   },
-    //   // entries: ["/tutorials/EN", "/tutorials/EN/2x2x2", "/tutorials/EN/2x2x2/ortega", "/battles"],
-    // },
+
     alias: {
       "@icons": "./node_modules/svelte-material-icons",
       "@components": "./src/lib/components",

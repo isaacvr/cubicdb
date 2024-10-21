@@ -33,7 +33,7 @@
     "desktop",
     "windows"
   ],
-  "main": "src/index.cjs",
+  "main": "src/electron/index.cjs",
   "scripts": {
     "dev": "concurrently \"npm run web\" \"electron-forge start -- --serve\"",
     "build": "vite build",

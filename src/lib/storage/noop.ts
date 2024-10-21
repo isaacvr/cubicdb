@@ -34,9 +34,9 @@ function parseDB(strDB: string): any[] {
 }
 
 async function loadData() {
-  const _algs = await import("../database/algs.db?raw");
-  const _tuts = await import("../database/tutorials.db?raw");
-  const _recs = await import("../database/reconstructions.db?raw");
+  const _algs = await import("$lib/fixed/algs.db?raw");
+  const _tuts = await import("$lib/fixed/tutorials.db?raw");
+  const _recs = await import("$lib/fixed/reconstructions.db?raw");
 
   algs = parseDB(_algs.default || "");
   tuts = parseDB(_tuts.default || "");

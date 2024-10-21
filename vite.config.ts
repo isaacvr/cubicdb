@@ -19,7 +19,6 @@ export default defineConfig(env => ({
     headerPlugin,
     sveltekit(), //basicSSL(),
   ],
-  base: env.mode === "production" ? "/" : "",
   server: {
     host: true,
     port: 5432,
