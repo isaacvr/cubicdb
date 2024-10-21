@@ -3,7 +3,6 @@ import { Vector2D } from "@classes/vector2-d";
 import { BACK, CENTER, DOWN, FRONT, LEFT, RIGHT, UP, Vector3D } from "@classes/vector3d";
 import { EPS } from "@constants";
 import type { EasingFunction } from "@interfaces";
-import { Quaternion, Vector3 } from "three";
 
 export function map(v: number, a: number, b: number, A: number, B: number): number {
   return b === a ? A : ((v - a) * (B - A)) / (b - a) + A;
@@ -196,14 +195,6 @@ export function rotateBundle(
   ang: number
 ): Vector3D[] {
   return points.map(p => p.rotate(O, u, ang));
-
-  // let q = new Quaternion()
-  //   .setFromAxisAngle(new Vector3(u.x, u.y, u.z).setLength(1), ang)
-  //   .normalize();
-  // return points.map(p => {
-  //   let p1 = new Vector3(p.x - O.x, p.y - O.y, p.z - O.z).applyQuaternion(q);
-  //   return new Vector3D(p1.x + O.x, p1.y + O.y, p1.z + O.z);
-  // });
 }
 
 export function sum(arr: number[]): number {

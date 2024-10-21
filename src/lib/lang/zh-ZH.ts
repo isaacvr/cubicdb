@@ -88,9 +88,13 @@ export const Chinese: Language = {
         [/settings/i, "设置", "通过各种设置和偏好自定义你的体验."],
         [/tools/i, "工具", "访问一系列工具, 以提高你的速解魔方练习和表现."],
         [/reconstructions/i, "重建", "通过顶级魔方选手的详细重构分析和学习."],
-        [/about-cubicdb/i, "关于 CubicDB", "了解有关 CubicDB 的更多信息, 其功能及如何帮助你提高速解魔方."],
+        [
+          /about-cubicdb/i,
+          "关于 CubicDB",
+          "了解有关 CubicDB 的更多信息, 其功能及如何帮助你提高速解魔方.",
+        ],
       ];
-      
+
       for (let i = 0, maxi = mp.length; i < maxi; i += 1) {
         if (mp[i][0].test(r)) {
           return mp[i].slice(1) as string[];
@@ -306,6 +310,7 @@ export const Chinese: Language = {
     stepBack: "后退一步",
     playPause: "播放/暂停",
     stepForward: "前进一步",
+    reconstructionProgress: "进步",
     title: "[标题]",
     scramble: "[在此输入你的打乱]",
     reconstruction: "[在此输入你的重构]",

@@ -1061,6 +1061,7 @@ export interface Language {
     stepBack: string;
     playPause: string;
     stepForward: string;
+    reconstructionProgress: string;
     title: string;
     scramble: string;
     reconstruction: string;

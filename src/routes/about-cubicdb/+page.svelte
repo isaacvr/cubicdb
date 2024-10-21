@@ -110,10 +110,6 @@
     }
   })();
 
-  function to(url: string) {
-    dataService.openURL(url);
-  }
-
   function toClipboard(s: string) {
     copyToClipboard(s).then(() => {
       notification.addNotification({
@@ -156,30 +152,37 @@
 
   <!-- RRSS -->
   <section class="flex items-center justify-center flex-wrap">
-    <Button
-      class="bg-gray-600 text-white gap-2"
-      on:click={() => to("https://github.com/isaacvr/cubicdb")}
+    <a
+      class="bg-gray-600 text-white gap-2 rounded-md p-2 flex items-center"
+      href="https://github.com/isaacvr/cubicdb"
+      target="_blank"
     >
-      <GithubIcon size="1.2rem" /> GitHub</Button
-    >
+      <GithubIcon size="1.2rem" /> GitHub
+    </a>
 
-    <Button
-      class="bg-pink-600 text-white gap-2"
-      on:click={() => to("https://instagram.com/cubicdb")}
+    <a
+      class="bg-pink-600 text-white gap-2 rounded-md p-2 flex items-center"
+      href="https://instagram.com/cubicdb"
+      target="_blank"
     >
-      <InstagramIcon size="1.2rem" /> Instagram</Button
-    >
+      <InstagramIcon size="1.2rem" /> Instagram
+    </a>
 
-    <Button
-      class="bg-blue-600 text-white gap-2"
-      on:click={() => to("mailto:isaacvega1996@gmail.com")}
+    <a
+      class="bg-blue-600 text-white gap-2 rounded-md p-2 flex items-center"
+      href="mailto:isaacvega1996@gmail.com"
+      target="_blank"
     >
-      <GmailIcon size="1.2rem" /> Gmail</Button
-    >
+      <GmailIcon size="1.2rem" /> Gmail
+    </a>
 
-    <Button class="bg-blue-800 text-white gap-2" on:click={() => to("https://t.me/cubicdb")}>
-      Telegram</Button
+    <a
+      class="bg-blue-800 text-white gap-2 rounded-md p-2 flex items-center"
+      href="https://t.me/cubicdb"
+      target="_blank"
     >
+      Telegram
+    </a>
   </section>
 
   <hr />
@@ -188,16 +191,18 @@
   <section class="flex-col w-full">
     <h2 class="text-2xl text-gray-300 mb-6">{$localLang.CUBICDB.acknowledgements}</h2>
 
-    <ul class="donation-container">
+    <ul class="flex flex-wrap justify-evenly gap-4">
       {#each acknowledgements as ack}
         <li>
-          <Button
-            class="donation flex items-center gap-2 relative bg-black bg-opacity-30 p-4 rounded-md shadow-lg"
-            on:click={() => to(ack.link)}
+          <a
+            class="flex items-center gap-2 relative bg-black bg-opacity-30 p-4
+            rounded-md shadow-lg"
+            href={ack.link}
+            target="_blank"
           >
             <img src={ack.logo} alt="" class="donation-img small" />
-            {ack.name}
-          </Button>
+            <span>{ack.name}</span>
+          </a>
         </li>
       {/each}
     </ul>

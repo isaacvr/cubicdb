@@ -357,6 +357,7 @@ export const Spanish: Language = {
     stepBack: "Paso atrás",
     playPause: "Reproducir/Pausar",
     stepForward: "Paso adelante",
+    reconstructionProgress: "Progreso",
     title: "[Título]",
     scramble: "[Escriba la mezcla aquí]",
     reconstruction: "[Escriba la reconstrucción aquí]",

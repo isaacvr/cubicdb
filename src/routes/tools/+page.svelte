@@ -72,7 +72,7 @@
   // Timer and Scramble Only
   let modes: { 0: string; 1: string; 2: number }[] = [];
   let filters: string[] = [];
-  let option: ToolOption = "solver";
+  let option: ToolOption = "timer-only";
   let timer: Timer;
 
   // Batch

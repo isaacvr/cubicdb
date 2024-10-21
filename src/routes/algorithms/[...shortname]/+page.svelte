@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { beforeUpdate, onDestroy, onMount } from "svelte";
   import { Button, Span, Spinner, Tooltip } from "flowbite-svelte";
   import { CubeMode } from "@constants";
   import { type Algorithm, type ICard, type Language, type Solution } from "@interfaces";
@@ -23,6 +23,7 @@
   import { goto } from "$app/navigation";
   import { browser } from "$app/environment";
   import { getTitleMeta } from "$lib/meta/title";
+  import type { Unsubscriber } from "svelte/store";
 
   const dataService = DataService.getInstance();
   const notification = NotificationService.getInstance();
@@ -209,7 +210,6 @@
   }
 
   // Alg admin
-
   async function renderSAlg() {
     sAlg.alg.tips = tipTemp.length ? tipTemp.join(", ").split(", ").map(Number) : [];
 
@@ -342,6 +342,8 @@
     return res.length === 1 ? [] : res;
   }
 
+  let pageSub: Unsubscriber;
+
   onMount(() => {
     toArray(``, "").forEach((e, p) => {
       let alg: Algorithm = {
@@ -361,13 +363,14 @@
         alg.solutions = e.solutions.map(moves => ({ moves }));
       }
 
-      console.log(alg);
-
       dataService.addAlgorithm(alg);
     });
+
+    pageSub = page.subscribe(p => updateCases(p.url));
   });
 
-  $: updateCases($page.url);
+  onDestroy(() => pageSub && pageSub());
+
   $: updateMeta($localLang);
 </script>
 
@@ -472,22 +475,27 @@
     {#if type < 2}
       <ul class="cards w-full grid py-4">
         {#each cards as card, pos (card.route)}
-          <a href={card.route} class="flex w-full">
-            <li
-              class="w-full max-w-[12rem] h-48 shadow-md rounded-md select-none cursor-pointer card
-              transition-all duration-200 grid place-items-center justify-center py-3 px-2
-              bg-backgroundLv1 hover:bg-backgroundLv2 hover:shadow-2xl hover:shadow-primary-900 relative"
+          <li aria-label={card.title} class="flex w-full">
+            <a
+              href={card.route}
+              class="w-full grid grid-rows-[8rem_1fr] gap-2 max-w-[12rem] shadow-md rounded-md select-none cursor-pointer card
+            transition-all duration-200 place-items-center justify-center py-3 px-2
+            bg-backgroundLv1 hover:bg-backgroundLv2 hover:shadow-2xl hover:shadow-primary-900 relative"
             >
-              {#if card?.puzzle?.img}
-                <PuzzleImage src={card.puzzle.img} />
-              {:else}
-                <Spinner size="10" color="yellow" class="m-auto" />
-              {/if}
+              <div>
+                {#if card?.puzzle?.img}
+                  <PuzzleImage src={card.puzzle.img} />
+                {:else}
+                  <Spinner size="10" color="yellow" class="m-auto" />
+                {/if}
+              </div>
 
-              <Span class="text-base">{card.title}</Span>
+              <div>
+                {card.title}
+              </div>
 
               {#if allowAlgAdmin}
-                <ul class="absolute no-grid flex flex-col gap-2 justify-start top-0 left-0">
+                <div class="absolute no-grid flex flex-col gap-2 justify-start top-0 left-0">
                   <Button
                     on:click={e => {
                       e.stopPropagation();
@@ -499,10 +507,10 @@
                   <Button color="red" on:click={() => removeAlg(currentList[pos])} class="p-1"
                     ><DeleteIcon size="1.2rem" />
                   </Button>
-                </ul>
+                </div>
               {/if}
-            </li>
-          </a>
+            </a>
+          </li>
         {/each}
       </ul>
     {/if}
@@ -573,7 +581,7 @@
     column-gap: 1rem;
   }
 
-  :global(.cards > a) {
+  :global(.cards > li) {
     flex: 0 0 9rem;
   }
 
@@ -623,10 +631,6 @@
 
   .cases:not(.compact) .img-btn {
     @apply md:h-40 md:w-40 w-32 h-32;
-  }
-
-  .card {
-    grid-template-rows: 10fr 1fr;
   }
 
   .alg-list {

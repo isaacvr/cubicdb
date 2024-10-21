@@ -11,7 +11,6 @@
 
   let selectedPuzzle: PuzzleType = "rubik";
   let order = 3;
-  let simulator: Simulator;
 
   function getTitle(n: string, p: PuzzleType, o: number) {
     let info = puzzleReg.get(p);
@@ -73,4 +72,4 @@
   <title>{getTitle($localLang.HOME.simulator, selectedPuzzle, order)}</title>
 </svelte:head>
 
-<Simulator bind:this={simulator} {selectedPuzzle} {order} on:config={updateURL} />
+<Simulator {selectedPuzzle} {order} on:config={updateURL} />

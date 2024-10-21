@@ -357,6 +357,7 @@ export const English: Language = {
     stepBack: "Step back",
     playPause: "Play/Pause",
     stepForward: "Step forward",
+    reconstructionProgress: "Progress",
     title: "[Title]",
     scramble: "[Type your scramble here]",
     reconstruction: "[Type your reconstruction here]",

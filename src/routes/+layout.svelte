@@ -204,15 +204,19 @@
         &nbsp;
       {/if}
 
-      <NavUl key="path-list" {hidden} class="order-2 md:order-1" ulClass="md:p-0 max-md:p-4">
+      <NavUl
+        key="path-list"
+        {hidden}
+        class="order-2 md:order-1"
+        ulClass="md:p-0 max-md:p-4"
+        on:click={() => !hidden && toggle()}
+      >
         <Breadcrumb>
-          <a href="/" class="inline-flex -mr-4" on:click={() => !hidden && toggle()}>
-            <BreadcrumbItem home></BreadcrumbItem>
-          </a>
+          <BreadcrumbItem home href="/" on:click={() => !hidden && toggle()}></BreadcrumbItem>
           {#each parts as part}
-            <a href={part.link} class="inline-flex" on:click={() => !hidden && toggle()}>
-              <BreadcrumbItem>{part.name.toUpperCase()}</BreadcrumbItem>
-            </a>
+            <BreadcrumbItem href={part.link} on:click={() => !hidden && toggle()}>
+              {part.name.toUpperCase()}
+            </BreadcrumbItem>
           {/each}
         </Breadcrumb>
       </NavUl>

@@ -226,21 +226,34 @@
       on:click={showGUI}
       text={$localLang.SIMULATOR.settings + "[Ctrl + ,]"}
     >
-      <Button color="alternative" class="h-8 w-8 p-0 me-3 rounded-full"
-        ><SettingsIcon size="1.2rem" /></Button
+      <Button
+        color="alternative"
+        class="h-8 w-8 p-0 me-3 rounded-full"
+        aria-label={$localLang.SIMULATOR.settings}
       >
+        <SettingsIcon size="1.2rem" />
+      </Button>
     </Tooltip>
 
     {#if threeAdaptor && threeAdaptor.cube?.p.scramble}
       <Tooltip hasKeybinding position="left" text={$localLang.global.toScramble + "[Ctrl + S]"}>
-        <Button on:click={scramble} color="alternative" class="h-8 w-8 p-0 me-3 rounded-full"
-          ><Refresh size="1.2rem" /></Button
+        <Button
+          on:click={scramble}
+          color="alternative"
+          class="h-8 w-8 p-0 me-3 rounded-full"
+          aria-label={$localLang.global.toScramble}
         >
+          <Refresh size="1.2rem" />
+        </Button>
       </Tooltip>
     {/if}
 
     <Tooltip hasKeybinding text={$localLang.global.showBackFace + "[Ctrl + B]"} position="left">
-      <Toggle class="cursor-pointer" bind:checked={showBackFace} />
+      <Toggle
+        class="cursor-pointer"
+        bind:checked={showBackFace}
+        aria-label={$localLang.global.showBackFace}
+      />
     </Tooltip>
   </div>
 {/if}
@@ -278,7 +291,9 @@
 
   <svelte:fragment slot="footer">
     <div class="flex flex-wrap items-center mx-auto gap-2">
-      <Button color="alternative" on:click={hideGUI}>{$localLang.global.cancel}</Button>
+      <Button color="alternative" on:click={hideGUI} aria-label={$localLang.global.cancel}>
+        {$localLang.global.cancel}
+      </Button>
 
       <Button
         color="green"
@@ -287,6 +302,7 @@
           hideGUI();
           dispatch("config", { puzzle: selectedPuzzle, order: order });
         }}
+        aria-label={$localLang.SIMULATOR.setPuzzle}
       >
         {$localLang.SIMULATOR.setPuzzle}
       </Button>

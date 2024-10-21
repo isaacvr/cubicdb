@@ -57,7 +57,7 @@
     {#each tabs as tab}
       <Button
         color="none"
-        ariaLabel={tab.ariaLabel}
+        aria-label={tab.ariaLabel}
         class="rounded-lg w-full
         {tab.index === $selectedTab
           ? 'bg-blue-600 text-white hover:bg-blue-500 z-10 '

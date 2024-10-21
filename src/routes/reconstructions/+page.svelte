@@ -39,7 +39,6 @@
   import CameraIcon from "@icons/Cctv.svelte";
   import { DataService } from "@stores/data.service";
   import { page } from "$app/stores";
-  import { goto } from "$app/navigation";
   import { DOMAIN } from "@constants";
 
   export let type: "full" | "controlled" = "full";
@@ -411,6 +410,8 @@
     mounted = true;
 
     if (type === "full") {
+      handleLocation($page.url);
+
       dataService.getReconstructions().then(r => {
         recs = r.filter(rec => errorIndex.indexOf(rec.num) < 0);
       });
@@ -421,7 +422,6 @@
 
   $: recomputeTimeBounds(speed);
   $: handleSequenceAlpha(sequenceAlpha);
-  $: type === "full" && handleLocation($page.url);
   $: drawerOpen = !$screen.isMobile ? true : drawerOpen;
   $: type === "controlled" && handleControlled(puzzleType, ~~puzzleOrder);
 </script>
@@ -448,13 +448,18 @@
     />
 
     <div class={"controls " + (type === "full" ? "grid h-16" : "flex items-center h-0")}>
-      <button class="flex px-3 py-2" on:mousedown={pause}>
+      <button
+        class="flex px-3 py-2"
+        on:mousedown={pause}
+        aria-label={$localLang.RECONSTRUCTIONS.reconstructionProgress}
+      >
         <Range
           bind:value={sequenceAlpha}
           min={initAlpha}
           max={finalAlpha}
           step="0.025"
           size={type === "full" ? "md" : "sm"}
+          aria-label={$localLang.RECONSTRUCTIONS.reconstructionProgress}
         />
       </button>
 
@@ -464,6 +469,7 @@
             color="none"
             class="w-full h-full rounded-none shadow-none hover:bg-purple-600"
             on:click={() => step(-1)}
+            aria-label={$localLang.RECONSTRUCTIONS.stepBack}
           >
             <StepBackIcon size={iconSize} />
           </Button>
@@ -483,6 +489,7 @@
           on:click={handlePlay}
           class={"w-full h-full rounded-none shadow-none hover:bg-green-600 " +
             (type === "full" ? "" : "!p-1 mr-1")}
+          aria-label={$localLang.RECONSTRUCTIONS.playPause}
         >
           {#if playing}
             <PauseIcon size={iconSize} />
@@ -505,6 +512,7 @@
             color="none"
             class="w-full h-full rounded-none shadow-none hover:bg-purple-600"
             on:click={() => step(1)}
+            aria-label={$localLang.RECONSTRUCTIONS.stepForward}
           >
             <StepForwardIcon size={iconSize} />
           </Button>
@@ -545,7 +553,10 @@
         <div>
           <h2 class="flex items-center gap-2">
             {$localLang.global.reconstruction}
-            <button on:click={copyReconstruction}><CopyIcon size={iconSize} /></button>
+
+            <button aria-label={$localLang.global.copy} on:click={copyReconstruction}>
+              <CopyIcon size={iconSize} />
+            </button>
             <Tooltip>{$localLang.global.copy}</Tooltip>
           </h2>
 
@@ -562,42 +573,63 @@
         <div>
           <h2 class="flex gap-2 items-center">
             {$localLang.global.settings}
-
-            <SettingsIcon class="text-inherit cursor-pointer" size={iconSize} />
-
-            <Dropdown>
-              {@const dropdownItemClass = "grid grid-cols-[3rem_auto]"}
-              <DropdownItem
-                class={dropdownItemClass}
-                on:click={() => (showBackFace = !showBackFace)}
-              >
-                <Toggle bind:checked={showBackFace} size="small"></Toggle>
-                <span>
-                  {$localLang.global.showBackFace}
-                </span>
-              </DropdownItem>
-
-              <DropdownItem class={dropdownItemClass} on:click={() => simulator.resetCamera()}>
-                <CameraIcon size={iconSize} />
-                {$localLang.RECONSTRUCTIONS.resetCamera}
-              </DropdownItem>
-
-              <DropdownItem
-                class={dropdownItemClass}
-                on:click={() => (scramble = reconstruction = title = "")}
-              >
-                <RestartIcon size={iconSize} />
-                {$localLang.global.reset}
-              </DropdownItem>
-
-              <DropdownItem class={dropdownItemClass} on:click={copyReconstruction}>
-                <CopyIcon size={iconSize} />
-                {$localLang.global.copy}
-              </DropdownItem>
-            </Dropdown>
           </h2>
 
           <ul class="setting-list no-grid p-2 gap-4 place-items-center">
+            <!-- Settings -->
+            <li>
+              <Button color="purple" class="!p-2" aria-label={$localLang.global.settings}>
+                <SettingsIcon class="text-inherit cursor-pointer" size={iconSize} />
+              </Button>
+
+              <Dropdown>
+                {@const dropdownItemClass = "grid grid-cols-[3rem_auto]"}
+                <DropdownItem
+                  class={dropdownItemClass}
+                  on:click={() => (showBackFace = !showBackFace)}
+                >
+                  <Toggle bind:checked={showBackFace} size="small"></Toggle>
+                  <span>
+                    {$localLang.global.showBackFace}
+                  </span>
+                </DropdownItem>
+
+                <DropdownItem class={dropdownItemClass} on:click={() => simulator.resetCamera()}>
+                  <CameraIcon size={iconSize} />
+                  {$localLang.RECONSTRUCTIONS.resetCamera}
+                </DropdownItem>
+
+                <DropdownItem
+                  class={dropdownItemClass}
+                  on:click={() => (scramble = reconstruction = title = "")}
+                >
+                  <RestartIcon size={iconSize} />
+                  {$localLang.global.reset}
+                </DropdownItem>
+
+                <DropdownItem class={dropdownItemClass} on:click={copyReconstruction}>
+                  <CopyIcon size={iconSize} />
+                  {$localLang.global.copy}
+                </DropdownItem>
+              </Dropdown>
+            </li>
+
+            <!-- Find Reconstruction -->
+            <li>
+              <Button
+                color="purple"
+                class="!p-2"
+                on:click={() => (showRecSearch = true)}
+                aria-label={$localLang.RECONSTRUCTIONS.findReconstruction}
+              >
+                <SearchIcon size={iconSize} />
+                <Tooltip>
+                  {$localLang.RECONSTRUCTIONS.findReconstruction}
+                </Tooltip>
+              </Button>
+            </li>
+
+            <!-- Puzzle -->
             <li>
               <Select
                 bind:value={puzzle}
@@ -608,22 +640,23 @@
                 hasIcon={e => e.scrambler}
               />
             </li>
+
+            <!-- Speed -->
             <li class="w-full max-w-[15rem] flex flex-col">
               <span> {$localLang.RECONSTRUCTIONS.speed}: {Math.floor(speed * 10) / 10}x</span>
-              <Range bind:value={speed} min={0.1} max={10} step="0.1" />
-            </li>
-            <li>
-              <Button color="purple" class="!p-2" on:click={() => (showRecSearch = true)}>
-                <SearchIcon size={iconSize} />
-                <Tooltip>
-                  {$localLang.RECONSTRUCTIONS.findReconstruction}
-                </Tooltip>
-              </Button>
+              <Range
+                bind:value={speed}
+                min={0.1}
+                max={10}
+                step="0.1"
+                aria-label={$localLang.RECONSTRUCTIONS.speed}
+              />
             </li>
 
+            <!-- Back -->
             {#if backURL}
               <li>
-                <Button on:click={() => goto(backURL)}>
+                <Button href={backURL} aria-label={$localLang.RECONSTRUCTIONS.return}>
                   <BackIcon size={iconSize} />
                   {$localLang.RECONSTRUCTIONS.return}
                 </Button>
@@ -657,6 +690,7 @@
         class="max-md:absolute md:hidden left-0 top-1/2 -translate-x-full -translate-y-1/2 px-[0.3rem] py-8
       rounded-none rounded-tl-md rounded-bl-md bg-background border-2 border-primary-500 border-r-0"
         on:click={() => (drawerOpen = !drawerOpen)}
+        aria-label={drawerOpen ? $localLang.global.minimize : $localLang.global.maximize}
       >
         <ChevronLeft size="1.2rem" class={drawerOpen ? "rotate-180" : ""} />
       </Button>
@@ -686,6 +720,7 @@
             setRecIndex();
             showRecSearch = false;
           }}
+          aria-label={rec.title}
           class="cursor-pointer rounded-md p-1 hover:bg-blue-600 hover:text-white w-full transition-all duration-200"
         >
           {rec.title}

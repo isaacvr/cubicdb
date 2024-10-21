@@ -44,6 +44,7 @@
   }
 
   function handleClick() {
+    console.log("CLICK");
     let list = document.querySelector(`#${selectID}`);
 
     if (!list) return;

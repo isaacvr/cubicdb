@@ -767,6 +767,7 @@
         class={`flex absolute items-center bottom-0 h-full max-w-[90%] left-1/2 translate-x-[-50%] mx-auto aspect-video
           justify-center transition-all duration-300 select-none` +
           (prevExpanded ? " bg-black w-full max-w-none z-10" : "z-0")}
+        aria-label={$localLang.global.images}
         class:hide={$isRunning || timerOnly}
         on:keydown={e => (e.code === "Space" ? e.preventDefault() : null)}
         on:click={() => {

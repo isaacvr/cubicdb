@@ -4,6 +4,7 @@
 /src/database/sessions.db
 /src/database/contests.db
 /dist
+/build
 /cache
 /release
 /.svelte-kit

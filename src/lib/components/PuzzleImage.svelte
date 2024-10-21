@@ -7,6 +7,8 @@
   export let glowOnHover = false;
   export let interactive = false;
   export let size = "";
+  export let width = "";
+  export let height = "";
   export { _cl as class };
 
   type ImageType = "raster" | "svg";
@@ -40,8 +42,8 @@
   class={"rounded flex items-center justify-center puzzle-img " +
     (!src ? " bg-gray-700 animate-pulse " : " ") +
     (_cl || "")}
-  style:width={size || "100%"}
-  style:height={size || "100%"}
+  style:width={width || size || "100%"}
+  style:height={height || size || "100%"}
   class:interactive
   class:glow={glowOnHover}
   role={type === "svg" ? "document" : "img"}
