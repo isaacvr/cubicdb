@@ -81,6 +81,9 @@
     }
   },
   "dependencies": {
+    "@capacitor/android": "^6.1.2",
+    "@capacitor/core": "^6.1.2",
+    "@capacitor/ios": "^6.1.2",
     "@electron/remote": "2.0.8",
     "@ffmpeg/ffmpeg": "0.12.10",
     "@ffmpeg/util": "0.12.1",
@@ -116,6 +119,7 @@
     "xstate": "5.18.2"
   },
   "devDependencies": {
+    "@capacitor/cli": "^6.1.2",
     "@electron-forge/cli": "6.0.0-beta.50",
     "@electron-forge/maker-deb": "6.0.0-beta.50",
     "@electron-forge/maker-rpm": "6.0.0-beta.50",

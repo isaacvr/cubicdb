@@ -7,6 +7,8 @@
 /build
 /cache
 /release
+/ios
+/android
 /.svelte-kit
 /.netlify
 .output
