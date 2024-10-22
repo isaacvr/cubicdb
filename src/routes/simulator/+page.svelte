@@ -5,7 +5,6 @@
   import { PuzzleTypeName, type PuzzleType } from "@interfaces";
   import { localLang } from "@stores/language.service";
   import { page } from "$app/stores";
-  import { onMount } from "svelte";
   import { goto } from "$app/navigation";
   import { browser } from "$app/environment";
 

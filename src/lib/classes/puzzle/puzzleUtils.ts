@@ -152,6 +152,7 @@ export function roundStickerCorners(
       bezier([pts[mod(i - 1, maxi)], pts[i], pts[i].add(v2)], PPC).forEach(p =>
         newSt.points.push(p)
       );
+      continue;
     }
 
     if (abs2 < ROUND_THRESHOLD) {

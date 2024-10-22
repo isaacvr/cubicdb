@@ -154,7 +154,6 @@ export function TIME_MACHINE(): PuzzleInterface {
   };
 
   tm.toMove = function (piece: Piece, sticker: Sticker, dir: Vector3D) {
-    console.log("STICKER: ", sticker);
     if (sticker.name === "number") {
       let mc = sticker.getMassCenter();
       let pcs = pieces.filter(
