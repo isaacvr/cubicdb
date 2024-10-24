@@ -14,7 +14,6 @@
     TableBodyRow,
     Input,
   } from "flowbite-svelte";
-  import { DataService } from "@stores/data.service";
   import { NotificationService } from "@stores/notification.service";
   import { localLang } from "@stores/language.service";
   import {
@@ -57,9 +56,9 @@
   import ToolsIcon from "@icons/Tools.svelte";
   import ChartIcon from "@icons/ChartLineVariant.svelte";
   import MetronomeIcon from "@icons/Metronome.svelte";
-  import Ao5Icon from "@icons/FormatListNumbered.svelte";
   import SeedIcon from "@icons/Leaf.svelte";
   import { getSeed, setSeed } from "@cstimer/lib/mathlib";
+  import { dataService } from "$lib/data-services/data.service";
 
   type TModal = "" | "edit-scramble" | "old-scrambles" | "settings";
 
@@ -95,7 +94,6 @@
       : TIMER_INPUT.filter(inp => inp != "GAN Cube");
   });
 
-  let dataService = DataService.getInstance();
   let notification = NotificationService.getInstance();
 
   /// MODAL
@@ -151,7 +149,7 @@
 
             initInputHandler();
 
-            dataService.updateSession($session);
+            $dataService.session.updateSession($session);
             initialCalc != $session.settings.calcAoX && updateStatistics(false);
           }
         });
@@ -328,7 +326,7 @@
     isSearching = true;
     $bluetoothList.length = 0;
 
-    dataService
+    $dataService.config
       .searchBluetooth(gn)
       .then(mac => {
         deviceID.set(mac);
@@ -349,13 +347,13 @@
   }
 
   function cancelSearch() {
-    dataService.cancelBluetoothRequest();
+    $dataService.config.cancelBluetoothRequest();
   }
 
   function connectBluetooth(id: string) {
     if (id != $deviceID) {
       isSearching = false;
-      dataService.connectBluetoothDevice(id);
+      $dataService.config.connectBluetoothDevice(id);
     } else {
       $inputMethod.disconnect();
     }

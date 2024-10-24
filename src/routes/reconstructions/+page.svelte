@@ -37,9 +37,9 @@
   import CopyIcon from "@icons/ClipboardOutline.svelte";
   import SettingsIcon from "@icons/Cog.svelte";
   import CameraIcon from "@icons/Cctv.svelte";
-  import { DataService } from "@stores/data.service";
   import { page } from "$app/stores";
   import { DOMAIN } from "@constants";
+  import { dataService } from "$lib/data-services/data.service";
 
   export let type: "full" | "controlled" = "full";
   export let scramble = "";
@@ -48,8 +48,6 @@
   export let puzzleOrder = 3;
 
   let recs: IDBReconstruction[] = [];
-
-  const dataService = DataService.getInstance();
 
   let recIndex = 1;
   let showRecSearch = false;
@@ -412,7 +410,7 @@
     if (type === "full") {
       handleLocation($page.url);
 
-      dataService.getReconstructions().then(r => {
+      $dataService.reconstruction.getReconstructions().then(r => {
         recs = r.filter(rec => errorIndex.indexOf(rec.num) < 0);
       });
     }

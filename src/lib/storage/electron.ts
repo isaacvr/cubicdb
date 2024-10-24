@@ -308,13 +308,33 @@ export class ElectronAdaptor implements IPC {
   }
 
   // For IPC only
-  algorithmsStorage() {}
-  cacheStorage() {}
-  vCacheStorage() {}
-  sessionsStorage() {}
-  solvesStorage() {}
-  tutorialsStorage() {}
-  reconstructionsStorage() {}
+  async algorithmsStorage() {
+    return 0;
+  }
+
+  async cacheStorage() {
+    return 0;
+  }
+
+  async vCacheStorage() {
+    return 0;
+  }
+
+  async sessionsStorage() {
+    return 0;
+  }
+
+  async solvesStorage() {
+    return 0;
+  }
+
+  async tutorialsStorage() {
+    return 0;
+  }
+
+  async reconstructionsStorage() {
+    return 0;
+  }
 
   async getStorageInfo(): Promise<IStorageInfo> {
     let algorithms = await this.ipc.algorithmsStorage();

@@ -16,7 +16,6 @@
   import Select from "@material/Select.svelte";
   import { LANGUAGES } from "@lang/index";
   import { localLang } from "@stores/language.service";
-  import { DataService } from "@stores/data.service";
 
   import StepIcon from "@icons/SchoolOutline.svelte";
   import DotsIcon from "@icons/DotsVertical.svelte";
@@ -35,8 +34,7 @@
   import { capitalize, replaceParams } from "@helpers/strings";
   import { browser } from "$app/environment";
   import { getTitleMeta } from "$lib/meta/title";
-
-  const dataService = DataService.getInstance();
+  import { dataService } from "$lib/data-services/data.service";
 
   const dropdownDefaultClass =
     "font-medium py-2 px-4 text-sm hover:bg-gray-600 flex items-center gap-2 justify-start";
@@ -144,7 +142,7 @@
     tut.algs = ~~tut.algs;
     tut.level = ~~tut.level;
 
-    dataService.updateTutorial(tut).then(() => {
+    $dataService.tutorial.updateTutorial(tut).then(() => {
       NotificationService.getInstance().addNotification({
         header: $localLang.global.done,
         text: $localLang.global.settingsSaved,
@@ -234,7 +232,7 @@
 
     editMode = JSON.parse(map.get("edit") || "false");
 
-    dataService
+    $dataService.tutorial
       .getTutorial(puzzle, code, lang)
       .then(t => {
         if (!t) {

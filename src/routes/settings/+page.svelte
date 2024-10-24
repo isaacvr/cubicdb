@@ -2,7 +2,6 @@
   import { NotificationService } from "@stores/notification.service";
   import { onDestroy, onMount } from "svelte";
   import Select from "@material/Select.svelte";
-  import { DataService } from "@stores/data.service";
   import { version } from "@stores/version.store";
   import { replaceParams } from "@helpers/strings";
   import { timer } from "@helpers/timer";
@@ -22,7 +21,13 @@
     Tooltip,
   } from "flowbite-svelte";
   import { localLang } from "@stores/language.service";
-  import type { ICacheDB, IStorageInfo, Language } from "@interfaces";
+  import {
+    FONTS,
+    type FONT_NAME,
+    type ICacheDB,
+    type IStorageInfo,
+    type Language,
+  } from "@interfaces";
   import { byteToString } from "@helpers/math";
   import Modal from "@components/Modal.svelte";
 
@@ -33,37 +38,19 @@
   import StorageIcon from "@icons/Harddisk.svelte";
   import CleanIcon from "@icons/DeleteAlert.svelte";
   import { browser } from "$app/environment";
+  import { dataService } from "$lib/data-services/data.service";
 
   const notService = NotificationService.getInstance();
 
-  let dataService = DataService.getInstance();
-
-  const FONTS = [
-    { name: "Ubuntu", value: "Ubuntu" },
-    { name: "Ropa Sans", value: "RopaSans" },
-    { name: "Bree Serif", value: "BreeSerif" },
-    { name: "CQ Mono", value: "CQMono" },
-    { name: "Raleway", value: "Raleway" },
-    { name: "Roboto", value: "Roboto" },
-    { name: "LCD4", value: "lcd4" },
-    { name: "Monaco", value: "Monaco" },
-  ];
-
-  const DEFAULT_APP_FONT = "Ubuntu";
-  const DEFAULT_TIMER_FONT = "Ubuntu";
-  const DEFAULT_ZOOM_FACTOR = 100;
   const tabActiveClass = "text-primary-400 p-4 border-b-2 border-b-primary-400";
   const ZOOM_FACTORS = [25, 50, 75, 100, 125, 150, 175, 200];
 
-  let appFont = browser ? localStorage.getItem("app-font") || DEFAULT_APP_FONT : DEFAULT_APP_FONT;
-
-  let timerFont = browser
-    ? localStorage.getItem("timer-font") || DEFAULT_TIMER_FONT
-    : DEFAULT_TIMER_FONT;
-
-  let zoomFactor: number = ~~(browser
-    ? localStorage.getItem("zoom-factor") || DEFAULT_ZOOM_FACTOR
-    : DEFAULT_ZOOM_FACTOR);
+  let appFont: FONT_NAME = "Ubuntu";
+  let timerFont: FONT_NAME = "Ubuntu";
+  let zoomFactor: number = 100;
+  // let appFont: FONT_NAME = $globalConfig.global.appFont;
+  // let timerFont: FONT_NAME = $globalConfig.global.timerFont;
+  // let zoomFactor: number = $globalConfig.global.zoomFactor;
 
   let initialZoomFactor = zoomFactor;
   let canCheckUpdate = true;
@@ -92,12 +79,13 @@
   let recVersion = "0.0.0";
 
   function save() {
-    localStorage.setItem("app-font", appFont);
-    localStorage.setItem("timer-font", timerFont);
-    localStorage.setItem("zoom-factor", "" + zoomFactor);
     document.documentElement.style.setProperty("--app-font", appFont);
     document.documentElement.style.setProperty("--timer-font", timerFont);
     document.documentElement.style.setProperty("--zoom-factor", "" + zoomFactor);
+
+    // $globalConfig.global.appFont = appFont;
+    // $globalConfig.global.timerFont = timerFont;
+    // $globalConfig.global.zoomFactor = zoomFactor;
 
     initialZoomFactor = zoomFactor;
 
@@ -109,9 +97,9 @@
   }
 
   function reset() {
-    appFont = DEFAULT_APP_FONT;
-    timerFont = DEFAULT_TIMER_FONT;
-    zoomFactor = DEFAULT_ZOOM_FACTOR;
+    // appFont = $globalConfig.global.appFont;
+    // timerFont = $globalConfig.global.timerFont;
+    // zoomFactor = $globalConfig.global.zoomFactor;
     save();
   }
 
@@ -177,7 +165,7 @@
 
   function checkUpdate() {
     canCheckUpdate = false;
-    dataService
+    $dataService.config
       .update("check")
       .then(res => {
         if (!res) return;
@@ -196,7 +184,7 @@
   }
 
   function updateNow() {
-    dataService
+    $dataService.config
       .update("download")
       .then(() => {
         console.log("Downloaded");
@@ -215,19 +203,19 @@
   }
 
   function updateAlgs() {
-    updatePart(dataService.updateAlgorithms(), "update algs error: ");
+    updatePart($dataService.algorithms.updateAlgorithms(), "update algs error: ");
   }
 
   function updateTuts() {
-    updatePart(dataService.updateTutorials(), "update tuts error: ");
+    updatePart($dataService.tutorial.updateTutorials(), "update tuts error: ");
   }
 
   function updateRecs() {
-    updatePart(dataService.updateReconstructions(), "update recs error: ");
+    updatePart($dataService.reconstruction.updateReconstructions(), "update recs error: ");
   }
 
   function updateDisplays() {
-    dataService.getAllDisplays().then(res => {
+    $dataService.config.getAllDisplays().then(res => {
       let cnt = 1;
 
       displays = res
@@ -240,7 +228,7 @@
   }
 
   function useDisplay(id: number) {
-    dataService.useDisplay(id);
+    $dataService.config.useDisplay(id);
   }
 
   function updateStorageNames() {
@@ -262,7 +250,7 @@
 
   async function updateStorage() {
     try {
-      storage = await dataService.getStorageInfo();
+      storage = await $dataService.cache.getStorageInfo();
       updateStorageNames();
     } catch {}
   }
@@ -271,7 +259,7 @@
     showDelete = false;
 
     try {
-      await dataService.clearCache(db);
+      await $dataService.cache.clearCache(db);
       await updateStorage();
     } catch {}
   }
@@ -292,9 +280,9 @@
 
   async function getVersions() {
     let versions = await Promise.all([
-      dataService.algorithmsVersion(),
-      dataService.tutorialsVersion(),
-      dataService.reconstructionsVersion(),
+      $dataService.algorithms.algorithmsVersion(),
+      $dataService.tutorial.tutorialsVersion(),
+      $dataService.reconstruction.reconstructionsVersion(),
     ]);
 
     algVersion = versions[0].version;
@@ -331,22 +319,26 @@
 
   function checkAlgs() {
     canCheckAlgs = false;
-    checkPart(dataService.checkAlgorithms(), $localLang.HOME.algorithms, updateAlgs).finally(
-      () => (canCheckAlgs = true)
-    );
+    checkPart(
+      $dataService.algorithms.checkAlgorithms(),
+      $localLang.HOME.algorithms,
+      updateAlgs
+    ).finally(() => (canCheckAlgs = true));
   }
 
   function checkTuts() {
     canCheckTuts = false;
-    checkPart(dataService.checkTutorials(), $localLang.HOME.tutorials, updateTuts).finally(
-      () => (canCheckTuts = true)
-    );
+    checkPart(
+      $dataService.tutorial.checkTutorials(),
+      $localLang.HOME.tutorials,
+      updateTuts
+    ).finally(() => (canCheckTuts = true));
   }
 
   function checkRecs() {
     canCheckRecs = false;
     checkPart(
-      dataService.checkReconstructions(),
+      $dataService.reconstruction.checkReconstructions(),
       $localLang.HOME.reconstructions,
       updateRecs
     ).finally(() => (canCheckRecs = true));
@@ -430,7 +422,7 @@
       </div>
     </TabItem>
 
-    {#if dataService.isElectron}
+    {#if $dataService.isElectron}
       <!-- Displays -->
       <TabItem activeClasses={tabActiveClass}>
         <div slot="title" class="flex items-center gap-2">

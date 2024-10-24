@@ -52,7 +52,7 @@ export const PuzzleTypeName = [
 
 export declare type PuzzleType = (typeof PuzzleTypeName)[number];
 
-type AnyCallback = (...args: any[]) => any;
+export type AnyCallback = (...args: any[]) => any;
 
 export declare type CubeView = "plan" | "trans" | "2d" | "bird";
 export const CubeViewMap: [CubeView, string][] = [
@@ -664,13 +664,13 @@ export interface IPC {
   addExternalConnector: (cb: AnyCallback) => any;
   external: (device: string, ...args: any[]) => any;
 
-  algorithmsStorage: () => any;
-  cacheStorage: () => any;
-  vCacheStorage: () => any;
-  sessionsStorage: () => any;
-  solvesStorage: () => any;
-  tutorialsStorage: () => any;
-  reconstructionsStorage: () => any;
+  algorithmsStorage: () => Promise<number>;
+  cacheStorage: () => Promise<number>;
+  vCacheStorage: () => Promise<number>;
+  sessionsStorage: () => Promise<number>;
+  solvesStorage: () => Promise<number>;
+  tutorialsStorage: () => Promise<number>;
+  reconstructionsStorage: () => Promise<number>;
 }
 
 export interface PDFOptions {
@@ -1273,4 +1273,54 @@ export interface VectorLike3D {
   x: number;
   y: number;
   z: number;
+}
+
+export const FONTS = [
+  { name: "Ubuntu", value: "Ubuntu" },
+  { name: "Ropa Sans", value: "RopaSans" },
+  { name: "Bree Serif", value: "BreeSerif" },
+  { name: "CQ Mono", value: "CQMono" },
+  { name: "Raleway", value: "Raleway" },
+  { name: "Roboto", value: "Roboto" },
+  { name: "LCD4", value: "lcd4" },
+  { name: "Monaco", value: "Monaco" },
+] as const;
+
+export type FONT_NAME = (typeof FONTS)[number]["value"];
+
+interface BluetoothCubeInfo {
+  mac: string;
+  name: string;
+}
+
+export interface CONFIG {
+  global: {
+    theme: string;
+    lang: LanguageCode;
+    zoomFactor: number;
+  };
+
+  algorithms: {
+    listView: boolean;
+  };
+
+  timer: {
+    session: string;
+    bluetoothCubes: BluetoothCubeInfo[];
+  };
+}
+
+export interface Theme {
+  name: string;
+  text: string;
+  primary: string;
+  background: string;
+  backgroundLevel1: string;
+  backgroundLevel2: string;
+  mark: string;
+  emphasis: string;
+  cancelButton: string;
+  acceptButton: string;
+  urgentButton: string;
+  accent: string;
 }

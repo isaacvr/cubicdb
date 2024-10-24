@@ -8,7 +8,6 @@
     type Solve,
     type TimerContext,
   } from "@interfaces";
-  import { DataService } from "@stores/data.service";
   import { infinitePenalty, isMo3, sTimer, timer } from "@helpers/timer";
   import Modal from "@components/Modal.svelte";
   import Tooltip from "@material/Tooltip.svelte";
@@ -55,10 +54,10 @@
   import PaginatorComponent from "@components/PaginatorComponent.svelte";
   import { GateAdaptor } from "$lib/timer/SessionsTab/AdvancedSearch/adaptors";
   import type { SearchFilter } from "$lib/timer/SessionsTab/AdvancedSearch/adaptors/types";
+  import { dataService } from "$lib/data-services/data.service";
 
   let localLang: Readable<Language> = derived(globalLang, $lang => getLanguage($lang));
 
-  const dataService = DataService.getInstance();
   const notification = NotificationService.getInstance();
 
   export let context: TimerContext;
@@ -106,7 +105,7 @@
     if (s) {
       gSolve.comments = (s.comments || "").trim();
       gSolve.penalty = s.penalty;
-      dataService.updateSolve(s).then(res => {
+      $dataService.solve.updateSolve(s).then(res => {
         handleUpdateSolve(res);
         pSolves = pSolves;
       });
@@ -172,7 +171,7 @@
     sSolve.penalty = p;
 
     if (update) {
-      dataService.updateSolve(sSolve).then(handleUpdateSolve);
+      $dataService.solve.updateSolve(sSolve).then(handleUpdateSolve);
     }
 
     showDropdown = false;
@@ -223,7 +222,7 @@
   }
 
   function _delete(s: Solve[]) {
-    dataService.removeSolves(s).then(handleRemoveSolves);
+    $dataService.solve.removeSolves(s).then(handleRemoveSolves);
   }
 
   function deleteSelected() {

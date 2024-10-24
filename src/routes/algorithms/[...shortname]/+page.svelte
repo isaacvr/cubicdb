@@ -1,12 +1,11 @@
 <script lang="ts">
-  import { beforeUpdate, onDestroy, onMount } from "svelte";
-  import { Button, Span, Spinner, Tooltip } from "flowbite-svelte";
+  import { onDestroy, onMount } from "svelte";
+  import { Button, Spinner, Tooltip } from "flowbite-svelte";
   import { CubeMode } from "@constants";
   import { type Algorithm, type ICard, type Language, type Solution } from "@interfaces";
   import { Puzzle } from "@classes/puzzle/puzzle";
   import { pGenerateCubeBundle } from "@helpers/cube-draw";
-  import { copyToClipboard, getSearchParams } from "@helpers/strings";
-  import { DataService } from "@stores/data.service";
+  import { copyToClipboard } from "@helpers/strings";
   import { NotificationService } from "@stores/notification.service";
   import { screen } from "@stores/screen.store";
   import { localLang } from "@stores/language.service";
@@ -24,8 +23,8 @@
   import { browser } from "$app/environment";
   import { getTitleMeta } from "$lib/meta/title";
   import type { Unsubscriber } from "svelte/store";
+  import { dataService } from "$lib/data-services/data.service";
 
-  const dataService = DataService.getInstance();
   const notification = NotificationService.getInstance();
 
   let lastUrl: string = "";
@@ -186,14 +185,18 @@
       cases = [];
       lastUrl = p1;
 
-      handleAlgorithms(await dataService.getAlgorithms(p1));
+      handleAlgorithms(
+        await $dataService.algorithms.getAlgorithms({
+          path: p1,
+        })
+      );
 
       selectCase($page.url);
 
       let parts = p1.split("/");
       let shortName = parts.pop() || "";
 
-      currentAlg = await dataService.getAlgorithm(parts.join("/"), shortName);
+      currentAlg = await $dataService.algorithms.getAlgorithm({ path: parts.join("/"), shortName });
 
       updateMeta($localLang);
     }
@@ -229,24 +232,25 @@
     //   z: rotation.z,
     // };
 
-    (isAdding ? dataService.addAlgorithm(sAlg.alg) : dataService.updateAlgorithm(sAlg.alg)).then(
-      alg => {
-        let item = cases.find(a => a._id === alg._id);
+    (isAdding
+      ? $dataService.algorithms.addAlgorithm(sAlg.alg)
+      : $dataService.algorithms.updateAlgorithm(sAlg.alg)
+    ).then(alg => {
+      let item = cases.find(a => a._id === alg._id);
 
-        if (!item) {
-          console.log("ITEM NOT FOUND: ", item);
-        } else {
-          let pos = cases.indexOf(item);
-          alg._puzzle = algorithmToPuzzle(alg, true);
+      if (!item) {
+        console.log("ITEM NOT FOUND: ", item);
+      } else {
+        let pos = cases.indexOf(item);
+        alg._puzzle = algorithmToPuzzle(alg, true);
 
-          pGenerateCubeBundle([alg._puzzle], 500, true, true)
-            .then(_ => {
-              cases[pos] = alg;
-            })
-            .catch(err => console.log("ERROR: ", err));
-        }
+        pGenerateCubeBundle([alg._puzzle], 500, true, true)
+          .then(_ => {
+            cases[pos] = alg;
+          })
+          .catch(err => console.log("ERROR: ", err));
       }
-    );
+    });
 
     show = false;
   }
@@ -293,7 +297,7 @@
   }
 
   async function removeAlg(a: Algorithm) {
-    await dataService.removeAlgorithm(a);
+    await $dataService.algorithms.removeAlgorithm(a);
     updateCases($page.url, true);
   }
 
@@ -363,7 +367,7 @@
         alg.solutions = e.solutions.map(moves => ({ moves }));
       }
 
-      dataService.addAlgorithm(alg);
+      $dataService.algorithms.addAlgorithm(alg);
     });
 
     pageSub = page.subscribe(p => updateCases(p.url));

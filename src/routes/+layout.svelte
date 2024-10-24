@@ -5,7 +5,7 @@
   import Minus from "@icons/Minus.svelte";
   import Close from "@icons/Close.svelte";
   import { onDestroy, onMount } from "svelte";
-  import { DataService } from "@stores/data.service";
+  // import { DataService } from "@stores/data.service";
   import {
     Breadcrumb,
     BreadcrumbItem,
@@ -27,17 +27,19 @@
   import { ArrowUpRightDownLeftOutline } from "flowbite-svelte-icons";
   import Select from "@material/Select.svelte";
   import { browser } from "$app/environment";
-  import type { INotification, LanguageCode } from "@interfaces";
+  import type { INotification } from "@interfaces";
   import Notification from "@components/Notification.svelte";
   import { goto } from "$app/navigation";
   import { page } from "$app/stores";
   import type { Unsubscriber } from "svelte/store";
   import type { LayoutServerData } from "./$types";
   import { getTitleMeta } from "$lib/meta/title";
+  import { dataService } from "$lib/data-services/data.service";
+  import { applyTheme } from "$lib/themes/manageThemes";
+  import { DEFAULT_THEME } from "$lib/themes/default";
 
   export let data: LayoutServerData;
 
-  const dataService = DataService.getInstance();
   let notifications: INotification[] = [];
   const notService = NotificationService.getInstance();
 
@@ -58,14 +60,18 @@
       text: $localLang.SETTINGS.updateCompleted,
       actions: [
         { text: $localLang.global.accept, callback: () => {}, color: "alternative" },
-        { text: $localLang.global.restart, callback: () => dataService.close(), color: "purple" },
+        {
+          text: $localLang.global.restart,
+          callback: () => $dataService.config.close(),
+          color: "purple",
+        },
       ],
       fixed: true,
     });
   }
 
   function cancelUpdate() {
-    dataService
+    $dataService.config
       .cancelUpdate()
       .then(() => {
         progress = 0;
@@ -76,11 +82,11 @@
   }
 
   function minimize() {
-    dataService.minimize();
+    $dataService.config.minimize();
   }
 
   function close() {
-    dataService.close();
+    $dataService.config.close();
   }
 
   function fullScreen() {
@@ -141,30 +147,18 @@
       notifications = v;
     });
 
-    dataService.on("download-progress", handleProgress);
-    dataService.on("update-downloaded", handleDone);
+    $dataService.on("download-progress", handleProgress);
+    $dataService.on("update-downloaded", handleDone);
+
+    applyTheme(DEFAULT_THEME);
 
     handleResize();
-    // checkUpdates();
-
-    let lang: LanguageCode = (localStorage.getItem("language") as LanguageCode) || "EN";
-    localStorage.setItem("language", lang);
-    globalLang.update(() => lang);
-
-    document.documentElement.style.setProperty(
-      "--app-font",
-      localStorage.getItem("app-font") || "Ubuntu"
-    );
-    document.documentElement.style.setProperty(
-      "--timer-font",
-      localStorage.getItem("timer-font") || "Ubuntu"
-    );
   });
 
   onDestroy(() => {
     clearInterval(itv);
-    dataService.off("download-progress", handleProgress);
-    dataService.off("update-downloaded", handleDone);
+    $dataService.off("download-progress", handleProgress);
+    $dataService.off("update-downloaded", handleDone);
   });
 
   $: $localLang, updateParts($page.url);
@@ -250,7 +244,7 @@
           />
         {/if}
 
-        {#if dataService.isElectron && $screen.width > 640}
+        {#if $dataService.isElectron && $screen.width > 640}
           <span>{date}</span>
 
           <Button

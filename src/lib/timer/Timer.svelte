@@ -17,7 +17,6 @@
     STEP_COLORS,
     MISC,
   } from "@constants";
-  import { DataService } from "@stores/data.service";
 
   /// Components
   import TabGroup from "@material/TabGroup.svelte";
@@ -62,6 +61,7 @@
   import DeleteIcon from "@icons/Delete.svelte";
   import { Button, Input, Modal } from "flowbite-svelte";
   import WcaCategory from "@components/wca/WCACategory.svelte";
+  import { dataService } from "$lib/data-services/data.service";
 
   let MENU: SCRAMBLE_MENU[] = getLanguage($globalLang).MENU;
 
@@ -87,7 +87,6 @@
   });
 
   /// SERVICES
-  const dataService = DataService.getInstance();
   const notService = NotificationService.getInstance();
 
   /// GENERAL
@@ -188,7 +187,7 @@
     }
 
     if (bestList.length && $session.settings.recordCelebration) {
-      dataService.emit("new-record");
+      $dataService.emit("new-record");
 
       notService.addNotification({
         header: $localLang.TIMER.congrats,
@@ -375,7 +374,7 @@
       $scramble = prettyScramble($scramble);
 
       // emit scramble for iCarry and other stuffs
-      dataService.scramble($scramble);
+      $dataService.scramble($scramble);
 
       // console.log("SCRAMBLE: ", $scramble);
 
@@ -397,7 +396,7 @@
   function selectedFilter(rescramble = true, saveFilter = false) {
     if (saveFilter && $session.settings.sessionType === "mixed") {
       $session.settings.prob = $prob;
-      dataService.updateSession($session).then().catch();
+      $dataService.session.updateSession($session).then().catch();
     }
 
     rescramble && initScrambler();
@@ -406,7 +405,7 @@
   function selectedMode(rescramble = true, saveMode = false, updateProb = true) {
     if (saveMode && $session.settings.sessionType === "mixed") {
       $session.settings.mode = $mode[1];
-      dataService.updateSession($session).then().catch();
+      $dataService.session.updateSession($session).then().catch();
     }
     filters = all.pScramble.filters.get($mode[1]) || [];
     updateProb && ($prob = -1);
@@ -474,7 +473,7 @@
       settings.stepNames = stepNames;
     }
 
-    dataService.addSession({ _id: "", name, settings }).then(ns => {
+    $dataService.session.addSession({ _id: "", name, settings }).then(ns => {
       ns.tName = ns.name;
       sessions = [...sessions, ns];
       $session = ns;
@@ -483,7 +482,7 @@
 
       if (!$session.settings.sessionType) {
         $session.settings.sessionType = $session.settings.sessionType || "mixed";
-        dataService.updateSession($session);
+        $dataService.session.updateSession($session);
       }
 
       selectedSession();
@@ -495,7 +494,7 @@
 
   function deleteSessionHandler(remove?: boolean) {
     if (remove) {
-      dataService.removeSession(sSession).then(ss => {
+      $dataService.session.removeSession(sSession).then(ss => {
         sessions = sessions.filter(s1 => s1._id != ss._id);
 
         if (sessions.length === 0) {
@@ -533,7 +532,7 @@
       return;
     }
 
-    dataService
+    $dataService.session
       .updateSession({ _id: s._id, name: s.tName?.trim() || "Session -", settings: s.settings })
       .then(handleUpdateSession);
   }
@@ -612,10 +611,10 @@
     }
 
     if (!(battle || timerOnly || scrambleOnly)) {
-      dataService.getSolves().then(sv => {
+      $dataService.solve.getSolves().then(sv => {
         $allSolves = sv;
 
-        dataService.getSessions().then(_sessions => {
+        $dataService.session.getSessions().then(_sessions => {
           sessions = _sessions.map(s => {
             s.tName = s.name;
             return s;

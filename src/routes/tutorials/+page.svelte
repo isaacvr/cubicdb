@@ -13,7 +13,6 @@
   } from "flowbite-svelte";
   import WCACategory from "@components/wca/WCACategory.svelte";
   import { globalLang, localLang } from "@stores/language.service";
-  import { DataService } from "@stores/data.service";
   import Select from "@material/Select.svelte";
   import { LANGUAGES } from "@lang/index";
   import { ICONS } from "@constants";
@@ -26,10 +25,10 @@
   import FundamentalsIcon from "@icons/HumanMaleBoardPoll.svelte";
   import FlagIcon from "@components/FlagIcon.svelte";
   import { goto } from "$app/navigation";
+  import { dataService } from "$lib/data-services/data.service";
 
   type IndicatorColor = "green" | "blue" | "yellow";
 
-  const dataService = DataService.getInstance();
   const dropdownDefaultClass =
     "font-medium py-2 px-4 text-sm hover:bg-gray-600 flex items-center gap-2 justify-start";
 
@@ -124,11 +123,11 @@
   function removeTutorial() {
     if (!sTut) return;
 
-    dataService.removeTutorial(sTut).then(() => getTutorials());
+    $dataService.tutorial.removeTutorial(sTut).then(() => getTutorials());
   }
 
   function getTutorials() {
-    dataService
+    $dataService.tutorial
       .getTutorials()
       .then(tuts => {
         tutorials = tuts;
@@ -165,7 +164,7 @@
   }
 
   function addTutorial() {
-    dataService
+    $dataService.tutorial
       .addTutorial(nTut)
       .then(t => viewTutorial(t, true))
       .catch(err => console.log("ERROR: ", err));

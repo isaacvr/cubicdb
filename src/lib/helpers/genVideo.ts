@@ -5,12 +5,12 @@ import { Puzzle } from "@classes/puzzle/puzzle";
 import { CubeMode } from "@constants";
 import { FFmpegService } from "@stores/ffmpeg.service";
 import { sha1 } from "object-hash";
-import { DataService } from "@stores/data.service";
 import { ThreeJSAdaptor } from "$lib/simulator/adaptors/ThreeJSAdaptor";
 import { ControlAdaptor } from "$lib/simulator/adaptors/ControlAdaptor";
+import { get } from "svelte/store";
+import { dataService } from "$lib/data-services/data.service";
 
 export async function genVideo(alg: ITutorialAlg, dims: number, FPS = 60): Promise<string | null> {
-  const dataService = DataService.getInstance();
   const hash = sha1(alg);
   // let res = await dataService.cacheGetVideo(hash);
 
@@ -78,7 +78,7 @@ export async function genVideo(alg: ITutorialAlg, dims: number, FPS = 60): Promi
       // CONVERT
       const ffmpeg = FFmpegService.getInstance();
       const result = await ffmpeg.generateVideo(images, FPS);
-      result && (await dataService.cacheSaveVideo(hash, result.data));
+      result && (await get(dataService).cache.cacheSaveVideo(hash, result.data));
 
       return result ? result.result : null;
     }

@@ -146,7 +146,7 @@
     "autoprefixer": "10.4.16",
     "concurrently": "5.1.0",
     "echarts": "5.4.3",
-    "electron": "32.1.2",
+    "electron": "33.0.2",
     "electron-builder": "24.13.3",
     "esbuild": "0.19.4",
     "eslint": "9.0.0",

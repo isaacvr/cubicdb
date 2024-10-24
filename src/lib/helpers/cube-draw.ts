@@ -1,5 +1,4 @@
 import { Puzzle } from "@classes/puzzle/puzzle";
-import { DataService } from "@stores/data.service";
 import { sha1 } from "object-hash";
 import { planView } from "@workers/imageGenerators/plainView";
 import { projectedView } from "@workers/imageGenerators/projectedView";
@@ -9,6 +8,8 @@ import { roundCorners } from "@classes/puzzle/puzzleUtils";
 import { birdView } from "@workers/imageGenerators/birdView";
 import { WebGLRenderer } from "three";
 import { browser } from "$app/environment";
+import { get } from "svelte/store";
+import { dataService } from "$lib/data-services/data.service";
 
 export async function pGenerateCubeBundle(
   cubes: Puzzle[],
@@ -23,10 +24,8 @@ export async function pGenerateCubeBundle(
     return cubes.map(() => "");
   }
 
-  const dataService = DataService.getInstance();
-
   // Cache or views
-  let images = await dataService.cacheGetImageBundle(cubes.map(c => sha1(c.options)));
+  let images = await get(dataService).cache.cacheGetImageBundle(cubes.map(c => sha1(c.options)));
 
   // Prepare for trans view
   let cv = document.createElement("canvas");
@@ -62,10 +61,10 @@ export async function pGenerateCubeBundle(
               ? projectedView(cube, W, format)
               : birdView(cube, W, format);
 
-        cache && dataService.cacheSaveImage(sha1(cube.options), cube.img);
+        cache && get(dataService).cache.cacheSaveImage(sha1(cube.options), cube.img);
       } else {
         cube.img = await transView(renderer, cv, cube, W);
-        cache && dataService.cacheSaveImage(sha1(cube.options), cube.img);
+        cache && get(dataService).cache.cacheSaveImage(sha1(cube.options), cube.img);
       }
     }
   }

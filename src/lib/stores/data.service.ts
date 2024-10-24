@@ -19,6 +19,7 @@ import type {
   PDFOptions,
   ICacheDB,
   IDBReconstruction,
+  CONFIG,
 } from "@interfaces";
 import { ElectronAdaptor, IndexedDBAdaptor } from "@storage/index";
 import type { Display } from "electron";
@@ -116,38 +117,6 @@ export class DataService {
 
   emit(ev: string, ...args: any[]) {
     this.emitter.emit(ev, ...args);
-  }
-
-  getAlgorithms(path: string, all?: boolean): Promise<Algorithm[]> {
-    return this.ipc.getAlgorithms({ all, path });
-  }
-
-  getAlgorithm(path: string, shortName: string): Promise<Algorithm | null> {
-    return this.ipc.getAlgorithm({ path, shortName });
-  }
-
-  addAlgorithm(alg: Algorithm) {
-    return this.ipc.addAlgorithm(alg);
-  }
-
-  removeAlgorithm(alg: Algorithm) {
-    return this.ipc.removeAlgorithm(alg);
-  }
-
-  updateAlgorithm(alg: Algorithm) {
-    return this.ipc.updateAlgorithm(alg);
-  }
-
-  algorithmsVersion() {
-    return this.ipc.algorithmsVersion();
-  }
-
-  checkAlgorithms() {
-    return this.ipc.checkAlgorithms();
-  }
-
-  updateAlgorithms() {
-    return this.ipc.updateAlgorithms();
   }
 
   getTutorials() {
@@ -411,5 +380,9 @@ export class DataService {
 
   scramble(s: string) {
     this.emitter.emit<DataEvent>("scramble", s);
+  }
+
+  loadConfig() {
+    return Promise.resolve({} as CONFIG);
   }
 }

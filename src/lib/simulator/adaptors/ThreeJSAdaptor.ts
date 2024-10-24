@@ -6,7 +6,7 @@ import { Vector2D } from "@classes/vector2-d";
 import { CENTER, Vector3D } from "@classes/vector3d";
 import { CubeMode, EPS } from "@constants";
 import { cubeToThree, piecesToTree } from "@helpers/cubeToThree";
-import { between, getLagrangeInterpolation } from "@helpers/math";
+import { getLagrangeInterpolation } from "@helpers/math";
 import type { PuzzleType } from "@interfaces";
 import {
   ACESFilmicToneMapping,
@@ -28,14 +28,15 @@ import {
   type Intersection,
 } from "three";
 import { TrackballControls } from "three/examples/jsm/controls/TrackballControls.js";
-import { DataService } from "@stores/data.service";
 import { browser } from "$app/environment";
+import { dataService } from "$lib/data-services/data.service";
+import { get } from "svelte/store";
 
 const textureLoader = new TextureLoader();
 let texture: any = null;
 
 if (browser) {
-  if (DataService.getInstance().isElectron) {
+  if (get(dataService).isElectron) {
     texture = await textureLoader.loadAsync("/assets/textures/cube-texture.jpg");
   } else {
     texture = await textureLoader.loadAsync("/assets/textures/cube-texture2.jpg");
@@ -295,7 +296,7 @@ export class ThreeJSAdaptor {
   }
 
   resizeHandler(contained: boolean) {
-    let isElectron = DataService.getInstance().isElectron;
+    let isElectron = get(dataService).isElectron;
     this.W = Math.min(window.innerWidth, window.screen.availWidth * (isElectron ? 2 : 1));
     this.H = Math.min(window.innerHeight, window.screen.availHeight * (isElectron ? 2 : 1));
 

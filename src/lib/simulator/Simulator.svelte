@@ -18,8 +18,8 @@
   import { CubeMode } from "@constants";
   import { pGenerateCubeBundle } from "@helpers/cube-draw";
   import PuzzleImage from "@components/PuzzleImage.svelte";
-  import { DataService } from "@stores/data.service";
   import { sha1 } from "object-hash";
+  import { dataService } from "$lib/data-services/data.service";
 
   export let enableKeyboard = true;
   export let enableDrag = true;
@@ -41,7 +41,6 @@
   export { _cl as class };
 
   const dispatch = createEventDispatcher();
-  const dataService = DataService.getInstance();
 
   let canvas: HTMLCanvasElement;
   let threeAdaptor: ThreeJSAdaptor;
@@ -70,15 +69,15 @@
   (async () => {
     for (let i = 0, maxi = puzzles.length; i < maxi; i += 1) {
       let hash = sha1(puzzles[i]);
-      let inCache = await dataService.cacheCheckImage(hash);
+      let inCache = await $dataService.cache.cacheCheckImage(hash);
 
       if (inCache) {
-        puzzles[i].img = await dataService.cacheGetImage(hash);
+        puzzles[i].img = await $dataService.cache.cacheGetImage(hash);
       } else {
         puzzles[i].img = (
           await pGenerateCubeBundle([new Puzzle({ type: puzzles[i].value, order: [3] })])
         )[0];
-        await dataService.cacheSaveImage(hash, puzzles[i].img);
+        await $dataService.cache.cacheSaveImage(hash, puzzles[i].img);
       }
     }
   })();

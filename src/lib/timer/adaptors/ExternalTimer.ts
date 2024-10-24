@@ -1,9 +1,6 @@
 // import { get, writable, type Writable } from 'svelte/store';
 // import { TimerState, type InputContext, type TimerInputHandler, Penalty, type Solve } from '@interfaces';
 // import { createMachine, interpret, type Sender } from 'xstate';
-// import { DataService } from '@stores/data.service';
-
-// const dataService = DataService.getInstance();
 
 // interface ExternalTimerContext extends InputContext {
 //   leftDown: Writable<boolean>;
@@ -105,7 +102,7 @@
 //     ls.penalty = ev.value;
 //     lastSolve.set(ls);
 //     time.set( ls.penalty === Penalty.DNF ? Infinity : ls.time );
-//     dataService.updateSolve(ls).then( handleUpdateSolve );
+//     $dataService.solve.updateSolve(ls).then( handleUpdateSolve );
 //   }
 // };
 
@@ -113,7 +110,7 @@
 //   let ls = get(lastSolve);
 
 //   if ( ls ) {
-//     dataService.removeSolves([ ls ]).then( handleRemoveSolves );
+//     $dataService.solve.removeSolves([ ls ]).then( handleRemoveSolves );
 //     time.set(0);
 //     reset();
 //   }
@@ -228,14 +225,14 @@
 //     this.interpreter.start();
 
 //     this.cb = (data: any) => this.setExternalConnection(data);
-//     dataService.on('external', this.cb);
+//     $dataService.on('external', this.cb);
 //   }
 
 //   disconnect() {
 //     console.log("[external]: disconnect");
 //     this.isActive = false;
 //     this.interpreter.stop();
-//     dataService.off('external', this.cb);
+//     $dataService.off('external', this.cb);
 //   }
 
 //   private setExternalConnection(ev: any) {
@@ -273,6 +270,6 @@
 //   }
 
 //   newRecord() {
-//     dataService.external(this.deviceId, { type: 'new-record' });
+//     $dataService.external(this.deviceId, { type: 'new-record' });
 //   }
 // }
