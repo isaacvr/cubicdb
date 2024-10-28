@@ -55,6 +55,8 @@
   import { GateAdaptor } from "$lib/timer/SessionsTab/AdvancedSearch/adaptors";
   import type { SearchFilter } from "$lib/timer/SessionsTab/AdvancedSearch/adaptors/types";
   import { dataService } from "$lib/data-services/data.service";
+  import { scrambleToPuzzle } from "@helpers/scrambleToPuzzle";
+  import PuzzleImageBundle from "@components/PuzzleImageBundle.svelte";
 
   let localLang: Readable<Language> = derived(globalLang, $lang => getLanguage($lang));
 
@@ -73,8 +75,7 @@
   let showDeleteAll = false;
   let sSolve: Solve;
   let gSolve: Solve;
-  let preview = "";
-  let cube;
+  let preview: string[] = [""];
   let showContextMenu = false;
   let contextMenuElement: HTMLUListElement;
   let solvesElement: HTMLDivElement;
@@ -100,7 +101,7 @@
   ];
 
   function closeHandler(s?: Solve) {
-    preview = "";
+    preview = [""];
 
     if (s) {
       gSolve.comments = (s.comments || "").trim();
@@ -124,13 +125,11 @@
     let sMode = sSolve.mode as string;
     let md = options.has(sMode) ? sMode : "333";
 
-    cube = Puzzle.fromSequence(sSolve.scramble, {
-      ...(options.get(md) as PuzzleOptions),
-      rounded: true,
-      headless: true,
-    });
+    let cubes = scrambleToPuzzle(sSolve.scramble, md);
 
-    pGenerateCubeBundle([cube], 400, true).then(res => (preview = res[0]));
+    pGenerateCubeBundle(cubes, 400, true).then(res => {
+      preview = res;
+    });
 
     show = true;
   }
@@ -612,7 +611,7 @@
   bind:this={modal}
   bind:show
   onClose={closeHandler}
-  class="w-[min(100%,36rem)]"
+  class="w-[min(100%,40rem)]"
   transitionName="modal"
 >
   <div class="flex justify-between items-center tx-text m-2">
@@ -643,14 +642,18 @@
       (fComment || collapsed ? "collapsed" : "")}
   >
     <Dice5Icon />
-    <span bind:innerHTML={sSolve.scramble} contenteditable="false" class="text-center"></span>
+
+    <span contenteditable="false" class="text-center overflow-auto max-h-[20svh]">
+      {@html sSolve.scramble.replaceAll("\n", "<br>")}
+    </span>
 
     <button
-      class="preview col-span-2 mb-2 mt-2 mx-auto overflow-hidden"
+      class="preview col-span-2 mb-2 mt-2 mx-auto overflow-hidden w-full h-full
+        flex items-center justify-center relative pb-4 px-1"
       on:click={() => (collapsed = !collapsed)}
     >
       {#if preview}
-        <PuzzleImage src={preview} />
+        <PuzzleImageBundle src={preview} />
       {:else}
         <Spinner size="20" />
       {/if}
@@ -755,7 +758,9 @@
     </Button>
     <Dropdown bind:open={showDropdown} class="bg-backgroundLevel2 rounded-md">
       {#each [{ label: $localLang.TIMER.noPenalty, penalty: Penalty.NONE }, ...PENALTIES] as p}
-        <DropdownItem class="bg-backgroundLevel2 tx-text" on:click={() => setPenalty(p.penalty)}>{p.label}</DropdownItem>
+        <DropdownItem class="bg-backgroundLevel2 tx-text" on:click={() => setPenalty(p.penalty)}
+          >{p.label}</DropdownItem
+        >
       {/each}
     </Dropdown>
   </div>

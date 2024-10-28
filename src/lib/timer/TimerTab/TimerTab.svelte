@@ -8,7 +8,6 @@
     type TimerContext,
     type TimerInputHandler,
   } from "@interfaces";
-  import { ChevronLeftSolid, ChevronRightSolid } from "flowbite-svelte-icons";
   import { writable, type Writable } from "svelte/store";
   import { blur, scale } from "svelte/transition";
 
@@ -52,6 +51,7 @@
   import Reconstructor from "./Reconstructor.svelte";
   import TimerOptions from "./TimerOptions.svelte";
   import StatsInfo from "./StatsInfo.svelte";
+  import PuzzleImageBundle from "@components/PuzzleImageBundle.svelte";
 
   export let context: TimerContext;
   export let battle = false;
@@ -487,11 +487,6 @@
     $inputMethod.newRecord();
   }
 
-  function step(ev: MouseEvent, v: number) {
-    ev.stopPropagation();
-    selectedImg = minmax(selectedImg + v, 0, $preview.length);
-  }
-
   function handleMouseDown(ev: MouseEvent) {
     if ($dataService.isElectron || ev.button) return;
 
@@ -575,7 +570,6 @@
   $: $localLang, updateTexts();
   $: $scramble && cleanOnScramble && clean();
   $: $dataService.config.sleep($state === TimerState.RUNNING);
-  $: $mode && (selectedImg = 0);
 </script>
 
 <svelte:window on:keyup={keyUp} on:keydown={keyDown} on:pointerup={handlePointerUp} />
@@ -790,32 +784,7 @@
           </div>
         {:else}
           <div class="w-full h-full flex items-center justify-center relative">
-            {#if $preview.length > 1}
-              <span class="absolute top-[-1.5rem] transition-all" out:blur>
-                {$localLang.global.scramble}
-                {selectedImg + 1} / {$preview.length}
-              </span>
-            {/if}
-
-            <Button
-              color="none"
-              on:click={ev => step(ev, -1)}
-              disabled={selectedImg === 0}
-              class={"rounded-full w-[3rem] h-[3rem] " + ($preview.length < 2 ? "hidden" : "")}
-            >
-              <ChevronLeftSolid class="pointer-events-none" />
-            </Button>
-
-            <PuzzleImage src={$preview[selectedImg].src || ""} />
-
-            <Button
-              color="none"
-              on:click={ev => step(ev, 1)}
-              disabled={selectedImg + 1 === $preview.length}
-              class={"rounded-full w-[3rem] h-[3rem] " + ($preview.length < 2 ? "hidden" : "")}
-            >
-              <ChevronRightSolid class="pointer-events-none" />
-            </Button>
+            <PuzzleImageBundle src={$preview.map(s => s.src || "")} />
           </div>
         {/if}
       </button>

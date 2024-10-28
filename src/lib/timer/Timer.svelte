@@ -62,6 +62,7 @@
   import { Button, Input, Modal } from "flowbite-svelte";
   import WcaCategory from "@components/wca/WCACategory.svelte";
   import { dataService } from "$lib/data-services/data.service";
+  import { scrambleToPuzzle } from "@helpers/scrambleToPuzzle";
 
   let MENU: SCRAMBLE_MENU[] = getLanguage($globalLang).MENU;
 
@@ -285,38 +286,7 @@
   }
 
   async function updateImage(md: string) {
-    let cb: Puzzle[] = [];
-
-    if (MISC.some(mode => (typeof mode === "string" ? mode === md : mode.indexOf(md) > -1))) {
-      let options: PuzzleOptions[] = all.pScramble.options.get(md)! as PuzzleOptions[];
-
-      cb = ScrambleParser.parseMisc($scramble, md).map((scr, pos) =>
-        Puzzle.fromSequence(
-          scr,
-          {
-            ...options[pos % options.length],
-            rounded: true,
-            headless: true,
-          },
-          false,
-          true
-        )
-      );
-    } else {
-      cb = [
-        Puzzle.fromSequence(
-          $scramble,
-          {
-            ...all.pScramble.options.get(md),
-            rounded: true,
-            headless: true,
-          } as PuzzleOptions,
-          false,
-          true
-        ),
-      ];
-    }
-
+    let cb = scrambleToPuzzle($scramble, md);
     let date = Date.now();
     setPreview(await pGenerateCubeBundle(cb, 500), date);
   }
@@ -352,7 +322,7 @@
       $scramble = "";
 
       let md = useMode || _mode || $mode[1];
-      let len = useLen || $mode[2];
+      let len = useLen || ($mode[1] === "r3ni" ? $prob : $mode[2]);
       let s = useScramble || scr;
       let pb = useProb != -1 ? useProb : _prob != -1 && typeof _prob === "number" ? _prob : $prob;
 
@@ -394,7 +364,7 @@
   }
 
   function selectedFilter(rescramble = true, saveFilter = false) {
-    if (saveFilter && $session.settings.sessionType === "mixed") {
+    if (saveFilter && ($session.settings.sessionType === "mixed" || $mode[1] === "r3ni")) {
       $session.settings.prob = $prob;
       $dataService.session.updateSession($session).then().catch();
     }
@@ -417,7 +387,11 @@
 
     modes = MENU[$group][1];
     $mode = modes[0];
-    // selectedMode(rescramble, true);
+
+    if ($mode[1] === "r3ni") {
+      $prob = 2;
+    }
+
     selectedMode(rescramble, false);
   }
 
@@ -453,6 +427,8 @@
     if (!fnd) {
       $mode = MENU[0][1][0];
     }
+
+    console.log("MODE: ", $mode);
 
     $stats = INITIAL_STATISTICS;
     setSolves();
@@ -746,7 +722,7 @@
         />
       {/if}
 
-      {#if filters.length > 0 && $tab === 0}
+      {#if $tab === 0 && filters.length > 0}
         <Select
           placeholder={$localLang.TIMER.selectFilter}
           value={$prob}
@@ -755,6 +731,18 @@
           transform={(i, p) => (p || 0) - 1}
           onChange={(i, p) => {
             $prob = p - 1;
+            selectedFilter(true, true);
+          }}
+        />
+      {:else if $tab === 0 && $mode[1] === "r3ni"}
+        <Select
+          placeholder={$localLang.TIMER.selectFilter}
+          value={$prob}
+          items={[2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]}
+          label={e => e.toString()}
+          transform={e => e}
+          onChange={e => {
+            $prob = e;
             selectedFilter(true, true);
           }}
         />
