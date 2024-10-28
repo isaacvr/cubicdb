@@ -20,7 +20,7 @@
   import WatchOffIcon from "@icons/WifiOff.svelte";
   import CommentIcon from "@icons/CommentPlusOutline.svelte";
   import BluetoothOffIcon from "@icons/BluetoothOff.svelte";
-  
+
   /// Components
   import Input from "@material/Input.svelte";
   import Select from "@material/Select.svelte";
@@ -615,7 +615,7 @@
   >
     {#if $session?.settings?.input === "Manual"}
       <div id="manual-inp">
-        <div class="text-xl w-full text-center text-primary-300">
+        <div class="text-xl w-full text-center tx-text">
           {timeStr.trim()
             ? TIMER_DNF.test(timeStr)
               ? timeStr.toUpperCase()
@@ -630,7 +630,7 @@
           class="w-full max-md:w-[min(90%,20rem)] mx-auto h-36 text-center {validTimeStr(timeStr)
             ? ''
             : 'border-red-400 border-2'}"
-          inpClass="text-center text-7xl outline-none"
+          inpClass="text-center text-7xl outline-none tx-text"
         />
       </div>
     {:else}
@@ -639,7 +639,7 @@
       >
         {#if $state === TimerState.RUNNING}
           <span
-            class="timer text-gray-300 max-sm:text-7xl max-sm:[line-height:8rem]"
+            class="timer tx-text max-sm:text-7xl max-sm:[line-height:8rem]"
             in:scale
             class:ready={$ready}
             hidden={$state === TimerState.RUNNING && !$session.settings.showElapsedTime}
@@ -654,7 +654,7 @@
           {/if}
         {:else}
           <span
-            class="timer text-gray-300 max-sm:text-7xl max-sm:[line-height:8rem]"
+            class="timer tx-text max-sm:text-7xl max-sm:[line-height:8rem]"
             class:prevention={$state === TimerState.PREVENTION}
             class:ready={$ready}
           >
@@ -823,7 +823,7 @@
   </div>
 
   <!-- Scramble -->
-  <div id="scramble" class="transition-all duration-300 max-md:text-xs max-md:leading-5">
+  <div id="scramble" class="transition-all duration-300 max-md:text-xs max-md:leading-5 tx-text">
     {#if $inputMethod instanceof GANInput}
       {#if $recoverySequence}
         <pre class="scramble-content" class:hide={$isRunning} class:battle>{"=> " +
@@ -967,7 +967,7 @@
   }
 
   .timer.prevention {
-    @apply text-red-800;
+    color: var(--th-emphasis);
   }
 
   @keyframes bump {

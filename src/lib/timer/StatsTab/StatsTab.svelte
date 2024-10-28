@@ -22,6 +22,7 @@
   import { Button } from "flowbite-svelte";
   import * as echarts from "echarts";
   import ExternalIcon from "@icons/OpenInNew.svelte";
+  import { dataService } from "$lib/data-services/data.service";
 
   export let context: TimerContext;
   export let headless = false;
@@ -183,7 +184,10 @@
         {
           text: $localLang.TIMER.timeDistribution,
           left: "center",
-          textStyle: { fontSize: $screen.isMobile ? 20 : 30 },
+          textStyle: {
+            fontSize: $screen.isMobile ? 20 : 30,
+            color: $dataService.theme.currentTheme.text,
+          },
         },
       ],
       xAxis: {
@@ -256,7 +260,11 @@
             output += `<tr>
               <td>${param.marker}</td>
               <td>${name}</td>
-              <td style="text-align: right; font-weight: bold; padding-left: .5rem;">${timer(+value, true, true)}</td>
+              <td style="text-align: right; font-weight: bold; padding-left: .5rem;">${timer(
+                +value,
+                true,
+                true
+              )}</td>
             </tr>`;
           });
 
@@ -321,7 +329,10 @@
         {
           text: $localLang.TIMER.hourDistribution,
           left: "center",
-          textStyle: { fontSize: $screen.isMobile ? 20 : 30 },
+          textStyle: {
+            fontSize: $screen.isMobile ? 20 : 30,
+            color: $dataService.theme.currentTheme.text,
+          },
         },
       ],
       xAxis: {
@@ -373,7 +384,10 @@
         {
           text: $localLang.TIMER.weekDistribution,
           left: "center",
-          textStyle: { fontSize: $screen.isMobile ? 20 : 30 },
+          textStyle: {
+            fontSize: $screen.isMobile ? 20 : 30,
+            color: $dataService.theme.currentTheme.text,
+          },
         },
       ],
       xAxis: {
@@ -429,7 +443,10 @@
         {
           text: $localLang.TIMER.histogram,
           left: "center",
-          textStyle: { fontSize: $screen.isMobile ? 20 : 30 },
+          textStyle: {
+            fontSize: $screen.isMobile ? 20 : 30,
+            color: $dataService.theme.currentTheme.text,
+          },
         },
       ],
       xAxis: {
@@ -618,7 +635,10 @@
           {
             text: $localLang.TIMER.stepsAverage,
             left: "center",
-            textStyle: { fontSize: $screen.isMobile ? 20 : 30 },
+            textStyle: {
+              fontSize: $screen.isMobile ? 20 : 30,
+              color: $dataService.theme.currentTheme.text,
+            },
           },
         ],
         xAxis: {
@@ -677,7 +697,10 @@
           {
             text: $localLang.TIMER.stepsPercent,
             left: "center",
-            textStyle: { fontSize: $screen.isMobile ? 20 : 30 },
+            textStyle: {
+              fontSize: $screen.isMobile ? 20 : 30,
+              color: $dataService.theme.currentTheme.text,
+            },
           },
         ],
         series: [
@@ -722,7 +745,7 @@
 
 <svelte:window on:resize={handleResize} />
 
-<main class:headless class:multi={$session.settings?.sessionType === "multi-step"}>
+<main class:headless class:multi={$session.settings?.sessionType === "multi-step"} class="tx-text">
   <div
     class={`canvas card grid place-items-center max-sm:col-span-1 col-span-2 row-span-2 ` +
       (headless ? "max-md:col-span-full" : "")}
@@ -779,16 +802,18 @@
 
   {#if !headless}
     <div class="card">
-      <h2 class="text-3xl text-gray-200 text-center mb-4">{$localLang.TIMER.bestMarks}</h2>
+      <h2 class="text-3xl tx-text text-center mb-4">{$localLang.TIMER.bestMarks}</h2>
       <div id="best-marks">
         {#each $localLang.TIMER.bestList as ao}
           {#if $stats[ao.key].id}
-            <span class="flex items-center justify-between px-2 rounded-md bg-black bg-opacity-40">
+            <span
+              class="flex items-center justify-between px-2 rounded-md bg-black bg-opacity-40 tx-text"
+            >
               {ao.title}:
 
               <Button
                 color="none"
-                class="px-1 text-sm h-6 hover:text-green-300"
+                class="px-1 text-sm h-6 hover:tx-primary-300 tx-text"
                 ariaLabel={$localLang.TIMER.go}
                 on:click={() => selectSolveById($stats[ao.key].id || "", ao.select)}
               >
@@ -858,7 +883,8 @@
   }
 
   .card {
-    @apply text-gray-300 p-6 bg-backgroundLv1 rounded-md;
+    @apply text-gray-300 p-6 rounded-md;
+    background-color: var(--th-backgroundLevel1);
   }
 
   .stats {

@@ -97,6 +97,7 @@ require(join(__dirname, "./serverHandlers/contests.cjs"))(ipcMain, Contests);
 require(join(__dirname, "./serverHandlers/reconstructions.cjs"))(ipcMain, Reconstructions, dbPath);
 require(join(__dirname, "./serverHandlers/cache.cjs"))(ipcMain, dbPath);
 require(join(__dirname, "./serverHandlers/vCache.cjs"))(ipcMain, dbPath);
+require(join(__dirname, "./serverHandlers/config.cjs"))(ipcMain, dbPath);
 
 /// Other handlers
 ipcMain.handle("close", () => {

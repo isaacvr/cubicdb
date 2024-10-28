@@ -428,13 +428,13 @@
   <PaginatorComponent {pg} on:update={updateSolves} />
 
   <!-- Solves -->
-  <div id="grid" class="text-gray-400 ml-8 mt-4 grid overflow-scroll" bind:this={solvesElement}>
+  <div id="grid" class="tx-text ml-8 mt-4 grid overflow-scroll" bind:this={solvesElement}>
     {#each pSolves as solve (solve._id)}
       <button
-        class="shadow-md w-full h-full min-h-[3rem] rounded-md p-1 bg-backgroundLv1 relative
+        class="shadow-md w-full h-full min-h-[3rem] rounded-md p-1 bg-backgroundLevel1 relative
           flex items-center justify-center transition-all duration-200 select-none cursor-pointer
 
-          hover:shadow-lg hover:shadow-primary-900 hover:bg-primary-800 hover:text-white
+          hover:shadow-lg hover:shadow-primary-800 hover:bg-primary-700 tx-text
         "
         on:click={ev => handleClick(solve, ev)}
         on:contextmenu={e => handleContextMenu(e, solve)}
@@ -460,7 +460,7 @@
   </div>
 
   <!-- Options -->
-  <div class="absolute top-3 right-2 text-gray-400 my-3 mx-1 flex flex-col gap-2">
+  <div class="absolute top-3 right-2 tx-text my-3 mx-1 flex flex-col gap-2">
     {#if $solves.length > 0}
       <Tooltip position="left" text={$localLang.TIMER.deleteAll + " [D]"} hasKeybinding>
         <button on:click={deleteAll} class="cursor-pointer grid place-items-center">
@@ -495,12 +495,12 @@
   <div
     class:isVisible={$selected}
     class="fixed rounded-md p-2 top-0 opacity-0 pointer-events-none w-[min(90%,56rem)] justify-center
-    transition-all duration-300 bg-gray-700 shadow-md flex flex-wrap max-w-full actions z-20"
+    transition-all duration-300 bg-backgroundLevel2 shadow-md flex flex-wrap max-w-full actions z-20"
   >
     <Button
       ariaLabel={$localLang.TIMER.selectAll}
       color="none"
-      class="hover:bg-white hover:bg-opacity-10"
+      class="hover:bg-white hover:bg-opacity-10 tx-text"
       tabindex={$selected ? 0 : -1}
       flat
       on:click={() => selectAll()}
@@ -511,7 +511,7 @@
     <Button
       ariaLabel={$localLang.TIMER.selectInterval}
       color="none"
-      class="hover:bg-white hover:bg-opacity-10"
+      class="hover:bg-white hover:bg-opacity-10 tx-text"
       tabindex={$selected ? 0 : -1}
       flat
       on:click={() => selectInterval()}
@@ -522,7 +522,7 @@
     <Button
       ariaLabel={$localLang.TIMER.invertSelection}
       color="none"
-      class="hover:bg-white hover:bg-opacity-10"
+      class="hover:bg-white hover:bg-opacity-10 tx-text"
       tabindex={$selected ? 0 : -1}
       flat
       on:click={() => selectInvert()}
@@ -534,7 +534,7 @@
     <Button
       ariaLabel={$localLang.global.cancel}
       color="none"
-      class="hover:bg-white hover:bg-opacity-10"
+      class="hover:bg-white hover:bg-opacity-10 tx-text"
       tabindex={$selected ? 0 : -1}
       flat
       on:click={() => selectNone()}
@@ -545,7 +545,7 @@
     <Button
       ariaLabel={$localLang.global.delete}
       color="none"
-      class="hover:bg-white hover:bg-opacity-10"
+      class="hover:bg-white hover:bg-opacity-10 tx-text"
       tabindex={$selected ? 0 : -1}
       flat
       on:click={() => deleteSelected()}
@@ -556,8 +556,8 @@
 
   <!-- Context Menu -->
   <ul
-    class="context-menu w-max p-2 rounded-md shadow-md fixed top-8 left-28 bg-gray-800
-    text-gray-300 grid gap-1 pointer-events-none opacity-0 invisible"
+    class="context-menu w-max p-2 rounded-md shadow-md fixed top-8 left-28 bg-backgroundLevel2
+    tx-text grid gap-1 pointer-events-none opacity-0 invisible"
     class:active={showContextMenu}
     bind:this={contextMenuElement}
   >
@@ -615,7 +615,7 @@
   class="w-[min(100%,36rem)]"
   transitionName="modal"
 >
-  <div class="flex justify-between items-center text-gray-400 m-2">
+  <div class="flex justify-between items-center tx-text m-2">
     <span class="view-time m-1 w-max">
       {#if sSolve.penalty === Penalty.NONE || sSolve.penalty === Penalty.P2}
         {sTimer(sSolve, true, true)}
@@ -639,7 +639,7 @@
     </span>
   </div>
   <div
-    class={"algorithm-container text-gray-400 m-2 transition-all duration-300 delay-100 " +
+    class={"algorithm-container tx-text m-2 transition-all duration-300 delay-100 " +
       (fComment || collapsed ? "collapsed" : "")}
   >
     <Dice5Icon />
@@ -658,14 +658,14 @@
 
     {#if sSolve.steps}
       <hr class="w-full border border-t-gray-400 col-span-2" />
-      <h3 class="text-gray-300 text-center col-span-2 mt-2 mb-8 text-lg">
+      <h3 class="tx-text text-center col-span-2 mt-2 mb-8 text-lg">
         {$localLang.global.steps}
       </h3>
 
       <div class="col-span-2 flex mb-4">
         {#each solveSteps as s, p (p)}
           <span
-            class="step-part text-gray-300"
+            class="step-part tx-text"
             data-percent={`${s}%`}
             data-time={timer((sSolve.steps || [])[p], true, true)}
             style={`
@@ -717,7 +717,7 @@
       ariaLabel={$localLang.global.cancel}
       flat
       on:click={() => modal.close()}
-      class="text-gray-400 hover:bg-gray-900 hover:text-gray-200 text-sm gap-1 px-2"
+      class="bg-cancelButton tx-text hover:text-gray-200 text-sm gap-1 px-2"
     >
       <CloseIcon />
       {$localLang.global.cancel}
@@ -746,23 +746,23 @@
       </Button>
     {/if}
 
-    <Button color="none">
+    <Button color="none" class="tx-text">
       {[{ label: $localLang.TIMER.noPenalty, penalty: Penalty.NONE }, ...PENALTIES].find(
         p => p.penalty === sSolve.penalty
       )?.label || $localLang.TIMER.noPenalty}
 
       <ChevronDown size="1.2rem" />
     </Button>
-    <Dropdown bind:open={showDropdown}>
+    <Dropdown bind:open={showDropdown} class="bg-backgroundLevel2 rounded-md">
       {#each [{ label: $localLang.TIMER.noPenalty, penalty: Penalty.NONE }, ...PENALTIES] as p}
-        <DropdownItem on:click={() => setPenalty(p.penalty)}>{p.label}</DropdownItem>
+        <DropdownItem class="bg-backgroundLevel2 tx-text" on:click={() => setPenalty(p.penalty)}>{p.label}</DropdownItem>
       {/each}
     </Dropdown>
   </div>
 </Modal>
 
 <Modal bind:this={deleteAllModal} bind:show={showDeleteAll} onClose={deleteAllHandler}>
-  <h1 class="text-gray-400 mb-4 text-lg">{$localLang.TIMER.removeAllSolves}</h1>
+  <h1 class="tx-text mb-4 text-lg">{$localLang.TIMER.removeAllSolves}</h1>
   <div class="flex justify-evenly">
     <Button
       color="alternative"

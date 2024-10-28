@@ -398,7 +398,10 @@
 
 <svelte:window on:keydown={keyDown} />
 
-<ul class="timer-options-container border-r border-r-gray-700 pt-2" class:timerOnly>
+<ul
+  class="timer-options-container border-r border-r-gray-700 border-t border-t-gray-700 pt-2"
+  class:timerOnly
+>
   <li>
     <Tooltip position="right" text={$localLang.TIMER.manageSessions}>
       <Button
@@ -427,7 +430,7 @@
             this={option.icon}
             width="100%"
             height="100%"
-            class="pointer-events-none"
+            class="pointer-events-none tx-text"
           />
         </Button>
       </Tooltip>
@@ -501,7 +504,7 @@
     <Dropdown
       bind:open={showToolsMenu}
       placement="right"
-      class="max-h-[20rem] w-max overflow-y-scroll"
+      class="max-h-[20rem] w-max overflow-y-scroll bg-backgroundLevel2 rounded-md tx-text"
     >
       {#each tools as tool}
         <DropdownItem defaultClass={DD_CLASS} on:click={() => addTool(tool)}>
@@ -591,11 +594,8 @@
     <!-- Input Method -->
     {#if !(timerOnly || $session.settings.sessionType === "multi-step")}
       <section class="flex gap-4 items-center">
-        {$localLang.TIMER.inputMethod}: <Select
-          bind:value={modalData.settings.input}
-          items={$timerInput}
-          transform={e => e}
-        />
+        {$localLang.TIMER.inputMethod}:
+        <Select bind:value={modalData.settings.input} items={$timerInput} transform={e => e} />
       </section>
     {/if}
 
@@ -854,12 +854,14 @@
 
 <style lang="postcss">
   .timer-options-container {
+    @apply rounded-tr-md;
     grid-area: options;
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
     padding: 0.25rem;
     position: relative;
+    background-color: var(--th-backgroundLevel1);
   }
 
   .timer-options-container li.menu {

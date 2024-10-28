@@ -1,9 +1,9 @@
 import type { GANInput } from "$lib/timer/adaptors/GAN";
 import type { QiYiSmartTimerInput } from "$lib/timer/adaptors/QY-Timer";
-import type { AnyCallback, UpdateCommand } from "@interfaces";
+import type { AnyCallback, CONFIG, UpdateCommand } from "@interfaces";
 import type { Display } from "electron";
 
-export interface ConfigIPC {
+export interface ConfigIPC extends CONFIG {
   addDownloadProgressListener: (cb: (percent: number) => {}) => any;
   addDownloadDoneListener: (cb: () => {}) => any;
   addBluetoothListener: (cb: AnyCallback) => any;
@@ -21,4 +21,5 @@ export interface ConfigIPC {
   useDisplay: (id: number) => Promise<void>;
   addExternalConnector: (cb: AnyCallback) => any;
   external: (device: string, ...args: any[]) => any;
+  saveConfig: () => Promise<void>;
 }

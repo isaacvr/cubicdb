@@ -45,12 +45,9 @@
   const tabActiveClass = "text-primary-400 p-4 border-b-2 border-b-primary-400";
   const ZOOM_FACTORS = [25, 50, 75, 100, 125, 150, 175, 200];
 
-  let appFont: FONT_NAME = "Ubuntu";
-  let timerFont: FONT_NAME = "Ubuntu";
-  let zoomFactor: number = 100;
-  // let appFont: FONT_NAME = $globalConfig.global.appFont;
-  // let timerFont: FONT_NAME = $globalConfig.global.timerFont;
-  // let zoomFactor: number = $globalConfig.global.zoomFactor;
+  let appFont: FONT_NAME = $dataService.config.global.appFont;
+  let timerFont: FONT_NAME = $dataService.config.global.timerFont;
+  let zoomFactor: number = $dataService.config.global.zoomFactor;
 
   let initialZoomFactor = zoomFactor;
   let canCheckUpdate = true;
@@ -79,13 +76,12 @@
   let recVersion = "0.0.0";
 
   function save() {
-    document.documentElement.style.setProperty("--app-font", appFont);
-    document.documentElement.style.setProperty("--timer-font", timerFont);
-    document.documentElement.style.setProperty("--zoom-factor", "" + zoomFactor);
+    const config = $dataService.config;
 
-    // $globalConfig.global.appFont = appFont;
-    // $globalConfig.global.timerFont = timerFont;
-    // $globalConfig.global.zoomFactor = zoomFactor;
+    config.global.appFont = appFont;
+    config.global.timerFont = timerFont;
+    config.global.zoomFactor = zoomFactor;
+    config.saveConfig();
 
     initialZoomFactor = zoomFactor;
 
@@ -97,9 +93,9 @@
   }
 
   function reset() {
-    // appFont = $globalConfig.global.appFont;
-    // timerFont = $globalConfig.global.timerFont;
-    // zoomFactor = $globalConfig.global.zoomFactor;
+    appFont = $dataService.config.global.appFont;
+    timerFont = $dataService.config.global.timerFont;
+    zoomFactor = $dataService.config.global.zoomFactor;
     save();
   }
 

@@ -663,6 +663,8 @@ export interface IPC {
 
   addExternalConnector: (cb: AnyCallback) => any;
   external: (device: string, ...args: any[]) => any;
+  getConfig: () => Promise<CONFIG>;
+  saveConfig: (config: CONFIG) => Promise<void>;
 
   algorithmsStorage: () => Promise<number>;
   cacheStorage: () => Promise<number>;
@@ -1288,7 +1290,7 @@ export const FONTS = [
 
 export type FONT_NAME = (typeof FONTS)[number]["value"];
 
-interface BluetoothCubeInfo {
+export interface BluetoothCubeInfo {
   mac: string;
   name: string;
 }
@@ -1298,6 +1300,8 @@ export interface CONFIG {
     theme: string;
     lang: LanguageCode;
     zoomFactor: number;
+    appFont: FONT_NAME;
+    timerFont: FONT_NAME;
   };
 
   algorithms: {
@@ -1311,12 +1315,16 @@ export interface CONFIG {
 }
 
 export interface Theme {
+  id: string;
+  appFont: FONT_NAME;
+  timerFont: FONT_NAME;
   name: string;
   text: string;
   primary: string;
   background: string;
   backgroundLevel1: string;
   backgroundLevel2: string;
+  backgroundLevel3: string;
   mark: string;
   emphasis: string;
   cancelButton: string;

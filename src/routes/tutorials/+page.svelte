@@ -324,7 +324,7 @@
         bind:value={nTut.summary}
         on:input={handleResize}
         spellcheck="false"
-        class="border border-primary-500 p-2 rounded-md w-full bg-transparent min-h-[5rem]"
+        class="border border-blue-500 p-2 rounded-md w-full bg-transparent min-h-[5rem]"
       />
       <!-- <Input placeholder="summary" bind:value={nTut.summary} class="max-w-[10rem]" /> -->
     </section>
@@ -385,6 +385,7 @@
   .options {
     @apply border border-gray-500 flex flex-col items-center p-2 gap-2 border-l-0;
     grid-area: options;
+    background-color: var(--th-backgroundLevel1);
   }
 
   .content {

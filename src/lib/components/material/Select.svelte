@@ -44,7 +44,6 @@
   }
 
   function handleClick() {
-    console.log("CLICK");
     let list = document.querySelector(`#${selectID}`);
 
     if (!list) return;
@@ -109,7 +108,7 @@
         ` +
         (disabled(item, pos, items) ? " text-gray-500 pointer-events-none select-none " : " ") +
         (transform(item, pos, items) === value
-          ? "bg-primary-600 text-white dark:hover:bg-primary-400"
+          ? "bg-primary-600 tx-text hover:bg-primary-400"
           : "")}
       on:click={() => {
         if (disabled(item, pos, items)) return;

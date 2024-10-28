@@ -20,12 +20,13 @@
   import AlgorithmEditorModal from "@components/AlgorithmEditorModal.svelte";
   import { page } from "$app/stores";
   import { goto } from "$app/navigation";
-  import { browser } from "$app/environment";
   import { getTitleMeta } from "$lib/meta/title";
   import type { Unsubscriber } from "svelte/store";
   import { dataService } from "$lib/data-services/data.service";
 
   const notification = NotificationService.getInstance();
+  const config = $dataService.config;
+  const algorithms = config.algorithms;
 
   let lastUrl: string = "";
   let cards: ICard[] = [];
@@ -34,7 +35,6 @@
   let selectedCase: Algorithm | null = null;
   let allSolutions = false;
   let imgExpanded = false;
-  let listView = browser ? JSON.parse(localStorage.getItem("algs-list-view") || "true") : true;
   const NUMBER_REG = /^[+-]?[\d]+(\.[\d]+)?$/;
   let currentList: Algorithm[] = [];
   let allowAlgAdmin = false;
@@ -128,8 +128,8 @@
   }
 
   function toggleListView() {
-    listView = !listView;
-    localStorage.setItem("algs-list-view", listView);
+    algorithms.listView = !algorithms.listView;
+    config.saveConfig();
   }
 
   function handlekeyDown(e: KeyboardEvent) {
@@ -386,9 +386,10 @@
 <svelte:window on:keydown={handlekeyDown} />
 
 <main class="container-mini">
+  <!-- All solutions -->
   {#if allSolutions}
     <div>
-      <h1 class="text-gray-300 text-3xl font-bold text-center">{selectedCase?.name}</h1>
+      <h1 class="tx-text text-3xl font-bold text-center">{selectedCase?.name}</h1>
       <button
         class={"flex mx-auto items-center justify-center transition-all duration-200 " +
           (imgExpanded ? "h-[min(20rem,100%)] w-[min(20rem,100%)]" : "h-40 w-40")}
@@ -403,10 +404,10 @@
 
       <div class="grid grid-cols-6">
         <h2 class="max-sm:hidden col-span-1 font-bold text-xl">&nbsp;</h2>
-        <h2 class="max-sm:col-span-5 col-span-3 font-bold text-xl text-gray-300">
+        <h2 class="max-sm:col-span-5 col-span-3 font-bold text-xl tx-text">
           {$localLang.ALGORITHMS.solution}
         </h2>
-        <h2 class="max-sm:col-span-1 col-span-1 font-bold text-xl text-right text-gray-300">
+        <h2 class="max-sm:col-span-1 col-span-1 font-bold text-xl text-right tx-text">
           {$localLang.ALGORITHMS.moves}
         </h2>
         <h2 class="max-sm:hidden col-span-1 font-bold text-xl">&nbsp</h2>
@@ -415,12 +416,15 @@
           <span class="max-sm:hidden col-span-1"></span>
 
           <div class="flex mt-2 max-sm:col-span-5 col-span-3">
-            <span class="w-6 pl-1 mr-2 text-right border-l-4 border-l-blue-500">{i + 1}:</span>
+            <span
+              class="tx-text w-6 pl-1 mr-2 text-right border-l-4"
+              style="border-left-color: var(--th-primary-600);">{i + 1}:</span
+            >
             <button
               role="link"
               tabindex="0"
               on:click={() => toClipboard(sol.moves)}
-              class="cursor-pointer hover:text-gray-300 transition-all
+              class="cursor-pointer hover:tx-text transition-all tx-text
               text-left duration-200 pl-2 underline underline-offset-4">{sol.moves}</button
             >
           </div>
@@ -428,7 +432,7 @@
           <Tooltip placement={$screen.isMobile ? "top" : "left"}>
             {$localLang.global.clickToCopy}
           </Tooltip>
-          <span class="max-sm:col-span-1 col-span-1 mt-2 text-right"
+          <span class="max-sm:col-span-1 col-span-1 mt-2 text-right tx-text"
             >{sol.moves.split(" ").length}</span
           >
           <span class="max-sm:hidden col-span-1"></span>
@@ -450,7 +454,7 @@
           on:click={toggleListView}
           aria-label={$localLang.ALGORITHMS.toggleView}
         >
-          {#if listView}
+          {#if algorithms.listView}
             <ViewListIcon size="1.2rem" class="pointer-events-none" />
           {:else}
             <ViewGridIcon size="1.2rem" class="pointer-events-none" />
@@ -478,7 +482,7 @@
               href={card.route}
               class="w-full grid grid-rows-[8rem_1fr] gap-2 max-w-[12rem] shadow-md rounded-md select-none cursor-pointer card
             transition-all duration-200 place-items-center justify-center py-3 px-2
-            bg-backgroundLv1 hover:bg-backgroundLv2 hover:shadow-2xl hover:shadow-primary-900 relative"
+            hover:shadow-2xl relative"
             >
               <div>
                 {#if card?.puzzle?.img}
@@ -515,16 +519,17 @@
 
     <!-- Cases -->
     {#if type === 2 || type >= 4}
-      <div class="cases grid" class:compact={!listView}>
+      <div class="cases grid" class:compact={!algorithms.listView}>
         <div class="row">
-          <span class="text-gray-300 font-bold">{$localLang.ALGORITHMS.case}</span>
-          <span class="text-gray-300 font-bold"></span>
-          <span class="text-gray-300 font-bold">{$localLang.ALGORITHMS.algorithms}</span>
+          <span class="tx-text font-bold">{$localLang.ALGORITHMS.case}</span>
+          <span class="tx-text font-bold"></span>
+          <span class="tx-text font-bold">{$localLang.ALGORITHMS.algorithms}</span>
         </div>
 
         {#each cases as c (c._id)}
           <div class="row min-h-[8rem] relative gap-2">
-            <span class="font-bold text-center">{c.name}</span>
+            <span class="font-bold text-center tx-text">{c.name}</span>
+
             <a
               class="img-btn flex items-center justify-center my-2"
               href={c.parentPath + "?case=" + c.shortName}
@@ -538,7 +543,7 @@
 
             <ul class="no-grid alg-list">
               {#each (c.solutions || []).slice(0, 4) as solution}
-                <li class="algorithm">{solution.moves}</li>
+                <li class="algorithm tx-text">{solution.moves}</li>
               {/each}
             </ul>
 
@@ -579,8 +584,17 @@
     column-gap: 1rem;
   }
 
-  :global(.cards > li) {
+  .cards li {
     flex: 0 0 9rem;
+  }
+
+  .cards li a {
+    background-color: var(--th-backgroundLevel1);
+  }
+
+  .cards li a:hover {
+    background-color: var(--th-backgroundLevel2);
+    box-shadow: 0 1rem 3rem -1rem var(--th-primary);
   }
 
   .cases .row {
@@ -606,7 +620,7 @@
   }
 
   .cases.compact .row > span {
-    @apply text-gray-300;
+    color: var(--th-text);
     grid-area: name;
   }
 
@@ -619,12 +633,13 @@
   }
 
   .cases.compact .row {
-    @apply place-items-center px-2 rounded-md bg-backgroundLv1;
+    @apply place-items-center px-2 rounded-md;
     grid-template-columns: 1fr;
     grid-template-areas:
       "img"
       "name";
     flex: 0 0 calc(9rem);
+    background-color: var(--th-backgroundLevel1);
   }
 
   .cases:not(.compact) .img-btn {

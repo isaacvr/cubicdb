@@ -111,6 +111,7 @@
 
 <style lang="postcss">
   .selected {
-    @apply bg-primary-800 text-white;
+    color: var(--th-text);
+    background-color: var(--th-primary-800);
   }
 </style>

@@ -70,9 +70,10 @@
     for (let i = 0, maxi = puzzles.length; i < maxi; i += 1) {
       let hash = sha1(puzzles[i]);
       let inCache = await $dataService.cache.cacheCheckImage(hash);
+      let img = await $dataService.cache.cacheGetImage(hash);
 
-      if (inCache) {
-        puzzles[i].img = await $dataService.cache.cacheGetImage(hash);
+      if (inCache && img) {
+        puzzles[i].img = img;
       } else {
         puzzles[i].img = (
           await pGenerateCubeBundle([new Puzzle({ type: puzzles[i].value, order: [3] })])

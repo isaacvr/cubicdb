@@ -1,10 +1,38 @@
-import type { UpdateCommand } from "@interfaces";
+import type { BluetoothCubeInfo, FONT_NAME, LanguageCode, UpdateCommand } from "@interfaces";
 import type { ConfigIPC } from "./configIPC.interface";
 import type { GANInput } from "$lib/timer/adaptors/GAN";
 import type { QiYiSmartTimerInput } from "$lib/timer/adaptors/QY-Timer";
+import { DEFAULT_THEME } from "$lib/themes/default";
 
 export class ConfigNoopIPC implements ConfigIPC {
-  private constructor() {}
+  global: {
+    theme: string;
+    lang: LanguageCode;
+    zoomFactor: number;
+    appFont: FONT_NAME;
+    timerFont: FONT_NAME;
+  };
+  algorithms: { listView: boolean };
+  timer: { session: string; bluetoothCubes: BluetoothCubeInfo[] };
+
+  private constructor() {
+    this.global = {
+      lang: "EN",
+      theme: DEFAULT_THEME.id,
+      zoomFactor: 100,
+      appFont: "Ubuntu",
+      timerFont: "Ubuntu",
+    };
+
+    this.algorithms = {
+      listView: false,
+    };
+
+    this.timer = {
+      session: "",
+      bluetoothCubes: [],
+    };
+  }
 
   private static _instance: ConfigNoopIPC | null = null;
 
@@ -53,6 +81,8 @@ export class ConfigNoopIPC implements ConfigIPC {
   }
 
   async useDisplay(id: number) {}
+
+  async saveConfig() {}
 
   addExternalConnector(cb: any) {}
 

@@ -287,9 +287,9 @@
       </div>
 
       {#if index > 0}
-        <h1 class="text-3xl text-white font-bold">{index}. {currentStep?.title}</h1>
+        <h1 class="text-3xl tx-text font-bold">{index}. {currentStep?.title}</h1>
       {:else}
-        <h1 class="text-3xl text-white font-bold">{tut.name}</h1>
+        <h1 class="text-3xl tx-text font-bold">{tut.name}</h1>
       {/if}
     </div>
 
@@ -349,7 +349,7 @@
 
   <!-- Steps -->
   <section class="step-list px-2 sticky top-0 h-fit z-10">
-    <h2 class="font-bold text-xl text-center text-white mt-2">
+    <h2 class="font-bold text-xl text-center tx-text mt-2">
       {tut.name}
 
       {#if editMode}
@@ -362,14 +362,14 @@
     <ul>
       <li>
         <button class="step-item" class:current={index === 0} on:click={() => (index = 0)}>
-          <h3 class="text-lg">{$localLang.global.summary}</h3>
+          <h3 class="text-lg tx-text">{$localLang.global.summary}</h3>
         </button>
       </li>
 
       {#each tut.steps as step, pos}
         <li class="relative">
           <button
-            class="step-item"
+            class="step-item tx-text"
             class:current={pos + 1 === index}
             on:click={() => (index = pos + 1)}
           >
@@ -426,7 +426,8 @@
 >
   <Button
     color="alternative"
-    class={"transition-all duration-200 " + (index === 0 ? "opacity-0 pointer-events-none" : "")}
+    class={"transition-all bg-cancelButton duration-200 " +
+      (index === 0 ? "opacity-0 pointer-events-none" : "")}
     on:click={() => (index -= 1)}
   >
     {$localLang.global.back}
@@ -434,7 +435,7 @@
 
   <Button
     color="purple"
-    class={"transition-all duration-200 " +
+    class={"bg-urgentButton transition-all duration-200 " +
       (index === tut.steps.length ? "opacity-0 pointer-events-none" : "")}
     on:click={() => (index += 1)}
   >
@@ -537,18 +538,21 @@
   }
 
   .step-item {
-    @apply select-none transition-all duration-100 p-2 border-r-2 border-r-gray-700
+    @apply select-none transition-all duration-100 p-2 border-r-2
       flex items-center gap-2 w-full;
     grid-area: stepList;
+    border-right-color: var(--th-backgroundLevel3);
   }
 
   .step-item.current {
-    @apply bg-primary-900 border-r-4 border-r-primary-400 cursor-default pl-4
-      rounded-l-md text-white;
+    @apply border-r-4 cursor-default pl-4 rounded-l-md;
+    background-color: var(--th-primary-900);
+    border-right-color: var(--th-primary-400);
+    color: var(--th-text);
   }
 
   .step-item:not(.current) {
-    @apply hover:text-primary-400 hover:pl-4;
+    @apply hover:text-blue-400 hover:pl-4;
   }
 
   .content {
@@ -560,6 +564,7 @@
   }
 
   .content .icon {
-    @apply w-14 h-14 rounded-full grid place-items-center bg-primary-500;
+    @apply w-14 h-14 rounded-full grid place-items-center;
+    background-color: var(--th-primary-500);
   }
 </style>

@@ -61,9 +61,9 @@
       <Button color="purple" on:click={save}>Save</Button>
     </div>
   {:else if block.type === "text"}
-    <p>{@html block.content.replaceAll("\n", "<br>")}</p>
+    <p class="tx-text">{@html block.content.replaceAll("\n", "<br>")}</p>
   {:else}
-    <h3 class="text-lg font-bold text-white">{block.content}</h3>
+    <h3 class="text-lg font-bold tx-text">{block.content}</h3>
   {/if}
 
   {#if editMode}

@@ -1,11 +1,11 @@
 <script lang="ts">
-  import "../App.css";
+  import "../app.css";
+  import "../theme.scss";
 
   import moment from "moment";
   import Minus from "@icons/Minus.svelte";
   import Close from "@icons/Close.svelte";
   import { onDestroy, onMount } from "svelte";
-  // import { DataService } from "@stores/data.service";
   import {
     Breadcrumb,
     BreadcrumbItem,
@@ -35,10 +35,10 @@
   import type { LayoutServerData } from "./$types";
   import { getTitleMeta } from "$lib/meta/title";
   import { dataService } from "$lib/data-services/data.service";
-  import { applyTheme } from "$lib/themes/manageThemes";
-  import { DEFAULT_THEME } from "$lib/themes/default";
 
   export let data: LayoutServerData;
+
+  $dataService.theme.applyTheme($dataService.theme.currentTheme, false);
 
   let notifications: INotification[] = [];
   const notService = NotificationService.getInstance();
@@ -150,8 +150,6 @@
     $dataService.on("download-progress", handleProgress);
     $dataService.on("update-downloaded", handleDone);
 
-    applyTheme(DEFAULT_THEME);
-
     handleResize();
   });
 
@@ -176,7 +174,7 @@
   <Navbar
     let:hidden
     let:toggle
-    class="justify-between fixed top-0 left-0 w-full z-50 border-b p-2"
+    class="justify-between fixed top-0 left-0 w-full z-50 border-b p-2 bg-backgroundLevel1"
     fluid
   >
     <a href="/">
@@ -205,10 +203,14 @@
         ulClass="md:p-0 max-md:p-4"
         on:click={() => !hidden && toggle()}
       >
-        <Breadcrumb>
+        <Breadcrumb class="[&_svg]:[color:var(--th-text)]">
           <BreadcrumbItem home href="/" on:click={() => !hidden && toggle()}></BreadcrumbItem>
           {#each parts as part}
-            <BreadcrumbItem href={part.link} on:click={() => !hidden && toggle()}>
+            <BreadcrumbItem
+              classLink="tx-text"
+              href={part.link}
+              on:click={() => !hidden && toggle()}
+            >
               {part.name.toUpperCase()}
             </BreadcrumbItem>
           {/each}
@@ -219,7 +221,7 @@
     <div class="flex order-1 md:order-2">
       <div {hidden} class="flex ml-auto items-center">
         {#if progress}
-          <span class="mr-2 text-yellow-500 cursor-default"> {progress + "%"} </span>
+          <span class="mr-2 tx-emphasis cursor-default"> {progress + "%"} </span>
           <Popover>
             <Span class="flex justify-center">{$localLang.global.downloading}</Span>
             <Progressbar {progress} divClass="w-[10rem] my-3" />

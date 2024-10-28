@@ -57,12 +57,12 @@ const dataService = readable({
   // Handlers
   algorithms: getAlgorithmIPC(),
   cache: getCacheIPC(),
-  config,
   reconstruction: getReconstructionIPC(),
   session: getSessionIPC(),
   solve: getSolveIPC(),
-  theme: getThemeIPC(),
   tutorial: getTutorialIPC(),
+  theme: getThemeIPC(),
+  config,
 
   // Methods
   on(ev: DataEvent, cb: (...args: any[]) => any) {

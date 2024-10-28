@@ -47,7 +47,7 @@
 <!-- Left Statistics -->
 <div
   id="left-stats"
-  class="text-gray-300 transition-all duration-300 max-md:text-xs"
+  class="tx-text transition-all duration-300 max-md:text-xs"
   class:hide={$isRunning}
 >
   <table class="ml-3">
@@ -80,7 +80,7 @@
         <Popover title={$localLang.TIMER.average} class="max-w-sm z-10">
           <p>{$localLang.TIMER.stats.average}</p>
 
-          <span class="my-2 mx-auto w-fit flex text-gray-200 text-xl">
+          <span class="my-2 mx-auto w-fit flex tx-text text-xl">
             <Katex math={`\\mu = \\frac{\\sum_{i=1}^{N} x_i}{N}`} />
           </span>
         </Popover>
@@ -101,7 +101,7 @@
         <Popover title={$localLang.TIMER.deviation} class="max-w-sm z-10">
           <p>{$localLang.TIMER.stats.deviation}</p>
 
-          <span class="my-2 mx-auto w-fit flex text-gray-200 text-xl">
+          <span class="my-2 mx-auto w-fit flex tx-text text-xl">
             <Katex math={`\\sigma = \\sqrt{\\frac{1}{N} \\sum_{i=1}^{N} (x_i - \\mu)^2}`} />
           </span>
         </Popover>
@@ -127,13 +127,13 @@
         <Popover title="Mo3" class="max-w-sm z-10">
           <p>{$localLang.TIMER.stats.mo3}</p>
 
-          <span class="my-2 mx-auto w-fit flex text-gray-200 text-xl">
+          <span class="my-2 mx-auto w-fit flex tx-text text-xl">
             <Katex math={`Mo3 = \\frac{x_1 + x_2 + x_3}{3}`} />
           </span>
         </Popover>
       </td>
 
-      <td class="cursor-pointer hover:text-green-300" on:click={() => summary(3)}>
+      <td class="cursor-pointer hover:tx-primary-300" on:click={() => summary(3)}>
         {#if $stats.Mo3.value > -1}
           {timer($stats.Mo3.value, true, true)}
         {:else}
@@ -149,13 +149,13 @@
         <Popover title="Ao5" class="max-w-sm z-10">
           <p>{$localLang.TIMER.stats.ao5}</p>
 
-          <span class="my-2 mx-auto w-fit flex text-gray-200 text-xl">
+          <span class="my-2 mx-auto w-fit flex tx-text text-xl">
             <Katex math={`Ao5 = \\frac{(\\sum_{i=1}^{5} x_i) - max - min}{3}`} />
           </span>
         </Popover>
       </td>
 
-      <td class="cursor-pointer hover:text-green-300" on:click={() => summary(5)}>
+      <td class="cursor-pointer hover:tx-primary-300" on:click={() => summary(5)}>
         {#if $stats.Ao5.value > -1}
           {timer($stats.Ao5.value, true, true)}
         {:else}
@@ -169,7 +169,7 @@
 <!-- Right Statistics -->
 <div
   id="right-stats"
-  class="text-gray-300 transition-all duration-300 max-md:text-xs"
+  class="tx-text transition-all duration-300 max-md:text-xs"
   class:hide={$isRunning}
 >
   <table class="mr-3">
@@ -178,7 +178,7 @@
         <td>{stat}:</td>
 
         <td
-          class={pos < 2 ? "cursor-pointer hover:text-green-300" : ""}
+          class={pos < 2 ? "cursor-pointer hover:tx-primary-300" : ""}
           on:click={() => (pos < 2 ? summary([12, 50][pos]) : null)}
         >
           {#if $stats[stat].value > -1}
@@ -197,16 +197,21 @@
   outsideclose
   title={$localLang.global.summary}
   on:close={recoverEnableKeyboard}
+  class="max-w-2xl grid bg-backgroundLevel2 tx-text"
+  color="none"
 >
   <pre
-    class="w-full text-xs whitespace-pre-wrap text-gray-300 max-h-[60vh] overflow-auto">{textSummary}</pre>
+    class="w-full text-xs whitespace-pre-wrap tx-text max-h-[60vh] overflow-auto">{textSummary}</pre>
 
   <svelte:fragment slot="footer">
     <div class="flex justify-center gap-4 w-full">
-      <Button color="alternative" on:click={() => toClipboard(textSummary)}
-        >{$localLang.global.clickToCopy}</Button
+      <Button
+        color="alternative"
+        class="bg-cancelButton tx-text"
+        on:click={() => toClipboard(textSummary)}>{$localLang.global.clickToCopy}</Button
       >
-      <Button color="purple" on:click={() => (showModal = false)}>{$localLang.global.accept}</Button
+      <Button color="none" class="bg-urgentButton tx-text" on:click={() => (showModal = false)}
+        >{$localLang.global.accept}</Button
       >
     </div>
   </svelte:fragment>
@@ -236,6 +241,7 @@
   }
 
   .stat-info {
-    @apply text-yellow-100 cursor-help;
+    @apply cursor-help;
+    color: var(--th-emphasis);
   }
 </style>

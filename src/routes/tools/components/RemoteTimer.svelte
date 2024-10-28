@@ -140,7 +140,7 @@
 </script>
 
 <div
-  class="bg-backgroundLv1 w-[min(90%,36rem)] flex mx-auto my-4 p-2 border-l-4 border-l-primary-700 landscape:hidden"
+  class="bg-backgroundLeve1 w-[min(90%,36rem)] flex mx-auto my-4 p-2 border-l-4 border-l-primary-700 landscape:hidden"
 >
   {$localLang.TOOLS.portraitWarning}
 </div>

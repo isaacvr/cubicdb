@@ -1,16 +1,55 @@
-import type { IPC, IStorageInfo, UpdateCommand } from "@interfaces";
+import type {
+  BluetoothCubeInfo,
+  CONFIG,
+  FONT_NAME,
+  IPC,
+  IStorageInfo,
+  LanguageCode,
+  UpdateCommand,
+} from "@interfaces";
 import type { ConfigIPC } from "./configIPC.interface";
 import { type GANInput, BLUETOOTH_FILTERS as GAN_BLUETOOTH_FILTERS } from "$lib/timer/adaptors/GAN";
 import {
   type QiYiSmartTimerInput,
   BLUETOOTH_FILTERS as QIYI_BLUETOOTH_FILTERS,
 } from "$lib/timer/adaptors/QY-Timer";
+import { DEFAULT_THEME } from "$lib/themes/default";
+import { applyThemeByID } from "$lib/themes/manageThemes";
 
 export class ConfigElectronIPC implements ConfigIPC {
   ipc: IPC;
+  global: {
+    theme: string;
+    lang: LanguageCode;
+    zoomFactor: number;
+    appFont: FONT_NAME;
+    timerFont: FONT_NAME;
+  };
+  algorithms: { listView: boolean };
+  timer: { session: string; bluetoothCubes: BluetoothCubeInfo[] };
 
   private constructor() {
     this.ipc = (<any>window).electronAPI as IPC;
+    this.global = {
+      theme: DEFAULT_THEME.id,
+      lang: "EN",
+      zoomFactor: 100,
+      appFont: "Ubuntu",
+      timerFont: "Ubuntu",
+    };
+
+    this.algorithms = {
+      listView: false,
+    };
+
+    this.timer = {
+      session: "",
+      bluetoothCubes: [],
+    };
+
+    this.ipc.getConfig().then(config => {
+      this.loadConfig(config);
+    });
   }
 
   private static _instance: ConfigElectronIPC | null = null;
@@ -21,6 +60,36 @@ export class ConfigElectronIPC implements ConfigIPC {
     }
 
     return ConfigElectronIPC._instance;
+  }
+
+  private applyConfig() {
+    document.documentElement.style.setProperty("--app-font", this.global.appFont);
+    document.documentElement.style.setProperty("--timer-font", this.global.timerFont);
+    document.documentElement.style.setProperty("--zoom-factor", "" + this.global.zoomFactor);
+    applyThemeByID(this.global.theme);
+  }
+
+  private loadConfig(c: CONFIG) {
+    this.global = {
+      theme: c?.global?.theme || DEFAULT_THEME.id,
+      lang: c?.global?.lang || "EN",
+      zoomFactor: c?.global?.zoomFactor || 100,
+      appFont: c?.global?.appFont || "Ubuntu",
+      timerFont: c?.global?.timerFont || "Ubuntu",
+    };
+
+    this.algorithms = {
+      listView: c?.algorithms?.listView || false,
+    };
+
+    this.timer = {
+      session: c?.timer?.session || "",
+      bluetoothCubes: c?.timer?.bluetoothCubes || [],
+    };
+
+    console.log("CONFIG: ", c);
+
+    this.applyConfig();
   }
 
   addDownloadProgressListener(cb: any) {
@@ -126,5 +195,17 @@ export class ConfigElectronIPC implements ConfigIPC {
 
   external(device: string, ...args: any[]) {
     this.ipc.external(device, ...args);
+  }
+
+  async saveConfig() {
+    const config: CONFIG = {
+      global: this.global,
+      algorithms: this.algorithms,
+      timer: this.timer,
+    };
+
+    this.applyConfig();
+
+    this.ipc.saveConfig(config);
   }
 }

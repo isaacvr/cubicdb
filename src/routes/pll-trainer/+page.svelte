@@ -365,6 +365,7 @@
   }
 
   blockquote {
-    @apply border-l-4 border-l-primary-600 p-2 bg-black bg-opacity-20;
+    @apply border-l-4 p-2 bg-black bg-opacity-20;
+    border-left: var(--th-primary-600);
   }
 </style>

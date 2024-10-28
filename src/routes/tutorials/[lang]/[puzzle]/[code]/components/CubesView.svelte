@@ -117,7 +117,7 @@
     scrambles = scrambles;
 
     setTimeout(() => {
-      pGenerateCubeBundle(cubes, 500, true).then(res => {
+      pGenerateCubeBundle(cubes, 500, true, false, false, true).then(res => {
         images = res;
       });
     }, 100);
@@ -276,7 +276,7 @@
           {/if}
         </div>
 
-        <div class="description grid min-w-[5rem]">
+        <div class="description grid min-w-[5rem] tx-text">
           {#if editing}
             {tempCubes[pos]?.solution || tempCubes[pos]?.scramble || "-"}
           {:else}
@@ -368,6 +368,9 @@
   }
 
   .cube-list.algMode .cube-item {
-    @apply w-full p-2 border border-gray-700 rounded-md bg-white bg-opacity-10 text-gray-300;
+    @apply w-full p-2 border-2 rounded-md bg-opacity-10;
+    color: var(--th-text);
+    border-color: var(--th-backgroundLevel3);
+    background-color: var(--th-backgroundLevel1);
   }
 </style>

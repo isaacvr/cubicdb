@@ -10,6 +10,7 @@
   let tabs: Tab[] = [];
   let cl = "";
 
+  export let footerClass = "";
   export { cl as class };
   export let onChange = (tab?: number) => {};
 
@@ -53,15 +54,15 @@
   <section class="flex relative" style="--len: {tabs.length};">
     <slot />
   </section>
-  <footer class="flex mt-auto border-t border-t-gray-700 gap-1 px-2 py-1">
+  <footer class={"flex mt-auto border-t border-t-gray-700 gap-1 px-2 py-1 " + footerClass}>
     {#each tabs as tab}
       <Button
         color="none"
         aria-label={tab.ariaLabel}
         class="rounded-lg w-full
         {tab.index === $selectedTab
-          ? 'bg-blue-600 text-white hover:bg-blue-500 z-10 '
-          : 'bg-backgroundLv1 hover:bg-backgroundLv2'}"
+          ? 'bg-primary-600 tx-text hover:bg-primary-500 z-10 '
+          : 'bg-backgroundLeve1 hover:bg-backgroundLeve2 tx-text'}"
         on:click={() => selectTab(tab)}
       >
         {#if tab.icon}

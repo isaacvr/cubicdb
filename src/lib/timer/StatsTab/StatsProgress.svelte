@@ -15,7 +15,7 @@
 </script>
 
 <div class="grid w-full gap-2">
-  <div class="flex justify-between">
+  <div class="flex justify-between tx-text">
     <span class="text-left">{title}</span> <span class="ml-auto flex">{label}</span>
   </div>
 

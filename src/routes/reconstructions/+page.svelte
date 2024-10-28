@@ -738,7 +738,9 @@
   }
 
   main:not(.full) {
-    @apply border border-primary-900 rounded-md bg-backgroundLv1;
+    @apply border rounded-md;
+    border-color: var(--th-primary-900);
+    background-color: var(--th-backgroundLevel1);
   }
 
   main:not(.full) .controls {
@@ -758,7 +760,8 @@
   }
 
   .controls {
-    @apply transition-all duration-200 bg-backgroundLv2 fixed bottom-0;
+    @apply transition-all duration-200 fixed bottom-0;
+    background-color: var(--th-backgroundLevel2);
   }
 
   .settings {
@@ -771,7 +774,8 @@
 
   @media not all and (min-width: 768px) {
     .settings {
-      @apply absolute w-[min(calc(100%-2rem),25rem)] right-0 bg-background transition-all duration-200;
+      @apply absolute w-[min(calc(100%-2rem),25rem)] right-0 transition-all duration-200;
+      background-color: var(--th-background);
     }
 
     .settings:not(.open) {
