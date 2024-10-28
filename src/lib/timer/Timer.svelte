@@ -17,7 +17,6 @@
     STEP_COLORS,
     MISC,
   } from "@constants";
-  import { DataService } from "@stores/data.service";
 
   /// Components
   import TabGroup from "@material/TabGroup.svelte";
@@ -62,6 +61,7 @@
   import DeleteIcon from "@icons/Delete.svelte";
   import { Button, Input, Modal } from "flowbite-svelte";
   import WcaCategory from "@components/wca/WCACategory.svelte";
+  import { dataService } from "$lib/data-services/data.service";
 
   let MENU: SCRAMBLE_MENU[] = getLanguage($globalLang).MENU;
 
@@ -87,7 +87,6 @@
   });
 
   /// SERVICES
-  const dataService = DataService.getInstance();
   const notService = NotificationService.getInstance();
 
   /// GENERAL
@@ -188,7 +187,7 @@
     }
 
     if (bestList.length && $session.settings.recordCelebration) {
-      dataService.emit("new-record");
+      $dataService.emit("new-record");
 
       notService.addNotification({
         header: $localLang.TIMER.congrats,
@@ -375,7 +374,7 @@
       $scramble = prettyScramble($scramble);
 
       // emit scramble for iCarry and other stuffs
-      dataService.scramble($scramble);
+      $dataService.scramble($scramble);
 
       // console.log("SCRAMBLE: ", $scramble);
 
@@ -397,7 +396,7 @@
   function selectedFilter(rescramble = true, saveFilter = false) {
     if (saveFilter && $session.settings.sessionType === "mixed") {
       $session.settings.prob = $prob;
-      dataService.updateSession($session).then().catch();
+      $dataService.session.updateSession($session).then().catch();
     }
 
     rescramble && initScrambler();
@@ -406,7 +405,7 @@
   function selectedMode(rescramble = true, saveMode = false, updateProb = true) {
     if (saveMode && $session.settings.sessionType === "mixed") {
       $session.settings.mode = $mode[1];
-      dataService.updateSession($session).then().catch();
+      $dataService.session.updateSession($session).then().catch();
     }
     filters = all.pScramble.filters.get($mode[1]) || [];
     updateProb && ($prob = -1);
@@ -423,7 +422,10 @@
   }
 
   function selectedSession() {
-    localStorage.setItem("session", $session._id);
+    const config = $dataService.config;
+
+    config.timer.session = $session._id;
+    config.saveConfig();
 
     let targetMode = $session.settings.mode || "333";
     let fnd = false;
@@ -474,7 +476,7 @@
       settings.stepNames = stepNames;
     }
 
-    dataService.addSession({ _id: "", name, settings }).then(ns => {
+    $dataService.session.addSession({ _id: "", name, settings }).then(ns => {
       ns.tName = ns.name;
       sessions = [...sessions, ns];
       $session = ns;
@@ -483,7 +485,7 @@
 
       if (!$session.settings.sessionType) {
         $session.settings.sessionType = $session.settings.sessionType || "mixed";
-        dataService.updateSession($session);
+        $dataService.session.updateSession($session);
       }
 
       selectedSession();
@@ -495,7 +497,7 @@
 
   function deleteSessionHandler(remove?: boolean) {
     if (remove) {
-      dataService.removeSession(sSession).then(ss => {
+      $dataService.session.removeSession(sSession).then(ss => {
         sessions = sessions.filter(s1 => s1._id != ss._id);
 
         if (sessions.length === 0) {
@@ -533,7 +535,7 @@
       return;
     }
 
-    dataService
+    $dataService.session
       .updateSession({ _id: s._id, name: s.tName?.trim() || "Session -", settings: s.settings })
       .then(handleUpdateSession);
   }
@@ -612,10 +614,10 @@
     }
 
     if (!(battle || timerOnly || scrambleOnly)) {
-      dataService.getSolves().then(sv => {
+      $dataService.solve.getSolves().then(sv => {
         $allSolves = sv;
 
-        dataService.getSessions().then(_sessions => {
+        $dataService.session.getSessions().then(_sessions => {
           sessions = _sessions.map(s => {
             s.tName = s.name;
             return s;
@@ -627,7 +629,7 @@
             return;
           }
 
-          let ss = localStorage.getItem("session");
+          let ss = $dataService.config.timer.session;
           let currentSession = sessions.find(s => s._id.toString() === ss);
           $session = currentSession || sessions[0];
 
@@ -702,7 +704,7 @@
   {:else}
     <div
       class="fixed mt-1 w-max -translate-x-1/2 left-1/2 z-50 grid grid-flow-col
-      gap-2 top-14 items-center justify-center text-gray-400"
+      gap-2 top-14 items-center justify-center"
     >
       <Select
         placeholder={$localLang.TIMER.selectSession}
@@ -759,7 +761,12 @@
       {/if}
     </div>
 
-    <TabGroup bind:this={tabs} class="h-full" onChange={t => ($tab = t || 0)}>
+    <TabGroup
+      bind:this={tabs}
+      class="h-full"
+      footerClass="bg-backgroundLevel2"
+      onChange={t => ($tab = t || 0)}
+    >
       <Tab name="" icon={TimerIcon} ariaLabel={$localLang.TIMER.timerTab}>
         <TimerTab {context} />
       </Tab>
@@ -779,7 +786,8 @@
       outsideclose
       title={$localLang.TIMER.manageSessions}
       size="md"
-      class="max-w-2xl grid"
+      class="max-w-2xl grid bg-backgroundLevel2 tx-text"
+      color="none"
     >
       {#if creatingSession}
         <div class="flex flex-col items-center min-h-[12rem] gap-4">
@@ -794,8 +802,7 @@
             placement="right"
           />
 
-          <i class="note text-gray-300">{$localLang.TIMER.sessionTypeDescription[newSessionType]}</i
-          >
+          <i class="note tx-text">{$localLang.TIMER.sessionTypeDescription[newSessionType]}</i>
 
           {#if newSessionType != "mixed"}
             <div class="flex flex-wrap gap-2 justify-center">
@@ -823,11 +830,11 @@
 
           <div class="flex flex-wrap gap-2 justify-center">
             <div class="flex items-center justify-center gap-2">
-              <span>{$localLang.global.name}</span>
+              <span class="tx-text">{$localLang.global.name}</span>
 
               <Input
                 focus={creatingSession}
-                class="bg-gray-600 text-gray-200 flex-1 max-w-[20ch]"
+                class="bg-backgroundLevel2 tx-text flex-1 max-w-[20ch]"
                 bind:value={newSessionName}
                 on:keyup={handleInputKeyUp}
               />
@@ -835,10 +842,10 @@
 
             {#if newSessionType === "multi-step"}
               <div class="flex items-center justify-center gap-2">
-                <span>{$localLang.global.steps}</span>
+                <span class="tx-text">{$localLang.global.steps}</span>
 
                 <Input
-                  class="bg-gray-600 text-gray-200 flex-1 max-w-[10ch]"
+                  class="bg-backgroundLevel2 tx-text flex-1 max-w-[10ch]"
                   inpClass="text-center"
                   type="number"
                   min={2}
@@ -857,7 +864,7 @@
 
           {#if newSessionType === "multi-step"}
             <div class="flex flex-col gap-2 justify-center">
-              <h2 class="text-xl text-gray-300 text-center">{$localLang.TIMER.stepNames}</h2>
+              <h2 class="text-xl tx-text text-center">{$localLang.TIMER.stepNames}</h2>
 
               <ul class="flex flex-wrap justify-center items-center gap-2">
                 {#each stepNames as sn, p (p)}
@@ -894,7 +901,7 @@
             >
               {#if s.icon}
                 <span
-                  class="absolute p-[.05rem] rounded-sm text-white
+                  class="absolute p-[.05rem] rounded-sm
                   left-[.5rem] top-1/2 -translate-y-1/2"
                 >
                   <WcaCategory icon={s.icon.icon} size="1rem" buttonClass="!p-[.1rem]" />
@@ -902,7 +909,7 @@
               {/if}
 
               <Input
-                class={"!bg-transparent text-center text-ellipsis w-full rounded-none flex-1 " +
+                class={"!bg-transparent text-center text-ellipsis w-full rounded-none flex-1 tx-text " +
                   (!s.editing ? " border-none " : "") +
                   (s.icon ? " text-left pl-1 " : "")}
                 bind:value={s.tName}
@@ -972,7 +979,7 @@
             type="button"
             ariaLabel={$localLang.TIMER.addNewSession}
             on:click={openAddSession}
-            class="mx-auto flex"
+            class="mx-auto flex bg-primary-700 tx-text"
           >
             <PlusIcon />
             {$localLang.TIMER.addNewSession}
@@ -982,10 +989,17 @@
     </Modal>
   {/if}
 
-  <Modal bind:open={showDeleteSession} size="xs" autoclose outsideclose>
-    <h1 class="text-gray-400 mb-4 text-lg">{$localLang.TIMER.removeSession}</h1>
+  <Modal
+    class="bg-backgroundLevel3 tx-text"
+    color="none"
+    bind:open={showDeleteSession}
+    size="xs"
+    autoclose
+    outsideclose
+  >
+    <h1 class="tx-text mb-4 text-lg">{$localLang.TIMER.removeSession}</h1>
     <div class="flex justify-evenly">
-      <Button color="alternative" ariaLabel={$localLang.global.cancel}>
+      <Button color="alternative" class="bg-cancelButton" ariaLabel={$localLang.global.cancel}>
         {$localLang.global.cancel}
       </Button>
 

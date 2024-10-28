@@ -4,7 +4,6 @@
   import { onMount } from "svelte";
   import Adaptors from "./adaptors";
   import { timer } from "@helpers/timer";
-  import { DataService } from "@stores/data.service";
   import { derived, type Readable } from "svelte/store";
   import Checkbox from "@material/Checkbox.svelte";
   import { globalLang } from "@stores/language.service";
@@ -13,6 +12,7 @@
   import { Card, Heading } from "flowbite-svelte";
   import Button from "@material/Button.svelte";
   import WcaCategory from "@components/wca/WCACategory.svelte";
+  import { dataService } from "$lib/data-services/data.service";
 
   let MODE_MAP: Map<string, string>;
 
@@ -21,8 +21,6 @@
     MODE_MAP = getModeMap(l.MENU);
     return l;
   });
-
-  let dataService = DataService.getInstance();
 
   let parser = 0;
   let mode = 0;
@@ -82,7 +80,7 @@
         s.tName = s._id;
         s._id = "";
         rem += 1;
-        dataService.addSession(s).then(ss => {
+        $dataService.session.addSession(s).then(ss => {
           rem -= 1;
           if (cubeData) {
             let solves = cubeData.solves.filter(s => {
@@ -94,7 +92,7 @@
               return false;
             });
 
-            dataService.addSolves(solves);
+            $dataService.solve.addSolves(solves);
           }
           if (rem === 0) {
             cubeData = null;
@@ -146,7 +144,7 @@
   }
 
   onMount(() => {
-    dataService.getSolves().then(solves => {
+    $dataService.solve.getSolves().then(solves => {
       oSolves = solves
         .map(s => {
           let cp = { ...s };
@@ -156,7 +154,7 @@
         .sort((a, b) => (a.session < b.session ? -1 : 1));
     });
 
-    dataService.getSessions().then(sessions => {
+    $dataService.session.getSessions().then(sessions => {
       ownData.sessions = sessions;
       oSession = ownData.sessions[0];
     });

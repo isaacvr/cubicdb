@@ -168,7 +168,7 @@
   }
 </script>
 
-<div class="bg-backgroundLv1 w-[min(90%,50rem)] mx-auto mt-8 p-4 rounded-md shadow-md">
+<div class="bg-backgroundLeve1 w-[min(90%,50rem)] mx-auto mt-8 p-4 rounded-md shadow-md">
   <div class="flex flex-wrap justify-center gap-4 text-center">
     <div>
       {$localLang.TOOLS.widthInCubes}
@@ -191,7 +191,7 @@
 </div>
 
 <div
-  class="bg-backgroundLv1 w-[min(90%,50rem)] mx-auto mt-8 rounded-md shadow-md p-4 grid place-items-center"
+  class="bg-backgroundLeve1 w-[min(90%,50rem)] mx-auto mt-8 rounded-md shadow-md p-4 grid place-items-center"
 >
   {#if imgStr}
     <div class="relative h-[20rem] w-full">

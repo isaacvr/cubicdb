@@ -8,6 +8,8 @@ import { DataService } from "@stores/data.service";
 import type { IReconstructor, ReconstructorMethod, ReconstructorStep } from "./interfaces";
 import { centerStickerAligned, getColoredStickers, pieceInCenter, pieceInPlace } from "./utils";
 import { formatMoves } from "@helpers/strings";
+import { dataService } from "$lib/data-services/data.service";
+import { get } from "svelte/store";
 
 interface CrossResult {
   vec: Vector3D;
@@ -124,9 +126,7 @@ export class CFOP implements IReconstructor {
   async getAlgs() {
     if (this.OLLAlgs.length && this.PLLAlgs.length) return;
 
-    let dataService = DataService.getInstance();
-
-    this.OLLAlgs = (await dataService.getAlgorithms("333/oll")).map(a => {
+    this.OLLAlgs = (await get(dataService).algorithms.getAlgorithms({ path: "333/oll" })).map(a => {
       let facelets = ["", "U", "U2", "U'"].map(mv =>
         Puzzle.fromSequence(mv + " " + a.scramble, { type: "rubik" }, true)
           .toFacelet()
@@ -137,7 +137,7 @@ export class CFOP implements IReconstructor {
       return { alg: a, facelets };
     });
 
-    this.PLLAlgs = (await dataService.getAlgorithms("333/pll")).map(a => {
+    this.PLLAlgs = (await get(dataService).algorithms.getAlgorithms({ path: "333/pll" })).map(a => {
       let facelets = ["", "U", "U2", "U'"].map(mv =>
         Puzzle.fromSequence(mv + " " + a.scramble, { type: "rubik" }, true)
           .toFacelet()
@@ -499,8 +499,8 @@ export class CFOP implements IReconstructor {
           let col = st.oll
             ? st.oll[0].f2l.cross.color
             : st.pll
-            ? st.pll[0].oll.f2l.cross.color
-            : "w";
+              ? st.pll[0].oll.f2l.cross.color
+              : "w";
           let cols = ["w", "r", "g", "y", "o", "b"];
           let trans = ["", "z", "x'", "x2", "z'", "x"];
 

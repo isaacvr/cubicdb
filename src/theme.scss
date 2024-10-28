@@ -1,0 +1,67 @@
+$classes: text, primary, background, backgroundLevel1, backgroundLevel2, backgroundLevel3, mark,
+  emphasis, cancelButton, acceptButton, urgentButton, accent;
+
+$shades: 100, 200, 300, 400, 500, 600, 700, 800, 900;
+
+@each $class in $classes {
+  // Background
+  body .bg-#{$class}.bg-#{$class} {
+    background-color: var(--th-#{$class});
+  }
+
+  body .hover\:bg-#{$class}.hover\:bg-#{$class}:hover {
+    background-color: var(--th-#{$class});
+  }
+
+  @each $shade in $shades {
+    body .bg-#{$class}-#{$shade}.bg-#{$class}-#{$shade} {
+      background-color: var(--th-#{$class}-#{$shade});
+    }
+
+    body .hover\:bg-#{$class}-#{$shade}.hover\:bg-#{$class}-#{$shade}:hover {
+      background-color: var(--th-#{$class}-#{$shade});
+    }
+  }
+
+  // Text
+  body .tx-#{$class}.tx-#{$class} {
+    color: var(--th-#{$class});
+  }
+
+  body .hover\:tx-#{$class}.hover\:tx-#{$class}:hover {
+    color: var(--th-#{$class});
+  }
+
+  @each $shade in $shades {
+    body .tx-#{$class}-#{$shade}.tx-#{$class}-#{$shade} {
+      color: var(--th-#{$class}-#{$shade});
+    }
+
+    body .hover\:tx-#{$class}-#{$shade}.hover\:tx-#{$class}-#{$shade}:hover {
+      color: var(--th-#{$class}-#{$shade});
+    }
+  }
+
+  // Shadows
+  body .shadow-#{$class}.shadow-#{$class} {
+    --tw-shadow-color: var(--th-#{$class});
+    --tw-shadow: var(--tw-shadow-colored);
+  }
+
+  body .hover\:shadow-#{$class}.hover\:shadow-#{$class}:hover {
+    --tw-shadow-color: var(--th-#{$class});
+    --tw-shadow: var(--tw-shadow-colored);
+  }
+
+  @each $shade in $shades {
+    body .shadow-#{$class}-#{$shade}.shadow-#{$class}-#{$shade} {
+      --tw-shadow-color: var(--th-#{$class}-#{$shade});
+      --tw-shadow: var(--tw-shadow-colored);
+    }
+
+    body .hover\:shadow-#{$class}-#{$shade}.hover\:shadow-#{$class}-#{$shade}:hover {
+      --tw-shadow-color: var(--th-#{$class}-#{$shade});
+      --tw-shadow: var(--tw-shadow-colored);
+    }
+  }
+}

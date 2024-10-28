@@ -37,9 +37,9 @@
   import CopyIcon from "@icons/ClipboardOutline.svelte";
   import SettingsIcon from "@icons/Cog.svelte";
   import CameraIcon from "@icons/Cctv.svelte";
-  import { DataService } from "@stores/data.service";
   import { page } from "$app/stores";
   import { DOMAIN } from "@constants";
+  import { dataService } from "$lib/data-services/data.service";
 
   export let type: "full" | "controlled" = "full";
   export let scramble = "";
@@ -48,8 +48,6 @@
   export let puzzleOrder = 3;
 
   let recs: IDBReconstruction[] = [];
-
-  const dataService = DataService.getInstance();
 
   let recIndex = 1;
   let showRecSearch = false;
@@ -412,7 +410,7 @@
     if (type === "full") {
       handleLocation($page.url);
 
-      dataService.getReconstructions().then(r => {
+      $dataService.reconstruction.getReconstructions().then(r => {
         recs = r.filter(rec => errorIndex.indexOf(rec.num) < 0);
       });
     }
@@ -740,7 +738,9 @@
   }
 
   main:not(.full) {
-    @apply border border-primary-900 rounded-md bg-backgroundLv1;
+    @apply border rounded-md;
+    border-color: var(--th-primary-900);
+    background-color: var(--th-backgroundLevel1);
   }
 
   main:not(.full) .controls {
@@ -760,7 +760,8 @@
   }
 
   .controls {
-    @apply transition-all duration-200 bg-backgroundLv2 fixed bottom-0;
+    @apply transition-all duration-200 fixed bottom-0;
+    background-color: var(--th-backgroundLevel2);
   }
 
   .settings {
@@ -773,7 +774,8 @@
 
   @media not all and (min-width: 768px) {
     .settings {
-      @apply absolute w-[min(calc(100%-2rem),25rem)] right-0 bg-background transition-all duration-200;
+      @apply absolute w-[min(calc(100%-2rem),25rem)] right-0 transition-all duration-200;
+      background-color: var(--th-background);
     }
 
     .settings:not(.open) {

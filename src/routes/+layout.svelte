@@ -1,11 +1,11 @@
 <script lang="ts">
-  import "../App.css";
+  import "../app.css";
+  import "../theme.scss";
 
   import moment from "moment";
   import Minus from "@icons/Minus.svelte";
   import Close from "@icons/Close.svelte";
   import { onDestroy, onMount } from "svelte";
-  import { DataService } from "@stores/data.service";
   import {
     Breadcrumb,
     BreadcrumbItem,
@@ -27,17 +27,19 @@
   import { ArrowUpRightDownLeftOutline } from "flowbite-svelte-icons";
   import Select from "@material/Select.svelte";
   import { browser } from "$app/environment";
-  import type { INotification, LanguageCode } from "@interfaces";
+  import type { INotification } from "@interfaces";
   import Notification from "@components/Notification.svelte";
   import { goto } from "$app/navigation";
   import { page } from "$app/stores";
   import type { Unsubscriber } from "svelte/store";
   import type { LayoutServerData } from "./$types";
   import { getTitleMeta } from "$lib/meta/title";
+  import { dataService } from "$lib/data-services/data.service";
 
   export let data: LayoutServerData;
 
-  const dataService = DataService.getInstance();
+  $dataService.theme.applyTheme($dataService.theme.currentTheme, false);
+
   let notifications: INotification[] = [];
   const notService = NotificationService.getInstance();
 
@@ -58,14 +60,18 @@
       text: $localLang.SETTINGS.updateCompleted,
       actions: [
         { text: $localLang.global.accept, callback: () => {}, color: "alternative" },
-        { text: $localLang.global.restart, callback: () => dataService.close(), color: "purple" },
+        {
+          text: $localLang.global.restart,
+          callback: () => $dataService.config.close(),
+          color: "purple",
+        },
       ],
       fixed: true,
     });
   }
 
   function cancelUpdate() {
-    dataService
+    $dataService.config
       .cancelUpdate()
       .then(() => {
         progress = 0;
@@ -76,11 +82,11 @@
   }
 
   function minimize() {
-    dataService.minimize();
+    $dataService.config.minimize();
   }
 
   function close() {
-    dataService.close();
+    $dataService.config.close();
   }
 
   function fullScreen() {
@@ -141,30 +147,16 @@
       notifications = v;
     });
 
-    dataService.on("download-progress", handleProgress);
-    dataService.on("update-downloaded", handleDone);
+    $dataService.on("download-progress", handleProgress);
+    $dataService.on("update-downloaded", handleDone);
 
     handleResize();
-    // checkUpdates();
-
-    let lang: LanguageCode = (localStorage.getItem("language") as LanguageCode) || "EN";
-    localStorage.setItem("language", lang);
-    globalLang.update(() => lang);
-
-    document.documentElement.style.setProperty(
-      "--app-font",
-      localStorage.getItem("app-font") || "Ubuntu"
-    );
-    document.documentElement.style.setProperty(
-      "--timer-font",
-      localStorage.getItem("timer-font") || "Ubuntu"
-    );
   });
 
   onDestroy(() => {
     clearInterval(itv);
-    dataService.off("download-progress", handleProgress);
-    dataService.off("update-downloaded", handleDone);
+    $dataService.off("download-progress", handleProgress);
+    $dataService.off("update-downloaded", handleDone);
   });
 
   $: $localLang, updateParts($page.url);
@@ -182,7 +174,7 @@
   <Navbar
     let:hidden
     let:toggle
-    class="justify-between fixed top-0 left-0 w-full z-50 border-b p-2"
+    class="justify-between fixed top-0 left-0 w-full z-50 border-b p-2 bg-backgroundLevel1"
     fluid
   >
     <a href="/">
@@ -211,10 +203,14 @@
         ulClass="md:p-0 max-md:p-4"
         on:click={() => !hidden && toggle()}
       >
-        <Breadcrumb>
+        <Breadcrumb class="[&_svg]:[color:var(--th-text)]">
           <BreadcrumbItem home href="/" on:click={() => !hidden && toggle()}></BreadcrumbItem>
           {#each parts as part}
-            <BreadcrumbItem href={part.link} on:click={() => !hidden && toggle()}>
+            <BreadcrumbItem
+              classLink="tx-text"
+              href={part.link}
+              on:click={() => !hidden && toggle()}
+            >
               {part.name.toUpperCase()}
             </BreadcrumbItem>
           {/each}
@@ -225,7 +221,7 @@
     <div class="flex order-1 md:order-2">
       <div {hidden} class="flex ml-auto items-center">
         {#if progress}
-          <span class="mr-2 text-yellow-500 cursor-default"> {progress + "%"} </span>
+          <span class="mr-2 tx-emphasis cursor-default"> {progress + "%"} </span>
           <Popover>
             <Span class="flex justify-center">{$localLang.global.downloading}</Span>
             <Progressbar {progress} divClass="w-[10rem] my-3" />
@@ -250,7 +246,7 @@
           />
         {/if}
 
-        {#if dataService.isElectron && $screen.width > 640}
+        {#if $dataService.isElectron && $screen.width > 640}
           <span>{date}</span>
 
           <Button

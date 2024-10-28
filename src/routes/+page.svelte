@@ -127,7 +127,15 @@
   ul li {
     @apply w-40 h-48 max-w-[12rem] shadow-md rounded-md select-none cursor-pointer
       transition-all duration-200 grid place-items-center justify-center py-3 px-2
-      bg-backgroundLv1 hover:shadow-2xl hover:bg-backgroundLv2 hover:shadow-primary-900 relative;
+      hover:shadow-2xl relative;
+
+    background-color: var(--th-backgroundLevel1);
+    color: var(--th-text);
+  }
+
+  ul li:hover {
+    background-color: var(--th-backgroundLevel2);
+    box-shadow: 0 1rem 3rem -1rem var(--th-primary);
   }
 
   ul img {

@@ -14,7 +14,6 @@
     TableBodyRow,
     Input,
   } from "flowbite-svelte";
-  import { DataService } from "@stores/data.service";
   import { NotificationService } from "@stores/notification.service";
   import { localLang } from "@stores/language.service";
   import {
@@ -57,9 +56,9 @@
   import ToolsIcon from "@icons/Tools.svelte";
   import ChartIcon from "@icons/ChartLineVariant.svelte";
   import MetronomeIcon from "@icons/Metronome.svelte";
-  import Ao5Icon from "@icons/FormatListNumbered.svelte";
   import SeedIcon from "@icons/Leaf.svelte";
   import { getSeed, setSeed } from "@cstimer/lib/mathlib";
+  import { dataService } from "$lib/data-services/data.service";
 
   type TModal = "" | "edit-scramble" | "old-scrambles" | "settings";
 
@@ -95,7 +94,6 @@
       : TIMER_INPUT.filter(inp => inp != "GAN Cube");
   });
 
-  let dataService = DataService.getInstance();
   let notification = NotificationService.getInstance();
 
   /// MODAL
@@ -151,7 +149,7 @@
 
             initInputHandler();
 
-            dataService.updateSession($session);
+            $dataService.session.updateSession($session);
             initialCalc != $session.settings.calcAoX && updateStatistics(false);
           }
         });
@@ -328,7 +326,7 @@
     isSearching = true;
     $bluetoothList.length = 0;
 
-    dataService
+    $dataService.config
       .searchBluetooth(gn)
       .then(mac => {
         deviceID.set(mac);
@@ -349,13 +347,13 @@
   }
 
   function cancelSearch() {
-    dataService.cancelBluetoothRequest();
+    $dataService.config.cancelBluetoothRequest();
   }
 
   function connectBluetooth(id: string) {
     if (id != $deviceID) {
       isSearching = false;
-      dataService.connectBluetoothDevice(id);
+      $dataService.config.connectBluetoothDevice(id);
     } else {
       $inputMethod.disconnect();
     }
@@ -400,7 +398,10 @@
 
 <svelte:window on:keydown={keyDown} />
 
-<ul class="timer-options-container border-r border-r-gray-700 pt-2" class:timerOnly>
+<ul
+  class="timer-options-container border-r border-r-gray-700 border-t border-t-gray-700 pt-2"
+  class:timerOnly
+>
   <li>
     <Tooltip position="right" text={$localLang.TIMER.manageSessions}>
       <Button
@@ -429,7 +430,7 @@
             this={option.icon}
             width="100%"
             height="100%"
-            class="pointer-events-none"
+            class="pointer-events-none tx-text"
           />
         </Button>
       </Tooltip>
@@ -503,7 +504,7 @@
     <Dropdown
       bind:open={showToolsMenu}
       placement="right"
-      class="max-h-[20rem] w-max overflow-y-scroll"
+      class="max-h-[20rem] w-max overflow-y-scroll bg-backgroundLevel2 rounded-md tx-text"
     >
       {#each tools as tool}
         <DropdownItem defaultClass={DD_CLASS} on:click={() => addTool(tool)}>
@@ -593,11 +594,8 @@
     <!-- Input Method -->
     {#if !(timerOnly || $session.settings.sessionType === "multi-step")}
       <section class="flex gap-4 items-center">
-        {$localLang.TIMER.inputMethod}: <Select
-          bind:value={modalData.settings.input}
-          items={$timerInput}
-          transform={e => e}
-        />
+        {$localLang.TIMER.inputMethod}:
+        <Select bind:value={modalData.settings.input} items={$timerInput} transform={e => e} />
       </section>
     {/if}
 
@@ -856,12 +854,14 @@
 
 <style lang="postcss">
   .timer-options-container {
+    @apply rounded-tr-md;
     grid-area: options;
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
     padding: 0.25rem;
     position: relative;
+    background-color: var(--th-backgroundLevel1);
   }
 
   .timer-options-container li.menu {

@@ -11,10 +11,10 @@ import {
   type Solve,
   Penalty,
 } from "@interfaces";
-import { DataService } from "@stores/data.service";
 import { get, type Writable } from "svelte/store";
 import { createActor, setup, fromCallback } from "xstate";
 import { decompressFromBase64 } from "$lib/helpers/decompress-string";
+import { dataService } from "$lib/data-services/data.service";
 
 interface GANContext {
   input: InputContext;
@@ -207,7 +207,7 @@ const saveSolve = fromCallback(
     let t = get(time);
 
     Promise.all([cfop.getAnalysis(t), roux.getAnalysis(t)]).then(res =>
-      DataService.getInstance().emitBluetoothData("reconstructor", res)
+      get(dataService).emitBluetoothData("reconstructor", res)
     );
 
     state.set(TimerState.STOPPED);
@@ -388,7 +388,6 @@ export class GANInput implements TimerInputHandler {
   private keyCheck: number;
   private deviceTimeOffset: number;
   private movesFromLastCheck: number;
-  private dataService: DataService;
   private interpreter;
   private moves: string[];
   private context: GANContext;
@@ -434,8 +433,6 @@ export class GANInput implements TimerInputHandler {
     this.deviceTimeOffset = 0;
     this.movesFromLastCheck = 1000;
     this.connected = false;
-
-    this.dataService = DataService.getInstance();
   }
 
   static get UUID_SUFFIX() {
@@ -514,18 +511,18 @@ export class GANInput implements TimerInputHandler {
   }
 
   init() {
-    this.dataService.off("scramble", this.handleScramble);
-    this.dataService.on("scramble", this.handleScramble.bind(this));
+    get(dataService).off("scramble", this.handleScramble);
+    get(dataService).on("scramble", this.handleScramble.bind(this));
     this.interpreter.start();
   }
 
   disconnect() {
-    this.dataService.off("scramble", this.handleScramble);
+    get(dataService).off("scramble", this.handleScramble);
     this.interpreter.send({
       type: "DISCONNECTED",
     });
 
-    this.dataService.emitBluetoothData("disconnect", null);
+    get(dataService).emitBluetoothData("disconnect", null);
 
     if (!this.connected) return;
     this.device?.gatt?.disconnect();
@@ -679,7 +676,7 @@ export class GANInput implements TimerInputHandler {
   }
 
   private emit(type: string, data: any) {
-    this.dataService.emitBluetoothData(type, data);
+    get(dataService).emitBluetoothData(type, data);
   }
 
   private async v2initDecoder(mac: string, ver: any) {

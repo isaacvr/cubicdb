@@ -85,7 +85,7 @@
   on:mousedown={handleClick}
   on:keyup={keyUpHandler}
   on:keydown={keyDownHandler}
-  class="bg-backgroundLv2 rounded-md show p-4 pt-3 overflow-visible {_cl || ''}"
+  class="bg-backgroundLevel2 rounded-md show p-4 pt-3 overflow-visible {_cl || ''}"
   style="view-transition-name: {transitionName};"
 >
   {#if show}

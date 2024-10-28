@@ -63,6 +63,28 @@
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
   transition: all 200ms;
+
+  /* Default theme */
+  --th-text: #d1d5db;
+  --th-primary: #3b82f6;
+  --th-primary-200: #bfdbfe;
+  --th-primary-300: #93c5fd;
+  --th-primary-400: #60a5fa;
+  --th-primary-500: #3b82f6;
+  --th-primary-600: #2563eb;
+  --th-primary-700: #1d4ed8;
+  --th-primary-800: #1e40af;
+  --th-primary-900: #1e3a8a;
+  --th-background: #080a16;
+  --th-backgroundLevel1: #11192a;
+  --th-backgroundLevel2: #18243e;
+  --th-backgroundLevel3: #2f3b56;
+  --th-mark: #7e22ce;
+  --th-emphasis: #eab308;
+  --th-cancelButton: #111827;
+  --th-acceptButton: #43a047;
+  --th-urgentButton: #9333ea;
+  --th-accent: #f97316;
 }
 
 #app {
@@ -74,7 +96,7 @@ html {
 }
 
 body {
-  @apply bg-background;
+  background-color: var(--th-background);
   margin: 0;
   display: flex;
   min-width: 320px;
@@ -158,8 +180,10 @@ body {
 }
 
 mark {
-  @apply bg-purple-700 bg-opacity-70 p-1 text-slate-300 inline-flex items-center justify-center my-1;
+  @apply bg-opacity-70 p-1 inline-flex items-center justify-center my-1;
   border-radius: 0.25rem;
+  background-color: var(--th-mark);
+  color: var(--th-text);
 }
 
 .note {

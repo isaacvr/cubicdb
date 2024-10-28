@@ -1,7 +1,6 @@
 <script lang="ts">
   import QRCode from "qrcode";
   import { version } from "@stores/version.store";
-  import Button from "@material/Button.svelte";
   import GithubIcon from "@icons/Github.svelte";
   import InstagramIcon from "@icons/Instagram.svelte";
   import GmailIcon from "@icons/Gmail.svelte";
@@ -9,14 +8,11 @@
   import CopyIcon from "@icons/ContentCopy.svelte";
   import { copyToClipboard } from "@helpers/strings";
   import { NotificationService } from "@stores/notification.service";
-  import { DataService } from "@stores/data.service";
   import { Card } from "flowbite-svelte";
   import { localLang } from "@stores/language.service";
   import { CubicDBICON } from "@constants";
 
   const notification = NotificationService.getInstance();
-  const dataService = DataService.getInstance();
-
   interface Donation {
     logo: string;
     qr: string;

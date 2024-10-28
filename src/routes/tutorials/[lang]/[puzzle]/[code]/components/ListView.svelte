@@ -74,7 +74,7 @@
     </div>
   {:else}
     {#each block.list || [] as item}
-      <li>{item}</li>
+      <li class="tx-text">{item}</li>
     {/each}
   {/if}
 

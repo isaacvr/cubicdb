@@ -1,5 +1,5 @@
 <script lang="ts">
-  /// Types
+  import { createEventDispatcher, onDestroy, onMount } from "svelte";
   import {
     Penalty,
     TimerState,
@@ -8,6 +8,9 @@
     type TimerContext,
     type TimerInputHandler,
   } from "@interfaces";
+  import { ChevronLeftSolid, ChevronRightSolid } from "flowbite-svelte-icons";
+  import { writable, type Writable } from "svelte/store";
+  import { blur, scale } from "svelte/transition";
 
   /// Icons
   import Close from "@icons/Close.svelte";
@@ -21,12 +24,11 @@
   /// Components
   import Input from "@material/Input.svelte";
   import Select from "@material/Select.svelte";
+  import Tooltip from "@material/Tooltip.svelte";
+  import Simulator from "$lib/simulator/Simulator.svelte";
 
   /// Helpers
-  import { writable, type Writable } from "svelte/store";
   import { adjustMillis, sTimer, timer, timerToMilli } from "@helpers/timer";
-  import { createEventDispatcher, onDestroy, onMount } from "svelte";
-  import { DataService } from "@stores/data.service";
   import { NotificationService } from "@stores/notification.service";
   import { localLang } from "@stores/language.service";
 
@@ -36,23 +38,19 @@
   import { GANInput } from "$lib/timer/adaptors/GAN";
   import { KeyboardInput } from "$lib/timer/adaptors/Keyboard";
   import { QiYiSmartTimerInput } from "$lib/timer/adaptors/QY-Timer";
+  import { dataService } from "$lib/data-services/data.service";
   // import { ExternalTimerInput } from "./adaptors/ExternalTimer";
 
   // Others
   import { randomUUID } from "@helpers/strings";
   import { isBetween, minmax } from "@helpers/math";
-  import Simulator from "$lib/simulator/Simulator.svelte";
   import { statsReplaceId } from "@helpers/statistics";
   import { Button, Modal, StepIndicator, TextPlaceholder } from "flowbite-svelte";
-  import Tooltip from "@material/Tooltip.svelte";
-  import { blur, scale } from "svelte/transition";
-  import { ChevronLeftSolid, ChevronRightSolid } from "flowbite-svelte-icons";
   import { Flip } from "@classes/Flip";
-  import Reconstructor from "./Reconstructor.svelte";
   import type { ReconstructorMethod } from "@classes/reconstructors/interfaces";
-  import TimerOptions from "./TimerOptions.svelte";
   import PuzzleImage from "@components/PuzzleImage.svelte";
-
+  import Reconstructor from "./Reconstructor.svelte";
+  import TimerOptions from "./TimerOptions.svelte";
   import StatsInfo from "./StatsInfo.svelte";
 
   export let context: TimerContext;
@@ -88,7 +86,6 @@
 
   const dispatch = createEventDispatcher();
   const notification = NotificationService.getInstance();
-  const dataService = DataService.getInstance();
 
   /// CLOCK
   const TIMER_DIGITS = /^\d+$/;
@@ -104,7 +101,7 @@
         ev.stopPropagation();
 
         if ($lastSolve) {
-          dataService.removeSolves([$lastSolve]).then(handleRemoveSolves);
+          $dataService.solve.removeSolves([$lastSolve]).then(handleRemoveSolves);
           $time = 0;
           reset();
         }
@@ -125,7 +122,7 @@
           $time = $lastSolve.penalty === Penalty.DNF ? Infinity : $lastSolve.time;
           battle
             ? dispatch("update", $lastSolve)
-            : dataService.updateSolve($lastSolve).then(handleUpdateSolve);
+            : $dataService.solve.updateSolve($lastSolve).then(handleUpdateSolve);
         }
       },
     },
@@ -143,7 +140,7 @@
           if (battle) {
             dispatch("update", $lastSolve);
           } else {
-            dataService.updateSolve($lastSolve).then(handleUpdateSolve);
+            $dataService.solve.updateSolve($lastSolve).then(handleUpdateSolve);
           }
         }
       },
@@ -239,7 +236,7 @@
       ls.group = -1;
       dispatch("solve", $lastSolve);
     } else {
-      dataService.addSolve(ls).then(d => {
+      $dataService.solve.addSolve(ls).then(d => {
         let s = $allSolves.find(s => s.date === d.date);
 
         if (s) {
@@ -366,7 +363,7 @@
 
     // else if ($session?.settings?.input === "ExternalTimer") {
     //   if (sameClass) {
-    //     dataService.external($deviceID, { type: "session", value: $session });
+    //     $dataService.config.external($deviceID, { type: "session", value: $session });
     //   } else {
     //     inputMethod.set(new ExternalTimerInput(inputContext));
     //     $inputMethod.init();
@@ -410,7 +407,7 @@
     //         deviceID = res.device;
     //         $session.settings.input = 'StackMat';
     //         initInputHandler();
-    //         dataService.updateSession($session);
+    //         $dataService.session.updateSession($session);
     //       } },
     //     ],
     //     key,
@@ -496,7 +493,7 @@
   }
 
   function handleMouseDown(ev: MouseEvent) {
-    if (dataService.isElectron || ev.button) return;
+    if ($dataService.isElectron || ev.button) return;
 
     ev.preventDefault();
 
@@ -520,7 +517,7 @@
       }
     }
 
-    if (dataService.isElectron) return;
+    if ($dataService.isElectron) return;
 
     ev.preventDefault();
 
@@ -542,7 +539,7 @@
   }
 
   function handlePointerUp(ev: any) {
-    if (dataService.isElectron) return;
+    if ($dataService.isElectron) return;
 
     ev.preventDefault();
 
@@ -561,23 +558,23 @@
 
     // navigator.mediaDevices?.addEventListener("devicechange", updateDevices);
     // updateDevices();
-    dataService.on("bluetooth", bluetoothHandler);
-    dataService.on("new-record", handleNewRecord);
+    $dataService.on("bluetooth", bluetoothHandler);
+    $dataService.on("new-record", handleNewRecord);
   });
 
   onDestroy(() => {
     $inputMethod.disconnect();
     // navigator.mediaDevices?.removeEventListener("devicechange", updateDevices);
     // document.querySelectorAll("#stackmat-signal").forEach(e => e.remove());
-    dataService.off("bluetooth", bluetoothHandler);
-    dataService.off("new-record", handleNewRecord);
+    $dataService.off("bluetooth", bluetoothHandler);
+    $dataService.off("new-record", handleNewRecord);
   });
 
   $: $solves.length === 0 && reset();
   $: $session && initInputHandler();
   $: $localLang, updateTexts();
   $: $scramble && cleanOnScramble && clean();
-  $: dataService.sleep($state === TimerState.RUNNING);
+  $: $dataService.config.sleep($state === TimerState.RUNNING);
   $: $mode && (selectedImg = 0);
 </script>
 
@@ -618,7 +615,7 @@
   >
     {#if $session?.settings?.input === "Manual"}
       <div id="manual-inp">
-        <div class="text-xl w-full text-center text-primary-300">
+        <div class="text-xl w-full text-center tx-text">
           {timeStr.trim()
             ? TIMER_DNF.test(timeStr)
               ? timeStr.toUpperCase()
@@ -633,7 +630,7 @@
           class="w-full max-md:w-[min(90%,20rem)] mx-auto h-36 text-center {validTimeStr(timeStr)
             ? ''
             : 'border-red-400 border-2'}"
-          inpClass="text-center text-7xl outline-none"
+          inpClass="text-center text-7xl outline-none tx-text"
         />
       </div>
     {:else}
@@ -642,7 +639,7 @@
       >
         {#if $state === TimerState.RUNNING}
           <span
-            class="timer text-gray-300 max-sm:text-7xl max-sm:[line-height:8rem]"
+            class="timer tx-text max-sm:text-7xl max-sm:[line-height:8rem]"
             in:scale
             class:ready={$ready}
             hidden={$state === TimerState.RUNNING && !$session.settings.showElapsedTime}
@@ -650,14 +647,14 @@
             {timer($time, $decimals, false)}
           </span>
 
-          {#if !dataService.isElectron}
+          {#if !$dataService.isElectron}
             <Button color="alternative" class="w-min mx-auto" on:click={stopTimer}>
               {$localLang.global.cancel}
             </Button>
           {/if}
         {:else}
           <span
-            class="timer text-gray-300 max-sm:text-7xl max-sm:[line-height:8rem]"
+            class="timer tx-text max-sm:text-7xl max-sm:[line-height:8rem]"
             class:prevention={$state === TimerState.PREVENTION}
             class:ready={$ready}
           >
@@ -666,7 +663,7 @@
               : timer($time, $decimals, false)}
           </span>
 
-          {#if $state === TimerState.INSPECTION && !dataService.isElectron}
+          {#if $state === TimerState.INSPECTION && !$dataService.isElectron}
             <Button
               color="alternative"
               class="w-min mx-auto pointer-events-auto"
@@ -826,7 +823,7 @@
   </div>
 
   <!-- Scramble -->
-  <div id="scramble" class="transition-all duration-300 max-md:text-xs max-md:leading-5">
+  <div id="scramble" class="transition-all duration-300 max-md:text-xs max-md:leading-5 tx-text">
     {#if $inputMethod instanceof GANInput}
       {#if $recoverySequence}
         <pre class="scramble-content" class:hide={$isRunning} class:battle>{"=> " +
@@ -970,7 +967,7 @@
   }
 
   .timer.prevention {
-    @apply text-red-800;
+    color: var(--th-emphasis);
   }
 
   @keyframes bump {

@@ -81,9 +81,9 @@
     }
   },
   "dependencies": {
-    "@capacitor/android": "^6.1.2",
-    "@capacitor/core": "^6.1.2",
-    "@capacitor/ios": "^6.1.2",
+    "@capacitor/android": "6.1.2",
+    "@capacitor/core": "6.1.2",
+    "@capacitor/ios": "6.1.2",
     "@electron/remote": "2.0.8",
     "@ffmpeg/ffmpeg": "0.12.10",
     "@ffmpeg/util": "0.12.1",
@@ -119,7 +119,7 @@
     "xstate": "5.18.2"
   },
   "devDependencies": {
-    "@capacitor/cli": "^6.1.2",
+    "@capacitor/cli": "6.1.2",
     "@electron-forge/cli": "6.0.0-beta.50",
     "@electron-forge/maker-deb": "6.0.0-beta.50",
     "@electron-forge/maker-rpm": "6.0.0-beta.50",
@@ -128,7 +128,7 @@
     "@playwright/test": "1.28.1",
     "@sveltejs/adapter-auto": "3.0.0",
     "@sveltejs/adapter-netlify": "4.3.5",
-    "@sveltejs/adapter-static": "^3.0.5",
+    "@sveltejs/adapter-static": "3.0.5",
     "@sveltejs/kit": "2.7.1",
     "@sveltejs/vite-plugin-svelte": "3.0.2",
     "@tsconfig/svelte": "3.0.0",
@@ -146,7 +146,7 @@
     "autoprefixer": "10.4.16",
     "concurrently": "5.1.0",
     "echarts": "5.4.3",
-    "electron": "32.1.2",
+    "electron": "33.0.2",
     "electron-builder": "24.13.3",
     "esbuild": "0.19.4",
     "eslint": "9.0.0",
@@ -161,6 +161,7 @@
     "postcss-load-config": "4.0.1",
     "prettier": "3.1.1",
     "prettier-plugin-svelte": "3.1.2",
+    "sass": "1.74.1",
     "svelte": "4.2.12",
     "svelte-check": "4.0.0",
     "svelte-flag-icons": "0.7.2",

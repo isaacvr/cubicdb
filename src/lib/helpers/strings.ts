@@ -317,3 +317,15 @@ export function capitalize(str: string): string {
   let parts = str.split(" ");
   return parts.map(p => p[0].toUpperCase() + p.slice(1)).join(" ");
 }
+
+export function parseDB(strDB: string): any[] {
+  return strDB
+    .split("\n")
+    .map(s => {
+      try {
+        return JSON.parse(s);
+      } catch {}
+      return "";
+    })
+    .filter(e => e);
+}

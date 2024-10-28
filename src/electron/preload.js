@@ -106,6 +106,8 @@ contextBridge.exposeInMainWorld("electronAPI", {
   // External
   addExternalConnector: cb => ipc.on("external", cb),
   external: async (deviceId, ...args) => ipc.invoke("external", deviceId, ...args),
+  getConfig: async () => ipc.invoke("get-config"),
+  saveConfig: async config => ipc.invoke("save-config", config),
 
   // Storage
   cacheStorage: async () => ipc.invoke("cache-storage"),

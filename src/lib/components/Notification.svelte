@@ -45,7 +45,7 @@
 <Toast
   transition={fly}
   params={{ x: 200 }}
-  class="relative pointer-events-auto bottom-0 end-0 ml-auto mr-4 shadow-lg !bg-backgroundLv3"
+  class="relative pointer-events-auto bottom-0 end-0 ml-auto mr-4 shadow-lg bg-backgroundLevel3"
   contentClass="flex items-center"
   bind:open
   dismissable={fixed}
@@ -54,14 +54,14 @@
 >
   {#if icon}
     {#if typeof icon === "string"}
-      <Avatar slot="icon" src={icon} class="text-gray-300 aspect-square" />
+      <Avatar slot="icon" src={icon} class="bg-backgroundLevel1 tx-text aspect-square" />
     {:else}
-      <svelte:component this={icon} slot="icon" size="1.2rem" class="text-gray-300 aspect-square" />
+      <svelte:component this={icon} slot="icon" size="1.2rem" class="bg-backgroundLevel1 tx-text aspect-square" />
     {/if}
   {/if}
 
-  <div class="ms-3 text-sm font-normal text-gray-300">
-    <span class="text-lg font-semibold text-green-200">{header}</span>
+  <div class="ms-3 text-sm font-normal tx-text">
+    <span class="text-lg font-semibold tx-text">{header}</span>
     <div class="mt-2 mb-2 text-sm font-normal">{text}</div>
     <div bind:innerHTML={html} contenteditable="false"></div>
 

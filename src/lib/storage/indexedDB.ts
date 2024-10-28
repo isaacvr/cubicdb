@@ -16,6 +16,7 @@ import type {
 } from "@interfaces";
 import { clone, getByteSize } from "@helpers/object";
 import { openDB, type IDBPDatabase } from "idb";
+import { parseDB } from "@helpers/strings";
 
 const DBName = "CubicDB-data";
 const AlgorithmStore = "Algorithms";
@@ -30,18 +31,6 @@ const debug = false;
 let algs: Algorithm[] = [];
 let tuts: ITutorial[] = [];
 let recs: IDBReconstruction[] = [];
-
-function parseDB(strDB: string): any[] {
-  return strDB
-    .split("\n")
-    .map(s => {
-      try {
-        return JSON.parse(s);
-      } catch {}
-      return "";
-    })
-    .filter(e => e);
-}
 
 async function loadData() {
   const _algs = await import("$lib/fixed/algs.db?raw");
@@ -170,7 +159,7 @@ export class IndexedDBAdaptor implements IPC {
   // Algorithms are handled from a fixed object
   async getAlgorithms(options: AlgorithmOptions): Promise<Algorithm[]> {
     await this.init();
-    if (options.all) return Promise.resolve(clone(algs) as Algorithm[]);
+    if (options.all) return clone(algs) as Algorithm[];
     let fAlgs = algs.filter(a => a.parentPath === options.path) as Algorithm[];
     return clone(fAlgs);
   }
@@ -532,13 +521,27 @@ export class IndexedDBAdaptor implements IPC {
   }
 
   // For IPC only
-  algorithmsStorage() {}
-  cacheStorage() {}
-  vCacheStorage() {}
-  sessionsStorage() {}
-  solvesStorage() {}
-  tutorialsStorage() {}
-  reconstructionsStorage() {}
+  async algorithmsStorage() {
+    return 0;
+  }
+  async cacheStorage() {
+    return 0;
+  }
+  async vCacheStorage() {
+    return 0;
+  }
+  async sessionsStorage() {
+    return 0;
+  }
+  async solvesStorage() {
+    return 0;
+  }
+  async tutorialsStorage() {
+    return 0;
+  }
+  async reconstructionsStorage() {
+    return 0;
+  }
 
   async getStorageInfo(): Promise<IStorageInfo> {
     await this.init();
