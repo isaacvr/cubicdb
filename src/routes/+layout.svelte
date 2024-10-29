@@ -1,5 +1,5 @@
 <script lang="ts">
-  import "../app.css";
+  import "../App.css";
   import "../theme.scss";
 
   import moment from "moment";
