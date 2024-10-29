@@ -178,6 +178,7 @@
         buttonClass: " pointer-events-none text-orange-300 ",
       },
       component: BldHelperTool,
+      hasSettings: true,
       handler: () => {},
     },
     {

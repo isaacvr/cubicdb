@@ -2,7 +2,7 @@
 
 ¿Are you looking for a speedcubing application?
 
-You're in the right place. This is a complete speedcubing application that gathers all kind of resources for you. More than a speedcubing app, this is a cubing guide.
+You're in the right place. This is a complete speedcubing application that gathers all kind of resources for you. More than a speedcubing app, this is a cubing guide. In the [releases](https://github.com/isaacvr/cubicdb/releases) you can download the desktop version, but also you can try from the web [here](https://cubicdb.netlify.app/);
 
 ## Inspirations
 
@@ -21,15 +21,15 @@ The project you're looking at right now, was inspired by some other really aweso
 
 ### Tutorials
 
-This is the first section. Here you can find some basic tutorials but please be patiente, there will be more over time.
+This is the [first section](https://cubicdb.netlify.app/tutorials). Here you can find some basic tutorials but please be patiente, there will be more over time.
 
 ### Algorithms
 
-Here you can find a lot of methods and sub-methods with all the possible casses and algorithms that you'll ever learn. This is a huge database.
+[Here](https://cubicdb.netlify.app/algorithms) you can find a lot of methods and sub-methods with all the possible casses and algorithms that you'll ever learn. This is a huge database.
 
 ### Timer
 
-Party is comming. This section allows you to sharp your skills by timing your solves and track your progress. For that, you will count with a lot of resources like statistics, all kind of charts and options.
+Party is comming. [This section](https://cubicdb.netlify.app/timer) allows you to sharp your skills by timing your solves and track your progress. For that, you will count with a lot of resources like statistics, all kind of charts and options.
 
 You can input your times with three (3) different methods:
 
@@ -48,25 +48,33 @@ Some of the options are:
 - Select the method for compute the statistics (Sequential or in groups).
 - Set a "seed" and a number, to sync your scrambles with a friend without needing internet connection.
 
+### Reconstructions
+
+One way to improve your skills is by looking how top cubers solve the puzzles and [here](https://cubicdb.netlify.app/reconstructions) you can find literally thousands of reconstructions for lots of puzzles.
+
 ### PLL Recognition
 
-Here you can train your 1-Look PLL. It will show you some random PLL and track the time to answer for each answer.
+[Here](https://cubicdb.netlify.app/pll-trainer) you can train your 1-Look PLL. It will show you some random PLL and track the time to answer for each answer.
 
 ### Puzzle Simulator
 
-Do you want to try a puzzle before buying it, or just want to play with one of them? Here you will have a good amount of puzzles and surprise, there will be more and more.
-
-### Settings
-
-There are not too much global settings here, but at least you can select the font of the application and the timer.
+Do you want to try a puzzle before buying it, or just want to play with one of them? [Here](https://cubicdb.netlify.app/simulator) you will have a good amount of puzzles and surprise, there will be more and more.
 
 ### Import-Export
 
-If you use Twisty Timer, CSTimer or CubeDesk and want to import your data, this is the right place. You can select the sessions that you want to import.
+If you use Twisty Timer, CSTimer or CubeDesk and want to [import](https://cubicdb.netlify.app/import-export) your data, this is the right place. You can select the sessions that you want to import.
 
-### Contest
+### Tools
 
-This section is not available for now, but will be in premium version. The purpose is simple: to generate PDF sheets for a contest and track all the times, sort them and more.
+[Here](https://cubicdb.netlify.app/tools) you can find the "timer only" if you want just to time your solve without saving them into a session, scramble only mode, scramble batch generator, mosaic generator from an image, 3x3 solver and more.
+
+### Settings
+
+There are not too much global [settings](https://cubicdb.netlify.app/settings) here, but at least you can select the font of the application and the timer.
+
+### About
+
+In [this section](https://cubicdb.netlify.app/about-cubicdb) you will find some ways to reach the dev (me) via social networks and also some ways to donate if you like this project, which will be reused in order to improve the app itself (win-win).
 
 ### Contributing
 

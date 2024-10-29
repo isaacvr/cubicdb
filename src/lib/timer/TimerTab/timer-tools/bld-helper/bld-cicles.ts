@@ -291,7 +291,7 @@ function getCoordPos(letter: string, coord: number[][], scheme: string[]) {
 }
 
 function letterToFC(letter: string, facelet: string, coord: number[][], scheme: string[]): string {
-  if (!/^[A-X]$/.test(letter)) return "";
+  if (!/^[A-Z]$/.test(letter)) return "";
   let pos = getCoordPos(letter, coord, scheme);
   return pos.map(p => facelet[p]).join("");
 }
@@ -461,7 +461,7 @@ function markAsVisited(
 }
 
 function getEdgeCicles(
-  buffer: string,
+  buffers: string[],
   facelet: string,
   solvedFacelet: string,
   cicles: string[][][],
@@ -476,7 +476,7 @@ function getEdgeCicles(
     let lFlipped: string[] = [];
     let visited = scheme.map(_ => false);
     let nEdges = getEdges(order, n);
-    let mcicle = getEdgeCicle(buffer, facelet, solvedFacelet, nEdges, visited, scheme);
+    let mcicle = getEdgeCicle(buffers[n - 1], facelet, solvedFacelet, nEdges, visited, scheme);
 
     if (mcicle.length) {
       mcicle.pop();
@@ -485,7 +485,7 @@ function getEdgeCicles(
     }
 
     markAsVisited(mcicle, visited, nEdges, scheme);
-    markAsVisited([buffer], visited, nEdges, scheme);
+    markAsVisited([buffers[n - 1]], visited, nEdges, scheme);
 
     while (visited.some(e => !e)) {
       for (let i = 0, maxi = scheme.length; i < maxi; i += 1) {
@@ -562,7 +562,7 @@ function getCornerCicles(
 }
 
 function getCenterCicles(
-  buffer: string,
+  buffers: string[],
   facelet: string,
   solvedFacelet: string,
   cicles: string[][][],
@@ -585,7 +585,7 @@ function getCenterCicles(
     let lCicle: string[][] = [];
     let nCenters = getCenters(order, n);
     let visited = scheme.map((_, p) => solvedFacelet[nCenters[p][0]] === facelet[nCenters[p][0]]);
-    let mcicle = getCenterCicle(buffer, facelet, solvedFacelet, nCenters, visited, scheme);
+    let mcicle = getCenterCicle(buffers[n - 1], facelet, solvedFacelet, nCenters, visited, scheme);
 
     mcicle.pop();
     mcicle.shift();
@@ -595,7 +595,7 @@ function getCenterCicles(
     }
 
     markAsVisited(mcicle, visited, nCenters, scheme);
-    markAsVisited([buffer], visited, nCenters, scheme);
+    markAsVisited([buffers[n - 1]], visited, nCenters, scheme);
 
     // let iteration = 4;
 
@@ -618,9 +618,9 @@ function getCenterCicles(
 
 export function getBLDCicles(
   scramble: string,
-  eBuffer: string,
+  eBuffers: string[],
   cBuffer: string,
-  cnBuffer: string,
+  cnBuffers: string[],
   order: number,
   schema: ISchema["code"]
 ): BLDCicleResult {
@@ -649,8 +649,8 @@ export function getBLDCicles(
   }
 
   getCornerCicles(cBuffer, facelet, solvedFacelet, cCicles, twistedCorners, order, cornerScheme);
-  getEdgeCicles(eBuffer, facelet, solvedFacelet, eCicles, flippedEdges, order, edgeScheme);
-  getCenterCicles(cnBuffer, facelet, solvedFacelet, cnCicles, order, centerScheme);
+  getEdgeCicles(eBuffers, facelet, solvedFacelet, eCicles, flippedEdges, order, edgeScheme);
+  getCenterCicles(cnBuffers, facelet, solvedFacelet, cnCicles, order, centerScheme);
 
   let edgeLetters = eCicles.map(c => c.reduce((acc, e) => [...acc, ...e], []));
   let centerLetters = cnCicles.map(c => c.reduce((acc, e) => [...acc, ...e], []));

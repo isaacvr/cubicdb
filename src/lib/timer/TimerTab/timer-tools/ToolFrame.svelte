@@ -1,15 +1,20 @@
 <script lang="ts">
-  import { createEventDispatcher } from "svelte";
+  import { createEventDispatcher, setContext } from "svelte";
+  import { Button } from "flowbite-svelte";
   import type { ActiveTool } from "@interfaces";
   import CloseIcon from "@icons/Close.svelte";
   import ContractIcon from "@icons/ChevronLeft.svelte";
-  import { Button } from "flowbite-svelte";
+  import SettingsIcon from "@icons/Cog.svelte";
+  import { writable } from "svelte/store";
 
   export let tool: ActiveTool;
 
   const dispatch = createEventDispatcher();
 
   let open = tool.open;
+  let configMode = writable(false);
+
+  setContext("configMode", configMode);
 
   function toggle() {
     open = !open;
@@ -19,6 +24,10 @@
 
   function closeTool() {
     dispatch("close");
+  }
+
+  function toggleConfig() {
+    $configMode = !$configMode;
   }
 </script>
 
@@ -30,7 +39,11 @@
     <span class="title mr-8 cursor-default select-none">{tool.tool.text}</span>
 
     {#if open}
-      <Button size="xs" color="none" class="p-1 ml-auto" on:click={toggle}>
+      <Button size="xs" color="none" class="p-1 ml-auto" on:click={toggleConfig}>
+        <SettingsIcon size="1rem" />
+      </Button>
+
+      <Button size="xs" color="none" class="p-1" on:click={toggle}>
         <ContractIcon size="1.2rem" />
       </Button>
 

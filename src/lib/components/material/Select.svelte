@@ -95,7 +95,7 @@
 <Dropdown
   bind:open={showOptions}
   id={selectID}
-  containerClass={"max-h-[20rem] overflow-y-auto z-50 w-max " + (useFixed ? "!fixed" : "")}
+  containerClass={"max-h-[20rem] overflow-y-auto z-50 w-max bg-backgroundLevel2 " + (useFixed ? "!fixed" : "")}
   {placement}
 >
   {#each items as item, pos}

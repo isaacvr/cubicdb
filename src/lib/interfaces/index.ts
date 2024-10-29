@@ -1247,6 +1247,7 @@ export interface ToolItem {
   iconParams: any;
   component: any;
   handler: Function;
+  hasSettings?: boolean;
 }
 
 export interface ActiveTool {

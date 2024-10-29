@@ -66,8 +66,6 @@ const MegaminxSpec = [
   [/^,/, ","],
   [/^:/, ":"],
 
-  // /((DB[RL]\d*'?)|([dbDB][RL]\d*'?)|(\[[ulfrbd]\d*'?\])|([RDrd](\+|-){1,2})|([ULFRBDy]\d*'?))/g
-
   // Move:
   [/^DB[RL]\d*'?/, "MOVE"], // Single moves back side
   [/^[dbDB][RL]\d*'?/, "MOVE"], // Side faces move
