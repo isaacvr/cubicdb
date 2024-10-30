@@ -2,14 +2,22 @@
   import type { TimerContext } from "@interfaces";
   import * as all from "@cstimer/scramble";
   import Select from "@material/Select.svelte";
-  import { Button, ButtonGroup, Tooltip } from "flowbite-svelte";
-  import { SCHEMAS, SPEFFZ_SCH, getBLDCicles, type BLDCicleResult } from "./bld-helper/bld-cicles";
+  import { Button, Tooltip } from "flowbite-svelte";
+  import {
+    ORIS,
+    SCHEMAS,
+    SPEFFZ_SCH,
+    getBLDCicles,
+    type BLDCicleResult,
+    type Facelet,
+  } from "./bld-helper/bld-cicles";
   import ClockwiseIcon from "@icons/CogClockwise.svelte";
   import CounterClockwiseIcon from "@icons/CogCounterclockwise.svelte";
   import FlippedIcon from "@icons/ArrowUpDown.svelte";
   import type { Writable } from "svelte/store";
   import { getContext } from "svelte";
   import { localLang } from "$lib/stores/language.service";
+  import type { ColorName } from "@constants";
 
   export let context: TimerContext;
 
@@ -26,6 +34,12 @@
   let centerBuffers: string[] = [cnschema.schema[2][0]];
   let order = 3;
 
+  const FACENAME: Facelet[] = ["U", "R", "F", "D", "L", "B"];
+  const COLORS: ColorName[] = ["white", "red", "green", "yellow", "orange", "blue"];
+  let frontFace: Facelet = "F";
+  let upFace: Facelet = "U";
+  let setupSeq = "";
+
   let cicle: BLDCicleResult = {
     centers: [],
 
@@ -38,6 +52,7 @@
     twistedCornerBuffer: 0,
 
     parity: false,
+    recommendedSetup: "",
   };
 
   // function setSchema(sch: ISchema) {
@@ -102,11 +117,17 @@
 
     updateBuffers();
 
-    cicle = getBLDCicles(scr, edgeBuffers, cornerBuffer, centerBuffers, order, [
-      eschema.code,
-      cschema.code,
-      cnschema.code,
-    ]);
+    cicle = getBLDCicles(
+      scr,
+      edgeBuffers,
+      cornerBuffer,
+      centerBuffers,
+      order,
+      [eschema.code, cschema.code, cnschema.code],
+      order % 2 === 0
+        ? { type: "rotation", sequence: setupSeq }
+        : { type: "orientation", front: frontFace, up: upFace }
+    );
   }
 
   function getName(type: "center" | "edge", pos: number, o: number, short = false) {
@@ -140,18 +161,72 @@
     eschema &&
     cschema &&
     cnschema &&
+    (setupSeq || "-") &&
     updateMemo($scramble, $mode[1]);
 </script>
 
 <div class="grid">
   {#if $configMode}
-    <!-- Corners -->
-    <div class="w-full grid justify-center items-center">
-      <h3 class="text-center tx-emphasis p-0">Corners</h3>
-
-      <div class="flex items-end justify-center gap-4 flex-wrap">
+    <div class="flex">
+      {#if order & 1}
         <div>
-          <span class="flex items-center gap-2 justify-center">Scheme</span>
+          Front:
+          <Select
+            type="color"
+            class="bg-backgroundLevel2"
+            placement="right"
+            items={FACENAME}
+            bind:value={frontFace}
+            transform={e => e}
+            label={(e, p) => COLORS[p]}
+            onChange={() =>
+              (upFace =
+                upFace === frontFace || FACENAME[(FACENAME.indexOf(upFace) + 3) % 6] === frontFace
+                  ? FACENAME[(FACENAME.indexOf(upFace) + 1) % 6]
+                  : upFace)}
+          />
+
+          Up:
+          <Select
+            type="color"
+            class="bg-backgroundLevel2"
+            placement="right"
+            items={FACENAME}
+            bind:value={upFace}
+            transform={e => e}
+            label={(e, p) => COLORS[p]}
+            disabled={(e, p) => e === frontFace || FACENAME[(p + 3) % 6] === frontFace}
+          />
+        </div>
+        <div></div>
+      {:else}
+        <div class="flex items-center justify-center mx-auto gap-2">
+          Setup Move:
+          <Select
+            class="bg-backgroundLevel2"
+            items={ORIS}
+            bind:value={setupSeq}
+            transform={e => e[1]}
+            label={e => e[1]}
+            placement="right"
+          />
+
+          <!-- Recommended Setup: "{cicle.recommendedSetup}" -->
+        </div>
+      {/if}
+    </div>
+
+    <table>
+      <tr>
+        <th></th>
+        <th>Scheme</th>
+        <th>Buffer/s</th>
+      </tr>
+
+      <!-- Corners -->
+      <tr>
+        <td><h3 class="text-center tx-emphasis p-0">Corners</h3></td>
+        <td>
           <Select
             class="bg-backgroundLevel2"
             bind:value={cschema}
@@ -159,10 +234,8 @@
             transform={e => e}
             label={e => e.name}
           />
-        </div>
-
-        <div class="ml-2">
-          <span class="flex items-center gap-2 justify-center">Buffer</span>
+        </td>
+        <td class="flex flex-wrap w-max justify-center">
           <Select
             class="py-2 bg-backgroundLevel2"
             placement="right"
@@ -170,83 +243,78 @@
             bind:value={cornerBuffer}
             transform={e => e}
           />
-        </div>
-      </div>
-    </div>
+        </td>
+      </tr>
 
-    <!-- Edges -->
-    {#if order > 2}
-      <hr class="border-gray-500 my-1" />
+      <!-- Edges -->
+      {#if order > 2}
+        <tr> <td colspan="3"> <hr class="border-gray-500 my-1" /> </td> </tr>
 
-      <div class="w-full grid mt-2">
-        <h3 class="text-center tx-emphasis">Edges</h3>
-
-        <div class="flex items-end justify-center gap-4 flex-wrap">
-          <div>
-            <span class="flex items-center gap-2 justify-center">Scheme</span>
+        <tr>
+          <td><h3 class="text-center tx-emphasis mt-6">Edges</h3></td>
+          <td>
             <Select
-              class="bg-backgroundLevel2"
+              class="bg-backgroundLevel2 mt-6"
               bind:value={eschema}
               items={SCHEMAS}
               transform={e => e}
               label={e => e.name}
             />
-          </div>
+          </td>
+          <td class="flex flex-wrap w-max justify-center gap-1">
+            {#each edgeBuffers as e, pos}
+              <div class="grid place-items-center w-fit">
+                <span class="flex items-center gap-2 justify-center w-min"
+                  >{getName("edge", pos, order, true)}</span
+                >
+                <Select
+                  class="py-2 bg-backgroundLevel2"
+                  placement="right"
+                  items={SPEFFZ_SCH[1]}
+                  bind:value={e}
+                  transform={e => e}
+                />
+              </div>
+            {/each}
+          </td>
+        </tr>
+      {/if}
 
-          {#each edgeBuffers as e, pos}
-            <div>
-              <span class="flex items-center gap-2 justify-center"
-                >{getName("edge", pos, order, true)}</span
-              >
-              <Select
-                class="py-2 bg-backgroundLevel2"
-                placement="right"
-                items={SPEFFZ_SCH[1]}
-                bind:value={e}
-                transform={e => e}
-              />
-            </div>
-          {/each}
-        </div>
-      </div>
-    {/if}
-
-    <!-- Centers -->
-    {#if order > 3}
-      <hr class="border-gray-500 my-1" />
-
-      <div class="w-full grid mt-2">
-        <h3 class="text-center tx-emphasis">Centers</h3>
-
-        <div class="flex items-end justify-center gap-4 flex-wrap">
-          <div>
-            <span class="flex items-center gap-2 justify-center">Scheme</span>
+      <!-- Centers -->
+      {#if order > 3}
+        <tr> <td colspan="3"> <hr class="border-gray-500 my-1" /> </td> </tr>
+        <tr>
+          <td>
+            <h3 class="text-center tx-emphasis mt-6">Centers</h3>
+          </td>
+          <td>
             <Select
-              class="bg-backgroundLevel2"
+              class="bg-backgroundLevel2 mt-6"
               bind:value={cnschema}
               items={SCHEMAS}
               transform={e => e}
               label={e => e.name}
             />
-          </div>
-
-          {#each centerBuffers as c, pos}
-            <div>
-              <span class="flex items-center gap-2 justify-center"
-                >{getName("center", pos, order, true)}</span
-              >
-              <Select
-                class="py-2 bg-backgroundLevel2"
-                placement="right"
-                items={SPEFFZ_SCH[2]}
-                bind:value={c}
-                transform={e => e}
-              />
-            </div>
-          {/each}
-        </div>
-      </div>
-    {/if}
+          </td>
+          <td class="flex flex-wrap w-max justify-center items-center gap-1">
+            {#each centerBuffers as c, pos}
+              <div class="grid place-items-center w-fit">
+                <span class="flex items-center gap-2 justify-center w-min"
+                  >{getName("center", pos, order, true)}</span
+                >
+                <Select
+                  class="py-2 bg-backgroundLevel2"
+                  placement="right"
+                  items={SPEFFZ_SCH[2]}
+                  bind:value={c}
+                  transform={e => e}
+                />
+              </div>
+            {/each}
+          </td>
+        </tr>
+      {/if}
+    </table>
 
     <Button
       color="none"

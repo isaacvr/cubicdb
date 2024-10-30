@@ -13,6 +13,7 @@ export interface BLDCicleResult {
   twistedCornerBuffer: number;
 
   parity: boolean;
+  recommendedSetup: string;
 }
 
 export interface ISchema {
@@ -20,6 +21,21 @@ export interface ISchema {
   code: "speffz" | "chichu" | "ar";
   schema: string[][];
 }
+
+interface IRotationSetup {
+  type: "rotation";
+  sequence: string;
+}
+
+export type Facelet = "U" | "R" | "F" | "D" | "L" | "B";
+
+interface IOrientationSetup {
+  type: "orientation";
+  front: Facelet;
+  up: Facelet;
+}
+
+type ISetup = IRotationSetup | IOrientationSetup;
 
 // U              R             F             D             L             B
 // 000 000 000    011 111 111   112 222 222   222 333 333   333 344 444   444 445 555
@@ -296,7 +312,7 @@ function letterToFC(letter: string, facelet: string, coord: number[][], scheme: 
   return pos.map(p => facelet[p]).join("");
 }
 
-function getSolvedFacelet(facelet: string, order: number): string {
+function getBaseSolvedFacelet(facelet: string, order: number) {
   let o2 = order ** 2;
   let ini = o2 >> 1;
 
@@ -307,6 +323,12 @@ function getSolvedFacelet(facelet: string, order: number): string {
   } else {
     centers = "URFDLB";
   }
+  return centers;
+}
+
+function getSolvedFacelet(facelet: string, order: number, _centers?: string): string {
+  let o2 = order ** 2;
+  let centers = _centers || getBaseSolvedFacelet(facelet, order);
 
   return centers
     .split("")
@@ -616,17 +638,94 @@ function getCenterCicles(
   }
 }
 
+export const ORIS = [
+  ["UF", ""],
+  ["UR", "y"],
+  ["UL", "y2"],
+  ["UB", "y'"],
+  ["LF", "z"],
+  ["LU", "z y"],
+  ["LD", "z y2"],
+  ["LB", "z y'"],
+  ["RF", "z'"],
+  ["RD", "z' y"],
+  ["RU", "z' y2"],
+  ["RB", "z' y'"],
+  ["FD", "x"],
+  ["FR", "x y"],
+  ["FL", "x y2"],
+  ["FU", "x y'"],
+  ["BU", "x'"],
+  ["BR", "x' y"],
+  ["BL", "x' y2"],
+  ["BD", "x' y'"],
+  ["DB", "x2"],
+  ["DR", "x2 y"],
+  ["DL", "x2 y2"],
+  ["DF", "x2 y'"],
+];
+
+function getSetup(s: ISetup, facelet: string, order: number) {
+  if (s.type === "rotation") return s.sequence;
+
+  let base = getBaseSolvedFacelet(facelet, order);
+  let targetOri = ORIS.find(o => o[0][0] === s.up && o[0][1] === s.front);
+  let currentOri = ORIS.find(o => o[0][0] === base[0] && o[0][1] === base[2]);
+
+  targetOri = targetOri ? targetOri : ["", ""];
+  currentOri = currentOri ? currentOri : ["", ""];
+
+  return Puzzle.inverse("rubik", currentOri[1]) + " " + targetOri[1];
+}
+
+function getRecommendedSetup(facelet: string, order: number) {
+  let minDistance = Infinity;
+  let setup = "";
+  let fc1 = facelet.split("");
+  let maxj = fc1.length;
+
+  for (let i = 0, maxi = ORIS.length; i < maxi; i += 1) {
+    let ori = ORIS[i];
+    let pz = new Puzzle({ type: "rubik", order: [1] });
+    pz.move(ori[1]);
+
+    let base = pz.toFacelet();
+
+    let fc2 = getSolvedFacelet(facelet, order, base).split("");
+    let res = 0;
+
+    for (let j = 0; j < maxj; j += 1) {
+      res += fc1[j] === fc2[j] ? 0 : 1;
+    }
+
+    if (res < minDistance) {
+      minDistance = res;
+      setup = ori[1];
+    }
+  }
+
+  return setup;
+}
+
 export function getBLDCicles(
   scramble: string,
   eBuffers: string[],
   cBuffer: string,
   cnBuffers: string[],
   order: number,
-  schemas: ISchema["code"][]
+  schemas: ISchema["code"][],
+  setup: ISetup
 ): BLDCicleResult {
   let pz = Puzzle.fromSequence(scramble, { type: "rubik", order: [order] }, false, true);
   let facelet = pz.toFacelet();
+  let setupSeq = getSetup(setup, facelet, order);
+
+  pz.move(setupSeq);
+
+  facelet = pz.toFacelet();
+
   let solvedFacelet = getSolvedFacelet(facelet, order);
+  // let recommendedSetup = getRecommendedSetup(facelet, order);
 
   let eCicles: string[][][] = [];
   let cCicles: string[][] = [];
@@ -672,5 +771,7 @@ export function getBLDCicles(
     twistedCornerBuffer: co === 0 ? 0 : co === 1 ? -1 : 1,
 
     parity: edgeLetters.length % 2 === 1,
+
+    recommendedSetup: "",
   };
 }
