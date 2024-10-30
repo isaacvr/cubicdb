@@ -3,13 +3,7 @@
   import * as all from "@cstimer/scramble";
   import Select from "@material/Select.svelte";
   import { Button, ButtonGroup, Tooltip } from "flowbite-svelte";
-  import {
-    SCHEMAS,
-    SPEFFZ_SCH,
-    getBLDCicles,
-    type BLDCicleResult,
-    type ISchema,
-  } from "./bld-helper/bld-cicles";
+  import { SCHEMAS, SPEFFZ_SCH, getBLDCicles, type BLDCicleResult } from "./bld-helper/bld-cicles";
   import ClockwiseIcon from "@icons/CogClockwise.svelte";
   import CounterClockwiseIcon from "@icons/CogCounterclockwise.svelte";
   import FlippedIcon from "@icons/ArrowUpDown.svelte";
@@ -23,11 +17,13 @@
 
   const { scramble, mode } = context;
 
-  let schema = SCHEMAS[0];
+  let cschema = SCHEMAS[0];
+  let eschema = SCHEMAS[0];
+  let cnschema = SCHEMAS[0];
 
-  let cornerBuffer = "";
-  let edgeBuffers: string[] = [""];
-  let centerBuffers: string[] = [""];
+  let cornerBuffer = cschema.schema[0][4];
+  let edgeBuffers: string[] = [eschema.schema[1][20]];
+  let centerBuffers: string[] = [cnschema.schema[2][0]];
   let order = 3;
 
   let cicle: BLDCicleResult = {
@@ -44,15 +40,9 @@
     parity: false,
   };
 
-  function setSchema(sch: ISchema) {
-    schema = sch;
-    cornerBuffer = sch.schema[0][4];
-    edgeBuffers = [sch.schema[1][20]];
-    centerBuffers = [sch.schema[2][0]];
-  }
-
-  // Speffz by default
-  setSchema(SCHEMAS[0]);
+  // function setSchema(sch: ISchema) {
+  //   schema = sch;
+  // }
 
   function cleanCicle() {
     cicle.centers = [];
@@ -75,7 +65,6 @@
   }
 
   function updateBuffers() {
-    const sch = schema.schema;
     // Centers
     let dims = [];
 
@@ -86,11 +75,17 @@
     }
 
     const centers = dims[0] * dims[1];
-    centerBuffers = [...centerBuffers, ...sch[2][0].repeat(centers).split("")].slice(0, centers);
+    centerBuffers = [...centerBuffers, ...cnschema.schema[2][0].repeat(centers).split("")].slice(
+      0,
+      centers
+    );
 
     // Edges
     const edges = (order - 1) >> 1;
-    edgeBuffers = [...edgeBuffers, ...sch[1][20].repeat(edges).split("")].slice(0, edges);
+    edgeBuffers = [...edgeBuffers, ...eschema.schema[1][20].repeat(edges).split("")].slice(
+      0,
+      edges
+    );
   }
 
   function updateMemo(scr: string, md: string) {
@@ -107,19 +102,29 @@
 
     updateBuffers();
 
-    cicle = getBLDCicles(scr, edgeBuffers, cornerBuffer, centerBuffers, order, schema.code);
+    cicle = getBLDCicles(scr, edgeBuffers, cornerBuffer, centerBuffers, order, [
+      eschema.code,
+      cschema.code,
+      cnschema.code,
+    ]);
   }
 
-  function getName(type: "center" | "edge", pos: number, o: number) {
+  function getName(type: "center" | "edge", pos: number, o: number, short = false) {
     if (o > 5) {
-      return type === "center" ? "Centers " + (pos + 1) : "Edges " + (pos + 1);
+      let centers = short ? "C" : "Centers ";
+      let edges = short ? "E" : "Edges ";
+      return type === "center" ? centers + (pos + 1) : edges + (pos + 1);
     }
 
     if (o === 5) {
       return type === "center"
         ? pos === 0
-          ? "x Centers"
-          : "+ Centers"
+          ? short
+            ? "x"
+            : "x Centers"
+          : short
+            ? "+"
+            : "+ Centers"
         : pos === 0
           ? "Midges"
           : "Wings";
@@ -132,71 +137,116 @@
     cornerBuffer &&
     edgeBuffers &&
     centerBuffers &&
-    schema &&
+    eschema &&
+    cschema &&
+    cnschema &&
     updateMemo($scramble, $mode[1]);
 </script>
 
 <div class="grid">
   {#if $configMode}
-    <!-- Config -->
-    <div class="w-full flex justify-center">
-      <ButtonGroup>
-        {#each SCHEMAS as sch}
-          <Button
-            on:click={() => setSchema(sch)}
-            color={sch === schema ? "yellow" : "dark"}
-            class={"py-1 " + (sch === schema ? "text-black" : "text-gray-400")}
-          >
-            {sch.name}
-          </Button>
-        {/each}
-      </ButtonGroup>
+    <!-- Corners -->
+    <div class="w-full grid justify-center items-center">
+      <h3 class="text-center tx-emphasis p-0">Corners</h3>
+
+      <div class="flex items-end justify-center gap-4 flex-wrap">
+        <div>
+          <span class="flex items-center gap-2 justify-center">Scheme</span>
+          <Select
+            class="bg-backgroundLevel2"
+            bind:value={cschema}
+            items={SCHEMAS}
+            transform={e => e}
+            label={e => e.name}
+          />
+        </div>
+
+        <div class="ml-2">
+          <span class="flex items-center gap-2 justify-center">Buffer</span>
+          <Select
+            class="py-2 bg-backgroundLevel2"
+            placement="right"
+            items={SPEFFZ_SCH[0]}
+            bind:value={cornerBuffer}
+            transform={e => e}
+          />
+        </div>
+      </div>
     </div>
 
-    <h2 class="text-center w-full text-orange-200">Buffers</h2>
+    <!-- Edges -->
+    {#if order > 2}
+      <hr class="border-gray-500 my-1" />
 
-    <ul class="buffer-list">
-      <!-- Corners -->
-      <li>
-        <span class="flex items-center gap-2"> Corners </span>
+      <div class="w-full grid mt-2">
+        <h3 class="text-center tx-emphasis">Edges</h3>
 
-        <Select
-          class="py-2 bg-backgroundLevel2"
-          placement="right"
-          items={SPEFFZ_SCH[0]}
-          bind:value={cornerBuffer}
-          transform={e => e}
-        />
-      </li>
+        <div class="flex items-end justify-center gap-4 flex-wrap">
+          <div>
+            <span class="flex items-center gap-2 justify-center">Scheme</span>
+            <Select
+              class="bg-backgroundLevel2"
+              bind:value={eschema}
+              items={SCHEMAS}
+              transform={e => e}
+              label={e => e.name}
+            />
+          </div>
 
-      <!-- Edges -->
-      {#each edgeBuffers as e, pos}
-        <li>
-          <span class="flex items-center gap-2">{getName("edge", pos, order)}</span>
-          <Select
-            class="py-2 bg-backgroundLevel2"
-            placement="right"
-            items={SPEFFZ_SCH[1]}
-            bind:value={e}
-            transform={e => e}
-          />
-        </li>
-      {/each}
+          {#each edgeBuffers as e, pos}
+            <div>
+              <span class="flex items-center gap-2 justify-center"
+                >{getName("edge", pos, order, true)}</span
+              >
+              <Select
+                class="py-2 bg-backgroundLevel2"
+                placement="right"
+                items={SPEFFZ_SCH[1]}
+                bind:value={e}
+                transform={e => e}
+              />
+            </div>
+          {/each}
+        </div>
+      </div>
+    {/if}
 
-      <!-- Centers -->
-      {#each centerBuffers as c, pos}
-        <li>
-          <span class="flex items-center gap-2">{getName("center", pos, order)}</span>
-          <Select
-            class="py-2 bg-backgroundLevel2"
-            placement="right"
-            items={SPEFFZ_SCH[2]}
-            bind:value={c}
-            transform={e => e}
-          />
-        </li>
-      {/each}
-    </ul>
+    <!-- Centers -->
+    {#if order > 3}
+      <hr class="border-gray-500 my-1" />
+
+      <div class="w-full grid mt-2">
+        <h3 class="text-center tx-emphasis">Centers</h3>
+
+        <div class="flex items-end justify-center gap-4 flex-wrap">
+          <div>
+            <span class="flex items-center gap-2 justify-center">Scheme</span>
+            <Select
+              class="bg-backgroundLevel2"
+              bind:value={cnschema}
+              items={SCHEMAS}
+              transform={e => e}
+              label={e => e.name}
+            />
+          </div>
+
+          {#each centerBuffers as c, pos}
+            <div>
+              <span class="flex items-center gap-2 justify-center"
+                >{getName("center", pos, order, true)}</span
+              >
+              <Select
+                class="py-2 bg-backgroundLevel2"
+                placement="right"
+                items={SPEFFZ_SCH[2]}
+                bind:value={c}
+                transform={e => e}
+              />
+            </div>
+          {/each}
+        </div>
+      </div>
+    {/if}
 
     <Button
       color="none"
@@ -313,13 +363,3 @@
     </table>
   {/if}
 </div>
-
-<style lang="postcss">
-  .buffer-list {
-    @apply flex flex-wrap gap-2 justify-evenly;
-  }
-
-  .buffer-list li {
-    @apply grid;
-  }
-</style>

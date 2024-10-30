@@ -622,7 +622,7 @@ export function getBLDCicles(
   cBuffer: string,
   cnBuffers: string[],
   order: number,
-  schema: ISchema["code"]
+  schemas: ISchema["code"][]
 ): BLDCicleResult {
   let pz = Puzzle.fromSequence(scramble, { type: "rubik", order: [order] }, false, true);
   let facelet = pz.toFacelet();
@@ -640,11 +640,14 @@ export function getBLDCicles(
 
   for (let i = 0, maxi = SCHEMAS.length; i < maxi; i += 1) {
     let sch = SCHEMAS[i];
-    if (sch.code === schema) {
-      cornerScheme = sch.schema[0];
+    if (sch.code === schemas[0]) {
       edgeScheme = sch.schema[1];
+    }
+    if (sch.code === schemas[1]) {
+      cornerScheme = sch.schema[0];
+    }
+    if (sch.code === schemas[2]) {
       centerScheme = sch.schema[2];
-      break;
     }
   }
 
