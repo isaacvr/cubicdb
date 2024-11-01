@@ -641,28 +641,28 @@ function getCenterCicles(
 export const ORIS = [
   ["UF", ""],
   ["UR", "y"],
-  ["UL", "y2"],
-  ["UB", "y'"],
+  ["UB", "y2"],
+  ["UL", "y'"],
   ["LF", "z"],
   ["LU", "z y"],
-  ["LD", "z y2"],
-  ["LB", "z y'"],
+  ["LB", "z y2"],
+  ["LD", "z y'"],
   ["RF", "z'"],
   ["RD", "z' y"],
-  ["RU", "z' y2"],
-  ["RB", "z' y'"],
+  ["RB", "z' y2"],
+  ["RU", "z' y'"],
   ["FD", "x"],
   ["FR", "x y"],
-  ["FL", "x y2"],
-  ["FU", "x y'"],
+  ["FU", "x y2"],
+  ["FL", "x y'"],
   ["BU", "x'"],
   ["BR", "x' y"],
-  ["BL", "x' y2"],
-  ["BD", "x' y'"],
+  ["BD", "x' y2"],
+  ["BL", "x' y'"],
   ["DB", "x2"],
   ["DR", "x2 y"],
-  ["DL", "x2 y2"],
-  ["DF", "x2 y'"],
+  ["DF", "x2 y2"],
+  ["DL", "x2 y'"],
 ];
 
 function getSetup(s: ISetup, facelet: string, order: number) {
@@ -674,6 +674,8 @@ function getSetup(s: ISetup, facelet: string, order: number) {
 
   targetOri = targetOri ? targetOri : ["", ""];
   currentOri = currentOri ? currentOri : ["", ""];
+
+  console.log("CORI_TORI: ", currentOri, targetOri);
 
   return Puzzle.inverse("rubik", currentOri[1]) + " " + targetOri[1];
 }
@@ -721,6 +723,8 @@ export function getBLDCicles(
   let setupSeq = getSetup(setup, facelet, order);
 
   pz.move(setupSeq);
+
+  console.log("SETUP: ", setupSeq);
 
   facelet = pz.toFacelet();
 

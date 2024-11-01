@@ -310,11 +310,12 @@
   }
 
   function handleContextMenu(e: MouseEvent, s: Solve) {
+    console.log("CONTEXT_MENU");
     e.stopPropagation();
     e.preventDefault();
 
     const dims = contextMenuElement.getBoundingClientRect();
-    const zoom = ~~document.documentElement.style.getPropertyValue("--zoom-factor") || 1;
+    const zoom = $dataService.config.global.zoomFactor / 100;
     const footerHeight = 2.5 * 16 * zoom;
     const sideSpace = 2.5 * 16 * zoom;
     const avalHeight = document.body.clientHeight - footerHeight;

@@ -26,6 +26,7 @@ export const Chinese: Language = {
     steps: "步骤",
     step: "步骤",
     scramble: "打乱",
+    scrambles: "打乱",
     search: "搜索",
     toScramble: "打乱谜题",
     reconstruction: "重建",

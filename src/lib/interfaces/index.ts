@@ -843,6 +843,7 @@ export interface Language {
     steps: string;
     step: string;
     scramble: string;
+    scrambles: string;
     search: string;
     toScramble: string;
     reconstruction: string;

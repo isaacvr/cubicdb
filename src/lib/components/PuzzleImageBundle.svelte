@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { createEventDispatcher } from "svelte";
   import PuzzleImage from "$lib/components/PuzzleImage.svelte";
   import { Button } from "flowbite-svelte";
   import { ChevronLeftSolid, ChevronRightSolid } from "flowbite-svelte-icons";

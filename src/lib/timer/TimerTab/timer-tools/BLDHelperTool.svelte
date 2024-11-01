@@ -14,10 +14,13 @@
   import ClockwiseIcon from "@icons/CogClockwise.svelte";
   import CounterClockwiseIcon from "@icons/CogCounterclockwise.svelte";
   import FlippedIcon from "@icons/ArrowUpDown.svelte";
+  import { ChevronLeftSolid, ChevronRightSolid } from "flowbite-svelte-icons";
   import type { Writable } from "svelte/store";
   import { getContext } from "svelte";
   import { localLang } from "$lib/stores/language.service";
-  import type { ColorName } from "@constants";
+  import { MISC, type ColorName } from "@constants";
+  import { ScrambleParser } from "@classes/scramble-parser";
+  import { minmax } from "@helpers/math";
 
   export let context: TimerContext;
 
@@ -39,35 +42,12 @@
   let frontFace: Facelet = "F";
   let upFace: Facelet = "U";
   let setupSeq = "";
+  let selectedCicle = 0;
 
-  let cicle: BLDCicleResult = {
-    centers: [],
-
-    edges: [],
-    flippedEdges: [],
-    edgeBufferState: [],
-
-    corners: [],
-    twistedCorners: [],
-    twistedCornerBuffer: 0,
-
-    parity: false,
-    recommendedSetup: "",
-  };
-
-  // function setSchema(sch: ISchema) {
-  //   schema = sch;
-  // }
+  let cicles: BLDCicleResult[] = [];
 
   function cleanCicle() {
-    cicle.centers = [];
-    cicle.edges = [];
-    cicle.flippedEdges = [];
-    cicle.edgeBufferState = [];
-    cicle.corners = [];
-    cicle.twistedCorners = [];
-    cicle.twistedCornerBuffer = 0;
-    cicle.parity = false;
+    cicles.length = 0;
   }
 
   function getPairs(letters: string[]): string {
@@ -117,17 +97,27 @@
 
     updateBuffers();
 
-    cicle = getBLDCicles(
-      scr,
-      edgeBuffers,
-      cornerBuffer,
-      centerBuffers,
-      order,
-      [eschema.code, cschema.code, cnschema.code],
-      order % 2 === 0
-        ? { type: "rotation", sequence: setupSeq }
-        : { type: "orientation", front: frontFace, up: upFace }
+    let scramble = MISC.some(mmode =>
+      typeof mmode === "string" ? mmode === md : mmode.indexOf(md) > -1
+    )
+      ? ScrambleParser.parseMisc(scr, md)
+      : [scr];
+
+    cicles = scramble.map(s =>
+      getBLDCicles(
+        s,
+        edgeBuffers,
+        cornerBuffer,
+        centerBuffers,
+        order,
+        [eschema.code, cschema.code, cnschema.code],
+        order % 2 === 0
+          ? { type: "rotation", sequence: setupSeq }
+          : { type: "orientation", front: frontFace, up: upFace }
+      )
     );
+
+    selectedCicle = 0;
   }
 
   function getName(type: "center" | "edge", pos: number, o: number, short = false) {
@@ -152,6 +142,11 @@
     }
 
     return type === "center" ? "Centers" : "Edges";
+  }
+
+  function step(ev: MouseEvent, v: number) {
+    ev.stopPropagation();
+    selectedCicle = minmax(selectedCicle + v, 0, cicles.length);
   }
 
   $: $scramble &&
@@ -325,109 +320,145 @@
     </Button>
   {:else}
     <!-- Memo -->
-    <table class="w-full">
-      <!-- CORNERS -->
-      {#if cicle.corners.length}
-        <tr>
-          <td class="text-green-300 flex items-center">
-            {#if cicle.twistedCornerBuffer === -1}
-              Corners <ClockwiseIcon class="cursor-help ml-1" />:
-              <Tooltip class="!bg-green-700"
-                >The buffer should be rotated clockwise at the end</Tooltip
-              >
-            {:else if cicle.twistedCornerBuffer === 1}
-              Corners <CounterClockwiseIcon class="cursor-help ml-1" />:
-              <Tooltip class="!bg-green-700">
-                The buffer should be rotated counterclockwise at the end
-              </Tooltip>
-            {:else}
-              Corners:
-            {/if}
-          </td>
-          <td>{getPairs(cicle.corners)}</td>
-        </tr>
-
-        {#if cicle.twistedCorners.length > 0}
-          <tr>
-            <td class="text-yellow-300">Twisted: </td>
-            <td>
-              <ul class="flex gap-3">
-                {#each cicle.twistedCorners as cn}
-                  <li class="flex items-center gap-2 border-b">
-                    {cn.letter}
-
-                    {#if cn.dir === -1}
-                      <ClockwiseIcon class="cursor-help" />
-                      <Tooltip class="!bg-green-700"
-                        >This piece should be rotated clockwise at the end</Tooltip
-                      >
-                    {:else}
-                      <CounterClockwiseIcon class="cursor-help" />
-                      <Tooltip class="!bg-green-700"
-                        >This piece should be rotated counterclockwise at the end</Tooltip
-                      >
-                    {/if}
-                  </li>
-                {/each}
-              </ul>
-            </td>
-          </tr>
-        {/if}
+    <!-- {#if cicles.length} -->
+    {#each cicles as cicle, pos}
+      <!-- {@const cicle = cicles[selectedCicle]} -->
+      {#if cicles.length > 1}
+        <h3
+          class={"text-center tx-emphasis " +
+            (pos ? "mt-4 border-t border-t-gray-500" : "") +
+            (pos % 2 === 1 ? " bg-backgroundLevel2" : "")}
+        >
+          {$localLang.global.scramble} #{pos + 1}
+        </h3>
       {/if}
-
-      <!-- EDGES -->
-      {#if cicle.edges.reduce((a, b) => a + b.length, 0)}
+      <table class={"w-full" + (pos % 2 === 1 ? " bg-backgroundLevel2" : "")}>
+        <!-- CORNERS -->
         {#if cicle.corners.length}
           <tr>
-            <td colspan="2"><hr class="border-gray-500 my-2" /></td>
-          </tr>
-        {/if}
-
-        {#each cicle.edges as edge, pos}
-          {#if pos}
-            <tr>
-              <td><hr class="border-gray-400" /></td>
-            </tr>
-          {/if}
-
-          <tr>
             <td class="text-green-300 flex items-center">
-              {getName("edge", pos, order)}:
-
-              {#if cicle.edgeBufferState[pos] != "normal"}
-                <FlippedIcon class="outline-none cursor-help" />
-                <Tooltip class="!bg-green-700">The buffer will be flipped at the end</Tooltip>
+              {#if cicle.twistedCornerBuffer === -1}
+                Corners <ClockwiseIcon class="cursor-help ml-1" />:
+                <Tooltip class="!bg-green-700"
+                  >The buffer should be rotated clockwise at the end</Tooltip
+                >
+              {:else if cicle.twistedCornerBuffer === 1}
+                Corners <CounterClockwiseIcon class="cursor-help ml-1" />:
+                <Tooltip class="!bg-green-700">
+                  The buffer should be rotated counterclockwise at the end
+                </Tooltip>
+              {:else}
+                Corners:
               {/if}
             </td>
-            <td>{getPairs(edge)}</td>
+            <td>{getPairs(cicle.corners)}</td>
           </tr>
 
-          {#if cicle.flippedEdges[pos] && cicle.flippedEdges[pos].length > 0}
+          {#if cicle.twistedCorners.length > 0}
             <tr>
-              <td class="text-yellow-300"
-                >Flipped{cicle.edges.length > 1 ? " " + (pos + 1) : ""}:
+              <td class="text-yellow-300">Twisted: </td>
+              <td>
+                <ul class="flex gap-3">
+                  {#each cicle.twistedCorners as cn}
+                    <li class="flex items-center gap-2 border-b">
+                      {cn.letter}
+
+                      {#if cn.dir === -1}
+                        <ClockwiseIcon class="cursor-help" />
+                        <Tooltip class="!bg-green-700"
+                          >This piece should be rotated clockwise at the end</Tooltip
+                        >
+                      {:else}
+                        <CounterClockwiseIcon class="cursor-help" />
+                        <Tooltip class="!bg-green-700"
+                          >This piece should be rotated counterclockwise at the end</Tooltip
+                        >
+                      {/if}
+                    </li>
+                  {/each}
+                </ul>
               </td>
-              <td>{cicle.flippedEdges[pos].join(", ")}</td>
             </tr>
           {/if}
-        {/each}
-      {/if}
-
-      <!-- CENTERS -->
-      {#if cicle.centers.length}
-        {#if cicle.corners.length || cicle.edges.reduce((a, b) => a + b.length, 0)}
-          <tr>
-            <td colspan="2"><hr class="border-gray-500 my-2" /></td>
-          </tr>
         {/if}
 
-        {#each cicle.centers as center, pos}
-          <tr>
-            <td class="text-green-300">{getName("center", pos, order)}: </td>
-            <td>{getPairs(center)}</td>
-          </tr>
-        {/each}
-      {/if}
-    </table>
+        <!-- EDGES -->
+        {#if cicle.edges.reduce((a, b) => a + b.length, 0)}
+          {#if cicle.corners.length}
+            <tr>
+              <td colspan="2"><hr class="border-gray-500 my-2" /></td>
+            </tr>
+          {/if}
+
+          {#each cicle.edges as edge, pos}
+            {#if pos}
+              <tr>
+                <td><hr class="border-gray-400" /></td>
+              </tr>
+            {/if}
+
+            <tr>
+              <td class="text-green-300 flex items-center">
+                {getName("edge", pos, order)}:
+
+                {#if cicle.edgeBufferState[pos] != "normal"}
+                  <FlippedIcon class="outline-none cursor-help" />
+                  <Tooltip class="!bg-green-700">The buffer will be flipped at the end</Tooltip>
+                {/if}
+              </td>
+              <td>{getPairs(edge)}</td>
+            </tr>
+
+            {#if cicle.flippedEdges[pos] && cicle.flippedEdges[pos].length > 0}
+              <tr>
+                <td class="text-yellow-300"
+                  >Flipped{cicle.edges.length > 1 ? " " + (pos + 1) : ""}:
+                </td>
+                <td>{cicle.flippedEdges[pos].join(", ")}</td>
+              </tr>
+            {/if}
+          {/each}
+        {/if}
+
+        <!-- CENTERS -->
+        {#if cicle.centers.length}
+          {#if cicle.corners.length || cicle.edges.reduce((a, b) => a + b.length, 0)}
+            <tr>
+              <td colspan="2"><hr class="border-gray-500 my-2" /></td>
+            </tr>
+          {/if}
+
+          {#each cicle.centers as center, pos}
+            <tr>
+              <td class="text-green-300">{getName("center", pos, order)}: </td>
+              <td>{getPairs(center)}</td>
+            </tr>
+          {/each}
+        {/if}
+      </table>
+    {/each}
+    <!-- {/if} -->
+
+    <!-- {#if cicles.length > 1}
+      <div class="flex items-center mx-auto">
+        <Button
+          color="none"
+          on:click={ev => step(ev, -1)}
+          disabled={selectedCicle === 0}
+          class={"rounded-full w-[3rem] h-[3rem] " + (cicles.length < 2 ? "hidden" : "mt-2")}
+        >
+          <ChevronLeftSolid class="pointer-events-none w-2 h-2" />
+        </Button>
+        <span>{$localLang.global.scramble} #{selectedCicle + 1}</span>
+        <Button
+          color="none"
+          on:click={ev => step(ev, 1)}
+          disabled={selectedCicle + 1 === cicles.length}
+          class={"rounded-full w-[3rem] h-[3rem] " + (cicles.length < 2 ? "hidden" : "mt-2")}
+        >
+          <ChevronRightSolid class="pointer-events-none w-2 h-2" />
+        </Button>
+      </div>
+    {/if} -->
   {/if}
 </div>

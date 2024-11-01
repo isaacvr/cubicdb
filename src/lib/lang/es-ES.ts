@@ -26,6 +26,7 @@ export const Spanish: Language = {
     steps: "Pasos",
     step: "Paso",
     scramble: "Mezcla",
+    scrambles: "Mezclas",
     search: "Buscar",
     toScramble: "Mezclar cubo",
     reconstruction: "Reconstrucción",

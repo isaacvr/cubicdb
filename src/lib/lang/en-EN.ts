@@ -26,6 +26,7 @@ export const English: Language = {
     steps: "Steps",
     step: "Step",
     scramble: "Scramble",
+    scrambles: "Scrambles",
     search: "Search",
     toScramble: "Scramble puzzle",
     reconstruction: "Reconstruction",
