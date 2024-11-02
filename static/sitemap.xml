@@ -47,7 +47,7 @@
     <priority>0.2</priority>
   </url>
   <url>
-    <loc>https://cubicdb.netlify.app/cubicdb</loc>
+    <loc>https://cubicdb.netlify.app/about-cubicdb</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
