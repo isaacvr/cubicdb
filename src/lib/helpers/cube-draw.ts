@@ -14,7 +14,6 @@ import { dataService } from "$lib/data-services/data.service";
 export async function pGenerateCubeBundle(
   cubes: Puzzle[],
   width?: number,
-  _all = true,
   inCube = false,
   printable = false,
   cache = false,

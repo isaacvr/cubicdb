@@ -119,7 +119,7 @@
     let arr: Puzzle[] =
       type < 2 ? cards.map(e => e.puzzle as Puzzle) : cases.map(e => e._puzzle as Puzzle);
 
-    pGenerateCubeBundle(arr, 500, true, true, false, true)
+    pGenerateCubeBundle(arr, 500, true, false, true)
       .then(_ => {
         cards = cards;
         cases = cases;
@@ -244,7 +244,7 @@
         let pos = cases.indexOf(item);
         alg._puzzle = algorithmToPuzzle(alg, true);
 
-        pGenerateCubeBundle([alg._puzzle], 500, true, true)
+        pGenerateCubeBundle([alg._puzzle], 500, true)
           .then(_ => {
             cases[pos] = alg;
           })

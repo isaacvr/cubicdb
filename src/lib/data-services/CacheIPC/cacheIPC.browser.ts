@@ -112,11 +112,15 @@ export class CacheBrowserIPC implements CacheIPC {
 
   async cacheSaveImage(hash: string, data: string): Promise<void> {
     await this.init();
-    if (!this.DB) return;
+    if (!this.DB) {
+      console.log("DB does not exists");
+      return;
+    }
 
     const tx = this.DB.transaction(CacheStore, "readwrite");
     await Promise.all([tx.store.put(<ICacheImg>{ hash, img: data }), tx.done]);
     this.cache.set(hash, data);
+    console.log("Transaction: done");
   }
 
   async cacheSave(hash: string, data: string): Promise<void> {}

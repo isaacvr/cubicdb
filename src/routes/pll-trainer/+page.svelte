@@ -96,7 +96,7 @@
           );
         }
 
-        pGenerateCubeBundle(puzzles, 500, true).then(res => {
+        pGenerateCubeBundle(puzzles, 500).then(res => {
           images.length = 0;
           images.push(...res);
           lastTime = Date.now();

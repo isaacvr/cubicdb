@@ -67,19 +67,21 @@
   }
 
   (async () => {
-    for (let i = 0, maxi = puzzles.length; i < maxi; i += 1) {
-      let hash = sha1(puzzles[i]);
-      let inCache = await $dataService.cache.cacheCheckImage(hash);
-      let img = await $dataService.cache.cacheGetImage(hash);
+    let hashes = puzzles.map(sha1);
+    let imgCache = await $dataService.cache.cacheGetImageBundle(hashes);
 
-      if (inCache && img) {
-        puzzles[i].img = img;
-      } else {
-        puzzles[i].img = (
-          await pGenerateCubeBundle([new Puzzle({ type: puzzles[i].value, order: [3] })])
-        )[0];
-        await $dataService.cache.cacheSaveImage(hash, puzzles[i].img);
-      }
+    // Assign images
+    imgCache.forEach((img, p) => (puzzles[p].img = img));
+
+    let missingPos = imgCache.reduce((acc, e, p) => (e ? acc : [...acc, p]), [] as number[]);
+    let cubes = missingPos.map(p => new Puzzle({ type: puzzles[p].value, order: [3] }));
+    let imgs = await pGenerateCubeBundle(cubes);
+
+    // Reassign the missing ones
+    for (let i = 0, maxi = missingPos.length; i < maxi; i += 1) {
+      let mp = missingPos[i];
+      puzzles[mp].img = imgs[i];
+      await $dataService.cache.cacheSaveImage(hashes[mp], imgs[i]);
     }
   })();
 

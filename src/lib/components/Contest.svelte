@@ -433,7 +433,7 @@
       } as PuzzleOptions)
     );
 
-    pGenerateCubeBundle(puzzles, 1000, true, false, true, false, "raster").then(res => {
+    pGenerateCubeBundle(puzzles, 1000, false, true, false, "raster").then(res => {
       imgs = res;
       draw();
     });

@@ -127,7 +127,7 @@
 
     let cubes = scrambleToPuzzle(sSolve.scramble, md);
 
-    pGenerateCubeBundle(cubes, 400, true).then(res => {
+    pGenerateCubeBundle(cubes, 400).then(res => {
       preview = res;
     });
 

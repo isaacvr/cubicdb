@@ -117,7 +117,7 @@
     scrambles = scrambles;
 
     setTimeout(() => {
-      pGenerateCubeBundle(cubes, 500, true, false, false, true).then(res => {
+      pGenerateCubeBundle(cubes, 500, false, false, true).then(res => {
         images = res;
       });
     }, 100);
@@ -172,7 +172,7 @@
   async function renderSAlg() {
     sAlg.alg.tips = tipTemp.length ? tipTemp.join(", ").split(", ").map(Number) : [];
 
-    img = (await pGenerateCubeBundle([algorithmToPuzzle(newAlg(sAlg.alg), false)], 300, true))[0];
+    img = (await pGenerateCubeBundle([algorithmToPuzzle(newAlg(sAlg.alg), false)], 300))[0];
   }
 
   function saveAlg() {
