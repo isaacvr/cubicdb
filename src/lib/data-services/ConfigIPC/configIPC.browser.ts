@@ -10,8 +10,6 @@ import type { GANInput } from "$lib/timer/adaptors/GAN";
 import type { QiYiSmartTimerInput } from "$lib/timer/adaptors/QY-Timer";
 import { DEFAULT_THEME } from "$lib/themes/default";
 
-interface DATABASE {}
-
 export class ConfigBrowserIPC implements ConfigIPC {
   global: {
     theme: string;
@@ -22,12 +20,14 @@ export class ConfigBrowserIPC implements ConfigIPC {
   };
   algorithms: { listView: boolean };
   timer: { session: string; bluetoothCubes: BluetoothCubeInfo[] };
+  configMap: Map<string, Record<string, any>>;
 
   private constructor() {
     let config = {} as CONFIG;
 
     try {
       config = JSON.parse(localStorage.getItem("config") || "{}") as CONFIG;
+      config.configMap = JSON.parse(config.configMap || "[]");
     } catch {}
 
     this.global = {
@@ -46,6 +46,8 @@ export class ConfigBrowserIPC implements ConfigIPC {
       session: config?.timer?.session || "",
       bluetoothCubes: config?.timer?.bluetoothCubes || [],
     };
+
+    this.configMap = new Map(config.configMap);
 
     this.applyConfig();
   }
@@ -104,11 +106,20 @@ export class ConfigBrowserIPC implements ConfigIPC {
 
   external(device: string, ...args: any[]) {}
 
+  setPath(path: string, config: object) {
+    this.configMap.set(path, config);
+  }
+
+  getPath(path: string) {
+    return this.configMap.get(path) || null;
+  }
+
   async saveConfig() {
     const config: CONFIG = {
       global: this.global,
       algorithms: this.algorithms,
       timer: this.timer,
+      configMap: [...this.configMap],
     };
 
     this.applyConfig();

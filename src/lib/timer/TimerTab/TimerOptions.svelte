@@ -59,6 +59,7 @@
   import SeedIcon from "@icons/Leaf.svelte";
   import { getSeed, setSeed } from "@cstimer/lib/mathlib";
   import { dataService } from "$lib/data-services/data.service";
+  import { onMount } from "svelte";
 
   type TModal = "" | "edit-scramble" | "old-scrambles" | "settings";
 
@@ -393,6 +394,10 @@
     showSeedModal = true;
     saveEnableKeyboard();
   }
+
+  onMount(() => {
+    // toolList = [{ tool: tools[1], open: true }];
+  });
 
   $: $localLang, updateTexts();
 </script>

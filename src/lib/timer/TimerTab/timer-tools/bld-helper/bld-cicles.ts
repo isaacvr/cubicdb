@@ -1,6 +1,20 @@
 import { Puzzle } from "@classes/puzzle/puzzle";
 import { FRONT, Vector3D } from "@classes/vector3d";
 
+interface BLDConfig {
+  scramble: string;
+  eBuffers: string[];
+  cBuffer: string;
+  cnBuffers: string[];
+  order: number;
+  schemas: ISchema["code"][];
+  setup: ISetup;
+  hasHelper: boolean;
+  eHelpers: string[];
+  cHelper: string;
+  cnHelpers: string[];
+}
+
 export interface BLDCicleResult {
   centers: string[][];
 
@@ -179,6 +193,37 @@ const cornerConj = CORNERS.map(e => {
   return [p1, p2];
 });
 
+const T_PERM = "R U R' U' R' F R2 U' R' U' R U R' F'";
+const Ja_PERM = "x R2 F R F' R U2 r' U r U2 x'";
+const Jb_PERM = "R U R' F' R U R' U' R' F R2 U' R' U'";
+
+const SETUP_MOVES: Record<string, string[]> = {
+  A: ["", Ja_PERM],
+  B: ["", ""],
+  C: ["", Jb_PERM],
+  D: ["", T_PERM],
+  E: ["L' E L", T_PERM],
+  F: ["E' L", T_PERM],
+  G: ["R' S R", T_PERM],
+  H: ["E L'", T_PERM],
+  I: ["M'", Jb_PERM],
+  J: ["E2 L", T_PERM],
+  K: ["M'", Jb_PERM],
+  L: ["L'", T_PERM],
+  M: ["", ""],
+  N: ["E L", T_PERM],
+  O: ["D' M'", Jb_PERM],
+  P: ["E' L'", T_PERM],
+  Q: ["M", Jb_PERM],
+  R: ["L", T_PERM],
+  S: ["M", Ja_PERM],
+  T: ["E2 L'", T_PERM],
+  U: ["M2", Ja_PERM],
+  V: ["D2 L2", T_PERM],
+  W: ["M2", Jb_PERM],
+  X: ["L2", T_PERM],
+};
+
 function gridToPos(row: number, column: number, order: number): number {
   return row * order + column;
 }
@@ -299,7 +344,6 @@ function getCoordPos(letter: string, coord: number[][], scheme: string[]) {
   let pos = toNumber(letter, scheme);
 
   if (pos < 0) {
-    console.log(letter, scheme);
     throw new Error("F");
   }
 
@@ -367,14 +411,25 @@ function samePiece(letter1: string, letter2: string, coord: number[][], scheme: 
 
 function getEdgeCicle(
   letter: string,
+  exchanges: string[][] | null,
   facelet: string,
   solvedFacelet: string,
   nEdges: number[][],
   visited: boolean[],
   scheme: string[]
 ) {
-  let cicle: string[] = [letter];
+  let getLetter = (s: string) => {
+    if (!exchanges) return s;
+    let f1 = exchanges.find(e => e[0] === s);
+    if (f1) return f1[1];
+    f1 = exchanges.find(e => e[1] === s);
+
+    if (f1) return f1[0];
+    return s;
+  };
+
   let currentLetter = letter;
+  let cicle: string[] = [currentLetter];
 
   for (let i = 0; i < 24; i += 1) {
     let nextLetter = getNextLetter(currentLetter, facelet, solvedFacelet, nEdges, visited, scheme);
@@ -382,10 +437,11 @@ function getEdgeCicle(
     if (nextLetter) {
       cicle.push(nextLetter);
 
-      if (samePiece(cicle[0], nextLetter, nEdges, scheme)) {
+      if (samePiece(getLetter(cicle[0]), nextLetter, nEdges, scheme)) {
         break;
       }
 
+      nextLetter = getLetter(nextLetter);
       currentLetter = nextLetter;
     } else break;
   }
@@ -482,8 +538,37 @@ function markAsVisited(
   }
 }
 
+function getExchanges(
+  parity: boolean,
+  buffers: string[],
+  helpers: string[] | null,
+  pos: number,
+  coord: number[][],
+  scheme: string[]
+): string[][] | null {
+  if (!parity || !helpers) return null;
+
+  let buffer = buffers[pos];
+  let helper = helpers[pos];
+  let bufferLetters = [buffer];
+  let helperLetters = [helper];
+
+  for (let i = 0, maxi = scheme.length; i < maxi; i += 1) {
+    if (buffer != scheme[i] && samePiece(buffer, scheme[i], coord, scheme)) {
+      bufferLetters.push(scheme[i]);
+    }
+    if (helper != scheme[i] && samePiece(helper, scheme[i], coord, scheme)) {
+      helperLetters.push(scheme[i]);
+    }
+  }
+
+  return bufferLetters.map((bf, pos) => [bf, helperLetters[pos]]);
+}
+
 function getEdgeCicles(
   buffers: string[],
+  helpers: string[] | null,
+  parity: boolean,
   facelet: string,
   solvedFacelet: string,
   cicles: string[][][],
@@ -498,7 +583,14 @@ function getEdgeCicles(
     let lFlipped: string[] = [];
     let visited = scheme.map(_ => false);
     let nEdges = getEdges(order, n);
-    let mcicle = getEdgeCicle(buffers[n - 1], facelet, solvedFacelet, nEdges, visited, scheme);
+    // let letter = buffers[n - 1];
+    let letter = parity && helpers ? helpers[n - 1] : buffers[n - 1];
+    let mcicle = getEdgeCicle(letter, null, facelet, solvedFacelet, nEdges, visited, scheme);
+    // let exchanges = getExchanges(parity, buffers, helpers, n - 1, nEdges, scheme);
+    // let mcicle = getEdgeCicle(letter, exchanges, facelet, solvedFacelet, nEdges, visited, scheme);
+
+    markAsVisited(mcicle, visited, nEdges, scheme);
+    markAsVisited([letter], visited, nEdges, scheme);
 
     if (mcicle.length) {
       mcicle.pop();
@@ -506,13 +598,18 @@ function getEdgeCicles(
       lCicle.push(mcicle);
     }
 
-    markAsVisited(mcicle, visited, nEdges, scheme);
-    markAsVisited([buffers[n - 1]], visited, nEdges, scheme);
-
     while (visited.some(e => !e)) {
       for (let i = 0, maxi = scheme.length; i < maxi; i += 1) {
         if (!visited[i]) {
-          let cicle = getEdgeCicle(scheme[i], facelet, solvedFacelet, nEdges, visited, scheme);
+          let cicle = getEdgeCicle(
+            scheme[i],
+            null,
+            facelet,
+            solvedFacelet,
+            nEdges,
+            visited,
+            scheme
+          );
 
           if (cicle.length != 2) {
             lCicle.push(cicle);
@@ -675,56 +772,71 @@ function getSetup(s: ISetup, facelet: string, order: number) {
   targetOri = targetOri ? targetOri : ["", ""];
   currentOri = currentOri ? currentOri : ["", ""];
 
-  console.log("CORI_TORI: ", currentOri, targetOri);
-
   return Puzzle.inverse("rubik", currentOri[1]) + " " + targetOri[1];
 }
 
-function getRecommendedSetup(facelet: string, order: number) {
-  let minDistance = Infinity;
-  let setup = "";
-  let fc1 = facelet.split("");
-  let maxj = fc1.length;
+// function getRecommendedSetup(facelet: string, order: number) {
+//   let minDistance = Infinity;
+//   let setup = "";
+//   let fc1 = facelet.split("");
+//   let maxj = fc1.length;
 
-  for (let i = 0, maxi = ORIS.length; i < maxi; i += 1) {
-    let ori = ORIS[i];
-    let pz = new Puzzle({ type: "rubik", order: [1] });
-    pz.move(ori[1]);
+//   for (let i = 0, maxi = ORIS.length; i < maxi; i += 1) {
+//     let ori = ORIS[i];
+//     let pz = new Puzzle({ type: "rubik", order: [1] });
+//     pz.move(ori[1]);
 
-    let base = pz.toFacelet();
+//     let base = pz.toFacelet();
 
-    let fc2 = getSolvedFacelet(facelet, order, base).split("");
-    let res = 0;
+//     let fc2 = getSolvedFacelet(facelet, order, base).split("");
+//     let res = 0;
 
-    for (let j = 0; j < maxj; j += 1) {
-      res += fc1[j] === fc2[j] ? 0 : 1;
-    }
+//     for (let j = 0; j < maxj; j += 1) {
+//       res += fc1[j] === fc2[j] ? 0 : 1;
+//     }
 
-    if (res < minDistance) {
-      minDistance = res;
-      setup = ori[1];
+//     if (res < minDistance) {
+//       minDistance = res;
+//       setup = ori[1];
+//     }
+//   }
+
+//   return setup;
+// }
+
+function applyMoves(pz: Puzzle, _moves: string[], schema: string[]) {
+  let moves = _moves.map(m => SPEFFZ_SCH[0][schema.indexOf(m)]);
+
+  for (let i = 0, maxi = moves.length; i < maxi; i += 1) {
+    let mv = moves[i];
+
+    if (mv in SETUP_MOVES) {
+      let setup = SETUP_MOVES[mv];
+      console.log("APLYING: ", mv, setup);
+
+      pz.move(setup[0]);
+      pz.move(setup[1]);
+      pz.move(Puzzle.inverse("rubik", setup[0]));
     }
   }
-
-  return setup;
 }
 
-export function getBLDCicles(
-  scramble: string,
-  eBuffers: string[],
-  cBuffer: string,
-  cnBuffers: string[],
-  order: number,
-  schemas: ISchema["code"][],
-  setup: ISetup
-): BLDCicleResult {
+export function getBLDCicles({
+  cBuffer,
+  cnBuffers,
+  eBuffers,
+  eHelpers,
+  hasHelper,
+  order,
+  schemas,
+  scramble,
+  setup,
+}: BLDConfig): BLDCicleResult {
   let pz = Puzzle.fromSequence(scramble, { type: "rubik", order: [order] }, false, true);
   let facelet = pz.toFacelet();
   let setupSeq = getSetup(setup, facelet, order);
 
   pz.move(setupSeq);
-
-  console.log("SETUP: ", setupSeq);
 
   facelet = pz.toFacelet();
 
@@ -755,13 +867,30 @@ export function getBLDCicles(
   }
 
   getCornerCicles(cBuffer, facelet, solvedFacelet, cCicles, twistedCorners, order, cornerScheme);
-  getEdgeCicles(eBuffers, facelet, solvedFacelet, eCicles, flippedEdges, order, edgeScheme);
-  getCenterCicles(cnBuffers, facelet, solvedFacelet, cnCicles, order, centerScheme);
-
-  let edgeLetters = eCicles.map(c => c.reduce((acc, e) => [...acc, ...e], []));
-  let centerLetters = cnCicles.map(c => c.reduce((acc, e) => [...acc, ...e], []));
   let cornerLetters = cCicles.reduce((acc, e) => [...acc, ...e], []);
   let co = ((twistedCorners.reduce((acc, e) => acc + e.dir, 0) % 3) + 3) % 3;
+  let parity = cornerLetters.length % 2 === 1;
+
+  if (parity && hasHelper && eHelpers && order === 3) {
+    applyMoves(pz, [eBuffers[0], eHelpers[0]], edgeScheme);
+    facelet = pz.toFacelet();
+  }
+
+  getEdgeCicles(
+    eBuffers,
+    hasHelper ? eHelpers : null,
+    parity,
+    facelet,
+    solvedFacelet,
+    eCicles,
+    flippedEdges,
+    order,
+    edgeScheme
+  );
+  let edgeLetters = eCicles.map(c => c.reduce((acc, e) => [...acc, ...e], []));
+
+  getCenterCicles(cnBuffers, facelet, solvedFacelet, cnCicles, order, centerScheme);
+  let centerLetters = cnCicles.map(c => c.reduce((acc, e) => [...acc, ...e], []));
 
   return {
     centers: centerLetters,
@@ -774,7 +903,7 @@ export function getBLDCicles(
     twistedCorners: twistedCorners,
     twistedCornerBuffer: co === 0 ? 0 : co === 1 ? -1 : 1,
 
-    parity: edgeLetters.length % 2 === 1,
+    parity,
 
     recommendedSetup: "",
   };

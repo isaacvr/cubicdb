@@ -27,6 +27,7 @@ export class ConfigElectronIPC implements ConfigIPC {
   };
   algorithms: { listView: boolean };
   timer: { session: string; bluetoothCubes: BluetoothCubeInfo[] };
+  configMap: Map<string, Record<string, any>>;
 
   private constructor() {
     this.ipc = (<any>window).electronAPI as IPC;
@@ -46,6 +47,8 @@ export class ConfigElectronIPC implements ConfigIPC {
       session: "",
       bluetoothCubes: [],
     };
+
+    this.configMap = new Map();
 
     this.ipc.getConfig().then(config => {
       this.loadConfig(config);
@@ -87,7 +90,7 @@ export class ConfigElectronIPC implements ConfigIPC {
       bluetoothCubes: c?.timer?.bluetoothCubes || [],
     };
 
-    console.log("CONFIG: ", c);
+    this.configMap = new Map(c?.configMap || []);
 
     this.applyConfig();
   }
@@ -197,11 +200,20 @@ export class ConfigElectronIPC implements ConfigIPC {
     this.ipc.external(device, ...args);
   }
 
+  setPath(path: string, config: object) {
+    this.configMap.set(path, config);
+  }
+
+  getPath(path: string) {
+    return this.configMap.get(path) || null;
+  }
+
   async saveConfig() {
     const config: CONFIG = {
       global: this.global,
       algorithms: this.algorithms,
       timer: this.timer,
+      configMap: [...this.configMap],
     };
 
     this.applyConfig();

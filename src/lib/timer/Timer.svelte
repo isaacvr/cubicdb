@@ -428,7 +428,7 @@
       $mode = MENU[0][1][0];
     }
 
-    console.log("MODE: ", $mode);
+    // console.log("MODE: ", $mode);
 
     $stats = INITIAL_STATISTICS;
     setSolves();

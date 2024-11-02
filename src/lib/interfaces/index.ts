@@ -1314,6 +1314,8 @@ export interface CONFIG {
     session: string;
     bluetoothCubes: BluetoothCubeInfo[];
   };
+
+  configMap: any;
 }
 
 export interface Theme {

@@ -2,7 +2,7 @@
   import type { TimerContext } from "@interfaces";
   import * as all from "@cstimer/scramble";
   import Select from "@material/Select.svelte";
-  import { Button, Tooltip } from "flowbite-svelte";
+  import { Button, Toggle, Tooltip } from "flowbite-svelte";
   import {
     ORIS,
     SCHEMAS,
@@ -14,27 +14,29 @@
   import ClockwiseIcon from "@icons/CogClockwise.svelte";
   import CounterClockwiseIcon from "@icons/CogCounterclockwise.svelte";
   import FlippedIcon from "@icons/ArrowUpDown.svelte";
-  import { ChevronLeftSolid, ChevronRightSolid } from "flowbite-svelte-icons";
   import type { Writable } from "svelte/store";
   import { getContext } from "svelte";
   import { localLang } from "$lib/stores/language.service";
   import { MISC, type ColorName } from "@constants";
   import { ScrambleParser } from "@classes/scramble-parser";
-  import { minmax } from "@helpers/math";
+  import { dataService } from "$lib/data-services/data.service";
 
   export let context: TimerContext;
 
   let configMode = getContext("configMode") as Writable<boolean>;
 
-  const { scramble, mode } = context;
+  const { scramble, mode, session } = context;
 
   let cschema = SCHEMAS[0];
   let eschema = SCHEMAS[0];
   let cnschema = SCHEMAS[0];
 
   let cornerBuffer = cschema.schema[0][4];
+  let cornerHelper = cschema.schema[0][1];
   let edgeBuffers: string[] = [eschema.schema[1][20]];
+  let edgeHelpers: string[] = [eschema.schema[1][1]];
   let centerBuffers: string[] = [cnschema.schema[2][0]];
+  let centerHelpers: string[] = [cnschema.schema[2][2]];
   let order = 3;
 
   const FACENAME: Facelet[] = ["U", "R", "F", "D", "L", "B"];
@@ -42,7 +44,9 @@
   let frontFace: Facelet = "F";
   let upFace: Facelet = "U";
   let setupSeq = "";
-  let selectedCicle = 0;
+  let hasHelper = false;
+
+  let configPath = "";
 
   let cicles: BLDCicleResult[] = [];
 
@@ -59,7 +63,7 @@
     );
   }
 
-  function updateBuffers() {
+  function updateBuffersHelpers() {
     // Centers
     let dims = [];
 
@@ -75,12 +79,18 @@
       centers
     );
 
+    centerHelpers = [...centerHelpers, ...cnschema.schema[2][2].repeat(centers).split("")].slice(
+      0,
+      centers
+    );
+
     // Edges
     const edges = (order - 1) >> 1;
     edgeBuffers = [...edgeBuffers, ...eschema.schema[1][20].repeat(edges).split("")].slice(
       0,
       edges
     );
+    edgeHelpers = [...edgeHelpers, ...eschema.schema[1][1].repeat(edges).split("")].slice(0, edges);
   }
 
   function updateMemo(scr: string, md: string) {
@@ -95,7 +105,7 @@
 
     order = option.order ? option.order[0] : 3;
 
-    updateBuffers();
+    updateBuffersHelpers();
 
     let scramble = MISC.some(mmode =>
       typeof mmode === "string" ? mmode === md : mmode.indexOf(md) > -1
@@ -104,20 +114,23 @@
       : [scr];
 
     cicles = scramble.map(s =>
-      getBLDCicles(
-        s,
-        edgeBuffers,
-        cornerBuffer,
-        centerBuffers,
+      getBLDCicles({
+        cBuffer: cornerBuffer,
+        cHelper: cornerHelper,
+        cnBuffers: centerBuffers,
+        cnHelpers: centerHelpers,
+        eBuffers: edgeBuffers,
+        eHelpers: edgeHelpers,
+        hasHelper,
         order,
-        [eschema.code, cschema.code, cnschema.code],
-        order % 2 === 0
-          ? { type: "rotation", sequence: setupSeq }
-          : { type: "orientation", front: frontFace, up: upFace }
-      )
+        schemas: [eschema.code, cschema.code, cnschema.code],
+        scramble: s,
+        setup:
+          order % 2 === 0
+            ? { type: "rotation", sequence: setupSeq }
+            : { type: "orientation", front: frontFace, up: upFace },
+      })
     );
-
-    selectedCicle = 0;
   }
 
   function getName(type: "center" | "edge", pos: number, o: number, short = false) {
@@ -144,10 +157,52 @@
     return type === "center" ? "Centers" : "Edges";
   }
 
-  function step(ev: MouseEvent, v: number) {
-    ev.stopPropagation();
-    selectedCicle = minmax(selectedCicle + v, 0, cicles.length);
+  async function saveConfig() {
+    $configMode = false;
+
+    let configPath = `bld-helper/config/${$session._id}/${order}`;
+
+    $dataService.config.setPath(configPath, {
+      cornerBuffer,
+      cornerHelper,
+      edgeBuffers,
+      edgeHelpers,
+      centerBuffers,
+      centerHelpers,
+      frontFace,
+      upFace,
+      setupSeq,
+      hasHelper,
+      cschema: cschema.code,
+      eschema: eschema.code,
+      cnschema: cnschema.code,
+    });
+
+    await $dataService.config.saveConfig();
   }
+
+  function getConfig(s: any, o: any) {
+    let configPath = `bld-helper/config/${$session._id}/${order}`;
+    let config = $dataService.config.getPath(configPath);
+
+    if (config) {
+      cornerBuffer = config.cornerBuffer || cschema.schema[0][4];
+      cornerHelper = config.cornerHelper || cschema.schema[0][1];
+      edgeBuffers = config.edgeBuffers || [eschema.schema[1][20]];
+      edgeHelpers = config.edgeHelpers || [eschema.schema[1][1]];
+      centerBuffers = config.centerBuffers || [cnschema.schema[2][0]];
+      centerHelpers = config.centerHelpers || [cnschema.schema[2][2]];
+      frontFace = config.frontFace || "F";
+      upFace = config.upFace || "U";
+      setupSeq = config.setupSeq || "";
+      hasHelper = !!config.hasHelper;
+      cschema = SCHEMAS.find(s => s.code === config.cschema) || SCHEMAS[0];
+      eschema = SCHEMAS.find(s => s.code === config.eschema) || SCHEMAS[0];
+      cnschema = SCHEMAS.find(s => s.code === config.cnschema) || SCHEMAS[0];
+    }
+  }
+
+  $: getConfig($session, order);
 
   $: $scramble &&
     cornerBuffer &&
@@ -157,156 +212,227 @@
     cschema &&
     cnschema &&
     (setupSeq || "-") &&
+    (hasHelper || "-") &&
+    cornerHelper &&
+    edgeHelpers &&
+    centerHelpers &&
     updateMemo($scramble, $mode[1]);
 </script>
 
 <div class="grid">
   {#if $configMode}
-    <div class="flex">
-      {#if order & 1}
-        <div>
-          Front:
-          <Select
-            type="color"
-            class="bg-backgroundLevel2"
-            placement="right"
-            items={FACENAME}
-            bind:value={frontFace}
-            transform={e => e}
-            label={(e, p) => COLORS[p]}
-            onChange={() =>
-              (upFace =
-                upFace === frontFace || FACENAME[(FACENAME.indexOf(upFace) + 3) % 6] === frontFace
-                  ? FACENAME[(FACENAME.indexOf(upFace) + 1) % 6]
-                  : upFace)}
-          />
+    {#if order & 1}
+      <div class="flex items-center gap-2">
+        Front:
+        <Select
+          type="color"
+          class="bg-backgroundLevel2"
+          placement="right"
+          items={FACENAME}
+          bind:value={frontFace}
+          transform={e => e}
+          label={(e, p) => COLORS[p]}
+          onChange={() =>
+            (upFace =
+              upFace === frontFace || FACENAME[(FACENAME.indexOf(upFace) + 3) % 6] === frontFace
+                ? FACENAME[(FACENAME.indexOf(upFace) + 1) % 6]
+                : upFace)}
+        />
 
-          Up:
-          <Select
-            type="color"
-            class="bg-backgroundLevel2"
-            placement="right"
-            items={FACENAME}
-            bind:value={upFace}
-            transform={e => e}
-            label={(e, p) => COLORS[p]}
-            disabled={(e, p) => e === frontFace || FACENAME[(p + 3) % 6] === frontFace}
-          />
-        </div>
-        <div></div>
-      {:else}
-        <div class="flex items-center justify-center mx-auto gap-2">
-          Setup Move:
-          <Select
-            class="bg-backgroundLevel2"
-            items={ORIS}
-            bind:value={setupSeq}
-            transform={e => e[1]}
-            label={e => e[1]}
-            placement="right"
-          />
+        Up:
+        <Select
+          type="color"
+          class="bg-backgroundLevel2"
+          placement="right"
+          items={FACENAME}
+          bind:value={upFace}
+          transform={e => e}
+          label={(e, p) => COLORS[p]}
+          disabled={(e, p) => e === frontFace || FACENAME[(p + 3) % 6] === frontFace}
+        />
 
-          <!-- Recommended Setup: "{cicle.recommendedSetup}" -->
-        </div>
-      {/if}
-    </div>
+        <Toggle color="orange" class="cursor-pointer" bind:checked={hasHelper}>Helper</Toggle>
+      </div>
+    {:else}
+      <div class="flex items-center justify-center mx-auto gap-2">
+        Setup Move:
+        <Select
+          class="bg-backgroundLevel2"
+          items={ORIS}
+          bind:value={setupSeq}
+          transform={e => e[1]}
+          label={e => e[1]}
+          placement="right"
+        />
 
-    <table>
+        <!-- Recommended Setup: "{cicle.recommendedSetup}" -->
+      </div>
+    {/if}
+
+    <table class="bordered mt-4">
       <tr>
-        <th></th>
-        <th>Scheme</th>
-        <th>Buffer/s</th>
+        <th class="text-center">Piece</th>
+        <th class="text-center">Scheme</th>
+        <th class="text-center">Buffers</th>
+        {#if hasHelper}
+          <th class="text-center">Helpers</th>
+        {/if}
       </tr>
 
       <!-- Corners -->
       <tr>
-        <td><h3 class="text-center tx-emphasis p-0">Corners</h3></td>
+        <td>
+          <h3 class="text-center tx-emphasis p-0">Corners</h3>
+        </td>
         <td>
           <Select
-            class="bg-backgroundLevel2"
+            class="bg-backgroundLevel2 flex mx-auto"
             bind:value={cschema}
             items={SCHEMAS}
             transform={e => e}
             label={e => e.name}
+            placement="right"
           />
         </td>
-        <td class="flex flex-wrap w-max justify-center">
+        <td class="">
           <Select
-            class="py-2 bg-backgroundLevel2"
+            class="py-2 bg-backgroundLevel2 flex mx-auto"
             placement="right"
             items={SPEFFZ_SCH[0]}
             bind:value={cornerBuffer}
             transform={e => e}
+            onChange={nv => {
+              if (cornerHelper === nv) {
+                const SCH = SPEFFZ_SCH[0];
+                cornerHelper = SCH[(SCH.indexOf(nv) + 1) % SCH.length];
+              }
+            }}
+            useFixed
           />
         </td>
+        {#if hasHelper}
+          <td class="">
+            <Select
+              class="py-2 bg-backgroundLevel2 flex mx-auto"
+              placement="right"
+              items={SPEFFZ_SCH[0]}
+              bind:value={cornerHelper}
+              transform={e => e}
+              disabled={e => e === cornerBuffer}
+              useFixed
+            />
+          </td>
+        {/if}
       </tr>
 
       <!-- Edges -->
       {#if order > 2}
-        <tr> <td colspan="3"> <hr class="border-gray-500 my-1" /> </td> </tr>
-
         <tr>
-          <td><h3 class="text-center tx-emphasis mt-6">Edges</h3></td>
+          <td>
+            <h3 class="text-center tx-emphasis">Edges</h3>
+          </td>
           <td>
             <Select
-              class="bg-backgroundLevel2 mt-6"
+              class="bg-backgroundLevel2 flex mx-auto"
               bind:value={eschema}
               items={SCHEMAS}
               transform={e => e}
               label={e => e.name}
+              placement="right"
             />
           </td>
-          <td class="flex flex-wrap w-max justify-center gap-1">
-            {#each edgeBuffers as e, pos}
-              <div class="grid place-items-center w-fit">
-                <span class="flex items-center gap-2 justify-center w-min"
-                  >{getName("edge", pos, order, true)}</span
-                >
-                <Select
-                  class="py-2 bg-backgroundLevel2"
-                  placement="right"
-                  items={SPEFFZ_SCH[1]}
-                  bind:value={e}
-                  transform={e => e}
-                />
-              </div>
-            {/each}
+          <td class="">
+            <div class="flex flex-wrap gap-2 justify-evenly">
+              {#each edgeBuffers as e, pos}
+                <div class="flex items-center gap-1">
+                  <span
+                    class={"flex items-center gap-2 justify-center w-min " +
+                      (order > 3 ? "" : "hidden")}>{getName("edge", pos, order, true)}</span
+                  >
+                  <Select
+                    class="py-2 bg-backgroundLevel2"
+                    placement="right"
+                    items={SPEFFZ_SCH[1]}
+                    bind:value={e}
+                    transform={e => e}
+                    onChange={nv => {
+                      if (edgeHelpers[pos] === nv) {
+                        const SCH = SPEFFZ_SCH[1];
+                        edgeHelpers[pos] = SCH[(SCH.indexOf(nv) + 1) % SCH.length];
+                      }
+                    }}
+                    useFixed
+                  />
+                </div>
+              {/each}
+            </div>
           </td>
+          {#if hasHelper}
+            <td class="">
+              <div class="flex flex-wrap gap-2 justify-evenly">
+                {#each edgeHelpers as e, pos}
+                  <Select
+                    class="py-2 bg-backgroundLevel2"
+                    placement="right"
+                    items={SPEFFZ_SCH[1]}
+                    bind:value={e}
+                    transform={e => e}
+                    disabled={e => e === edgeBuffers[pos]}
+                    useFixed
+                  />
+                {/each}
+              </div>
+            </td>
+          {/if}
         </tr>
       {/if}
 
       <!-- Centers -->
       {#if order > 3}
-        <tr> <td colspan="3"> <hr class="border-gray-500 my-1" /> </td> </tr>
         <tr>
           <td>
-            <h3 class="text-center tx-emphasis mt-6">Centers</h3>
+            <h3 class="text-center tx-emphasis">Centers</h3>
           </td>
           <td>
             <Select
-              class="bg-backgroundLevel2 mt-6"
+              class="bg-backgroundLevel2 flex mx-auto"
               bind:value={cnschema}
               items={SCHEMAS}
               transform={e => e}
               label={e => e.name}
             />
           </td>
-          <td class="flex flex-wrap w-max justify-center items-center gap-1">
-            {#each centerBuffers as c, pos}
-              <div class="grid place-items-center w-fit">
-                <span class="flex items-center gap-2 justify-center w-min"
-                  >{getName("center", pos, order, true)}</span
-                >
-                <Select
-                  class="py-2 bg-backgroundLevel2"
-                  placement="right"
-                  items={SPEFFZ_SCH[2]}
-                  bind:value={c}
-                  transform={e => e}
-                />
-              </div>
-            {/each}
+          <td class="">
+            <div class="flex flex-wrap gap-2 justify-evenly">
+              {#each centerBuffers as c, pos}
+                <div class="flex items-center gap-1">
+                  <span class="flex items-center gap-2 justify-center w-min"
+                    >{getName("center", pos, order, true)}</span
+                  >
+                  <Select
+                    class="py-2 bg-backgroundLevel2"
+                    placement="right"
+                    items={SPEFFZ_SCH[2]}
+                    bind:value={c}
+                    transform={e => e}
+                    useFixed
+                  />
+                </div>
+              {/each}
+            </div>
           </td>
+          {#if hasHelper}
+            <td class="">
+              <Select
+                class="py-2 bg-backgroundLevel2"
+                placement="right"
+                items={SPEFFZ_SCH[0]}
+                bind:value={cornerBuffer}
+                transform={e => e}
+                useFixed
+              />
+            </td>
+          {/if}
         </tr>
       {/if}
     </table>
@@ -314,13 +440,12 @@
     <Button
       color="none"
       class="bg-orange-400 hover:bg-orange-300 text-black mt-4"
-      on:click={() => ($configMode = false)}
+      on:click={saveConfig}
     >
       {$localLang.global.save}
     </Button>
   {:else}
     <!-- Memo -->
-    <!-- {#if cicles.length} -->
     {#each cicles as cicle, pos}
       <!-- {@const cicle = cicles[selectedCicle]} -->
       {#if cicles.length > 1}
@@ -437,28 +562,17 @@
         {/if}
       </table>
     {/each}
-    <!-- {/if} -->
-
-    <!-- {#if cicles.length > 1}
-      <div class="flex items-center mx-auto">
-        <Button
-          color="none"
-          on:click={ev => step(ev, -1)}
-          disabled={selectedCicle === 0}
-          class={"rounded-full w-[3rem] h-[3rem] " + (cicles.length < 2 ? "hidden" : "mt-2")}
-        >
-          <ChevronLeftSolid class="pointer-events-none w-2 h-2" />
-        </Button>
-        <span>{$localLang.global.scramble} #{selectedCicle + 1}</span>
-        <Button
-          color="none"
-          on:click={ev => step(ev, 1)}
-          disabled={selectedCicle + 1 === cicles.length}
-          class={"rounded-full w-[3rem] h-[3rem] " + (cicles.length < 2 ? "hidden" : "mt-2")}
-        >
-          <ChevronRightSolid class="pointer-events-none w-2 h-2" />
-        </Button>
-      </div>
-    {/if} -->
   {/if}
 </div>
+
+<style>
+  table.bordered,
+  table.bordered td,
+  table.bordered th {
+    border: 1px solid gray;
+  }
+
+  table.bordered {
+    width: 100%;
+  }
+</style>

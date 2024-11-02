@@ -22,4 +22,6 @@ export interface ConfigIPC extends CONFIG {
   addExternalConnector: (cb: AnyCallback) => any;
   external: (device: string, ...args: any[]) => any;
   saveConfig: () => Promise<void>;
+  setPath: (path: string, config: Record<string, any>) => any;
+  getPath: (path: string) => Record<string, any> | null;
 }

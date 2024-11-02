@@ -14,6 +14,7 @@ export class ConfigNoopIPC implements ConfigIPC {
   };
   algorithms: { listView: boolean };
   timer: { session: string; bluetoothCubes: BluetoothCubeInfo[] };
+  configMap: any;
 
   private constructor() {
     this.global = {
@@ -87,4 +88,10 @@ export class ConfigNoopIPC implements ConfigIPC {
   addExternalConnector(cb: any) {}
 
   external(device: string, ...args: any[]) {}
+
+  setPath(path: string, config: object) {}
+
+  getPath(path: string) {
+    return null;
+  }
 }

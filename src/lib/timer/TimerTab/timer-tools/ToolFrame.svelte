@@ -39,17 +39,21 @@
     <span class="title mr-8 cursor-default select-none">{tool.tool.text}</span>
 
     {#if open}
-      <Button size="xs" color="none" class="p-1 ml-auto" on:click={toggleConfig}>
-        <SettingsIcon size="1rem" />
-      </Button>
+      <div class="ml-auto">
+        {#if tool.tool.hasSettings}
+          <Button size="xs" color="none" class="p-1" on:click={toggleConfig}>
+            <SettingsIcon size="1rem" />
+          </Button>
+        {/if}
 
-      <Button size="xs" color="none" class="p-1" on:click={toggle}>
-        <ContractIcon size="1.2rem" />
-      </Button>
+        <Button size="xs" color="none" class="p-1" on:click={toggle}>
+          <ContractIcon size="1.2rem" />
+        </Button>
 
-      <Button size="xs" color="none" class="p-1" on:click={closeTool}>
-        <CloseIcon size="1.2rem" />
-      </Button>
+        <Button size="xs" color="none" class="p-1" on:click={closeTool}>
+          <CloseIcon size="1.2rem" />
+        </Button>
+      </div>
     {/if}
   </header>
 
