@@ -8,7 +8,7 @@
   import { goto } from "$app/navigation";
   import { browser } from "$app/environment";
 
-  let selectedPuzzle: PuzzleType = "rubik";
+  let selectedPuzzle: PuzzleType = "icarry";
   let order = 3;
 
   function getTitle(n: string, p: PuzzleType, o: number) {

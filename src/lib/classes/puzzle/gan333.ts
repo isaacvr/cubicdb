@@ -7,7 +7,8 @@ import { Sticker } from "./Sticker";
 import { assignColors, getAllStickers, scaleSticker } from "./puzzleUtils";
 import { getRandomScramble } from "@cstimer/scramble/scramble_333";
 import { ScrambleParser } from "@classes/scramble-parser";
-import { ImageSticker } from "./ImageSticker";
+import { A, G, N } from "./ganLogo";
+import { FaceSticker } from "./FaceSticker";
 
 export function GAN333(): PuzzleInterface {
   const n = 3;
@@ -27,6 +28,7 @@ export function GAN333(): PuzzleInterface {
       edgeMagnetBase: "rgb(126, 126, 73)",
       edgeMagnet: "rgb(255, 255, 0)",
       x: "#bbb",
+      ganBlue: "#00589C",
     }),
     rotation: {},
     center: new Vector3D(0, 0, 0),
@@ -147,16 +149,9 @@ export function GAN333(): PuzzleInterface {
     pieces.push(centerPiece.rotate(CENTER, FRONT, PI_2).rotate(CENTER, UP, PI_2 * i));
   }
 
-  centerPiece.stickers.push(
-    new ImageSticker(
-      "/assets/gan_logo.svg",
-      sticker.add(FRONT.add(RIGHT).mul(len)).points,
-      undefined,
-      [],
-      true,
-      0.6
-    ).add(UP.mul(0.01))
-  );
+  centerPiece.stickers.push(...G.map(st => st.clone()));
+  centerPiece.stickers.push(...A.map(st => st.clone()));
+  centerPiece.stickers.push(...N.map(st => st.clone()));
 
   pieces.push(centerPiece);
 
@@ -227,6 +222,12 @@ export function GAN333(): PuzzleInterface {
   gan.faceVectors = [UP, RIGHT, FRONT, DOWN, LEFT, BACK];
 
   assignColors(gan, gan.faceColors);
+
+  centerPiece.stickers.forEach(st => {
+    if (st instanceof FaceSticker) {
+      st.color = "ganBlue";
+    }
+  });
 
   return gan;
 }
