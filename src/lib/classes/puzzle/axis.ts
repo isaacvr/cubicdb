@@ -18,7 +18,7 @@ export function AXIS(): PuzzleInterface {
     getAllStickers: () => [],
     faceColors: ["y", "o", "g", "w", "r", "b"],
     move: () => true,
-    roundParams: [],
+    roundParams: {},
   };
 
   axis.getAllStickers = getAllStickers.bind(axis);

@@ -66,6 +66,8 @@ export const English: Language = {
     back: "Back",
     next: "Next",
     start: "Start",
+    download: "Download",
+    copyCode: "Copy $1",
   },
   TUTORIALS: {
     easy: "Easy",

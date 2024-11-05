@@ -27,7 +27,7 @@ export function BICUBE(): PuzzleInterface {
     getAllStickers: () => [],
     faceColors: ["y", "g", "r", "w", "b", "o"],
     move: () => true,
-    roundParams: [],
+    roundParams: {},
   };
 
   bic.getAllStickers = getAllStickers.bind(bic);

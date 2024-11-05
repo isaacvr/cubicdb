@@ -1,6 +1,19 @@
 import { EPS } from "@constants";
-import { Vector3D, CENTER } from "./../vector3d";
+import { Vector3D, CENTER } from "$lib/classes/vector3d";
 import { rotateBundle } from "@helpers/math";
+
+interface StickerPointCMD {
+  type: "point";
+  point: Vector3D;
+}
+
+interface StickerBezierCMD {
+  type: "bezier";
+  order: number;
+  points: Vector3D[];
+}
+
+type StickerCMD = StickerPointCMD | StickerBezierCMD;
 
 export class Sticker {
   points: Vector3D[];
@@ -14,6 +27,7 @@ export class Sticker {
   nonInteractive: boolean;
   name: string;
   userData: any;
+  // commands: StickerCMD[];
 
   constructor(
     pts?: Vector3D[],
@@ -33,6 +47,7 @@ export class Sticker {
     this.vecs = (vecs || []).map(v => v.unit());
     this.nonInteractive = nonInteractive;
     this.name = name;
+    // this.commands = this.points.map(p => ({ type: "point", point: p }));
   }
 
   computeBoundingBox(): Vector3D[] {
@@ -148,7 +163,6 @@ export class Sticker {
       this._cached_mass_center.rotate(ref, dir, ang, true);
       this.vecs.forEach(v => v.rotate(CENTER, dir, ang, true));
       this.color = col || this.color;
-      // this.computeBoundingBox();
       return this;
     }
 
@@ -157,7 +171,6 @@ export class Sticker {
     res._cached_mass_center = this._cached_mass_center.rotate(ref, dir, ang);
     res.color = col || res.color;
     res.vecs.map(v => v.rotate(CENTER, dir, ang, true));
-    // res.computeBoundingBox();
     return res;
   }
 
@@ -191,7 +204,7 @@ export class Sticker {
       return self ? this : this.clone();
     }
 
-    const points = rotateBundle(this.points, ref, dir, ang);
+    const points = rotateBundle(this.points, ref, dir, ang) as Vector3D[];
 
     if (self) {
       this.points.forEach((e, p) => e.setCoords(points[p].x, points[p].y, points[p].z));

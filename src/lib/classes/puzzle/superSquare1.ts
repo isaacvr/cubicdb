@@ -19,12 +19,12 @@ export function SUPER_SQUARE1(): PuzzleInterface {
     getAllStickers: () => [],
     faceColors: ["w", "b", "r", "y", "g", "o"],
     move: () => true,
-    roundParams: [
-      (s: Sticker, i: number) => {
+    roundParams: {
+      rd: (s: Sticker, i: number) => {
         if (s.name === "center" && (i === 1 || i === 3)) return [1];
         return 0.11;
       },
-    ],
+    },
   };
 
   sq1.getAllStickers = getAllStickers.bind(sq1);

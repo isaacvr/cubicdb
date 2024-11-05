@@ -14,6 +14,7 @@
   export let size = "";
   export let width = "";
   export let height = "";
+  export let allowDownload = false;
   export { _cl as class };
 
   let preview: string[] = [];
@@ -56,6 +57,7 @@
   {width}
   {height}
   class={_cl + (preview.length > 1 ? "pt-4" : "")}
+  {allowDownload}
 />
 
 <Button

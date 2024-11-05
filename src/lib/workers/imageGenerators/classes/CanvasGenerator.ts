@@ -92,5 +92,17 @@ export class CanvasGenerator implements IDrawer {
     this.ctx.arc(x, y, radius, startAngle, endAngle, counterclockwise);
   }
 
+  quadraticCurveTo(cpx: number, cpy: number, x: number, y: number) {
+    this.ctx.quadraticCurveTo(cpx, cpy, x, y);
+  }
+
+  bezierCurveTo(cp1x: number, cp1y: number, cp2x: number, cp2y: number, x: number, y: number) {
+    this.ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x, y);
+  }
+
+  circle(x: number, y: number, r: number) {
+    this.ctx.ellipse(x, y, r, r, 0, 0, Math.PI * 2);
+  }
+
   setPosition() {}
 }

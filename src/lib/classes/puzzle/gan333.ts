@@ -37,8 +37,8 @@ export function GAN333(): PuzzleInterface {
     dims: [3, 3, 3],
     faceColors: ["w", "r", "g", "y", "o", "b"],
     move: () => false,
-    roundParams: [
-      (s: Sticker, i: number) => {
+    roundParams: {
+      rd: (s: Sticker, i: number) => {
         let acc = s.points.reduce((acc, v) => acc + (edgePoint(v) >= 2 ? 1 : 0), 0);
         const smallRound = 0.05;
 
@@ -55,8 +55,14 @@ export function GAN333(): PuzzleInterface {
 
         return 0.4;
       },
-    ],
+    },
   };
+
+  // rd
+  // scale
+  // ppc
+  // fn
+  // justScale
 
   gan.getAllStickers = getAllStickers.bind(gan);
 

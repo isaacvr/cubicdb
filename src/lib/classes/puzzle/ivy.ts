@@ -16,7 +16,7 @@ export function IVY(): PuzzleInterface {
     getAllStickers: () => [],
     faceColors: ["w", "r", "g", "y", "o", "b"],
     move: () => true,
-    roundParams: [],
+    roundParams: {},
   };
 
   ivy.getAllStickers = getAllStickers.bind(ivy);

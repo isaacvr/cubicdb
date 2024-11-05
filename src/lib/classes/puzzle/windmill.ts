@@ -16,7 +16,7 @@ export function WINDMILL(): PuzzleInterface {
     getAllStickers: () => [],
     faceColors: ["w", "r", "g", "y", "o", "b"],
     move: () => true,
-    roundParams: [],
+    roundParams: {},
   };
 
   windmill.getAllStickers = getAllStickers.bind(windmill);

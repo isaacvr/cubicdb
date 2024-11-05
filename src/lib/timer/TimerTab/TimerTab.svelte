@@ -784,7 +784,7 @@
           </div>
         {:else}
           <div class="w-full h-full flex items-center justify-center relative">
-            <PuzzleImageBundle src={$preview.map(s => s.src || "")} />
+            <PuzzleImageBundle src={$preview.map(s => s.src || "")} allowDownload={prevExpanded} />
           </div>
         {/if}
       </button>

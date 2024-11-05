@@ -16,7 +16,7 @@ export function FISHER(): PuzzleInterface {
     getAllStickers: () => [],
     faceColors: ["y", "o", "g", "w", "r", "b"],
     move: () => true,
-    roundParams: [],
+    roundParams: {},
   };
 
   fisher.getAllStickers = getAllStickers.bind(fisher);

@@ -19,9 +19,7 @@ export function VOID(): PuzzleInterface {
     dims: [3, 3, 3],
     faceColors: ["w", "r", "g", "y", "o", "b"],
     move: () => false,
-    roundParams: [
-      // (Sticker => number | [number] | null), scale, PPC, fn, justScale
-    ],
+    roundParams: {},
   };
 
   voidC.getAllStickers = getAllStickers.bind(voidC);

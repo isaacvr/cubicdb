@@ -1,11 +1,13 @@
 import { CENTER, Vector3D } from "./../vector3d";
 import { Sticker } from "./Sticker";
-import type { PuzzleInterface } from "@interfaces";
+import type { PuzzleInterface, RoundCornersParams } from "@interfaces";
 import { FaceSticker } from "./FaceSticker";
 import { bezier, circle, lineIntersection3D, mod } from "@helpers/math";
 import { ImageSticker } from "./ImageSticker";
 import { EPS } from "@constants";
 import { TextSticker } from "./TextSticker";
+import { BezierSticker } from "./BezierSticker";
+import { BezierCurve } from "./BezierCurve";
 
 export function assignColors(p: PuzzleInterface, cols?: string[], isCube = false) {
   let colors = cols || ["y", "o", "g", "w", "r", "b"];
@@ -84,7 +86,7 @@ export function assignColors(p: PuzzleInterface, cols?: string[], isCube = false
   }
 }
 
-export function getAllStickers(): Sticker[] {
+export function getAllStickers(): Sticker[] | BezierSticker[] {
   let res = [];
   // @ts-ignore
   let pieces = this.pieces;
@@ -97,7 +99,7 @@ export function getAllStickers(): Sticker[] {
   return res;
 }
 
-export function scaleSticker(st: Sticker, scale: number): Sticker {
+export function scaleSticker(st: Sticker | BezierSticker, scale: number) {
   const SCALE = scale || 0.925;
 
   if (SCALE < 0) {
@@ -106,15 +108,16 @@ export function scaleSticker(st: Sticker, scale: number): Sticker {
 
   let n = st.getOrientation();
   let cm = st.updateMassCenter();
-  return st.sub(cm).mul(SCALE).add(cm).add(n.mul(0.005));
+  return st.sub(cm, true).mul(SCALE, true).add(cm, true).add(n.mul(0.005), true);
 }
 
 export function roundStickerCorners(
   s: Sticker,
   rd?: number | Function,
   scale?: number,
-  ppc?: number
-): Sticker {
+  ppc?: number,
+  calcPath?: boolean
+) {
   const RAD = rd || 0.11;
   const RAD_FN = typeof rd === "function" ? rd : () => RAD;
   const PPC = ppc || 10;
@@ -123,7 +126,7 @@ export function roundStickerCorners(
 
   let st = s;
   let pts = st.points;
-  let newSt = new Sticker();
+  let newSt = calcPath ? new BezierSticker() : new Sticker();
 
   if (ppc === 0) {
     return scaleSticker(s.clone(), SCALE);
@@ -143,31 +146,54 @@ export function roundStickerCorners(
     let abs1 = v1.abs() / seg_perc;
     let abs2 = v2.abs() / seg_perc1;
 
+    // Short on both sides => go as a point
     if (abs1 < ROUND_THRESHOLD && abs2 < ROUND_THRESHOLD) {
       newSt.points.push(pts[i].clone());
+      calcPath && (newSt as BezierSticker).parts.push(pts[i].clone());
       continue;
     }
 
+    // Short on the first side => Bezier
     if (abs1 < ROUND_THRESHOLD) {
       bezier([pts[mod(i - 1, maxi)], pts[i], pts[i].add(v2)], PPC).forEach(p =>
         newSt.points.push(p)
       );
+
+      calcPath &&
+        (newSt as BezierSticker).parts.push(
+          new BezierCurve([pts[mod(i - 1, maxi)], pts[i], pts[i].add(v2)], PPC)
+        );
       continue;
     }
 
+    // Short on the second side => bezier
     if (abs2 < ROUND_THRESHOLD) {
       let abs21 = pts[mod(i + 1, maxi)].sub(pts[mod(i + 2, maxi)]).abs();
       let v22 = pts[mod(i + 2, maxi)].sub(pts[mod(i + 1, maxi)]).mul(seg_perc1);
 
+      // Check another point next to them
       if (abs21 < ROUND_THRESHOLD) {
         bezier([pts[i].add(v1), pts[i], pts[mod(i + 1, maxi)]], PPC).forEach(p =>
           newSt.points.push(p)
         );
+
+        calcPath &&
+          (newSt as BezierSticker).parts.push(
+            new BezierCurve([pts[i].add(v1), pts[i], pts[mod(i + 1, maxi)]], PPC)
+          );
       } else {
         bezier(
           [pts[i].add(v1), pts[i], pts[mod(i + 1, maxi)], pts[mod(i + 1, maxi)].add(v22)],
           PPC
         ).forEach(p => newSt.points.push(p));
+
+        calcPath &&
+          (newSt as BezierSticker).parts.push(
+            new BezierCurve(
+              [pts[i].add(v1), pts[i], pts[mod(i + 1, maxi)], pts[mod(i + 1, maxi)].add(v22)],
+              PPC
+            )
+          );
       }
 
       i += 1;
@@ -184,20 +210,25 @@ export function roundStickerCorners(
       isCircle = true;
     }
 
-    circle(pts[i].add(v1), pts[i], pts[i].add(v2), PPC).forEach(p => newSt.points.push(p));
+    if (isCircle) {
+      circle(pts[i].add(v1), pts[i], pts[i].add(v2), PPC).forEach(p => {
+        newSt.points.push(p);
+        calcPath && (newSt as BezierSticker).parts.push(p.clone());
+      });
+    } else {
+      bezier([pts[i].add(v1), pts[i], pts[i].add(v2)], PPC).forEach(p => newSt.points.push(p));
+
+      calcPath &&
+        (newSt as BezierSticker).parts.push(
+          new BezierCurve([pts[i].add(v1), pts[i], pts[i].add(v2)], PPC)
+        );
+    }
   }
 
   return scaleSticker(newSt, SCALE);
 }
 
-export function roundCorners(
-  p: PuzzleInterface,
-  rd?: number,
-  scale?: number,
-  ppc?: number,
-  fn?: Function,
-  justScale?: boolean
-) {
+export function roundCorners({ p, rd, scale, ppc, fn, justScale, calcPath }: RoundCornersParams) {
   if (p.isRounded) {
     return;
   }
@@ -217,7 +248,9 @@ export function roundCorners(
         continue;
       }
 
-      let newSt = justScale ? scaleSticker(s[j], 0) : roundStickerCorners(s[j], rd, scale, ppc);
+      let newSt = justScale
+        ? scaleSticker(s[j], 0)
+        : roundStickerCorners(s[j], rd, scale, ppc, calcPath);
 
       if (newSt === s[j]) continue;
 

@@ -16,7 +16,7 @@ export function SQUARE1_STAR(): PuzzleInterface {
     faceColors: ["green", "blue"],
     getAllStickers: getAllStickers,
     move: () => true,
-    roundParams: [],
+    roundParams: {},
   };
 
   const PI = Math.PI;

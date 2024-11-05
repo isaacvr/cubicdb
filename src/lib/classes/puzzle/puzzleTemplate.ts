@@ -17,9 +17,13 @@ export function PUZZLE(): PuzzleInterface {
     dims: [],
     faceColors: ["w", "r", "g", "y", "o", "b"],
     move: () => false,
-    roundParams: [
-      // (Sticker => number | [number] | null), scale, PPC, fn, justScale
-    ],
+    roundParams: {
+      // rd?: number | Function
+      // scale?: number
+      // ppc?: number
+      // fn?: Function
+      // justScale?: boolean
+    },
   };
 
   puzzle.getAllStickers = getAllStickers.bind(puzzle);

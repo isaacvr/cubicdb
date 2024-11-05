@@ -24,7 +24,7 @@ export function birdView(cube: Puzzle, DIM: number, format: "raster" | "svg" = "
   const LW = Math.max(2, DIM / 100);
   const ctx = format === "raster" ? new CanvasGenerator(W, H) : new SVGGenerator(W, H);
 
-  roundCorners(cube.p, ...cube.p.roundParams);
+  roundCorners({ p: cube.p, ...cube.p.roundParams });
 
   let allStickers = cube.p.pieces.reduce((acc, e) => [...acc, ...e.stickers], <Sticker[]>[]);
   let leftSticker = allStickers

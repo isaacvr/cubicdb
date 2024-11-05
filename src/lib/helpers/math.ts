@@ -1,4 +1,5 @@
 import { Color } from "@classes/Color";
+import type { BezierCurve } from "@classes/puzzle/BezierCurve";
 import { Vector2D } from "@classes/vector2-d";
 import { BACK, CENTER, DOWN, FRONT, LEFT, RIGHT, UP, Vector3D } from "@classes/vector3d";
 import { EPS } from "@constants";
@@ -189,11 +190,11 @@ export function byteToString(b: number): string {
 }
 
 export function rotateBundle(
-  points: Vector3D[],
+  points: (Vector3D | BezierCurve)[],
   O: Vector3D,
   u: Vector3D,
   ang: number
-): Vector3D[] {
+): (Vector3D | BezierCurve)[] {
   return points.map(p => p.rotate(O, u, ang));
 }
 

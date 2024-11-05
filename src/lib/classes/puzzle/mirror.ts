@@ -19,7 +19,7 @@ export function MIRROR(n: number): PuzzleInterface {
     dims: [n, n, n],
     faceColors: [],
     move: () => false,
-    roundParams: [],
+    roundParams: {},
   };
 
   mirror.getAllStickers = getAllStickers.bind(mirror);

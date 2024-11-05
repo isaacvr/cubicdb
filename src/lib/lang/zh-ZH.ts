@@ -66,6 +66,8 @@ export const Chinese: Language = {
     start: "开始",
     back: "返回",
     next: "下一步",
+    download: "下载中",
+    copyCode: "复制 $1",
   },
   TUTORIALS: {
     easy: "简单",

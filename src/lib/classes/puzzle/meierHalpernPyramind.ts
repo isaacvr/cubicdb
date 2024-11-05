@@ -16,7 +16,7 @@ export function MEIER_HALPERN_PYRAMIND(): PuzzleInterface {
     faceColors: ["g", "b", "y", "r"],
     move: () => true,
     dims: [],
-    roundParams: [],
+    roundParams: {},
   };
 
   mhp.getAllStickers = getAllStickers.bind(mhp);

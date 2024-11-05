@@ -119,7 +119,7 @@
     let arr: Puzzle[] =
       type < 2 ? cards.map(e => e.puzzle as Puzzle) : cases.map(e => e._puzzle as Puzzle);
 
-    pGenerateCubeBundle(arr, 500, true, false, true)
+    pGenerateCubeBundle(arr, 1000, true, false, false)
       .then(_ => {
         cards = cards;
         cases = cases;
@@ -140,9 +140,9 @@
     if (e.code === "KeyL" && e.ctrlKey && !allSolutions && (type === 2 || type >= 4)) {
       toggleListView();
     } else if (e.code === "KeyA" && e.ctrlKey) {
-      // e.preventDefault();
-      // allowAlgAdmin = !allowAlgAdmin;
-      allowAlgAdmin = false;
+      e.preventDefault();
+      allowAlgAdmin = !allowAlgAdmin;
+      // allowAlgAdmin = false;
     } else if (e.code === "KeyN" && e.ctrlKey && allowAlgAdmin) {
       addAlgorithm();
     }
@@ -222,7 +222,7 @@
 
     sAlg.alg._puzzle = algorithmToPuzzle(sAlg.alg, true);
 
-    img = (await pGenerateCubeBundle([sAlg.alg._puzzle], 200, true))[0];
+    img = (await pGenerateCubeBundle([sAlg.alg._puzzle], 200))[0];
   }
 
   function saveAlgorithm() {
@@ -256,7 +256,7 @@
   }
 
   function selectAlg(a: Algorithm) {
-    sAlg = clone(a, ["_puzzle"]);
+    sAlg = { alg: clone(a, ["_puzzle"]), tutorial: false };
 
     sAlg.alg.tips = (sAlg.alg.tips || []).slice();
     show = true;
@@ -396,13 +396,18 @@
         on:click={() => (imgExpanded = !imgExpanded)}
       >
         {#if selectedCase?._puzzle?.img}
-          <PuzzleImage src={selectedCase._puzzle.img} />
+          <PuzzleImage
+            src={selectedCase._puzzle.img}
+            allowDownload
+            downloadDivClass="translate-x-[calc(100%+.25rem)]"
+            placement="right"
+          />
         {:else}
           <Spinner size="6" color="white" />
         {/if}
       </button>
 
-      <div class="grid grid-cols-6">
+      <div class="grid grid-cols-6 gap-1">
         <h2 class="max-sm:hidden col-span-1 font-bold text-xl">&nbsp;</h2>
         <h2 class="max-sm:col-span-5 col-span-3 font-bold text-xl tx-text">
           {$localLang.ALGORITHMS.solution}
@@ -425,7 +430,7 @@
               tabindex="0"
               on:click={() => toClipboard(sol.moves)}
               class="cursor-pointer hover:tx-text transition-all tx-text
-              text-left duration-200 pl-2 underline underline-offset-4">{sol.moves}</button
+                text-left duration-200 pl-2 underline underline-offset-4">{sol.moves}</button
             >
           </div>
 
@@ -498,14 +503,13 @@
 
               {#if allowAlgAdmin}
                 <div class="absolute no-grid flex flex-col gap-2 justify-start top-0 left-0">
-                  <Button
-                    on:click={e => {
-                      e.stopPropagation();
+                  <button
+                    on:click|preventDefault={e => {
                       selectAlg(currentList[pos]);
                     }}
-                    class="p-1"
+                    class="p-1 bg-primary-600 rounded-md"
                     ><EditIcon size="1.2rem" />
-                  </Button>
+                  </button>
                   <Button color="red" on:click={() => removeAlg(currentList[pos])} class="p-1"
                     ><DeleteIcon size="1.2rem" />
                   </Button>

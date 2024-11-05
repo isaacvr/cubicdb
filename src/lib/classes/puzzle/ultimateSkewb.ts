@@ -29,7 +29,7 @@ export function ULTIMATE_SKEWB(): PuzzleInterface {
       "gray",
     ],
     move: () => true,
-    roundParams: [],
+    roundParams: {},
   };
 
   const PI = Math.PI;

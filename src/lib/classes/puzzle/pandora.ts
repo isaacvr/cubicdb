@@ -16,7 +16,7 @@ export function PANDORA(): PuzzleInterface {
     getAllStickers: () => [],
     faceColors: ["w", "r", "g", "y", "o", "b"],
     move: () => true,
-    roundParams: [],
+    roundParams: {},
   };
 
   pandora.getAllStickers = getAllStickers.bind(pandora);

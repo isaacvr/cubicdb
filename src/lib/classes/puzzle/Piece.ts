@@ -5,6 +5,7 @@ import { rotateBundle } from "@helpers/math";
 import { EPS } from "@constants";
 import type { VectorLike3D } from "@interfaces";
 import { TextSticker } from "./TextSticker";
+import { BezierSticker } from "./BezierSticker";
 
 type CallbackFunction = (
   p: any,
@@ -17,7 +18,7 @@ type CallbackFunction = (
 ) => void;
 
 export class Piece {
-  stickers: Sticker[];
+  stickers: (Sticker | BezierSticker)[];
   boundingBox: Vector3D[];
   hasCallback: boolean;
   callback: CallbackFunction;
@@ -151,9 +152,11 @@ export class Piece {
   }
 
   rotate(ref: Vector3D, dir: Vector3D, ang: number, self?: boolean): Piece {
-    let st = this.stickers;
+    let st = this.stickers.filter(s => !(s instanceof BezierSticker)) as Sticker[];
+    let bz = this.stickers.filter(s => s instanceof BezierSticker);
 
     if (self) {
+      // Rotate pure stickers
       let pts: Vector3D[] = [];
 
       for (let i = 0, maxi = st.length; i < maxi; i += 1) {
@@ -164,7 +167,7 @@ export class Piece {
         }
       }
 
-      let pts1 = rotateBundle(pts, ref, dir, ang);
+      let pts1 = rotateBundle(pts, ref, dir, ang) as Vector3D[];
 
       for (let i = 0, maxi = pts.length; i < maxi; i += 1) {
         pts[i].setCoords(pts1[i].x, pts1[i].y, pts1[i].z);
@@ -173,6 +176,9 @@ export class Piece {
       for (let i = 0, maxi = st.length; i < maxi; i += 1) {
         st[i].partialRotation(ref, dir, ang, true);
       }
+
+      // Rotate Bezier stickers
+      bz.forEach(s => s.rotate(ref, dir, ang, true));
 
       this._cached_mass_center.rotate(ref, dir, ang, true);
       this.anchor.rotate(ref, dir, ang, true).toNormal();

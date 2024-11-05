@@ -30,7 +30,7 @@ export function PYRAMINX_CRYSTAL(): PuzzleInterface {
       "gray",
     ],
     move: () => true,
-    roundParams: [],
+    roundParams: {},
   };
 
   const PI = Math.PI;

@@ -16,7 +16,7 @@ export function TETRAMINX(): PuzzleInterface {
     faceColors: ["g", "b", "y", "r", "g", "b", "y", "r"],
     move: () => true,
     dims: [],
-    roundParams: [],
+    roundParams: {},
   };
 
   tetra.getAllStickers = getAllStickers.bind(tetra);

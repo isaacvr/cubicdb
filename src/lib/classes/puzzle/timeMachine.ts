@@ -25,7 +25,7 @@ export function TIME_MACHINE(): PuzzleInterface {
     dims: [],
     faceColors: ["w", "r", "g", "y", "o", "b"],
     move: () => false,
-    roundParams: [],
+    roundParams: {},
   };
 
   tm.getAllStickers = getAllStickers.bind(tm);

@@ -48,7 +48,7 @@ export function DREIDEL(): PuzzleInterface {
     dims: [],
     faceColors: ["w", "r", "g", "y", "o", "b"],
     move: () => false,
-    roundParams: [],
+    roundParams: {},
   };
 
   dreidel.getAllStickers = getAllStickers.bind(dreidel);

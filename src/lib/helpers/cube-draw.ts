@@ -48,9 +48,9 @@ export async function pGenerateCubeBundle(
       const cube = cubes[i];
 
       if (printable) cube.p.palette = PRINTABLE_PALETTE;
-      if (cube.options.rounded) {
-        roundCorners(cube.p, ...cube.p.roundParams);
-      }
+      // if (cube.options.rounded) {
+      //   roundCorners({ p: cube.p, ...cube.p.roundParams });
+      // }
 
       if (["plan", "2d", "bird"].indexOf(cube.view) > -1) {
         cube.img =
@@ -59,6 +59,9 @@ export async function pGenerateCubeBundle(
             : cube.view === "2d"
               ? projectedView(cube, W, format)
               : birdView(cube, W, format);
+        // cube.view === "plan" || cube.view === "2d"
+        //   ? projectedView(cube, W, format)
+        //   : birdView(cube, W, format);
 
         cache && get(dataService).cache.cacheSaveImage(sha1(cube.options), cube.img);
       } else {

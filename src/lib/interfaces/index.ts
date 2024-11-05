@@ -7,6 +7,7 @@ import type { Writable } from "svelte/store";
 import type { Display } from "electron";
 import type { HTMLImgAttributes } from "svelte/elements";
 import type { FILTER_OPERATOR } from "$lib/timer/SessionsTab/AdvancedSearch/adaptors/types";
+import type { BezierSticker } from "@classes/puzzle/BezierSticker";
 
 export const PuzzleTypeName = [
   "rubik",
@@ -199,6 +200,16 @@ export interface ToMoveResult {
   animationTime?: number;
 }
 
+export interface RoundCornersParams {
+  p: PuzzleInterface;
+  rd?: number | Function;
+  scale?: number;
+  ppc?: number;
+  fn?: Function;
+  justScale?: boolean;
+  calcPath?: boolean;
+}
+
 export interface PuzzleInterface {
   pieces: Piece[];
   palette: any;
@@ -210,9 +221,9 @@ export interface PuzzleInterface {
   center: Vector3D;
   faceVectors: Vector3D[];
   faceColors: string[];
-  getAllStickers: () => Sticker[];
+  getAllStickers: () => Sticker[] | BezierSticker[];
   move: (m: any) => any;
-  roundParams: any[];
+  roundParams: Omit<RoundCornersParams, "p">;
   isRounded?: boolean;
   dims?: number[];
   raw?: any;
@@ -883,6 +894,8 @@ export interface Language {
     next: string;
     back: string;
     start: string;
+    download: string;
+    copyCode: string;
   };
   TUTORIALS: {
     easy: string;
@@ -1336,3 +1349,7 @@ export interface Theme {
   urgentButton: string;
   accent: string;
 }
+
+export type Side = "top" | "right" | "bottom" | "left";
+export type Alignment = "start" | "end";
+export type Placement = `${Side}-${Alignment}`;

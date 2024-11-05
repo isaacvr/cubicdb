@@ -1,3 +1,5 @@
+import type { BezierCurve } from "@classes/puzzle/BezierCurve";
+import { BezierSticker } from "@classes/puzzle/BezierSticker";
 import type { Sticker } from "@classes/puzzle/Sticker";
 import type { Puzzle } from "@classes/puzzle/puzzle";
 import { Vector2D } from "@classes/vector2-d";
@@ -21,6 +23,17 @@ export interface IDrawer {
     endAngle: number,
     counterclockwise?: boolean
   ) => void;
+  quadraticCurveTo: (cpx: number, cpy: number, x: number, y: number) => void;
+  bezierCurveTo: (
+    cp1x: number,
+    cp1y: number,
+    cp2x: number,
+    cp2y: number,
+    x: number,
+    y: number
+  ) => void;
+
+  circle: (x: number, y: number, r: number) => void;
 
   strokeStyle: string | CanvasGradient | CanvasPattern;
   fillStyle: string | CanvasGradient | CanvasPattern;
@@ -42,8 +55,8 @@ function getTipColor(mode: CubeMode): string {
 
 export function drawStickers(
   ctx: IDrawer,
-  stickers: Sticker[],
-  sideStickers: Sticker[],
+  stickers: Sticker[] | BezierSticker[],
+  sideStickers: Sticker[] | BezierSticker[],
   W: number,
   H: number,
   cube: Puzzle
@@ -116,6 +129,7 @@ export function drawStickers(
   for (let i = 0, maxi = allStickers.length; i < maxi; i += 1) {
     let st = allStickers[i];
     ctx.fillStyle = cube.getHexStrColor(st.color);
+    // console.log(`Color <${st.color}> ==> <${ctx.fillStyle}>`);
 
     if (cube.type === "clock") {
       if (st.name != "pin") {
@@ -125,7 +139,20 @@ export function drawStickers(
       }
     }
 
-    let pts = st.points;
+    if (st.name === "circle" || st.name === "pin") {
+      let mc = st.updateMassCenter();
+      let rad = mc.sub(st.points[0]).abs();
+      let x = map(mc.x, v1.x, v2.x, 0, vdif.x) + offset.x;
+      let y = H - map(mc.y, v1.y, v2.y, 0, vdif.y) - offset.y;
+      let r = map(mc.x + rad, v1.x, v2.x, 0, vdif.x) + offset.x - x;
+      ctx.circle(x, y, r);
+      continue;
+    }
+    // else {
+    //   console.log(`NAME: <${st.name}>`);
+    // }
+
+    let pts = st instanceof BezierSticker ? st.parts : st.points;
 
     ctx.beginPath();
 
@@ -134,12 +161,33 @@ export function drawStickers(
     }
 
     for (let j = 0, maxj = pts.length; j < maxj; j += 1) {
-      let x = map(pts[j].x, v1.x, v2.x, 0, vdif.x) + offset.x;
-      let y = map(pts[j].y, v1.y, v2.y, 0, vdif.y) + offset.y;
-      if (j === 0) {
-        ctx.moveTo(x, H - y);
+      if (pts[j] instanceof Vector3D) {
+        let pt = pts[j] as Vector3D;
+        let x = map(pt.x, v1.x, v2.x, 0, vdif.x) + offset.x;
+        let y = H - map(pt.y, v1.y, v2.y, 0, vdif.y) - offset.y;
+        if (j === 0) {
+          ctx.moveTo(x, y);
+        } else {
+          ctx.lineTo(x, y);
+        }
       } else {
-        ctx.lineTo(x, H - y);
+        let bz = pts[j] as BezierCurve;
+        let pts1 = bz.anchors.map(a => ({
+          x: map(a.x, v1.x, v2.x, 0, vdif.x) + offset.x,
+          y: H - map(a.y, v1.y, v2.y, 0, vdif.y) - offset.y,
+        }));
+
+        if (j === 0) {
+          ctx.moveTo(pts1[0].x, pts1[0].y);
+        } else {
+          ctx.lineTo(pts1[0].x, pts1[0].y);
+        }
+
+        if (pts1.length === 3) {
+          ctx.quadraticCurveTo(pts1[1].x, pts1[1].y, pts1[2].x, pts1[2].y);
+        } else {
+          ctx.bezierCurveTo(pts1[1].x, pts1[1].y, pts1[2].x, pts1[2].y, pts1[3].x, pts1[3].y);
+        }
       }
     }
     ctx.fill();

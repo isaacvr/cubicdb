@@ -26,7 +26,7 @@ export function CLOCK(): PuzzleInterface {
     pieces: [],
     rotation: { x: 0, y: 0, z: 0 },
     dims: [],
-    roundParams: [],
+    roundParams: {},
     isRounded: true,
   };
 

@@ -66,6 +66,8 @@ export const Spanish: Language = {
     start: "Comenzar",
     back: "Atrás",
     next: "Siguiente",
+    download: "Descargar",
+    copyCode: "Copiar $1"
   },
   TUTORIALS: {
     easy: "Fácil",

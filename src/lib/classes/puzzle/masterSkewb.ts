@@ -18,7 +18,7 @@ export function MASTER_SKEWB(): PuzzleInterface {
     getAllStickers: () => [],
     faceColors: ["w", "r", "g", "y", "o", "b"],
     move: () => true,
-    roundParams: [],
+    roundParams: {},
   };
 
   mskewb.getAllStickers = getAllStickers.bind(mskewb);

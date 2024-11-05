@@ -3,13 +3,10 @@
   import { getColorByName } from "@constants";
   import { weakRandomUUID } from "@helpers/strings";
   import ExpandIcon from "@icons/ChevronDown.svelte";
+  import type { Placement, Side } from "@interfaces";
 
   import { Button, Dropdown, DropdownDivider, DropdownItem } from "flowbite-svelte";
   import { createEventDispatcher, onMount } from "svelte";
-
-  type Side = "top" | "right" | "bottom" | "left";
-  type Alignment = "start" | "end";
-  type Placement = `${Side}-${Alignment}`;
 
   let cl = "";
   export { cl as class };

@@ -68,8 +68,14 @@ export function GEAR(): PuzzleInterface {
     getAllStickers: () => [],
     faceColors: ["y", "o", "g", "w", "r", "b"],
     move: () => true,
-    roundParams: [0.2, 0.9, null, (s: Sticker) => s.color != "x"],
+    roundParams: { rd: 0.2, scale: 0.9, fn: (s: Sticker) => s.color != "x" },
   };
+
+  // rd
+  // scale
+  // ppc
+  // fn
+  // justScale
 
   gear.getAllStickers = getAllStickers.bind(gear);
 

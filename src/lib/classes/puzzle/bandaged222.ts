@@ -16,7 +16,7 @@ export function BDG(): PuzzleInterface {
     getAllStickers: () => [],
     faceColors: ["y", "o", "g", "w", "r", "b"],
     move: () => true,
-    roundParams: [],
+    roundParams: {},
   };
 
   bdg.getAllStickers = getAllStickers.bind(bdg);

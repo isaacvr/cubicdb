@@ -1,8 +1,10 @@
 import { EPS } from "@constants";
 import type { IDrawer } from "../utils";
+import { sha1 } from "object-hash";
+import { randomCSSId, randomUUID } from "@helpers/strings";
 
-interface IElement {
-  type: "path" | "text";
+interface PathElement {
+  type: "path";
   fill: boolean;
   stroke: boolean;
   path: string;
@@ -10,6 +12,16 @@ interface IElement {
   fillStyle: string;
   lineWidth: CanvasPathDrawingStyles["lineWidth"];
   lineCap: CanvasPathDrawingStyles["lineCap"];
+  position: number;
+}
+
+interface TextElement {
+  type: "text";
+  fill: boolean;
+  stroke: boolean;
+  strokeStyle: string;
+  fillStyle: string;
+  lineWidth: CanvasPathDrawingStyles["lineWidth"];
   textAlign: CanvasTextDrawingStyles["textAlign"];
   textBaseline: CanvasTextDrawingStyles["textBaseline"];
   font: CanvasTextDrawingStyles["font"];
@@ -17,6 +29,31 @@ interface IElement {
   content: string;
   x: number;
   y: number;
+}
+
+interface CircleElement {
+  type: "circle";
+  fill: boolean;
+  stroke: boolean;
+  strokeStyle: string;
+  fillStyle: string;
+  lineWidth: CanvasPathDrawingStyles["lineWidth"];
+  position: number;
+  x: number;
+  y: number;
+  r: number;
+}
+
+declare type IElement = PathElement | TextElement | CircleElement;
+
+interface ISVGClass {
+  name: string;
+  rules: (string | number)[][];
+}
+
+function f(x: number) {
+  const pot = 100;
+  return Math.floor(x * pot) / pot;
 }
 
 export class SVGGenerator implements IDrawer {
@@ -50,11 +87,19 @@ export class SVGGenerator implements IDrawer {
   }
 
   moveTo(x: number, y: number) {
-    this.elements[this._cursor].path += `M${x},${y}`;
+    let elem = this.elements[this._cursor];
+
+    if (elem.type != "path") return;
+
+    elem.path += `M${f(x)},${f(y)}`;
   }
 
   lineTo(x: number, y: number) {
-    this.elements[this._cursor].path += `L${x},${y}`;
+    let elem = this.elements[this._cursor];
+
+    if (elem.type != "path") return;
+
+    elem.path += `L${f(x)},${f(y)}`;
   }
 
   stroke() {
@@ -71,13 +116,7 @@ export class SVGGenerator implements IDrawer {
       lineCap: this.lineCap,
       lineWidth: this.lineWidth,
       strokeStyle: this.strokeStyle,
-      font: "",
-      textAlign: "start",
-      textBaseline: "alphabetic",
       position: -1,
-      content: "",
-      x: 0,
-      y: 0,
     });
 
     this._cursor = this.elements.length - 1;
@@ -88,37 +127,109 @@ export class SVGGenerator implements IDrawer {
   }
 
   closePath() {
-    this.elements[this._cursor].path += `Z`;
+    let elem = this.elements[this._cursor];
+
+    if (elem.type != "path") return;
+
+    elem.path += `Z`;
   }
 
-  private getNodeStr(node: IElement) {
+  private getNodeStr(node: IElement, classes: Map<string, ISVGClass>) {
+    let hash = sha1(this.getNodeClassInfo(node));
+    let classInfo = classes.get(hash);
+
+    if (!classInfo) {
+      throw new ReferenceError("Class not found");
+    }
+
+    let className = classInfo.name;
+
     switch (node.type) {
       case "path": {
-        return `<path ${node.position >= 0 ? 'data-position="' + node.position + '"' : ""} fill="${
-          node.fill ? node.fillStyle : "none"
-        }" stroke="${node.stroke ? node.strokeStyle : "none"}" stroke-width="${
-          node.lineWidth
-        }" stroke-linecap="${node.lineCap}" d="${node.path}" />`;
+        return `<path ${
+          node.position >= 0 ? 'data-position="' + node.position + '"' : ""
+        } class="${className}" d="${node.path}" />`;
       }
 
       case "text": {
-        return `<text x="${node.x}" y="${node.y}" font-size="${node.font.slice(
+        return `<text x="${f(node.x)}" y="${f(node.y)}" font-size="${node.font.slice(
           0,
           node.font.indexOf("px")
-        )}" alignment-baseline="${node.textBaseline}" fill="${
-          node.fillStyle
-        }" font-family="${node.font.slice(node.font.indexOf("px") + 3)}" text-anchor="${
-          node.textAlign === "center" ? "middle" : "start"
-        }">${node.content}</text>`;
+        )}" class="${className}">${node.content}</text>`;
+      }
+
+      case "circle": {
+        return `<circle ${
+          node.position >= 0 ? 'data-position="' + node.position + '"' : ""
+        } class="${className}" cx="${node.x}" cy="${node.y}" r="${node.r}" />`;
       }
     }
   }
 
+  private getNodeClassInfo(node: IElement) {
+    switch (node.type) {
+      case "path": {
+        return [
+          ["fill", node.fill ? node.fillStyle : "none"],
+          ["stroke", node.stroke ? node.strokeStyle : "none"],
+          ["stroke-width", node.lineWidth],
+          ["stroke-linecap", node.lineCap],
+        ];
+      }
+
+      case "text": {
+        return [
+          ["alignment-baseline", node.textBaseline],
+          ["fill", node.fill ? node.fillStyle : "none"],
+          ["text-anchor", node.textAlign === "center" ? "middle" : "start"],
+        ];
+      }
+
+      case "circle": {
+        return [
+          ["fill", node.fill ? node.fillStyle : "none"],
+          ["stroke", node.stroke ? node.strokeStyle : "none"],
+          ["stroke-width", node.lineWidth],
+        ];
+      }
+    }
+
+    return [];
+  }
+
+  private getClasses() {
+    let elements = this.elements;
+    let classMap = new Map<string, ISVGClass>();
+
+    for (let i = 0, maxi = elements.length; i < maxi; i += 1) {
+      let node = elements[i];
+      let config: ISVGClass["rules"] = this.getNodeClassInfo(node);
+      let hash = sha1(config);
+
+      if (!classMap.has(hash)) {
+        classMap.set(hash, {
+          name: "c" + classMap.size,
+          rules: config,
+        });
+      }
+    }
+
+    return classMap;
+  }
+
   getImage() {
+    let cl = randomCSSId();
+    let classes = this.getClasses();
+    let style = [...classes.entries()]
+      .map(c => `.${cl} .${c[1].name}{${c[1].rules.map(e => `${e[0]}:${e[1]};`).join("")}}`)
+      .join("");
+
     return `<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-    <svg xmlns="http://www.w3.org/2000/svg" x="0" y="0" width="${this.W}"
-      height="${this.H}" viewBox="0 0 ${this.W} ${this.H}">
-      ${this.elements.map(e => this.getNodeStr(e)).join("\n")}
+    <svg xmlns="http://www.w3.org/2000/svg" x="0" y="0" width="${this.W}" height="${
+      this.H
+    }" viewBox="0 0 ${this.W} ${this.H}" class="${cl}">
+      <style>${style}</style>
+      ${this.elements.map(e => this.getNodeStr(e, classes)).join("\n      ")}
     </svg>`;
   }
 
@@ -131,9 +242,7 @@ export class SVGGenerator implements IDrawer {
       type: "text",
       fill: true,
       stroke: false,
-      path: "",
       fillStyle: this.fillStyle,
-      lineCap: this.lineCap,
       lineWidth: this.lineWidth,
       strokeStyle: this.strokeStyle,
       textAlign: this.textAlign,
@@ -141,8 +250,8 @@ export class SVGGenerator implements IDrawer {
       font: this.font,
       position: -1,
       content: s,
-      x,
-      y,
+      x: f(x),
+      y: f(y),
     });
 
     this._cursor = this.elements.length - 1;
@@ -156,6 +265,10 @@ export class SVGGenerator implements IDrawer {
     endAngle: number,
     counterclockwise = false
   ) {
+    let elem = this.elements[this._cursor];
+
+    if (elem.type != "path") return;
+
     const startX = x + radius * Math.cos(startAngle);
     const startY = y + radius * Math.sin(startAngle);
     const endX = x + radius * Math.cos(endAngle);
@@ -169,14 +282,47 @@ export class SVGGenerator implements IDrawer {
       const startY = y;
 
       // Dos arcos para hacer un círculo completo
-      const arc1 = `A ${radius} ${radius} 0 1 0 ${x - radius} ${y}`;
-      const arc2 = `A ${radius} ${radius} 0 1 0 ${startX} ${startY}`;
+      const arc1 = `A ${f(radius)} ${f(radius)} 0 1 0 ${f(x - radius)} ${f(y)}`;
+      const arc2 = `A ${f(radius)} ${f(radius)} 0 1 0 ${f(startX)} ${f(startY)}`;
 
-      this.elements[this._cursor].path += `M ${startX} ${startY} ${arc1} ${arc2}`;
+      elem.path += `M ${f(startX)} ${f(startY)} ${arc1} ${arc2}`;
     } else {
-      this.elements[
-        this._cursor
-      ].path += `M ${startX} ${startY} A ${radius} ${radius} 0 ${largeArcFlag} ${sweepFlag} ${endX} ${endY}`;
+      elem.path += `M ${f(startX)} ${f(startY)} A ${f(radius)} ${f(
+        radius
+      )} 0 ${largeArcFlag} ${sweepFlag} ${f(endX)} ${f(endY)}`;
     }
+  }
+
+  quadraticCurveTo(cpx: number, cpy: number, x: number, y: number) {
+    let elem = this.elements[this._cursor];
+
+    if (elem.type != "path") return;
+
+    elem.path += `Q${f(cpx)} ${f(cpy)},${f(x)} ${f(y)}`;
+  }
+
+  bezierCurveTo(cp1x: number, cp1y: number, cp2x: number, cp2y: number, x: number, y: number) {
+    let elem = this.elements[this._cursor];
+
+    if (elem.type != "path") return;
+
+    elem.path += `C${f(cp1x)} ${f(cp1y)},${f(cp2x)} ${f(cp2y)},${f(x)} ${f(y)}`;
+  }
+
+  circle(x: number, y: number, r: number) {
+    this.elements.push({
+      type: "circle",
+      fill: true,
+      stroke: true,
+      fillStyle: this.fillStyle,
+      lineWidth: this.lineWidth,
+      strokeStyle: this.strokeStyle,
+      position: -1,
+      x: f(x),
+      y: f(y),
+      r: f(r),
+    });
+
+    this._cursor = this.elements.length - 1;
   }
 }

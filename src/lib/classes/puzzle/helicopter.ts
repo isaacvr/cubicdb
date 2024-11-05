@@ -17,7 +17,7 @@ export function HELICOPTER(): PuzzleInterface {
     getAllStickers: () => [],
     faceColors: ['w', 'r', 'g', 'y', 'o', 'b'],
     move: () => true,
-    roundParams: [],
+    roundParams: {},
   };
 
   helic.getAllStickers = getAllStickers.bind(helic);

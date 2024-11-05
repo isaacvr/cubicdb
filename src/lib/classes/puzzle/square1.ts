@@ -18,8 +18,8 @@ export function SQUARE1(): PuzzleInterface {
     getAllStickers: () => [],
     faceColors: ["w", "b", "r", "y", "g", "o"],
     move: () => true,
-    roundParams: [
-      (s: Sticker, i: number) => {
+    roundParams: {
+      rd: (s: Sticker, i: number) => {
         let o = s.getOrientation();
 
         if (o.cross(UP).abs() < EPS) {
@@ -41,8 +41,8 @@ export function SQUARE1(): PuzzleInterface {
 
         return i === 1 || i === 2 ? [0.2, true] : [0.05, true];
       },
-      0.95,
-    ],
+      scale: 0.95,
+    },
   };
 
   sq1.getAllStickers = getAllStickers.bind(sq1);

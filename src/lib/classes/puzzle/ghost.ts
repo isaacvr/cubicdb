@@ -17,10 +17,7 @@ export function GHOST(): PuzzleInterface {
     dims: [],
     faceColors: ["w", "r", "g", "y", "o", "b"],
     move: () => false,
-    // isRounded: true,
-    roundParams: [
-      // (Sticker => number | [number] | null), scale, PPC, fn, justScale
-    ],
+    roundParams: {},
   };
 
   ghost.getAllStickers = getAllStickers.bind(ghost);

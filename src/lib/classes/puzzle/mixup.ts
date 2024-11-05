@@ -20,7 +20,7 @@ export function MIXUP(): PuzzleInterface {
     dims: [n, n, n],
     faceColors: ["w", "r", "g", "y", "o", "b"],
     move: () => false,
-    roundParams: [],
+    roundParams: {},
   };
 
   mixup.getAllStickers = getAllStickers.bind(mixup);

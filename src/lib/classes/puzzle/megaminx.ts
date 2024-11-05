@@ -34,8 +34,8 @@ export function MEGAMINX(_n: number): PuzzleInterface {
       "lightGray",
     ],
     move: () => false,
-    roundParams: [
-      (s: Sticker) => {
+    roundParams: {
+      rd: (s: Sticker) => {
         if (s.color === "d" || s.color === "x" || s.name === "center") return null;
         if (s.name === "star" && n % 2 === 0) {
           s.color = "d";
@@ -49,7 +49,7 @@ export function MEGAMINX(_n: number): PuzzleInterface {
 
         return 0.2;
       },
-    ],
+    },
   };
 
   mega.getAllStickers = getAllStickers.bind(mega);

@@ -8,7 +8,8 @@ import { getOColoredStickers } from "@classes/reconstructors/utils";
 import type { Piece } from "@classes/puzzle/Piece";
 import { SVGGenerator } from "./classes/SVGGenerator";
 import { CanvasGenerator } from "./classes/CanvasGenerator";
-import type { PuzzleType } from "@interfaces";
+import type { PuzzleType, ToMoveResult } from "@interfaces";
+import { BezierSticker } from "@classes/puzzle/BezierSticker";
 
 function pointing(st: Sticker, vec = UP): boolean {
   if (st.color === "d") return false;
@@ -24,6 +25,7 @@ export function planView(cube: Puzzle, DIM: number, format: "raster" | "svg" = "
 
   if (!allowed.includes(cube.type)) return "";
 
+  const nCube = cube.clone();
   const W = DIM;
   const H = DIM;
   const PI = Math.PI;
@@ -32,13 +34,13 @@ export function planView(cube: Puzzle, DIM: number, format: "raster" | "svg" = "
   const SIDE_ANG = cube.type === "megaminx" ? PI - cube.p.raw[1] : PI_2;
   const ctx = format === "raster" ? new CanvasGenerator(W, H) : new SVGGenerator(W, H);
 
-  roundCorners(cube.p, ...cube.p.roundParams);
+  roundCorners({ p: nCube.p, ...nCube.p.roundParams, calcPath: true });
 
-  let pieces = cube.pieces;
+  let pieces = nCube.pieces;
   let topPieces: Piece[] = [];
 
-  if (cube.type === "pyraminx") {
-    topPieces = cube.p.pieces.filter(pc =>
+  if (nCube.type === "pyraminx") {
+    topPieces = nCube.p.pieces.filter(pc =>
       getOColoredStickers(pc).every(st => nPointing(st, DOWN))
     );
   } else {
@@ -47,8 +49,8 @@ export function planView(cube: Puzzle, DIM: number, format: "raster" | "svg" = "
         let pc = pieces[i];
         let st = getOColoredStickers(pieces[i]).find(st => nPointing(st));
 
-        if (st && cube.p.toMove) {
-          topPieces = cube.p.toMove(pc, st, UP).pieces;
+        if (st && nCube.p.toMove) {
+          topPieces = (nCube.p.toMove(pc, st, UP) as ToMoveResult).pieces;
           break;
         }
       }
@@ -59,10 +61,10 @@ export function planView(cube: Puzzle, DIM: number, format: "raster" | "svg" = "
   let stickers: Sticker[] = [];
   let sideStikers: Sticker[] = [];
 
-  if (cube.type === "pyraminx") {
+  if (nCube.type === "pyraminx") {
     stickers = topPieces
       .reduce((a, b) => [...a, ...getOColoredStickers(b)], <Sticker[]>[])
-      .map(st => st.rotate(CENTER, RIGHT, PI_2));
+      .map(st => st.rotate(CENTER, RIGHT, PI_2, true));
   } else {
     stickers = topPieces
       .reduce(
@@ -90,11 +92,11 @@ export function planView(cube: Puzzle, DIM: number, format: "raster" | "svg" = "
         let o = s.getOrientation();
         let ac = s._generator;
         let a = ac.points.reduce((a, b) => (a.y > b.y ? a : b));
-        let newS = s.rotate(a, o.cross(UP), SIDE_ANG);
+        let newS = s.rotate(a, o.cross(UP), SIDE_ANG, true);
 
         o.y = 0; // Always get the horizontal plane only
 
-        const factor = cube.type === "megaminx" ? 1 / 2 : 2 / 3;
+        const factor = nCube.type === "megaminx" ? 1 / 2 : 2 / 3;
 
         let shrink = (V: Vector3D) => {
           let O = V.reflect1(a, o).add(V).div(2);
@@ -106,14 +108,25 @@ export function planView(cube: Puzzle, DIM: number, format: "raster" | "svg" = "
           let s = shrink(p);
           p.setCoords(s.x, s.y, s.z);
         });
-        return newS.rotate(CENTER, RIGHT, PI_2);
+
+        if (newS instanceof BezierSticker) {
+          newS.parts.forEach(p => {
+            let pts = p instanceof Vector3D ? [p] : p.anchors;
+
+            pts.forEach(pt => {
+              let s = shrink(pt);
+              pt.setCoords(s.x, s.y, s.z);
+            });
+          });
+        }
+        return newS.rotate(CENTER, RIGHT, PI_2, true);
       });
   }
 
   ctx.strokeStyle = "#000000";
   ctx.lineWidth = LW;
 
-  drawStickers(ctx, stickers, sideStikers, W, H, cube);
+  drawStickers(ctx, stickers, sideStikers, W, H, nCube);
 
   return ctx.getImage();
 }

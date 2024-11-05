@@ -17,7 +17,7 @@ export function REDI(): PuzzleInterface {
     faceColors: ["w", "r", "g", "y", "o", "b"],
     move: () => true,
     dims: [],
-    roundParams: [],
+    roundParams: {},
   };
 
   redi.getAllStickers = getAllStickers.bind(redi);

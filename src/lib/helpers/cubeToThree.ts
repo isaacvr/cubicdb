@@ -98,7 +98,7 @@ export function piecesToTree(
 export function cubeToThree(cube: Puzzle, F: number = 1) {
   let nc = cube;
 
-  roundCorners(nc.p, ...nc.p.roundParams);
+  roundCorners({ p: nc.p, ...nc.p.roundParams });
 
   let defFilter = (s: Sticker[]) => s;
   let rubikFilter = (s: Sticker[]) => {

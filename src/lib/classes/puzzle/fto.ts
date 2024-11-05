@@ -19,7 +19,7 @@ export function FTO(): PuzzleInterface {
     faceColors: ["w", "v", "g", "r", "y", "gray", "b", "o"],
     move: () => true,
     dims: [],
-    roundParams: [],
+    roundParams: {},
   };
 
   fto.getAllStickers = getAllStickers.bind(fto);

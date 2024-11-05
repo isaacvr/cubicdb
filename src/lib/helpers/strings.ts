@@ -52,6 +52,10 @@ export function randomUUID() {
   return res.map(s => s.join("")).join("-");
 }
 
+export function randomCSSId() {
+  return btoa(randomUUID()).slice(0, 16);
+}
+
 export function defaultInner(s: string, withSuffix = true) {
   return s.replace(/\n/g, "<br>") + (withSuffix ? "<br>" : "");
 }

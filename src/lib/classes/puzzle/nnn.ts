@@ -26,7 +26,7 @@ export function RUBIK(_a: number, _b: number, _c: number): PuzzleInterface {
     dims,
     faceColors: ["w", "r", "g", "y", "o", "b"],
     move: () => false,
-    roundParams: [undefined, undefined, a < 10 ? 10 : a < 20 ? 5 : 2],
+    roundParams: { ppc: a < 10 ? 10 : a < 20 ? 5 : 2 },
   };
 
   let fc = rubik.faceColors;

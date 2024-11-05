@@ -17,7 +17,7 @@ export function PYRAMINX(n: number): PuzzleInterface {
     faceColors: ["g", "b", "y", "r"],
     move: () => true,
     dims: [],
-    roundParams: [],
+    roundParams: {},
   };
 
   pyra.getAllStickers = getAllStickers.bind(pyra);

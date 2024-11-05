@@ -30,7 +30,7 @@ export function SQUARE2(): PuzzleInterface {
     getAllStickers: () => [],
     faceColors: ["w", "b", "r", "y", "g", "o"],
     move: () => true,
-    roundParams: [],
+    roundParams: {},
   };
 
   sq2.getAllStickers = getAllStickers.bind(sq2);
