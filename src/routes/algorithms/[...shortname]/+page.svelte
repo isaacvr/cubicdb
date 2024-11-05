@@ -119,7 +119,7 @@
     let arr: Puzzle[] =
       type < 2 ? cards.map(e => e.puzzle as Puzzle) : cases.map(e => e._puzzle as Puzzle);
 
-    pGenerateCubeBundle(arr, 1000, true, false, false)
+    pGenerateCubeBundle(arr, 1000, true, false, true)
       .then(_ => {
         cards = cards;
         cases = cases;
