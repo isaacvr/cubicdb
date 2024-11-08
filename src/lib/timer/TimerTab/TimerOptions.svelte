@@ -396,7 +396,7 @@
   }
 
   onMount(() => {
-    // toolList = [{ tool: tools[1], open: true }];
+    toolList = [{ tool: tools[4], open: true }];
   });
 
   $: $localLang, updateTexts();

@@ -404,9 +404,20 @@ let petrusmeta: IMeta[] = [
   {
     move: moves,
     maxl: 10,
-    head: "2x2x3",
+    head: "2x2x2 => 2x2x3",
     step: {
       "---------------------FF-FF-DD-DD-DD----LLLLLL----BB-BB": 0x3,
+    },
+  },
+];
+
+let petrus223meta: IMeta[] = [
+  {
+    move: moves,
+    maxl: 10,
+    head: "2x2x3",
+    step: {
+      "---------------------FF-FF-DD-DD-DD----LLLLLL----BB-BB": 0x0,
     },
   },
 ];
@@ -501,6 +512,7 @@ function solveStepByStep(meta: IMeta[]): string[][] {
 }
 
 let block222solv: gSolver;
+let block223solv: gSolver;
 
 function block222Solver(scramble: string) {
   curScramble = ScrambleParser.parseScrambleOld(
@@ -549,6 +561,57 @@ function block222Solver(scramble: string) {
   return res;
 }
 
+function block223Solver(scramble: string, pos: number) {
+  console.time("block223Solver");
+  curScramble = ScrambleParser.parseScrambleOld(
+    scramble,
+    {
+      a: 3,
+      b: 3,
+      c: 3,
+    },
+    "URFDLB"
+  );
+
+  curScrambleStrArr.length = 0;
+
+  for (let i = 0; i < curScramble.length; i += 1) {
+    curScrambleStrArr[i] =
+      "URFDLB".charAt(curScramble[i].pos) + " 2'".charAt(curScramble[i].times - 1);
+  }
+
+  let faceStr = ["UF", "UL", "UB", "UR", "DF", "DL", "DB", "DR"];
+  let faceSolved = [
+    "---UUUUUURR-RR----FFFFFF-------------LL-LL------------",
+    "UU-UU-UU----------FF-FF-------------LLLLLL----BB-BB---",
+    "UUUUUU----RR-RR---------------------LL-LL----BBBBBB---",
+    "-UU-UU-UURRRRRR----FF-FF---------------------BB-BB----",
+
+    "------------RR-RR----FFFFFFDDDDDD-------LL-LL---------",
+    "---------------------FF-FF-DD-DD-DD----LLLLLL----BB-BB",
+    "-------------RR-RR------------DDDDDD---LL-LL----BBBBBB",
+    "------------RRRRRR----FF-FF-DD-DD-DD------------BB-BB-",
+  ];
+
+  block223solv = block223solv || new gSolver(faceSolved, cubeMove, moves);
+
+  let res: string[][] = [];
+
+  sol = [];
+
+  let sol1 = block223solv.search(stateInit(cubeMove, faceSolved[pos]), 0, 10);
+
+  if (sol1) {
+    res.push([faceStr[pos], adjustScramble(sol1)]);
+  } else {
+    res.push([faceStr[pos], "-"]);
+  }
+
+  console.timeEnd("block223Solver");
+
+  return res;
+}
+
 function getMoveMap(ori: string) {
   let rot = ori.split(" ");
   let map: any[] = [0, 1, 2, 3, 4, 5];
@@ -575,9 +638,18 @@ function getMoveMap(ori: string) {
   return map.join("");
 }
 
-export function exec333StepSolver(type: StepSolver, scramble: string, curOri: string): string[][] {
+export function exec333StepSolver(
+  type: StepSolver,
+  scramble: string,
+  curOri: string,
+  p223: number
+): string[][] {
   if (type == "222") {
     return block222Solver(scramble);
+  }
+
+  if (type == "223") {
+    return block223Solver(scramble, p223);
   }
 
   let moveMap = getMoveMap(curOri);

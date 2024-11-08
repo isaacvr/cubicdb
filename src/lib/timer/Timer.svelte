@@ -351,7 +351,7 @@
 
       // console.log("SCRAMBLE: ", $scramble);
 
-      // $scramble = "F R2 F2 U2 B' L2 B' D2 R2 U2 R2 F2 L D' F L2 F2 U' B U B2 Rw' Uw'";
+      // $scramble = "U' B2 D L2 B2 D L2 R2 F2 D' F2 B' R' D L' U2 B' D2 B";
 
       // let cfop = new CFOP(Puzzle.fromSequence($scramble, { type: 'rubik' }).toFacelet());
       // cfop.getAnalysis();

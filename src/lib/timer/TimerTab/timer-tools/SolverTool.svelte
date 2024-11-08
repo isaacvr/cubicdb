@@ -10,9 +10,12 @@
 
   let oris = cubeOris;
   let orientation = oris[0];
+  let petrus223 = 0;
+  let petrus223Oris = ["UF", "UL", "UB", "UR", "DF", "DL", "DB", "DR"];
 
   let result: string[][] = [];
-  let solver: StepSolver | null = null;
+  // let solver: StepSolver | null = null;
+  let solver: StepSolver | null = "223";
 
   function autoSelect() {
     for (let i = 0, maxi = StepSolverStr.length; i < maxi; i += 1) {
@@ -27,10 +30,10 @@
     return item.modes.indexOf(md) > -1;
   }
 
-  function updateResult(scr: string, sv: StepSolver | null, o: string, md: string) {
+  function updateResult(scr: string, sv: StepSolver | null, o: string, md: string, p223: number) {
     if (!sv) return;
 
-    let res = getSolver(sv, scr, o, md);
+    let res = getSolver(sv, scr, o, md, p223);
 
     if (!res) {
       autoSelect();
@@ -41,10 +44,10 @@
   }
 
   onMount(() => {
-    autoSelect();
+    // autoSelect();
   });
 
-  $: $scramble && updateResult($scramble, solver, orientation, $mode[1]);
+  $: $scramble && updateResult($scramble, solver, orientation, $mode[1], petrus223);
 </script>
 
 <div class="grid">
@@ -60,13 +63,25 @@
       disabled={e => !canWork(e, $mode ? $mode[1] : "")}
     />
 
-    {#if ["222", "pocket", "skewb", "sq1", "pyra"].every(t => t != solver)}
+    {#if ["222", "223", "pocket", "skewb", "sq1", "pyra"].every(t => t != solver)}
       <Select
         placement="right-start"
         class="!py-2 !bg-gray-800 !relative"
         bind:value={orientation}
         items={oris}
         transform={e => e}
+        label={e => e}
+        useFixed={true}
+      />
+    {/if}
+
+    {#if solver === "223"}
+      <Select
+        placement="right-start"
+        class="!py-2 !bg-gray-800 !relative"
+        bind:value={petrus223}
+        items={petrus223Oris}
+        transform={(e, p) => p}
         label={e => e}
         useFixed={true}
       />
