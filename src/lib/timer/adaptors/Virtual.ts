@@ -210,26 +210,26 @@ export class VirtualInput implements TimerInputHandler {
       // Mano derecha
       I: "R",
       K: "R'",
-      O: "Rw",
-      L: "Rw'",
+      // O: "Rw",
+      // L: "Rw'",
       J: "U",
-      U: "Uw",
+      // U: "Uw",
       M: "D'",
       H: "F",
       N: "B'",
-      Y: "M",
+      // Y: "M",
 
       // Mano izquierda
       E: "L'",
       D: "L",
-      W: "Lw'",
-      S: "Lw",
+      // W: "Lw'",
+      // S: "Lw",
       F: "U'",
-      R: "Uw'",
+      // R: "Uw'",
       C: "D",
       G: "F'",
       V: "B",
-      X: "M'",
+      // X: "M'",
     };
 
     // this.interpreter.subscribe(sn => {
@@ -257,9 +257,7 @@ export class VirtualInput implements TimerInputHandler {
     if (/^Key[A-Z]/.test(ev.code) && !ev.ctrlKey && !ev.shiftKey) {
       let k = ev.code.slice(3);
       if (k in this.keymap) {
-        console.log("MOVE: ", this.keymap[k]);
         this.emit("move", [this.keymap[k], 100]);
-        // this.interpreter.send({ type: "move:start" });
         return;
       }
     }

@@ -347,13 +347,15 @@ export class ThreeJSAdaptor {
         if (this.addMove(this.moveQueue[0])) {
           this.setAnimationData();
           this.animating = true;
+          this.currentAnimation?.onstart && this.currentAnimation.onstart();
         }
 
         this.moveQueue.shift();
       } else if (this.animationQueue.length > 0) {
         this.setAnimationData();
         this.animating = true;
-        let { userData, ignoreUserData } = this.currentAnimation!;
+        let { userData, ignoreUserData, onstart } = this.currentAnimation!;
+        onstart && onstart();
 
         !ignoreUserData &&
           userData.forEach(dataList =>
@@ -372,6 +374,12 @@ export class ThreeJSAdaptor {
       let total = currAnim.animBuffer.length;
       let anim = 0;
       let animLen = this.moveQueue.length;
+
+      if (currAnim.onprogress) {
+        let totalTime = currAnim.animationTimes.reduce((acc, e) => Math.max(acc, e), 0);
+        let globalAlpha = (performance.now() - currAnim.timeIni) / totalTime;
+        currAnim.onprogress && currAnim.onprogress(globalAlpha);
+      }
 
       for (let i = 0; i < total; i += 1) {
         let animationTime = currAnim.animationTimes[i];
@@ -402,7 +410,8 @@ export class ThreeJSAdaptor {
 
       // Animation ended
       if (anim === 0) {
-        this.currentAnimation.onend && this.currentAnimation.onend();
+        currAnim.onprogress && currAnim.onprogress(1);
+        currAnim.onend && currAnim.onend();
         this.animationQueue.shift();
         this.animating = false;
       }
@@ -483,7 +492,20 @@ export class ThreeJSAdaptor {
     let sticker = piece?.stickers.find(s => s.vecs.length === 3);
 
     let data = this.dataFromGroup([piece, sticker], u, u, dir);
-    data && this.prepareFromDrag(data);
+    // data && this.prepareFromDrag(data);
+    if (data) {
+      let anim = this.prepareFromDrag(data);
+      anim.onstart = () => {
+        this.emit("move:start");
+      };
+      anim.onend = () => {
+        this.emit("move:end");
+
+        if (this.cube?.isComplete()) {
+          this.emit("solved");
+        }
+      };
+    }
     return true;
   }
 
