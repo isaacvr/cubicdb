@@ -39,6 +39,7 @@
     type BluetoothDeviceData,
     SESSION_TYPE,
     type SessionType,
+    type PuzzleType,
   } from "@interfaces";
   import { Puzzle } from "@classes/puzzle/puzzle";
   import { ScrambleParser } from "@classes/scramble-parser";
@@ -137,6 +138,8 @@
   let bluetoothList = writable<BluetoothDeviceData[]>([]);
   let bluetoothStatus = writable(false);
   let STATS_WINDOW = writable<(number | null)[][]>($AON.map(_ => []));
+  let puzzleType = writable<PuzzleType>("rubik");
+  let puzzleOrder = writable(3);
 
   let lastPreview = 0;
 
@@ -348,14 +351,25 @@
 
       // console.log("SCRAMBLE: ", $scramble);
 
-      // $scramble = "BL";
+      $scramble = "F R2 F2 U2 B' L2 B' D2 R2 U2 R2 F2 L D' F L2 F2 U' B U B2 Rw' Uw'";
 
       // let cfop = new CFOP(Puzzle.fromSequence($scramble, { type: 'rubik' }).toFacelet());
       // cfop.getAnalysis();
 
       // console.log("MODE: ", md);
-      if (all.pScramble.options.has(md) && $session?.settings?.genImage) {
+
+      let opts = all.pScramble.options.get(md);
+
+      if (opts) {
+        if (!Array.isArray(opts)) {
+          $puzzleType = opts.type;
+          $puzzleOrder = opts.order ? opts.order[0] : 3;
+        }
+      }
+
+      if (opts && $session?.settings?.genImage) {
         // console.log("HAS", md);
+
         updateImage(md);
       } else {
         setPreview([], Date.now());
@@ -638,6 +652,8 @@
     bluetoothStatus,
     enableKeyboard,
     STATS_WINDOW,
+    puzzleType,
+    puzzleOrder,
     setSolves,
     sortSolves,
     updateSolves,

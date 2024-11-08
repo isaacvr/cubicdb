@@ -318,4 +318,5 @@ export class KeyboardInput implements TimerInputHandler {
   }
 
   newRecord() {}
+  sendEvent() {}
 }

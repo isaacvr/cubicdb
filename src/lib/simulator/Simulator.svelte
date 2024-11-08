@@ -126,6 +126,12 @@
     threeAdaptor.resetPuzzle(f);
   }
 
+  export function resetPuzzle(p: PuzzleType, o: number, s: string) {
+    threeAdaptor.selectedPuzzle = selectedPuzzle = p;
+    threeAdaptor.order = order = o;
+    threeAdaptor.resetPuzzle("", false, s);
+  }
+
   // export function
 
   /// GUI
@@ -185,6 +191,10 @@
       zoom,
       canvas,
     });
+
+    threeAdaptor.on("move:start", () => dispatch("move:start"));
+    threeAdaptor.on("move:end", () => dispatch("move:end"));
+    threeAdaptor.on("solved", () => dispatch("solved"));
 
     controlAdaptor = new ControlAdaptor(threeAdaptor);
 

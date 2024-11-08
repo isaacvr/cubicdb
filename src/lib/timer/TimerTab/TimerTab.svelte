@@ -4,6 +4,7 @@
     Penalty,
     TimerState,
     type InputContext,
+    type Session,
     type Solve,
     type TimerContext,
     type TimerInputHandler,
@@ -52,6 +53,7 @@
   import TimerOptions from "./TimerOptions.svelte";
   import StatsInfo from "./StatsInfo.svelte";
   import PuzzleImageBundle from "@components/PuzzleImageBundle.svelte";
+  import { VirtualInput } from "../adaptors/Virtual";
 
   export let context: TimerContext;
   export let battle = false;
@@ -75,6 +77,8 @@
     decimals,
     bluetoothList,
     enableKeyboard,
+    puzzleType,
+    puzzleOrder,
     sortSolves,
     updateSolves,
     initScrambler,
@@ -204,7 +208,6 @@
 
   // OTHER
   let simulator: Simulator;
-  let selectedImg = 0;
   let reconstructor: ReconstructorMethod[] = [];
   let recIndex = 0;
 
@@ -328,6 +331,7 @@
       "GAN Cube": GANInput,
       "QY-Timer": QiYiSmartTimerInput,
       Keyboard: KeyboardInput,
+      Virtual: VirtualInput,
       // ExternalTimer: ExternalTimerInput,
     };
 
@@ -346,6 +350,9 @@
       $inputMethod.init($deviceID, true);
     } else if ($session?.settings?.input === "GAN Cube" && !sameClass) {
       inputMethod.set(new GANInput(inputContext));
+      $inputMethod.init();
+    } else if ($session?.settings?.input === "Virtual" && !sameClass) {
+      inputMethod.set(new VirtualInput(inputContext));
       $inputMethod.init();
     } else if ($session?.settings?.input === "QY-Timer" && !sameClass) {
       inputMethod.set(new QiYiSmartTimerInput(inputContext));
@@ -546,6 +553,18 @@
     }
   }
 
+  function showSimulator(s: Session) {
+    return s?.settings?.input === "GAN Cube" || s?.settings?.input === "Virtual";
+  }
+
+  function handleScrambleChange() {
+    cleanOnScramble && clean();
+
+    if ($session?.settings?.input === "Virtual" && simulator) {
+      simulator.resetPuzzle($puzzleType, $puzzleOrder, $scramble);
+    }
+  }
+
   onMount(() => {
     if (timerOnly || scrambleOnly) {
       return;
@@ -568,7 +587,7 @@
   $: $solves.length === 0 && reset();
   $: $session && initInputHandler();
   $: $localLang, updateTexts();
-  $: $scramble && cleanOnScramble && clean();
+  $: $scramble && handleScrambleChange();
   $: $dataService.config.sleep($state === TimerState.RUNNING);
 </script>
 
@@ -579,7 +598,7 @@
   class:scrambleOnly
   class:battle
   class="timer-tab w-full h-full"
-  class:smart_cube={$session.settings.input === "GAN Cube"}
+  class:simulator={showSimulator($session)}
 >
   <!-- Options -->
   {#if !scrambleOnly && !battle}
@@ -729,29 +748,43 @@
   <div
     id="preview-container"
     class:expanded={prevExpanded}
-    class={(prevExpanded ? "" : "relative") +
-      " " +
-      ($session?.settings?.input === "GAN Cube" ? "z-0" : "")}
+    class={(prevExpanded ? "" : "relative") + " " + (showSimulator($session) ? "z-0" : "")}
   >
     <!-- Cube3D -->
-    {#if $session?.settings?.input === "GAN Cube"}
+    {#if showSimulator($session)}
       <section class="relative cube-3d -z-10">
-        <Simulator
-          class={$bluetoothStatus ? "" : "z-0 opacity-20"}
-          selectedPuzzle={"icarry"}
-          enableDrag={false}
-          enableKeyboard={false}
-          gui={false}
-          contained={true}
-          showBackFace={$session?.settings?.showBackFace}
-          bind:this={simulator}
-        />
-        <svelte:component
-          this={BluetoothOffIcon}
-          class={$bluetoothStatus ? "hidden" : "absolute text-blue-500 animate-pulse"}
-          width="100%"
-          height="100%"
-        />
+        {#if $session?.settings?.input === "Virtual"}
+          <Simulator
+            enableDrag={true}
+            enableKeyboard={false}
+            gui={false}
+            contained={true}
+            showBackFace={$session?.settings?.showBackFace}
+            bind:this={simulator}
+            zoom={9}
+            on:move:start={() => $inputMethod.sendEvent({ type: "move:start" })}
+            on:solved={() => $inputMethod.sendEvent({ type: "solved" })}
+            animationTime={100}
+          />
+        {:else}
+          <Simulator
+            class={$bluetoothStatus ? "" : "z-0 opacity-20"}
+            selectedPuzzle={"icarry"}
+            enableDrag={false}
+            enableKeyboard={false}
+            gui={false}
+            contained={true}
+            showBackFace={$session?.settings?.showBackFace}
+            bind:this={simulator}
+          />
+
+          <svelte:component
+            this={BluetoothOffIcon}
+            class={$bluetoothStatus ? "hidden" : "absolute text-blue-500 animate-pulse"}
+            width="100%"
+            height="100%"
+          />
+        {/if}
       </section>
     {:else if $session?.settings?.genImage || battle}
       <button
@@ -853,7 +886,7 @@
       "options leftStats image rightStats";
   }
 
-  .timer-tab.smart_cube {
+  .timer-tab.simulator {
     grid-template-areas:
       "options scramble scramble scramble"
       "options image image image"

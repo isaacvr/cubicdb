@@ -205,7 +205,7 @@ export interface RoundCornersParams {
   rd?: number | Function;
   scale?: number;
   ppc?: number;
-  fn?: Function;
+  fn?: (st: Sticker) => boolean;
   justScale?: boolean;
   calcPath?: boolean;
 }
@@ -230,6 +230,7 @@ export interface PuzzleInterface {
   scramble?: () => any;
   toMove?: (p: Piece, s: Sticker, dir: Vector3D, pinCode?: any) => ToMoveResult | ToMoveResult[];
   applySequence?: (...args: any[]) => (SequenceResult | SequenceResult[])[];
+  toMoveSeq?: (move: string) => Required<ToMoveResult> | Required<ToMoveResult>[];
   vectorsFromCamera?: AnyCallback;
 }
 
@@ -274,7 +275,7 @@ export interface Solve {
   steps?: number[];
 }
 
-export type TimerInput = "Keyboard" | "Manual" | "StackMat" | "GAN Cube" | "QY-Timer";
+export type TimerInput = "Keyboard" | "Manual" | "StackMat" | "GAN Cube" | "QY-Timer" | "Virtual";
 // | "ExternalTimer";
 export type SessionType = "mixed" | "single" | "multi-step";
 
@@ -283,6 +284,7 @@ export const TIMER_INPUT: TimerInput[] = [
   "Manual",
   "StackMat",
   "GAN Cube",
+  "Virtual",
   // "QY-Timer",
   // "ExternalTimer",
 ];
@@ -467,6 +469,8 @@ export interface TimerContext {
   bluetoothStatus: Writable<boolean>;
   enableKeyboard: Writable<boolean>;
   STATS_WINDOW: Writable<(number | null)[][]>;
+  puzzleType: Writable<PuzzleType>;
+  puzzleOrder: Writable<number>;
 
   setSolves: (rescramble?: boolean) => any;
   sortSolves: () => any;
@@ -823,6 +827,7 @@ export interface TimerInputHandler {
   stopTimer: () => void;
   keyUpHandler: (e: KeyboardEvent) => void;
   keyDownHandler: (e: KeyboardEvent) => void;
+  sendEvent: (e: { type: string; data?: any }) => void;
   newRecord: () => void;
 }
 

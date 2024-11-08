@@ -4,7 +4,6 @@
     AverageSetting,
     Penalty,
     type Language,
-    type PuzzleOptions,
     type Solve,
     type TimerContext,
   } from "@interfaces";
@@ -13,7 +12,6 @@
   import Tooltip from "@material/Tooltip.svelte";
   import TextArea from "@material/TextArea.svelte";
 
-  import { Puzzle } from "@classes/puzzle/puzzle";
   import { pGenerateCubeBundle } from "@helpers/cube-draw";
   import { options } from "@cstimer/scramble/scramble";
   import { STEP_COLORS } from "@constants";
@@ -49,7 +47,6 @@
   import { startViewTransition } from "@helpers/DOM";
   import { navigate } from "svelte-routing";
   import { Button, Dropdown, DropdownItem, Spinner } from "flowbite-svelte";
-  import PuzzleImage from "@components/PuzzleImage.svelte";
   import AdvancedSearch from "./components/AdvancedSearch/AdvancedSearch.svelte";
   import PaginatorComponent from "@components/PaginatorComponent.svelte";
   import { GateAdaptor } from "$lib/timer/SessionsTab/AdvancedSearch/adaptors";
@@ -310,7 +307,6 @@
   }
 
   function handleContextMenu(e: MouseEvent, s: Solve) {
-    console.log("CONTEXT_MENU");
     e.stopPropagation();
     e.preventDefault();
 

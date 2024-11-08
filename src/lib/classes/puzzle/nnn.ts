@@ -26,7 +26,10 @@ export function RUBIK(_a: number, _b: number, _c: number): PuzzleInterface {
     dims,
     faceColors: ["w", "r", "g", "y", "o", "b"],
     move: () => false,
-    roundParams: { ppc: a < 10 ? 10 : a < 20 ? 5 : 2 },
+    roundParams: {
+      ppc: a < 10 ? 10 : a < 20 ? 5 : 2,
+      fn: (st: Sticker) => !(isCube && st.color === "x"),
+    },
   };
 
   let fc = rubik.faceColors;
@@ -152,7 +155,12 @@ export function RUBIK(_a: number, _b: number, _c: number): PuzzleInterface {
 
       if (d === 0) {
         console.log("Invalid move. Piece intersection detected.", "URFDLB"[moveId], turns, mv);
-        console.log("Piece: ", i, pieces[i], pts2);
+        console.log(
+          "Piece: ",
+          i,
+          pieces[i],
+          pieces[i].stickers.map(st => st.direction1(pts2[0], u, true))
+        );
         return null;
       }
 
@@ -239,6 +247,32 @@ export function RUBIK(_a: number, _b: number, _c: number): PuzzleInterface {
     }
 
     return res;
+  };
+
+  rubik.toMoveSeq = function (seq: string) {
+    let mv = ScrambleParser.parseNNN(seq, { a, b, c })[0];
+    let pcs;
+
+    try {
+      pcs = trySingleMove(mv);
+    } catch (e) {
+      console.log(`ERROR: <${seq}> <${mv}>`);
+      console.error(e);
+    }
+
+    if (!pcs) {
+      return {
+        ang: 0,
+        animationTime: 0,
+        center: new Vector3D(),
+        dir: new Vector3D(),
+        pieces: [],
+      };
+    }
+
+    let { u, ang } = pcs;
+
+    return { dir: u, ang, pieces: pcs.pieces, animationTime: 0, center: rubik.center };
   };
 
   rubik.rotation = {

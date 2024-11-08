@@ -215,6 +215,42 @@ export function GAN333(): PuzzleInterface {
     };
   };
 
+  gan.toMoveSeq = function (m: string) {
+    let mv = ["R", "L", "U", "D", "F", "B"];
+    let mc = [
+      new Vector3D(0.9, 0, 0),
+      new Vector3D(-0.9, 0, 0),
+      new Vector3D(0, 0.9, 0),
+      new Vector3D(0, -0.9, 0),
+      new Vector3D(0, 0, 0.9),
+      new Vector3D(0, 0, -0.9),
+    ];
+
+    let pos = mv.indexOf(m[0]);
+
+    if (pos < 0) {
+      return {
+        ang: 0,
+        animationTime: 100,
+        center: gan.center,
+        pieces: [],
+        dir: new Vector3D(),
+      };
+    }
+
+    let dir = m[1] === "'" ? 1 : -1;
+    let u: any = mc[pos];
+    let toMovePieces = pieces.filter(p => p.direction1(u, u) === 0);
+
+    return {
+      ang: PI_2 * dir,
+      animationTime: 100,
+      center: gan.center,
+      pieces: toMovePieces,
+      dir: u,
+    };
+  };
+
   gan.scramble = function () {
     gan.move(ScrambleParser.parseNNN(getRandomScramble(), { a: n, b: n, c: n }));
   };

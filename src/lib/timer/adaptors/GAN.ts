@@ -1074,4 +1074,5 @@ export class GANInput implements TimerInputHandler {
   }
 
   newRecord() {}
+  sendEvent() {}
 }

@@ -601,7 +601,7 @@
     {#if !(timerOnly || $session.settings.sessionType === "multi-step")}
       <section class="flex gap-4 items-center">
         {$localLang.TIMER.inputMethod}:
-        <Select bind:value={modalData.settings.input} items={$timerInput} transform={e => e} />
+        <Select bind:value={modalData.settings.input} items={$timerInput} transform={e => e} placement="right" />
       </section>
     {/if}
 

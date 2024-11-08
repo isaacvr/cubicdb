@@ -6,8 +6,8 @@ import { Vector2D } from "@classes/vector2-d";
 import { CENTER, Vector3D } from "@classes/vector3d";
 import { CubeMode, EPS } from "@constants";
 import { cubeToThree, piecesToTree } from "@helpers/cubeToThree";
-import { getLagrangeInterpolation } from "@helpers/math";
-import type { PuzzleType } from "@interfaces";
+import { getLagrangeInterpolation, map } from "@helpers/math";
+import type { PuzzleType, ToMoveResult } from "@interfaces";
 import {
   ACESFilmicToneMapping,
   AmbientLight,
@@ -31,6 +31,7 @@ import { TrackballControls } from "three/examples/jsm/controls/TrackballControls
 import { browser } from "$app/environment";
 import { dataService } from "$lib/data-services/data.service";
 import { get } from "svelte/store";
+import { Emitter } from "@classes/Emitter";
 
 const textureLoader = new TextureLoader();
 let texture: any = null;
@@ -81,7 +82,12 @@ interface PuzzleAnimation {
   centers: Vector3D[];
   timeIni: number;
   ignoreUserData?: boolean;
+  onstart?: Function;
+  onprogress?: Function;
+  onend?: Function;
 }
+
+declare type ThreeJSAdaptorEvents = "move" | "move:start" | "move:end" | "solved";
 
 function findPiece(p: Piece, arr: Piece[]): boolean {
   for (let i = 0, maxi = arr.length; i < maxi; i += 1) {
@@ -149,6 +155,7 @@ export class ThreeJSAdaptor {
   private distance: number;
   private angleFactor = 0;
   private destroyed = false;
+  private emitter = new Emitter();
 
   constructor(config: ThreeJSAdaptorConfig) {
     this.enableKeyboard = config.enableKeyboard;
@@ -190,6 +197,18 @@ export class ThreeJSAdaptor {
     this.controls.maxDistance = 12;
   }
 
+  on(ev: ThreeJSAdaptorEvents, cb: (...args: any[]) => void) {
+    this.emitter.on(ev, cb);
+  }
+
+  off(ev?: ThreeJSAdaptorEvents, cb?: (...args: any[]) => void) {
+    this.emitter.off(ev, cb);
+  }
+
+  private emit(ev: ThreeJSAdaptorEvents, ...args: any[]) {
+    this.emitter.emit(ev, ...args);
+  }
+
   setZoom(z: number) {
     this.zoom = z;
     this.distance = z;
@@ -200,7 +219,8 @@ export class ThreeJSAdaptor {
     best: Vector3D,
     vv: Vector3D,
     dir: number,
-    fp = findPiece
+    fp = findPiece,
+    tmResult: ToMoveResult | ToMoveResult[] | null = null
   ): DragResult | null {
     let animationBuffer: Object3D[][] = [];
     let userData: UserData[][] = [];
@@ -208,7 +228,7 @@ export class ThreeJSAdaptor {
     let animationTimes: number[] = [];
     let centers: Vector3D[] = [];
 
-    let toMove = this.cube?.p.toMove ? this.cube.p.toMove(pc[0], pc[1], best) : [];
+    let toMove = tmResult || (this.cube?.p.toMove ? this.cube.p.toMove(pc[0], pc[1], best) : []);
     let groupToMove = Array.isArray(toMove) ? toMove : [toMove];
 
     let u: any = best;
@@ -380,7 +400,9 @@ export class ThreeJSAdaptor {
         }
       }
 
+      // Animation ended
       if (anim === 0) {
+        this.currentAnimation.onend && this.currentAnimation.onend();
         this.animationQueue.shift();
         this.animating = false;
       }
@@ -420,10 +442,25 @@ export class ThreeJSAdaptor {
     this.currentAnimation = this.animationQueue[0];
   }
 
-  addMove(mov: any[]) {
-    let m = mov[0];
+  addMoveNew(mov: any[]) {
+    if (!this.cube || !this.cube.p.toMoveSeq) return false;
+
     this.animationTime = Math.min(100, (mov[1] * 2) / 3);
 
+    let res = this.cube.p.toMoveSeq(mov[0]);
+
+    res = (Array.isArray(res) ? res : [res]).filter(sq => sq.pieces.length);
+
+    if (res.length === 0) return false;
+
+    let data = this.dataFromGroup([null, null], res[0].dir, new Vector3D(), -1, findPiece, res);
+    data && this.prepareFromDrag(data);
+
+    return !!data;
+  }
+
+  addMove(mov: any[]) {
+    let m = mov[0];
     let mv = ["R", "L", "U", "D", "F", "B"];
     let mc = [
       new Vector3D(0.9, 0, 0),
@@ -510,6 +547,7 @@ export class ThreeJSAdaptor {
     let animation = this.animation;
 
     if (this.rotating && this.rotationData && animation) {
+      this.emit("move");
       let { animBuffer, angs } = animation;
       let vec = vectorsFromCamera([this.rotationData.u], this.camera)[0];
       let vNormal = new Vector2D(vec.x, vec.y).unit().mul(0.2);
@@ -525,6 +563,7 @@ export class ThreeJSAdaptor {
         this.interpolate({ ...animation, u: this.rotationData.u }, i, this.angleFactor);
       }
     } else if (!this.rotating && this.piece && len > MOVE_THRESHOLD) {
+      this.emit("move:start");
       let data = this.drag(this.piece, this.ini as Vector2, fin, this.camera);
 
       if (data) {
@@ -555,8 +594,13 @@ export class ThreeJSAdaptor {
     this.rotating = false;
     this.rotationData = null;
 
+    let rect = this.canvas.getBoundingClientRect();
+
     this.ini = new Vector2(event.clientX, event.clientY);
-    this.iniM = new Vector3((event.clientX / this.W) * 2 - 1, -(event.clientY / this.H) * 2 + 1);
+    this.iniM = new Vector3(
+      map(event.clientX, rect.x, rect.x + rect.width, -1, 1),
+      map(event.clientY, rect.y, rect.y + rect.height, 1, -1)
+    );
 
     let allStickers: Object3D[] = [];
 
@@ -639,6 +683,13 @@ export class ThreeJSAdaptor {
       this.animation.animationTimes = this.animation.animationTimes.map(() => 0);
       this.animation.angs = this.animation.angs.map(ang => ang * N);
       this.animationQueue.push(this.animation);
+      this.animation.onend = () => {
+        this.emit("move:end");
+
+        if (this.cube?.isComplete()) {
+          this.emit("solved");
+        }
+      };
     }
 
     this.dragging = false;
@@ -831,5 +882,6 @@ export class ThreeJSAdaptor {
     this.renderer.dispose();
     this.renderer.forceContextLoss();
     this.controls.dispose();
+    this.off();
   }
 }

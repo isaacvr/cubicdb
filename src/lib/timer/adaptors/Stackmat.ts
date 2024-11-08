@@ -374,4 +374,5 @@ export class StackmatInput implements TimerInputHandler {
   keyDownHandler() {}
   stopTimer() {}
   newRecord() {}
+  sendEvent() {}
 }

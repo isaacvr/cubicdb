@@ -812,7 +812,6 @@ function applyMoves(pz: Puzzle, _moves: string[], schema: string[]) {
 
     if (mv in SETUP_MOVES) {
       let setup = SETUP_MOVES[mv];
-      console.log("APLYING: ", mv, setup);
 
       pz.move(setup[0]);
       pz.move(setup[1]);
