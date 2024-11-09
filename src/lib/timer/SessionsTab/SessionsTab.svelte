@@ -645,12 +645,12 @@
     </span>
 
     <button
-      class="preview col-span-2 mb-2 mt-2 mx-auto overflow-hidden w-full h-full
-        flex items-center justify-center relative pb-4 px-1"
+      class="preview col-span-2 mx-auto overflow-hidden w-full h-full
+        flex items-center justify-center relative px-1 max-h-[50vh]"
       on:click={() => (collapsed = !collapsed)}
     >
       {#if preview}
-        <PuzzleImageBundle src={preview} />
+        <PuzzleImageBundle src={preview} allowDownload={!collapsed} />
       {:else}
         <Spinner size="20" />
       {/if}
@@ -810,11 +810,11 @@
   .algorithm-container {
     display: grid;
     grid-template-columns: 1.3rem 1fr;
-    grid-template-rows: auto 18rem auto auto auto;
+    grid-template-rows: auto 1fr auto auto auto;
   }
 
   .algorithm-container.collapsed {
-    grid-template-rows: auto 6rem auto auto auto;
+    grid-template-rows: auto 0.5fr auto auto auto;
   }
 
   .actions {

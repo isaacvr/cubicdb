@@ -230,6 +230,7 @@ export const English: Language = {
 
     inputMethod: "Input method",
     device: "Device",
+    syncSolved: "Sync solved state",
     inspection: "Inspection",
     showTime: "Show time when running",
     genImage: "Generate images",

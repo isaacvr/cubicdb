@@ -67,7 +67,7 @@ export const Spanish: Language = {
     back: "Atrás",
     next: "Siguiente",
     download: "Descargar",
-    copyCode: "Copiar $1"
+    copyCode: "Copiar $1",
   },
   TUTORIALS: {
     easy: "Fácil",
@@ -230,6 +230,7 @@ export const Spanish: Language = {
 
     inputMethod: "Método de entrada",
     device: "Dispositivo",
+    syncSolved: "Sincronizar estado resuelto",
     inspection: "Inspección",
     showTime: "Mostrar tiempo durante la marcha",
     genImage: "Generar imágenes",

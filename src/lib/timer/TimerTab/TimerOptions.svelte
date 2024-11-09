@@ -1,5 +1,8 @@
 <script lang="ts">
+  import { onMount } from "svelte";
   import { derived, type Writable } from "svelte/store";
+  import { getSeed, setSeed } from "@cstimer/lib/mathlib";
+  import { dataService } from "$lib/data-services/data.service";
   import {
     Button,
     Modal,
@@ -57,9 +60,7 @@
   import ChartIcon from "@icons/ChartLineVariant.svelte";
   import MetronomeIcon from "@icons/Metronome.svelte";
   import SeedIcon from "@icons/Leaf.svelte";
-  import { getSeed, setSeed } from "@cstimer/lib/mathlib";
-  import { dataService } from "$lib/data-services/data.service";
-  import { onMount } from "svelte";
+  import SyncIcon from "@icons/Sync.svelte";
 
   type TModal = "" | "edit-scramble" | "old-scrambles" | "settings";
 
@@ -111,6 +112,7 @@
   let isSearching = false;
   let showToolsMenu = false;
   let connectingPos = -1;
+  let ulElement: HTMLUListElement;
 
   const BUTTON_CLASS = "w-7 h-7 p-1 ";
   const DD_CLASS = "font-medium p-2 text-sm dark:hover:bg-gray-600 flex items-center";
@@ -264,7 +266,7 @@
     saveEnableKeyboard();
   }
 
-  function keyDown(event: KeyboardEvent) {
+  function handleKeydown(event: KeyboardEvent) {
     if (!$enableKeyboard) return;
 
     const { code } = event;
@@ -292,6 +294,13 @@
         break;
       }
     }
+  }
+
+  function handleResize() {
+    if (!ulElement) return;
+
+    // let rec = ulElement.getBoundingClientRect();
+    // console.log(window.innerWidth, window.innerHeight, rec.height);
   }
 
   function updateTexts() {
@@ -325,14 +334,14 @@
         ? new GANInput(inputContext)
         : new QiYiSmartTimerInput(inputContext);
 
+    let type = modalData.settings.input === "GAN Cube" ? "GAN" : "QYTimer";
+
     isSearching = true;
     $bluetoothList.length = 0;
 
     $dataService.config
       .searchBluetooth(gn)
-      .then(mac => {
-        deviceID.set(mac);
-
+      .then(() => {
         if ($inputMethod instanceof GANInput && $inputMethod.connected) {
           $inputMethod.disconnect();
         }
@@ -355,6 +364,10 @@
   function connectBluetooth(id: string) {
     if (id != $deviceID) {
       isSearching = false;
+      $deviceID = id;
+      let type = modalData.settings.input === "GAN Cube" ? "GAN" : "QYTimer";
+      $dataService.config.setPath(`timer/inputs/${type}`, { mac: id });
+      $dataService.config.saveConfig();
       $dataService.config.connectBluetoothDevice(id);
     } else {
       $inputMethod.disconnect();
@@ -395,18 +408,23 @@
     saveEnableKeyboard();
   }
 
+  function syncSolved() {
+    $dataService.emitBluetoothData("sync-solved", null);
+  }
+
   onMount(() => {
-    toolList = [{ tool: tools[4], open: true }];
+    // toolList = [{ tool: tools[4], open: true }];
   });
 
   $: $localLang, updateTexts();
 </script>
 
-<svelte:window on:keydown={keyDown} />
+<svelte:window on:keydown={handleKeydown} on:resize={handleResize} />
 
 <ul
   class="timer-options-container border-r border-r-gray-700 border-t border-t-gray-700 pt-2"
   class:timerOnly
+  bind:this={ulElement}
 >
   <li>
     <Tooltip position="right" text={$localLang.TIMER.manageSessions}>
@@ -497,6 +515,30 @@
     </li>
   {/if}
 
+  <!-- <li>
+    <Button
+      aria-label="Ao5"
+      color="none"
+      class={BUTTON_CLASS}
+      on:keydown={e => (e.code === "Space" ? e.preventDefault() : null)}
+    >
+      <Ao5Icon width="100%" height="100%" />
+    </Button>
+  </li> -->
+
+  <li>
+    <Tooltip text="Seed ">
+      <Button
+        aria-label={"Seed"}
+        color="none"
+        class={BUTTON_CLASS + " text-green-300"}
+        on:click={prepareShowSeedModal}
+      >
+        <SeedIcon size="100%" />
+      </Button>
+    </Tooltip>
+  </li>
+
   <li class="menu">
     <Button
       aria-label={$localLang.HOME.tools}
@@ -521,30 +563,6 @@
     </Dropdown>
   </li>
 
-  <!-- <li>
-    <Button
-      aria-label="Ao5"
-      color="none"
-      class={BUTTON_CLASS}
-      on:keydown={e => (e.code === "Space" ? e.preventDefault() : null)}
-    >
-      <Ao5Icon width="100%" height="100%" />
-    </Button>
-  </li> -->
-
-  <li>
-    <Tooltip text="Seed ">
-      <Button
-        aria-label={"GAN Cube"}
-        color="none"
-        class={BUTTON_CLASS + " text-green-300"}
-        on:click={prepareShowSeedModal}
-      >
-        <SeedIcon size="100%" />
-      </Button>
-    </Tooltip>
-  </li>
-
   <!-- Tools list -->
   <ul class="tool-container" class:open={toolList.some(t => t.open)}>
     {#each toolList as tool}
@@ -560,6 +578,7 @@
   </ul>
 </ul>
 
+<!-- Timer tab modal -->
 <Modal
   bind:open={show}
   size="xs"
@@ -601,7 +620,12 @@
     {#if !(timerOnly || $session.settings.sessionType === "multi-step")}
       <section class="flex gap-4 items-center">
         {$localLang.TIMER.inputMethod}:
-        <Select bind:value={modalData.settings.input} items={$timerInput} transform={e => e} placement="right" />
+        <Select
+          bind:value={modalData.settings.input}
+          items={$timerInput}
+          transform={e => e}
+          placement="right"
+        />
       </section>
     {/if}
 
@@ -681,11 +705,19 @@
 
         <ul class="mt-4">
           {#each $bluetoothList as { deviceId, deviceName }, pos (deviceId)}
-            <li class="flex items-center justify-between pl-4 bg-white bg-opacity-10 rounded-md">
+            <li class="flex items-center gap-2 pl-4 bg-white bg-opacity-10 rounded-md">
               {deviceName}
+
+              <!-- {#if deviceId === $deviceID}
+              <Tooltip text={$localLang.TIMER.syncSolved} position="top" class="ml-auto">
+                <Button on:click={syncSolved} class="bg-primary-800 tx-text px-3">
+                  <SyncIcon size="1.2rem" />
+                </Button>
+              </Tooltip>
+              {/if} -->
               <Button
                 color={deviceId === $deviceID ? "red" : "green"}
-                class="gap-2"
+                class="gap-2 ml-auto"
                 on:click={() => {
                   if (pos === connectingPos) return;
                   if (deviceId === $deviceID) {
@@ -830,6 +862,7 @@
   </svelte:fragment>
 </Modal>
 
+<!-- Seed Modal -->
 <Modal
   bind:open={showSeedModal}
   size="xs"
@@ -864,10 +897,17 @@
     grid-area: options;
     display: flex;
     flex-direction: column;
+    align-items: center;
     gap: 0.5rem;
     padding: 0.25rem;
     position: relative;
     background-color: var(--th-backgroundLevel1);
+  }
+
+  .timer-options-container li {
+    --size: 1.6rem;
+    width: var(--size);
+    height: var(--size);
   }
 
   .timer-options-container li.menu {

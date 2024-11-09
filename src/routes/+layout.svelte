@@ -200,7 +200,7 @@
         key="path-list"
         {hidden}
         class="order-2 md:order-1"
-        ulClass="md:p-0 max-md:p-4"
+        ulClass="md:p-0 max-md:p-4 z-50"
         on:click={() => !hidden && toggle()}
       >
         <Breadcrumb class="[&_svg]:[color:var(--th-text)]">

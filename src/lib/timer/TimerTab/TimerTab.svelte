@@ -7,6 +7,7 @@
     type Session,
     type Solve,
     type TimerContext,
+    type TimerInput,
     type TimerInputHandler,
   } from "@interfaces";
   import { writable, type Writable } from "svelte/store";
@@ -435,6 +436,8 @@
   }
 
   function bluetoothHandler(type: string, data: any) {
+    console.log("data: ", type, data);
+
     switch (type) {
       case "move": {
         simulator.applyMove(data[0], data[1]);
@@ -448,7 +451,6 @@
       }
 
       case "facelet": {
-        simulator;
         simulator.fromFacelet(data);
         break;
       }
@@ -470,7 +472,7 @@
 
       case "disconnect": {
         $bluetoothStatus = false;
-        $deviceID = "";
+        $deviceID = "default";
         break;
       }
 
@@ -485,6 +487,11 @@
         }
         reconstructor = data;
         recIndex = 0;
+        break;
+      }
+
+      case "sync-solved": {
+        $inputMethod.sendEvent({ type: "sync-solved" });
         break;
       }
     }
@@ -565,6 +572,23 @@
     }
   }
 
+  function getTimerState(st: TimerState) {
+    if (st === TimerState.INSPECTION) return "inspection";
+    if (st === TimerState.PREVENTION) return "prevention";
+    if (st === TimerState.RUNNING) return "running";
+    if (st === TimerState.STOPPED) return "stopped";
+    return "clean";
+  }
+
+  function getTimerInput(st: TimerInput) {
+    if (st === "GAN Cube") return "gan";
+    if (st === "Manual") return "manual";
+    if (st === "QY-Timer") return "qytimer";
+    if (st === "StackMat") return "stackmat";
+    if (st === "Virtual") return "virtual";
+    return "keyboard";
+  }
+
   onMount(() => {
     if (timerOnly || scrambleOnly) {
       return;
@@ -599,6 +623,8 @@
   class:battle
   class="timer-tab w-full h-full"
   class:simulator={showSimulator($session)}
+  data-timerstate={getTimerState($state)}
+  data-timerinput={getTimerInput($session?.settings?.input || "Keyboard")}
 >
   <!-- Options -->
   {#if !scrambleOnly && !battle}
@@ -775,6 +801,7 @@
             gui={false}
             contained={true}
             showBackFace={$session?.settings?.showBackFace}
+            animationTime={100}
             bind:this={simulator}
           />
 
@@ -891,6 +918,25 @@
       "options scramble scramble scramble"
       "options image image image"
       "options leftStats timer rightStats";
+  }
+
+  .timer-tab.simulator[data-timerinput="virtual"][data-timerstate="clean"] #timer {
+    display: none;
+  }
+
+  .timer-tab.simulator[data-timerinput="virtual"][data-timerstate="running"] #scramble {
+    display: none;
+  }
+
+  .timer-tab.simulator[data-timerstate="running"] {
+    grid-template-areas:
+      "options image image image"
+      "options image image image"
+      "options leftStats timer rightStats";
+  }
+
+  .timer-tab.simulator[data-timerstate="running"] #scramble {
+    display: none;
   }
 
   .timer-tab.timerOnly {
@@ -1010,6 +1056,6 @@
   }
 
   .cube-3d {
-    @apply w-full h-full bg-white bg-opacity-20 max-w-md shadow-md rounded-md mx-auto overflow-hidden;
+    @apply w-[calc(100%-1rem)] h-full bg-white bg-opacity-20 max-w-md shadow-md rounded-md mx-auto overflow-hidden;
   }
 </style>

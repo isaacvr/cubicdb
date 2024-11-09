@@ -16,6 +16,8 @@ import { createActor, setup, fromCallback } from "xstate";
 import { decompressFromBase64 } from "$lib/helpers/decompress-string";
 import { dataService } from "$lib/data-services/data.service";
 
+let solvedState = SOLVED_FACELET;
+
 interface GANContext {
   input: InputContext;
   sequencer: AlgorithmSequence;
@@ -26,7 +28,7 @@ interface GANContext {
 
 type GANActor = (data: Actor<GANContext>) => any;
 
-const debug = false;
+const debug = true;
 
 function matchUUID(uuid1: string, uuid2: string) {
   return uuid1.toUpperCase() == uuid2.toUpperCase();
@@ -68,9 +70,8 @@ const isOwn: GANActor = ({ context }) => {
 };
 
 const isCompleteCube: GANActor = ({ event }) => {
-  debug &&
-    console.log("FACELET_SOLVED: ", event.data.facelet, event.data.facelet === SOLVED_FACELET);
-  return event.data.facelet === SOLVED_FACELET;
+  debug && console.log("FACELET_SOLVED: ", event.data.facelet, event.data.facelet === solvedState);
+  return event.data.facelet === solvedState;
 };
 
 const isScrambleReady: GANActor = ({ context }) => {
@@ -424,7 +425,7 @@ export class GANInput implements TimerInputHandler {
     this.timeOffs = [];
     this.prevCubie = new CubieCube();
     this.curCubie = new CubieCube();
-    this.latestFacelet = SOLVED_FACELET;
+    this.latestFacelet = solvedState;
     this.deviceTime = 0;
     this.moveCnt = 0;
     this.prevMoveCnt = -1;
@@ -522,14 +523,13 @@ export class GANInput implements TimerInputHandler {
       type: "DISCONNECTED",
     });
 
-    get(dataService).emitBluetoothData("disconnect", null);
-
     if (!this.connected) return;
     this.device?.gatt?.disconnect();
     this.connected = false;
     this.context.input.bluetoothStatus.set(false);
 
     this.interpreter.stop();
+    get(dataService).emitBluetoothData("disconnect", null);
   }
 
   keyUpHandler(ev: KeyboardEvent) {
@@ -557,7 +557,7 @@ export class GANInput implements TimerInputHandler {
     //   data: {
     //     move,
     //     offset: 0,
-    //     facelet: SOLVED_FACELET,
+    //     facelet: solvedState,
     //   },
     // });
     // this.emit("move", [move, 200]);
@@ -582,10 +582,10 @@ export class GANInput implements TimerInputHandler {
     this.clear();
     this.disconnect();
 
-    this.device = device;
-    this.deviceMac = localStorage.getItem("bluetooth-mac") || "";
+    let data = get(dataService).config.getPath(`timer/inputs/GAN`);
 
-    // debug && console.log("[gancube] deviceMac: ", this.deviceMac);
+    this.device = device;
+    this.deviceMac = data ? data.mac : "";
 
     let server: BluetoothRemoteGATTServer | undefined;
 
@@ -668,7 +668,7 @@ export class GANInput implements TimerInputHandler {
     this.timeOffs = [];
     this.prevCubie = new CubieCube();
     this.curCubie = new CubieCube();
-    this.latestFacelet = SOLVED_FACELET;
+    this.latestFacelet = solvedState;
     this.deviceTime = 0;
     this.prevMoveCnt = -1;
     this.battery = 100;
@@ -1074,5 +1074,15 @@ export class GANInput implements TimerInputHandler {
   }
 
   newRecord() {}
-  sendEvent() {}
+
+  sendEvent(ev: { type: string; data?: any }) {
+    if (ev.type === "sync-solved") {
+      solvedState = this.latestFacelet;
+      let ds = get(dataService);
+
+      ds.emitBluetoothData("facelet", SOLVED_FACELET);
+      ds.config.setPath(`timer/inputs/GAN/${this.deviceMac}`, { solvedState });
+      ds.config.saveConfig();
+    }
+  }
 }

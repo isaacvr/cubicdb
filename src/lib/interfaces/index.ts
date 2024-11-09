@@ -990,6 +990,7 @@ export interface Language {
 
     inputMethod: string;
     device: string;
+    syncSolved: string;
     inspection: string;
     showTime: string;
     genImage: string;

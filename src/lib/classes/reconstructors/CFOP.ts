@@ -4,7 +4,6 @@ import { BACK, DOWN, FRONT, LEFT, RIGHT, UP, type Vector3D } from "@classes/vect
 import { CubeMode, EPS } from "@constants";
 import { calcPercents, sum } from "@helpers/math";
 import type { Algorithm } from "@interfaces";
-import { DataService } from "@stores/data.service";
 import type { IReconstructor, ReconstructorMethod, ReconstructorStep } from "./interfaces";
 import { centerStickerAligned, getColoredStickers, pieceInCenter, pieceInPlace } from "./utils";
 import { formatMoves } from "@helpers/strings";

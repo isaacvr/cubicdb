@@ -225,8 +225,7 @@
       <Button class="bg-backgroundLevel3 hover:bg-urgentButton !px-2">
         <DownloadIcon />
       </Button>
-      <!-- <Tooltip class="bg-backgroundLevel3 z-10" {placement}>{$localLang.global.download}</Tooltip> -->
-      <Dropdown trigger="hover" placement="right-start">
+      <Dropdown trigger="hover" placement="right-start" class="bg-backgroundLevel3 rounded-md">
         {#each downloadFactors as f}
           <DropdownItem on:click={() => handleDownload(f)}>
             {toInt(imgWidth * f, 0)}x{toInt(imgHeight * f, 0)}
@@ -235,7 +234,7 @@
       </Dropdown>
 
       <Button class="bg-backgroundLevel3 hover:bg-urgentButton !px-2"><CopyIcon /></Button>
-      <Dropdown trigger="hover" placement="right-start">
+      <Dropdown trigger="hover" placement="right-start" class="bg-backgroundLevel3 rounded-md">
         {#each downloadFactors as f}
           <DropdownItem on:click={() => handleCopy(f)}>
             {toInt(imgWidth * f, 0)}x{toInt(imgHeight * f, 0)}

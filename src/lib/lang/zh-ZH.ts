@@ -183,6 +183,7 @@ export const Chinese: Language = {
 
     inputMethod: "输入方法",
     device: "设备",
+    syncSolved: "同步已解决状态",
     inspection: "检查",
     showTime: "运行时显示时间",
     genImage: "生成图像",

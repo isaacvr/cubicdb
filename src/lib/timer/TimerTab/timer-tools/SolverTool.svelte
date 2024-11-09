@@ -14,8 +14,7 @@
   let petrus223Oris = ["UF", "UL", "UB", "UR", "DF", "DL", "DB", "DR"];
 
   let result: string[][] = [];
-  // let solver: StepSolver | null = null;
-  let solver: StepSolver | null = "223";
+  let solver: StepSolver | null = null;
 
   function autoSelect() {
     for (let i = 0, maxi = StepSolverStr.length; i < maxi; i += 1) {
