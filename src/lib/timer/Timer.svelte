@@ -34,14 +34,12 @@
     type Session,
     type Statistics,
     type TimerContext,
-    type PuzzleOptions,
     type Language,
     type BluetoothDeviceData,
     SESSION_TYPE,
     type SessionType,
     type PuzzleType,
   } from "@interfaces";
-  import { Puzzle } from "@classes/puzzle/puzzle";
   import { ScrambleParser } from "@classes/scramble-parser";
   import { INITIAL_STATISTICS, getUpdatedStatistics } from "@helpers/statistics";
   import { infinitePenalty, timer } from "@helpers/timer";
