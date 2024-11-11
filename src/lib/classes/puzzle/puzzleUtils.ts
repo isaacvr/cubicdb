@@ -99,7 +99,7 @@ export function getAllStickers(): Sticker[] | BezierSticker[] {
   return res;
 }
 
-export function scaleSticker(st: Sticker | BezierSticker, scale: number) {
+export function scaleSticker(st: Sticker | BezierSticker, scale: number, self = false) {
   const SCALE = scale || 0.925;
 
   if (SCALE < 0) {
@@ -108,7 +108,7 @@ export function scaleSticker(st: Sticker | BezierSticker, scale: number) {
 
   let n = st.getOrientation();
   let cm = st.updateMassCenter();
-  return st.sub(cm).mul(SCALE, true).add(cm, true).add(n.mul(0.005), true);
+  return st.sub(cm, self).mul(SCALE, true).add(cm, true).add(n.mul(0.005), true);
 }
 
 export function roundStickerCorners(

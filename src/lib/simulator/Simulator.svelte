@@ -47,7 +47,7 @@
   let controlAdaptor: ControlAdaptor;
 
   /// GUI
-  let excludedPuzzles: PuzzleType[] = ["icarry"];
+  let excludedPuzzles: PuzzleType[] = ["icarry", "redibarrel"];
   let puzzles: { name: string; value: PuzzleType; order: boolean; img: string }[] = [];
   let hasOrder = true;
   let GUIExpanded = false;

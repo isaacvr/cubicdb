@@ -1,5 +1,7 @@
+import { EPS } from "@constants";
 import { Vector3D } from "./../vector3d";
 import { Sticker } from "./Sticker";
+import { Piece } from "./Piece";
 
 export class FaceSticker extends Sticker {
   faces: number[][];

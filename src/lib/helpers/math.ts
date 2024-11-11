@@ -371,3 +371,34 @@ export function cmd(command: string, command1: string = "", len: number = 0) {
 export function mod(n: number, m: number) {
   return ((n % m) + m) % m;
 }
+
+export function getCircle(p1: Vector3D, p2: Vector3D, p3: Vector3D, PPC: number) {
+  const PI_2 = Math.PI / 2;
+  let u = Vector3D.cross(p1, p2, p3);
+  let mid1 = p1.add(p2).div(2);
+  let mid2 = p3.add(p2).div(2);
+  let d1 = p1.sub(p2).rotate(CENTER, u, PI_2, true);
+  let d2 = p3.sub(p2).rotate(CENTER, u, PI_2, true);
+
+  let center = lineIntersection3D(mid1, d1, mid2, d2);
+
+  if (!center) return bezier([p1, p2, p3], PPC);
+
+  // let sides = [d1.abs(), d2.abs(), d1.sub(d2).abs()];
+  let sides = [
+    center.sub(p1).abs(),
+    center.sub(p3).abs(),
+    center.sub(p3).sub(center.sub(p1)).abs(),
+  ];
+  let ang = Math.acos((sides[2] ** 2 - sides[0] ** 2 - sides[1] ** 2) / (-2 * sides[0] * sides[1]));
+  let pts: Vector3D[] = [];
+
+  console.log("ANG: ", ang);
+
+  for (let j = 0; j <= PPC; j += 1) {
+    let a = j / PPC;
+    pts.push(p1.rotate(center, u, a * ang));
+  }
+
+  return pts;
+}

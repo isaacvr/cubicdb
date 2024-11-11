@@ -35,6 +35,7 @@ import { MASTER_SKEWB } from "./masterSkewb";
 import { VOID } from "./void333";
 import { FISHER44 } from "./fisher44";
 import { GHOST } from "./ghost";
+import { REDI_BARREL } from "./rediBarrel";
 
 // NxN, Pyraminx, Megaminx, Skewb, Square-1, Clock
 registerPuzzle("rubik", "Rubik", RUBIK, true);
@@ -84,5 +85,6 @@ registerPuzzle("ivy", "Ivy", IVY, false);
 registerPuzzle("dino", "Dino", DINO, false);
 registerPuzzle("rex", "Rex", REX, false);
 registerPuzzle("redi", "Redi", REDI, false);
+registerPuzzle("redibarrel", "Redi Barrel", REDI_BARREL, false);
 registerPuzzle("helicopter", "Helicopter", HELICOPTER, false);
 registerPuzzle("fto", "FTO", FTO, false);

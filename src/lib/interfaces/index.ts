@@ -47,7 +47,8 @@ export const PuzzleTypeName = [
   "diamondcube",
   "axis44",
   "fisher44",
-  "redicilinder",
+  "redibarrel",
+  "twisty33",
   "ghost",
 ] as const;
 
