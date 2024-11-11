@@ -61,7 +61,6 @@ export async function pGenerateCubeBundle(
         if (cube.options.rounded) {
           roundCorners({ p: cube.p, ...cube.p.roundParams });
         }
-        console.log("PUZZLE: ", cube);
         cube.img = await transView(renderer, cv, cube, W);
         cache && get(dataService).cache.cacheSaveImage(sha1(cube.options), cube.img);
       }

@@ -1,7 +1,7 @@
 import { sveltekit } from "@sveltejs/kit/vite";
 import { defineConfig } from "vitest/config";
 import pkg from "./package.json" assert { type: "json" };
-// import basicSSL from "@vitejs/plugin-basic-ssl";
+import basicSSL from "@vitejs/plugin-basic-ssl";
 
 const headerPlugin = {
   name: "p",
@@ -15,10 +15,7 @@ const headerPlugin = {
 };
 
 export default defineConfig(env => ({
-  plugins: [
-    headerPlugin,
-    sveltekit(), //basicSSL(),
-  ],
+  plugins: [headerPlugin, basicSSL(), sveltekit()],
   server: {
     host: true,
     port: 5432,
@@ -26,6 +23,7 @@ export default defineConfig(env => ({
       "Cross-Origin-Opener-Policy": "same-origin",
       "Cross-Origin-Embedder-Policy": "require-corp",
     },
+    proxy: {},
   },
   build: {
     minify: true,

@@ -334,8 +334,6 @@
         ? new GANInput(inputContext)
         : new QiYiSmartTimerInput(inputContext);
 
-    let type = modalData.settings.input === "GAN Cube" ? "GAN" : "QYTimer";
-
     isSearching = true;
     $bluetoothList.length = 0;
 

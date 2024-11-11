@@ -67,6 +67,8 @@
   }
 
   (async () => {
+    if (!gui) return;
+
     let hashes = puzzles.map(sha1);
     let imgCache = await $dataService.cache.cacheGetImageBundle(hashes);
 

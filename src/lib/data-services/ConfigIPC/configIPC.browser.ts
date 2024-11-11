@@ -6,9 +6,14 @@ import type {
   UpdateCommand,
 } from "@interfaces";
 import type { ConfigIPC } from "./configIPC.interface";
-import type { GANInput } from "$lib/timer/adaptors/GAN";
-import type { QiYiSmartTimerInput } from "$lib/timer/adaptors/QY-Timer";
+import { type GANInput, BLUETOOTH_FILTERS as GAN_BLUETOOTH_FILTERS } from "$lib/timer/adaptors/GAN";
+import {
+  type QiYiSmartTimerInput,
+  BLUETOOTH_FILTERS as QIYI_BLUETOOTH_FILTERS,
+} from "$lib/timer/adaptors/QY-Timer";
 import { DEFAULT_THEME } from "$lib/themes/default";
+import { dataService } from "$lib/data-services/data.service";
+import { get } from "svelte/store";
 
 export class ConfigBrowserIPC implements ConfigIPC {
   global: {
@@ -93,6 +98,44 @@ export class ConfigBrowserIPC implements ConfigIPC {
   async pairingBluetoothResponse() {}
 
   async searchBluetooth(inp: GANInput | QiYiSmartTimerInput): Promise<string> {
+    let filters = inp.adaptor === "GAN" ? GAN_BLUETOOTH_FILTERS : QIYI_BLUETOOTH_FILTERS;
+
+    return new Promise((res, rej) => {
+      navigator.bluetooth
+        .requestDevice(filters)
+        .then(async device => {
+          let mac = prompt("MAC:");
+
+          let type = inp.adaptor === "GAN" ? "GAN" : "QYTimer";
+          const config = get(dataService).config;
+
+          config.setPath(`timer/inputs/${type}`, { mac });
+          config.saveConfig();
+
+          inp.fromDevice(device).then(res).catch(rej);
+
+          // if (!device.watchAdvertisements) {
+          //   let mac = prompt("");
+          //   inp.fromDevice(device).then(res).catch(rej);
+          //   return;
+          // }
+
+          // console.log("DEVICE: ", device);
+
+          // const abortController = new AbortController();
+
+          // device.onadvertisementreceived = ev => {
+          //   console.log("[advertisementreceived]: ", ev);
+          //   abortController.abort();
+          //   // inp.fromDevice(device).then(res).catch(rej);
+          //   rej();
+          // };
+
+          // device.watchAdvertisements({ signal: abortController.signal });
+        })
+        .catch(rej);
+    });
+
     return "";
   }
 
