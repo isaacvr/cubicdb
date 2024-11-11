@@ -3,7 +3,7 @@ import { build, files, version } from "$service-worker";
 
 const CACHE = `cache-${version}`;
 
-const ASSETS = [...build, ...files];
+const ASSETS = [...build, ...files].filter(name => !name.includes("ffmpeg-core"));
 
 self.addEventListener("install", event => {
   async function addFilesToCache() {
