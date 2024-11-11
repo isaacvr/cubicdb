@@ -93,6 +93,11 @@
     document.documentElement.requestFullscreen();
   }
 
+  // let data = {
+  //   title: "CubicDB",
+  //   description: "Cubing with fun",
+  // };
+
   function updateJSONLD() {
     jsonld = `<${"script"} type="application/ld+json">${JSON.stringify({
       "@context": "https://schema.org",
@@ -113,10 +118,17 @@
   updateJSONLD();
 
   function updateParts(rt: URL) {
+    let titleMeta = getTitleMeta(rt.pathname, $localLang);
+
+    data = {
+      title: titleMeta.title,
+      description: titleMeta.description,
+    };
+
     parts.length = 0;
 
     if (!rt) {
-      goto("/");
+      goto("/", { replaceState: true });
       return;
     }
 
@@ -151,6 +163,7 @@
     $dataService.on("update-downloaded", handleDone);
 
     handleResize();
+    updateParts($page.url);
   });
 
   onDestroy(() => {
