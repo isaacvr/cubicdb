@@ -249,13 +249,14 @@
       <li class="cube-item flex items-center gap-4">
         <div class="w-[8rem] h-[8rem] relative shrink-0">
           {#if editing}
-            {#if tempAnimated}
+            <PuzzleImage src={img} />
+            <!-- {#if tempAnimated}
               <CubeVideo cube={tempCubes[pos]} />
             {:else}
               <PuzzleImage src={img} />
             {/if}
           {:else if block.animated}
-            <CubeVideo cube={block.cubes[pos]} />
+            <CubeVideo cube={block.cubes[pos]} /> -->
           {:else}
             <PuzzleImage src={img} />
           {/if}
