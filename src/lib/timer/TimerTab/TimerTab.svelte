@@ -436,7 +436,7 @@
   }
 
   function bluetoothHandler(type: string, data: any) {
-    console.log("data: ", type, data);
+    // console.log("data: ", type, data);
 
     switch (type) {
       case "move": {
@@ -865,7 +865,15 @@
         />
       {:else}
         <pre class="scramble-content" class:hide={$isRunning} class:battle>
-          {$sequenceParts[0]} <mark>{$sequenceParts[1]}</mark> {$sequenceParts[2]}
+          {#each $sequenceParts[0].split(" ") as mv}
+            <span>{mv}</span>
+          {/each}
+          
+          <mark>{$sequenceParts[1]}</mark>
+          
+          {#each $sequenceParts[2].split(" ") as mv}
+            <span>{mv}</span>
+          {/each}
         </pre>
       {/if}
     {:else if !$scramble}
@@ -980,19 +988,16 @@
 
   #scramble .scramble-content {
     @apply max-w-[calc(100%-2rem)] md:w-[min(calc(100%-10rem),50rem)] mx-auto break-words whitespace-pre-wrap
-      flex text-left justify-center items-baseline h-min max-h-[15rem];
+      flex flex-wrap gap-2 text-left justify-center items-baseline h-min max-h-[15rem];
     line-height: 1.3;
     overflow: hidden auto;
+    row-gap: 0rem;
   }
 
   #scramble .scramble-content.battle {
     margin: 0;
     max-height: 9rem;
     text-align: center;
-  }
-
-  #scramble .scramble-content mark {
-    @apply mr-2;
   }
 
   #timer {

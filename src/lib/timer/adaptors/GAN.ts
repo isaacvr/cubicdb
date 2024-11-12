@@ -28,7 +28,7 @@ interface GANContext {
 
 type GANActor = (data: Actor<GANContext>) => any;
 
-const debug = true;
+const debug = false;
 
 function matchUUID(uuid1: string, uuid2: string) {
   return uuid1.toUpperCase() == uuid2.toUpperCase();

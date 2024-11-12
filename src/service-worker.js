@@ -2,7 +2,7 @@
 import { build, files, version } from "$service-worker";
 
 const CACHE = `cache-${version}`;
-
+const DEBUG = false;
 const ASSETS = [...build, ...files].filter(name => !name.includes("ffmpeg-core"));
 
 self.addEventListener("install", event => {
@@ -11,8 +11,8 @@ self.addEventListener("install", event => {
     await cache.addAll(ASSETS);
   }
 
-  console.log("installing service worker for version", version);
-  console.log("ASSETS: ", ASSETS);
+  DEBUG && console.log("installing service worker for version", version);
+  DEBUG && console.log("ASSETS: ", ASSETS);
   event.waitUntil(addFilesToCache());
 });
 
@@ -29,7 +29,7 @@ self.addEventListener("activate", event => {
 self.addEventListener("fetch", event => {
   if (event.request.method !== "GET") return;
 
-  console.log("FETCH: ", event);
+  DEBUG && console.log("FETCH: ", event);
 
   async function respond() {
     const url = new URL(event.request.url);
@@ -59,7 +59,7 @@ self.addEventListener("fetch", event => {
       const response = await cache.match(event.request);
 
       if (response) {
-        console.log(`Returning from Cache`, event.request.url);
+        DEBUG && console.log(`Returning from Cache`, event.request.url);
         return response;
       }
 

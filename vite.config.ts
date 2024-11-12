@@ -1,7 +1,7 @@
 import { sveltekit } from "@sveltejs/kit/vite";
 import { defineConfig } from "vitest/config";
 import pkg from "./package.json" assert { type: "json" };
-import basicSSL from "@vitejs/plugin-basic-ssl";
+// import basicSSL from "@vitejs/plugin-basic-ssl";
 
 const headerPlugin = {
   name: "p",
@@ -15,7 +15,7 @@ const headerPlugin = {
 };
 
 export default defineConfig(env => ({
-  plugins: [headerPlugin, basicSSL(), sveltekit()],
+  plugins: [headerPlugin, /*basicSSL(),*/ sveltekit()],
   server: {
     host: true,
     port: 5432,
