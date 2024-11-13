@@ -8,22 +8,22 @@
   "categories": ["education", "entertainment", "games", "sports"],
   "icons": [
     {
-      "src": "./logo_x128.png",
+      "src": "./logo_x128.webp",
       "sizes": "128x128",
       "type": "image/png"
     },
     {
-      "src": "./logo_x256.png",
+      "src": "./logo_x256.webp",
       "sizes": "256x256",
       "type": "image/png"
     },
     {
-      "src": "./logo_x348.png",
+      "src": "./logo_x348.webp",
       "sizes": "348x348",
       "type": "image/png"
     },
     {
-      "src": "./logo_x512.png",
+      "src": "./logo_x512.webp",
       "sizes": "512x512",
       "type": "image/png"
     }

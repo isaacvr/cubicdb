@@ -3,7 +3,8 @@ import { build, files, version } from "$service-worker";
 
 const CACHE = `cache-${version}`;
 const DEBUG = false;
-const ASSETS = [...build, ...files].filter(name => !name.includes("ffmpeg-core"));
+const EXCLUDED = ["ffmpeg-core.js", "ffmpeg-core.wasm", "cube-texture.jpg", "cube-texture1.jpg"];
+const ASSETS = [...build, ...files].filter(name => !EXCLUDED.some(e => name.endsWith(e)));
 
 self.addEventListener("install", event => {
   async function addFilesToCache() {

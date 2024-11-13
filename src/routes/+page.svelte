@@ -9,7 +9,7 @@
     <!-- Tutorials -->
     <li>
       <a class="flex flex-col items-center justify-between w-full h-full" href="/tutorials">
-        <img class="mx-auto" src="/assets/tutorials.png" alt="" />
+        <img class="mx-auto" src="/assets/tutorials.webp" alt="" />
         <h2 class="text-sm text-center">{$localLang.HOME.tutorials}</h2>
       </a>
     </li>
@@ -17,7 +17,7 @@
     <!-- Algorithms -->
     <li>
       <a class="flex flex-col items-center justify-between w-full h-full" href="/algorithms">
-        <img class="mx-auto" src="/assets/algorithms.png" alt="" />
+        <img class="mx-auto" src="/assets/algorithms.webp" alt="" />
         <h2 class="text-sm text-center">{$localLang.HOME.algorithms}</h2>
       </a>
     </li>
@@ -25,7 +25,7 @@
     <!-- Timer -->
     <li>
       <a class="flex flex-col items-center justify-between w-full h-full" href="/timer">
-        <img class="mx-auto" src="/assets/timer.png" alt="" />
+        <img class="mx-auto" src="/assets/timer.webp" alt="" />
         <h2 class="text-sm text-center">{$localLang.HOME.timer}</h2>
       </a>
     </li>
@@ -33,7 +33,7 @@
     <!-- Reconstructions -->
     <li>
       <a class="flex flex-col items-center justify-between w-full h-full" href="/reconstructions">
-        <img class="mx-auto" src="/assets/reconstructions.png" alt="" />
+        <img class="mx-auto" src="/assets/reconstructions.webp" alt="" />
         <h2 class="text-sm text-center">{$localLang.HOME.reconstructions}</h2>
       </a>
     </li>
@@ -41,7 +41,7 @@
     <!-- Battle -->
     <!-- <li>
       <a class="flex flex-col items-center justify-between w-full h-full" href="/battle">
-        <img class="mx-auto" src="/assets/battle.png" alt="" />
+        <img class="mx-auto" src="/assets/battle.webp" alt="" />
         <h2 class="text-sm text-center">{$localLang.HOME.battle}</h2>
       </a>
     </li> -->
@@ -49,7 +49,7 @@
     <!-- PLL Recognition -->
     <li>
       <a class="flex flex-col items-center justify-between w-full h-full" href="/pll-trainer">
-        <img class="mx-auto" src="/assets/pll.png" alt="" />
+        <img class="mx-auto" src="/assets/pll.webp" alt="" />
         <h2 class="text-sm text-center">{$localLang.HOME.pll_recognition}</h2>
       </a>
     </li>
@@ -57,7 +57,7 @@
     <!-- Simulator -->
     <li>
       <a class="flex flex-col items-center justify-between w-full h-full" href="/simulator">
-        <img class="mx-auto" src="/assets/megaminx.png" alt="" />
+        <img class="mx-auto" src="/assets/megaminx.webp" alt="" />
         <h2 class="text-sm text-center">{$localLang.HOME.simulator}</h2>
       </a>
     </li>
@@ -73,7 +73,7 @@
     <!-- Tools -->
     <li>
       <a class="flex flex-col items-center justify-between w-full h-full" href="/tools">
-        <img class="mx-auto" src="/assets/tools.png" alt="" />
+        <img class="mx-auto" src="/assets/tools.webp" alt="" />
         <h2 class="text-sm text-center">{$localLang.HOME.tools}</h2>
       </a>
     </li>
@@ -81,7 +81,7 @@
     <!-- Import / Export -->
     <li>
       <a class="flex flex-col items-center justify-between w-full h-full" href="/import-export">
-        <img class="mx-auto" src="/assets/import-export.png" alt="" />
+        <img class="mx-auto" src="/assets/import-export.webp" alt="" />
         <h2 class="text-sm text-center">{$localLang.HOME.importExport}</h2>
       </a>
     </li>
@@ -89,7 +89,7 @@
     <!-- Settings -->
     <li>
       <a class="flex flex-col items-center justify-between w-full h-full" href="/settings">
-        <img class="mx-auto" src="/assets/settings.png" alt="" />
+        <img class="mx-auto" src="/assets/settings.webp" alt="" />
         <h2 class="text-sm text-center">{$localLang.HOME.settings}</h2>
       </a>
     </li>

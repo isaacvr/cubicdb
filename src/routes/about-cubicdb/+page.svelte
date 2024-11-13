@@ -24,7 +24,7 @@
 
   const donations: Donation[] = [
     {
-      logo: "/assets/transfermovil.png",
+      logo: "/assets/transfermovil.webp",
       address: "9227-0699-9291-8501",
       qr: "",
       qrText: "TRANSFERMOVIL_ETECSA,TRANSFERENCIA,9227069992918501,55070597,",
@@ -32,7 +32,7 @@
       currency: "CUP",
     },
     {
-      logo: "/assets/transfermovil.png",
+      logo: "/assets/transfermovil.webp",
       address: "9225-1299-7655-0563",
       qr: "",
       qrText: "TRANSFERMOVIL_ETECSA,TRANSFERENCIA,9225129976550563,55070597,",
@@ -40,7 +40,7 @@
       currency: "MLC",
     },
     {
-      logo: "/assets/ETH.png",
+      logo: "/assets/ETH.webp",
       address: "0xbcAEb3Ce55f76890EF10CB3d1C037086Dd7c9B63",
       qr: "",
       qrText: "ethereum:0xbcAEb3Ce55f76890EF10CB3d1C037086Dd7c9B63@1",
@@ -48,7 +48,7 @@
       currency: "ETH + Tokens",
     },
     {
-      logo: "/assets/BTC.png",
+      logo: "/assets/BTC.webp",
       address: "bc1qcsr4v5yf8m9cfax5rrurjssy4fw5jrgzqpvfnd",
       qr: "",
       qrText: "bc1qcsr4v5yf8m9cfax5rrurjssy4fw5jrgzqpvfnd",
@@ -60,7 +60,7 @@
   const acknowledgements = [
     {
       name: "CSTimer",
-      logo: "/assets/cstimer.png",
+      logo: "/assets/cstimer.webp",
       link: "https://cstimer.net/",
     },
     {
@@ -80,7 +80,7 @@
     },
     {
       name: "AlgDB",
-      logo: "/assets/algdb.png",
+      logo: "/assets/algdb.webp",
       link: "https://algdb.net/",
     },
     {
@@ -90,7 +90,7 @@
     },
     {
       name: "CubeSolv",
-      logo: "/assets/cubesolv.png",
+      logo: "/assets/cubesolv.webp",
       link: "https://www.cubesolv.es/",
     },
     {
@@ -220,7 +220,7 @@
           </button>
           <span class="donation-currency flex items-center gap-2">
             {#if dnt.cubaOnly}
-              <img src="/assets/cuba.png" alt="" class="w-5 h-4" />
+              <img src="/assets/cuba.webp" alt="" class="w-5 h-4" />
             {/if}
 
             {dnt.currency}
