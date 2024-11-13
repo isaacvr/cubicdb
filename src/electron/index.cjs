@@ -384,7 +384,7 @@ function createWindow() {
     //   awaitWriteFinish: true,
     // });
 
-    win.loadURL("https://localhost:5432/");
+    win.loadURL("http://localhost:5432/");
     eApp.listen(0, () => {
       console.log("LISTENING ON PORT: ", eApp.get("port"));
     });

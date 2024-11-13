@@ -68,7 +68,7 @@ export const CubeModeMap = [
   ["Corner Orientation", CubeMode.CO],
 ];
 
-const COLORS = {
+const COLORS: Record<string, string> = {
   green: "rgb(0, 157, 84)",
   red: "rgb(220,66,47)",
   blue: "rgb(61, 129, 246)",
@@ -104,7 +104,7 @@ const COLORS = {
 
 export declare type ColorName = keyof typeof COLORS;
 
-export function getColorByName(colorName: ColorName) {
+export function getColorByName(colorName: ColorName | (string & {})) {
   return COLORS[colorName] || (colorName as string);
 }
 
