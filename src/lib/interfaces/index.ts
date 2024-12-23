@@ -1204,6 +1204,25 @@ export interface Language {
     clickToAuth: string;
   };
   MENU: SCRAMBLE_MENU[];
+  CONTEST: {
+    round: string;
+    rounds: string;
+    format: string;
+    extraScrambles: string;
+    addCategory: string;
+    fmcRules: string[];
+    faceMoves: string;
+    rotations: string;
+    competitor: string;
+    doNotFillWarning: string;
+    gradedBy: string;
+    result: string;
+    ccaID: string;
+    registrantID: string;
+    clockwise: string;
+    counterClockwise: string;
+    double: string;
+  };
 }
 
 export interface BluetoothDeviceData {

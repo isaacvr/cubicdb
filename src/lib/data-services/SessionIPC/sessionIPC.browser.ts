@@ -36,7 +36,7 @@ export class SessionBrowserIPC implements SessionIPC {
       this.isInit = true;
     } else {
       await new Promise(res => {
-        let itv = setInterval(() => {
+        const itv = setInterval(() => {
           if (!this.isInit) {
             clearInterval(itv);
             res(null);
@@ -107,7 +107,7 @@ export class SessionBrowserIPC implements SessionIPC {
       tName: s.tName || "",
     };
 
-    let res = await Promise.all([tx.store.put(ss), tx.done]);
+    const res = await Promise.all([tx.store.put(ss), tx.done]);
     s._id = res[0] as string;
     return s;
   }
@@ -133,7 +133,7 @@ export class SessionBrowserIPC implements SessionIPC {
     await this.init();
     if (!this.DB) return Promise.resolve(s);
 
-    let rs: Session | undefined = await this.DB.get(SessionStore, s._id);
+    const rs: Session | undefined = await this.DB.get(SessionStore, s._id);
 
     if (rs) {
       rs.name = s.name;
@@ -149,7 +149,7 @@ export class SessionBrowserIPC implements SessionIPC {
     await this.init();
     if (!this.DB) return Promise.resolve(s);
 
-    let rs: Session | undefined = await this.DB.get(SessionStore, s._id);
+    const rs: Session | undefined = await this.DB.get(SessionStore, s._id);
 
     if (rs) {
       rs.name = s.name;

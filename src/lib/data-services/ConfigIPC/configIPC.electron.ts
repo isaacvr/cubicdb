@@ -1,10 +1,13 @@
 import type {
   BluetoothCubeInfo,
   CONFIG,
+  ContestPDFOptions,
+  ContestPDFResult,
   FONT_NAME,
   IPC,
   IStorageInfo,
   LanguageCode,
+  Sheet,
   UpdateCommand,
 } from "@interfaces";
 import type { ConfigIPC } from "./configIPC.interface";
@@ -144,7 +147,7 @@ export class ConfigElectronIPC implements ConfigIPC {
   }
 
   searchBluetooth(inp: GANInput | QiYiSmartTimerInput): Promise<string> {
-    let filters = inp.adaptor === "GAN" ? GAN_BLUETOOTH_FILTERS : QIYI_BLUETOOTH_FILTERS;
+    const filters = inp.adaptor === "GAN" ? GAN_BLUETOOTH_FILTERS : QIYI_BLUETOOTH_FILTERS;
 
     return new Promise((res, rej) => {
       navigator.bluetooth
@@ -165,13 +168,13 @@ export class ConfigElectronIPC implements ConfigIPC {
   }
 
   async getStorageInfo(): Promise<IStorageInfo> {
-    let algorithms = await this.ipc.algorithmsStorage();
-    let cache = await this.ipc.cacheStorage();
-    let vcache = await this.ipc.vCacheStorage();
-    let sessions = await this.ipc.sessionsStorage();
-    let solves = await this.ipc.solvesStorage();
-    let tutorials = await this.ipc.tutorialsStorage();
-    let reconstructions = await this.ipc.reconstructionsStorage();
+    const algorithms = await this.ipc.algorithmsStorage();
+    const cache = await this.ipc.cacheStorage();
+    const vcache = await this.ipc.vCacheStorage();
+    const sessions = await this.ipc.sessionsStorage();
+    const solves = await this.ipc.solvesStorage();
+    const tutorials = await this.ipc.tutorialsStorage();
+    const reconstructions = await this.ipc.reconstructionsStorage();
 
     return {
       algorithms,
@@ -219,5 +222,17 @@ export class ConfigElectronIPC implements ConfigIPC {
     this.applyConfig();
 
     this.ipc.saveConfig(config);
+  }
+
+  async generateContestPDF(args: ContestPDFOptions): Promise<ContestPDFResult> {
+    return this.ipc.generateContestPDF(args);
+  }
+
+  async zipPDF(s: { name: string; files: Sheet[] }): Promise<string> {
+    return this.ipc.zipPDF(s);
+  }
+
+  async revealFile(f: string): Promise<void> {
+    return this.ipc.revealFile(f);
   }
 }

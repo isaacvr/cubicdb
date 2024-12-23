@@ -79,7 +79,7 @@ export const Chinese: Language = {
   NAVBAR: {
     home: "主页",
     routeMap: (r: string) => {
-      let mp: [RegExp, string, string][] = [
+      const mp: [RegExp, string, string][] = [
         [/tutorials/i, "教程", "通过我们的综合教程学习如何解决和提高你的速解魔方技能."],
         [/algorithms/i, "算法", "探索大量的速解魔方算法, 帮助你更快地解决谜题."],
         [/timer/i, "计时器", "使用我们的计时器跟踪你的解题时间并分析你的表现."],
@@ -453,7 +453,7 @@ export const Chinese: Language = {
         ["Megaminx", "mgmp", -70, 55, [5]],
         ["Pyraminx", "pyrso", -10, 36, [3]],
         ["Skewb", "skbso", 0, 33, [3]],
-        ["Sq-1", "sqrs", 0, 50, [8, 2]],
+        ["Square-1", "sqrs", 0, 50, [8, 2]],
         ["4x4 BLD", "444bld", -40, 40, [4]],
         ["5x5 BLD", "555bld", -60, 48, [4]],
       ],
@@ -719,4 +719,30 @@ export const Chinese: Language = {
     ],
     ["FTO (Face-Turning Octahedron)", [["随机", "fto", 25]]],
   ],
+  CONTEST: {
+    round: "轮次",
+    rounds: "轮次",
+    format: "格式",
+    extraScrambles: "額外的混音",
+    addCategory: "添加类别",
+    fmcRules: [
+      "你有一小时的时间寻找解法。",
+      "每横线一步，如需删除转动，请清晰地将其涂黑。",
+      "禁止通过打乱公式的任何部分直接推得解法。",
+      "你的解法长度不能超过80步，包括整体转动。",
+      "你的解法长度会根据OBTM进行计算。",
+      "只能使用WCA规则第12章所述的转动表示方法。如不确定，请仅使用以下转动",
+    ],
+    faceMoves: "单层转动",
+    rotations: "整体转动",
+    competitor: "选手",
+    doNotFillWarning: "选手请勿填写。",
+    gradedBy: "阅卷人",
+    result: "成绩",
+    ccaID: "CCA ID",
+    registrantID: "编号",
+    clockwise: "顺时针",
+    counterClockwise: "逆时针",
+    double: "180度",
+  },
 };

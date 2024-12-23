@@ -2,8 +2,8 @@ import type { IDBReconstruction } from "@interfaces";
 import type { ReconstructionIPC } from "./reconstructionIPC.interface";
 
 export class ReconstructionNoopIPC implements ReconstructionIPC {
-  private constructor() { }
-  
+  private constructor() {}
+
   private static _instance: ReconstructionNoopIPC | null = null;
 
   static getInstance() {

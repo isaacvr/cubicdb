@@ -2,6 +2,12 @@
   import { localLang } from "@stores/language.service";
   import { screen } from "@stores/screen.store";
   import { CubicDBICON } from "@constants";
+  import { onMount } from "svelte";
+  import { calcPercents } from "@helpers/math";
+
+  onMount(() => {
+    console.log(calcPercents([1, 1, 9, 39, 26, 31, 4], 109));
+  });
 </script>
 
 <main class="container-mini relative">
@@ -63,12 +69,12 @@
     </li>
 
     <!-- Contest -->
-    <!-- <li>
+    <li>
       <a class="flex flex-col items-center justify-between w-full h-full" href="/contest">
         <img class="mx-auto" src={CubicDBICON} alt="" />
         <h2 class="text-sm text-center">{$localLang.HOME.contest}</h2>
       </a>
-    </li> -->
+    </li>
 
     <!-- Tools -->
     <li>

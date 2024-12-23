@@ -35,22 +35,22 @@ const PermInvEdgeSym: number[] = [];
 const SymMove: number[][] = [];
 const Sym8Move: number[] = [];
 const SymMoveUD: number[][] = [];
-let moveCube: CubieCube[] = [];
-let FlipS2R: number[] = [];
-let Perm2CombP: number[] = [];
-let TwistS2R: number[] = [];
-let EPermS2R: number[] = [];
-let SymStateFlip: number[] = [];
-let SymStateTwist: number[] = [];
-let SymStatePerm: number[] = [];
-let FlipS2RF: number[] = [];
-let FlipMove: number[][] = [];
-let UDSliceMove: number[][] = [];
-let TwistMove: number[][] = [];
-let UDSliceConj: number[][] = [];
-let UDSliceTwistPrun: number[] = [];
-let UDSliceFlipPrun: number[] = [];
-let TwistFlipPrun: number[] = [];
+const moveCube: CubieCube[] = [];
+const FlipS2R: number[] = [];
+const Perm2CombP: number[] = [];
+const TwistS2R: number[] = [];
+const EPermS2R: number[] = [];
+const SymStateFlip: number[] = [];
+const SymStateTwist: number[] = [];
+const SymStatePerm: number[] = [];
+const FlipS2RF: number[] = [];
+const FlipMove: number[][] = [];
+const UDSliceMove: number[][] = [];
+const TwistMove: number[][] = [];
+const UDSliceConj: number[][] = [];
+const UDSliceTwistPrun: number[] = [];
+const UDSliceFlipPrun: number[] = [];
+const TwistFlipPrun: number[] = [];
 
 function setVal(val0: number, val: number, isEdge: boolean) {
   return isEdge ? (val << 1) | (val0 & 1) : val | (val0 & 0xf8);
@@ -80,12 +80,12 @@ function setNPerm(arr: number[], idx: number, n: number, isEdge: boolean) {
   n--;
   let val = 0x76543210;
   for (let i = 0; i < n; ++i) {
-    let p = fact[n - i];
+    const p = fact[n - i];
     let v = ~~(idx / p);
     idx %= p;
     v <<= 2;
     arr[i] = setVal(arr[i], (val >> v) & 0xf, isEdge);
-    let m = (1 << v) - 1;
+    const m = (1 << v) - 1;
     val = (val & m) + ((val >> 4) & ~m);
   }
   arr[n] = setVal(arr[n], val & 0xf, isEdge);
@@ -95,7 +95,7 @@ function getNPerm(arr: number[], n: number, isEdge: boolean) {
   let idx = 0,
     val = 0x76543210;
   for (let i = 0; i < n - 1; ++i) {
-    let v = getVal(arr[i], isEdge) << 2;
+    const v = getVal(arr[i], isEdge) << 2;
     idx = (n - i) * idx + ((val >> v) & 0xf);
     val -= 0x11111110 << v;
   }
@@ -129,7 +129,7 @@ function getNPermFull(arr: number[], n: number, isEdge: boolean) {
 }
 
 function setComb(arr: number[], idxC: number, mask: number, isEdge: boolean) {
-  let end = arr.length - 1;
+  const end = arr.length - 1;
   let r = 4,
     fill = end;
   for (let i = end; i >= 0; i--) {
@@ -146,11 +146,11 @@ function setComb(arr: number[], idxC: number, mask: number, isEdge: boolean) {
 }
 
 function getComb(arr: number[], mask: number, isEdge: boolean) {
-  let end = arr.length - 1;
+  const end = arr.length - 1;
   let idxC = 0;
   let r = 4;
   for (let i = end; i >= 0; i--) {
-    let perm = getVal(arr[i], isEdge);
+    const perm = getVal(arr[i], isEdge);
     if ((perm & 0xc) == mask) {
       idxC += Cnk[i][r--];
     }
@@ -181,18 +181,18 @@ function initRawSymPrun(
   SymState: number[],
   PrunFlag: number
 ) {
-  let SYM_SHIFT = PrunFlag & 0xf;
-  let SYM_E2C_MAGIC = ((PrunFlag >> 4) & 1) == 1 ? 0x00dddd00 : 0x00000000;
-  let IS_PHASE2 = ((PrunFlag >> 5) & 1) == 1;
-  let INV_DEPTH = (PrunFlag >> 8) & 0xf;
-  let MAX_DEPTH = (PrunFlag >> 12) & 0xf;
-  let MIN_DEPTH = (PrunFlag >> 16) & 0xf;
+  const SYM_SHIFT = PrunFlag & 0xf;
+  const SYM_E2C_MAGIC = ((PrunFlag >> 4) & 1) == 1 ? 0x00dddd00 : 0x00000000;
+  const IS_PHASE2 = ((PrunFlag >> 5) & 1) == 1;
+  const INV_DEPTH = (PrunFlag >> 8) & 0xf;
+  const MAX_DEPTH = (PrunFlag >> 12) & 0xf;
+  const MIN_DEPTH = (PrunFlag >> 16) & 0xf;
 
-  let SYM_MASK = (1 << SYM_SHIFT) - 1;
-  let ISTFP = RawMove == null;
-  let N_SIZE = N_RAW * N_SYM;
-  let N_MOVES = IS_PHASE2 ? 10 : 18;
-  let NEXT_AXIS_MAGIC = N_MOVES == 10 ? 0x42 : 0x92492;
+  const SYM_MASK = (1 << SYM_SHIFT) - 1;
+  const ISTFP = RawMove == null;
+  const N_SIZE = N_RAW * N_SYM;
+  const N_MOVES = IS_PHASE2 ? 10 : 18;
+  const NEXT_AXIS_MAGIC = N_MOVES == 10 ? 0x42 : 0x92492;
 
   let depth = getPruning(PrunTable, N_SIZE) - 1;
 
@@ -206,17 +206,17 @@ function initRawSymPrun(
     setPruning(PrunTable, N_SIZE, 0xf ^ (depth + 1));
   }
 
-  let SEARCH_DEPTH =
+  const SEARCH_DEPTH =
     PARTIAL_INIT_LEVEL > 0 ? Math.min(Math.max(depth + 1, MIN_DEPTH), MAX_DEPTH) : MAX_DEPTH;
 
   while (depth < SEARCH_DEPTH) {
-    let inv = depth > INV_DEPTH;
-    let select = inv ? 0xf : depth;
-    let selArrMask = select * 0x11111111;
-    let check = inv ? depth : 0xf;
+    const inv = depth > INV_DEPTH;
+    const select = inv ? 0xf : depth;
+    const selArrMask = select * 0x11111111;
+    const check = inv ? depth : 0xf;
     depth++;
     InitPrunProgress++;
-    let xorVal = depth ^ 0xf;
+    const xorVal = depth ^ 0xf;
     let done = 0;
     let val = 0;
     for (let i = 0; i < N_SIZE; i++, val >>= 4) {
@@ -230,8 +230,8 @@ function initRawSymPrun(
       if ((val & 0xf) != select) {
         continue;
       }
-      let raw = i % N_RAW;
-      let sym = ~~(i / N_RAW);
+      const raw = i % N_RAW;
+      const sym = ~~(i / N_RAW);
       let flip = 0,
         fsym = 0;
       if (ISTFP) {
@@ -249,8 +249,8 @@ function initRawSymPrun(
           rawx = RawConj![RawMove![raw][m]][symx & SYM_MASK];
         }
         symx >>= SYM_SHIFT;
-        let idx = symx * N_RAW + rawx;
-        let prun = getPruning(PrunTable, idx);
+        const idx = symx * N_RAW + rawx;
+        const prun = getPruning(PrunTable, idx);
         if (prun != check) {
           if (prun < depth - 1) {
             m += (NEXT_AXIS_MAGIC >> m) & 3;
@@ -328,15 +328,15 @@ class CubieCube {
 
   static CornMult(a: CubieCube, b: CubieCube, prod: CubieCube) {
     for (let corn = 0; corn < 8; corn += 1) {
-      let ori = ((a.ca[b.ca[corn] & 7] >> 3) + (b.ca[corn] >> 3)) % 3;
+      const ori = ((a.ca[b.ca[corn] & 7] >> 3) + (b.ca[corn] >> 3)) % 3;
       prod.ca[corn] = (a.ca[b.ca[corn] & 7] & 7) | (ori << 3);
     }
   }
 
   static CornMultFull(a: CubieCube, b: CubieCube, prod: CubieCube) {
     for (let corn = 0; corn < 8; corn += 1) {
-      let oriA = a.ca[b.ca[corn] & 7] >> 3;
-      let oriB = b.ca[corn] >> 3;
+      const oriA = a.ca[b.ca[corn] & 7] >> 3;
+      const oriB = b.ca[corn] >> 3;
       let ori = oriA + (oriA < 3 ? oriB : 6 - oriB);
       ori = (ori % 3) + (oriA < 3 == oriB < 3 ? 0 : 3);
       prod.ca[corn] = (a.ca[b.ca[corn] & 7] & 7) | (ori << 3);
@@ -344,19 +344,19 @@ class CubieCube {
   }
 
   static CornConjugate(a: CubieCube, idx: number, b: CubieCube) {
-    let sinv = SymCube[SymMultInv[0][idx]];
-    let s = SymCube[idx];
+    const sinv = SymCube[SymMultInv[0][idx]];
+    const s = SymCube[idx];
     for (let corn = 0; corn < 8; corn += 1) {
-      let oriA = sinv.ca[a.ca[s.ca[corn] & 7] & 7] >> 3;
-      let oriB = a.ca[s.ca[corn] & 7] >> 3;
-      let ori = oriA < 3 ? oriB : (3 - oriB) % 3;
+      const oriA = sinv.ca[a.ca[s.ca[corn] & 7] & 7] >> 3;
+      const oriB = a.ca[s.ca[corn] & 7] >> 3;
+      const ori = oriA < 3 ? oriB : (3 - oriB) % 3;
       b.ca[corn] = (sinv.ca[a.ca[s.ca[corn] & 7] & 7] & 7) | (ori << 3);
     }
   }
 
   static EdgeConjugate(a: CubieCube, idx: number, b: CubieCube) {
-    let sinv = SymCube[SymMultInv[0][idx]];
-    let s = SymCube[idx];
+    const sinv = SymCube[SymMultInv[0][idx]];
+    const s = SymCube[idx];
     for (let ed = 0; ed < 12; ed++) {
       b.ea[ed] = sinv.ea[a.ea[s.ea[ed] >> 1] >> 1] ^ (a.ea[s.ea[ed] >> 1] & 1) ^ (s.ea[ed] & 1);
     }
@@ -479,7 +479,7 @@ class CubieCube {
   }
 
   URFConjugate() {
-    let temps = new CubieCube();
+    const temps = new CubieCube();
     CubieCube.CornMult(CubieCube.urf2, this, temps);
     CubieCube.CornMult(temps, CubieCube.urf1, this);
     CubieCube.EdgeMult(CubieCube.urf2, this, temps);
@@ -487,22 +487,22 @@ class CubieCube {
   }
 
   toFaceCube(cFacelet: number[][] = cornerFacelet, eFacelet: number[][] = edgeFacelet) {
-    let ts = "URFDLB";
-    let f: string[] = [];
+    const ts = "URFDLB";
+    const f: string[] = [];
 
     for (let i = 0; i < 54; i++) {
       f[i] = ts[~~(i / 9)];
     }
 
     for (let c = 0; c < 8; c++) {
-      let j = this.ca[c] & 0x7; // cornercubie with index j is at
-      let ori = this.ca[c] >> 3; // Orientation of this cubie
+      const j = this.ca[c] & 0x7; // cornercubie with index j is at
+      const ori = this.ca[c] >> 3; // Orientation of this cubie
       for (let n = 0; n < 3; n++) f[cFacelet[c][(n + ori) % 3]] = ts[~~(cFacelet[j][n] / 9)];
     }
 
     for (let e = 0; e < 12; e++) {
-      let j = this.ea[e] >> 1; // edgecubie with index j is at edgeposition
-      let ori = this.ea[e] & 1; // Orientation of this cubie
+      const j = this.ea[e] >> 1; // edgecubie with index j is at edgeposition
+      const ori = this.ea[e] & 1; // Orientation of this cubie
       for (let n = 0; n < 2; n++) f[eFacelet[e][(n + ori) % 2]] = ts[~~(eFacelet[j][n] / 9)];
     }
 
@@ -525,8 +525,9 @@ class CubieCube {
     eFacelet: number[][] = edgeFacelet
   ) {
     let count = 0;
-    let f = [];
-    let centers = facelet[4] + facelet[13] + facelet[22] + facelet[31] + facelet[40] + facelet[49];
+    const f = [];
+    const centers =
+      facelet[4] + facelet[13] + facelet[22] + facelet[31] + facelet[40] + facelet[49];
     for (let i = 0; i < 54; ++i) {
       f[i] = centers.indexOf(facelet[i]);
       if (f[i] == -1) {
@@ -671,7 +672,7 @@ class CoordCube {
       return false;
     }
     if (USE_CONJ_PRUN) {
-      let pc = new CubieCube();
+      const pc = new CubieCube();
       CubieCube.CornConjugate(cc, 1, pc);
       CubieCube.EdgeConjugate(cc, 1, pc);
       this.twistc = pc.getTwistSym();
@@ -732,14 +733,14 @@ class CoordCube {
   }
 }
 //--------------------------------------------
-let MAX_PRE_MOVES = 20;
-let TRY_INVERSE = true;
-let TRY_THREE_AXES = true;
-let MIN_P1LENGTH_PRE = 7;
-let MAX_DEPTH2 = 13;
-let INVERSE_SOLUTION = 0x2;
+const MAX_PRE_MOVES = 20;
+const TRY_INVERSE = true;
+const TRY_THREE_AXES = true;
+const MIN_P1LENGTH_PRE = 7;
+const MAX_DEPTH2 = 13;
+const INVERSE_SOLUTION = 0x2;
 
-let move2str = [
+const move2str = [
   "U ",
   "U2",
   "U'",
@@ -760,7 +761,7 @@ let move2str = [
   "B'",
 ];
 
-let urfMove = [
+const urfMove = [
   [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17],
   [6, 7, 8, 0, 1, 2, 3, 4, 5, 15, 16, 17, 9, 10, 11, 12, 13, 14],
   [3, 4, 5, 6, 7, 8, 0, 1, 2, 12, 13, 14, 15, 16, 17, 9, 10, 11],
@@ -824,7 +825,7 @@ export class Search {
   solution(facelets: string, maxDepth = 21, probeMax = 1e9, probeMin = 0, verbose = 0): string {
     initPrunTables();
 
-    let check = this.verify(facelets);
+    const check = this.verify(facelets);
 
     if (check != 0) {
       return "Error " + Math.abs(check);
@@ -850,7 +851,7 @@ export class Search {
       this.urfCoordCube[i].setWithPrun(this.urfCubieCube[i], 20);
       this.cc.URFConjugate();
       if (i % 3 == 2) {
-        let tmp = new CubieCube().invFrom(this.cc);
+        const tmp = new CubieCube().invFrom(this.cc);
         this.cc.init(tmp.ca, tmp.ea);
       }
     }
@@ -947,7 +948,7 @@ export class Search {
       CubieCube.CornMult(moveCube[m], cc, this.preMoveCubes[maxl]);
       CubieCube.EdgeMult(moveCube[m], cc, this.preMoveCubes[maxl]);
       this.preMoves[this.maxPreMoves - maxl] = m;
-      let ret = this.phase1PreMoves(maxl - 1, m, this.preMoveCubes[maxl]);
+      const ret = this.phase1PreMoves(maxl - 1, m, this.preMoveCubes[maxl]);
       if (ret == 0) {
         return 0;
       }
@@ -987,7 +988,7 @@ export class Search {
       return ret;
     }
 
-    let m = ~~(this.preMoves[this.preMoveLen - 1] / 3) * 3 + 1;
+    const m = ~~(this.preMoves[this.preMoveLen - 1] / 3) * 3 + 1;
     CubieCube.CornMult(
       moveCube[m],
       this.phase1Cubie[this.depth1],
@@ -1007,13 +1008,13 @@ export class Search {
 
   initPhase2(phase2Cubie: CubieCube) {
     let p2corn = phase2Cubie.getCPermSym();
-    let p2csym = p2corn & 0xf;
+    const p2csym = p2corn & 0xf;
     p2corn >>= 4;
     let p2edge = phase2Cubie.getEPermSym();
-    let p2esym = p2edge & 0xf;
+    const p2esym = p2edge & 0xf;
     p2edge >>= 4;
-    let p2mid = phase2Cubie.getMPerm();
-    let prun = Math.max(
+    const p2mid = phase2Cubie.getMPerm();
+    const prun = Math.max(
       getPruningMax(
         EPermCCombPPrunMax,
         EPermCCombPPrun,
@@ -1021,13 +1022,13 @@ export class Search {
       ),
       getPruningMax(MCPermPrunMax, MCPermPrun, p2corn * N_MPERM + MPermConj[p2mid][p2csym])
     );
-    let maxDep2 = Math.min(MAX_DEPTH2, this.sol - this.length1);
+    const maxDep2 = Math.min(MAX_DEPTH2, this.sol - this.length1);
     if (prun >= maxDep2) {
       return prun > maxDep2 ? 2 : 1;
     }
     let depth2;
     for (depth2 = maxDep2 - 1; depth2 >= prun; depth2--) {
-      let ret = this.phase2(p2edge, p2esym, p2corn, p2csym, p2mid, depth2, this.depth1, 10);
+      const ret = this.phase2(p2edge, p2esym, p2corn, p2csym, p2mid, depth2, this.depth1, 10);
       if (ret < 0) {
         break;
       }
@@ -1056,7 +1057,7 @@ export class Search {
     if (node.prun == 0 && maxl < 5) {
       if (this.allowShorter || maxl == 0) {
         this.depth1 -= maxl;
-        let ret = this.initPhase2Pre();
+        const ret = this.initPhase2Pre();
         this.depth1 += maxl;
         return ret;
       } else {
@@ -1068,7 +1069,7 @@ export class Search {
         continue;
       }
       for (let power = 0; power < 3; power++) {
-        let m = axis + power;
+        const m = axis + power;
 
         if (this.isRec && m != this.move[this.depth1 - maxl]) {
           continue;
@@ -1091,7 +1092,7 @@ export class Search {
         }
         this.move[this.depth1 - maxl] = m;
         this.valid1 = Math.min(this.valid1, this.depth1 - maxl);
-        let ret = this.phase1(this.nodeUD[maxl], maxl - 1, axis);
+        const ret = this.phase1(this.nodeUD[maxl], maxl - 1, axis);
         if (ret == 0) {
           return 0;
         } else if (ret == 2) {
@@ -1107,10 +1108,10 @@ export class Search {
       this.moveSol = [curMove];
       return;
     }
-    let axisCur = ~~(curMove / 3);
-    let axisLast = ~~(this.moveSol[this.moveSol.length - 1] / 3);
+    const axisCur = ~~(curMove / 3);
+    const axisLast = ~~(this.moveSol[this.moveSol.length - 1] / 3);
     if (axisCur == axisLast) {
-      let pow = ((curMove % 3) + (this.moveSol[this.moveSol.length - 1] % 3) + 1) % 4;
+      const pow = ((curMove % 3) + (this.moveSol[this.moveSol.length - 1] % 3) + 1) % 4;
       if (pow == 3) {
         this.moveSol.pop();
       } else {
@@ -1123,7 +1124,7 @@ export class Search {
       axisCur % 3 == axisLast % 3 &&
       axisCur == ~~(this.moveSol[this.moveSol.length - 2] / 3)
     ) {
-      let pow = ((curMove % 3) + (this.moveSol[this.moveSol.length - 2] % 3) + 1) % 4;
+      const pow = ((curMove % 3) + (this.moveSol[this.moveSol.length - 2] % 3) + 1) % 4;
       if (pow == 3) {
         this.moveSol[this.moveSol.length - 2] = this.moveSol[this.moveSol.length - 1];
         this.moveSol.pop();
@@ -1148,15 +1149,15 @@ export class Search {
     if (edge == 0 && corn == 0 && mid == 0) {
       return maxl;
     }
-    let moveMask = ckmv2bit[lm];
+    const moveMask = ckmv2bit[lm];
     for (let m = 0; m < 10; m++) {
       if (((moveMask >> m) & 1) != 0) {
         m += (0x42 >> m) & 3;
         continue;
       }
-      let midx = MPermMove![mid][m];
+      const midx = MPermMove![mid][m];
       let cornx = CPermMove[corn][SymMoveUD[csym][m]];
-      let csymx = SymMult[cornx & 0xf][csym];
+      const csymx = SymMult[cornx & 0xf][csym];
       cornx >>= 4;
       if (
         getPruningMax(MCPermPrunMax, MCPermPrun, cornx * N_MPERM + MPermConj[midx][csymx]) >= maxl
@@ -1164,7 +1165,7 @@ export class Search {
         continue;
       }
       let edgex = EPermMove[edge][SymMoveUD[esym][m]];
-      let esymx = SymMult[edgex & 0xf][esym];
+      const esymx = SymMult[edgex & 0xf][esym];
       edgex >>= 4;
       if (
         getPruningMax(
@@ -1175,8 +1176,8 @@ export class Search {
       ) {
         continue;
       }
-      let edgei = getPermSymInv(edgex, esymx, false);
-      let corni = getPermSymInv(cornx, csymx, true);
+      const edgei = getPermSymInv(edgex, esymx, false);
+      const corni = getPermSymInv(cornx, csymx, true);
       if (
         getPruningMax(
           EPermCCombPPrunMax,
@@ -1188,7 +1189,7 @@ export class Search {
         continue;
       }
 
-      let ret = this.phase2(edgex, esymx, cornx, csymx, midx, maxl - 1, depth + 1, m);
+      const ret = this.phase2(edgex, esymx, cornx, csymx, midx, maxl - 1, depth + 1, m);
       if (ret >= 0) {
         this.move[depth] = ud2std[m];
         return ret;
@@ -1201,7 +1202,7 @@ export class Search {
     if (!this.moveSol) return "";
 
     let sb = "";
-    let urf = (this.verbose & INVERSE_SOLUTION) != 0 ? (this.urfIdx + 3) % 6 : this.urfIdx;
+    const urf = (this.verbose & INVERSE_SOLUTION) != 0 ? (this.urfIdx + 3) % 6 : this.urfIdx;
     if (urf < 3) {
       for (let s = 0; s < this.moveSol.length; ++s) {
         sb += move2str[urfMove[urf][this.moveSol[s]]] + " ";
@@ -1218,41 +1219,41 @@ export class Search {
 //--------------------------------------------
 
 let PARTIAL_INIT_LEVEL = 2;
-let USE_COMBP_PRUN = true; //USE_TWIST_FLIP_PRUN;
+const USE_COMBP_PRUN = true; //USE_TWIST_FLIP_PRUN;
 
-let Ux1 = 0;
-let Ux2 = 1;
-let Ux3 = 2;
-let Rx1 = 3;
-let Rx2 = 4;
-let Rx3 = 5;
-let Fx1 = 6;
-let Fx2 = 7;
-let Fx3 = 8;
-let Dx1 = 9;
-let Dx2 = 10;
-let Dx3 = 11;
-let Lx1 = 12;
-let Lx2 = 13;
-let Lx3 = 14;
-let Bx1 = 15;
-let Bx2 = 16;
-let Bx3 = 17;
+const Ux1 = 0;
+const Ux2 = 1;
+const Ux3 = 2;
+const Rx1 = 3;
+const Rx2 = 4;
+const Rx3 = 5;
+const Fx1 = 6;
+const Fx2 = 7;
+const Fx3 = 8;
+const Dx1 = 9;
+const Dx2 = 10;
+const Dx3 = 11;
+const Lx1 = 12;
+const Lx2 = 13;
+const Lx3 = 14;
+const Bx1 = 15;
+const Bx2 = 16;
+const Bx3 = 17;
 
-let N_MOVES = 18;
-let N_MOVES2 = 10;
-let N_FLIP = 2048;
-let N_FLIP_SYM = 336;
-let N_TWIST = 2187;
-let N_TWIST_SYM = 324;
-let N_PERM = 40320;
-let N_PERM_SYM = 2768;
-let N_MPERM = 24;
-let N_SLICE = 495;
-let N_COMB = USE_COMBP_PRUN ? 140 : 70;
-let P2_PARITY_MOVE = USE_COMBP_PRUN ? 0xa5 : 0;
+const N_MOVES = 18;
+const N_MOVES2 = 10;
+const N_FLIP = 2048;
+const N_FLIP_SYM = 336;
+const N_TWIST = 2187;
+const N_TWIST_SYM = 324;
+const N_PERM = 40320;
+const N_PERM_SYM = 2768;
+const N_MPERM = 24;
+const N_SLICE = 495;
+const N_COMB = USE_COMBP_PRUN ? 140 : 70;
+const P2_PARITY_MOVE = USE_COMBP_PRUN ? 0xa5 : 0;
 
-let ud2std = [
+const ud2std = [
   Ux1,
   Ux2,
   Ux3,
@@ -1272,8 +1273,8 @@ let ud2std = [
   Bx1,
   Bx3,
 ];
-let std2ud: number[] = [];
-let ckmv2bit: number[] = [];
+const std2ud: number[] = [];
+const ckmv2bit: number[] = [];
 
 {
   // init util
@@ -1281,10 +1282,10 @@ let ckmv2bit: number[] = [];
     std2ud[ud2std[i]] = i;
   }
   for (let i = 0; i < 10; i++) {
-    let ix = ~~(ud2std[i] / 3);
+    const ix = ~~(ud2std[i] / 3);
     ckmv2bit[i] = 0;
     for (let j = 0; j < 10; j++) {
-      let jx = ~~(ud2std[j] / 3);
+      const jx = ~~(ud2std[j] / 3);
       ckmv2bit[i] |= (ix == jx || (ix % 3 == jx % 3 && ix >= jx) ? 1 : 0) << j;
     }
   }
@@ -1292,14 +1293,14 @@ let ckmv2bit: number[] = [];
 }
 
 //phase2
-let CPermMove: number[][] = [];
-let EPermMove: number[][] = [];
+const CPermMove: number[][] = [];
+const EPermMove: number[][] = [];
 let MPermMove: number[][] | null = [];
-let MPermConj: number[][] = [];
-let CCombPMove: number[][] = []; // = new char[N_COMB][N_MOVES2];
-let CCombPConj: number[][] = [];
-let MCPermPrun: number[] = [];
-let EPermCCombPPrun: number[] = [];
+const MPermConj: number[][] = [];
+const CCombPMove: number[][] = []; // = new char[N_COMB][N_MOVES2];
+const CCombPConj: number[][] = [];
+const MCPermPrun: number[] = [];
+const EPermCCombPPrun: number[] = [];
 
 let TwistFlipPrunMax = 15;
 let UDSliceFlipPrunMax = 15;
@@ -1332,11 +1333,11 @@ function initBasic() {
 
   {
     //init sym cubes
-    let d = new CubieCube();
+    const d = new CubieCube();
 
-    let f2 = new CubieCube().initCoord(28783, 0, 259268407, 0);
-    let u4 = new CubieCube().initCoord(15138, 0, 119765538, 7);
-    let lr2 = new CubieCube().initCoord(5167, 0, 83473207, 0);
+    const f2 = new CubieCube().initCoord(28783, 0, 259268407, 0);
+    const u4 = new CubieCube().initCoord(15138, 0, 119765538, 7);
+    const lr2 = new CubieCube().initCoord(5167, 0, 83473207, 0);
     for (let i = 0; i < 8; i++) {
       lr2.ca[i] |= 3 << 3;
     }
@@ -1406,12 +1407,12 @@ function initBasic() {
       setFunc: Function,
       getFunc: Function
     ) {
-      let N_RAW_HALF = (N_RAW + 1) >> 1;
-      let c = new CubieCube();
-      let d = new CubieCube();
+      const N_RAW_HALF = (N_RAW + 1) >> 1;
+      const c = new CubieCube();
+      const d = new CubieCube();
       let count = 0;
-      let sym_inc = coord >= 2 ? 1 : 2;
-      let conjFunc = coord != 1 ? CubieCube.EdgeConjugate : CubieCube.CornConjugate;
+      const sym_inc = coord >= 2 ? 1 : 2;
+      const conjFunc = coord != 1 ? CubieCube.EdgeConjugate : CubieCube.CornConjugate;
 
       for (let i = 0; i < N_RAW; i++) {
         if (Raw2Sym[i] !== undefined) {
@@ -1420,7 +1421,7 @@ function initBasic() {
         setFunc.call(c, i);
         for (let s = 0; s < 16; s += sym_inc) {
           conjFunc(c, s, d);
-          let idx = getFunc.call(d);
+          const idx = getFunc.call(d);
           if (USE_TWIST_FLIP_PRUN && coord == 0) {
             FlipS2RF[(count << 3) | (s >> 1)] = idx;
           }
@@ -1461,7 +1462,7 @@ function initBasic() {
       CubieCube.prototype.setEPerm,
       CubieCube.prototype.getEPerm
     );
-    let cc = new CubieCube();
+    const cc = new CubieCube();
     for (let i = 0; i < N_PERM_SYM; i++) {
       setNPerm(cc.ea, EPermS2R[i], 8, true);
       Perm2CombP[i] =
@@ -1474,7 +1475,7 @@ function initBasic() {
     // init coord tables
 
     c = new CubieCube();
-    let d = new CubieCube();
+    const d = new CubieCube();
 
     function initSymMoveTable(
       moveTable: number[][],
@@ -1691,13 +1692,13 @@ function initPrunTables() {
 
 export function randomCube() {
   let ep, cp;
-  let eo = ~~(Math.random() * 2048);
-  let co = ~~(Math.random() * 2187);
+  const eo = ~~(Math.random() * 2048);
+  const co = ~~(Math.random() * 2187);
   do {
     ep = ~~(Math.random() * fact[12]);
     cp = ~~(Math.random() * fact[8]);
   } while (getNParity(cp, 8) != getNParity(ep, 12));
-  let cc = new CubieCube().initCoord(cp, co, ep, eo);
+  const cc = new CubieCube().initCoord(cp, co, ep, eo);
   return cc.toFaceCube();
 }
 

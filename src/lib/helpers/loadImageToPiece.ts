@@ -11,11 +11,11 @@ import type { ImageSticker } from "@classes/puzzle/ImageSticker";
 export function loadImageToPiece(sticker: ImageSticker, piece: Object3D) {
   const texture = new TextureLoader().load(sticker.url);
 
-  let material = new MeshBasicMaterial({ map: texture, transparent: true });
-  let geometry = new PlaneGeometry();
-  let up = sticker.getOrientation();
-  let mc = sticker.getMassCenter();
-  let scale = sticker.scale;
+  const material = new MeshBasicMaterial({ map: texture, transparent: true });
+  const geometry = new PlaneGeometry();
+  const up = sticker.getOrientation();
+  const mc = sticker.getMassCenter();
+  const scale = sticker.scale;
 
   geometry.lookAt(new Vector3(up.x, up.y, up.z));
   geometry.scale(scale, scale, scale);

@@ -79,7 +79,7 @@ export const Spanish: Language = {
   NAVBAR: {
     home: "Inicio",
     routeMap: (r: string) => {
-      let mp: [RegExp, string, string][] = [
+      const mp: [RegExp, string, string][] = [
         [
           /tutorials/i,
           "Tutoriales",
@@ -502,7 +502,7 @@ export const Spanish: Language = {
         ["Megaminx", "mgmp", -70, 55, [5]],
         ["Pyraminx", "pyrso", -10, 36, [3]],
         ["Skewb", "skbso", 0, 33, [3]],
-        ["Sq-1", "sqrs", 0, 50, [8, 2]],
+        ["Square-1", "sqrs", 0, 50, [8, 2]],
         ["4x4 BLD", "444bld", -40, 40, [4]],
         ["5x5 BLD", "555bld", -60, 48, [4]],
       ],
@@ -768,6 +768,32 @@ export const Spanish: Language = {
         ["234567", "r234567", 0],
       ],
     ],
-    ["FTO (Face-Turning Octahedron)", [["Aleatorio", "fto", 25]]],
+    ["FTO", [["Aleatorio", "fto", 25]]],
   ],
+  CONTEST: {
+    round: "Ronda",
+    rounds: "Rondas",
+    format: "Formato",
+    extraScrambles: "Mezclas extra",
+    addCategory: "Añadir categoría",
+    fmcRules: [
+      "Tienes 60 minutos para encontrar y escribir una solución.",
+      "Escribe 1 movimiento por cada barra. Para borrar un movimiento, táchalo de forma clara.",
+      "Tu solución no debe derivarse directamente de ninguna parte del algoritmo de mezcla.",
+      "Tu solución debe tener como mucho 80 movimientos, incluyendo rotaciones.",
+      "Tu resultado será contabilizado en OBTM.",
+      "Usar sólo la notación descrita en el Artículo 12 del Reglamento WCA. Si no estás seguro, usa sólo los movimientos listados aquí.",
+    ],
+    faceMoves: "Movimientos de capa externa",
+    rotations: "Rotaciones",
+    competitor: "Competidor",
+    doNotFillWarning: "NO RELLENAR SI ERES EL COMPETIDOR.",
+    gradedBy: "Corregido por",
+    result: "Resultado",
+    ccaID: "CCA ID",
+    registrantID: "ID del registro",
+    clockwise: "Horario",
+    counterClockwise: "Antihorario",
+    double: "Doble",
+  },
 };

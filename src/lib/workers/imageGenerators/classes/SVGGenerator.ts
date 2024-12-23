@@ -87,7 +87,7 @@ export class SVGGenerator implements IDrawer {
   }
 
   moveTo(x: number, y: number) {
-    let elem = this.elements[this._cursor];
+    const elem = this.elements[this._cursor];
 
     if (elem.type != "path") return;
 
@@ -95,7 +95,7 @@ export class SVGGenerator implements IDrawer {
   }
 
   lineTo(x: number, y: number) {
-    let elem = this.elements[this._cursor];
+    const elem = this.elements[this._cursor];
 
     if (elem.type != "path") return;
 
@@ -127,7 +127,7 @@ export class SVGGenerator implements IDrawer {
   }
 
   closePath() {
-    let elem = this.elements[this._cursor];
+    const elem = this.elements[this._cursor];
 
     if (elem.type != "path") return;
 
@@ -135,14 +135,14 @@ export class SVGGenerator implements IDrawer {
   }
 
   private getNodeStr(node: IElement, classes: Map<string, ISVGClass>) {
-    let hash = sha1(this.getNodeClassInfo(node));
-    let classInfo = classes.get(hash);
+    const hash = sha1(this.getNodeClassInfo(node));
+    const classInfo = classes.get(hash);
 
     if (!classInfo) {
       throw new ReferenceError("Class not found");
     }
 
-    let className = classInfo.name;
+    const className = classInfo.name;
 
     switch (node.type) {
       case "path": {
@@ -198,13 +198,13 @@ export class SVGGenerator implements IDrawer {
   }
 
   private getClasses() {
-    let elements = this.elements;
-    let classMap = new Map<string, ISVGClass>();
+    const elements = this.elements;
+    const classMap = new Map<string, ISVGClass>();
 
     for (let i = 0, maxi = elements.length; i < maxi; i += 1) {
-      let node = elements[i];
-      let config: ISVGClass["rules"] = this.getNodeClassInfo(node);
-      let hash = sha1(config);
+      const node = elements[i];
+      const config: ISVGClass["rules"] = this.getNodeClassInfo(node);
+      const hash = sha1(config);
 
       if (!classMap.has(hash)) {
         classMap.set(hash, {
@@ -218,9 +218,9 @@ export class SVGGenerator implements IDrawer {
   }
 
   getImage() {
-    let cl = randomCSSId();
-    let classes = this.getClasses();
-    let style = [...classes.entries()]
+    const cl = randomCSSId();
+    const classes = this.getClasses();
+    const style = [...classes.entries()]
       .map(c => `.${cl} .${c[1].name}{${c[1].rules.map(e => `${e[0]}:${e[1]};`).join("")}}`)
       .join("");
 
@@ -265,7 +265,7 @@ export class SVGGenerator implements IDrawer {
     endAngle: number,
     counterclockwise = false
   ) {
-    let elem = this.elements[this._cursor];
+    const elem = this.elements[this._cursor];
 
     if (elem.type != "path") return;
 
@@ -294,7 +294,7 @@ export class SVGGenerator implements IDrawer {
   }
 
   quadraticCurveTo(cpx: number, cpy: number, x: number, y: number) {
-    let elem = this.elements[this._cursor];
+    const elem = this.elements[this._cursor];
 
     if (elem.type != "path") return;
 
@@ -302,7 +302,7 @@ export class SVGGenerator implements IDrawer {
   }
 
   bezierCurveTo(cp1x: number, cp1y: number, cp2x: number, cp2y: number, x: number, y: number) {
-    let elem = this.elements[this._cursor];
+    const elem = this.elements[this._cursor];
 
     if (elem.type != "path") return;
 

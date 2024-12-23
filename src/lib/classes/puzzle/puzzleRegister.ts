@@ -7,7 +7,7 @@ export interface PuzzleInfo {
   order: boolean;
 }
 
-export let puzzleReg: Map<string, PuzzleInfo> = new Map<string, PuzzleInfo>();
+export const puzzleReg: Map<string, PuzzleInfo> = new Map<string, PuzzleInfo>();
 
 export function registerPuzzle(code: PuzzleType, name: string, constr: Function, order: boolean) {
   puzzleReg.set(code, { code, name, constr, order });

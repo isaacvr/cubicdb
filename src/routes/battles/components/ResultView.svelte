@@ -22,12 +22,6 @@
 
   let completed = false;
 
-  function isPos(round: ROUND, i: number, pos: number) {
-    let vals = [round.t1, round.t2, round.t3, round.t4, round.t5].map((s, p) => [s.time, p]);
-    vals.sort((a, b) => (a[0] != b[0] ? a[0] - b[0] : a[1] - b[1]));
-    return vals[pos][1] === i;
-  }
-
   $: completed = game.players.every(p =>
     p[1].times.slice(0, isMo3(game.mode) ? 3 : 5).every(t => t != 0)
   );

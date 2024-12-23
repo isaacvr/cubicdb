@@ -101,7 +101,7 @@ function findPiece(p: Piece, arr: Piece[]): boolean {
 
 function vectorsFromCamera(vecs: any[], cam: PerspectiveCamera) {
   return vecs.map(e => {
-    let vp = new Vector3(e.x, e.y, e.z).project(cam);
+    const vp = new Vector3(e.x, e.y, e.z).project(cam);
     return new Vector3D(vp.x, -vp.y, 0);
   });
 }
@@ -222,21 +222,21 @@ export class ThreeJSAdaptor {
     fp = findPiece,
     tmResult: ToMoveResult | ToMoveResult[] | null = null
   ): DragResult | null {
-    let animationBuffer: Object3D[][] = [];
-    let userData: UserData[][] = [];
-    let angs: number[] = [];
-    let animationTimes: number[] = [];
-    let centers: Vector3D[] = [];
+    const animationBuffer: Object3D[][] = [];
+    const userData: UserData[][] = [];
+    const angs: number[] = [];
+    const animationTimes: number[] = [];
+    const centers: Vector3D[] = [];
 
-    let toMove = tmResult || (this.cube?.p.toMove ? this.cube.p.toMove(pc[0], pc[1], best) : []);
-    let groupToMove = Array.isArray(toMove) ? toMove : [toMove];
+    const toMove = tmResult || (this.cube?.p.toMove ? this.cube.p.toMove(pc[0], pc[1], best) : []);
+    const groupToMove = Array.isArray(toMove) ? toMove : [toMove];
 
     let u: any = best;
 
     groupToMove.forEach(g => {
       if (g.pieces.length === 0) return;
       if ("dir" in g) {
-        let cr = vv.cross(vectorsFromCamera([g.dir], this.camera)[0]);
+        const cr = vv.cross(vectorsFromCamera([g.dir], this.camera)[0]);
         dir = -Math.sign(cr.z);
         u = g.dir;
       }
@@ -247,9 +247,9 @@ export class ThreeJSAdaptor {
         centers.push(this.cube?.p.center.clone() || CENTER);
       }
 
-      let pieces: Piece[] = g.pieces;
-      let subBuffer: Object3D[] = [];
-      let subUserData: UserData[] = [];
+      const pieces: Piece[] = g.pieces;
+      const subBuffer: Object3D[] = [];
+      const subUserData: UserData[] = [];
 
       this.group.children.forEach((p: Object3D, pos: number) => {
         if (fp(<Piece>p.userData.data, pieces)) {
@@ -287,19 +287,19 @@ export class ThreeJSAdaptor {
     camera.updateMatrixWorld();
     camera.updateProjectionMatrix();
 
-    let pc = [piece.object.parent!.userData.data, piece.object.userData.data!];
-    let po = pc[1].getOrientation();
-    let vecs: Vector3D[] = pc[1].vecs.filter((v: Vector3D) => v.cross(po).abs() > EPS);
-    let v = fin.clone().sub(ini);
-    let vv = new Vector3D(v.x, v.y, 0);
+    const pc = [piece.object.parent!.userData.data, piece.object.userData.data!];
+    const po = pc[1].getOrientation();
+    const vecs: Vector3D[] = pc[1].vecs.filter((v: Vector3D) => v.cross(po).abs() > EPS);
+    const v = fin.clone().sub(ini);
+    const vv = new Vector3D(v.x, v.y, 0);
 
-    let faceVectors = vectorsFromCamera(vecs, camera);
+    const faceVectors = vectorsFromCamera(vecs, camera);
 
     let dir: number = 0;
     let best: Vector3D = new Vector3D(0, 0, 0);
 
     faceVectors.reduce((ac, fv, p) => {
-      let cr = vv.cross(fv);
+      const cr = vv.cross(fv);
       if (cr.abs() > ac) {
         best = vecs[p];
         dir = -Math.sign(cr.z);
@@ -316,7 +316,7 @@ export class ThreeJSAdaptor {
   }
 
   resizeHandler(contained: boolean) {
-    let isElectron = get(dataService).isElectron;
+    const isElectron = get(dataService).isElectron;
     this.W = Math.min(window.innerWidth, window.screen.availWidth * (isElectron ? 2 : 1));
     this.H = Math.min(window.innerHeight, window.screen.availHeight * (isElectron ? 2 : 1));
 
@@ -354,14 +354,14 @@ export class ThreeJSAdaptor {
       } else if (this.animationQueue.length > 0) {
         this.setAnimationData();
         this.animating = true;
-        let { userData, ignoreUserData, onstart } = this.currentAnimation!;
+        const { userData, ignoreUserData, onstart } = this.currentAnimation!;
         onstart && onstart();
 
         !ignoreUserData &&
           userData.forEach(dataList =>
             dataList.forEach(({ data, anchor }) => {
               if (data instanceof Piece && anchor && data.anchor.abs()) {
-                let a = data.anchor;
+                const a = data.anchor;
                 anchor.setCoords(a.x, a.y, a.z);
               }
             })
@@ -370,19 +370,19 @@ export class ThreeJSAdaptor {
     }
 
     if (this.animating && this.currentAnimation) {
-      let currAnim = this.currentAnimation;
-      let total = currAnim.animBuffer.length;
+      const currAnim = this.currentAnimation;
+      const total = currAnim.animBuffer.length;
       let anim = 0;
-      let animLen = this.moveQueue.length;
+      const animLen = this.moveQueue.length;
 
       if (currAnim.onprogress) {
-        let totalTime = currAnim.animationTimes.reduce((acc, e) => Math.max(acc, e), 0);
-        let globalAlpha = (performance.now() - currAnim.timeIni) / totalTime;
+        const totalTime = currAnim.animationTimes.reduce((acc, e) => Math.max(acc, e), 0);
+        const globalAlpha = (performance.now() - currAnim.timeIni) / totalTime;
         currAnim.onprogress && currAnim.onprogress(globalAlpha);
       }
 
       for (let i = 0; i < total; i += 1) {
-        let animationTime = currAnim.animationTimes[i];
+        const animationTime = currAnim.animationTimes[i];
         let alpha = (performance.now() - currAnim.timeIni) / animationTime;
 
         if (animLen) {
@@ -424,14 +424,14 @@ export class ThreeJSAdaptor {
   interpolate(animation: PuzzleAnimation, pos: number, alpha: number) {
     const { angs, animBuffer, from, u, userData, centers } = animation;
 
-    let nu = new Vector3(u.x, u.y, u.z).normalize();
-    let center = centers[pos];
-    let c = new Vector3(center.x, center.y, center.z);
-    let ang = angs[pos] * alpha;
+    const nu = new Vector3(u.x, u.y, u.z).normalize();
+    const center = centers[pos];
+    const c = new Vector3(center.x, center.y, center.z);
+    const ang = angs[pos] * alpha;
 
     userData[pos].forEach((p, idx) => {
       const { data } = p;
-      let d = animBuffer[pos][idx];
+      const d = animBuffer[pos][idx];
       d.rotation.setFromRotationMatrix(from[pos][idx]);
       d.position.setFromMatrixPosition(from[pos][idx]);
       if (data instanceof Piece && data.hasCallback) {
@@ -462,16 +462,16 @@ export class ThreeJSAdaptor {
 
     if (res.length === 0) return false;
 
-    let data = this.dataFromGroup([null, null], res[0].dir, new Vector3D(), -1, findPiece, res);
+    const data = this.dataFromGroup([null, null], res[0].dir, new Vector3D(), -1, findPiece, res);
     data && this.prepareFromDrag(data);
 
     return !!data;
   }
 
   addMove(mov: any[]) {
-    let m = mov[0];
-    let mv = ["R", "L", "U", "D", "F", "B"];
-    let mc = [
+    const m = mov[0];
+    const mv = ["R", "L", "U", "D", "F", "B"];
+    const mc = [
       new Vector3D(0.9, 0, 0),
       new Vector3D(-0.9, 0, 0),
       new Vector3D(0, 0.9, 0),
@@ -480,21 +480,21 @@ export class ThreeJSAdaptor {
       new Vector3D(0, 0, -0.9),
     ];
 
-    let pos = mv.indexOf(m[0]);
+    const pos = mv.indexOf(m[0]);
 
     if (pos < 0) {
       return false;
     }
 
-    let dir = m[1] === "'" ? 1 : -1;
-    let u: any = mc[pos];
-    let piece = this.cube!.pieces.find(p => p.direction1(u, u) === 0 && p.stickers.length > 4);
-    let sticker = piece?.stickers.find(s => s.vecs.length === 3);
+    const dir = m[1] === "'" ? 1 : -1;
+    const u: any = mc[pos];
+    const piece = this.cube!.pieces.find(p => p.direction1(u, u) === 0 && p.stickers.length > 4);
+    const sticker = piece?.stickers.find(s => s.vecs.length === 3);
 
-    let data = this.dataFromGroup([piece, sticker], u, u, dir);
+    const data = this.dataFromGroup([piece, sticker], u, u, dir);
     // data && this.prepareFromDrag(data);
     if (data) {
-      let anim = this.prepareFromDrag(data);
+      const anim = this.prepareFromDrag(data);
       anim.onstart = () => {
         this.emit("move:start");
       };
@@ -512,15 +512,15 @@ export class ThreeJSAdaptor {
   moveFromKeyboard(vec: Vector2) {
     if (this.animating || !this.enableKeyboard) return;
 
-    let allStickers: Object3D[] = [];
+    const allStickers: Object3D[] = [];
 
     this.group.children.forEach((c: Object3D) => {
       allStickers.push(...c.children);
     });
 
-    let mcm = new Vector3((this.mcx / this.W) * 2 - 1, -(this.mcy / this.H) * 2 + 1);
+    const mcm = new Vector3((this.mcx / this.W) * 2 - 1, -(this.mcy / this.H) * 2 + 1);
 
-    let intersects = this.mouseIntersection(mcm.x, mcm.y, allStickers, this.camera);
+    const intersects = this.mouseIntersection(mcm.x, mcm.y, allStickers, this.camera);
 
     let piece = null;
 
@@ -541,7 +541,7 @@ export class ThreeJSAdaptor {
 
     if (!piece) return;
 
-    let data = this.drag(piece, new Vector2(this.mcx, this.mcy), vec, this.camera);
+    const data = this.drag(piece, new Vector2(this.mcx, this.mcy), vec, this.camera);
 
     if (data && pos) {
       this.prepareFromDrag(data);
@@ -560,36 +560,36 @@ export class ThreeJSAdaptor {
       return;
     }
 
-    let fin = new Vector2(event.clientX, event.clientY);
-    let len = fin
+    const fin = new Vector2(event.clientX, event.clientY);
+    const len = fin
       .clone()
       .sub(this.ini as Vector2)
       .length();
 
-    let animation = this.animation;
+    const animation = this.animation;
 
     if (this.rotating && this.rotationData && animation) {
       this.emit("move");
-      let { animBuffer, angs } = animation;
-      let vec = vectorsFromCamera([this.rotationData.u], this.camera)[0];
-      let vNormal = new Vector2D(vec.x, vec.y).unit().mul(0.2);
-      let dirNormal = new Vector2D(fin.x, fin.y).sub(new Vector2D(this.ini!.x, this.ini!.y));
-      let dir = Vector2D.cross(vNormal, dirNormal) * this.rotationData.dir;
-      let maxAng = Math.PI / (2 * angs.reduce((a, b) => Math.max(Math.abs(a), Math.abs(b)), 0));
-      let factor = (dir * maxAng) / lagrange(this.distance);
+      const { animBuffer, angs } = animation;
+      const vec = vectorsFromCamera([this.rotationData.u], this.camera)[0];
+      const vNormal = new Vector2D(vec.x, vec.y).unit().mul(0.2);
+      const dirNormal = new Vector2D(fin.x, fin.y).sub(new Vector2D(this.ini!.x, this.ini!.y));
+      const dir = Vector2D.cross(vNormal, dirNormal) * this.rotationData.dir;
+      const maxAng = Math.PI / (2 * angs.reduce((a, b) => Math.max(Math.abs(a), Math.abs(b)), 0));
+      const factor = (dir * maxAng) / lagrange(this.distance);
       this.angleFactor = factor * (this.cube?.type === "clock" ? 3 : 1);
 
-      let total = animBuffer.length;
+      const total = animBuffer.length;
 
       for (let i = 0; i < total; i += 1) {
         this.interpolate({ ...animation, u: this.rotationData.u }, i, this.angleFactor);
       }
     } else if (!this.rotating && this.piece && len > MOVE_THRESHOLD) {
       this.emit("move:start");
-      let data = this.drag(this.piece, this.ini as Vector2, fin, this.camera);
+      const data = this.drag(this.piece, this.ini as Vector2, fin, this.camera);
 
       if (data) {
-        let anim = this.prepareFromDrag(data, false);
+        const anim = this.prepareFromDrag(data, false);
         this.rotationData = data;
         this.animation = anim;
         this.rotating = true;
@@ -616,7 +616,7 @@ export class ThreeJSAdaptor {
     this.rotating = false;
     this.rotationData = null;
 
-    let rect = this.canvas.getBoundingClientRect();
+    const rect = this.canvas.getBoundingClientRect();
 
     this.ini = new Vector2(event.clientX, event.clientY);
     this.iniM = new Vector3(
@@ -624,13 +624,13 @@ export class ThreeJSAdaptor {
       map(event.clientY, rect.y, rect.y + rect.height, 1, -1)
     );
 
-    let allStickers: Object3D[] = [];
+    const allStickers: Object3D[] = [];
 
     this.group.children.forEach((c: Object3D) => {
       allStickers.push(...c.children);
     });
 
-    let intersects = this.mouseIntersection(this.iniM.x, this.iniM.y, allStickers, this.camera);
+    const intersects = this.mouseIntersection(this.iniM.x, this.iniM.y, allStickers, this.camera);
 
     this.piece = null;
 
@@ -642,11 +642,11 @@ export class ThreeJSAdaptor {
 
           if (this.cube?.type === "clock") {
             if (this.piece.object.userData.data.name === "pin") {
-              let data = this.drag(this.piece, new Vector2(0, 0), new Vector2(1, 0), this.camera);
+              const data = this.drag(this.piece, new Vector2(0, 0), new Vector2(1, 0), this.camera);
 
               if (data) {
-                let anim = this.prepareFromDrag(data, false);
-                let factor = event.ctrlKey ? 1 : -1;
+                const anim = this.prepareFromDrag(data, false);
+                const factor = event.ctrlKey ? 1 : -1;
                 anim.angs = anim.angs.map(a => Math.abs(a) * factor);
                 anim.timeIni = performance.now();
                 anim.animationTimes = anim.animationTimes.map(_ => 0);
@@ -670,20 +670,20 @@ export class ThreeJSAdaptor {
     if (this.rotating && this.rotationData && this.animation) {
       const N1 = Math.floor(this.angleFactor);
       const N2 = Math.ceil(this.angleFactor);
-      let N = Math.abs(N1 - this.angleFactor) < Math.abs(N2 - this.angleFactor) ? N1 : N2;
+      const N = Math.abs(N1 - this.angleFactor) < Math.abs(N2 - this.angleFactor) ? N1 : N2;
 
       const { animBuffer, angs, userData, animationTimes, centers } = this.animation;
 
-      let from1 = animBuffer.map((g: any[]) => g.map(e => e.matrixWorld.clone()));
-      let u = this.rotationData.u.clone();
+      const from1 = animBuffer.map((g: any[]) => g.map(e => e.matrixWorld.clone()));
+      const u = this.rotationData.u.clone();
 
       this.animationQueue.push({
         animBuffer: animBuffer.map((objList, pos) =>
           objList.map(obj => {
-            let data = obj.userData as UserData;
+            const data = obj.userData as UserData;
 
             if (data.anchor && data.data instanceof Piece) {
-              let newAnchor = data.data.anchor.rotate(CENTER, u, angs[pos] * this.angleFactor);
+              const newAnchor = data.data.anchor.rotate(CENTER, u, angs[pos] * this.angleFactor);
               data.anchor.setCoords(newAnchor.x, newAnchor.y, newAnchor.z);
             }
 
@@ -722,7 +722,7 @@ export class ThreeJSAdaptor {
   }
 
   prepareFromDrag(data: DragResult, push = true) {
-    let animation: PuzzleAnimation = {
+    const animation: PuzzleAnimation = {
       animBuffer: data.buffer,
       userData: data.userData,
       centers: data.centers,
@@ -740,8 +740,8 @@ export class ThreeJSAdaptor {
   }
 
   mouseIntersection(mx: number, my: number, arr: any[], camera: PerspectiveCamera): Intersection[] {
-    let mouse = new Vector2(mx, my);
-    let raycaster = new Raycaster();
+    const mouse = new Vector2(mx, my);
+    const raycaster = new Raycaster();
     raycaster.setFromCamera(mouse, camera);
 
     return raycaster.intersectObjects(arr).filter(e => {
@@ -770,7 +770,7 @@ export class ThreeJSAdaptor {
   }
 
   resetCamera() {
-    let pos = new Vector3D(0.68068, 0.34081, 0.6485).setLength(this.zoom);
+    const pos = new Vector3D(0.68068, 0.34081, 0.6485).setLength(this.zoom);
 
     this.camera.position.set(pos.x, pos.y, pos.z);
     this.camera.rotation.set(0, 0, 0);
@@ -785,7 +785,7 @@ export class ThreeJSAdaptor {
   }
 
   resetScene() {
-    let children = this.scene.children;
+    const children = this.scene.children;
     this.scene.remove(...children);
 
     // Scene preparation
@@ -798,8 +798,8 @@ export class ThreeJSAdaptor {
 
     const excludePuzzlesBF: PuzzleType[] = ["clock", "timemachine", "ghost"];
 
-    let ctt = cubeToThree(this.cube!);
-    let bfc = piecesToTree(
+    const ctt = cubeToThree(this.cube!);
+    const bfc = piecesToTree(
       this.cube!,
       1,
       (st: Sticker[]) => {
@@ -823,7 +823,7 @@ export class ThreeJSAdaptor {
 
     [ctt.meshes, bfc.meshes].forEach(m => {
       m.forEach(m => {
-        let mats = (
+        const mats = (
           m.material instanceof Array ? m.material : [m.material]
         ) as MeshStandardMaterial[];
 
@@ -870,7 +870,7 @@ export class ThreeJSAdaptor {
   keyDownHandler(e: KeyboardEvent) {
     if (!this.enableKeyboard) return;
 
-    let mc = new Vector2(this.mcx, this.mcy);
+    const mc = new Vector2(this.mcx, this.mcy);
 
     switch (e.code) {
       case "ArrowUp": {

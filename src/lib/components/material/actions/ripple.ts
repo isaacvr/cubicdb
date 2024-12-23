@@ -7,9 +7,9 @@ type PROPS = { position?: RIPPLE_POSITION; duration?: number; background?: strin
 export function ripple(node: HTMLElement, eProps: PROPS) {
   let POSITION: RIPPLE_POSITION;
   let DURATION: number;
-  let BACKGROUND = new Color();
+  const BACKGROUND = new Color();
 
-  let initialize = (p: PROPS) => {
+  const initialize = (p: PROPS) => {
     let _p: PROPS;
 
     if (typeof p === "boolean") {
@@ -34,14 +34,14 @@ export function ripple(node: HTMLElement, eProps: PROPS) {
   initialize(eProps);
 
   const getProps = (e: MouseEvent) => {
-    let box = node.getBoundingClientRect();
-    let w = box.width,
+    const box = node.getBoundingClientRect();
+    const w = box.width,
       h = box.height;
     if (POSITION === "center") {
       return { x: w / 2, y: h / 2 };
     }
 
-    let p = node.getBoundingClientRect();
+    const p = node.getBoundingClientRect();
 
     return {
       x: e.clientX - p.x,
@@ -54,7 +54,7 @@ export function ripple(node: HTMLElement, eProps: PROPS) {
 
     BACKGROUND.set(3, 0.5);
 
-    let { x, y } = getProps(e);
+    const { x, y } = getProps(e);
 
     node.classList.remove("ripple");
     void node.offsetWidth;

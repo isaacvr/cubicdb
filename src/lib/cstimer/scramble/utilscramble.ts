@@ -22,8 +22,8 @@
 import { circle, rn, rndEl } from "../lib/mathlib";
 import { formatScramble, mega, regScrambler } from "./scramble";
 
-let cubesuff = ["", "2", "'"];
-let minxsuff = ["", "2", "'", "2'"];
+const cubesuff = ["", "2", "'"];
+const minxsuff = ["", "2", "'", "2'"];
 let seq = [];
 let p = [];
 
@@ -33,7 +33,7 @@ function adjScramble(faces, adj, len, suffixes?) {
   }
   let used = 0;
   let face;
-  let ret = [];
+  const ret = [];
   for (let j = 0; j < len; j++) {
     do {
       face = rn(faces.length);
@@ -47,12 +47,12 @@ function adjScramble(faces, adj, len, suffixes?) {
 
 function yj4x4(type, len) {
   // the idea is to keep the fixed center on U and do Rw or Lw, Fw or Bw, to not disturb it
-  let turns = [
+  const turns = [
     ["U", "D"],
     ["R", "L", "r"],
     ["F", "B", "f"],
   ];
-  let donemoves = [];
+  const donemoves = [];
   let lastaxis;
   let fpos = 0; // 0 = Ufr, 1 = Ufl, 2 = Ubl, 3 = Ubr
   let j, k;
@@ -61,12 +61,12 @@ function yj4x4(type, len) {
   for (j = 0; j < len; j++) {
     let done = 0;
     do {
-      let first = rn(turns.length);
-      let second = rn(turns[first].length);
+      const first = rn(turns.length);
+      const second = rn(turns[first].length);
       if (first != lastaxis || donemoves[second] == 0) {
         if (first == lastaxis) {
           donemoves[second] = 1;
-          let rs = rn(cubesuff.length);
+          const rs = rn(cubesuff.length);
           if (first == 0 && second == 0) {
             fpos = (fpos + 4 + rs) % 4;
           }
@@ -87,7 +87,7 @@ function yj4x4(type, len) {
           }
           lastaxis = first;
           donemoves[second] = 1;
-          let rs = rn(cubesuff.length);
+          const rs = rn(cubesuff.length);
           if (first == 0 && second == 0) {
             fpos = (fpos + 4 + rs) % 4;
           }
@@ -147,7 +147,7 @@ export function bicube(type, len) {
     }
   }
 
-  let d = [
+  const d = [
     [0, 1, 2, 5, 8, 7, 6, 3, 4],
     [6, 7, 8, 13, 20, 19, 18, 11, 12],
     [0, 3, 6, 11, 18, 17, 16, 9, 10],
@@ -200,7 +200,7 @@ regScrambler("bic", bicube);
 
 // Clock functions.
 function c(s) {
-  let array = [
+  const array = [
     s + "=0",
     s + "+1",
     s + "+2",
@@ -226,8 +226,8 @@ function c3() {
 }
 
 function do15puzzle(mirrored, len, arrow?, tiny?) {
-  let moves = mirrored ? ["U", "L", "R", "D"] : ["D", "R", "L", "U"];
-  let effect = [
+  const moves = mirrored ? ["U", "L", "R", "D"] : ["D", "R", "L", "U"];
+  const effect = [
     [0, -1],
     [1, 0],
     [-1, 0],
@@ -351,9 +351,9 @@ function sq1_getseq(num, type, len) {
     seq[n] = [];
     let cnt = 0;
     while (cnt < len) {
-      let x = rn(12) - 5;
-      let y = type == 2 ? 0 : rn(12) - 5;
-      let size = (x == 0 ? 0 : 1) + (y == 0 ? 0 : 1);
+      const x = rn(12) - 5;
+      const y = type == 2 ? 0 : rn(12) - 5;
+      const size = (x == 0 ? 0 : 1) + (y == 0 ? 0 : 1);
       if ((cnt + size <= len || type != 1) && (size > 0 || cnt == 0)) {
         if (sq1_domove(x, y)) {
           if (type == 1) cnt += size;
@@ -398,7 +398,7 @@ function sq1_domove(x, y) {
 }
 
 function moyuRedi(length) {
-  let ret = [];
+  const ret = [];
   for (let i = 0; i < length; i++) {
     ret.push(mega([["R"], ["L"]], ["", "'"], 3 + rn(3)));
   }
@@ -407,7 +407,7 @@ function moyuRedi(length) {
 
 function addPyrTips(scramble, moveLen) {
   let cnt = 0;
-  let rnd = [];
+  const rnd = [];
   for (let i = 0; i < 4; i++) {
     rnd[i] = rn(3);
     if (rnd[i] > 0) {
@@ -431,7 +431,7 @@ export function utilscramble(type: string, len: number) {
     case "15pat": // 15 puzzle
       return do15puzzle(false, len, true, true);
     case "clkwca": // Clock (WCA Notation)
-      let clkapp = ["0+", "1+", "2+", "3+", "4+", "5+", "6+", "1-", "2-", "3-", "4-", "5-"];
+      const clkapp = ["0+", "1+", "2+", "3+", "4+", "5+", "6+", "1-", "2-", "3-", "4-", "5-"];
       ret = "UR? DR? DL? UL? U? R? D? L? ALL? y2 U? R? D? L? ALL?????";
       for (let i = 0; i < 14; i++) {
         ret = ret.replace("?", rndEl(clkapp));
@@ -597,8 +597,8 @@ export function utilscramble(type: string, len: number) {
     case "sq2": // Square-2
       let i = 0;
       while (i < len) {
-        let rndu = rn(12) - 5;
-        let rndd = rn(12) - 5;
+        const rndu = rn(12) - 5;
+        const rndd = rn(12) - 5;
         if (rndu != 0 || rndd != 0) {
           i++;
           ret += "(" + rndu + "," + rndd + ") / ";

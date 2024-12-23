@@ -4,7 +4,7 @@ import { adjustScramble, appendSuffix } from "./utils";
 
 export function skewbSolver(scramble: string): string[][] {
   let curScramble: ReturnType<typeof ScrambleParser.parseSkewb>;
-  let curScrambleStrArr: string[] = [];
+  const curScrambleStrArr: string[] = [];
   let sol: any[] = [];
 
   function stateInit(doMove: Function, state: string) {
@@ -19,7 +19,7 @@ export function skewbSolver(scramble: string): string[][] {
     return state;
   }
 
-  let U0 = 0,
+  const U0 = 0,
     U1 = 1,
     U2 = 2,
     U3 = 3,
@@ -52,7 +52,7 @@ export function skewbSolver(scramble: string): string[][] {
   /**	1 2   U
 			 0  LFRB
 			3 4   D  */
-  let moveData = [
+  const moveData = [
     [
       [R0, B0, D0],
       [R4, B3, D2],
@@ -117,16 +117,16 @@ export function skewbSolver(scramble: string): string[][] {
   ];
 
   function skewbMove(state: string, move: string) {
-    let ret: any = state.split("");
-    let swaps = moveData["RULBrbxy".indexOf(move[0])];
-    let pow = "? '*".indexOf(move[1]);
+    const ret: any = state.split("");
+    const swaps = moveData["RULBrbxy".indexOf(move[0])];
+    const pow = "? '*".indexOf(move[1]);
     for (let i = 0; i < swaps.length; i++) {
       acycle(ret, swaps[i], pow);
     }
     return ret.join("");
   }
 
-  let solv = new gSolver(
+  const solv = new gSolver(
     [
       "?L?L??B?B?UUUUU?R?R???F?F?????",
       "?F?F??L?L?UUUUU?B?B???R?R?????",
@@ -153,9 +153,9 @@ export function skewbSolver(scramble: string): string[][] {
     curScrambleStrArr[i] = "RULB".charAt(curScramble[i][0]) + "'  2".charAt(curScramble[i][1] + 1);
   }
 
-  let faceStr = ["U", "R", "F", "D", "L", "B"];
+  const faceStr = ["U", "R", "F", "D", "L", "B"];
 
-  let faceSolved = [
+  const faceSolved = [
     "UUUUU?RR???FF????????LL???BB??",
     "???BBUUUUU??L?L?FF????????R?R?",
     "?B?B??R?R?UUUUU?F?F???L?L?????",
@@ -164,23 +164,23 @@ export function skewbSolver(scramble: string): string[][] {
     "??F?F??R?R???????B?B?L?L?UUUUU",
   ];
 
-  let res: string[][] = [];
+  const res: string[][] = [];
 
   for (let i = 0; i < 6; i++) {
     sol = [];
 
-    let state = stateInit(skewbMove, "U????R????F????D????L????B????");
-    let ori = ["x*", "y ", null, "x ", "y*", "y'"];
-    let uidx = ~~(state.indexOf(faceStr[i]) / 5);
+    const state = stateInit(skewbMove, "U????R????F????D????L????B????");
+    const ori = ["x*", "y ", null, "x ", "y*", "y'"];
+    const uidx = ~~(state.indexOf(faceStr[i]) / 5);
 
     if (ori[uidx]) {
       sol.push(ori[uidx]);
     }
 
-    let sol1 = solv.search(stateInit(skewbMove, faceSolved[i]), 0);
+    const sol1 = solv.search(stateInit(skewbMove, faceSolved[i]), 0);
 
     if (sol1) {
-      let suff = sol[0] ? sol[0].replace("'", "2").replace("*", "'") : "";
+      const suff = sol[0] ? sol[0].replace("'", "2").replace("*", "'") : "";
 
       res.push([faceStr[i], adjustScramble([suff, ...sol1])]);
     } else {

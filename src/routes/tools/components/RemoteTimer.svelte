@@ -163,8 +163,7 @@
       ($mLeftDown ? "!bg-primary-800 " : "")}
   >
     <button
-      class={"w-full h-full grid place-items-center "}
-      class:pressed={$mLeftDown}
+      class={"w-full h-full grid place-items-center " + ($mLeftDown ? "text-primary-400" : "")}
       on:touchstart|preventDefault
       on:pointerdown={handleLeft}
       on:pointerup={handleLeft}
@@ -216,8 +215,7 @@
       ($mRightDown ? "!bg-primary-800 " : "")}
   >
     <button
-      class={"w-full h-full grid place-items-center "}
-      class:pressed={$mRightDown}
+      class={"w-full h-full grid place-items-center " + ($mRightDown ? "text-primary-400" : "")}
       on:touchstart|preventDefault
       on:pointerdown={handleRight}
       on:pointerup={handleRight}
@@ -239,9 +237,3 @@
     </div>
   </svelte:fragment>
 </Modal>
-
-<style lang="postcss">
-  button.pressed {
-    @apply text-primary-400;
-  }
-</style>

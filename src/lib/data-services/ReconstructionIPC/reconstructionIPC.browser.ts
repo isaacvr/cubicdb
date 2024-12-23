@@ -34,7 +34,7 @@ export class ReconstructionBrowserIPC implements ReconstructionIPC {
       this.isInit = true;
     } else {
       await new Promise(res => {
-        let itv = setInterval(() => {
+        const itv = setInterval(() => {
           if (!this.isInit) {
             clearInterval(itv);
             res(null);

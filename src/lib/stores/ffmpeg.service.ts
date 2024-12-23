@@ -7,11 +7,11 @@ const ffmpegWasm = "/assets/ffmpeg/ffmpeg-core.wasm";
 const BASE64_MARKER = ";base64,";
 
 function convertDataURIToBinary(dataURI: string) {
-  let base64Index = dataURI.indexOf(BASE64_MARKER) + BASE64_MARKER.length;
-  let base64 = dataURI.substring(base64Index);
-  let raw = window.atob(base64);
-  let rawLength = raw.length;
-  let array = new Uint8Array(new ArrayBuffer(rawLength));
+  const base64Index = dataURI.indexOf(BASE64_MARKER) + BASE64_MARKER.length;
+  const base64 = dataURI.substring(base64Index);
+  const raw = window.atob(base64);
+  const rawLength = raw.length;
+  const array = new Uint8Array(new ArrayBuffer(rawLength));
 
   for (let i = 0; i < rawLength; i += 1) {
     array[i] = raw.charCodeAt(i);
@@ -39,7 +39,7 @@ export class FFmpegService {
 
     if (this.starting) {
       return new Promise(res => {
-        let itv = setInterval(() => {
+        const itv = setInterval(() => {
           if (this.ready) {
             clearInterval(itv);
             res(null);
@@ -69,7 +69,7 @@ export class FFmpegService {
     await this.init();
 
     try {
-      let len = images.length.toString().length;
+      const len = images.length.toString().length;
       const pref = "0".repeat(len);
       const imageID = randomUUID();
 
@@ -102,7 +102,7 @@ export class FFmpegService {
 
       const blob = new Blob([data], { type: "video/mp4" });
 
-      let res = URL.createObjectURL(blob);
+      const res = URL.createObjectURL(blob);
 
       await this.ffmpeg.deleteFile(fileName);
 

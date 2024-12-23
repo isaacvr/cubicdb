@@ -30,10 +30,10 @@ export function REDI(): PuzzleInterface {
   const R1 = Math.sqrt((RAD - 1) ** 2 + (-RAD - 1) ** 2);
   const H = Math.sqrt(R1 ** 2 - RAD ** 2);
 
-  let pieces = redi.pieces;
-  let ref = LEFT.add(UP).add(BACK);
+  const pieces = redi.pieces;
+  const ref = LEFT.add(UP).add(BACK);
 
-  let cornerSticker = new Sticker([
+  const cornerSticker = new Sticker([
     ref,
     ref.add(FRONT.mul(2 / 3)),
     ref.add(FRONT.mul(2 / 3)).add(RIGHT.mul(2 / 3)),
@@ -42,13 +42,13 @@ export function REDI(): PuzzleInterface {
 
   cornerSticker.vecs = [ref.unit()];
 
-  let corner = new Piece([
+  const corner = new Piece([
     cornerSticker,
     cornerSticker.rotate(ref, ref, ANG),
     cornerSticker.rotate(ref, ref, -ANG),
   ]);
 
-  let arrowSticker = new Sticker([
+  const arrowSticker = new Sticker([
     ref.add(FRONT.mul(2 / 3)),
     ref.add(FRONT.mul(4 / 3)),
     ref.add(FRONT.mul(4 / 3)).add(RIGHT.mul(2 / 3)),
@@ -64,7 +64,7 @@ export function REDI(): PuzzleInterface {
 
   arrowSticker.vecs = [ref.unit(), LEFT.add(UP).add(FRONT).unit()];
 
-  let arrowPiece = new Piece([arrowSticker, arrowSticker.rotate(LEFT.add(UP), LEFT.add(UP), PI)]);
+  const arrowPiece = new Piece([arrowSticker, arrowSticker.rotate(LEFT.add(UP), LEFT.add(UP), PI)]);
 
   for (let i = 0; i < 4; i += 1) {
     pieces.push(corner.rotate(CENTER, UP, PI_2 * i));
@@ -78,8 +78,8 @@ export function REDI(): PuzzleInterface {
   }
 
   redi.toMove = function (piece: Piece, sticker: Sticker, dir: Vector3D) {
-    let c = new Vector3D(Math.sign(dir.x) / 2, Math.sign(dir.y) / 2, Math.sign(dir.z) / 2);
-    let toMovePieces = pieces.filter(p => p.direction1(c, dir, true) >= 0);
+    const c = new Vector3D(Math.sign(dir.x) / 2, Math.sign(dir.y) / 2, Math.sign(dir.z) / 2);
+    const toMovePieces = pieces.filter(p => p.direction1(c, dir, true) >= 0);
     return {
       pieces: toMovePieces,
       ang: ANG,
@@ -88,7 +88,7 @@ export function REDI(): PuzzleInterface {
 
   const moveMaps = ["RLFBrlfbxyz", "_____LR_xyz"];
 
-  let planes = [
+  const planes = [
     [RIGHT.add(DOWN), BACK.add(DOWN), RIGHT.add(BACK)], // R
     [FRONT.add(DOWN), FRONT.add(LEFT), LEFT.add(DOWN)], // L
     [FRONT.add(RIGHT), FRONT.add(DOWN), RIGHT.add(DOWN)], // F
@@ -103,7 +103,7 @@ export function REDI(): PuzzleInterface {
   ];
 
   redi.move = function (scramble: string[]) {
-    let moves = scramble[0].match(new RegExp(`[${moveMaps[0]}]'?`, "g"));
+    const moves = scramble[0].match(new RegExp(`[${moveMaps[0]}]'?`, "g"));
 
     if (moves) {
       let variant = 0;
@@ -114,11 +114,11 @@ export function REDI(): PuzzleInterface {
       }
 
       for (let i = 0, maxi = moves.length; i < maxi; i += 1) {
-        let mv = moves[i];
-        let moveId = moveMaps[variant].indexOf(mv[0]);
-        let plane = planes[moveId];
-        let u = Vector3D.cross(plane[0], plane[1], plane[2]).unit();
-        let pcs = pieces.filter(p => p.direction1(plane[0], u) >= 0);
+        const mv = moves[i];
+        const moveId = moveMaps[variant].indexOf(mv[0]);
+        const plane = planes[moveId];
+        const u = Vector3D.cross(plane[0], plane[1], plane[2]).unit();
+        const pcs = pieces.filter(p => p.direction1(plane[0], u) >= 0);
         let ang = Math.sign(mv.indexOf("'") + 0.1) * ANG;
 
         if (moveId > 7) {
@@ -138,11 +138,11 @@ export function REDI(): PuzzleInterface {
     const MOVES = 40;
 
     for (let i = 0; i < MOVES; i += 1) {
-      let p = random(pieces) as Piece;
-      let s = random(p.stickers.filter(s => !/^[xd]{1}$/.test(s.color))) as Sticker;
-      let vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > EPS));
-      let pcs = redi.toMove(p, s, vec) as ToMoveResult;
-      let cant = 1 + random(3);
+      const p = random(pieces) as Piece;
+      const s = random(p.stickers.filter(s => !/^[xd]{1}$/.test(s.color))) as Sticker;
+      const vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > EPS));
+      const pcs = redi.toMove(p, s, vec) as ToMoveResult;
+      const cant = 1 + random(3);
       pcs.pieces.forEach((p: Piece) => p.rotate(CENTER, vec, pcs.ang * cant, true));
     }
   };

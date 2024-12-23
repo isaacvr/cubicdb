@@ -23,14 +23,14 @@ export function piecesToTree(
   sTrans: Function = (s: Sticker[]) => s,
   side: Side = DoubleSide
 ) {
-  let group = new Object3D();
-  let pieces = cube.pieces;
-  let meshes: Mesh[] = [];
+  const group = new Object3D();
+  const pieces = cube.pieces;
+  const meshes: Mesh[] = [];
 
   for (let p = 0, maxp = pieces.length; p < maxp; p += 1) {
-    let pc = pieces[p];
-    let stickers: Sticker[] = sTrans(pc.stickers);
-    let piece = new Object3D();
+    const pc = pieces[p];
+    const stickers: Sticker[] = sTrans(pc.stickers);
+    const piece = new Object3D();
 
     piece.userData = {
       data: pc,
@@ -39,7 +39,7 @@ export function piecesToTree(
     pc.anchor.abs() && (piece.userData.anchor = pc.anchor.clone());
 
     for (let s = 0, maxs = stickers.length; s < maxs; s += 1) {
-      let sticker = stickers[s].mul(F);
+      const sticker = stickers[s].mul(F);
 
       if (sticker instanceof ImageSticker) {
         loadImageToPiece(sticker, piece);
@@ -51,21 +51,21 @@ export function piecesToTree(
         continue;
       }
 
-      let color = cube.getHexColor(sticker.color);
-      let stickerGeometry = new BufferGeometry();
-      let vertices: number[] = [];
-      let indices: number[] = [];
+      const color = cube.getHexColor(sticker.color);
+      const stickerGeometry = new BufferGeometry();
+      const vertices: number[] = [];
+      const indices: number[] = [];
 
       sticker.points.forEach(p => vertices.push(p.x, p.y, p.z));
 
-      let stickerMaterial = new MeshStandardMaterial({
+      const stickerMaterial = new MeshStandardMaterial({
         color,
         side,
         ...(color ? { roughness: 0.5, metalness: 0.6 } : {}),
       });
 
       if (sticker instanceof FaceSticker) {
-        let f = sticker.faces;
+        const f = sticker.faces;
         for (let i = 0, maxi = f.length; i < maxi; i += 1) {
           indices.push(f[i][0], f[i][1], f[i][2]);
         }
@@ -79,7 +79,7 @@ export function piecesToTree(
       stickerGeometry.setAttribute("position", new BufferAttribute(new Float32Array(vertices), 3));
       stickerGeometry.computeVertexNormals();
 
-      let box = new Mesh(stickerGeometry, stickerMaterial);
+      const box = new Mesh(stickerGeometry, stickerMaterial);
 
       box.userData = {
         data: stickers[s],
@@ -96,12 +96,12 @@ export function piecesToTree(
 }
 
 export function cubeToThree(cube: Puzzle, F: number = 1) {
-  let nc = cube;
+  const nc = cube;
 
   roundCorners({ p: nc.p, ...nc.p.roundParams });
 
-  let defFilter = (s: Sticker[]) => s;
-  let rubikFilter = (s: Sticker[]) => {
+  const defFilter = (s: Sticker[]) => s;
+  const rubikFilter = (s: Sticker[]) => {
     return s.filter(
       st =>
         !(
@@ -113,11 +113,11 @@ export function cubeToThree(cube: Puzzle, F: number = 1) {
     );
   };
 
-  let normalMode = [CubeMode.NORMAL, CubeMode.ELL, CubeMode.PLL, CubeMode.ZBLL].some(
+  const normalMode = [CubeMode.NORMAL, CubeMode.ELL, CubeMode.PLL, CubeMode.ZBLL].some(
     e => e === cube.mode
   );
 
-  let { group, meshes } = piecesToTree(
+  const { group, meshes } = piecesToTree(
     nc,
     F,
     cube.type === "rubik" && normalMode ? rubikFilter : defFilter

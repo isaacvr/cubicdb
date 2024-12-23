@@ -43,7 +43,7 @@ export class Vector2D {
   }
 
   unit() {
-    let len = this.abs();
+    const len = this.abs();
     return new Vector2D(this.x / len, this.y / len);
   }
 }

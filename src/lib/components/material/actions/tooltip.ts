@@ -21,12 +21,12 @@ export function tooltip(node: HTMLElement, eProps: PROPS) {
   let hasKeybinding = false;
   let _class = "";
 
-  let tt = document.createElement("div");
+  const tt = document.createElement("div");
   node.append(tt);
 
   function mouseenter() {
     resize();
-    let pt = processKey(text);
+    const pt = processKey(text);
 
     tt.innerHTML = `${
       hasKeybinding
@@ -41,14 +41,14 @@ export function tooltip(node: HTMLElement, eProps: PROPS) {
   }
 
   function resize() {
-    let ce = node.getBoundingClientRect();
-    let ct = tt.getBoundingClientRect();
+    const ce = node.getBoundingClientRect();
+    const ct = tt.getBoundingClientRect();
 
     let _x = ce.x;
     let _y = ce.y;
 
-    let e1: HTMLElement | null | undefined = getStackingContext(node);
-    let cp = e1.getBoundingClientRect();
+    const e1: HTMLElement | null | undefined = getStackingContext(node);
+    const cp = e1.getBoundingClientRect();
 
     if (e1.getAttribute("data-type") != "modal") {
       _x -= cp.x;
@@ -97,7 +97,7 @@ export function tooltip(node: HTMLElement, eProps: PROPS) {
     hasKeybinding = !!p.hasKeybinding;
     _class = p.class || "";
 
-    let classes = _class.split(/\s+/).filter(e => e);
+    const classes = _class.split(/\s+/).filter(e => e);
 
     classes.length && tt.classList.add(...classes);
   }

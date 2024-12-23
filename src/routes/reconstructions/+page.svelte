@@ -256,8 +256,8 @@
     let map = loc.searchParams;
     let p = map.get("puzzle");
     let o = parseInt(map.get("order") || "-1");
-    let s = map.get("scramble") || "";
-    let r = map.get("reconstruction") || "";
+    let s = (map.get("scramble") || "").replace(/_/g, " ");
+    let r = (map.get("reconstruction") || "").replace(/_/g, " ");
     let id = parseInt(map.get("recIndex") || "-1");
 
     backURL = (map.get("returnTo") || "").trim();
@@ -356,9 +356,9 @@
     } else {
       rec = `${DOMAIN}/reconstructions?puzzle=${puzzle.puzzle}&order=${
         puzzle.order
-      }&scramble=${encodeURIComponent(scramble)}&reconstruction=${encodeURIComponent(
-        reconstruction
-      )}`;
+      }&scramble=${encodeURIComponent(
+        scramble.replace(/\s+/g, "_")
+      )}&reconstruction=${encodeURIComponent(reconstruction.replace(/\s+/g, "_"))}`;
     }
 
     copyToClipboard(rec).then(() => {

@@ -58,7 +58,7 @@ export function getSolver(
 ): string[][] | null {
   const solver333: StepSolver[] = ["222", "223", "cf", "roux", "petrus", "zz", "eodr"];
 
-  let stp = StepSolverStr.find(step => step.solver === type);
+  const stp = StepSolverStr.find(step => step.solver === type);
 
   if (!stp || stp.modes.indexOf(mode) < 0) return null;
 

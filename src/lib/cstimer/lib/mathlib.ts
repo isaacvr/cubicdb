@@ -40,7 +40,7 @@ for (let i = 0; i < 32; ++i) {
 }
 
 export function circleOri(arr: number[], a: number, b: number, c: number, d: number, ori: number) {
-  let temp = arr[a];
+  const temp = arr[a];
   arr[a] = arr[d] ^ ori;
   arr[d] = arr[c] ^ ori;
   arr[c] = arr[b] ^ ori;
@@ -48,8 +48,8 @@ export function circleOri(arr: number[], a: number, b: number, c: number, d: num
 }
 
 export function circle(arr: any[], ...args: any[]) {
-  let length = args.length - 1;
-  let temp = arr[args[length]];
+  const length = args.length - 1;
+  const temp = arr[args[length]];
   for (let i = length; i > 0; i -= 1) {
     arr[args[i]] = arr[args[i - 1]];
   }
@@ -62,13 +62,13 @@ export function circle(arr: any[], ...args: any[]) {
 //ori: ori1, ori2, ..., orin, base
 // arr[perm[idx2]] = arr[perm[idx1]] + ori[idx2] - ori[idx1] + base
 export function acycle(arr: number[], perm: any[], pow: number = 1, ori?: number[]) {
-  let plen = perm.length;
-  let tmp = [];
+  const plen = perm.length;
+  const tmp = [];
   for (let i = 0; i < plen; i++) {
     tmp[i] = arr[perm[i]];
   }
   for (let i = 0; i < plen; i++) {
-    let j = (i + pow) % plen;
+    const j = (i + pow) % plen;
     arr[perm[j]] = tmp[i];
     if (ori) {
       arr[perm[j]] += ori[j] - ori[i] + ori[ori.length - 1];
@@ -120,7 +120,7 @@ export function get8Perm(arr: number[], n?: number, even?: number) {
   let idx = 0;
   let val = 0x76543210;
   for (let i = 0; i < n - 1; ++i) {
-    let v = arr[i] << 2;
+    const v = arr[i] << 2;
     idx = (n - i) * idx + ((val >> v) & 7);
     val -= 0x11111110 << v;
   }
@@ -135,13 +135,13 @@ export function set8Perm(arr: number[], idx: number, n?: number, even?: number) 
     idx <<= 1;
   }
   for (let i = 0; i < n; ++i) {
-    let p = fact[n - i];
+    const p = fact[n - i];
     let v = ~~(idx / p);
     prt ^= v;
     idx %= p;
     v <<= 2;
     arr[i] = (val >> v) & 7;
-    let m = (1 << v) - 1;
+    const m = (1 << v) - 1;
     val = (val & m) + ((val >> 4) & ~m);
   }
   if (even && even < 0 && (prt & 1) != 0) {
@@ -154,7 +154,7 @@ export function set8Perm(arr: number[], idx: number, n?: number, even?: number) 
 }
 
 export function getNOri(arr: number[], n: number, evenbase: number) {
-  let base = Math.abs(evenbase);
+  const base = Math.abs(evenbase);
   let idx = evenbase < 0 ? 0 : arr[0] % base;
   for (let i = n - 1; i > 0; i--) {
     idx = idx * base + (arr[i] % base);
@@ -163,7 +163,7 @@ export function getNOri(arr: number[], n: number, evenbase: number) {
 }
 
 export function setNOri(arr: number[], idx: number, n: number, evenbase: number) {
-  let base = Math.abs(evenbase);
+  const base = Math.abs(evenbase);
   let parity = base * n;
   for (let i = 1; i < n; i++) {
     arr[i] = idx % base;
@@ -215,12 +215,12 @@ export function fillFacelet(
 
 export function createMove(moveTable: number[][], size: number, doMove: any, N_MOVES = 6) {
   if (Array.isArray(doMove)) {
-    let cord = new coord(doMove[1], doMove[2], doMove[3]);
+    const cord = new coord(doMove[1], doMove[2], doMove[3]);
     doMove = doMove[0];
     for (let j = 0; j < N_MOVES; j++) {
       moveTable[j] = [];
       for (let i = 0; i < size; i++) {
-        let arr = cord.set([], i);
+        const arr = cord.set([], i);
         doMove(arr, j);
         moveTable[j][i] = cord.get(arr);
       }
@@ -257,7 +257,7 @@ export function edgeMove(arr: number[], m: number) {
   }
 }
 
-let cornerFacelet = [
+const cornerFacelet = [
   [8, 9, 20],
   [6, 18, 38],
   [0, 36, 47],
@@ -268,7 +268,7 @@ let cornerFacelet = [
   [35, 17, 51],
 ];
 
-let edgeFacelet = [
+const edgeFacelet = [
   [5, 10],
   [7, 19],
   [3, 37],
@@ -283,10 +283,10 @@ let edgeFacelet = [
   [48, 14],
 ];
 
-let rotMult: number[][] = [];
-let rotMulI: number[][] = [];
-let rotMulM: number[][] = [];
-let rot2str = [
+const rotMult: number[][] = [];
+const rotMulI: number[][] = [];
+const rotMulM: number[][] = [];
+const rot2str = [
   "",
   "y'",
   "y2",
@@ -312,7 +312,7 @@ let rot2str = [
   "y z'",
   "z'",
 ];
-let CubeMoveRE = /^\s*([URFDLB]w?|[EMSyxz]|2-2[URFDLB]w)(['2]?)(@\d+)?\s*$/;
+const CubeMoveRE = /^\s*([URFDLB]w?|[EMSyxz]|2-2[URFDLB]w)(['2]?)(@\d+)?\s*$/;
 
 export class CubieCube {
   ca: number[];
@@ -333,7 +333,7 @@ export class CubieCube {
 
   static CornMult(a: CubieCube, b: CubieCube, prod: CubieCube) {
     for (let corn = 0; corn < 8; corn++) {
-      let ori = ((a.ca[b.ca[corn] & 7] >> 3) + (b.ca[corn] >> 3)) % 3;
+      const ori = ((a.ca[b.ca[corn] & 7] >> 3) + (b.ca[corn] >> 3)) % 3;
       prod.ca[corn] = (a.ca[b.ca[corn] & 7] & 7) | (ori << 3);
     }
   }
@@ -344,7 +344,7 @@ export class CubieCube {
   }
 
   static moveCube = (function () {
-    let moveCube = [];
+    const moveCube = [];
 
     for (let i = 0; i < 18; i++) {
       moveCube[i] = new CubieCube();
@@ -368,22 +368,22 @@ export class CubieCube {
   })();
 
   static rotCube = (function () {
-    let u4 = new CubieCube().init(
+    const u4 = new CubieCube().init(
       [3, 0, 1, 2, 7, 4, 5, 6],
       [6, 0, 2, 4, 14, 8, 10, 12, 23, 17, 19, 21]
     );
-    let f2 = new CubieCube().init(
+    const f2 = new CubieCube().init(
       [5, 4, 7, 6, 1, 0, 3, 2],
       [12, 10, 8, 14, 4, 2, 0, 6, 18, 16, 22, 20]
     );
-    let urf = new CubieCube().init(
+    const urf = new CubieCube().init(
       [8, 20, 13, 17, 19, 15, 22, 10],
       [3, 16, 11, 18, 7, 22, 15, 20, 1, 9, 13, 5]
     );
-    let c = new CubieCube();
-    let d = new CubieCube();
+    const c = new CubieCube();
+    const d = new CubieCube();
 
-    let rotCube = [];
+    const rotCube = [];
 
     for (let i = 0; i < 24; i++) {
       rotCube[i] = new CubieCube().init(c.ca, c.ea);
@@ -402,8 +402,8 @@ export class CubieCube {
       }
     }
 
-    let movHash = [];
-    let rotHash = [];
+    const movHash = [];
+    const rotHash = [];
 
     for (let i = 0; i < 24; i++) {
       rotHash[i] = rotCube[i].hashCode();
@@ -420,7 +420,7 @@ export class CubieCube {
       for (let j = 0; j < 24; j++) {
         CubieCube.CornMult(rotCube[i], rotCube[j], c);
         CubieCube.EdgeMult(rotCube[i], rotCube[j], c);
-        let k = rotHash.indexOf(c.hashCode());
+        const k = rotHash.indexOf(c.hashCode());
         rotMult[i][j] = k;
         rotMulI[k][j] = i;
       }
@@ -431,7 +431,7 @@ export class CubieCube {
         CubieCube.EdgeMult(rotCube[rotMulI[0][i]], CubieCube.moveCube[j], c);
         CubieCube.CornMult(c, rotCube[i], d);
         CubieCube.EdgeMult(c, rotCube[i], d);
-        let k = movHash.indexOf(d.hashCode());
+        const k = movHash.indexOf(d.hashCode());
         rotMulM[i][j] = k;
       }
     }
@@ -491,19 +491,19 @@ export class CubieCube {
   }
 
   toFaceCube(cFacelet: number[][] = cornerFacelet, eFacelet: number[][] = edgeFacelet): string {
-    let ts = "URFDLB";
-    let f = [];
+    const ts = "URFDLB";
+    const f = [];
     for (let i = 0; i < 54; i++) {
       f[i] = ts[~~(i / 9)];
     }
     for (let c = 0; c < 8; c++) {
-      let j = this.ca[c] & 0x7; // cornercubie with index j is at
-      let ori = this.ca[c] >> 3; // Orientation of this cubie
+      const j = this.ca[c] & 0x7; // cornercubie with index j is at
+      const ori = this.ca[c] >> 3; // Orientation of this cubie
       for (let n = 0; n < 3; n++) f[cFacelet[c][(n + ori) % 3]] = ts[~~(cFacelet[j][n] / 9)];
     }
     for (let e = 0; e < 12; e++) {
-      let j = this.ea[e] >> 1; // edgecubie with index j is at edgeposition
-      let ori = this.ea[e] & 1; // Orientation of this cubie
+      const j = this.ea[e] >> 1; // edgecubie with index j is at edgeposition
+      const ori = this.ea[e] & 1; // Orientation of this cubie
       for (let n = 0; n < 2; n++) f[eFacelet[e][(n + ori) % 2]] = ts[~~(eFacelet[j][n] / 9)];
     }
     return f.join("");
@@ -525,8 +525,9 @@ export class CubieCube {
     eFacelet: number[][] = edgeFacelet
   ) {
     let count = 0;
-    let f = [];
-    let centers = facelet[4] + facelet[13] + facelet[22] + facelet[31] + facelet[40] + facelet[49];
+    const f = [];
+    const centers =
+      facelet[4] + facelet[13] + facelet[22] + facelet[31] + facelet[40] + facelet[49];
     for (let i = 0; i < 54; ++i) {
       f[i] = centers.indexOf(facelet[i]);
       if (f[i] == -1) {
@@ -579,7 +580,7 @@ export class CubieCube {
       sum ^= this.ea[e] & 1;
     }
 
-    let cp = [];
+    const cp = [];
 
     for (let c = 0; c < 8; c++) {
       mask |= 1 << (this.ca[c] & 7);
@@ -599,8 +600,8 @@ export class CubieCube {
   }
 
   edgeCycles() {
-    let visited = [];
-    let small_cycles = [0, 0, 0];
+    const visited = [];
+    const small_cycles = [0, 0, 0];
     let cycles = 0;
     let parity = false;
     for (let x = 0; x < 12; ++x) {
@@ -635,18 +636,18 @@ export class CubieCube {
     if (small_cycles[0] < small_cycles[1]) {
       cycles += (small_cycles[0] + small_cycles[1]) >> 1;
     } else {
-      let flip_cycles = [0, 2, 3, 5, 6, 8, 9];
+      const flip_cycles = [0, 2, 3, 5, 6, 8, 9];
       cycles += small_cycles[1] + flip_cycles[(small_cycles[0] - small_cycles[1]) >> 1];
     }
     return cycles - ~~parity;
   }
 
   selfMoveStr(moveStr: string, isInv: boolean) {
-    let m = CubeMoveRE.exec(moveStr);
+    const m = CubeMoveRE.exec(moveStr);
     if (!m) {
       return;
     }
-    let face = m[1];
+    const face = m[1];
     let pow = "2'".indexOf(m[2] || "-") + 2;
     if (isInv) {
       pow = 4 - pow;
@@ -675,7 +676,7 @@ export class CubieCube {
       CubieCube.EdgeMult(this, CubieCube.moveCube[_m], tmpCubie);
       CubieCube.CornMult(this, CubieCube.moveCube[_m], tmpCubie);
       this.init(tmpCubie.ca, tmpCubie.ea);
-      let rot = [3, 15, 17, 1, 11, 23][axis];
+      const rot = [3, 15, 17, 1, 11, 23][axis];
       for (let i = 0; i < pow; i++) {
         this.ori = CubieCube.rotMult[rot][this.ori];
       }
@@ -696,7 +697,7 @@ export class CubieCube {
       CubieCube.EdgeMult(this, CubieCube.moveCube[m2], tmpCubie);
       CubieCube.CornMult(this, CubieCube.moveCube[m2], tmpCubie);
       this.init(tmpCubie.ca, tmpCubie.ea);
-      let rot = [3, 15, 17, 1, 11, 23][axis];
+      const rot = [3, 15, 17, 1, 11, 23][axis];
       for (let i = 0; i < pow; i++) {
         this.ori = CubieCube.rotMult[rot][this.ori];
       }
@@ -704,7 +705,7 @@ export class CubieCube {
     }
     axis = "yxz".indexOf(face);
     if (axis != -1) {
-      let rot = [3, 15, 17][axis];
+      const rot = [3, 15, 17][axis];
       for (let i = 0; i < pow; i++) {
         this.ori = CubieCube.rotMult[rot][this.ori];
       }
@@ -727,7 +728,7 @@ export class CubieCube {
   }
 }
 
-let tmpCubie = new CubieCube();
+const tmpCubie = new CubieCube();
 
 export function createPrun(
   prun: number[],
@@ -739,7 +740,7 @@ export function createPrun(
   N_POWER?: number,
   N_INV?: number
 ) {
-  let isMoveTable = Array.isArray(doMove);
+  const isMoveTable = Array.isArray(doMove);
   N_MOVES = N_MOVES || 6;
   N_POWER = N_POWER || 3;
   N_INV = N_INV || 256;
@@ -752,10 +753,10 @@ export function createPrun(
   // let t = +new Date;
   for (let l = 0; l <= maxd; l++) {
     let done = 0;
-    let inv = l >= N_INV;
-    let fill = (l + 1) ^ 15;
-    let find = inv ? 0xf : l;
-    let check = inv ? l : 0xf;
+    const inv = l >= N_INV;
+    const fill = (l + 1) ^ 15;
+    const find = inv ? 0xf : l;
+    const check = inv ? l : 0xf;
 
     out: for (let p = 0; p < size; p++, val >>= 4) {
       if ((p & 7) == 0) {
@@ -907,12 +908,12 @@ export class Solver {
       this.move = [];
       this.prun = [];
       for (let i = 0; i < this.N_STATES; i++) {
-        let state_param = this.state_params[i];
-        let init = state_param[0];
-        let doMove = state_param[1];
-        let size = state_param[2];
-        let maxd = state_param[3];
-        let N_INV = state_param[4];
+        const state_param = this.state_params[i];
+        const init = state_param[0];
+        const doMove = state_param[1];
+        const size = state_param[2];
+        const maxd = state_param[3];
+        const N_INV = state_param[4];
         this.move[i] = [];
         this.prun[i] = [];
         createMove(this.move[i], size, doMove, this.N_MOVES);
@@ -933,7 +934,7 @@ export class Solver {
   }
 
   idaSearch(state: SolverState, maxl: number, lm: number) {
-    let N_STATES = this.N_STATES;
+    const N_STATES = this.N_STATES;
     for (let i = 0; i < N_STATES; i++) {
       if (getPruning(this.prun[i], state[i]) > maxl) {
         return false;
@@ -942,13 +943,13 @@ export class Solver {
     if (maxl == 0) {
       return true;
     }
-    let offset = state[0] + maxl + lm + 1;
+    const offset = state[0] + maxl + lm + 1;
     for (let move0 = 0; move0 < this.N_MOVES; move0++) {
-      let move = (move0 + offset) % this.N_MOVES;
+      const move = (move0 + offset) % this.N_MOVES;
       if (move == lm) {
         continue;
       }
-      let cur_state = state.slice();
+      const cur_state = state.slice();
       for (let power = 0; power < this.N_POWER; power++) {
         for (let i = 0; i < N_STATES; i++) {
           cur_state[i] = this.move[i][move][cur_state[i]];
@@ -963,7 +964,7 @@ export class Solver {
   }
 
   toStr(sol: number[][], move_map: string, power_map: string) {
-    let ret = [];
+    const ret = [];
     for (let i = 0; i < sol.length; i++) {
       ret.push(move_map[sol[i][0]] + power_map[sol[i][1]]);
     }
@@ -999,7 +1000,7 @@ export class gSolver {
     this.solvedStates = solvedStates;
     this.doMove = doMove;
     this.movesList = [];
-    for (var move in moves) {
+    for (const move in moves) {
       this.movesList.push([move, moves[move]]);
     }
     this.prunTable = {};
@@ -1017,15 +1018,15 @@ export class gSolver {
   updatePrun(targetDepth?: number) {
     targetDepth = targetDepth === undefined ? this.prunDepth + 1 : targetDepth;
 
-    for (var depth = this.prunDepth + 1; depth <= targetDepth; depth++) {
+    for (let depth = this.prunDepth + 1; depth <= targetDepth; depth++) {
       if (this.prevSize >= this.MAX_PRUN_SIZE) {
         break;
       }
-      var t = +new Date();
+      const t = +new Date();
       if (depth < 1) {
         this.prevSize = 0;
-        for (var i = 0; i < this.solvedStates.length; i++) {
-          var state = this.solvedStates[i];
+        for (let i = 0; i < this.solvedStates.length; i++) {
+          const state = this.solvedStates[i];
           if (!(state in this.prunTable)) {
             this.prunTable[state] = depth;
             this.prunTableSize++;
@@ -1045,7 +1046,7 @@ export class gSolver {
   updatePrunBFS(fromDepth: number) {
     if (this.toUpdateArr == null) {
       this.toUpdateArr = [];
-      for (let state in this.prunTable) {
+      for (const state in this.prunTable) {
         if (this.prunTable[state] != fromDepth) {
           continue;
         }
@@ -1053,9 +1054,9 @@ export class gSolver {
       }
     }
     while (this.toUpdateArr.length != 0) {
-      let state = this.toUpdateArr.pop();
+      const state = this.toUpdateArr.pop();
       for (let moveIdx = 0; moveIdx < this.movesList.length; moveIdx++) {
-        let newState = this.doMove(state, this.movesList[moveIdx][0]);
+        const newState = this.doMove(state, this.movesList[moveIdx][0]);
         if (!newState || newState in this.prunTable) {
           continue;
         }
@@ -1102,7 +1103,7 @@ export class gSolver {
   }
 
   getPruning(state: string) {
-    let prun = this.prunTable[state];
+    const prun = this.prunTable[state];
     return prun === undefined ? this.prunDepth + 1 : prun;
   }
 
@@ -1114,7 +1115,7 @@ export class gSolver {
       if (this.solvedStates.indexOf(state) == -1) {
         return false;
       }
-      let solArr = this.getSolArr();
+      const solArr = this.getSolArr();
       this.subOpt = true;
       if (solArr.join(",") == this.prevSolStr) {
         return false;
@@ -1134,16 +1135,16 @@ export class gSolver {
       }
       this.cost--;
     }
-    let lastMove = lm == null ? "" : this.movesList[lm][0];
-    let lastAxisFace = lm == null ? -1 : this.movesList[lm][1];
+    const lastMove = lm == null ? "" : this.movesList[lm][0];
+    const lastAxisFace = lm == null ? -1 : this.movesList[lm][1];
     for (let moveIdx = this.sol[depth] || 0; moveIdx < this.movesList.length; moveIdx++) {
-      let moveArgs = this.movesList[moveIdx];
-      let axisface = moveArgs[1] ^ lastAxisFace;
-      let move = moveArgs[0];
+      const moveArgs = this.movesList[moveIdx];
+      const axisface = moveArgs[1] ^ lastAxisFace;
+      const move = moveArgs[0];
       if (axisface == 0 || ((axisface & 0xf) == 0 && move <= lastMove)) {
         continue;
       }
-      let newState = this.doMove(state, move);
+      const newState = this.doMove(state, move);
       if (!newState || newState == state) {
         continue;
       }
@@ -1157,7 +1158,7 @@ export class gSolver {
   }
 
   getSolArr() {
-    let solArr = [];
+    const solArr = [];
     for (let i = 0; i < this.sol.length; i++) {
       solArr.push(this.movesList[this.sol[i]][0]);
     }
@@ -1165,8 +1166,8 @@ export class gSolver {
   }
 }
 
-let randGen = (function () {
-  let isaac = new Isaac();
+const randGen = (function () {
+  const isaac = new Isaac();
   let rndCnt: number;
   let seedStr: string; // '' + new Date().getTime();
 
@@ -1181,7 +1182,7 @@ let randGen = (function () {
 
   function setSeed(_rndCnt: number, _seedStr: string) {
     if (_seedStr && (_seedStr != seedStr || rndCnt > _rndCnt)) {
-      let seed = [];
+      const seed = [];
       for (let i = 0; i < _seedStr.length; i++) {
         seed[i] = _seedStr.charCodeAt(i);
       }
@@ -1215,12 +1216,12 @@ export function rn(n: number) {
 
 export function rndPerm(n: number, isEven?: boolean) {
   let p = 0;
-  let arr = [];
+  const arr = [];
   for (let i = 0; i < n; i++) {
     arr[i] = i;
   }
   for (let i = 0; i < n - 1; i++) {
-    let k = rn(n - i);
+    const k = rn(n - i);
     circle(arr, i, i + k);
     p ^= Number(k != 0);
   }
@@ -1250,7 +1251,7 @@ export function time2str(unix: number, format: string) {
     return "N/A";
   }
   format = format || "%Y-%M-%D %h:%m:%s";
-  let date = new Date(unix * 1000);
+  const date = new Date(unix * 1000);
   return format
     .replace("%Y", date.getFullYear().toString())
     .replace("%M", ("0" + (date.getMonth() + 1)).slice(-2))
@@ -1260,14 +1261,14 @@ export function time2str(unix: number, format: string) {
     .replace("%s", ("0" + date.getSeconds()).slice(-2));
 }
 
-let timeRe = /^\s*(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)\s*$/;
+const timeRe = /^\s*(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)\s*$/;
 
 export function str2time(val: string) {
-  let m = timeRe.exec(val);
+  const m = timeRe.exec(val);
   if (!m) {
     return null;
   }
-  let date = new Date(0);
+  const date = new Date(0);
   date.setFullYear(~~m[1]);
   date.setMonth(~~m[2] - 1);
   date.setDate(~~m[3]);
@@ -1292,7 +1293,7 @@ export function str2obj(val: any): object {
 }
 
 export function valuedArray(len: number, val: any) {
-  let ret = [];
+  const ret = [];
   for (let i = 0; i < len; i++) {
     ret[i] = val;
   }
@@ -1300,7 +1301,7 @@ export function valuedArray(len: number, val: any) {
 }
 
 export function idxArray(arr: any[], idx: number) {
-  let ret = [];
+  const ret = [];
   for (let i = 0; i < arr.length; i++) {
     ret.push(arr[i][idx]);
   }
@@ -1308,7 +1309,7 @@ export function idxArray(arr: any[], idx: number) {
 }
 
 export const minx = (function () {
-  let U = 0,
+  const U = 0,
     R = 1,
     F = 2,
     L = 3,
@@ -1320,8 +1321,8 @@ export const minx = (function () {
     B = 9,
     DBR = 10,
     D = 11;
-  let oppFace = [D, DBL, B, DBR, DR, DL, BL, BR, R, F, L, U];
-  let adjFaces = [
+  const oppFace = [D, DBL, B, DBR, DR, DL, BL, BR, R, F, L, U];
+  const adjFaces = [
     [BR, R, F, L, BL], //U
     [DBR, DR, F, U, BR], //R
     [DR, DL, L, U, R], //F
@@ -1343,12 +1344,12 @@ export const minx = (function () {
     if (pow == 0) {
       return;
     }
-    let base = face * 11;
-    let adjs = [];
-    let swaps: number[][] = [[], [], [], [], []];
+    const base = face * 11;
+    const adjs = [];
+    const swaps: number[][] = [[], [], [], [], []];
     for (let i = 0; i < 5; i++) {
-      let aface = adjFaces[face][i];
-      let ridx = adjFaces[aface].indexOf(face);
+      const aface = adjFaces[face][i];
+      const ridx = adjFaces[aface].indexOf(face);
       if (wide == 0 || wide == 1) {
         swaps[i].push(base + i);
         swaps[i].push(base + i + 5);
@@ -1364,10 +1365,10 @@ export const minx = (function () {
         for (let j = 2; j < 5; j++) {
           swaps[i].push(aface * 11 + ((ridx + j) % 5));
         }
-        let ii = 4 - i;
-        let opp = oppFace[face];
-        let oaface = adjFaces[opp][ii];
-        let oridx = adjFaces[oaface].indexOf(opp);
+        const ii = 4 - i;
+        const opp = oppFace[face];
+        const oaface = adjFaces[opp][ii];
+        const oridx = adjFaces[oaface].indexOf(opp);
         swaps[i].push(opp * 11 + ii);
         swaps[i].push(opp * 11 + ii + 5);
         swaps[i].push(oaface * 11 + 10);

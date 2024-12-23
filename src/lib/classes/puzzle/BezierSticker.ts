@@ -25,7 +25,7 @@ export class BezierSticker extends Sticker {
       return this;
     }
 
-    let st = new BezierSticker(this.points.map(p => p.add(ref)));
+    const st = new BezierSticker(this.points.map(p => p.add(ref)));
     st.parts = this.parts.map(p => p.add(ref));
 
     return st;
@@ -38,7 +38,7 @@ export class BezierSticker extends Sticker {
       return this;
     }
 
-    let st = new BezierSticker(this.points.map(p => p.sub(ref)));
+    const st = new BezierSticker(this.points.map(p => p.sub(ref)));
     st.parts = this.parts.map(p => p.sub(ref));
 
     return st;
@@ -51,7 +51,7 @@ export class BezierSticker extends Sticker {
       return this;
     }
 
-    let st = new BezierSticker(this.points.map(p => p.mul(num)));
+    const st = new BezierSticker(this.points.map(p => p.mul(num)));
     st.parts = this.parts.map(p => p.mul(num));
 
     return st;
@@ -71,7 +71,7 @@ export class BezierSticker extends Sticker {
       return this;
     }
 
-    let res = this.clone(true) as BezierSticker;
+    const res = this.clone(true) as BezierSticker;
     res.points = this.points.map(e => e.rotate(ref, dir, ang));
     res.parts = this.parts.map(e => e.rotate(ref, dir, ang));
     res._cached_mass_center = this._cached_mass_center.rotate(ref, dir, ang);
@@ -97,7 +97,7 @@ export class BezierSticker extends Sticker {
       return this;
     }
 
-    let res = this.clone(true) as BezierSticker;
+    const res = this.clone(true) as BezierSticker;
     res.points = points;
     res.parts = this.parts.map(p => p.rotate(ref, dir, ang));
     res._cached_mass_center = this._cached_mass_center.rotate(ref, dir, ang);

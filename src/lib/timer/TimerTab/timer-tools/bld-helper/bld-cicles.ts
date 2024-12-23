@@ -170,7 +170,7 @@ const CORNERS = [
 ];
 
 const edgeConj = EDGES.map(e => {
-  let c = e[1];
+  const c = e[1];
 
   for (let i = 0, maxi = EDGES.length; i < maxi; i += 1) {
     if (EDGES[i][0] === c) return i;
@@ -180,8 +180,8 @@ const edgeConj = EDGES.map(e => {
 });
 
 const cornerConj = CORNERS.map(e => {
-  let c1 = e[1];
-  let c2 = e[2];
+  const c1 = e[1];
+  const c2 = e[2];
   let p1 = -1;
   let p2 = -1;
 
@@ -234,24 +234,24 @@ function getEdges(order: number, type: number): number[][] {
 
   if (type < 1 && type > maxEdge) return [];
 
-  let anchors = [0, 4, 2, 1, 5, 3].map(n => n * order * order);
-  let pos = type + mid - 1;
+  const anchors = [0, 4, 2, 1, 5, 3].map(n => n * order * order);
+  const pos = type + mid - 1;
 
-  let offsets1 = [
+  const offsets1 = [
     gridToPos(0, pos, order),
     gridToPos(pos + 1, -1, order),
     gridToPos(order, -pos - 1, order),
     gridToPos(order - pos - 1, 0, order),
   ];
 
-  let offsets2 = [
+  const offsets2 = [
     gridToPos(0, order - pos - 1, order),
     gridToPos(order - pos, -1, order),
     gridToPos(order - 1, pos, order),
     gridToPos(pos, 0, order),
   ];
 
-  let res: number[][] = [];
+  const res: number[][] = [];
 
   for (let i = 0, maxi = anchors.length; i < maxi; i += 1) {
     offsets1.forEach(offset => res.push([anchors[i] + offset]));
@@ -262,7 +262,7 @@ function getEdges(order: number, type: number): number[][] {
       res[i][1] = res[edgeConj[i]][0];
     }
   } else {
-    let conjOff: number[] = [];
+    const conjOff: number[] = [];
 
     for (let i = 0, maxi = anchors.length; i < maxi; i += 1) {
       offsets2.forEach(offset => conjOff.push(anchors[i] + offset));
@@ -277,16 +277,16 @@ function getEdges(order: number, type: number): number[][] {
 }
 
 function getCorners(order: number): number[][] {
-  let anchors = [0, 4, 2, 1, 5, 3].map(n => n * order * order);
+  const anchors = [0, 4, 2, 1, 5, 3].map(n => n * order * order);
 
-  let offsets = [
+  const offsets = [
     gridToPos(0, 0, order),
     gridToPos(0, order - 1, order),
     gridToPos(order, -1, order),
     gridToPos(order - 1, 0, order),
   ];
 
-  let res: number[][] = [];
+  const res: number[][] = [];
 
   for (let i = 0, maxi = anchors.length; i < maxi; i += 1) {
     offsets.forEach(offset => res.push([anchors[i] + offset]));
@@ -315,19 +315,19 @@ function getCenters(order: number, type: number): number[][] {
 
   if (type > maxCenter) return [];
 
-  let anchors = [0, 4, 2, 1, 5, 3].map(n => n * order * order);
-  let coord = new Vector3D(
+  const anchors = [0, 4, 2, 1, 5, 3].map(n => n * order * order);
+  const coord = new Vector3D(
     Math.floor((type - 1) / dims[1]) + 1.5,
     Math.floor((type - 1) % dims[1]) + 1.5
   );
-  let center = new Vector3D(order / 2, order / 2);
+  const center = new Vector3D(order / 2, order / 2);
   const PI_2 = Math.PI / 2;
 
-  let offsets = [0, 1, 2, 3]
+  const offsets = [0, 1, 2, 3]
     .map(n => coord.rotate(center, FRONT, -PI_2 * n))
     .map(c => gridToPos(Math.round(c.x - 0.5), Math.round(c.y - 0.5), order));
 
-  let res: number[][] = [];
+  const res: number[][] = [];
 
   for (let i = 0, maxi = anchors.length; i < maxi; i += 1) {
     offsets.forEach(o => res.push([anchors[i] + o]));
@@ -341,7 +341,7 @@ function toNumber(letter: string, scheme: string[]) {
 }
 
 function getCoordPos(letter: string, coord: number[][], scheme: string[]) {
-  let pos = toNumber(letter, scheme);
+  const pos = toNumber(letter, scheme);
 
   if (pos < 0) {
     throw new Error("F");
@@ -352,13 +352,13 @@ function getCoordPos(letter: string, coord: number[][], scheme: string[]) {
 
 function letterToFC(letter: string, facelet: string, coord: number[][], scheme: string[]): string {
   if (!/^[A-Z]$/.test(letter)) return "";
-  let pos = getCoordPos(letter, coord, scheme);
+  const pos = getCoordPos(letter, coord, scheme);
   return pos.map(p => facelet[p]).join("");
 }
 
 function getBaseSolvedFacelet(facelet: string, order: number) {
-  let o2 = order ** 2;
-  let ini = o2 >> 1;
+  const o2 = order ** 2;
+  const ini = o2 >> 1;
 
   let centers: string = "";
 
@@ -371,8 +371,8 @@ function getBaseSolvedFacelet(facelet: string, order: number) {
 }
 
 function getSolvedFacelet(facelet: string, order: number, _centers?: string): string {
-  let o2 = order ** 2;
-  let centers = _centers || getBaseSolvedFacelet(facelet, order);
+  const o2 = order ** 2;
+  const centers = _centers || getBaseSolvedFacelet(facelet, order);
 
   return centers
     .split("")
@@ -388,7 +388,7 @@ function getNextLetter(
   visited: boolean[],
   scheme: string[]
 ): string | null {
-  let pos = letterToFC(letter, facelet, coord, scheme);
+  const pos = letterToFC(letter, facelet, coord, scheme);
 
   for (let i = 0, maxi = scheme.length; i < maxi; i += 1) {
     if (visited[i]) continue;
@@ -399,10 +399,10 @@ function getNextLetter(
 }
 
 function samePiece(letter1: string, letter2: string, coord: number[][], scheme: string[]): boolean {
-  let p1 = getCoordPos(letter1, coord, scheme)
+  const p1 = getCoordPos(letter1, coord, scheme)
     .map(e => e)
     .sort((a, b) => a - b);
-  let p2 = getCoordPos(letter2, coord, scheme)
+  const p2 = getCoordPos(letter2, coord, scheme)
     .map(e => e)
     .sort((a, b) => a - b);
 
@@ -418,7 +418,7 @@ function getEdgeCicle(
   visited: boolean[],
   scheme: string[]
 ) {
-  let getLetter = (s: string) => {
+  const getLetter = (s: string) => {
     if (!exchanges) return s;
     let f1 = exchanges.find(e => e[0] === s);
     if (f1) return f1[1];
@@ -429,7 +429,7 @@ function getEdgeCicle(
   };
 
   let currentLetter = letter;
-  let cicle: string[] = [currentLetter];
+  const cicle: string[] = [currentLetter];
 
   for (let i = 0; i < 24; i += 1) {
     let nextLetter = getNextLetter(currentLetter, facelet, solvedFacelet, nEdges, visited, scheme);
@@ -457,11 +457,11 @@ function getCornerCicle(
   visited: boolean[],
   scheme: string[]
 ) {
-  let cicle: string[] = [letter];
+  const cicle: string[] = [letter];
   let currentLetter = letter;
 
   for (let i = 0; i < 8; i += 1) {
-    let nextLetter = getNextLetter(
+    const nextLetter = getNextLetter(
       currentLetter,
       facelet,
       solvedFacelet,
@@ -492,14 +492,14 @@ function getCenterCicle(
   visited: boolean[],
   scheme: string[]
 ) {
-  let cicle: string[] = [letter];
+  const cicle: string[] = [letter];
   let currentLetter = letter;
-  let vs = visited.slice();
+  const vs = visited.slice();
 
   vs[toNumber(letter, scheme)] = true;
 
   for (let i = 0; i < 24; i += 1) {
-    let nextLetter = getNextLetter(currentLetter, facelet, solvedFacelet, nCenters, vs, scheme);
+    const nextLetter = getNextLetter(currentLetter, facelet, solvedFacelet, nCenters, vs, scheme);
 
     if (nextLetter) {
       cicle.push(nextLetter);
@@ -526,7 +526,7 @@ function markAsVisited(
   scheme: string[]
 ): void {
   for (let i = 0, maxi = letters.length; i < maxi; i += 1) {
-    let pos = toNumber(letters[i], scheme);
+    const pos = toNumber(letters[i], scheme);
 
     if (visited[pos]) continue;
 
@@ -548,10 +548,10 @@ function getExchanges(
 ): string[][] | null {
   if (!parity || !helpers) return null;
 
-  let buffer = buffers[pos];
-  let helper = helpers[pos];
-  let bufferLetters = [buffer];
-  let helperLetters = [helper];
+  const buffer = buffers[pos];
+  const helper = helpers[pos];
+  const bufferLetters = [buffer];
+  const helperLetters = [helper];
 
   for (let i = 0, maxi = scheme.length; i < maxi; i += 1) {
     if (buffer != scheme[i] && samePiece(buffer, scheme[i], coord, scheme)) {
@@ -579,13 +579,13 @@ function getEdgeCicles(
   const maxEdge = (order - 1) >> 1;
 
   for (let n = 1; n <= maxEdge; n += 1) {
-    let lCicle: string[][] = [];
-    let lFlipped: string[] = [];
-    let visited = scheme.map(_ => false);
-    let nEdges = getEdges(order, n);
+    const lCicle: string[][] = [];
+    const lFlipped: string[] = [];
+    const visited = scheme.map(_ => false);
+    const nEdges = getEdges(order, n);
     // let letter = buffers[n - 1];
-    let letter = parity && helpers ? helpers[n - 1] : buffers[n - 1];
-    let mcicle = getEdgeCicle(letter, null, facelet, solvedFacelet, nEdges, visited, scheme);
+    const letter = parity && helpers ? helpers[n - 1] : buffers[n - 1];
+    const mcicle = getEdgeCicle(letter, null, facelet, solvedFacelet, nEdges, visited, scheme);
     // let exchanges = getExchanges(parity, buffers, helpers, n - 1, nEdges, scheme);
     // let mcicle = getEdgeCicle(letter, exchanges, facelet, solvedFacelet, nEdges, visited, scheme);
 
@@ -601,7 +601,7 @@ function getEdgeCicles(
     while (visited.some(e => !e)) {
       for (let i = 0, maxi = scheme.length; i < maxi; i += 1) {
         if (!visited[i]) {
-          let cicle = getEdgeCicle(
+          const cicle = getEdgeCicle(
             scheme[i],
             null,
             facelet,
@@ -636,9 +636,9 @@ function getCornerCicles(
   order: number,
   scheme: string[]
 ) {
-  let visited = scheme.map(_ => false);
-  let nCorners = getCorners(order);
-  let mcicle = getCornerCicle(buffer, facelet, solvedFacelet, nCorners, visited, scheme);
+  const visited = scheme.map(_ => false);
+  const nCorners = getCorners(order);
+  const mcicle = getCornerCicle(buffer, facelet, solvedFacelet, nCorners, visited, scheme);
 
   mcicle.pop();
   mcicle.shift();
@@ -658,15 +658,15 @@ function getCornerCicles(
     // if (!iteration) break;
     for (let i = 0, maxi = scheme.length; i < maxi; i += 1) {
       if (!visited[i]) {
-        let cicle = getCornerCicle(scheme[i], facelet, solvedFacelet, nCorners, visited, scheme);
+        const cicle = getCornerCicle(scheme[i], facelet, solvedFacelet, nCorners, visited, scheme);
 
         if (cicle.length != 2) {
           cicles.push(cicle);
         } else if (cicle[0] != cicle[1]) {
-          let pos1 = getCoordPos(cicle[0], nCorners, scheme);
-          let pos2 = getCoordPos(cicle[1], nCorners, scheme);
+          const pos1 = getCoordPos(cicle[0], nCorners, scheme);
+          const pos2 = getCoordPos(cicle[1], nCorners, scheme);
 
-          let dir = (pos2.indexOf(pos1[0]) - 1) * 2 - 1; // for 1 => -1 and for 2 => 1
+          const dir = (pos2.indexOf(pos1[0]) - 1) * 2 - 1; // for 1 => -1 and for 2 => 1
 
           twistedCorners.push({
             letter: cicle[0],
@@ -701,10 +701,17 @@ function getCenterCicles(
   const maxCenter = dims[0] * dims[1];
 
   for (let n = 1; n <= maxCenter; n += 1) {
-    let lCicle: string[][] = [];
-    let nCenters = getCenters(order, n);
-    let visited = scheme.map((_, p) => solvedFacelet[nCenters[p][0]] === facelet[nCenters[p][0]]);
-    let mcicle = getCenterCicle(buffers[n - 1], facelet, solvedFacelet, nCenters, visited, scheme);
+    const lCicle: string[][] = [];
+    const nCenters = getCenters(order, n);
+    const visited = scheme.map((_, p) => solvedFacelet[nCenters[p][0]] === facelet[nCenters[p][0]]);
+    const mcicle = getCenterCicle(
+      buffers[n - 1],
+      facelet,
+      solvedFacelet,
+      nCenters,
+      visited,
+      scheme
+    );
 
     mcicle.pop();
     mcicle.shift();
@@ -724,7 +731,14 @@ function getCenterCicles(
       // if (!iteration) break;
       for (let i = 0, maxi = scheme.length; i < maxi; i += 1) {
         if (!visited[i]) {
-          let cicle = getCenterCicle(scheme[i], facelet, solvedFacelet, nCenters, visited, scheme);
+          const cicle = getCenterCicle(
+            scheme[i],
+            facelet,
+            solvedFacelet,
+            nCenters,
+            visited,
+            scheme
+          );
           markAsVisited(cicle, visited, nCenters, scheme);
           lCicle.push(cicle);
         }
@@ -765,7 +779,7 @@ export const ORIS = [
 function getSetup(s: ISetup, facelet: string, order: number) {
   if (s.type === "rotation") return s.sequence;
 
-  let base = getBaseSolvedFacelet(facelet, order);
+  const base = getBaseSolvedFacelet(facelet, order);
   let targetOri = ORIS.find(o => o[0][0] === s.up && o[0][1] === s.front);
   let currentOri = ORIS.find(o => o[0][0] === base[0] && o[0][1] === base[2]);
 
@@ -805,13 +819,13 @@ function getSetup(s: ISetup, facelet: string, order: number) {
 // }
 
 function applyMoves(pz: Puzzle, _moves: string[], schema: string[]) {
-  let moves = _moves.map(m => SPEFFZ_SCH[0][schema.indexOf(m)]);
+  const moves = _moves.map(m => SPEFFZ_SCH[0][schema.indexOf(m)]);
 
   for (let i = 0, maxi = moves.length; i < maxi; i += 1) {
-    let mv = moves[i];
+    const mv = moves[i];
 
     if (mv in SETUP_MOVES) {
-      let setup = SETUP_MOVES[mv];
+      const setup = SETUP_MOVES[mv];
 
       pz.move(setup[0]);
       pz.move(setup[1]);
@@ -831,29 +845,29 @@ export function getBLDCicles({
   scramble,
   setup,
 }: BLDConfig): BLDCicleResult {
-  let pz = Puzzle.fromSequence(scramble, { type: "rubik", order: [order] }, false, true);
+  const pz = Puzzle.fromSequence(scramble, { type: "rubik", order: [order] }, false, true);
   let facelet = pz.toFacelet();
-  let setupSeq = getSetup(setup, facelet, order);
+  const setupSeq = getSetup(setup, facelet, order);
 
   pz.move(setupSeq);
 
   facelet = pz.toFacelet();
 
-  let solvedFacelet = getSolvedFacelet(facelet, order);
+  const solvedFacelet = getSolvedFacelet(facelet, order);
   // let recommendedSetup = getRecommendedSetup(facelet, order);
 
-  let eCicles: string[][][] = [];
-  let cCicles: string[][] = [];
-  let cnCicles: string[][][] = [];
-  let flippedEdges: string[][] = [];
-  let twistedCorners: BLDCicleResult["twistedCorners"] = [];
+  const eCicles: string[][][] = [];
+  const cCicles: string[][] = [];
+  const cnCicles: string[][][] = [];
+  const flippedEdges: string[][] = [];
+  const twistedCorners: BLDCicleResult["twistedCorners"] = [];
 
   let cornerScheme: string[] = SPEFFZ_SCH[0];
   let edgeScheme: string[] = SPEFFZ_SCH[1];
   let centerScheme: string[] = SPEFFZ_SCH[2];
 
   for (let i = 0, maxi = SCHEMAS.length; i < maxi; i += 1) {
-    let sch = SCHEMAS[i];
+    const sch = SCHEMAS[i];
     if (sch.code === schemas[0]) {
       edgeScheme = sch.schema[1];
     }
@@ -866,9 +880,9 @@ export function getBLDCicles({
   }
 
   getCornerCicles(cBuffer, facelet, solvedFacelet, cCicles, twistedCorners, order, cornerScheme);
-  let cornerLetters = cCicles.reduce((acc, e) => [...acc, ...e], []);
-  let co = ((twistedCorners.reduce((acc, e) => acc + e.dir, 0) % 3) + 3) % 3;
-  let parity = cornerLetters.length % 2 === 1;
+  const cornerLetters = cCicles.reduce((acc, e) => [...acc, ...e], []);
+  const co = ((twistedCorners.reduce((acc, e) => acc + e.dir, 0) % 3) + 3) % 3;
+  const parity = cornerLetters.length % 2 === 1;
 
   if (parity && hasHelper && eHelpers && order === 3) {
     applyMoves(pz, [eBuffers[0], eHelpers[0]], edgeScheme);
@@ -886,10 +900,10 @@ export function getBLDCicles({
     order,
     edgeScheme
   );
-  let edgeLetters = eCicles.map(c => c.reduce((acc, e) => [...acc, ...e], []));
+  const edgeLetters = eCicles.map(c => c.reduce((acc, e) => [...acc, ...e], []));
 
   getCenterCicles(cnBuffers, facelet, solvedFacelet, cnCicles, order, centerScheme);
-  let centerLetters = cnCicles.map(c => c.reduce((acc, e) => [...acc, ...e], []));
+  const centerLetters = cnCicles.map(c => c.reduce((acc, e) => [...acc, ...e], []));
 
   return {
     centers: centerLetters,

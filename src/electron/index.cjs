@@ -1,4 +1,12 @@
-const { app, BrowserWindow, ipcMain, shell, powerSaveBlocker, screen } = require("electron");
+const {
+  BrowserWindow,
+  app,
+  globalShortcut,
+  ipcMain,
+  powerSaveBlocker,
+  screen,
+  shell,
+} = require("electron");
 const { autoUpdater, CancellationToken } = require("electron-updater");
 const { join, resolve } = require("path");
 const {
@@ -130,7 +138,7 @@ async function createPDF(width, height, html) {
           .printToPDF({
             printBackground: true,
             margins: {
-              marginType: "none",
+              marginType: "printableArea",
             },
           })
           .then(res)
@@ -246,6 +254,13 @@ function createWindow() {
       preload: join(__dirname, "preload.js"),
     },
     icon: join(__dirname, "icon.png"),
+  });
+
+  // Disable closing window with Ctrl + W
+  win.webContents.on("before-input-event", (event, input) => {
+    if (input.control && input.key.toLowerCase() === "w") {
+      event.preventDefault();
+    }
   });
 
   // Enable SharedArrayBuffer

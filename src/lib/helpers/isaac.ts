@@ -45,8 +45,8 @@
  */
 
 function add(x: number, y: number) {
-  var lsb = (x & 0xffff) + (y & 0xffff);
-  var msb = (x >>> 16) + (y >>> 16) + (lsb >>> 16);
+  const lsb = (x & 0xffff) + (y & 0xffff);
+  const msb = (x >>> 16) + (y >>> 16) + (lsb >>> 16);
   return (msb << 16) | (lsb & 0xffff);
 }
 
@@ -71,7 +71,7 @@ export class Isaac {
 
   reset() {
     this.acc = this.brs = this.cnt = 0;
-    for (var i = 0; i < 256; i += 1) this.m[i] = this.r[i] = 0;
+    for (let i = 0; i < 256; i += 1) this.m[i] = this.r[i] = 0;
     this.gnt = 0;
   }
 
@@ -183,7 +183,7 @@ export class Isaac {
   }
 
   prng(n?: number) {
-    var i, x, y;
+    let i, x, y;
 
     n = n && typeof n === "number" ? Math.abs(Math.floor(n)) : 1;
 

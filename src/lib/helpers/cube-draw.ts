@@ -24,11 +24,11 @@ export async function pGenerateCubeBundle(
   }
 
   // Cache or views
-  let images = await get(dataService).cache.cacheGetImageBundle(cubes.map(c => sha1(c.options)));
+  const images = await get(dataService).cache.cacheGetImageBundle(cubes.map(c => sha1(c.options)));
 
   // Prepare for trans view
-  let cv = document.createElement("canvas");
-  let renderer = new WebGLRenderer({
+  const cv = document.createElement("canvas");
+  const renderer = new WebGLRenderer({
     antialias: true,
     alpha: true,
     powerPreference: "high-performance",
@@ -54,7 +54,7 @@ export async function pGenerateCubeBundle(
           cube.view === "plan"
             ? planView(cube, W, format)
             : cube.view === "2d"
-              ? projectedView(cube, W, format)
+              ? projectedView({ cube, DIM: W, format, printMode: true })
               : birdView(cube, W, format);
         cache && get(dataService).cache.cacheSaveImage(sha1(cube.options), cube.img);
       } else {

@@ -9,7 +9,7 @@ import { Piece } from "./Piece";
 import { assignColors, getAllStickers, random } from "./puzzleUtils";
 
 export function AXIS(): PuzzleInterface {
-  let axis: PuzzleInterface = {
+  const axis: PuzzleInterface = {
     center: new Vector3D(0, 0, 0),
     faceVectors: [],
     palette: STANDARD_PALETTE,
@@ -36,46 +36,46 @@ export function AXIS(): PuzzleInterface {
     BACK.add(RIGHT.div(2)).cross(DOWN.add(LEFT)).unit(),
   ];
 
-  let A = UP.add(FRONT).mul(L);
-  let B = RIGHT.add(UP).add(BACK).mul(L);
+  const A = UP.add(FRONT).mul(L);
+  const B = RIGHT.add(UP).add(BACK).mul(L);
 
-  let AB = Math.sqrt(L ** 2 + (L / 2) ** 2);
+  const AB = Math.sqrt(L ** 2 + (L / 2) ** 2);
 
-  let alpha = PI / 4;
-  let beta = Math.asin(L / 2 / AB);
-  let gamma = alpha + beta;
+  const alpha = PI / 4;
+  const beta = Math.asin(L / 2 / AB);
+  const gamma = alpha + beta;
 
-  let AC = (L * Math.sin(alpha)) / Math.sin(gamma);
+  const AC = (L * Math.sin(alpha)) / Math.sin(gamma);
 
-  let C = A.add(B.sub(A).unit().mul(AC));
-  let F = LEFT.add(UP).add(BACK).mul(L);
-  let G = LEFT.add(UP).add(FRONT).mul(L);
-  let H = RIGHT.add(UP).add(FRONT).mul(L);
+  const C = A.add(B.sub(A).unit().mul(AC));
+  const F = LEFT.add(UP).add(BACK).mul(L);
+  const G = LEFT.add(UP).add(FRONT).mul(L);
+  const H = RIGHT.add(UP).add(FRONT).mul(L);
 
-  let D = F.add(G).div(2);
-  let E = D.add(B.sub(D).unit().mul(AC));
-  let E1 = E.rotate(CENTER, DOWN, PI_2).rotate(CENTER, FRONT, PI_2);
+  const D = F.add(G).div(2);
+  const E = D.add(B.sub(D).unit().mul(AC));
+  const E1 = E.rotate(CENTER, DOWN, PI_2).rotate(CENTER, FRONT, PI_2);
 
-  let DEF = new Sticker([F, D, E]);
-  let BCE = new Sticker([B, E, C]);
-  let ACDE = new Sticker([E, D, A, C]);
-  let BCH = new Sticker([B, C, H]);
-  let ADG = new Sticker([D, G, A]);
-  let ACH = new Sticker([C, A, H]);
+  const DEF = new Sticker([F, D, E]);
+  const BCE = new Sticker([B, E, C]);
+  const ACDE = new Sticker([E, D, A, C]);
+  const BCH = new Sticker([B, C, H]);
+  const ADG = new Sticker([D, G, A]);
+  const ACH = new Sticker([C, A, H]);
 
-  let plane1 = [A, B, A.rotate(G, BACK, PI_2)];
-  let plane2 = [B, D, D.rotate(G, LEFT, PI_2)];
+  const plane1 = [A, B, A.rotate(G, BACK, PI_2)];
+  const plane2 = [B, D, D.rotate(G, LEFT, PI_2)];
 
-  let FH = F.project(plane1[0], plane1[1], plane1[2]);
-  let DH = D.project(plane1[0], plane1[1], plane1[2]);
-  let EH = E.project(plane1[0], plane1[1], plane1[2]);
-  let EH1 = E1.project(plane1[0], plane1[1], plane1[2]);
-  let CH = C.project(plane2[0], plane2[1], plane2[2]);
-  let AH = A.project(plane2[0], plane2[1], plane2[2]);
+  const FH = F.project(plane1[0], plane1[1], plane1[2]);
+  const DH = D.project(plane1[0], plane1[1], plane1[2]);
+  const EH = E.project(plane1[0], plane1[1], plane1[2]);
+  const EH1 = E1.project(plane1[0], plane1[1], plane1[2]);
+  const CH = C.project(plane2[0], plane2[1], plane2[2]);
+  const AH = A.project(plane2[0], plane2[1], plane2[2]);
 
-  let stCornerBig = new Sticker([A, AH, DH, D]);
+  const stCornerBig = new Sticker([A, AH, DH, D]);
 
-  let cornerBig = new Piece([
+  const cornerBig = new Piece([
     ADG,
     ADG.rotate(G, G, (2 * PI) / 3),
     ADG.rotate(G, G, (-2 * PI) / 3),
@@ -85,7 +85,7 @@ export function AXIS(): PuzzleInterface {
     stCornerBig.rotate(G, G, (-2 * PI) / 3),
   ]);
 
-  let centerPiece = new Piece([
+  const centerPiece = new Piece([
     DEF,
     ACH.rotate(CENTER, UP, PI_2).rotate(CENTER, FRONT, PI_2),
     new Sticker([F, E, EH, FH]),
@@ -94,7 +94,7 @@ export function AXIS(): PuzzleInterface {
     new Sticker([E1, F, FH, EH1]),
   ]);
 
-  let edgeSmall = new Piece([
+  const edgeSmall = new Piece([
     ACDE,
     new Sticker([E, D, DH, EH]),
     new Sticker([E, C, CH, EH]),
@@ -102,14 +102,14 @@ export function AXIS(): PuzzleInterface {
     new Sticker([A, D, DH, AH]),
   ]);
 
-  let cornerSmall = new Piece([
+  const cornerSmall = new Piece([
     BCE,
     new Sticker([B, EH, E]),
     new Sticker([C, E, EH, CH]),
     new Sticker([B, C, CH]),
   ]);
 
-  let edge1 = new Piece([
+  const edge1 = new Piece([
     BCH,
     new Sticker([C, B, CH]),
     centerPiece.stickers[5].rotate(G, G, (-PI * 2) / 3),
@@ -117,7 +117,7 @@ export function AXIS(): PuzzleInterface {
 
   edge1.stickers.push(...edge1.rotate(CENTER, B.add(H).div(2), PI).stickers);
 
-  let pieces = axis.pieces;
+  const pieces = axis.pieces;
 
   pieces.push(cornerBig);
   pieces.push(centerPiece);
@@ -145,13 +145,13 @@ export function AXIS(): PuzzleInterface {
     let nDir = dir;
 
     if (!vdir.some(v => v.equals(dir)) && !vdir.some(v => v.equals(dir.mul(-1)))) {
-      let vdirs = [...vdir, ...vdir.map(v => v.mul(-1))];
+      const vdirs = [...vdir, ...vdir.map(v => v.mul(-1))];
       vdirs.sort((a, b) => a.sub(dir).abs() - b.sub(dir).abs());
       nDir = vdirs[0];
     }
 
-    let mc = piece.updateMassCenter();
-    let toMovePieces = pieces.filter(p => p.direction1(mc, dir) === 0);
+    const mc = piece.updateMassCenter();
+    const toMovePieces = pieces.filter(p => p.direction1(mc, dir) === 0);
     return {
       pieces: toMovePieces,
       dir: nDir,
@@ -165,11 +165,11 @@ export function AXIS(): PuzzleInterface {
     const MOVES = 40;
 
     for (let i = 0; i < MOVES; i += 1) {
-      let p = random(pieces) as Piece;
-      let s = random(p.stickers.filter(s => !/^[xd]{1}$/.test(s.color))) as Sticker;
-      let vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > EPS));
-      let pcs = axis.toMove(p, s, vec) as ToMoveResult;
-      let cant = 1 + random(3);
+      const p = random(pieces) as Piece;
+      const s = random(p.stickers.filter(s => !/^[xd]{1}$/.test(s.color))) as Sticker;
+      const vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > EPS));
+      const pcs = axis.toMove(p, s, vec) as ToMoveResult;
+      const cant = 1 + random(3);
       pcs.pieces.forEach((p: Piece) => p.rotate(CENTER, vec, pcs.ang * cant, true));
     }
   };

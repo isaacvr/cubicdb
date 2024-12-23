@@ -42,7 +42,7 @@ config.addExternalConnector((_: any, args: any) => {
   if (args.length != 4) return;
 
   if (args[3].type === "__timer_list") {
-    let data: { 0: any; 1: ExternalTimer }[] = args[3].value;
+    const data: { 0: any; 1: ExternalTimer }[] = args[3].value;
     externalTimers.set(data.map((e: any) => e[1]));
     return;
   }

@@ -3,21 +3,21 @@ import { CubieCube, Solver, circle } from "@cstimer/lib/mathlib";
 import { adjustScramble } from "./utils";
 
 export function roux_s1(scramble: string): string[][] {
-  let cc = new CubieCube();
-  let cd = new CubieCube();
+  const cc = new CubieCube();
+  const cd = new CubieCube();
 
   function cMove(idx: number, m: number) {
     cc.ca = [0, 0, 0, 0, 0, 0, 0, 0];
 
     for (let i = 1; i < 3; i += 1) {
-      let val = idx % 24;
+      const val = idx % 24;
       idx = ~~(idx / 24);
       cc.ca[val & 0x7] = i | (val & 0x18);
     }
 
     CubieCube.CornMult(cc, CubieCube.moveCube[m * 3], cd);
 
-    let ret = [];
+    const ret = [];
 
     for (let i = 0; i < 8; i += 1) {
       ret[cd.ca[i] & 0x7] = i | (cd.ca[i] & 0x18);
@@ -36,14 +36,14 @@ export function roux_s1(scramble: string): string[][] {
     cc.ea = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
     for (let i = 1; i < 4; i += 1) {
-      let val = idx % 24;
+      const val = idx % 24;
       idx = ~~(idx / 24);
       cc.ea[val >> 1] = (i << 1) | (val & 1);
     }
 
     CubieCube.EdgeMult(cc, CubieCube.moveCube[m * 3], cd);
 
-    let ret = [];
+    const ret = [];
 
     for (let i = 0; i < 12; i += 1) {
       ret[cd.ea[i] >> 1] = (i << 1) | (cd.ea[i] & 1);
@@ -58,35 +58,35 @@ export function roux_s1(scramble: string): string[][] {
     return idx;
   }
 
-  let SOLVED_CORN = 5 * 24 + 6;
-  let SOLVED_EDGE = 20 * 24 * 24 + 18 * 24 + 12;
+  const SOLVED_CORN = 5 * 24 + 6;
+  const SOLVED_EDGE = 20 * 24 * 24 + 18 * 24 + 12;
 
-  let solv = new Solver(6, 3, [
+  const solv = new Solver(6, 3, [
     [SOLVED_CORN, cMove, 24 * 24],
     [SOLVED_EDGE, eMove, 24 * 24 * 24],
   ]);
 
-  let faceStr = ["LU", "LD", "FU", "FD"];
-  let moveIdx = ["DRBULF", "URFDLB", "DBLUFR", "UBRDFL"];
-  let rotIdx = ["", "", "y", "y"];
+  const faceStr = ["LU", "LD", "FU", "FD"];
+  const moveIdx = ["DRBULF", "URFDLB", "DBLUFR", "UBRDFL"];
+  const rotIdx = ["", "", "y", "y"];
 
   function solveRoux1Ori(solvOri: string) {
-    let corn = [SOLVED_CORN];
-    let edge = [SOLVED_EDGE];
+    const corn = [SOLVED_CORN];
+    const edge = [SOLVED_EDGE];
 
     for (let i = 1; i < 4; i += 1) {
       corn[i] = cMove(corn[i - 1], 4);
       edge[i] = eMove(edge[i - 1], 4);
     }
 
-    let moveConj = [];
+    const moveConj = [];
 
-    let _solvOri = solvOri.split("");
+    const _solvOri = solvOri.split("");
 
     for (let s = 0; s < 4; s += 1) {
       moveConj[s] = _solvOri.join("");
 
-      let moves = ScrambleParser.parseScrambleOld(
+      const moves = ScrambleParser.parseScrambleOld(
         scramble,
         {
           a: 3,
@@ -97,8 +97,8 @@ export function roux_s1(scramble: string): string[][] {
       );
 
       for (let i = 0; i < moves.length; i += 1) {
-        let m = moves[i].pos;
-        let p = moves[i].times;
+        const m = moves[i].pos;
+        const p = moves[i].times;
 
         for (let j = 0; j < p; j += 1) {
           corn[s] = cMove(corn[s], m);
@@ -121,10 +121,10 @@ export function roux_s1(scramble: string): string[][] {
     }
   }
 
-  let res: string[][] = [];
+  const res: string[][] = [];
 
   for (let face = 0; face < 4; face += 1) {
-    let sol = solveRoux1Ori(moveIdx[face]);
+    const sol = solveRoux1Ori(moveIdx[face]);
     let ori = sol.pop();
 
     if (face % 2 == 0) {

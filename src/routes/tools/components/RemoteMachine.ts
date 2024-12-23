@@ -4,7 +4,7 @@ import { get, writable, type Writable } from "svelte/store";
 import { createActor, setup } from "xstate";
 import JSConfetti from "js-confetti";
 
-let confetti = new JSConfetti();
+const confetti = new JSConfetti();
 
 interface MachineContext {
   leftDown: Writable<boolean>;
@@ -198,7 +198,7 @@ export class RemoteMachine {
     this.interpreter = createActor(machine, { input: this.context });
 
     this.interpreter.subscribe(event => {
-      let ev = event.value as MachineState;
+      const ev = event.value as MachineState;
 
       if (ev != get(this.state)) {
         this.state.set(ev);

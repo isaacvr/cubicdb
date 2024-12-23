@@ -33,7 +33,7 @@ export function MIRROR(n: number): PuzzleInterface {
     [9 / 19, 1, 29 / 19],
   ];
 
-  let getFactor = function (axis: number, pos: number): number {
+  const getFactor = function (axis: number, pos: number): number {
     if (pos < 1) {
       return LENS[axis][0];
     }
@@ -43,7 +43,7 @@ export function MIRROR(n: number): PuzzleInterface {
     return LENS[axis][2];
   };
 
-  let getPosition = function (axis: number, pos: number): number {
+  const getPosition = function (axis: number, pos: number): number {
     if (pos == 0) {
       return 0;
     }
@@ -60,31 +60,31 @@ export function MIRROR(n: number): PuzzleInterface {
           continue;
         }
 
-        let anchor = DOWN.mul(getPosition(2, z))
+        const anchor = DOWN.mul(getPosition(2, z))
           .add(FRONT.mul(getPosition(1, y)))
           .add(RIGHT.mul(getPosition(0, x)));
-        let fx = getFactor(0, x);
-        let fy = getFactor(1, y);
-        let fz = getFactor(2, z);
+        const fx = getFactor(0, x);
+        const fy = getFactor(1, y);
+        const fz = getFactor(2, z);
 
-        let center = anchor.add(RIGHT.mul(fx).add(FRONT.mul(fy)).add(DOWN.mul(fz)).div(2));
+        const center = anchor.add(RIGHT.mul(fx).add(FRONT.mul(fy)).add(DOWN.mul(fz)).div(2));
 
-        let p = new Piece();
-        let sUp = new Sticker([
+        const p = new Piece();
+        const sUp = new Sticker([
           anchor,
           anchor.add(FRONT.mul(fy)),
           anchor.add(FRONT.mul(fy).add(RIGHT.mul(fx))),
           anchor.add(RIGHT.mul(fx)),
         ]);
 
-        let sLeft = new Sticker([
+        const sLeft = new Sticker([
           anchor,
           anchor.add(DOWN.mul(fz)),
           anchor.add(DOWN.mul(fz).add(FRONT.mul(fy))),
           anchor.add(FRONT.mul(fy)),
         ]);
 
-        let sBack = new Sticker([
+        const sBack = new Sticker([
           anchor,
           anchor.add(RIGHT.mul(fx)),
           anchor.add(RIGHT.mul(fx).add(DOWN.mul(fz))),
@@ -117,11 +117,11 @@ export function MIRROR(n: number): PuzzleInterface {
     }
   }
 
-  let pieces = mirror.pieces;
+  const pieces = mirror.pieces;
 
-  let computeBoundingBox = function () {
-    let bbs = pieces.map(s => s.computeBoundingBox());
-    let box = bbs.reduce(
+  const computeBoundingBox = function () {
+    const bbs = pieces.map(s => s.computeBoundingBox());
+    const box = bbs.reduce(
       (ac, p) => {
         return [
           Math.min(ac[0], p[0].x),
@@ -138,18 +138,18 @@ export function MIRROR(n: number): PuzzleInterface {
     return [new Vector3D(box[0], box[1], box[2]), new Vector3D(box[3], box[4], box[5])];
   };
 
-  let boundingBox = computeBoundingBox();
-  let ini = DOWN.mul(getPosition(2, 1))
+  const boundingBox = computeBoundingBox();
+  const ini = DOWN.mul(getPosition(2, 1))
     .add(FRONT.mul(getPosition(1, 1)))
     .add(RIGHT.mul(getPosition(0, 1)));
 
-  let fin = DOWN.mul(getPosition(2, n - 1))
+  const fin = DOWN.mul(getPosition(2, n - 1))
     .add(FRONT.mul(getPosition(1, n - 1)))
     .add(RIGHT.mul(getPosition(0, n - 1)));
 
   mirror.center = ini.add(fin).div(2);
 
-  let c1 = boundingBox[0].add(boundingBox[1]).div(2);
+  const c1 = boundingBox[0].add(boundingBox[1]).div(2);
 
   pieces.forEach(p => p.sub(c1, true).mul(len / n, true));
   mirror.center.sub(c1, true).mul(len / n, true);
@@ -163,8 +163,8 @@ export function MIRROR(n: number): PuzzleInterface {
 
     st = st._generator;
 
-    let ac = st.updateMassCenter().add(st.normal().mul(-0.03));
-    let toMovePieces = pieces.filter(p => p.direction1(ac, dir) === 0);
+    const ac = st.updateMassCenter().add(st.normal().mul(-0.03));
+    const toMovePieces = pieces.filter(p => p.direction1(ac, dir) === 0);
     return {
       pieces: toMovePieces,
       ang: PI_2,
@@ -173,14 +173,14 @@ export function MIRROR(n: number): PuzzleInterface {
 
   mirror.scramble = function () {
     const MOVES = 100;
-    let dirs = [UP, DOWN, FRONT, BACK, LEFT, RIGHT];
+    const dirs = [UP, DOWN, FRONT, BACK, LEFT, RIGHT];
 
     for (let i = 0; i < MOVES; i += 1) {
-      let dir = random(dirs);
-      let pc = random(pieces) as Piece;
-      let st = pc.stickers[0];
-      let mv = mirror.toMove!(pc, st, dir) as ToMoveResult;
-      let cant = 1 + random(3);
+      const dir = random(dirs);
+      const pc = random(pieces) as Piece;
+      const st = pc.stickers[0];
+      const mv = mirror.toMove!(pc, st, dir) as ToMoveResult;
+      const cant = 1 + random(3);
       mv.pieces.forEach((p: Piece) => p.rotate(mirror.center, dir, mv.ang * cant, true));
     }
   };

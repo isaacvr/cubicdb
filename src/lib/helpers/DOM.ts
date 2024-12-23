@@ -8,7 +8,7 @@ export function getStackingContext(e: HTMLElement): HTMLElement {
 
     e = e.parentElement;
 
-    let {
+    const {
       position,
       zIndex,
       display,

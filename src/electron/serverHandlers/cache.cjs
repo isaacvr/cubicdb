@@ -1,6 +1,8 @@
 const fsp = require("node:fs/promises");
 const { join } = require("node:path");
 
+const debug = false;
+
 /**
  * @typedef {import('electron').IpcMain} IpcMain
  *
@@ -12,16 +14,16 @@ module.exports = async (ipcMain, dbPath) => {
 
   try {
     await fsp.mkdir(cachePath, { recursive: true });
-    console.log("[cache]: Cache path created!");
+    debug && console.log("[cache]: Cache path created!");
   } catch (err) {
-    console.log("[cache]: CACHE ERROR: ", err);
+    debug && console.log("[cache]: CACHE ERROR: ", err);
   }
 
   let cache = new Map();
 
   let list = await fsp.readdir(cachePath);
 
-  console.log("[cache]: list -> ", list);
+  debug && console.log("[cache]: list -> ", list);
 
   for (let i = 0, maxi = list.length; i < maxi; i += 1) {
     if ((await fsp.stat(join(cachePath, list[i]))).isFile()) {
@@ -29,14 +31,14 @@ module.exports = async (ipcMain, dbPath) => {
     }
   }
 
-  console.log("[cache]: loaded %d records from cache directory", list.length);
+  debug && console.log("[cache]: loaded %d records from cache directory", list.length);
 
   ipcMain.handle("check-image", async (_, hash) => {
     return cache.has(hash);
   });
 
   ipcMain.handle("get-image", async (_, hash) => {
-    console.log("[cache]: getting image");
+    debug && console.log("[cache]: getting image");
 
     if (cache.has(hash)) {
       return cache.get(hash);
@@ -46,23 +48,23 @@ module.exports = async (ipcMain, dbPath) => {
   });
 
   ipcMain.handle("get-image-bundle", async (_, hashes) => {
-    console.log("[cache]: getting image bundle");
+    debug && console.log("[cache]: getting image bundle");
     return hashes.map(h => (cache.has(h) ? cache.get(h) : ""));
   });
 
   ipcMain.handle("save-image", async (_, hash, data) => {
     if (cache.has(hash)) {
-      console.log("[cache]: already on cache: ", hash);
+      debug && console.log("[cache]: already on cache: ", hash);
       return true;
     }
 
     try {
       await fsp.writeFile(join(cachePath, hash), data);
       cache.set(hash, data);
-      console.log("[cache]: saved to cache: ", hash, data);
+      debug && console.log("[cache]: saved to cache: ", hash, data);
       return true;
     } catch (err) {
-      console.log("[cache]: CACHE ERROR: ", err);
+      debug && console.log("[cache]: CACHE ERROR: ", err);
     }
   });
 

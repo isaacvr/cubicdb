@@ -2,8 +2,8 @@ import { gSolver } from "@cstimer/lib/mathlib";
 import { adjustScramble } from "./utils";
 
 export function square1Solver(scramble: string): string[][] {
-  let moves: Record<string, number> = { "0": 0x21 };
-  let curScramble: number[] = [];
+  const moves: Record<string, number> = { "0": 0x21 };
+  const curScramble: number[] = [];
   // let sol
 
   for (let m = 1; m < 12; m += 1) {
@@ -24,14 +24,14 @@ export function square1Solver(scramble: string): string[][] {
       return null;
     }
     let mv = ~~move;
-    let st = state.split("|");
+    const st = state.split("|");
 
     if (mv == 0) {
-      let tmp = st[0].slice(6);
+      const tmp = st[0].slice(6);
       st[0] = st[0].slice(0, 6) + st[1].slice(6);
       st[1] = st[1].slice(0, 6) + tmp;
     } else {
-      let idx = mv > 0 ? 0 : 1;
+      const idx = mv > 0 ? 0 : 1;
       mv = Math.abs(mv);
       st[idx] = st[idx].slice(mv) + st[idx].slice(0, mv);
       if (/[a-h]/.exec(st[idx][0] + st[idx][6])) {
@@ -44,7 +44,7 @@ export function square1Solver(scramble: string): string[][] {
   function prettySq1Arr(sol: string[]) {
     let u = 0;
     let d = 0;
-    let ret = [];
+    const ret = [];
     for (let i = 0; i < sol.length; i += 1) {
       if (+sol[i] == 0) {
         if (u == 0 && d == 0) {
@@ -62,7 +62,7 @@ export function square1Solver(scramble: string): string[][] {
     return ret;
   }
 
-  let solv1 = new gSolver(
+  const solv1 = new gSolver(
     [
       "0Aa0Aa0Aa0Aa|Aa0Aa0Aa0Aa0",
       "0Aa0Aa0Aa0Aa|0Aa0Aa0Aa0Aa",
@@ -73,7 +73,7 @@ export function square1Solver(scramble: string): string[][] {
     moves
   );
 
-  let solv2 = new gSolver(
+  const solv2 = new gSolver(
     [
       "0Aa0Aa0Aa0Aa|Bb1Bb1Bb1Bb1",
       "0Aa0Aa0Aa0Aa|1Bb1Bb1Bb1Bb",
@@ -84,8 +84,8 @@ export function square1Solver(scramble: string): string[][] {
     moves
   );
 
-  let movere = /^\s*\(\s*(-?\d+),\s*(-?\d+)\s*\)\s*$/;
-  let moveseq = scramble.split("/");
+  const movere = /^\s*\(\s*(-?\d+),\s*(-?\d+)\s*\)\s*$/;
+  const moveseq = scramble.split("/");
 
   for (let i = 0; i < moveseq.length; i += 1) {
     if (/^\s*$/.exec(moveseq[i])) {
@@ -93,7 +93,7 @@ export function square1Solver(scramble: string): string[][] {
       continue;
     }
 
-    let m = movere.exec(moveseq[i]);
+    const m = movere.exec(moveseq[i]);
 
     if (!m) continue;
 
@@ -112,8 +112,8 @@ export function square1Solver(scramble: string): string[][] {
     curScramble.pop();
   }
 
-  let sol1 = solv1.search(stateInit(sq1Move, "0Aa0Aa0Aa0Aa|Aa0Aa0Aa0Aa0"), 0);
-  let sol2 = solv2.search(stateInit(sq1Move, "0Aa0Aa0Aa0Aa|Bb1Bb1Bb1Bb1"), 0);
+  const sol1 = solv1.search(stateInit(sq1Move, "0Aa0Aa0Aa0Aa|Aa0Aa0Aa0Aa0"), 0);
+  const sol2 = solv2.search(stateInit(sq1Move, "0Aa0Aa0Aa0Aa|Bb1Bb1Bb1Bb1"), 0);
 
   return [
     ["CS", adjustScramble(prettySq1Arr(sol1 || []))],

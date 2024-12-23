@@ -8,7 +8,7 @@ import { EPS, STANDARD_PALETTE } from "@constants";
 export function PYRAMORPHIX(): PuzzleInterface {
   const n = 2;
 
-  let pyra: PuzzleInterface = {
+  const pyra: PuzzleInterface = {
     center: new Vector3D(0, 0, 0),
     palette: STANDARD_PALETTE,
     pieces: [],
@@ -30,10 +30,10 @@ export function PYRAMORPHIX(): PuzzleInterface {
   const V = L / Math.sqrt(3);
   const H = Math.sqrt(L ** 2 - V ** 2);
   const R = (Math.sqrt(6) * L) / 12;
-  let PU = UP.mul(H - R);
-  let PR = DOWN.mul(R).add(FRONT.mul(V)).rotate(CENTER, UP, PI_3);
-  let PB = PR.rotate(CENTER, UP, 2 * PI_3);
-  let PL = PB.rotate(CENTER, UP, 2 * PI_3);
+  const PU = UP.mul(H - R);
+  const PR = DOWN.mul(R).add(FRONT.mul(V)).rotate(CENTER, UP, PI_3);
+  const PB = PR.rotate(CENTER, UP, 2 * PI_3);
+  const PL = PB.rotate(CENTER, UP, 2 * PI_3);
 
   pyra.pieces = [];
 
@@ -53,14 +53,14 @@ export function PYRAMORPHIX(): PuzzleInterface {
     UNITS[3][0].cross(UNITS[3][1]).unit(),
   ];
 
-  let createPiece = function (v1: Vector3D, v2: Vector3D, v3: Vector3D): Piece {
-    let pts = [v1, v2, v3];
-    let v = pts[2]
+  const createPiece = function (v1: Vector3D, v2: Vector3D, v3: Vector3D): Piece {
+    const pts = [v1, v2, v3];
+    const v = pts[2]
       .sub(pts[1])
       .cross(pts[1].sub(pts[0]))
       .unit()
       .mul(H / n);
-    let c = pts
+    const c = pts
       .reduce((ac, v) => ac.add(v), new Vector3D(0, 0, 0))
       .div(3)
       .add(v);
@@ -92,9 +92,9 @@ export function PYRAMORPHIX(): PuzzleInterface {
     }
   }
 
-  let pieces = pyra.pieces;
+  const pieces = pyra.pieces;
 
-  let vdirs = [
+  const vdirs = [
     Vector3D.cross(PU.add(PL).div(2), PU.add(PR).div(2), PR.add(PB).div(2)).unit(),
     Vector3D.cross(PU.add(PB).div(2), PU.add(PL).div(2), PL.add(PR).div(2)).unit(),
     Vector3D.cross(PL.add(PR).div(2), PU.add(PR).div(2), PU.add(PB).div(2)).unit(),
@@ -103,8 +103,8 @@ export function PYRAMORPHIX(): PuzzleInterface {
   pieces.forEach(p => p.stickers.forEach(s => (s.vecs = vdirs.map(v => v.clone()))));
 
   pyra.toMove = function (piece: Piece, sticker: Sticker, dir: Vector3D) {
-    let mc = sticker.updateMassCenter();
-    let toMovePieces = pieces.filter(p => p.direction1(mc, dir) == 0);
+    const mc = sticker.updateMassCenter();
+    const toMovePieces = pieces.filter(p => p.direction1(mc, dir) == 0);
     return {
       pieces: toMovePieces,
       ang: PI_2,
@@ -117,11 +117,11 @@ export function PYRAMORPHIX(): PuzzleInterface {
     const MOVES = 10;
 
     for (let i = 0; i < MOVES; i += 1) {
-      let p = random(pieces) as Piece;
-      let s = random(p.stickers.filter(s => !/^[xd]{1}$/.test(s.color))) as Sticker;
-      let vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > EPS));
-      let pcs = pyra.toMove(p, s, vec) as ToMoveResult;
-      let cant = 1 + random(3);
+      const p = random(pieces) as Piece;
+      const s = random(p.stickers.filter(s => !/^[xd]{1}$/.test(s.color))) as Sticker;
+      const vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > EPS));
+      const pcs = pyra.toMove(p, s, vec) as ToMoveResult;
+      const cant = 1 + random(3);
       pcs.pieces.forEach((p: Piece) => p.rotate(CENTER, vec, pcs.ang * cant, true));
     }
   };

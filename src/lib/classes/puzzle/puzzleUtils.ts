@@ -10,15 +10,15 @@ import { BezierSticker } from "./BezierSticker";
 import { BezierCurve } from "./BezierCurve";
 
 export function assignColors(p: PuzzleInterface, cols?: string[], isCube = false) {
-  let colors = cols || ["y", "o", "g", "w", "r", "b"];
+  const colors = cols || ["y", "o", "g", "w", "r", "b"];
 
-  let stickers: Sticker[] = p.getAllStickers();
-  let pieces = p.pieces;
+  const stickers: Sticker[] = p.getAllStickers();
+  const pieces = p.pieces;
 
   // Adjust -1, 0 and 1 values for better precision
   for (let i = 0, maxi = stickers.length; i < maxi; i += 1) {
-    let sticker = stickers[i];
-    let points = sticker.points;
+    const sticker = stickers[i];
+    const points = sticker.points;
     for (let j = 0, maxj = points.length; j < maxj; j += 1) {
       for (let k = -1; k <= 1; k += 1) {
         if (Math.abs(points[j].x - k) < EPS) {
@@ -42,10 +42,10 @@ export function assignColors(p: PuzzleInterface, cols?: string[], isCube = false
     )
       continue;
 
-    let sticker = stickers[i];
-    let p1 = sticker.getMassCenter();
-    let u = sticker.getOrientation();
-    let dirs = [0, 0, 0];
+    const sticker = stickers[i];
+    const p1 = sticker.getMassCenter();
+    const u = sticker.getOrientation();
+    const dirs = [0, 0, 0];
     let ok = false;
 
     if (isCube) {
@@ -87,12 +87,12 @@ export function assignColors(p: PuzzleInterface, cols?: string[], isCube = false
 }
 
 export function getAllStickers(): Sticker[] | BezierSticker[] {
-  let res = [];
+  const res = [];
   // @ts-ignore
-  let pieces = this.pieces;
+  const pieces = this.pieces;
 
   for (let i = 0, maxi = pieces.length; i < maxi; i += 1) {
-    let stickers = pieces[i].stickers;
+    const stickers = pieces[i].stickers;
     res.push(...stickers);
   }
 
@@ -106,8 +106,8 @@ export function scaleSticker(st: Sticker | BezierSticker, scale: number, self = 
     return st;
   }
 
-  let n = st.getOrientation();
-  let cm = st.updateMassCenter();
+  const n = st.getOrientation();
+  const cm = st.updateMassCenter();
   return st.sub(cm, self).mul(SCALE, true).add(cm, true).add(n.mul(0.005), true);
 }
 
@@ -124,27 +124,27 @@ export function roundStickerCorners(
   const SCALE = scale || 0.925;
   const ROUND_THRESHOLD = 0.1;
 
-  let st = s;
-  let pts = st.points;
-  let newSt = calcPath ? new BezierSticker() : new Sticker();
+  const st = s;
+  const pts = st.points;
+  const newSt = calcPath ? new BezierSticker() : new Sticker();
 
   if (ppc === 0) {
     return scaleSticker(s.clone(), SCALE);
   }
 
   for (let i = 0, maxi = pts.length; i < maxi; i += 1) {
-    let r = RAD_FN(s, i);
+    const r = RAD_FN(s, i);
 
     if (r === null) return s;
 
     let isCircle = Array.isArray(r) && r.length === 1;
-    let isEllipse = Array.isArray(r) && r.length > 1;
-    let seg_perc = isCircle || isEllipse ? r[0] : r;
-    let seg_perc1 = isEllipse ? (typeof r[1] != "boolean" ? r[1] : r[0]) : isCircle ? r[0] : r;
+    const isEllipse = Array.isArray(r) && r.length > 1;
+    const seg_perc = isCircle || isEllipse ? r[0] : r;
+    const seg_perc1 = isEllipse ? (typeof r[1] != "boolean" ? r[1] : r[0]) : isCircle ? r[0] : r;
     let v1 = pts[mod(i - 1, maxi)].sub(pts[i]).mul(seg_perc);
     let v2 = pts[mod(i + 1, maxi)].sub(pts[i]).mul(seg_perc1);
-    let abs1 = v1.abs() / seg_perc;
-    let abs2 = v2.abs() / seg_perc1;
+    const abs1 = v1.abs() / seg_perc;
+    const abs2 = v2.abs() / seg_perc1;
 
     // Short on both sides => go as a point
     if (abs1 < ROUND_THRESHOLD && abs2 < ROUND_THRESHOLD) {
@@ -168,8 +168,8 @@ export function roundStickerCorners(
 
     // Short on the second side => bezier
     if (abs2 < ROUND_THRESHOLD) {
-      let abs21 = pts[mod(i + 1, maxi)].sub(pts[mod(i + 2, maxi)]).abs();
-      let v22 = pts[mod(i + 2, maxi)].sub(pts[mod(i + 1, maxi)]).mul(seg_perc1);
+      const abs21 = pts[mod(i + 1, maxi)].sub(pts[mod(i + 2, maxi)]).abs();
+      const v22 = pts[mod(i + 2, maxi)].sub(pts[mod(i + 1, maxi)]).mul(seg_perc1);
 
       // Check another point next to them
       if (abs21 < ROUND_THRESHOLD) {
@@ -237,18 +237,18 @@ export function roundCorners({ p, rd, scale, ppc, fn, justScale, calcPath }: Rou
   const CHECK = fn || ((s: Sticker) => !BANNED_CLASSES.some(cl => s instanceof cl));
 
   p.isRounded = true;
-  let pieces = p.pieces;
+  const pieces = p.pieces;
 
   for (let i = 0, maxi = pieces.length; i < maxi; i += 1) {
-    let pc = pieces[i];
-    let s = pc.stickers;
+    const pc = pieces[i];
+    const s = pc.stickers;
 
     for (let j = 0, maxj = s.length; j < maxj; j += 1) {
       if (!CHECK(s[j])) {
         continue;
       }
 
-      let newSt = justScale
+      const newSt = justScale
         ? scaleSticker(s[j], 0)
         : roundStickerCorners(s[j], rd, scale, ppc, calcPath);
 
@@ -275,11 +275,11 @@ export function roundCorners({ p, rd, scale, ppc, fn, justScale, calcPath }: Rou
 }
 
 export function assignVectors(p: PuzzleInterface) {
-  let pieces = p.pieces;
+  const pieces = p.pieces;
 
   for (let i = 0, maxi = pieces.length; i < maxi; i += 1) {
-    let stickers = pieces[i].stickers;
-    let vecs = pieces[i].stickers.reduce((ac: Vector3D[], s) => {
+    const stickers = pieces[i].stickers;
+    const vecs = pieces[i].stickers.reduce((ac: Vector3D[], s) => {
       if (s.color != "x" && s.color != "d") {
         ac.push(s.getOrientation());
       }
@@ -298,7 +298,7 @@ export function random(a: any) {
   if (Array.isArray(a) || typeof a === "string") {
     return a[~~(Math.random() * a.length)];
   } else if (typeof a === "object") {
-    let k = Object.keys(a);
+    const k = Object.keys(a);
     return a[k[~~(Math.random() * k.length)]];
   }
 
@@ -312,12 +312,12 @@ export function extrudeSticker(
   closeFin = false,
   closePath = true
 ): FaceSticker {
-  let s1 = s.add(u);
-  let faces: number[][] = [];
+  const s1 = s.add(u);
+  const faces: number[][] = [];
 
   for (let i = 0, maxi = s.points.length; i < maxi; i += 1) {
     if (!closePath && i + 1 === maxi) break;
-    let ni = mod(i + 1, maxi);
+    const ni = mod(i + 1, maxi);
     faces.push([i, maxi + i, maxi + ni]);
     faces.push([i, maxi + ni, ni]);
   }

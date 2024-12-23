@@ -39,12 +39,12 @@ export function SUPER_SQUARE1(): PuzzleInterface {
 
   const BIG = (L1 * Math.sin(PI_6)) / Math.sin((7 * PI) / 12);
 
-  let pieces = sq1.pieces;
-  let DV = LEFT.add(BACK).add(FRONT.mul(BIG)).setLength(1).mul(RAD);
-  let CURVE_PTS = 10;
+  const pieces = sq1.pieces;
+  const DV = LEFT.add(BACK).add(FRONT.mul(BIG)).setLength(1).mul(RAD);
+  const CURVE_PTS = 10;
 
   // Corner
-  let pieceBig = new Piece([
+  const pieceBig = new Piece([
     new Sticker([
       LEFT.add(BACK).add(UP),
       LEFT.add(BACK).add(UP).add(FRONT.mul(BIG)),
@@ -77,7 +77,7 @@ export function SUPER_SQUARE1(): PuzzleInterface {
   );
 
   // Edge
-  let pieceSmall = new Piece([
+  const pieceSmall = new Piece([
     new Sticker(
       [
         RIGHT.add(UP).add(BACK).add(LEFT.mul(BIG)),
@@ -108,14 +108,14 @@ export function SUPER_SQUARE1(): PuzzleInterface {
       .add(DOWN.mul(0.5), true),
   ]);
 
-  let slidePlane = [
+  const slidePlane = [
     LEFT.add(FRONT).add(UP).add(DOWN.mul(L24)).add(RIGHT.mul(BIG)),
     LEFT.add(FRONT).add(DOWN).add(UP.mul(L24)).add(RIGHT.mul(BIG)),
     RIGHT.add(BACK).add(DOWN).add(UP.mul(L24)).add(LEFT.mul(BIG)),
   ];
 
-  let vdir = Vector3D.cross(slidePlane[0], slidePlane[1], slidePlane[2]).unit();
-  let vec = vdir.mul(-1);
+  const vdir = Vector3D.cross(slidePlane[0], slidePlane[1], slidePlane[2]).unit();
+  const vec = vdir.mul(-1);
 
   vdir.setConstant(true);
   vec.setConstant(true);
@@ -152,9 +152,9 @@ export function SUPER_SQUARE1(): PuzzleInterface {
   }
 
   // Center
-  let centerAnchor = DV.rotate(CENTER, DOWN, PI_6 * 9);
+  const centerAnchor = DV.rotate(CENTER, DOWN, PI_6 * 9);
 
-  let centerPiece = new Piece([
+  const centerPiece = new Piece([
     new Sticker(
       [
         UP.add(centerAnchor.rotate(CENTER, DOWN, PI)),
@@ -175,7 +175,7 @@ export function SUPER_SQUARE1(): PuzzleInterface {
   pieces.push(centerPiece.rotate(CENTER, vec, PI));
   pieces.push(centerPiece.rotate(CENTER, UP, PI).rotate(CENTER, vec, PI));
 
-  let planes = [
+  const planes = [
     slidePlane.map(v => v.clone()), // /
     pieceBig.stickers[2].points.map(p => p.clone().add(UP.mul(0.25))).reverse(), // up1
     pieceBig.stickers[2].points.map(p => p.clone().add(DOWN.mul(0.25))).reverse(), // up2
@@ -183,18 +183,18 @@ export function SUPER_SQUARE1(): PuzzleInterface {
     pieceBig.stickers[2].points.map(p => p.clone().add(DOWN.mul(1.25))), // down1
   ];
 
-  let trySingleMove = (mv: any): { pieces: Piece[]; u: Vector3D; ang: number } | null => {
-    let moveId = mv[0]; // 2
-    let turns = mv[1]; // 3
+  const trySingleMove = (mv: any): { pieces: Piece[]; u: Vector3D; ang: number } | null => {
+    const moveId = mv[0]; // 2
+    const turns = mv[1]; // 3
     const pts1 = planes[moveId];
     const u = Vector3D.cross(pts1[0], pts1[1], pts1[2]).unit();
     const mu = u.mul(-1);
     const ang = PI_6 * turns;
 
-    let pcs = [];
+    const pcs = [];
 
     for (let i = 0, maxi = pieces.length; i < maxi; i += 1) {
-      let d = pieces[i].direction1(pts1[0], u, false, (x: Sticker) => !/^[xd]$/.test(x.color));
+      const d = pieces[i].direction1(pts1[0], u, false, (x: Sticker) => !/^[xd]$/.test(x.color));
 
       if ((!moveId && d > 0) || (moveId && d === 0)) {
         pcs.push(pieces[i]);
@@ -217,24 +217,24 @@ export function SUPER_SQUARE1(): PuzzleInterface {
 
   sq1.move = function (moves: any[]) {
     for (let m = 0, maxm = moves.length; m < maxm; m += 1) {
-      let mv = moves[m];
-      let pcs = trySingleMove(mv);
+      const mv = moves[m];
+      const pcs = trySingleMove(mv);
 
       if (!pcs) {
         return false;
       }
 
-      let { u, ang } = pcs;
+      const { u, ang } = pcs;
       pcs.pieces.forEach(p => p.rotate(CENTER, u, ang, true));
     }
     return true;
   };
 
   sq1.toMove = function (piece: Piece, sticker: Sticker, dir: Vector3D) {
-    let ang = dir.cross(UP).abs() < EPS ? PI_6 : PI;
+    const ang = dir.cross(UP).abs() < EPS ? PI_6 : PI;
     let toMovePieces: Piece[] = [];
     let u = dir;
-    let mc = sticker.getMassCenter();
+    const mc = sticker.getMassCenter();
 
     if (ang > PI_6) {
       if (sq1.move([[0, 6]])) {
@@ -243,7 +243,7 @@ export function SUPER_SQUARE1(): PuzzleInterface {
         toMovePieces = pieces.filter(p => p.direction1(CENTER, u) >= 0);
       }
     } else {
-      let mc = sticker.updateMassCenter();
+      const mc = sticker.updateMassCenter();
       toMovePieces = pieces.filter(p => {
         return p.direction1(mc, dir) === 0;
       });
@@ -257,21 +257,21 @@ export function SUPER_SQUARE1(): PuzzleInterface {
   };
 
   sq1.scramble = function () {
-    let scramble = ScrambleParser.parseSuperSquare1(utilscramble("ssq1t", 20)!);
+    const scramble = ScrambleParser.parseSuperSquare1(utilscramble("ssq1t", 20)!);
     // let scramble = ScrambleParser.parseSuperSquare1("/ (6,6,0,0) / (6,6,0,0) / (6,6,0,0)");
     sq1.move(scramble);
   };
 
   sq1.applySequence = function (seq: string[]) {
-    let moves = seq.reduce(
+    const moves = seq.reduce(
       (acc: number[][], mv) => [...acc, ...ScrambleParser.parseSquare1(mv)],
       []
     );
-    let res: { u: Vector3D; ang: number; pieces: string[] }[] = [];
+    const res: { u: Vector3D; ang: number; pieces: string[] }[] = [];
 
     for (let i = 0, maxi = moves.length; i < maxi; i += 1) {
       let pcs;
-      let mv = moves[i];
+      const mv = moves[i];
 
       try {
         pcs = trySingleMove(mv);
@@ -283,7 +283,7 @@ export function SUPER_SQUARE1(): PuzzleInterface {
         continue;
       }
 
-      let { u, ang } = pcs;
+      const { u, ang } = pcs;
 
       res.push({ u, ang, pieces: pcs.pieces.map(p => p.id) });
 

@@ -13,7 +13,7 @@ interface IMeta {
 }
 
 let curScramble: ReturnType<typeof ScrambleParser.parseScrambleOld>;
-let curScrambleStrArr: string[] = [];
+const curScrambleStrArr: string[] = [];
 let sol: string[];
 
 function stateInit(doMove: Function, state: string) {
@@ -37,18 +37,18 @@ function solveParallel(
   let solcur;
 
   out: for (let maxl = 0; maxl < MAXL + 1; maxl++) {
-    for (let solved in solvs) {
+    for (const solved in solvs) {
       if ((maps[solved] | mask) != maps[solved]) {
         continue;
       }
-      let state = stateInit(doMove, solved);
+      const state = stateInit(doMove, solved);
       solcur = solvs[solved].search(state, 0, maxl);
       if (solcur != undefined) {
         mask |= maps[solved];
         break out;
       }
       for (let m = 0; m < fmov.length; m++) {
-        let fstate = doMove(state, fmov[m]);
+        const fstate = doMove(state, fmov[m]);
         solcur = solvs[solved].search(fstate, 0, maxl);
         if (solcur != undefined) {
           solcur.unshift(fmov[m]);
@@ -61,7 +61,7 @@ function solveParallel(
   return [solcur, mask];
 }
 
-let U1 = 0,
+const U1 = 0,
   U2 = 1,
   U3 = 2,
   U4 = 3,
@@ -116,7 +116,7 @@ let U1 = 0,
   B8 = 52,
   B9 = 53;
 
-let moveData = [
+const moveData = [
   [
     [U1, U3, U9, U7],
     [U2, U6, U8, U4],
@@ -281,7 +281,7 @@ let moveData = [
   ], // z
 ];
 
-let moves = appendSuffix({
+const moves = appendSuffix({
   U: 0x00,
   R: 0x11,
   F: 0x22,
@@ -290,7 +290,7 @@ let moves = appendSuffix({
   B: 0x52,
 });
 
-let movesWithoutD = appendSuffix({
+const movesWithoutD = appendSuffix({
   U: 0x00,
   R: 0x11,
   F: 0x22,
@@ -298,30 +298,30 @@ let movesWithoutD = appendSuffix({
   B: 0x52,
 });
 
-let movesRouxSB = appendSuffix({
+const movesRouxSB = appendSuffix({
   U: 0x00,
   R: 0x11,
   M: 0x61,
   r: 0x71,
 });
 
-let movesZZF2L = appendSuffix({
+const movesZZF2L = appendSuffix({
   U: 0x00,
   R: 0x11,
   L: 0x41,
 });
 
 function cubeMove(state: string, move: string) {
-  let ret: any = state.split("");
-  let swaps = moveData["URFDLBurfdlbMESxyz".indexOf(move[0])];
-  let pow = "? 2'".indexOf(move[1]);
+  const ret: any = state.split("");
+  const swaps = moveData["URFDLBurfdlbMESxyz".indexOf(move[0])];
+  const pow = "? 2'".indexOf(move[1]);
   for (let i = 0; i < swaps.length; i += 1) {
     acycle(ret, swaps[i], pow);
   }
   return ret.join("");
 }
 
-let cfmeta: IMeta[] = [
+const cfmeta: IMeta[] = [
   {
     move: moves,
     maxl: 8,
@@ -371,7 +371,7 @@ let cfmeta: IMeta[] = [
   },
 ];
 
-let sabmeta: IMeta[] = [
+const sabmeta: IMeta[] = [
   {
     move: moves,
     maxl: 10,
@@ -391,7 +391,7 @@ let sabmeta: IMeta[] = [
   },
 ];
 
-let petrusmeta: IMeta[] = [
+const petrusmeta: IMeta[] = [
   {
     move: moves,
     maxl: 8,
@@ -411,7 +411,7 @@ let petrusmeta: IMeta[] = [
   },
 ];
 
-let petrus223meta: IMeta[] = [
+const petrus223meta: IMeta[] = [
   {
     move: moves,
     maxl: 10,
@@ -422,7 +422,7 @@ let petrus223meta: IMeta[] = [
   },
 ];
 
-let zzmeta: IMeta[] = [
+const zzmeta: IMeta[] = [
   {
     move: moves,
     maxl: 10,
@@ -450,7 +450,7 @@ let zzmeta: IMeta[] = [
   },
 ];
 
-let eodrmeta: IMeta[] = [
+const eodrmeta: IMeta[] = [
   {
     move: moves,
     maxl: 7,
@@ -471,17 +471,17 @@ let eodrmeta: IMeta[] = [
 
 function solveStepByStep(meta: IMeta[]): string[][] {
   let ret: any[] = [null, 0];
-  let sols = [];
+  const sols = [];
   sol = [];
-  let res: string[][] = [];
+  const res: string[][] = [];
 
   for (let i = 0; i < meta.length; i += 1) {
-    let metai = meta[i];
+    const metai = meta[i];
 
     if (!metai.solv) {
-      let solv: Record<string, gSolver> = {};
+      const solv: Record<string, gSolver> = {};
 
-      for (let solved in metai.step) {
+      for (const solved in metai.step) {
         solv[solved] = new gSolver([solved], cubeMove, metai.move);
       }
 
@@ -532,8 +532,8 @@ function block222Solver(scramble: string) {
       "URFDLB".charAt(curScramble[i].pos) + " 2'".charAt(curScramble[i].times - 1);
   }
 
-  let faceStr = ["URF", "UFL", "ULB", "UBR", "DFR", "DLF", "DBL", "DRB"];
-  let faceSolved = [
+  const faceStr = ["URF", "UFL", "ULB", "UBR", "DFR", "DLF", "DBL", "DRB"];
+  const faceSolved = [
     "----UU-UURR-RR-----FF-FF------------------------------",
     "---UU-UU----------FF-FF--------------LL-LL------------",
     "UU-UU-------------------------------LL-LL-----BB-BB---",
@@ -546,11 +546,11 @@ function block222Solver(scramble: string) {
 
   block222solv = block222solv || new gSolver(faceSolved, cubeMove, moves);
 
-  let res: string[][] = [];
+  const res: string[][] = [];
 
   for (let i = 0; i < 8; i += 1) {
     sol = [];
-    let sol1 = block222solv.search(stateInit(cubeMove, faceSolved[i]), 0);
+    const sol1 = block222solv.search(stateInit(cubeMove, faceSolved[i]), 0);
     if (sol1) {
       res.push([faceStr[i], adjustScramble(sol1)]);
     } else {
@@ -580,8 +580,8 @@ function block223Solver(scramble: string, pos: number) {
       "URFDLB".charAt(curScramble[i].pos) + " 2'".charAt(curScramble[i].times - 1);
   }
 
-  let faceStr = ["UF", "UL", "UB", "UR", "DF", "DL", "DB", "DR"];
-  let faceSolved = [
+  const faceStr = ["UF", "UL", "UB", "UR", "DF", "DL", "DB", "DR"];
+  const faceSolved = [
     "---UUUUUURR-RR----FFFFFF-------------LL-LL------------",
     "UU-UU-UU----------FF-FF-------------LLLLLL----BB-BB---",
     "UUUUUU----RR-RR---------------------LL-LL----BBBBBB---",
@@ -595,11 +595,11 @@ function block223Solver(scramble: string, pos: number) {
 
   block223solv = block223solv || new gSolver(faceSolved, cubeMove, moves);
 
-  let res: string[][] = [];
+  const res: string[][] = [];
 
   sol = [];
 
-  let sol1 = block223solv.search(stateInit(cubeMove, faceSolved[pos]), 0, 10);
+  const sol1 = block223solv.search(stateInit(cubeMove, faceSolved[pos]), 0, 10);
 
   if (sol1) {
     res.push([faceStr[pos], adjustScramble(sol1)]);
@@ -613,9 +613,9 @@ function block223Solver(scramble: string, pos: number) {
 }
 
 function getMoveMap(ori: string) {
-  let rot = ori.split(" ");
-  let map: any[] = [0, 1, 2, 3, 4, 5];
-  let rotMap = [
+  const rot = ori.split(" ");
+  const map: any[] = [0, 1, 2, 3, 4, 5];
+  const rotMap = [
     [5, 1, 0, 2, 4, 3], //x
     [0, 2, 4, 3, 5, 1], //y
     [1, 3, 2, 4, 0, 5], //z
@@ -624,8 +624,8 @@ function getMoveMap(ori: string) {
     if (!rot[i][0]) {
       continue;
     }
-    let axis = "xyz".indexOf(rot[i][0]);
-    let pow = "? 2'".indexOf(rot[i][1] || " ");
+    const axis = "xyz".indexOf(rot[i][0]);
+    const pow = "? 2'".indexOf(rot[i][1] || " ");
     for (let p = 0; p < pow; p += 1) {
       for (let j = 0; j < 6; j += 1) {
         map[j] = rotMap[axis][map[j]];
@@ -652,7 +652,7 @@ export function exec333StepSolver(
     return block223Solver(scramble, p223);
   }
 
-  let moveMap = getMoveMap(curOri);
+  const moveMap = getMoveMap(curOri);
 
   curScramble = ScrambleParser.parseScrambleOld(
     scramble,

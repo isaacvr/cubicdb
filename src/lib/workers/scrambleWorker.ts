@@ -1,38 +1,68 @@
+// import { pScramble } from "@cstimer/scramble";
 import * as all from "@cstimer/scramble";
 
-self.addEventListener("message", function (e) {
-  let mode = e.data[0];
-  let len = e.data[1];
-  let cant = e.data[2] || 1;
+interface SETTINGS {
+  scrambles: number;
+  extras: number;
+  factor: number;
+}
 
-  let batch = [];
+function f() {
+  return "";
+}
+
+self.addEventListener("message", function (e) {
+  const round = e.data[0];
+  const md = e.data[1];
+  const settings: SETTINGS = e.data[2] || { scrambles: 5, extras: 2, factor: 1 };
+  const total = settings.scrambles + settings.extras;
+  const name = e.data[3];
+
+  const mode = md[1];
+  const len = md[2];
+
+  const batch: string[] = [];
 
   postMessage({
     type: "progress",
-    mode,
+    mode: md,
+    round,
+    name,
     value: 0,
   });
 
-  for (let i = 0; i < cant; i += 1) {
+  if (mode === "r3ni") {
     batch.push(
-      all.pScramble.scramblers
-        .get(mode)
-        ?.apply(null, [mode, Math.abs(len)])
+      ...((all.pScramble.scramblers.get(mode) || f).apply(null, [mode, total]) as string)
         .replace(/\\n/g, "<br>")
-        .trim()
+        .split("<br>")
+        .map(s => s.trim().replace(/^\d+\)\s+/, ""))
     );
+  } else {
+    for (let i = 0; i < total; i += 1) {
+      batch.push(
+        ((all.pScramble.scramblers.get(mode) || f).apply(null, [mode, Math.abs(len)]) as string)
+          .replace(/\\n/g, "<br>")
+          .trim()
+      );
 
-    postMessage({
-      type: "progress",
-      mode,
-      value: ((i + 1) * 100) / cant,
-    });
+      postMessage({
+        type: "progress",
+        mode: md,
+        round,
+        name,
+        value: ((i + 1) * 100) / total,
+      });
+    }
   }
 
   postMessage({
     type: "done",
-    mode,
+    mode: md,
+    round,
     batch,
+    name,
+    settings,
   });
 });
 

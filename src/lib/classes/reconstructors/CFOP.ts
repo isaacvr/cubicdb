@@ -70,11 +70,11 @@ interface LLAlgorithm {
 type TEquivalentMode = "OLL" | "PLL";
 
 function equivalentFacelets(f1: number[], f2: number[], type: TEquivalentMode): boolean {
-  let fMap: Map<number, number> = new Map();
-  let template = "UUUUUUUUURRR------FFF---------------LLL------BBB------"
+  const fMap: Map<number, number> = new Map();
+  const template = "UUUUUUUUURRR------FFF---------------LLL------BBB------"
     .split("")
     .map(s => s != "-");
-  let filter = (s: number) => (type === "PLL" ? true : s === f1[4]); // 85 = U in ASCII representation
+  const filter = (s: number) => (type === "PLL" ? true : s === f1[4]); // 85 = U in ASCII representation
 
   for (let i = 0, maxi = f1.length; i < maxi; i += 1) {
     if (!template[i] || !filter(f1[i])) continue;
@@ -126,7 +126,7 @@ export class CFOP implements IReconstructor {
     if (this.OLLAlgs.length && this.PLLAlgs.length) return;
 
     this.OLLAlgs = (await get(dataService).algorithms.getAlgorithms({ path: "333/oll" })).map(a => {
-      let facelets = ["", "U", "U2", "U'"].map(mv =>
+      const facelets = ["", "U", "U2", "U'"].map(mv =>
         Puzzle.fromSequence(mv + " " + a.scramble, { type: "rubik" }, true)
           .toFacelet()
           .split("")
@@ -137,7 +137,7 @@ export class CFOP implements IReconstructor {
     });
 
     this.PLLAlgs = (await get(dataService).algorithms.getAlgorithms({ path: "333/pll" })).map(a => {
-      let facelets = ["", "U", "U2", "U'"].map(mv =>
+      const facelets = ["", "U", "U2", "U'"].map(mv =>
         Puzzle.fromSequence(mv + " " + a.scramble, { type: "rubik" }, true)
           .toFacelet()
           .split("")
@@ -158,10 +158,10 @@ export class CFOP implements IReconstructor {
     this.currTime = 0;
     this.moves = [];
 
-    let pieces = this.cube.p.pieces;
+    const pieces = this.cube.p.pieces;
 
     for (let i = 0, maxi = pieces.length; i < maxi; i += 1) {
-      let colorst = getColoredStickers(pieces[i]).length;
+      const colorst = getColoredStickers(pieces[i]).length;
 
       if (colorst === 1) {
         this.centers.push(pieces[i]);
@@ -184,12 +184,12 @@ export class CFOP implements IReconstructor {
   }
 
   private cross(): CrossResult[] {
-    let centers = this.centers;
-    let edges = this.edges;
-    let vecs = centers.map(c => c.stickers[0].getOrientation());
-    let cols = centers.map(c => c.stickers[0].color);
+    const centers = this.centers;
+    const edges = this.edges;
+    const vecs = centers.map(c => c.stickers[0].getOrientation());
+    const cols = centers.map(c => c.stickers[0].color);
 
-    let group = centers.map(c => {
+    const group = centers.map(c => {
       return edges.filter(edge => edge.stickers.some(st => centerStickerAligned(c, st)));
     });
 
@@ -206,12 +206,12 @@ export class CFOP implements IReconstructor {
   private f2l(cross: CrossResult[]): F2LResult | null {
     if (cross.length === 0) return null;
 
-    let centers = this.centers;
-    let edges = this.edges;
-    let corners = this.corners.filter(c => pieceInPlace(centers, c));
-    let pairs = corners.reduce((acc, corner) => {
-      let fEdges = edges.filter(edge => {
-        let cols = getColoredStickers(edge).map(st => st.color);
+    const centers = this.centers;
+    const edges = this.edges;
+    const corners = this.corners.filter(c => pieceInPlace(centers, c));
+    const pairs = corners.reduce((acc, corner) => {
+      const fEdges = edges.filter(edge => {
+        const cols = getColoredStickers(edge).map(st => st.color);
         return cols.every(c => corner.contains(c));
       });
 
@@ -220,11 +220,11 @@ export class CFOP implements IReconstructor {
       return acc;
     }, [] as Piece[][]);
 
-    let pairRes: F2LResult["pairs"] = [];
+    const pairRes: F2LResult["pairs"] = [];
 
     for (let i = 0, maxi = cross.length; i < maxi; i += 1) {
-      let cr = cross[i];
-      let cPairs = pairs.filter(p => p[0].contains(cr.color) && !p[1].contains(cr.color));
+      const cr = cross[i];
+      const cPairs = pairs.filter(p => p[0].contains(cr.color) && !p[1].contains(cr.color));
 
       if (cPairs.length) {
         pairRes.push({ cross: cr, pairs: cPairs });
@@ -242,19 +242,19 @@ export class CFOP implements IReconstructor {
   private oll(f2l: F2LResult | null): OLLResult[] | null {
     if (!f2l || f2l.total === 0) return null;
 
-    let results = f2l.pairs.filter(p => p.pairs.length === 4);
+    const results = f2l.pairs.filter(p => p.pairs.length === 4);
 
     if (results.length === 0) return null;
 
-    let res: OLLResult[] = [];
+    const res: OLLResult[] = [];
 
     for (let i = 0, maxi = results.length; i < maxi; i += 1) {
-      let { cross } = results[i];
-      let topCenter = this.centers.filter(
+      const { cross } = results[i];
+      const topCenter = this.centers.filter(
         ct => ct.stickers[0].getOrientation().add(cross.vec).abs() < EPS
       )[0];
 
-      let pieces = this.cube.pieces.filter(pc => pieceInCenter(topCenter, pc));
+      const pieces = this.cube.pieces.filter(pc => pieceInCenter(topCenter, pc));
 
       if (pieces.every(pc => pc.stickers.some(st => centerStickerAligned(topCenter, st)))) {
         res.push({
@@ -270,22 +270,22 @@ export class CFOP implements IReconstructor {
   private pll(oll: OLLResult[] | null): PLLResult[] | null {
     if (!oll || oll.length === 0 || oll[0].f2l.pairs.length != 4) return null;
 
-    let res: PLLResult[] = [];
+    const res: PLLResult[] = [];
 
     for (let o = 0, maxo = oll.length; o < maxo; o += 1) {
-      let { topCenter } = oll[o];
-      let pieces = this.cube.pieces.filter(pc => pieceInCenter(topCenter, pc));
-      let vecs = this.cube.p.faceVectors;
-      let cols = vecs.map(_ => "");
+      const { topCenter } = oll[o];
+      const pieces = this.cube.pieces.filter(pc => pieceInCenter(topCenter, pc));
+      const vecs = this.cube.p.faceVectors;
+      const cols = vecs.map(_ => "");
 
       for (let i = 0, maxi = pieces.length; i < maxi; i += 1) {
-        let st = getColoredStickers(pieces[i]);
+        const st = getColoredStickers(pieces[i]);
 
         for (let j = 0, maxj = st.length; j < maxj; j += 1) {
-          let u = st[j].getOrientation();
-          let v = vecs.find(v => v.sub(u).abs() < EPS);
+          const u = st[j].getOrientation();
+          const v = vecs.find(v => v.sub(u).abs() < EPS);
           if (!v) return null;
-          let pos = vecs.indexOf(v);
+          const pos = vecs.indexOf(v);
 
           if (!cols[pos]) {
             cols[pos] = st[j].color;
@@ -304,17 +304,17 @@ export class CFOP implements IReconstructor {
   }
 
   completed(): boolean {
-    let centers = this.centers;
+    const centers = this.centers;
     return this.cube.pieces.every(pc => pieceInPlace(centers, pc));
   }
 
   getStatus(): CFOPStatus {
-    let cross = this.cross();
-    let f2l = this.f2l(cross);
-    let oll = this.oll(f2l);
-    let pll = this.pll(oll);
-    let completed = this.completed();
-    let auf = !!(pll && !completed);
+    const cross = this.cross();
+    const f2l = this.f2l(cross);
+    const oll = this.oll(f2l);
+    const pll = this.pll(oll);
+    const completed = this.completed();
+    const auf = !!(pll && !completed);
 
     if (cross.length === 0) {
       this.stage = Stage.SCRAMBLED;
@@ -343,8 +343,8 @@ export class CFOP implements IReconstructor {
 
     this.currTime = seq.time;
     this.cube.move(seq.move);
-    let st = this.getStatus();
-    let lastStage = this.status[this.status.length - 1];
+    const st = this.getStatus();
+    const lastStage = this.status[this.status.length - 1];
     lastStage.moves.push({ move: seq.move, time: this.currTime });
     lastStage.time = this.currTime - this.lastTime;
 
@@ -367,11 +367,11 @@ export class CFOP implements IReconstructor {
 
     if (!status.f2l) return null;
 
-    let bottomLayer = status.f2l.pairs.filter(p => p.pairs.length === 4)[0].cross.vec;
-    let algs = this.OLLAlgs;
-    let cube = Puzzle.fromFacelet(status.facelet, "rubik");
+    const bottomLayer = status.f2l.pairs.filter(p => p.pairs.length === 4)[0].cross.vec;
+    const algs = this.OLLAlgs;
+    const cube = Puzzle.fromFacelet(status.facelet, "rubik");
 
-    let faceTransform: any[] = [
+    const faceTransform: any[] = [
       // Transformation according to the cross face
       [UP, "z2"],
       [RIGHT, "z"],
@@ -382,7 +382,7 @@ export class CFOP implements IReconstructor {
     ];
 
     for (let i = 0, maxi = faceTransform.length; i < maxi; i += 1) {
-      let tr = faceTransform[i];
+      const tr = faceTransform[i];
 
       if (tr[0].sub(bottomLayer).abs() < EPS) {
         cube.move(tr[1]);
@@ -390,11 +390,11 @@ export class CFOP implements IReconstructor {
       }
     }
 
-    let _facelet = cube.toFacelet();
-    let facelet = _facelet.split("").map(s => s.charCodeAt(0));
+    const _facelet = cube.toFacelet();
+    const facelet = _facelet.split("").map(s => s.charCodeAt(0));
 
     for (let a = 0, maxa = algs.length; a < maxa; a += 1) {
-      let { alg, facelets } = algs[a];
+      const { alg, facelets } = algs[a];
 
       for (let i = 0, maxi = facelets.length; i < maxi; i += 1) {
         if (equivalentFacelets(facelet, facelets[i], "OLL")) {
@@ -411,11 +411,11 @@ export class CFOP implements IReconstructor {
 
     if (!status.f2l) return null;
 
-    let bottomLayer = status.f2l.pairs.filter(p => p.pairs.length === 4)[0].cross.vec;
-    let algs = this.PLLAlgs;
-    let cube = Puzzle.fromFacelet(status.facelet, "rubik");
+    const bottomLayer = status.f2l.pairs.filter(p => p.pairs.length === 4)[0].cross.vec;
+    const algs = this.PLLAlgs;
+    const cube = Puzzle.fromFacelet(status.facelet, "rubik");
 
-    let faceTransform: any[] = [
+    const faceTransform: any[] = [
       // Transformation according to the cross face
       [UP, "z2"],
       [RIGHT, "z"],
@@ -426,7 +426,7 @@ export class CFOP implements IReconstructor {
     ];
 
     for (let i = 0, maxi = faceTransform.length; i < maxi; i += 1) {
-      let tr = faceTransform[i];
+      const tr = faceTransform[i];
 
       if (tr[0].sub(bottomLayer).abs() < EPS) {
         cube.move(tr[1]);
@@ -434,11 +434,11 @@ export class CFOP implements IReconstructor {
       }
     }
 
-    let _facelet = cube.toFacelet();
-    let facelet = _facelet.split("").map(s => s.charCodeAt(0));
+    const _facelet = cube.toFacelet();
+    const facelet = _facelet.split("").map(s => s.charCodeAt(0));
 
     for (let a = 0, maxa = algs.length; a < maxa; a += 1) {
-      let { alg, facelets } = algs[a];
+      const { alg, facelets } = algs[a];
 
       for (let i = 0, maxi = facelets.length; i < maxi; i += 1) {
         if (equivalentFacelets(facelet, facelets[i], "PLL")) {
@@ -456,17 +456,17 @@ export class CFOP implements IReconstructor {
       this.moves.length = 0;
     }
 
-    let timeline = this.getTimeline();
-    let steps = [
+    const timeline = this.getTimeline();
+    const steps = [
       [Stage.SCRAMBLED], // CROSS
       [Stage.CROSS, Stage.F2L_PAIR1, Stage.F2L_PAIR2, Stage.F2L_PAIR3], // F2L
       [Stage.F2L_PAIR4], // OLL
       [Stage.OLL, Stage.PLL, Stage.AUF, Stage.COMPLETED], // PLL
     ];
 
-    let moveCounts = steps.map(subs => subs.map(_ => 0));
-    let time = steps.map(subs => subs.map(_ => 0));
-    let moves = steps.map(subs => subs.map(_ => <string[]>[]));
+    const moveCounts = steps.map(subs => subs.map(_ => 0));
+    const time = steps.map(subs => subs.map(_ => 0));
+    const moves = steps.map(subs => subs.map(_ => <string[]>[]));
     let st = timeline[0].status;
     let cross: Algorithm | null = null;
     let oll: Algorithm | null = null;
@@ -474,7 +474,7 @@ export class CFOP implements IReconstructor {
     let crossTrans = "";
 
     for (let s = 0, maxs = steps.length, i = 0; s < maxs && i < timeline.length; s += 1) {
-      let substep = steps[s];
+      const substep = steps[s];
 
       for (let j = 0, maxj = substep.length; j < maxj && i < timeline.length; j += 1) {
         if (st.stage === substep[j]) {
@@ -495,13 +495,13 @@ export class CFOP implements IReconstructor {
         }
 
         if (!cross && (st.oll || st.pll)) {
-          let col = st.oll
+          const col = st.oll
             ? st.oll[0].f2l.cross.color
             : st.pll
               ? st.pll[0].oll.f2l.cross.color
               : "w";
-          let cols = ["w", "r", "g", "y", "o", "b"];
-          let trans = ["", "z", "x'", "x2", "z'", "x"];
+          const cols = ["w", "r", "g", "y", "o", "b"];
+          const trans = ["", "z", "x'", "x2", "z'", "x"];
 
           for (let i = 0; i < 6; i += 1) {
             if (col === cols[i]) {
@@ -523,8 +523,8 @@ export class CFOP implements IReconstructor {
       }
     }
 
-    let moveSum = sum(time.map(sum));
-    let factor = totalTime / moveSum;
+    const moveSum = sum(time.map(sum));
+    const factor = totalTime / moveSum;
 
     for (let i = 0, maxi = time.length; i < maxi; i += 1) {
       for (let j = 0, maxj = time[i].length; j < maxj; j += 1) {
@@ -532,9 +532,9 @@ export class CFOP implements IReconstructor {
       }
     }
 
-    let percents = calcPercents(time.map(sum), totalTime);
-    let f2lPercents = calcPercents(time[1], sum(time[1]));
-    let f2ls = time[1].map(
+    const percents = calcPercents(time.map(sum), totalTime);
+    const f2lPercents = calcPercents(time[1], sum(time[1]));
+    const f2ls = time[1].map(
       (t, p): ReconstructorStep => ({
         time: t,
         name: "F2L pair " + (p + 1),

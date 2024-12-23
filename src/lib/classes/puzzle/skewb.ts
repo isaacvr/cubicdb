@@ -8,7 +8,7 @@ import { assignColors, getAllStickers, random } from "./puzzleUtils";
 import { ScrambleParser } from "@classes/scramble-parser";
 
 export function SKEWB(): PuzzleInterface {
-  let skewb: PuzzleInterface = {
+  const skewb: PuzzleInterface = {
     pieces: [],
     palette: STANDARD_PALETTE,
     rotation: {},
@@ -26,7 +26,9 @@ export function SKEWB(): PuzzleInterface {
   const PI_2 = PI / 2;
   const PI_3 = PI / 3;
 
-  let center = new Piece([new Sticker([UP.add(BACK), UP.add(LEFT), UP.add(FRONT), UP.add(RIGHT)])]);
+  const center = new Piece([
+    new Sticker([UP.add(BACK), UP.add(LEFT), UP.add(FRONT), UP.add(RIGHT)]),
+  ]);
 
   center.stickers[0].vecs = [
     UP.add(BACK).add(LEFT).unit(),
@@ -35,11 +37,11 @@ export function SKEWB(): PuzzleInterface {
     UP.add(FRONT).add(RIGHT).unit(),
   ];
 
-  let cornerSticker = new Sticker([UP.add(RIGHT), UP.add(FRONT), UP.add(FRONT).add(RIGHT)]);
+  const cornerSticker = new Sticker([UP.add(RIGHT), UP.add(FRONT), UP.add(FRONT).add(RIGHT)]);
 
-  let anchor = UP.add(FRONT).add(RIGHT);
+  const anchor = UP.add(FRONT).add(RIGHT);
 
-  let corner = new Piece([
+  const corner = new Piece([
     cornerSticker,
     cornerSticker.rotate(anchor, UP, PI_2).rotate(anchor, RIGHT, PI_2),
     cornerSticker.rotate(anchor, DOWN, PI_2).rotate(anchor, BACK, PI_2),
@@ -67,9 +69,9 @@ export function SKEWB(): PuzzleInterface {
 
   const MOVE_MAP = "FURLB";
 
-  let pieces = skewb.pieces;
+  const pieces = skewb.pieces;
 
-  let planes = [
+  const planes = [
     [FRONT.add(LEFT), FRONT.add(UP), RIGHT.add(UP)], // F
     [RIGHT.add(UP), FRONT.add(UP), FRONT.add(LEFT)], // U
     [BACK.add(UP), RIGHT.add(FRONT), RIGHT.add(UP)], // R
@@ -85,10 +87,10 @@ export function SKEWB(): PuzzleInterface {
     [RIGHT, UP, LEFT].map(e => e.add(FRONT.mul(2))), // z
   ];
 
-  let trySingleMove = (mv: any): { pieces: Piece[]; u: Vector3D; ang: number } | null => {
-    let moveId = mv[0];
+  const trySingleMove = (mv: any): { pieces: Piece[]; u: Vector3D; ang: number } | null => {
+    const moveId = mv[0];
     let turns = mv[1];
-    let pts1 = planes[moveId];
+    const pts1 = planes[moveId];
 
     if (moveId >= planes.length - 3) {
       turns = (-turns * 3) / 4;
@@ -99,10 +101,10 @@ export function SKEWB(): PuzzleInterface {
     const mu = u.mul(-1);
     const ang = -2 * PI_3 * turns;
 
-    let pcs = [];
+    const pcs = [];
 
     for (let i = 0, maxi = pieces.length; i < maxi; i += 1) {
-      let d = pieces[i].direction1(pts1[0], u);
+      const d = pieces[i].direction1(pts1[0], u);
       if (d === 0) {
         console.log("Invalid move. Piece intersection detected.", MOVE_MAP[moveId], turns, mv);
         console.log("Piece: ", i, pieces[i], pts1);
@@ -123,14 +125,14 @@ export function SKEWB(): PuzzleInterface {
 
   skewb.move = function (moves: any[]) {
     for (let m = 0, maxm = moves.length; m < maxm; m += 1) {
-      let mv = moves[m];
-      let pcs = trySingleMove(mv);
+      const mv = moves[m];
+      const pcs = trySingleMove(mv);
 
       if (!pcs) {
         return false;
       }
 
-      let { u, ang } = pcs;
+      const { u, ang } = pcs;
       pcs.pieces.forEach(p => p.rotate(CENTER, u, ang, true));
     }
 
@@ -138,8 +140,8 @@ export function SKEWB(): PuzzleInterface {
   };
 
   skewb.toMove = function (piece: Piece, sticker: Sticker, dir: Vector3D) {
-    let mc = sticker.updateMassCenter();
-    let toMovePieces = pieces.filter(p => p.direction1(mc, dir) >= 0);
+    const mc = sticker.updateMassCenter();
+    const toMovePieces = pieces.filter(p => p.direction1(mc, dir) >= 0);
     return {
       pieces: toMovePieces,
       ang: 2 * PI_3,
@@ -152,18 +154,18 @@ export function SKEWB(): PuzzleInterface {
     const MOVES = 30;
 
     for (let i = 0; i < MOVES; i += 1) {
-      let p = random(pieces) as Piece;
-      let s = random(p.stickers.filter(s => !/^[xd]{1}$/.test(s.color))) as Sticker;
-      let vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > EPS));
-      let pcs = skewb.toMove(p, s, vec) as ToMoveResult;
-      let cant = 1 + random(2);
+      const p = random(pieces) as Piece;
+      const s = random(p.stickers.filter(s => !/^[xd]{1}$/.test(s.color))) as Sticker;
+      const vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > EPS));
+      const pcs = skewb.toMove(p, s, vec) as ToMoveResult;
+      const cant = 1 + random(2);
       pcs.pieces.forEach((p: Piece) => p.rotate(CENTER, vec, pcs.ang * cant, true));
     }
   };
 
   skewb.applySequence = function (seq: string[]) {
-    let moves = seq.map(mv => ScrambleParser.parseSkewb(mv)[0]);
-    let res: { u: Vector3D; ang: number; pieces: string[] }[] = [];
+    const moves = seq.map(mv => ScrambleParser.parseSkewb(mv)[0]);
+    const res: { u: Vector3D; ang: number; pieces: string[] }[] = [];
 
     for (let i = 0, maxi = moves.length; i < maxi; i += 1) {
       let pcs;
@@ -178,7 +180,7 @@ export function SKEWB(): PuzzleInterface {
         continue;
       }
 
-      let { u, ang } = pcs;
+      const { u, ang } = pcs;
 
       res.push({ u, ang, pieces: pcs.pieces.map(p => p.id) });
 

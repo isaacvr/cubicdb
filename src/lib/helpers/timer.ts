@@ -7,13 +7,13 @@ export function timer(val: number, dec?: boolean, suff?: boolean): string {
   if (isNaN(val)) return (dec ? "0.00" : "0") + (suff ? "s" : "");
 
   let v = ~~(val / 10);
-  let ms = v % 100;
+  const ms = v % 100;
   v = ~~(v / 100);
-  let s = v % 60;
+  const s = v % 60;
   v = ~~(v / 60);
-  let m = v % 60;
+  const m = v % 60;
   v = ~~(v / 60);
-  let h = v;
+  const h = v;
 
   const l2 = (s: number) => ("00" + s).slice(-2);
 
@@ -51,11 +51,11 @@ export function infinitePenalty(s: Solve): boolean {
 }
 
 export function timerToMilli(n: number): number {
-  let mtp = [10, 1_000, 60_000, 3_600_000]; // Multiplier up to hours
+  const mtp = [10, 1_000, 60_000, 3_600_000]; // Multiplier up to hours
   let res = 0;
 
   for (let i = 0, maxi = mtp.length; i < maxi && n; i += 1) {
-    let d = n % 100;
+    const d = n % 100;
     res += d * mtp[i];
 
     n = ~~(n / 100);
@@ -69,8 +69,8 @@ export function adjustMillis(n: number, round = false): number {
 }
 
 export function formatHour(n: number): string {
-  let res = n % 12 || 12;
-  let suff = ["am", "pm"][~~(n >= 12)];
+  const res = n % 12 || 12;
+  const suff = ["am", "pm"][~~(n >= 12)];
   return res + suff;
 }
 

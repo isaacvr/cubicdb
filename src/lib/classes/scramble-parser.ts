@@ -21,8 +21,8 @@ export class ScrambleParser {
   constructor() {}
 
   static parseScramble(scramble: string, moveMap: string) {
-    let moveseq = [];
-    let moves = scramble.split(/\s+/g);
+    const moveseq = [];
+    const moves = scramble.split(/\s+/g);
     let m, w, f, p;
 
     for (let s = 0, maxs = moves.length; s < maxs; s += 1) {
@@ -77,12 +77,12 @@ export class ScrambleParser {
     moveToOrder = _moveToOrder,
     simplify = false
   ) {
-    let scr = ScrambleParser.parseNNNString(scramble, simplify);
-    let moves = ScrambleParser.parseScramble(scr, MOVE_MAP);
-    let res = [];
+    const scr = ScrambleParser.parseNNNString(scramble, simplify);
+    const moves = ScrambleParser.parseScramble(scr, MOVE_MAP);
+    const res = [];
 
     for (let i = 0, maxi = moves.length; i < maxi; i += 1) {
-      let o = moveToOrder(MOVE_MAP.charAt(moves[i][0]), order);
+      const o = moveToOrder(MOVE_MAP.charAt(moves[i][0]), order);
 
       if (!moves[i][4]) {
         res.push([
@@ -100,7 +100,7 @@ export class ScrambleParser {
   }
 
   static parseMegaminx(scramble: string) {
-    let res: number[][] = [];
+    const res: number[][] = [];
 
     // Carrot Notation
     if (
@@ -109,7 +109,7 @@ export class ScrambleParser {
         .filter(e => e)
         .every(e => /^(\s*([+-]{2}|U|U'))*$/.test(e))
     ) {
-      let moves = scramble.match(/[+-]{2}|U'?/g);
+      const moves = scramble.match(/[+-]{2}|U'?/g);
 
       if (!moves) {
         return res;
@@ -134,21 +134,21 @@ export class ScrambleParser {
       }
     } else {
       // WCA Notation
-      let moves =
+      const moves =
         scramble.match(
           /((DB[RL]\d*'?)|([dbDB][RL]\d*'?)|(\[[ulfrbd]\d*'?\])|([LRDlrd](\+|-){1,2})|([ULFRBDy]\d*'?))/g
         ) || [];
-      let moveMap = "ULFRBD";
+      const moveMap = "ULFRBD";
 
       for (let i = 0, maxi = moves.length; i < maxi; i += 1) {
-        let mv = moves[i];
+        const mv = moves[i];
 
         if (/^([LRDlrd](\+|-){1,2})$/.test(mv)) {
-          let type = { d: 0, r: 1, l: 3 }[mv[0].toLowerCase()] || 0;
-          let turns = mv.indexOf("+") * (mv.length - 1);
+          const type = { d: 0, r: 1, l: 3 }[mv[0].toLowerCase()] || 0;
+          const turns = mv.indexOf("+") * (mv.length - 1);
           res.push([type, turns, -1, mv[0] === mv[0].toLowerCase() ? 1 : 0]);
         } else {
-          let turns =
+          const turns =
             (parseInt(mv.replace(/\D+(\d+)\D*/g, "$1")) || 1) * Math.sign(mv.indexOf("'") + 0.2);
 
           if (/^([ULFRBDy]\d*'?)$/.test(mv)) {
@@ -180,16 +180,16 @@ export class ScrambleParser {
     // MOVE_MAP = "URLB"
     // MV = [ plane, turns, layers, direction ] ]
 
-    let res = [];
-    let moveReg = /(([ULRB]w?)|(o?[ULRB])|[urlbdyz])['2]?/g;
-    let moves = scramble.match(moveReg);
+    const res = [];
+    const moveReg = /(([ULRB]w?)|(o?[ULRB])|[urlbdyz])['2]?/g;
+    const moves = scramble.match(moveReg);
 
     if (!moves) return [];
 
     for (let i = 0, maxi = moves.length; i < maxi; i += 1) {
-      let mv = moves[i];
+      const mv = moves[i];
 
-      let turns =
+      const turns =
         (parseInt(mv.replace(/\D+(\d+)\D*/g, "$1")) || 1) * Math.sign(mv.indexOf("'") + 0.2);
 
       if (mv.startsWith("o")) {
@@ -199,7 +199,7 @@ export class ScrambleParser {
       } else if (mv[0] === "d") {
         res.push([0, -turns, 2, -1]);
       } else {
-        let mmv = mv[0].toUpperCase();
+        const mmv = mv[0].toUpperCase();
         res.push([
           moveMap.indexOf(mmv),
           turns,
@@ -213,15 +213,15 @@ export class ScrambleParser {
   }
 
   static parseSkewb(scramble: string, moveMap = "FURLBfrlbxyz") {
-    let res = [];
-    let moveReg = /[FULRBfrlbxyz]['2]?/g;
-    let moves = scramble.match(moveReg);
+    const res = [];
+    const moveReg = /[FULRBfrlbxyz]['2]?/g;
+    const moves = scramble.match(moveReg);
 
     if (!moves) return [];
 
     for (let i = 0, maxi = moves.length; i < maxi; i += 1) {
-      let mv = moves[i];
-      let turns =
+      const mv = moves[i];
+      const turns =
         (parseInt(mv.replace(/\D+(\d+)\D*/g, "$1")) || 1) * Math.sign(mv.indexOf("'") + 0.2);
       res.push([moveMap.indexOf(mv[0]), -turns]);
     }
@@ -230,17 +230,17 @@ export class ScrambleParser {
   }
 
   static parseSquare1(scramble: string) {
-    let newScramble = scramble.replace(/\s+/g, "").split("/");
-    let sqres = [/^\((-?\d),(-?\d)\)$/, /^(-?\d),(-?\d)$/, /^(-?\d)(-?\d)$/, /^(-?\d)$/];
-    let res = [];
+    const newScramble = scramble.replace(/\s+/g, "").split("/");
+    const sqres = [/^\((-?\d),(-?\d)\)$/, /^(-?\d),(-?\d)$/, /^(-?\d)(-?\d)$/, /^(-?\d)$/];
+    const res = [];
 
     for (let i = 0, maxi = newScramble.length; i < maxi; i += 1) {
-      let reg = sqres.find(reg => reg.exec(newScramble[i]));
+      const reg = sqres.find(reg => reg.exec(newScramble[i]));
 
       if (reg) {
-        let m = reg.exec(newScramble[i])!;
-        let u = ~~m[1];
-        let d = ~~m[2];
+        const m = reg.exec(newScramble[i])!;
+        const u = ~~m[1];
+        const d = ~~m[2];
         if (u != 0) {
           res.push([1, u]);
         }
@@ -259,16 +259,16 @@ export class ScrambleParser {
   }
 
   static parseSuperSquare1(scramble: string) {
-    let newScramble = scramble.replace(/\s+/g, "").split("/");
-    let sqres = /^\((-?\d),(-?\d),(-?\d),(-?\d)\)$/;
-    let res = [];
+    const newScramble = scramble.replace(/\s+/g, "").split("/");
+    const sqres = /^\((-?\d),(-?\d),(-?\d),(-?\d)\)$/;
+    const res = [];
 
     for (let i = 0, maxi = newScramble.length; i < maxi; i += 1) {
-      let m = sqres.exec(newScramble[i]);
+      const m = sqres.exec(newScramble[i]);
 
       if (m) {
         for (let n = 1; n <= 4; n += 1) {
-          let mv = ~~m[n];
+          const mv = ~~m[n];
           mv && res.push([n, mv]);
         }
       }
@@ -281,16 +281,16 @@ export class ScrambleParser {
   }
 
   static parseFTO(scramble: string) {
-    let res = [];
-    let moveReg = /(BL|BR|[URFDLB])'?/g;
-    let moves = scramble.match(moveReg);
+    const res = [];
+    const moveReg = /(BL|BR|[URFDLB])'?/g;
+    const moves = scramble.match(moveReg);
     const moveMap = ["U", "R", "F", "D", "L", "B", "BR", "BL"];
 
     if (!moves) return [];
 
     for (let i = 0, maxi = moves.length; i < maxi; i += 1) {
-      let mv = moves[i];
-      let turns = mv.endsWith("'") ? -1 : 1;
+      const mv = moves[i];
+      const turns = mv.endsWith("'") ? -1 : 1;
       res.push([moveMap.indexOf(turns < 0 ? mv.slice(0, -1) : mv), -turns]);
     }
 
@@ -298,14 +298,14 @@ export class ScrambleParser {
   }
 
   static parseClock(scramble: string) {
-    let parts = scramble.replace(/\n+/g, " ").split(/\s+/g);
-    let res: number[][] = [];
+    const parts = scramble.replace(/\n+/g, " ").split(/\s+/g);
+    const res: number[][] = [];
 
     if (/-\d/.test(scramble)) {
       /// Concise notation
       const pins = [0xc, 0x5, 0x3, 0xa, 0x7, 0xb, 0xe, 0xd, 0xf, 0x0, 0];
 
-      let parts = scramble.replace(/\s+/g, "").split("/");
+      const parts = scramble.replace(/\s+/g, "").split("/");
 
       if (parts.length != 11) return res;
 
@@ -313,17 +313,17 @@ export class ScrambleParser {
       const SINGLE_REG = /^\((-?\d)\)$/;
 
       for (let i = 0, maxi = parts.length; i < maxi; i += 1) {
-        let mv = parts[i];
+        const mv = parts[i];
 
         if (BOTH_REG.test(mv) && i < 4) {
-          let moves = mv.replace(BOTH_REG, "$1 $2").split(" ").map(Number);
+          const moves = mv.replace(BOTH_REG, "$1 $2").split(" ").map(Number);
 
           res.push([pins[i], moves[0], 0]);
           res.push([-1, -1, -1]);
           res.push([i & 1 ? pins[i] : pins[(i + 2) & 3], -moves[1], 0]);
           res.push([-1, -1, -1]);
         } else if (SINGLE_REG.test(mv)) {
-          let move = +mv.replace(SINGLE_REG, "$1");
+          const move = +mv.replace(SINGLE_REG, "$1");
 
           if (i === 9) {
             res.push([-1, -1, -1]);
@@ -333,7 +333,7 @@ export class ScrambleParser {
             res.push([pins[i], move, 0]);
           }
         } else {
-          let pin = parseInt(
+          const pin = parseInt(
             mv
               .split("")
               .map(s => (s === "U" ? 1 : 0))
@@ -383,16 +383,16 @@ export class ScrambleParser {
           res.push([-3, parts[i][1] === "2" ? 2 : parts[i][1] === "'" ? -1 : 1]);
           first = true;
         } else {
-          let cmd = [0, 0, 0];
+          const cmd = [0, 0, 0];
 
           for (let j = 0, maxj = letters.length; j < maxj; j += 1) {
             if (parts[i].startsWith(letters[j])) {
               cmd[0] = pins[j];
 
               if (parts[i].includes("(")) {
-                let mvs = parts[i].slice(letters[j].length).match(/\((\d[+-]),\s*(\d[+-])\)/);
+                const mvs = parts[i].slice(letters[j].length).match(/\((\d[+-]),\s*(\d[+-])\)/);
                 if (mvs && mvs.length >= 3) {
-                  let upPos =
+                  const upPos =
                     checkBit(cmd[0], 3) === checkBit(cmd[0], 1)
                       ? [2, 1][(cmd[0] & 0x8) >> 3]
                       : checkBit(cmd[0], 3) === checkBit(cmd[0], 2)
@@ -445,7 +445,7 @@ export class ScrambleParser {
         } else if (parts[i][0] === "z") {
           res.push([-3, parts[i][1] === "2" ? 2 : parts[i][1] === "'" ? -1 : 1]);
         } else if (/\d+/.test(parts[i])) {
-          let turns = parseInt(parts[i].replace("=", "").slice(1, 3));
+          const turns = parseInt(parts[i].replace("=", "").slice(1, 3));
           parts[i][0] === "d" ? (d = turns) : (u = turns);
         } else {
           if (pins.length === 4) {

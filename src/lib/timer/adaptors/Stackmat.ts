@@ -70,7 +70,7 @@ const isRunning: STActor = ({
 };
 
 const wasCleaned: STActor = ({ context: { lastState, stState, initScrambler } }) => {
-  let ls = get(lastState);
+  const ls = get(lastState);
 
   if (ls && get(stState).time_milli < ls.time_milli) {
     initScrambler();
@@ -165,14 +165,14 @@ export class StackmatInput implements TimerInputHandler {
   }
 
   static async updateInputDevices(): Promise<string[][]> {
-    let devices: string[][] = [];
-    let retobj: Promise<string[][]> = new Promise(function (resolve, reject) {
+    const devices: string[][] = [];
+    const retobj: Promise<string[][]> = new Promise(function (resolve, reject) {
       resolve(devices);
     });
 
     return navigator?.mediaDevices?.enumerateDevices().then(function (deviceInfos) {
       for (let i = 0; i < deviceInfos.length; i++) {
-        let deviceInfo = deviceInfos[i];
+        const deviceInfo = deviceInfos[i];
         if (deviceInfo.kind === "audioinput") {
           devices.push([
             deviceInfo.deviceId,
@@ -226,7 +226,7 @@ export class StackmatInput implements TimerInputHandler {
     this.interpreter.start();
     this.isActive = true;
 
-    let selectObj: any = {
+    const selectObj: any = {
       echoCancellation: false,
       noiseSuppression: false,
     };
@@ -274,7 +274,7 @@ export class StackmatInput implements TimerInputHandler {
       StackmatInput.stackmatProcessor = await this.getAudioProcessor();
     }
 
-    let stackmatProcessor = StackmatInput.stackmatProcessor;
+    const stackmatProcessor = StackmatInput.stackmatProcessor;
 
     await this.audio_context.audioWorklet.addModule(stackmatProcessor);
 
@@ -328,7 +328,7 @@ export class StackmatInput implements TimerInputHandler {
     // };
 
     this.node.port.onmessage = ev => {
-      let { data }: { data: StackmatState } = ev;
+      const { data }: { data: StackmatState } = ev;
       data.stackmatId = this.id;
       this.callback(data);
     };
@@ -361,7 +361,7 @@ export class StackmatInput implements TimerInputHandler {
   callback(sst: StackmatState) {
     if (!this.isActive) return;
 
-    let ctx = this.interpreter.getSnapshot().context;
+    const ctx = this.interpreter.getSnapshot().context;
     ctx.time.set(sst.time_milli);
     ctx.stState.set(sst);
     ctx.lastState.set(this.lastState);

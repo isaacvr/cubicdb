@@ -53,8 +53,8 @@ export class Paginator {
     this._page = between(this._page, 1, this._pages);
     this.offset = (this._page - 1) * this._limit;
 
-    let minL = Math.max(1, this._page - (this.width >> 1)); // min label
-    let maxL = Math.min(this._pages, minL + this.width - 1); // max label
+    const minL = Math.max(1, this._page - (this.width >> 1)); // min label
+    const maxL = Math.min(this._pages, minL + this.width - 1); // max label
 
     this.labels.length = 0;
 

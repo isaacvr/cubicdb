@@ -20,7 +20,7 @@ export class BezierCurve {
       return this;
     }
 
-    let na = this.anchors.map(a => a.add(v, self));
+    const na = this.anchors.map(a => a.add(v, self));
 
     return new BezierCurve(na, this.resolution);
   }
@@ -31,7 +31,7 @@ export class BezierCurve {
       return this;
     }
 
-    let na = this.anchors.map(a => a.sub(v, self));
+    const na = this.anchors.map(a => a.sub(v, self));
 
     return new BezierCurve(na, this.resolution);
   }
@@ -42,7 +42,7 @@ export class BezierCurve {
       return this;
     }
 
-    let na = this.anchors.map(a => a.mul(n, self));
+    const na = this.anchors.map(a => a.mul(n, self));
 
     return new BezierCurve(na, this.resolution);
   }
@@ -53,7 +53,7 @@ export class BezierCurve {
       return this;
     }
 
-    let na = this.anchors.map(a => a.div(n, self));
+    const na = this.anchors.map(a => a.div(n, self));
 
     return new BezierCurve(na, this.resolution);
   }
@@ -64,7 +64,7 @@ export class BezierCurve {
       return this;
     }
 
-    let na = this.anchors.map(a => a.rotate(center, u, ang, self));
+    const na = this.anchors.map(a => a.rotate(center, u, ang, self));
 
     return new BezierCurve(na, this.resolution);
   }

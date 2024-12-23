@@ -38,19 +38,19 @@ export function rotateSegment(
   ox: number,
   oy: number
 ): number[] {
-  let p1 = rotatePoint(x1 - ox, y1 - oy, ang);
-  let p2 = rotatePoint(x2 - ox, y2 - oy, ang);
+  const p1 = rotatePoint(x1 - ox, y1 - oy, ang);
+  const p2 = rotatePoint(x2 - ox, y2 - oy, ang);
   return [p1[0] + ox, p1[1] + oy, p2[0] + ox, p2[1] + oy];
 }
 
 export function between(n: number, a: number, b: number): number {
-  let na = Math.min(a, b);
-  let nb = Math.max(a, b);
+  const na = Math.min(a, b);
+  const nb = Math.max(a, b);
   return Math.min(nb, Math.max(na, n));
 }
 
 export function isBetween(n: number, a: number, b: number, inclusive = true): boolean {
-  let v = Math.sign(n - a) * Math.sign(n - b);
+  const v = Math.sign(n - a) * Math.sign(n - b);
   return inclusive ? v <= 0 : v < 0;
 }
 
@@ -60,8 +60,8 @@ export function planeLineIntersection(
   l0: Vector3D,
   l: Vector3D
 ): Vector3D | null | undefined {
-  let num = p0.sub(l0).dot(n);
-  let den = l.dot(n);
+  const num = p0.sub(l0).dot(n);
+  const den = l.dot(n);
 
   if (den === 0) {
     return null;
@@ -79,7 +79,7 @@ export function search(v: number, arr: number[], bound?: boolean): number {
     fin = arr.length;
 
   while (ini < fin) {
-    let mid = (ini + fin) >> 1;
+    const mid = (ini + fin) >> 1;
 
     if (!bound && arr[mid] === v) {
       return mid;
@@ -101,11 +101,11 @@ export function minmax(v: number, a: number, b: number) {
 
 export function calcPercents(st: number[], time: number) {
   let acc = 0;
-  let solveSteps = [];
+  const solveSteps = [];
 
   for (let i = 0, maxi = st.length; i < maxi; i += 1) {
-    let perc = (st[i] * 100) / time;
-    let newV = Math.round(perc + acc);
+    const perc = (st[i] * 100) / time;
+    const newV = Math.round(perc + acc);
     acc = perc - newV;
     solveSteps.push(newV);
   }
@@ -118,15 +118,15 @@ export function getPixelCoord(x: number, y: number, width: number): number {
 }
 
 export function getPixelInfo(x: number, y: number, d: ImageData): Color {
-  let idx = getPixelCoord(x, y, d.width);
-  let data = d.data;
+  const idx = getPixelCoord(x, y, d.width);
+  const data = d.data;
 
   return new Color(data[idx], data[idx + 1], data[idx + 2]);
 }
 
 export function colorDistance(a: Color, b: Color): number {
-  let c1 = a.color;
-  let c2 = b.color;
+  const c1 = a.color;
+  const c2 = b.color;
 
   return c1.map((e, p) => (e - c2[p]) ** 2).reduce((a, b) => a + b, 0);
 }
@@ -137,15 +137,15 @@ export function lineIntersection2D(
   b: Vector2D,
   _ub: Vector2D
 ): Vector2D | null {
-  let ua = _ua.unit();
-  let ub = _ub.unit();
+  const ua = _ua.unit();
+  const ub = _ub.unit();
 
   if (Math.abs(Vector2D.cross(ua, ub)) < EPS) return null;
 
-  let D = ua.y * ub.x - ua.x * ub.y;
-  let D1 = (b.y - a.y) * ub.x - (b.x - a.x) * ub.y;
+  const D = ua.y * ub.x - ua.x * ub.y;
+  const D1 = (b.y - a.y) * ub.x - (b.x - a.x) * ub.y;
 
-  let t1 = D1 / D;
+  const t1 = D1 / D;
 
   return a.add(ua.mul(t1));
 }
@@ -156,12 +156,12 @@ export function lineIntersection3D(
   b: Vector3D,
   ub: Vector3D
 ): Vector3D | null {
-  let v1 = ua.cross(ub);
-  let v2 = b.sub(a).cross(ub);
+  const v1 = ua.cross(ub);
+  const v2 = b.sub(a).cross(ub);
 
   if (v1.abs() < EPS) return null;
 
-  let r = v2.abs() / v1.abs();
+  const r = v2.abs() / v1.abs();
 
   if (v1.mul(r).sub(v2).abs() < EPS) {
     return a.add(ua.mul(r));
@@ -203,13 +203,13 @@ export function sum(arr: number[]): number {
 }
 
 export function toInt(n: number, d: number): number {
-  let pot = 10 ** d;
+  const pot = 10 ** d;
   return Math.floor(n / pot) * pot;
 }
 
 export function getLagrangeInterpolation(pts: Vector2D[]) {
-  let funcs = pts.map((pt, pos) => {
-    let otherPts = pts.filter((_, pos1) => pos1 != pos);
+  const funcs = pts.map((pt, pos) => {
+    const otherPts = pts.filter((_, pos1) => pos1 != pos);
     return (x: number) => pt.y * otherPts.reduce((acc, p) => (acc * (x - p.x)) / (pt.x - p.x), 1);
   });
 
@@ -218,10 +218,10 @@ export function getLagrangeInterpolation(pts: Vector2D[]) {
 
 // Animation Timing Functions
 export function cubicBezier(t: number, x1: number, y1: number, x2: number, y2: number): number {
-  let p1 = new Vector2D(0, 0);
-  let p2 = new Vector2D(x1, y1);
-  let p3 = new Vector2D(x2, y2);
-  let p4 = new Vector2D(1, 1);
+  const p1 = new Vector2D(0, 0);
+  const p2 = new Vector2D(x1, y1);
+  const p3 = new Vector2D(x2, y2);
+  const p4 = new Vector2D(1, 1);
 
   return p1.mul((1 - t) ** 3).add(
     p2
@@ -280,7 +280,7 @@ export function bitLength(n: number): number {
 export function pascal(n: number) {
   if (n <= 0) return [1];
 
-  let res = [[1], []];
+  const res = [[1], []];
   let cur = 1;
 
   for (let i = 1; i <= n; i += 1) {
@@ -293,12 +293,12 @@ export function pascal(n: number) {
 }
 
 export function bezier(pts: Vector3D[], points: number): Vector3D[] {
-  let res: Vector3D[] = [];
-  let n = pts.length - 1;
-  let Cnk = pascal(n);
+  const res: Vector3D[] = [];
+  const n = pts.length - 1;
+  const Cnk = pascal(n);
 
   for (let j = 0; j <= points; j += 1) {
-    let a = j / points;
+    const a = j / points;
     res.push(
       pts.reduce((ac: Vector3D, p: Vector3D, pos: number) => {
         return ac.add(p.mul(Cnk[pos] * Math.pow(1 - a, n - pos) * Math.pow(a, pos)), true);
@@ -312,14 +312,14 @@ export function bezier(pts: Vector3D[], points: number): Vector3D[] {
 // Circle that goes through p1 and p3 with p1p2 and p2p3 being tangent to the circle
 export function circle(p1: Vector3D, p2: Vector3D, p3: Vector3D, PPC: number): Vector3D[] {
   const PI_2 = Math.PI / 2;
-  let P = [p1, p2, p3];
-  let v1 = p1.sub(p2);
-  let v2 = p3.sub(p2);
+  const P = [p1, p2, p3];
+  const v1 = p1.sub(p2);
+  const v2 = p3.sub(p2);
 
-  let u = Vector3D.cross(P[0], P[1], P[2]).unit();
+  const u = Vector3D.cross(P[0], P[1], P[2]).unit();
 
   if (Math.abs(v1.abs() - v2.abs()) < EPS) {
-    let center = lineIntersection3D(
+    const center = lineIntersection3D(
       P[0],
       v1.rotate(CENTER, u, PI_2),
       P[2],
@@ -327,14 +327,14 @@ export function circle(p1: Vector3D, p2: Vector3D, p3: Vector3D, PPC: number): V
     );
 
     if (center) {
-      let sides = [v1.abs(), v2.abs(), v1.sub(v2).abs()];
-      let ang =
+      const sides = [v1.abs(), v2.abs(), v1.sub(v2).abs()];
+      const ang =
         Math.PI -
         Math.acos((sides[2] ** 2 - sides[0] ** 2 - sides[1] ** 2) / (-2 * sides[0] * sides[1]));
-      let pts: Vector3D[] = [];
+      const pts: Vector3D[] = [];
 
       for (let j = 0; j <= PPC; j += 1) {
-        let a = j / PPC;
+        const a = j / PPC;
         pts.push(P[0].rotate(center, u, a * ang));
       }
 
@@ -355,12 +355,12 @@ export function cmd(command: string, command1: string = "", len: number = 0) {
     B: BACK,
   };
 
-  let sum = command
+  const sum = command
     .split("")
     .filter(c => c in dirMap)
     .reduce((acc, c) => acc.add(dirMap[c], true), new Vector3D());
 
-  let sum1 = command1
+  const sum1 = command1
     .split("")
     .filter(c => c in dirMap)
     .reduce((acc, c) => acc.add(dirMap[c], true), new Vector3D());
@@ -374,29 +374,31 @@ export function mod(n: number, m: number) {
 
 export function getCircle(p1: Vector3D, p2: Vector3D, p3: Vector3D, PPC: number) {
   const PI_2 = Math.PI / 2;
-  let u = Vector3D.cross(p1, p2, p3);
-  let mid1 = p1.add(p2).div(2);
-  let mid2 = p3.add(p2).div(2);
-  let d1 = p1.sub(p2).rotate(CENTER, u, PI_2, true);
-  let d2 = p3.sub(p2).rotate(CENTER, u, PI_2, true);
+  const u = Vector3D.cross(p1, p2, p3);
+  const mid1 = p1.add(p2).div(2);
+  const mid2 = p3.add(p2).div(2);
+  const d1 = p1.sub(p2).rotate(CENTER, u, PI_2, true);
+  const d2 = p3.sub(p2).rotate(CENTER, u, PI_2, true);
 
-  let center = lineIntersection3D(mid1, d1, mid2, d2);
+  const center = lineIntersection3D(mid1, d1, mid2, d2);
 
   if (!center) return bezier([p1, p2, p3], PPC);
 
   // let sides = [d1.abs(), d2.abs(), d1.sub(d2).abs()];
-  let sides = [
+  const sides = [
     center.sub(p1).abs(),
     center.sub(p3).abs(),
     center.sub(p3).sub(center.sub(p1)).abs(),
   ];
-  let ang = Math.acos((sides[2] ** 2 - sides[0] ** 2 - sides[1] ** 2) / (-2 * sides[0] * sides[1]));
-  let pts: Vector3D[] = [];
+  const ang = Math.acos(
+    (sides[2] ** 2 - sides[0] ** 2 - sides[1] ** 2) / (-2 * sides[0] * sides[1])
+  );
+  const pts: Vector3D[] = [];
 
   console.log("ANG: ", ang);
 
   for (let j = 0; j <= PPC; j += 1) {
-    let a = j / PPC;
+    const a = j / PPC;
     pts.push(p1.rotate(center, u, a * ang));
   }
 

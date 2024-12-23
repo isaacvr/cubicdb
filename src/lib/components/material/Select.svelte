@@ -5,7 +5,6 @@
   import { weakRandomUUID } from "@helpers/strings";
   import ExpandIcon from "@icons/ChevronDown.svelte";
   import type { Placement, Side } from "@interfaces";
-  import e from "cors";
 
   import { Button, Dropdown, DropdownDivider, DropdownItem } from "flowbite-svelte";
   import { createEventDispatcher, onMount, tick } from "svelte";

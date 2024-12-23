@@ -4,7 +4,7 @@
   import { derived, writable, type Readable } from "svelte/store";
 
   /// Modules
-  import * as all from "@cstimer/scramble";
+  import { pScramble } from "@cstimer/scramble";
   import JSConfetti from "js-confetti";
 
   /// Data
@@ -15,7 +15,6 @@
     AON,
     ICONS,
     STEP_COLORS,
-    MISC,
   } from "@constants";
 
   /// Components
@@ -300,7 +299,7 @@
     //   let md = modes[i];
     //   let len = lens[i];
     //   for (let j = 0; j < 50; j += 1) {
-    //     let scr = (all.pScramble.scramblers.get(md) || (() => '')).apply(null, [
+    //     let scr = (pScramble.scramblers.get(md) || (() => '')).apply(null, [
     //       md, Math.abs(len)
     //     ]).replace(/\\n/g, '<br>').trim();
     //     let pred = identifyPuzzle(scr);
@@ -323,7 +322,7 @@
       $scramble = "";
 
       let md = useMode || _mode || $mode[1];
-      let len = useLen || ($mode[1] === "r3ni" ? $prob : $mode[2]);
+      let len = useLen || ($mode[1] === "r3" || $mode[1] === "r3ni" ? $prob : $mode[2]);
       let s = useScramble || scr;
       let pb = useProb != -1 ? useProb : _prob != -1 && typeof _prob === "number" ? _prob : $prob;
 
@@ -332,7 +331,7 @@
       } else {
         $scramble = s
           ? s
-          : (all.pScramble.scramblers.get(md) || (() => ""))
+          : (pScramble.scramblers.get(md) || (() => ""))
               .apply(null, [md, Math.abs(len), pb < 0 ? undefined : pb])
               .replace(/\\n/g, "<br>")
               .trim();
@@ -356,7 +355,7 @@
 
       // console.log("MODE: ", md);
 
-      let opts = all.pScramble.options.get(md);
+      let opts = pScramble.options.get(md);
 
       if (opts) {
         if (!Array.isArray(opts)) {
@@ -376,7 +375,10 @@
   }
 
   function selectedFilter(rescramble = true, saveFilter = false) {
-    if (saveFilter && ($session.settings.sessionType === "mixed" || $mode[1] === "r3ni")) {
+    if (
+      saveFilter &&
+      ($session.settings.sessionType === "mixed" || $mode[1] === "r3" || $mode[1] === "r3ni")
+    ) {
       $session.settings.prob = $prob;
       $dataService.session.updateSession($session).then().catch();
     }
@@ -389,22 +391,22 @@
       $session.settings.mode = $mode[1];
       $dataService.session.updateSession($session).then().catch();
     }
-    filters = all.pScramble.filters.get($mode[1]) || [];
+    filters = pScramble.filters.get($mode[1]) || [];
     updateProb && ($prob = -1);
     selectedFilter(rescramble);
   }
 
-  function selectedGroup(rescramble = true) {
+  function selectedGroup(rescramble = true, saveGroup = false) {
     if (typeof $group === "undefined") return;
 
     modes = MENU[$group][1];
     $mode = modes[0];
 
-    if ($mode[1] === "r3ni") {
-      $prob = 2;
+    if ($mode[1] === "r3ni" || $mode[1] === "r3") {
+      $prob = $mode[1] === "r3ni" ? 2 : 5;
     }
 
-    selectedMode(rescramble, false);
+    selectedMode(rescramble, saveGroup);
   }
 
   function selectedSession() {
@@ -718,7 +720,7 @@
           transform={e => e}
           onChange={(g, p) => {
             $group = p || 0;
-            selectedGroup();
+            selectedGroup(true, true);
           }}
         />
 
@@ -748,7 +750,7 @@
             selectedFilter(true, true);
           }}
         />
-      {:else if $tab === 0 && $mode[1] === "r3ni"}
+      {:else if $tab === 0 && ($mode[1] === "r3" || $mode[1] === "r3ni")}
         <Select
           placeholder={$localLang.global.scrambles}
           value={$prob}

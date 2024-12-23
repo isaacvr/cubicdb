@@ -234,7 +234,7 @@ class BaseTokenizer implements Tokenizer {
     const string = this._string.slice(this._cursor);
 
     for (const [regexp, tokenType] of this.spec) {
-      let tokenValue = this._match(regexp, string);
+      const tokenValue = this._match(regexp, string);
 
       if (tokenValue == null) continue;
       if (tokenType == null) return this.getNextToken();
@@ -268,11 +268,11 @@ class Solver {
   }
 
   invertFlat(seq: IToken[]): IToken[] {
-    let res: IToken[] = [];
+    const res: IToken[] = [];
 
     for (let i = seq.length - 1; i >= 0; i -= 1) {
       if (seq[i].type === "Move") {
-        let cp = clone(seq[i]) as IToken;
+        const cp = clone(seq[i]) as IToken;
         cp.value = Puzzle.inverse(this.tokenizerType, cp.value);
         res.push(cp);
       } else {
@@ -284,8 +284,8 @@ class Solver {
   }
 
   simplify(seq: string[]): string[] {
-    let mp = new Map<number, string>();
-    let mp1 = new Map<string, number>();
+    const mp = new Map<number, string>();
+    const mp1 = new Map<string, number>();
     mp.set(-3, "");
     mp.set(-2, "2");
     mp.set(-1, "'");
@@ -300,8 +300,8 @@ class Solver {
     mp1.set("3", -1);
     mp1.set("3'", 1);
 
-    let s1 = seq.map(s => {
-      let p: any = s.replace(/^(\d*)([a-zA-Z]+)('|2'|2|3'|3)?$/, "$1$2 $3").split(" ");
+    const s1 = seq.map(s => {
+      const p: any = s.replace(/^(\d*)([a-zA-Z]+)('|2'|2|3'|3)?$/, "$1$2 $3").split(" ");
       return [p[0], mp1.get(p[1])];
     });
 
@@ -333,7 +333,7 @@ class Solver {
       case "Move":
         return [ast.value];
       case "ParentesizedExpression":
-        let seq = this.solve(ast.value.expr, simplify);
+        const seq = this.solve(ast.value.expr, simplify);
         let res: string[] = [];
         for (let i = 1, maxi = ast.value.cant; i <= maxi; i += 1) {
           res = [...res, ...seq];
@@ -343,15 +343,15 @@ class Solver {
         let seq;
 
         if (ast.value.setup) {
-          let setup = this.solve(ast.value.setup, simplify);
-          let conmutator = this.solve(ast.value.conmutator, simplify);
-          let setupInv = this.invert(setup as string[]);
+          const setup = this.solve(ast.value.setup, simplify);
+          const conmutator = this.solve(ast.value.conmutator, simplify);
+          const setupInv = this.invert(setup as string[]);
           seq = [...setup, ...conmutator, ...setupInv];
         } else {
-          let s1 = this.solve(ast.value.expr1, simplify);
-          let s2 = this.solve(ast.value.expr2, simplify);
-          let s1i = this.invert(s1 as string[]);
-          let s2i = this.invert(s2 as string[]);
+          const s1 = this.solve(ast.value.expr1, simplify);
+          const s2 = this.solve(ast.value.expr2, simplify);
+          const s1i = this.invert(s1 as string[]);
+          const s2i = this.invert(s2 as string[]);
           seq = [...s1, ...s2, ...s1i, ...s2i];
         }
 
@@ -382,7 +382,7 @@ class Solver {
       case "Move":
         return [ast];
       case "ParentesizedExpression":
-        let seq = this.flat(ast.value.expr);
+        const seq = this.flat(ast.value.expr);
         let res: IToken[] = [];
 
         for (let i = 1, maxi = ast.value.cant; i <= maxi; i += 1) {
@@ -394,15 +394,15 @@ class Solver {
         let seq: IToken[];
 
         if (ast.value.setup) {
-          let setup = this.flat(ast.value.setup);
-          let conmutator = this.flat(ast.value.conmutator);
-          let setupInv = this.invertFlat(setup);
+          const setup = this.flat(ast.value.setup);
+          const conmutator = this.flat(ast.value.conmutator);
+          const setupInv = this.invertFlat(setup);
           seq = [...setup, ...conmutator, ...setupInv];
         } else {
-          let s1 = this.flat(ast.value.expr1);
-          let s2 = this.flat(ast.value.expr2);
-          let s1i = this.invertFlat(s1 as IToken[]);
-          let s2i = this.invertFlat(s2 as IToken[]);
+          const s1 = this.flat(ast.value.expr1);
+          const s2 = this.flat(ast.value.expr2);
+          const s1i = this.invertFlat(s1 as IToken[]);
+          const s2i = this.invertFlat(s2 as IToken[]);
           seq = [...s1, ...s2, ...s1i, ...s2i];
         }
 
@@ -438,7 +438,7 @@ export class Interpreter {
     this._tokenizer.init(string.replaceAll("’", "'"));
     this._lookahead = this._tokenizer.getNextToken();
 
-    let pr = this.Program();
+    const pr = this.Program();
 
     if (this._lookahead) {
       throw new SyntaxError(`Missing operators`);
@@ -508,7 +508,7 @@ export class Interpreter {
   Expression(): IToken {
     if (!this._lookahead) return { type: "Expression", value: [], cursor: -1 };
 
-    let moves: IToken[] = [];
+    const moves: IToken[] = [];
 
     while (this._lookahead) {
       switch (this._lookahead.type) {
@@ -562,9 +562,9 @@ export class Interpreter {
    */
   ParentesizedExpression(): IToken {
     this._eat("(");
-    let expr = this.Expression();
-    let n = +this._eat(")").value.slice(1);
-    let cant = n || 1;
+    const expr = this.Expression();
+    const n = +this._eat(")").value.slice(1);
+    const cant = n || 1;
     return { type: "ParentesizedExpression", value: { expr, cant, explicit: !!n }, cursor: -1 };
   }
 
@@ -574,14 +574,14 @@ export class Interpreter {
    */
   ConmutatorExpression(): IToken {
     this._eat("[");
-    let expr1 = this.Expression();
+    const expr1 = this.Expression();
 
     if (this._lookahead?.type === ":") {
       this._eat(":");
 
-      let conmutator = this.Expression();
-      let n = +this._eat("]").value.slice(1);
-      let cant = n || 1;
+      const conmutator = this.Expression();
+      const n = +this._eat("]").value.slice(1);
+      const cant = n || 1;
       return {
         type: "ConmutatorExpression",
         value: { setup: expr1, conmutator, cant, explicit: !!n },
@@ -590,9 +590,9 @@ export class Interpreter {
     }
 
     this._eat(",");
-    let expr2 = this.Expression();
-    let n = +this._eat("]").value.slice(1);
-    let cant = n || 1;
+    const expr2 = this.Expression();
+    const n = +this._eat("]").value.slice(1);
+    const cant = n || 1;
     return {
       type: "ConmutatorExpression",
       value: { expr1, expr2, cant, explicit: !!n },
@@ -616,7 +616,7 @@ export class Interpreter {
   }
 
   _eat(tokenType: any, tokenValue?: any) {
-    let token = this._lookahead;
+    const token = this._lookahead;
 
     if (token == null) {
       this._throwCursor();

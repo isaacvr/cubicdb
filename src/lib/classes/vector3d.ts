@@ -5,7 +5,7 @@ const PI = Math.PI;
 const TAU = PI * 2;
 
 function getCanonical(v: Vector3D) {
-  let dirs = [UP, RIGHT, FRONT, DOWN, LEFT, BACK];
+  const dirs = [UP, RIGHT, FRONT, DOWN, LEFT, BACK];
 
   for (let i = 0, maxi = dirs.length; i < maxi; i += 1) {
     if (dirs[i].equals(v)) {
@@ -34,8 +34,8 @@ export class Vector3D {
   }
 
   static cross(a: Vector3D, b: Vector3D, c: Vector3D): Vector3D {
-    let v1 = b.sub(a);
-    let v2 = c.sub(b);
+    const v1 = b.sub(a);
+    const v2 = c.sub(b);
     return v1.cross(v2);
   }
 
@@ -50,7 +50,7 @@ export class Vector3D {
   }
 
   static direction1(anchor: Vector3D, u: Vector3D, pt: Vector3D): -1 | 0 | 1 {
-    let dot = u.dot(pt.sub(anchor));
+    const dot = u.dot(pt.sub(anchor));
     if (Math.abs(dot) < EPS) {
       return 0;
     }
@@ -62,8 +62,8 @@ export class Vector3D {
   }
 
   static project1(pt: Vector3D, a: Vector3D, u: Vector3D): Vector3D {
-    let v = pt.sub(a);
-    let dist = u.dot(v);
+    const v = pt.sub(a);
+    const dist = u.dot(v);
     return pt.add(u.mul(-dist));
   }
 
@@ -185,15 +185,15 @@ export class Vector3D {
       vecs.some(v => (v[0] as Vector3D).cross(u).abs() < EPS) &&
       fAngs.some(a => Math.abs(a[0] - rAng) < EPS)
     ) {
-      let idx = [
+      const idx = [
         (vt: Vector3D) => new Vector3D(vt.x, -vt.z, vt.y), // RIGHT => (x, y, z) => (x, -z, y)
         (vt: Vector3D) => new Vector3D(vt.z, vt.y, -vt.x), // UP    => (x, y, z) => (z, y, -x)
         (vt: Vector3D) => new Vector3D(-vt.y, vt.x, vt.z), // FRONT => (x, y, z) => (-y, x, z)
       ];
 
-      let aIndex = fAngs.filter(a => Math.abs(a[0] - rAng) < EPS)[0][1];
-      let vIndex = vecs.filter(v => (v[0] as Vector3D).cross(u).abs() < EPS)[0][1] as number;
-      let cant = (vecs[vIndex][0] as Vector3D).dot(u) > 0 ? aIndex : (4 - aIndex) % 4;
+      const aIndex = fAngs.filter(a => Math.abs(a[0] - rAng) < EPS)[0][1];
+      const vIndex = vecs.filter(v => (v[0] as Vector3D).cross(u).abs() < EPS)[0][1] as number;
+      const cant = (vecs[vIndex][0] as Vector3D).dot(u) > 0 ? aIndex : (4 - aIndex) % 4;
       let vt = this.clone();
 
       for (let i = 1; i <= cant; i += 1) {
@@ -214,12 +214,12 @@ export class Vector3D {
 
     // let v3 = new Vector3(this.x - O.x, this.y - O.y, this.z - O.z);
     // v3.applyAxisAngle(nu, ang).add(new Vector3(O.x, O.y, O.z));
-    let k = u.unit();
-    let v = this.sub(O);
-    let p1 = v.mul(Math.cos(ang));
-    let p2 = k.cross(v).mul(Math.sin(ang));
-    let p3 = k.mul(k.dot(v) * (1 - Math.cos(ang)));
-    let v3 = p1.add(p2, true).add(p3, true).add(O, true);
+    const k = u.unit();
+    const v = this.sub(O);
+    const p1 = v.mul(Math.cos(ang));
+    const p2 = k.cross(v).mul(Math.sin(ang));
+    const p3 = k.mul(k.dot(v) * (1 - Math.cos(ang)));
+    const v3 = p1.add(p2, true).add(p3, true).add(O, true);
 
     if (self) {
       this.x = v3.x;
@@ -244,7 +244,7 @@ export class Vector3D {
   }
 
   unit(): Vector3D {
-    let len = this.abs();
+    const len = this.abs();
     if (len != 0) {
       return getCanonical(this.div(len));
     }
@@ -264,7 +264,7 @@ export class Vector3D {
   }
 
   toNormal(): Vector3D {
-    let coords = [this.x, this.y, this.z].map(e => (Math.abs(e) < EPS ? 0 : Math.sign(e)));
+    const coords = [this.x, this.y, this.z].map(e => (Math.abs(e) < EPS ? 0 : Math.sign(e)));
     this.x = coords[0];
     this.y = coords[1];
     this.z = coords[2];

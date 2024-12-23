@@ -32,15 +32,15 @@ export function applyTheme(t: Theme, transform = true) {
 
     if (excludedShadesKeys.includes(key as any)) continue;
 
-    let c = new Color(color);
-    let hsl = c.rgbToHSL();
+    const c = new Color(color);
+    const hsl = c.rgbToHSL();
 
     document.documentElement.style.setProperty(`--th-${key}-hue`, hsl[0] + "");
     document.documentElement.style.setProperty(`--th-${key}-sat`, hsl[1] + "%");
 
     for (let i = 1; i <= 9; i += 1) {
-      let shade = i * 100;
-      let perc = 105 - 10 * i;
+      const shade = i * 100;
+      const perc = 105 - 10 * i;
       document.documentElement.style.setProperty(
         `--th-${key}-${shade}`,
         `hsl(var(--th-${key}-hue),var(--th-${key}-sat),${perc}%)`
@@ -63,6 +63,6 @@ export function transformTheme(t: Theme): Theme {
 }
 
 export function applyThemeByID(id: string) {
-  let currentTheme = THEME_LIST.find(th => th.id === id) || DEFAULT_THEME;
+  const currentTheme = THEME_LIST.find(th => th.id === id) || DEFAULT_THEME;
   applyTheme(currentTheme, true);
 }

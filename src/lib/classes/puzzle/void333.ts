@@ -23,7 +23,7 @@ export function VOID(): PuzzleInterface {
   };
 
   voidC.getAllStickers = getAllStickers.bind(voidC);
-  let pieces = voidC.pieces;
+  const pieces = voidC.pieces;
 
   // Constants
   const PI = Math.PI;
@@ -34,7 +34,7 @@ export function VOID(): PuzzleInterface {
   const LAYERS = 20;
 
   // Corners
-  let cornerSticker = new Sticker(
+  const cornerSticker = new Sticker(
     [
       cmd("FRU", "LD", LEN),
       ...bezier([cmd("FRU", "D", LEN), cmd("FRU"), cmd("FRU", "L", LEN)], 20),
@@ -43,16 +43,16 @@ export function VOID(): PuzzleInterface {
     [UP, RIGHT, FRONT]
   );
 
-  let mat: Vector3D[][] = [];
-  let vts: number[][] = [];
+  const mat: Vector3D[][] = [];
+  const vts: number[][] = [];
 
-  let c1 = circle(
+  const c1 = circle(
     new Vector3D(1 / 3, 1, 1),
     new Vector3D(1, 1, 1),
     new Vector3D(1, 1 / 3, 1),
     LAYERS
   );
-  let c2 = circle(
+  const c2 = circle(
     new Vector3D(1, 1, 1 / 3),
     new Vector3D(1, 1, 1),
     new Vector3D(1, 1 / 3, 1),
@@ -65,8 +65,8 @@ export function VOID(): PuzzleInterface {
 
   mat.push([c1[c1.length - 1]]);
 
-  let MT = ((LAYERS + 1) * (LAYERS + 2)) / 2;
-  let getPos = (i: number, j: number) => MT - ((LAYERS - i + 2) * (LAYERS - i + 1)) / 2 + j;
+  const MT = ((LAYERS + 1) * (LAYERS + 2)) / 2;
+  const getPos = (i: number, j: number) => MT - ((LAYERS - i + 2) * (LAYERS - i + 1)) / 2 + j;
   for (let i = 0; i <= LAYERS; i += 1) {
     for (let j = 0, maxj = LAYERS - i - 1; j <= maxj; j += 1) {
       vts.push([getPos(i, j), getPos(i + 1, j), getPos(i, j + 1)]);
@@ -77,7 +77,7 @@ export function VOID(): PuzzleInterface {
     }
   }
 
-  let curveSticker = new FaceSticker(
+  const curveSticker = new FaceSticker(
     mat.reduce((acc, e) => [...acc, ...e], []),
     vts,
     "darkGray"
@@ -85,7 +85,7 @@ export function VOID(): PuzzleInterface {
 
   curveSticker.nonInteractive = true;
 
-  let cornerPiece = new Piece([
+  const cornerPiece = new Piece([
     cornerSticker,
     cornerSticker.rotate(CENTER, cmd("FRU"), TAU_3),
     cornerSticker.rotate(CENTER, cmd("FRU"), -TAU_3),
@@ -100,23 +100,23 @@ export function VOID(): PuzzleInterface {
   );
 
   // Edges
-  let edgeSticker = new Sticker([cmd("FRU", "L", 2 / 3), cmd("FLU", "R", 2 / 3)]);
+  const edgeSticker = new Sticker([cmd("FRU", "L", 2 / 3), cmd("FLU", "R", 2 / 3)]);
 
   const ANG1 = 1.5 * PI_2;
   const ANG2 = 0.5 * PI_2;
   const RAD = Math.SQRT2 / 3;
 
   for (let i = 0; i <= PPC; i += 1) {
-    let a = i / PPC;
-    let ang = ANG1 * (1 - a) + ANG2 * a;
-    let v = new Vector3D(Math.cos(ang) * RAD, Math.sin(ang) * RAD, 1);
+    const a = i / PPC;
+    const ang = ANG1 * (1 - a) + ANG2 * a;
+    const v = new Vector3D(Math.cos(ang) * RAD, Math.sin(ang) * RAD, 1);
     edgeSticker.points.push(v);
   }
 
   edgeSticker.updateMassCenter();
   edgeSticker.vecs = [UP, FRONT, RIGHT].map(v => v.clone());
 
-  let edgePiece = new Piece([edgeSticker, edgeSticker.rotate(CENTER, cmd("FU"), PI)]);
+  const edgePiece = new Piece([edgeSticker, edgeSticker.rotate(CENTER, cmd("FU"), PI)]);
 
   pieces.push(...[0, 1, 2, 3].map(n => edgePiece.rotate(CENTER, UP, PI_2 * n)));
   pieces.push(
@@ -136,7 +136,7 @@ export function VOID(): PuzzleInterface {
   const ref = cmd("LUB");
   const ref1 = cmd("FRD");
 
-  let planes = [
+  const planes = [
     [ref, ref.add(FRONT), ref.add(RIGHT)],
     [ref1, ref1.add(BACK), ref1.add(UP)],
     [ref1, ref1.add(UP), ref1.add(LEFT)],
@@ -145,11 +145,11 @@ export function VOID(): PuzzleInterface {
     [ref, ref.add(RIGHT), ref.add(DOWN)],
   ];
 
-  let trySingleMove = (mv: any): PiecesToMove | null => {
-    let moveId = MOVE_MAP.indexOf(mv[1]);
+  const trySingleMove = (mv: any): PiecesToMove | null => {
+    const moveId = MOVE_MAP.indexOf(mv[1]);
     let layers = mv[0];
-    let turns = mv[2];
-    let span = mv[3];
+    const turns = mv[2];
+    const span = mv[3];
     const pts1 = planes[moveId];
     const u = Vector3D.cross(pts1[0], pts1[1], pts1[2]).unit();
     const mu = u.mul(-1);
@@ -161,10 +161,10 @@ export function VOID(): PuzzleInterface {
     const pts3 = pts2.map(p => p.add(u.mul(LEN * span)));
     const ang = (Math.PI / 2) * turns;
 
-    let pcs = [];
+    const pcs = [];
 
     for (let i = 0, maxi = pieces.length; i < maxi; i += 1) {
-      let d = pieces[i].direction1(pts2[0], u, true);
+      const d = pieces[i].direction1(pts2[0], u, true);
 
       if (d === 0) {
         console.log("Invalid move. Piece intersection detected.", "URFDLB"[moveId], turns, mv);
@@ -173,7 +173,7 @@ export function VOID(): PuzzleInterface {
       }
 
       if (span) {
-        let d1 = pieces[i].direction1(pts3[0], u, true);
+        const d1 = pieces[i].direction1(pts3[0], u, true);
 
         if (d * d1 < 0) {
           pcs.push(pieces[i]);
@@ -192,15 +192,15 @@ export function VOID(): PuzzleInterface {
 
   voidC.move = function (moves: any[]) {
     for (let m = 0, maxm = moves.length; m < maxm; m += 1) {
-      let mv = moves[m];
-      let pcs = trySingleMove(mv);
+      const mv = moves[m];
+      const pcs = trySingleMove(mv);
 
       if (!pcs) {
         return false;
       }
 
-      let { u, ang, center } = pcs;
-      let p = pcs.pieces;
+      const { u, ang, center } = pcs;
+      const p = pcs.pieces;
 
       for (let i = 0, maxi = p.length; i < maxi; i += 1) {
         p[i].rotate(center || voidC.center, u, ang, true);
@@ -210,8 +210,8 @@ export function VOID(): PuzzleInterface {
   };
 
   voidC.toMove = function (pc: Piece, st: Sticker, u: Vector3D) {
-    let mc = st.updateMassCenter();
-    let pcs = pieces.filter(p => p.direction1(mc, u) === 0);
+    const mc = st.updateMassCenter();
+    const pcs = pieces.filter(p => p.direction1(mc, u) === 0);
 
     return {
       pieces: pcs,
@@ -223,30 +223,30 @@ export function VOID(): PuzzleInterface {
     const MOVES = 100;
 
     for (let i = 0; i < MOVES; i += 1) {
-      let p = random(pieces) as Piece;
+      const p = random(pieces) as Piece;
       if (!p) {
         i -= 1;
         continue;
       }
-      let s = random(p.stickers.filter(s => !/^[xd]{1}$/.test(s.color))) as Sticker;
+      const s = random(p.stickers.filter(s => !/^[xd]{1}$/.test(s.color))) as Sticker;
       if (!s) {
         i -= 1;
         continue;
       }
-      let vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > EPS));
+      const vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > EPS));
       if (!vec) {
         i -= 1;
         continue;
       }
-      let pcs = voidC.toMove!(p, s, vec) as ToMoveResult;
-      let cant = 1 + random(3);
+      const pcs = voidC.toMove!(p, s, vec) as ToMoveResult;
+      const cant = 1 + random(3);
       pcs.pieces.forEach((p: Piece) => p.rotate(CENTER, vec, pcs.ang * cant, true));
     }
   };
 
   voidC.applySequence = function (seq: string[]) {
-    let moves = seq.map(mv => ScrambleParser.parseNNN(mv, { a: 3, b: 3, c: 3 })[0]);
-    let res: { u: Vector3D; ang: number; pieces: string[] }[] = [];
+    const moves = seq.map(mv => ScrambleParser.parseNNN(mv, { a: 3, b: 3, c: 3 })[0]);
+    const res: { u: Vector3D; ang: number; pieces: string[] }[] = [];
 
     for (let i = 0, maxi = moves.length; i < maxi; i += 1) {
       let pcs;
@@ -261,7 +261,7 @@ export function VOID(): PuzzleInterface {
         continue;
       }
 
-      let { u, ang } = pcs;
+      const { u, ang } = pcs;
       res.push({ u, ang, pieces: pcs.pieces.map(p => p.id) });
       pcs.pieces.forEach(p => p.rotate(CENTER, u, ang, true));
     }

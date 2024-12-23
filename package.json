@@ -43,6 +43,7 @@
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
     "lint": "prettier --check . && eslint .",
+    "lint:fix": "prettier --check . && eslint . --fix",
     "lint:oxc": "npx oxlint -c .oxlintrc.json",
     "format": "prettier --write .",
     "test": "npm run test:integration && npm run test:unit",

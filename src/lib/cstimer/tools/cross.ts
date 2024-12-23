@@ -36,22 +36,22 @@ import { solvFacelet } from "@cstimer/scramble/scramble_333";
 import { Puzzle } from "@classes/puzzle/puzzle";
 
 let permPrun: number[], flipPrun: number[], ecPrun: number[][], fullPrun: number[];
-let cmv: number[][] = [];
-let pmul: number[][] = [];
-let fmul: number[][] = [];
+const cmv: number[][] = [];
+const pmul: number[][] = [];
+const fmul: number[][] = [];
 
-let e1mv: number[][] = [];
-let c1mv: number[][] = [];
-let xxPrun01: number[] = [];
-let xxPrun02: number[] = [];
+const e1mv: number[][] = [];
+const c1mv: number[][] = [];
+const xxPrun01: number[] = [];
+const xxPrun02: number[] = [];
 
 function pmv(a: number, c: number) {
-  let b = cmv[c][~~(a / 24)];
+  const b = cmv[c][~~(a / 24)];
   return 24 * ~~(b / 384) + pmul[a % 24][(b >> 4) % 24];
 }
 
 function fmv(b: number, c: number) {
-  let a = cmv[c][b >> 4];
+  const a = cmv[c][b >> 4];
   return (~~(a / 384) << 4) | (fmul[b & 15][(a >> 4) % 24] ^ (a & 15));
 }
 
@@ -66,9 +66,9 @@ function f2i(c: number[]) {
 }
 
 function fullmv(idx: number, move: number) {
-  let slice = cmv[move][~~(idx / 384)];
-  let flip = fmul[idx & 15][(slice >> 4) % 24] ^ (slice & 15);
-  let perm = pmul[(idx >> 4) % 24][(slice >> 4) % 24];
+  const slice = cmv[move][~~(idx / 384)];
+  const flip = fmul[idx & 15][(slice >> 4) % 24] ^ (slice & 15);
+  const perm = pmul[(idx >> 4) % 24][(slice >> 4) % 24];
   return ~~(slice / 384) * 384 + 16 * perm + flip;
 }
 
@@ -89,9 +89,9 @@ function init() {
     fmul[i] = [];
   }
 
-  let pm1: number[] = [];
-  let pm2: number[] = [];
-  let pm3: number[] = [];
+  const pm1: number[] = [];
+  const pm2: number[] = [];
+  const pm3: number[] = [];
 
   for (let i = 0; i < 24; i++) {
     for (let j = 0; j < 24; j++) {
@@ -122,7 +122,7 @@ function init() {
   createPrun(flipPrun, 0, 7920, 6, fmv);
 
   function getmv(comb: number, m: number) {
-    let arr = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    const arr = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
     let r = 4;
 
     for (let i = 0; i < 12; i++) {
@@ -138,7 +138,7 @@ function init() {
 
     (comb = 0), (r = 4);
     let t = 0;
-    let pm = [];
+    const pm = [];
 
     for (let i = 0; i < 12; i++) {
       if (arr[i] >= 0) {
@@ -160,7 +160,7 @@ function xxinit() {
   xxinitRet = true;
 
   xinit();
-  let obj1 = 4;
+  const obj1 = 4;
   let obj2 = 5;
   createPrun(
     xxPrun01,
@@ -168,8 +168,8 @@ function xxinit() {
     576 * 576,
     7,
     function (q: any, m: any) {
-      let ec1 = q % 576;
-      let ec2 = ~~(q / 576);
+      const ec1 = q % 576;
+      const ec2 = ~~(q / 576);
       return (
         c1mv[~~(ec1 / 24)][m] * 24 +
         e1mv[ec1 % 24][m] +
@@ -184,8 +184,8 @@ function xxinit() {
     576 * 576,
     7,
     function (q: any, m: any) {
-      let ec1 = q % 576;
-      let ec2 = ~~(q / 576);
+      const ec1 = q % 576;
+      const ec2 = ~~(q / 576);
       return (
         c1mv[~~(ec1 / 24)][m] * 24 +
         e1mv[ec1 % 24][m] +
@@ -211,7 +211,7 @@ function xinit() {
     e1mv[i] = [];
     for (let m = 0; m < 6; m++) {
       c1mv[i][m] = cornMove(i, m);
-      let edge = [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1];
+      const edge = [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1];
       edge[i >> 1] = i & 1;
       edgeMove(edge, m);
       for (let e = 0; e < 12; e++) {
@@ -226,7 +226,7 @@ function xinit() {
   ecPrun = [];
 
   for (let obj = 0; obj < 4; obj++) {
-    let prun: number[] = [];
+    const prun: number[] = [];
 
     createPrun(prun, (obj + 4) * 3 * 24 + (obj + 4) * 2, 576, 5, function (q: number, m: number) {
       return c1mv[~~(q / 24)][m] * 24 + e1mv[q % 24][m];
@@ -236,9 +236,9 @@ function xinit() {
   }
 
   function cornMove(corn: number, m: number) {
-    let idx = ~~(corn / 3);
+    const idx = ~~(corn / 3);
     let twst = corn % 3;
-    let idxt = [
+    const idxt = [
       [3, 1, 2, 7, 0, 5, 6, 4],
       [0, 1, 6, 2, 4, 5, 7, 3],
       [1, 2, 3, 0, 4, 5, 6, 7],
@@ -246,7 +246,7 @@ function xinit() {
       [4, 0, 2, 3, 5, 1, 6, 7],
       [0, 1, 2, 3, 7, 4, 5, 6],
     ];
-    let twstt = [
+    const twstt = [
       [2, 0, 0, 1, 1, 0, 0, 2],
       [0, 0, 1, 2, 0, 0, 2, 1],
       [0, 0, 0, 0, 0, 0, 0, 0],
@@ -380,30 +380,30 @@ function idacross(q: number, t: number, l: number, lm: number, sol: string[]) {
   return false;
 }
 
-export let faceStr = ["D", "U", "L", "R", "F", "B"];
+export const faceStr = ["D", "U", "L", "R", "F", "B"];
 export const rotIdx = ["", "z2", "z'", "z", "x'", "x"];
 
-let moveIdx = ["FRUBLD", "FLDBRU", "FDRBUL", "FULBDR", "URBDLF", "DRFULB"];
-let yrotIdx = ["FRUBLD", "RBULFD", "BLUFRD", "LFURBD"];
+const moveIdx = ["FRUBLD", "FLDBRU", "FDRBUL", "FULBDR", "URBDLF", "DRFULB"];
+const yrotIdx = ["FRUBLD", "RBULFD", "BLUFRD", "LFURBD"];
 
 export function solve_cross(moves: string) {
   init();
 
-  let seq: any = ScrambleParser.parseNNN(
+  const seq: any = ScrambleParser.parseNNN(
     solvFacelet(Puzzle.fromSequence(moves, { type: "rubik", order: [3] }, true, true).toFacelet()),
     { a: 3, b: 3, c: 3 },
     "FRUBLD"
   );
 
-  let ret = [];
+  const ret = [];
 
   for (let face = 0; face < 6; face++) {
     let flip = 0;
     let perm = 0;
 
     for (let i = 0; i < seq.length; i++) {
-      let m = moveIdx[face].indexOf(seq[i][1]);
-      let p = ((seq[i][2] % 4) + 4) % 4;
+      const m = moveIdx[face].indexOf(seq[i][1]);
+      const p = ((seq[i][2] % 4) + 4) % 4;
 
       for (let j = 0; j < p; j++) {
         flip = fmv(flip, m);
@@ -411,7 +411,7 @@ export function solve_cross(moves: string) {
       }
     }
 
-    let sol: string[] = [];
+    const sol: string[] = [];
 
     for (let len = 0; len < 100; len++) {
       if (idacross(perm, flip, len, -1, sol)) {
@@ -428,10 +428,10 @@ export function solve_cross(moves: string) {
 
 export function solve_xxcross(moves: any, face: number) {
   xxinit();
-  let states: any[] = [];
+  const states: any[] = [];
   let yrot = 0;
 
-  let seq: any = ScrambleParser.parseNNN(
+  const seq: any = ScrambleParser.parseNNN(
     solvFacelet(Puzzle.fromSequence(moves, { type: "rubik", order: [3] }, true, true).toFacelet()),
     { a: 3, b: 3, c: 3 },
     "FRUBLD"
@@ -443,8 +443,8 @@ export function solve_xxcross(moves: any, face: number) {
     let e1 = [8, 10, 12];
     let c1 = [12, 15, 18];
     for (let i = 0; i < seq.length; i++) {
-      let m = yrotIdx[yrot].indexOf("FRUBLD".charAt(moveIdx[face].indexOf(seq[i][1])));
-      let p = ((seq[i][2] % 4) + 4) % 4;
+      const m = yrotIdx[yrot].indexOf("FRUBLD".charAt(moveIdx[face].indexOf(seq[i][1])));
+      const p = ((seq[i][2] % 4) + 4) % 4;
       for (let j = 0; j < p; j++) {
         flip = fmv(flip, m);
         perm = pmv(perm, m);
@@ -454,12 +454,12 @@ export function solve_xxcross(moves: any, face: number) {
     }
     states.push([perm, flip, e1, c1]);
   }
-  let sol: string[] = [];
+  const sol: string[] = [];
   let found = false;
   let len = 0;
   while (!found) {
     for (yrot = 0; yrot < 4; yrot++) {
-      let state = states[yrot];
+      const state = states[yrot];
       if (
         idaxxcross(
           state[0],
@@ -504,18 +504,18 @@ export function solve_xcross(moves: string, face: number) {
   xinit();
   let flip = 0;
   let perm = 0;
-  let e1 = [8, 10, 12, 14];
-  let c1 = [12, 15, 18, 21];
+  const e1 = [8, 10, 12, 14];
+  const c1 = [12, 15, 18, 21];
 
-  let seq: any = ScrambleParser.parseNNN(
+  const seq: any = ScrambleParser.parseNNN(
     solvFacelet(Puzzle.fromSequence(moves, { type: "rubik", order: [3] }, true, true).toFacelet()),
     { a: 3, b: 3, c: 3 },
     "FRUBLD"
   );
 
   for (let i = 0; i < seq.length; i++) {
-    let m = moveIdx[face].indexOf(seq[i][1]);
-    let p = ((seq[i][2] % 4) + 4) % 4;
+    const m = moveIdx[face].indexOf(seq[i][1]);
+    const p = ((seq[i][2] % 4) + 4) % 4;
 
     for (let j = 0; j < p; j++) {
       flip = fmv(flip, m);
@@ -526,7 +526,7 @@ export function solve_xcross(moves: string, face: number) {
       }
     }
   }
-  let sol: string[] = [];
+  const sol: string[] = [];
   let found = false;
   let len = 0;
   while (!found) {
@@ -557,17 +557,17 @@ function fullInit() {
 
 function mapCross(idx: number) {
   let comb = ~~(idx / 384);
-  let perm = (idx >> 4) % 24;
-  let flip = idx & 15;
+  const perm = (idx >> 4) % 24;
+  const flip = idx & 15;
 
-  let arrp = [];
-  let arrf = [];
-  let pm: number[] = [];
-  let fl: number[] = [];
+  const arrp = [];
+  const arrf = [];
+  const pm: number[] = [];
+  const fl: number[] = [];
   i2f(flip, fl);
   setNPerm(pm, perm, 4);
   let r = 4;
-  let map = [7, 6, 5, 4, 10, 9, 8, 11, 3, 2, 1, 0];
+  const map = [7, 6, 5, 4, 10, 9, 8, 11, 3, 2, 1, 0];
   for (let i = 0; i < 12; i++) {
     if (comb >= Cnk[11 - i][r]) {
       comb -= Cnk[11 - i][r--];
@@ -582,15 +582,15 @@ function mapCross(idx: number) {
 
 export function getEasyCross(length: number) {
   fullInit();
-  let lenA = Math.min(length % 10, 8);
-  let lenB = Math.min(~~(length / 10), 8);
-  let minLen = Math.min(lenA, lenB);
-  let maxLen = Math.max(lenA, lenB);
-  let ncase = [0, 1, 16, 174, 1568, 11377, 57758, 155012, 189978, 190080];
+  const lenA = Math.min(length % 10, 8);
+  const lenB = Math.min(~~(length / 10), 8);
+  const minLen = Math.min(lenA, lenB);
+  const maxLen = Math.max(lenA, lenB);
+  const ncase = [0, 1, 16, 174, 1568, 11377, 57758, 155012, 189978, 190080];
   let cases = rn(ncase[maxLen + 1] - ncase[minLen]) + 1;
   let i;
   for (i = 0; i < 190080; i++) {
-    let prun = getPruning(fullPrun, i);
+    const prun = getPruning(fullPrun, i);
     if (prun <= maxLen && prun >= minLen && --cases == 0) {
       break;
     }
@@ -601,24 +601,24 @@ export function getEasyCross(length: number) {
 export function getEasyXCross(length: number) {
   fullInit();
   xinit();
-  let ncase = [1, 16, 174, 1568, 11377, 57758, 155012, 189978, 190080];
+  const ncase = [1, 16, 174, 1568, 11377, 57758, 155012, 189978, 190080];
   length = Math.max(0, Math.min(length, 8));
-  let remain = ncase[length];
+  const remain = ncase[length];
   let isFound = false;
 
   while (!isFound) {
     let rndIdx = [];
-    let sample = 500;
+    const sample = 500;
     for (let i = 0; i < sample; i++) {
       rndIdx.push(rn(remain));
     }
     rndIdx.sort(function (a, b) {
       return b - a;
     });
-    let rndCases = [];
+    const rndCases = [];
     let cnt = 0;
     for (let i = 0; i < 190080; i++) {
-      let prun = getPruning(fullPrun, i);
+      const prun = getPruning(fullPrun, i);
       if (prun > length) {
         continue;
       }
@@ -633,15 +633,15 @@ export function getEasyXCross(length: number) {
     }
     rndIdx = rndPerm(sample);
     for (let i = 0; i < sample; i++) {
-      let caze = rndCases[rndIdx[i]];
+      const caze = rndCases[rndIdx[i]];
       let comb = ~~(caze / 384);
-      let perm = comb * 24 + ((caze >> 4) % 24);
-      let flip = (comb << 4) | (caze & 15);
-      let sol: string[] = [];
-      let corns = rndPerm(8).slice(4);
-      let edges = rndPerm(8);
+      const perm = comb * 24 + ((caze >> 4) % 24);
+      const flip = (comb << 4) | (caze & 15);
+      const sol: string[] = [];
+      const corns = rndPerm(8).slice(4);
+      const edges = rndPerm(8);
 
-      let arr = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+      const arr = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
       let r = 4;
       for (let j = 0; j < 12; j++) {
         if (comb >= Cnk[11 - j][r]) {
@@ -657,7 +657,7 @@ export function getEasyXCross(length: number) {
         if (isFound || getPruning(ecPrun[j], corns[j] * 24 + edges[j]) > length) {
           continue;
         }
-        let sol: string[] = [];
+        const sol: string[] = [];
         for (let depth = 0; depth <= length; depth++) {
           if (idaxcross(perm, flip, edges[j], corns[j], j, depth, -1, sol)) {
             isFound = true;
@@ -668,11 +668,11 @@ export function getEasyXCross(length: number) {
       if (!isFound) {
         continue;
       }
-      let crossArr = mapCross(caze);
+      const crossArr = mapCross(caze);
       crossArr[2] = valuedArray(8, -1);
       crossArr[3] = valuedArray(8, -1);
-      let map = [7, 6, 5, 4, 10, 9, 8, 11, 3, 2, 1, 0];
-      let map2 = [6, 5, 4, 7, 2, 1, 0, 3];
+      const map = [7, 6, 5, 4, 10, 9, 8, 11, 3, 2, 1, 0];
+      const map2 = [6, 5, 4, 7, 2, 1, 0, 3];
       for (let i = 0; i < 4; i++) {
         crossArr[0][map[edges[i] >> 1]] = map[i + 4];
         crossArr[1][map[edges[i] >> 1]] = edges[i] % 2;

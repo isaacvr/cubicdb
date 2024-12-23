@@ -37,8 +37,8 @@ export class Sphere {
   private init() {
     const V = this.verticalPoints;
     const H = this.horizontalPoints;
-    let dt = this.deltaTheta / (V - 1);
-    let dp = this.deltaPhi / (H - 1);
+    const dt = this.deltaTheta / (V - 1);
+    const dp = this.deltaPhi / (H - 1);
 
     for (let i = 0, maxi = V - 1; i <= maxi; i += 1) {
       for (let j = 0, maxj = H - 1; j <= maxj; j += 1) {

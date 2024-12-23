@@ -47,7 +47,7 @@ export class CacheBrowserIPC implements CacheIPC {
       this.isInit = true;
     } else {
       await new Promise(res => {
-        let itv = setInterval(() => {
+        const itv = setInterval(() => {
           if (!this.isInit) {
             clearInterval(itv);
             res(null);
@@ -79,10 +79,10 @@ export class CacheBrowserIPC implements CacheIPC {
 
       // Load Cache to RAM
       this.cache.clear();
-      let allRecords: ICacheImg[] = await this.DB.getAll(CacheStore);
+      const allRecords: ICacheImg[] = await this.DB.getAll(CacheStore);
 
       for (let i = 0, maxi = allRecords.length; i < maxi; i += 1) {
-        let { hash, img } = allRecords[i];
+        const { hash, img } = allRecords[i];
         this.cache.set(hash, img);
       }
 
@@ -158,9 +158,9 @@ export class CacheBrowserIPC implements CacheIPC {
         reconstructions: 0,
       };
 
-    let cache = await this.DB.getAll(CacheStore);
-    let sessions = await this.DB.getAll(SessionStore);
-    let solves = await this.DB.getAll(SolveStore);
+    const cache = await this.DB.getAll(CacheStore);
+    const sessions = await this.DB.getAll(SessionStore);
+    const solves = await this.DB.getAll(SolveStore);
 
     return {
       algorithms: 0,

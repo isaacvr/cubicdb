@@ -20,7 +20,7 @@ export function SQUARE1(): PuzzleInterface {
     move: () => true,
     roundParams: {
       rd: (s: Sticker, i: number) => {
-        let o = s.getOrientation();
+        const o = s.getOrientation();
 
         if (o.cross(UP).abs() < EPS) {
           if (s.points.length === 3) return i === 1 ? [0.25] : 0.11;
@@ -55,9 +55,9 @@ export function SQUARE1(): PuzzleInterface {
 
   const BIG = (L1 * Math.sin(PI_6)) / Math.sin((7 * PI) / 12);
 
-  let pieces = sq1.pieces;
+  const pieces = sq1.pieces;
 
-  let pieceBig = new Piece([
+  const pieceBig = new Piece([
     new Sticker([
       LEFT.add(BACK).add(UP),
       LEFT.add(BACK).add(UP).add(FRONT.mul(BIG)),
@@ -87,7 +87,7 @@ export function SQUARE1(): PuzzleInterface {
     )
   );
 
-  let pieceSmall = new Piece([
+  const pieceSmall = new Piece([
     new Sticker(
       [
         RIGHT.add(UP).add(BACK).add(LEFT.mul(BIG)),
@@ -114,7 +114,7 @@ export function SQUARE1(): PuzzleInterface {
     s.vecs = [UP.clone()];
   });
 
-  let mid = new Piece([
+  const mid = new Piece([
     new Sticker(
       [
         LEFT.add(BACK).add(UP).add(DOWN.mul(L23)),
@@ -165,7 +165,7 @@ export function SQUARE1(): PuzzleInterface {
     ]).reverse(),
   ]);
 
-  let vdir = mid.stickers[2].getOrientation();
+  const vdir = mid.stickers[2].getOrientation();
 
   mid.stickers.forEach(s => {
     s.vecs = [vdir.mul(-1), UP.clone()];
@@ -183,7 +183,7 @@ export function SQUARE1(): PuzzleInterface {
   pieces.push(mid);
   pieces.push(mid.rotate(CENTER, UP, PI));
 
-  let planes = [
+  const planes = [
     mid.stickers[2].clone().points, // /
     pieceBig.stickers[2].clone().points.reverse(), // up
     mid.stickers[5].clone().points, // down
@@ -193,18 +193,18 @@ export function SQUARE1(): PuzzleInterface {
     [CENTER, RIGHT, DOWN].map(v => v.add(FRONT.mul(2))), // z
   ];
 
-  let trySingleMove = (mv: any): { pieces: Piece[]; u: Vector3D; ang: number } | null => {
-    let moveId = mv[0]; // 2
-    let turns = mv[1]; // 3
+  const trySingleMove = (mv: any): { pieces: Piece[]; u: Vector3D; ang: number } | null => {
+    const moveId = mv[0]; // 2
+    const turns = mv[1]; // 3
     const pts1 = planes[moveId];
     const u = Vector3D.cross(pts1[0], pts1[1], pts1[2]).unit();
     const mu = u.mul(-1);
     const ang = PI_6 * turns;
 
-    let pcs = [];
+    const pcs = [];
 
     for (let i = 0, maxi = pieces.length; i < maxi; i += 1) {
-      let d = pieces[i].direction1(pts1[0], u, false, (x: Sticker) => !/[xd]/.test(x.color));
+      const d = pieces[i].direction1(pts1[0], u, false, (x: Sticker) => !/[xd]/.test(x.color));
 
       if (d === 0) {
         console.log("Invalid move. Piece intersection detected.", "/UD"[moveId], turns, mv);
@@ -224,17 +224,17 @@ export function SQUARE1(): PuzzleInterface {
     };
   };
 
-  let updateReverse = (u: Vector3D, ang: number) => {
+  const updateReverse = (u: Vector3D, ang: number) => {
     planes[0].forEach(p => p.rotate(CENTER, u, ang, true));
 
-    let dirs = pieces
+    const dirs = pieces
       .slice(-2)
       .map((p: Piece) => p.stickers.find(s => s.name === "side-equator")!.getOrientation());
-    let dirs1 = pieces
+    const dirs1 = pieces
       .slice(-2)
       .map((p: Piece) => p.stickers.find(s => s.name === "small-equator")!.getOrientation());
-    let id = dirs[0].dot(LEFT) > 0 ? 0 : 1;
-    let pu = Vector3D.cross(planes[0][0], planes[0][1], planes[0][2]);
+    const id = dirs[0].dot(LEFT) > 0 ? 0 : 1;
+    const pu = Vector3D.cross(planes[0][0], planes[0][1], planes[0][2]);
 
     if (dirs1[id].dot(FRONT) * pu.dot(RIGHT) < 0) {
       planes[0].reverse();
@@ -243,14 +243,14 @@ export function SQUARE1(): PuzzleInterface {
 
   sq1.move = function (moves: any[]) {
     for (let m = 0, maxm = moves.length; m < maxm; m += 1) {
-      let mv = moves[m];
-      let pcs = trySingleMove(mv);
+      const mv = moves[m];
+      const pcs = trySingleMove(mv);
 
       if (!pcs) {
         return false;
       }
 
-      let { u, ang } = pcs;
+      const { u, ang } = pcs;
       pcs.pieces.forEach(p => p.rotate(CENTER, u, ang, true));
 
       if (mv[0] > 3) {
@@ -261,7 +261,7 @@ export function SQUARE1(): PuzzleInterface {
   };
 
   sq1.toMove = function (piece: Piece, sticker: Sticker, dir: Vector3D) {
-    let ang = dir.cross(UP).abs() < EPS ? (sticker.vecs.length > 1 ? PI / 2 : PI_6) : PI;
+    const ang = dir.cross(UP).abs() < EPS ? (sticker.vecs.length > 1 ? PI / 2 : PI_6) : PI;
     let toMovePieces: Piece[] = [];
 
     if (ang > PI_6 && dir.cross(UP).abs() > EPS) {
@@ -273,8 +273,8 @@ export function SQUARE1(): PuzzleInterface {
         toMovePieces = pieces.filter(p => p.direction1(dir.mul(0.06), dir) === 0);
       }
     } else {
-      let mc = sticker.updateMassCenter();
-      let isBig = ang > PI_6;
+      const mc = sticker.updateMassCenter();
+      const isBig = ang > PI_6;
       toMovePieces = pieces.filter(p => {
         return isBig ? p.direction1(mc, dir) === 0 : p.direction1(mc, dir) >= 0;
       });
@@ -287,20 +287,20 @@ export function SQUARE1(): PuzzleInterface {
   };
 
   sq1.scramble = function () {
-    let scramble = ScrambleParser.parseSquare1(square1SolverGetRandomScramble());
+    const scramble = ScrambleParser.parseSquare1(square1SolverGetRandomScramble());
     sq1.move(scramble);
   };
 
   sq1.applySequence = function (seq: string[]) {
-    let moves = seq.reduce(
+    const moves = seq.reduce(
       (acc: number[][], mv) => [...acc, ...ScrambleParser.parseSquare1(mv)],
       []
     );
-    let res: { u: Vector3D; ang: number; pieces: string[] }[] = [];
+    const res: { u: Vector3D; ang: number; pieces: string[] }[] = [];
 
     for (let i = 0, maxi = moves.length; i < maxi; i += 1) {
       let pcs;
-      let mv = moves[i];
+      const mv = moves[i];
 
       try {
         pcs = trySingleMove(mv);
@@ -312,7 +312,7 @@ export function SQUARE1(): PuzzleInterface {
         continue;
       }
 
-      let { u, ang } = pcs;
+      const { u, ang } = pcs;
 
       res.push({ u, ang, pieces: pcs.pieces.map(p => p.id) });
 

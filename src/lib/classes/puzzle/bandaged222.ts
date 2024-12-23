@@ -24,9 +24,9 @@ export function BDG(): PuzzleInterface {
   const PI = Math.PI;
   const PI_2 = PI / 2;
 
-  let pieces = bdg.pieces;
+  const pieces = bdg.pieces;
 
-  let small = new Piece([
+  const small = new Piece([
     new Sticker([LEFT.add(UP).add(BACK), LEFT.add(UP), UP, UP.add(BACK)]),
     new Sticker([LEFT.add(UP).add(BACK), LEFT.add(BACK), LEFT, LEFT.add(UP)]),
     new Sticker([LEFT.add(UP).add(BACK), UP.add(BACK), BACK, BACK.add(LEFT)]),
@@ -34,7 +34,7 @@ export function BDG(): PuzzleInterface {
 
   small.stickers.forEach(s => (s.vecs = [LEFT, UP, BACK].map(e => e.clone())));
 
-  let big = new Piece([
+  const big = new Piece([
     new Sticker([LEFT, LEFT.add(DOWN), LEFT.add(DOWN).add(FRONT), LEFT.add(FRONT)]),
     new Sticker([RIGHT, RIGHT.add(FRONT), RIGHT.add(DOWN).add(FRONT), RIGHT.add(DOWN)]),
     new Sticker([
@@ -62,9 +62,9 @@ export function BDG(): PuzzleInterface {
   pieces.push(big.rotate(CENTER, FRONT, PI).rotate(CENTER, UP, PI_2));
 
   bdg.toMove = function (piece: Piece, sticker: Sticker, dir: Vector3D) {
-    let mc = sticker.updateMassCenter();
-    let intersected = pieces.filter(p => p.direction1(CENTER, dir) === 0);
-    let toMovePieces = pieces.filter(p => p.direction1(mc, dir) === 0);
+    const mc = sticker.updateMassCenter();
+    const intersected = pieces.filter(p => p.direction1(CENTER, dir) === 0);
+    const toMovePieces = pieces.filter(p => p.direction1(mc, dir) === 0);
     return {
       pieces: intersected.length > 0 ? [] : toMovePieces,
       ang: PI_2,
@@ -83,16 +83,16 @@ export function BDG(): PuzzleInterface {
     const moves = 5;
 
     for (let i = 0; i < moves; i += 1) {
-      let cant = 1 + random(3);
-      let i1 = i & 1;
-      let i2 = i1 ^ 1;
+      const cant = 1 + random(3);
+      const i1 = i & 1;
+      const i2 = i1 ^ 1;
       getPieces(vecs[i1]).map(p => p.rotate(CENTER, vecs[i1], PI_2 * cant, true));
       getPieces(vecs[i2]).map(p => p.rotate(CENTER, vecs[i2], PI_2 * 2, true));
       getPieces(vecs[i1]).map(p => p.rotate(CENTER, vecs[i1], PI_2 * 2, true));
     }
 
-    let cant = Math.round(Math.random()) * 2 - 1;
-    let i = (moves & 1) ^ 1;
+    const cant = Math.round(Math.random()) * 2 - 1;
+    const i = (moves & 1) ^ 1;
 
     getPieces(vecs[i]).map(p => p.rotate(CENTER, vecs[i], PI_2 * cant, true));
   };

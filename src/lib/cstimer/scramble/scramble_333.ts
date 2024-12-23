@@ -153,8 +153,8 @@ function initMove() {
   }
 }
 
-let moveCube: CubieCube[] = [];
-let cornerFacelet = [
+const moveCube: CubieCube[] = [];
+const cornerFacelet = [
   [8, 9, 20],
   [6, 18, 38],
   [0, 36, 47],
@@ -164,7 +164,7 @@ let cornerFacelet = [
   [33, 53, 42],
   [35, 17, 51],
 ];
-let edgeFacelet = [
+const edgeFacelet = [
   [5, 10],
   [7, 19],
   [3, 37],
@@ -201,7 +201,7 @@ function toFaceCube(cc: CubieCube1) {
 
 // SCRAMBLERS
 // @ts-ignore
-let search = new Search();
+const search = new Search();
 
 export function getRandomScramble() {
   return getAnyScramble(0xffffffffffff, 0xffffffffffff, 0xffffffff, 0xffffffff);
@@ -215,7 +215,7 @@ export function getFMCScramble() {
     axisl2;
   do {
     scramble = getRandomScramble();
-    let moveseq = scramble.split(" ");
+    const moveseq = scramble.split(" ");
     if (moveseq.length < 3) {
       continue;
     }
@@ -263,7 +263,7 @@ function fixOri(arr: number[], cntU: number, base: number) {
 }
 
 function fixPerm(arr: number[], cntU: number, parity: number) {
-  let val = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+  const val = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
   for (let i = 0; i < arr.length; i++) {
     if (arr[i] != -1) {
       val[arr[i]] = -1;
@@ -278,7 +278,7 @@ function fixPerm(arr: number[], cntU: number, parity: number) {
   let i;
   for (i = 0; i < arr.length && cntU > 0; i++) {
     if (arr[i] == -1) {
-      let r = rn(cntU);
+      const r = rn(cntU);
       arr[i] = val[r];
       for (let j = r; j < 11; j++) {
         val[j] = val[j + 1];
@@ -289,7 +289,7 @@ function fixPerm(arr: number[], cntU: number, parity: number) {
     }
   }
   if (getNParity(getNPerm(arr, arr.length), arr.length) == 1 - parity) {
-    let temp = arr[i - 1];
+    const temp = arr[i - 1];
     arr[i - 1] = arr[last];
     arr[last] = temp;
   }
@@ -301,22 +301,22 @@ function parseMask(arr: any, length: number) {
   if ("number" !== typeof arr) {
     return arr;
   }
-  let ret = [];
+  const ret = [];
   for (let i = 0; i < length; i++) {
-    let val = arr & 0xf; // should use "/" instead of ">>" to avoid unexpected type conversion
+    const val = arr & 0xf; // should use "/" instead of ">>" to avoid unexpected type conversion
     ret[i] = val == 15 ? -1 : val;
     arr /= 16;
   }
   return ret;
 }
 
-let aufsuff = [[], [Ux1], [Ux2], [Ux3]];
+const aufsuff = [[], [Ux1], [Ux2], [Ux3]];
 
-let rlpresuff = [[], [Rx1, Lx3], [Rx2, Lx2], [Rx3, Lx1]];
+const rlpresuff = [[], [Rx1, Lx3], [Rx2, Lx2], [Rx3, Lx1]];
 
-let rlappsuff = ["", "x'", "x2", "x"];
+const rlappsuff = ["", "x'", "x2", "x"];
 
-let emptysuff = [[]];
+const emptysuff = [[]];
 
 function getAnyScramble(
   _ep: any,
@@ -329,21 +329,21 @@ function getAnyScramble(
   initMove();
   _rndapp = _rndapp || emptysuff;
   _rndpre = _rndpre || emptysuff;
-  let $_ep = parseMask(_ep, 12);
-  let $_eo = parseMask(_eo, 12);
-  let $_cp = parseMask(_cp, 8);
-  let $_co = parseMask(_co, 8);
+  const $_ep = parseMask(_ep, 12);
+  const $_eo = parseMask(_eo, 12);
+  const $_cp = parseMask(_cp, 8);
+  const $_co = parseMask(_co, 8);
   let solution = "";
   do {
-    let eo = $_eo.slice();
-    let ep = $_ep.slice();
-    let co = $_co.slice();
-    let cp = $_cp.slice();
-    let neo = fixOri(eo, cntU(eo), 2);
-    let nco = fixOri(co, cntU(co), 3);
+    const eo = $_eo.slice();
+    const ep = $_ep.slice();
+    const co = $_co.slice();
+    const cp = $_cp.slice();
+    const neo = fixOri(eo, cntU(eo), 2);
+    const nco = fixOri(co, cntU(co), 3);
     let nep, ncp;
-    let ue = cntU(ep);
-    let uc = cntU(cp);
+    const ue = cntU(ep);
+    const uc = cntU(cp);
     if (ue == 0 && uc == 0) {
       nep = getNPerm(ep, 12);
       ncp = getNPerm(cp, 8);
@@ -362,25 +362,25 @@ function getAnyScramble(
     }
     let cc = new CubieCube1(ncp, nco, nep, neo);
     let cc2 = new CubieCube();
-    let rndpre = rndEl(_rndpre);
-    let rndapp = rndEl(_rndapp);
+    const rndpre = rndEl(_rndpre);
+    const rndapp = rndEl(_rndapp);
     for (let i = 0; i < rndpre.length; i++) {
       CornMult(moveCube[rndpre[i]], cc, cc2);
       EdgeMult(moveCube[rndpre[i]], cc, cc2);
-      let tmp = cc2;
+      const tmp = cc2;
       cc2 = cc;
       cc = tmp;
     }
     for (let i = 0; i < rndapp.length; i++) {
       CornMult(cc, moveCube[rndapp[i]], cc2);
       EdgeMult(cc, moveCube[rndapp[i]], cc2);
-      let tmp = cc2;
+      const tmp = cc2;
       cc2 = cc;
       cc = tmp;
     }
-    let posit = toFaceCube(cc);
+    const posit = toFaceCube(cc);
     // @ts-ignore
-    let search0 = new Search();
+    const search0 = new Search();
     solution = search0.solution(posit, 21, 1e9, 50, 2);
   } while (solution.length <= 3);
   return solution.replace(/ +/g, " ");
@@ -494,11 +494,11 @@ const f2lfilter = [
 ];
 
 export function getLSLLScramble(type: any, length: any, cases: any) {
-  let caze = f2l_map[fixCase(cases, f2lprobs)];
-  let ep = Math.pow(16, caze & 0xf);
-  let eo = 0xf ^ ((caze >> 4) & 1);
-  let cp = Math.pow(16, (caze >> 8) & 0xf);
-  let co = 0xf ^ ((caze >> 12) & 3);
+  const caze = f2l_map[fixCase(cases, f2lprobs)];
+  const ep = Math.pow(16, caze & 0xf);
+  const eo = 0xf ^ ((caze >> 4) & 1);
+  const cp = Math.pow(16, (caze >> 8) & 0xf);
+  const co = 0xf ^ ((caze >> 12) & 3);
   return getAnyScramble(
     0xba9f7654ffff - 7 * ep,
     0x000f0000ffff - eo * ep,
@@ -527,7 +527,7 @@ export function getF2LScramble(_type: any, _length: any, prob: any) {
   i = UB    j = UL    k = UF    l = UR
 
   */
-  let p = between(prob || 0, 0, crossProbs.length - 1);
+  const p = between(prob || 0, 0, crossProbs.length - 1);
   let _prob = crossProbs[p];
 
   if (typeof prob != "number" || prob < 0 || prob >= crossProbs.length) {
@@ -537,7 +537,7 @@ export function getF2LScramble(_type: any, _length: any, prob: any) {
   return getAnyScramble(_prob[0], _prob[1], 0xffffffff, 0xffffffff);
 }
 
-let zbll_map = [
+const zbll_map = [
   [0x3210, 0x2121], // H-BBFF
   [0x3012, 0x2121], // H-FBFB
   [0x3120, 0x2121], // H-RFLF
@@ -581,12 +581,12 @@ let zbll_map = [
   [0xffff, 0x0000], // PLL
 ];
 
-let zbprobs = [
+const zbprobs = [
   1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
   2, 2, 2, 2, 2, 2, 2, 3,
 ];
 
-let zbfilter = [
+const zbfilter = [
   "H-BBFF",
   "H-FBFB",
   "H-RFLF",
@@ -630,7 +630,7 @@ let zbfilter = [
   "PLL",
 ];
 
-let coll_map: any[] = [
+const coll_map: any[] = [
   [0x3210, 0x2121, "FeFeeeBeBLGRDGDRGLDGD", 2, "H-1"],
   [0x2301, 0x1212, "ReLeeeReLBGBDGDFGFDGD", 2, "H-2"],
   [0x1203, 0x1212, "ReBeeeLeBFGRDGDLGFDGD", 4, "H-3"],
@@ -676,11 +676,11 @@ let coll_map: any[] = [
   [0x3210, 0x0000, "DeDeeeDeDBGBRGRFGFLGL", 1, "O-AUF"],
 ];
 
-let coprobs = idxArray(coll_map, 3);
-let cofilter = idxArray(coll_map, 4);
+const coprobs = idxArray(coll_map, 3);
+const cofilter = idxArray(coll_map, 4);
 
 export function getZBLLScramble(type: any, length: any, cases: any) {
-  let zbcase = zbll_map[fixCase(cases, zbprobs)];
+  const zbcase = zbll_map[fixCase(cases, zbprobs)];
   return getAnyScramble(0xba987654ffff, 0, zbcase[0] + 0x76540000, zbcase[1], aufsuff, aufsuff);
 }
 
@@ -693,7 +693,7 @@ export function getZBLSScramble() {
 }
 
 export function getLSEScramble() {
-  let rnd4 = rn(4);
+  const rnd4 = rn(4);
   return (
     getAnyScramble(
       0xba98f6f4ffff,
@@ -706,7 +706,7 @@ export function getLSEScramble() {
   );
 }
 
-let cmll_map = [
+const cmll_map = [
   0x0000, // O or solved
   0x1212, // H
   0x0102, // L
@@ -716,12 +716,12 @@ let cmll_map = [
   0x0012, // U
   0x0111, // aS
 ];
-let cmprobs = [6, 12, 24, 24, 24, 24, 24, 24];
-let cmfilter = ["O", "H", "L", "Pi", "S", "T", "U", "aS"];
+const cmprobs = [6, 12, 24, 24, 24, 24, 24, 24];
+const cmfilter = ["O", "H", "L", "Pi", "S", "T", "U", "aS"];
 
 export function getCMLLScramble(type: any, length: any, cases: any) {
-  let rnd4 = rn(4);
-  let presuff = [];
+  const rnd4 = rn(4);
+  const presuff = [];
   for (let i = 0; i < aufsuff.length; i++) {
     presuff.push(aufsuff[i].concat(rlpresuff[rnd4]));
   }
@@ -749,7 +749,7 @@ export function get2GLLScramble() {
   return getAnyScramble(0xba987654ffff, 0x000000000000, 0x76543210, 0x0000ffff, aufsuff);
 }
 
-let pll_map = [
+const pll_map = [
   [0x1032, 0x3210], // H
   [0x3102, 0x3210], // Ua
   [0x3021, 0x3210], // Ub
@@ -773,9 +773,9 @@ let pll_map = [
   [0x3201, 0x3012], // Y
 ];
 
-let pllprobs = [1, 4, 4, 2, 4, 4, 2, 4, 4, 4, 4, 4, 4, 4, 1, 1, 4, 4, 4, 4, 4];
+const pllprobs = [1, 4, 4, 2, 4, 4, 2, 4, 4, 4, 4, 4, 4, 4, 1, 1, 4, 4, 4, 4, 4];
 
-export let pllfilter = [
+export const pllfilter = [
   "H",
   "Ua",
   "Ub",
@@ -800,7 +800,7 @@ export let pllfilter = [
 ];
 
 export function getPLLScramble(type: any, length: any, cases: any) {
-  let pllcase = pll_map[fixCase(cases, pllprobs)];
+  const pllcase = pll_map[fixCase(cases, pllprobs)];
   return getAnyScramble(
     pllcase[0] + 0xba9876540000,
     0x000000000000,
@@ -811,7 +811,7 @@ export function getPLLScramble(type: any, length: any, cases: any) {
   );
 }
 
-let oll_map = [
+const oll_map = [
   [0x0000, 0x0000], // PLL
   [0x1111, 0x1212], // Point-1
   [0x1111, 0x1122], // Point-2
@@ -871,11 +871,11 @@ let oll_map = [
   [0x0101, 0x1212], // I-56
   [0x0101, 0x0000], // CO-57
 ];
-let ollprobs = [
+const ollprobs = [
   1, 2, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 1, 2, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
   4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 2, 2, 2,
 ];
-let ollfilter = [
+const ollfilter = [
   "PLL",
   "Point-1",
   "Point-2",
@@ -937,7 +937,7 @@ let ollfilter = [
 ];
 
 export function getOLLScramble(type: any, length: any, cases: any) {
-  let ollcase = oll_map[fixCase(cases, ollprobs)];
+  const ollcase = oll_map[fixCase(cases, ollprobs)];
   return getAnyScramble(0xba987654ffff, ollcase[0], 0x7654ffff, ollcase[1], aufsuff, aufsuff);
 }
 
@@ -946,7 +946,7 @@ export function getEOLineScramble() {
 }
 
 export function getEasyCrossScramble(type: any, length: any) {
-  let cases = getEasyCross(length);
+  const cases = getEasyCross(length);
   return getAnyScramble(cases[0], cases[1], 0xffffffff, 0xffffffff);
 }
 
@@ -981,11 +981,11 @@ export function getCustomScramble(type: string, length: number, cases: any) {
   return getAnyScramble(ep, eo, cp, co);
 }
 
-let daufsuff = [[], [Dx1], [Dx2], [Dx3]];
-let daufrot = ["", "y", "y2", "y'"];
+const daufsuff = [[], [Dx1], [Dx2], [Dx3]];
+const daufrot = ["", "y", "y2", "y'"];
 
 function getMehta3QBScramble() {
-  let rnd4 = rn(4);
+  const rnd4 = rn(4);
   return (
     getAnyScramble(0xffff765fffff, 0xffff000fffff, 0xf65fffff, 0xf00fffff, [daufsuff[rnd4]]) +
     daufrot[rnd4]
@@ -993,8 +993,8 @@ function getMehta3QBScramble() {
 }
 
 function getMehtaEOLEScramble() {
-  let skip = rn(4);
-  let rnd4 = rn(4);
+  const skip = rn(4);
+  const rnd4 = rn(4);
   return (
     getAnyScramble(
       0xba98765fffff + (0x4567 & (0xf << (skip * 4))) * 0x100000000,
@@ -1022,7 +1022,7 @@ function getMehtaCDRLLScramble() {
   return getAnyScramble(0xba98765fffff, 0x000000000000, 0x7654ffff, 0x0000ffff);
 }
 
-let customfilter = [
+const customfilter = [
   "UR",
   "UF",
   "UL",
@@ -1045,13 +1045,13 @@ let customfilter = [
   "DRB",
 ];
 for (let i = 0; i < 20; i++) {
-  let piece = customfilter[i];
+  const piece = customfilter[i];
   customfilter[i + 20] = (piece.length == 2 ? "OriE-" : "OriC-") + piece;
   customfilter[i] = (piece.length == 2 ? "PermE-" : "PermC-") + piece;
 }
-let customprobs = valuedArray(40, 0);
+const customprobs = valuedArray(40, 0);
 
-let ttll_map: { 0: number; 1: number; 2: string }[] = [
+const ttll_map: { 0: number; 1: number; 2: string }[] = [
   [0x32410, 0x3210, "FBar-1"],
   [0x32410, 0x3102, "FBar-2"],
   [0x32410, 0x3021, "FBar-3"],
@@ -1126,15 +1126,15 @@ let ttll_map: { 0: number; 1: number; 2: string }[] = [
   [0x30412, 0x0132, "FOpp-12"],
 ];
 
-let ttllprobs: number[] = [];
-let ttllfilter: string[] = [];
+const ttllprobs: number[] = [];
+const ttllfilter: string[] = [];
 for (let i = 0; i < ttll_map.length; i++) {
   ttllprobs[i] = 1;
   ttllfilter[i] = ttll_map[i][2];
 }
 
 function getTTLLScramble(type: any, length: any, cases: any) {
-  let ttllcase = ttll_map[fixCase(cases, ttllprobs)];
+  const ttllcase = ttll_map[fixCase(cases, ttllprobs)];
   return getAnyScramble(
     0xba9876540000 + ttllcase[1],
     0x000000000000,
@@ -1145,9 +1145,9 @@ function getTTLLScramble(type: any, length: any, cases: any) {
   );
 }
 
-let eols_map: number[] = [];
-let eolsprobs: any[] = [];
-let eolsfilter = [];
+const eols_map: number[] = [];
+const eolsprobs: any[] = [];
+const eolsfilter = [];
 
 for (let i = 0; i < f2l_map.length; i++) {
   if (f2l_map[i][0] & 0xf0) {
@@ -1159,10 +1159,10 @@ for (let i = 0; i < f2l_map.length; i++) {
 }
 
 function getEOLSScramble(type: any, length: any, cases: any) {
-  let caze = eols_map[fixCase(cases, eolsprobs)];
-  let ep = Math.pow(16, caze & 0xf);
-  let cp = Math.pow(16, (caze >> 8) & 0xf);
-  let co = 0xf ^ ((caze >> 12) & 3);
+  const caze = eols_map[fixCase(cases, eolsprobs)];
+  const ep = Math.pow(16, caze & 0xf);
+  const cp = Math.pow(16, (caze >> 8) & 0xf);
+  const co = 0xf ^ ((caze >> 12) & 3);
   return getAnyScramble(
     0xba9f7654ffff - 7 * ep,
     0x000000000000,
@@ -1172,9 +1172,9 @@ function getEOLSScramble(type: any, length: any, cases: any) {
   );
 }
 
-let wvls_map: number[] = [];
-let wvlsprobs: any[] = [];
-let wvlsfilter = [
+const wvls_map: number[] = [];
+const wvlsprobs: any[] = [];
+const wvlsfilter = [
   "Oriented",
   "Rectangle-1",
   "Rectangle-2",
@@ -1210,17 +1210,17 @@ for (let i = 0; i < 27; i++) {
 }
 
 function getWVLSScramble(type: any, length: any, cases: any) {
-  let caze = wvls_map[fixCase(cases, wvlsprobs)];
+  const caze = wvls_map[fixCase(cases, wvlsprobs)];
   return getAnyScramble(0xba9f7654ff8f, 0x000000000000, 0x765fff4f, 0x000f0020 | caze);
 }
 
-let vls_map: number[][] = [];
-let vlsprobs: any[] = [];
-let vlsfilter = [];
+const vls_map: number[][] = [];
+const vlsprobs: any[] = [];
+const vlsfilter = [];
 
 for (let i = 0; i < 27 * 8; i++) {
-  let co = i % 27;
-  let eo = ~~(i / 27);
+  const co = i % 27;
+  const eo = ~~(i / 27);
   vls_map[i] = [
     (~~(co / 9) % 3 << 12) | (~~(co / 3) % 3 << 8) | co % 3,
     (((eo >> 2) & 1) << 12) | (((eo >> 1) & 1) << 8) | (eo & 1),
@@ -1231,7 +1231,7 @@ for (let i = 0; i < 27 * 8; i++) {
 }
 
 function getVLSScramble(type: any, length: any, cases: any) {
-  let caze = vls_map[fixCase(cases, vlsprobs)];
+  const caze = vls_map[fixCase(cases, vlsprobs)];
   return getAnyScramble(
     0xba9f7654ff8f,
     0x000f00000000 + caze[1],
@@ -1242,7 +1242,7 @@ function getVLSScramble(type: any, length: any, cases: any) {
 }
 
 function getSBRouxScramble() {
-  let rnd4 = rn(4);
+  const rnd4 = rn(4);
   return (
     getAnyScramble(0xfa9ff6ffffff, 0xf00ff0ffffff, 0xf65fffff, 0xf00fffff, [rlpresuff[rnd4]]) +
     rlappsuff[rnd4]
@@ -1250,7 +1250,7 @@ function getSBRouxScramble() {
 }
 
 function getEasyXCrossScramble(type: any, length: any) {
-  let cases: any = getEasyXCross(length);
+  const cases: any = getEasyXCross(length);
   return getAnyScramble(cases[0], cases[1], cases[2], cases[3]);
 }
 

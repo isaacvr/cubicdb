@@ -9,7 +9,7 @@ import { EPS, STANDARD_PALETTE } from "@constants";
 import { ScrambleParser } from "@classes/scramble-parser";
 
 export function FTO(): PuzzleInterface {
-  let fto: PuzzleInterface = {
+  const fto: PuzzleInterface = {
     center: new Vector3D(0, 0, 0),
     palette: STANDARD_PALETTE,
     pieces: [],
@@ -25,7 +25,7 @@ export function FTO(): PuzzleInterface {
   fto.getAllStickers = getAllStickers.bind(fto);
 
   fto.pieces = [];
-  let pieces = fto.pieces;
+  const pieces = fto.pieces;
 
   const PI = Math.PI;
   const TAU_3 = (2 * PI) / 3;
@@ -33,18 +33,20 @@ export function FTO(): PuzzleInterface {
   const PI_4 = PI / 4;
   const len = Math.SQRT2 / 3;
 
-  let cornerSticker = new Sticker([
+  const cornerSticker = new Sticker([
     FRONT,
     FRONT.add(RIGHT.sub(FRONT).mul(1 / 3)),
     FRONT.add(UP.sub(FRONT).mul(1 / 3)),
   ]);
-  let cornerPiece = new Piece([0, 1, 2, 3].map(n => cornerSticker.rotate(CENTER, FRONT, n * PI_2)));
+  const cornerPiece = new Piece(
+    [0, 1, 2, 3].map(n => cornerSticker.rotate(CENTER, FRONT, n * PI_2))
+  );
 
   pieces.push(...[0, 1, 2, 3].map(n => cornerPiece.rotate(CENTER, RIGHT, n * PI_2)));
   pieces.push(...[1, -1].map(n => cornerPiece.rotate(CENTER, UP, n * PI_2)));
 
-  let edgeBigSticker = cornerSticker.add(RIGHT.sub(FRONT).mul(1 / 3));
-  let edgeBigPiece = new Piece([edgeBigSticker, edgeBigSticker.reflect1(FRONT, UP, true)]);
+  const edgeBigSticker = cornerSticker.add(RIGHT.sub(FRONT).mul(1 / 3));
+  const edgeBigPiece = new Piece([edgeBigSticker, edgeBigSticker.reflect1(FRONT, UP, true)]);
 
   pieces.push(...[0, 1, 2, 3].map(n => edgeBigPiece.rotate(CENTER, UP, n * PI_2)));
   pieces.push(
@@ -54,13 +56,13 @@ export function FTO(): PuzzleInterface {
     ...[0, 1, 2, 3].map(n => edgeBigPiece.rotate(CENTER, FRONT, -PI_2).rotate(CENTER, UP, n * PI_2))
   );
 
-  let edgeSticker = cornerSticker.rotate(
+  const edgeSticker = cornerSticker.rotate(
     cornerSticker.points[2],
     cornerSticker.getOrientation(),
     PI / 3
   );
 
-  let edgePiece = new Piece([
+  const edgePiece = new Piece([
     edgeSticker,
     cornerPiece.reflect1(cornerSticker.points[1], FRONT, true).stickers[0],
   ]);
@@ -91,12 +93,12 @@ export function FTO(): PuzzleInterface {
         .div(0.816496580927726, true) // box length
   );
 
-  let getPlaneFromSticker = (st: Sticker, layer = 1) => {
-    let o = st.getOrientation();
+  const getPlaneFromSticker = (st: Sticker, layer = 1) => {
+    const o = st.getOrientation();
     return st.points.map(p => p.add(o.mul(-len * layer)));
   };
 
-  let planes: Vector3D[][] = [
+  const planes: Vector3D[][] = [
     [...getPlaneFromSticker(pieces[0].stickers[0]).reverse()], // U
     [...getPlaneFromSticker(pieces[0].stickers[3]).reverse()], // R
     [...getPlaneFromSticker(pieces[0].stickers[2]).reverse()], // F
@@ -107,18 +109,18 @@ export function FTO(): PuzzleInterface {
     [...getPlaneFromSticker(pieces[0].stickers[3], 2)], // BL
   ];
 
-  let trySingleMove = (mv: any): { pieces: Piece[]; u: Vector3D; ang: number } | null => {
-    let moveId = mv[0];
-    let turns = mv[1];
+  const trySingleMove = (mv: any): { pieces: Piece[]; u: Vector3D; ang: number } | null => {
+    const moveId = mv[0];
+    const turns = mv[1];
     const pts1 = planes[moveId];
     const u = Vector3D.cross(pts1[0], pts1[1], pts1[2]).unit();
     const mu = u.mul(-1);
     const ang = TAU_3 * turns;
 
-    let pcs = [];
+    const pcs = [];
 
     for (let i = 0, maxi = pieces.length; i < maxi; i += 1) {
-      let d = pieces[i].direction1(pts1[0], u, false, (s: Sticker) => !/^[xd]$/.test(s.color));
+      const d = pieces[i].direction1(pts1[0], u, false, (s: Sticker) => !/^[xd]$/.test(s.color));
 
       if (d < 0) {
         pcs.push(pieces[i]);
@@ -135,20 +137,20 @@ export function FTO(): PuzzleInterface {
   /// [ id, turns, layers, direction ]
   fto.move = function (moves: any[]) {
     for (let m = 0, maxm = moves.length; m < maxm; m += 1) {
-      let mv = moves[m];
-      let pcs = trySingleMove(mv);
+      const mv = moves[m];
+      const pcs = trySingleMove(mv);
       if (!pcs) {
         return false;
       }
-      let { u, ang } = pcs;
+      const { u, ang } = pcs;
       pcs.pieces.forEach(p => p.rotate(CENTER, u, ang, true));
     }
     return true;
   };
 
   fto.toMove = function (piece: Piece, sticker: Sticker, dir: Vector3D) {
-    let mc = sticker.updateMassCenter();
-    let toMovePieces = pieces.filter(p => p.direction1(mc, dir) === 0);
+    const mc = sticker.updateMassCenter();
+    const toMovePieces = pieces.filter(p => p.direction1(mc, dir) === 0);
     return {
       pieces: toMovePieces,
       ang: TAU_3,
@@ -159,21 +161,21 @@ export function FTO(): PuzzleInterface {
     if (!fto.toMove) return;
 
     for (let i = 0; i < 20; i += 1) {
-      let p = random(pieces) as Piece;
-      let s = random(p.stickers.filter(s => /^[^xd]$/.test(s.color))) as Sticker;
+      const p = random(pieces) as Piece;
+      const s = random(p.stickers.filter(s => /^[^xd]$/.test(s.color))) as Sticker;
       if (!s) {
         i -= 1;
         continue;
       }
-      let vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > EPS));
-      let pcs = fto.toMove(p, s, vec) as ToMoveResult;
+      const vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > EPS));
+      const pcs = fto.toMove(p, s, vec) as ToMoveResult;
       pcs.pieces.forEach((p: Piece) => p.rotate(pcs.center || CENTER, vec, pcs.ang, true));
     }
   };
 
   fto.applySequence = function (seq: string[]) {
-    let moves = seq.map(mv => ScrambleParser.parseMegaminx(mv)[0]);
-    let res: { u: Vector3D; ang: number; pieces: string[] }[] = [];
+    const moves = seq.map(mv => ScrambleParser.parseMegaminx(mv)[0]);
+    const res: { u: Vector3D; ang: number; pieces: string[] }[] = [];
 
     // for (let i = 0, maxi = moves.length; i < maxi; i += 1) {
     //   let pcs;

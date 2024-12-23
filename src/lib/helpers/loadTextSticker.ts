@@ -5,7 +5,7 @@ import type { TextSticker } from "@classes/puzzle/TextSticker";
 import type { Puzzle } from "@classes/puzzle/puzzle";
 import FONT_URL from "./roboto_regular_numbers.typeface.json?raw";
 
-let font = new Font(JSON.parse(FONT_URL));
+const font = new Font(JSON.parse(FONT_URL));
 
 export function loadTextSticker(sticker: TextSticker, piece: Object3D, cube: Puzzle) {
   const color = cube.getHexColor(sticker.color);

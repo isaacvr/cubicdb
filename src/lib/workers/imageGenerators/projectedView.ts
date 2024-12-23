@@ -21,10 +21,10 @@ function getRoundedSQ1Sticker(
   SQ1_A2: Vector3D[],
   threshold = 1
 ): Sticker {
-  let st1 = st._generator.clone();
-  let points = st1.points;
+  const st1 = st._generator.clone();
+  const points = st1.points;
 
-  let pts = (st._generator.points as Vector3D[]).filter(p => {
+  const pts = (st._generator.points as Vector3D[]).filter(p => {
     return Math.abs(p.y) >= threshold - EPS;
   });
 
@@ -37,40 +37,52 @@ function getRoundedSQ1Sticker(
   st1.updateMassCenter();
   st1.rotate(pts[0], pts[0].sub(pts[1]), PI_2, true);
 
-  let f = points[0].y * st1.getOrientation().dot(UP);
+  const f = points[0].y * st1.getOrientation().dot(UP);
 
   if (f < 0) {
     st1.rotate(pts[0], pts[0].sub(pts[1]), PI_2 * 2, true);
   }
 
-  let ini = f > 0 ? 1 : 2;
+  const ini = f > 0 ? 1 : 2;
 
   for (let j = ini; j <= ini + 1; j += 1) {
-    let pj = points[j].clone();
+    const pj = points[j].clone();
     pj.y = 0;
 
-    let anchors = pj.abs() > 1.5 ? SQ1_A2 : SQ1_A1;
+    const anchors = pj.abs() > 1.5 ? SQ1_A2 : SQ1_A1;
 
     anchors.sort((a, b) => a.sub(pj).abs() - b.sub(pj).abs());
 
-    let closer = anchors[0];
+    const closer = anchors[0];
     points[j].x = closer.x;
     points[j].z = closer.z;
   }
 
   const rp = cube.p.roundParams;
-  let rounded = cube.p.isRounded ? roundStickerCorners(st1, rp.rd, rp.scale, rp.ppc, true) : st1;
+  const rounded = cube.p.isRounded ? roundStickerCorners(st1, rp.rd, rp.scale, rp.ppc, true) : st1;
   rounded.color = st.color;
   rounded.oColor = st.oColor;
 
   return rounded;
 }
 
-export function projectedView(cube: Puzzle, DIM: number, format: "raster" | "svg" = "svg"): string {
+interface PROJECTED_VIEW_ARGS {
+  cube: Puzzle;
+  DIM: number;
+  format?: "raster" | "svg";
+  printMode?: boolean;
+}
+
+export function projectedView({
+  cube,
+  DIM,
+  format = "svg",
+  printMode = false,
+}: PROJECTED_VIEW_ARGS): string {
   let W = (DIM * 4) / 2;
   let H = (DIM * 3) / 2;
   const FACTOR = 2.1;
-  let LW = DIM * 0.007;
+  let LW = DIM * (printMode ? 0.01 : 0.007);
   const SPECIAL_SQ1 = [CubeMode.CS, CubeMode.EO, CubeMode.CO];
   const ORDER = cube.order;
 
@@ -102,9 +114,13 @@ export function projectedView(cube: Puzzle, DIM: number, format: "raster" | "svg
     LW = H * 0.004;
   } else if (cube.type === "supersquare1") {
     H = W;
+  } else if (cube.type === "clock") {
+    H = DIM;
+  } else if (cube.type === "fto") {
+    H = W * 0.5;
   }
 
-  let ctx = format === "raster" ? new CanvasGenerator(W, H) : new SVGGenerator(W, H);
+  const ctx = format === "raster" ? new CanvasGenerator(W, H) : new SVGGenerator(W, H);
   ctx.lineWidth = LW;
 
   let colorFilter = ["d"];
@@ -117,12 +133,12 @@ export function projectedView(cube: Puzzle, DIM: number, format: "raster" | "svg
     colorFilter = ["d"];
   }
 
-  let stickers = cube.getAllStickers().filter(s => {
+  const stickers = cube.getAllStickers().filter(s => {
     if (cube.type === "clock") return !(s instanceof FaceSticker);
     return colorFilter.indexOf(s.color) === -1;
   });
 
-  let sideStk: { [name: string]: Sticker[] } = {};
+  const sideStk: { [name: string]: Sticker[] } = {};
 
   let faceVectors = cube.p.faceVectors;
   let faceName = ["U", "R", "F", "D", "L", "B"];
@@ -137,8 +153,8 @@ export function projectedView(cube: Puzzle, DIM: number, format: "raster" | "svg
   ];
 
   // Square-1 anchors
-  let SQ1_A1: Vector3D[] = [];
-  let SQ1_A2: Vector3D[] = [];
+  const SQ1_A1: Vector3D[] = [];
+  const SQ1_A2: Vector3D[] = [];
 
   for (let i = 0; i < 12; i += 1) {
     SQ1_A1.push(BACK.rotate(CENTER, UP, PI_6 * i + PI_6 / 2).mul(1.38036823524362));
@@ -152,9 +168,9 @@ export function projectedView(cube: Puzzle, DIM: number, format: "raster" | "svg
     faceVectors = [UP, DOWN, RIGHT.add(BACK).add(UP)];
     faceName = ["U", "D", "M"];
   } else if (cube.type === "megaminx" || cube.type === "pyraminxCrystal") {
-    let raw = cube.p.raw;
-    let ac = raw[0];
-    let FACE_ANG = raw[1];
+    const raw = cube.p.raw;
+    const ac = raw[0];
+    const FACE_ANG = raw[1];
     faceName = ["U", "MU1", "MU2", "MU3", "MU4", "MU5", "MD1", "MD2", "MD3", "MD4", "MD5", "D"];
     fcTr = [
       [CENTER, UP, 0, UP, 0], /// no transform
@@ -177,17 +193,18 @@ export function projectedView(cube: Puzzle, DIM: number, format: "raster" | "svg
       fcTr.push([CENTER, RIGHT, Math.asin(0.5773502691896258), CENTER, 0]);
     }
   } else if (cube.type === "rubik") {
-    let unit = 2 / Math.max(ORDER.a, ORDER.b, ORDER.c);
-    let sideMult = ORDER.a === 3 && ORDER.b === 1 && ORDER.c === 3 ? 2 : 1;
+    const unit = 2 / Math.max(ORDER.a, ORDER.b, ORDER.c);
+    const sideMult = ORDER.a === 3 && ORDER.b === 1 && ORDER.c === 3 ? 2 : 1;
+    const offset = printMode ? 0.5 : 1;
 
     fcTr = [
       // rotate([0], [1], [2]).add([3].mul([4]))
-      [CENTER, RIGHT, PI_2, UP, (sideMult * unit * (ORDER.b + ORDER.c + 1)) / 2],
-      [CENTER, UP, -PI_2, RIGHT, (sideMult * unit * (ORDER.a + ORDER.b + 1)) / 2],
+      [CENTER, RIGHT, PI_2, UP, (sideMult * unit * (ORDER.b + ORDER.c + offset)) / 2],
+      [CENTER, UP, -PI_2, RIGHT, (sideMult * unit * (ORDER.a + ORDER.b + offset)) / 2],
       [CENTER, RIGHT, 0, UP, 0], /// F = no transform
-      [CENTER, LEFT, PI_2, DOWN, (sideMult * unit * (ORDER.b + ORDER.c + 1)) / 2],
-      [CENTER, UP, PI_2, LEFT, (sideMult * unit * (ORDER.a + ORDER.b + 1)) / 2],
-      [CENTER, UP, PI, RIGHT, sideMult * unit * (ORDER.a + ORDER.b + 1)],
+      [CENTER, LEFT, PI_2, DOWN, (sideMult * unit * (ORDER.b + ORDER.c + offset)) / 2],
+      [CENTER, UP, PI_2, LEFT, (sideMult * unit * (ORDER.a + ORDER.b + offset)) / 2],
+      [CENTER, UP, PI, RIGHT, sideMult * unit * (ORDER.a + ORDER.b + offset)],
     ];
   } else if (cube.type === "clock") {
     faceName = ["FRONT", "BACK"];
@@ -215,30 +232,30 @@ export function projectedView(cube: Puzzle, DIM: number, format: "raster" | "svg
   ];
 
   for (let i = 0, maxi = stickers.length; i < maxi; i += 1) {
-    let st = stickers[i];
+    const st = stickers[i];
     let uv = st.getOrientation();
-    let mc = st.getMassCenter();
+    const mc = st.getMassCenter();
     let ok = false;
-    let off1 = new Vector3D(-2, 2, 0);
-    let off2 = new Vector3D(2, 2, 0);
+    const off1 = new Vector3D(-2, 2, 0);
+    const off2 = new Vector3D(2, 2, 0);
 
     if (cube.type === "supersquare1") {
       if (mc.y > 0.7) {
-        let newst = UP.dot(uv) < EPS ? getRoundedSQ1Sticker(cube, st, SQ1_A1, SQ1_A2) : st;
+        const newst = UP.dot(uv) < EPS ? getRoundedSQ1Sticker(cube, st, SQ1_A1, SQ1_A2) : st;
         sideStk["U"].push(newst.rotate(CENTER, RIGHT, PI_2, true).add(off1, true));
       } else if (mc.y > 0.2) {
         if (!(st.color != "x" || (st.color === "x" && uv.y > 0))) continue;
-        let newst = UP.dot(uv) < EPS ? getRoundedSQ1Sticker(cube, st, SQ1_A1, SQ1_A2, 0.5) : st;
+        const newst = UP.dot(uv) < EPS ? getRoundedSQ1Sticker(cube, st, SQ1_A1, SQ1_A2, 0.5) : st;
         sideStk["U1"].push(newst.rotate(CENTER, RIGHT, PI_2, true).add(off2, true));
       } else if (mc.y < -0.6) {
-        let newst = DOWN.dot(uv) < EPS ? getRoundedSQ1Sticker(cube, st, SQ1_A1, SQ1_A2) : st;
+        const newst = DOWN.dot(uv) < EPS ? getRoundedSQ1Sticker(cube, st, SQ1_A1, SQ1_A2) : st;
         sideStk["D"].push(
           newst.rotate(CENTER, RIGHT, -PI_2, true).add(off1.rotate(CENTER, FRONT, PI), true)
         );
       } else if (mc.y < -0.2) {
         if (!(st.color != "x" || (st.color === "x" && uv.y < 0))) continue;
 
-        let newst = DOWN.dot(uv) < EPS ? getRoundedSQ1Sticker(cube, st, SQ1_A1, SQ1_A2, 0.5) : st;
+        const newst = DOWN.dot(uv) < EPS ? getRoundedSQ1Sticker(cube, st, SQ1_A1, SQ1_A2, 0.5) : st;
         sideStk["D1"].push(
           newst.rotate(CENTER, RIGHT, -PI_2, true).add(off2.rotate(CENTER, FRONT, PI), true)
         );
@@ -252,11 +269,11 @@ export function projectedView(cube: Puzzle, DIM: number, format: "raster" | "svg
     }
 
     if (cube.type === "clock" && st.name === "pin") {
-      let ori = st.getOrientation();
-      let face = ori.z > 0 ? 0 : 1;
-      let on = Math.abs(st.getMassCenter().z) > 0.27;
+      const ori = st.getOrientation();
+      const face = ori.z > 0 ? 0 : 1;
+      const on = Math.abs(st.getMassCenter().z) > 0.27;
 
-      let arr = sideStk[faceName[face]];
+      const arr = sideStk[faceName[face]];
 
       sideStk[faceName[face]].push(st);
 
@@ -291,14 +308,14 @@ export function projectedView(cube: Puzzle, DIM: number, format: "raster" | "svg
       st.color != "d" &&
       st.color != "x"
     ) {
-      let allPts = st._generator.points as Vector3D[];
-      let pts = allPts.filter(p => {
+      const allPts = st._generator.points as Vector3D[];
+      const pts = allPts.filter(p => {
         return Math.abs(p.y) >= 1 - EPS;
       });
 
       if (pts.length > 0) {
         if (!SPECIAL_SQ1.some(m => cube.mode === m)) {
-          let rounded = getRoundedSQ1Sticker(cube, st, SQ1_A1, SQ1_A2);
+          const rounded = getRoundedSQ1Sticker(cube, st, SQ1_A1, SQ1_A2);
 
           if (pts[0].y > 0) {
             sideStk.U.push(rounded);
@@ -307,11 +324,11 @@ export function projectedView(cube: Puzzle, DIM: number, format: "raster" | "svg
           }
         }
       } else {
-        let isFront = allPts.reduce((ac, p) => ac && p.z >= 1, true);
+        const isFront = allPts.reduce((ac, p) => ac && p.z >= 1, true);
 
         if (isFront) {
-          let st1 = st.clone();
-          let f = SPECIAL_SQ1.some(m => m === cube.mode) ? 1 : 4 / 3;
+          const st1 = st.clone();
+          const f = SPECIAL_SQ1.some(m => m === cube.mode) ? 1 : 4 / 3;
           (st1.points as Vector3D[]).forEach(p => {
             p.y /= 2;
             p.x *= f;
@@ -323,11 +340,11 @@ export function projectedView(cube: Puzzle, DIM: number, format: "raster" | "svg
   }
 
   if (cube.type === "pyraminx") {
-    let PU = UP.mul(1.59217);
-    let PR = DOWN.mul(0.53072).add(FRONT.mul(1.5011)).rotate(CENTER, UP, PI_3);
-    let PB = PR.rotate(CENTER, UP, 2 * PI_3);
-    let PL = PB.rotate(CENTER, UP, 2 * PI_3);
-    let MLR = PL.add(PR).div(2);
+    const PU = UP.mul(1.59217);
+    const PR = DOWN.mul(0.53072).add(FRONT.mul(1.5011)).rotate(CENTER, UP, PI_3);
+    const PB = PR.rotate(CENTER, UP, 2 * PI_3);
+    const PL = PB.rotate(CENTER, UP, 2 * PI_3);
+    const MLR = PL.add(PR).div(2);
 
     const ANG = 0.4048928432892675;
     const ANG1 = PI_2 + ANG;
@@ -337,13 +354,13 @@ export function projectedView(cube: Puzzle, DIM: number, format: "raster" | "svg
     sideStk.D.forEach(s => s.rotate(PR, PL.sub(PR), ANG1, true).rotate(MLR, RIGHT, ANG, true));
     sideStk.L.forEach(s => s.rotate(PU, PU.sub(PL), ANG1, true).rotate(MLR, RIGHT, ANG, true));
 
-    let cm1 = sideStk.R.reduce((a, s) => a.add(s.getMassCenter(), true), new Vector3D())
+    const cm1 = sideStk.R.reduce((a, s) => a.add(s.getMassCenter(), true), new Vector3D())
       .div(sideStk.R.length, true)
       .setLength(0.15);
-    let cm2 = sideStk.D.reduce((a, s) => a.add(s.getMassCenter(), true), new Vector3D())
+    const cm2 = sideStk.D.reduce((a, s) => a.add(s.getMassCenter(), true), new Vector3D())
       .div(sideStk.D.length, true)
       .setLength(0.15);
-    let cm3 = sideStk.L.reduce((a, s) => a.add(s.getMassCenter(), true), new Vector3D())
+    const cm3 = sideStk.L.reduce((a, s) => a.add(s.getMassCenter(), true), new Vector3D())
       .div(sideStk.L.length, true)
       .setLength(0.15);
 
@@ -354,8 +371,8 @@ export function projectedView(cube: Puzzle, DIM: number, format: "raster" | "svg
     sideStk.U.forEach(st => st.rotate(CENTER, RIGHT, PI_2, true).add(UP.mul(getFactor()), true));
     sideStk.D.forEach(st => st.rotate(CENTER, RIGHT, -PI_2, true).add(DOWN.mul(getFactor()), true));
   } else if (cube.type === "megaminx" || cube.type === "pyraminxCrystal") {
-    let raw = cube.p.raw;
-    let FACE_ANG = raw[1];
+    const raw = cube.p.raw;
+    const FACE_ANG = raw[1];
 
     for (let i = 0; i < 6; i += 1) {
       sideStk[faceName[i]].forEach(s => s.rotate(CENTER, RIGHT, PI_2, true));
@@ -367,7 +384,7 @@ export function projectedView(cube: Puzzle, DIM: number, format: "raster" | "svg
         ? cube.p.pieces.filter(p => {
             if (p.stickers.length < 2) return false;
             if (p.stickers.some(st => st.name === "center")) {
-              let st = p.stickers.filter(st => st.name === "center")[0];
+              const st = p.stickers.filter(st => st.name === "center")[0];
               return st.name === "center" && st.getOrientation().sub(DOWN).abs() < EPS;
             }
 
@@ -378,8 +395,8 @@ export function projectedView(cube: Puzzle, DIM: number, format: "raster" | "svg
     const vec = new Vector3D(3.53, -0.38, 0);
 
     for (let i = 6; i < 12; i += 1) {
-      let stickers = sideStk[faceName[i]];
-      let o = stickers[0].getOrientation();
+      const stickers = sideStk[faceName[i]];
+      const o = stickers[0].getOrientation();
 
       if (o.sub(DOWN).abs() < EPS) {
         stickers.forEach(s =>
@@ -390,10 +407,10 @@ export function projectedView(cube: Puzzle, DIM: number, format: "raster" | "svg
       }
 
       for (let j = 0, maxj = downPts.length; j < maxj; j += 1) {
-        let v = downPts[(j + 1) % maxj].sub(downPts[j]);
+        const v = downPts[(j + 1) % maxj].sub(downPts[j]);
 
         if (Math.abs(v.dot(o)) < EPS) {
-          let anchor = stickers
+          const anchor = stickers
             .reduce((acc: Vector3D[], s) => [...acc, ...s.points], [])
             .sort((a, b) => {
               return a.y - b.y;
@@ -414,12 +431,14 @@ export function projectedView(cube: Puzzle, DIM: number, format: "raster" | "svg
   } else if (cube.type === "fto") {
     faceName
       .slice(4)
-      .forEach(name => sideStk[name].forEach(st => st.rotate(RIGHT.mul(1.1), UP, PI, true)));
+      .forEach(name =>
+        sideStk[name].forEach(st => st.rotate(RIGHT.mul(printMode ? 1 : 1.1), UP, PI, true))
+      );
   } else if (cube.type === "clock") {
     sideStk[faceName[1]].forEach(st => st.rotate(RIGHT.mul(1.1), UP, PI, true));
   }
 
-  let allStickers: Sticker[] = [];
+  const allStickers: Sticker[] = [];
 
   for (let i = 0, maxi = faceName.length; i < maxi; i += 1) {
     allStickers.push(...sideStk[faceName[i]]);
@@ -428,21 +447,21 @@ export function projectedView(cube: Puzzle, DIM: number, format: "raster" | "svg
   drawStickers(ctx, allStickers, [], W, H, cube);
 
   if (cube.type === "megaminx") {
-    let LX = W * 0.258;
-    let LY = H * 0.457;
-    let fontWeight = W * 0.05;
+    const LX = W * 0.258;
+    const LY = H * 0.457;
+    const fontWeight = W * 0.05;
 
-    let upVector = cube.p.faceVectors[0];
-    let frontVector = cube.p.faceVectors[3];
+    const upVector = cube.p.faceVectors[0];
+    const frontVector = cube.p.faceVectors[3];
 
-    let cc = cube.p.getAllStickers().filter(st => st.name === "center-colored");
-    let hToArr = (s: string) =>
+    const cc = cube.p.getAllStickers().filter(st => st.name === "center-colored");
+    const hToArr = (s: string) =>
       s
         .slice(1)
         .match(/.{2}/g)
         ?.map(n => parseInt(n, 16)) || [0, 0, 0];
 
-    let upColor = hToArr(
+    const upColor = hToArr(
       cube.getHexStrColor(
         cc
           .filter(st => st.getOrientation().sub(upVector).abs() < EPS)
@@ -450,7 +469,7 @@ export function projectedView(cube: Puzzle, DIM: number, format: "raster" | "svg
       )
     );
 
-    let frontColor = hToArr(
+    const frontColor = hToArr(
       cube.getHexStrColor(
         cc
           .filter(st => st.getOrientation().sub(frontVector).abs() < EPS)

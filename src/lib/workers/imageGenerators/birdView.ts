@@ -26,16 +26,16 @@ export function birdView(cube: Puzzle, DIM: number, format: "raster" | "svg" = "
 
   roundCorners({ p: cube.p, ...cube.p.roundParams });
 
-  let allStickers = cube.p.pieces.reduce((acc, e) => [...acc, ...e.stickers], <Sticker[]>[]);
-  let leftSticker = allStickers
+  const allStickers = cube.p.pieces.reduce((acc, e) => [...acc, ...e.stickers], <Sticker[]>[]);
+  const leftSticker = allStickers
     .filter(st => pointing(st, LEFT))
     .map(st => adjustRotation(st.rotate(new Vector3D(-1, 1, 1), UP, PI_2), true));
 
-  let backSticker = allStickers
+  const backSticker = allStickers
     .filter(st => pointing(st, BACK))
     .map(st => adjustRotation(st.rotate(new Vector3D(1, 1, -1), UP, -PI_2), true));
 
-  let restStickers = allStickers
+  const restStickers = allStickers
     .filter(st => !pointing(st, LEFT) && !pointing(st, BACK) && st.color != "d")
     .map(st => adjustRotation(st));
 

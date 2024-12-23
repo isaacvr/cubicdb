@@ -109,7 +109,7 @@ export function getColorByName(colorName: ColorName | (string & {})) {
 }
 
 export function getNameByColor(color: string): ColorName {
-  let et = Object.entries(COLORS);
+  const et = Object.entries(COLORS);
   for (let i = 0, maxi = et.length; i < maxi; i += 1) {
     if (et[i][1] === color) {
       return et[i][0] as ColorName;
@@ -119,7 +119,7 @@ export function getNameByColor(color: string): ColorName {
 }
 
 export function strToHex(color: string): number {
-  let nums = color.split("(")[1].split(")")[0].split(",").map(Number);
+  const nums = color.split("(")[1].split(")")[0].split(",").map(Number);
   return (nums[0] << 16) | (nums[1] << 8) | nums[2];
 }
 

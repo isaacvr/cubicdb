@@ -26,25 +26,25 @@ export class CSTimer implements CubicDBAdaptor {
   }
 
   toCubicDB(str: string): CubicDBData {
-    let data = JSON.parse(str);
-    let sessionNames = Object.keys(data).filter(s => s != "properties");
-    let res: CubicDBData = {
+    const data = JSON.parse(str);
+    const sessionNames = Object.keys(data).filter(s => s != "properties");
+    const res: CubicDBData = {
       sessions: [],
       solves: [],
     };
 
-    let props = JSON.parse(data.properties.sessionData) as {
+    const props = JSON.parse(data.properties.sessionData) as {
       [key: string]: CSTimerSessionProperty;
     };
 
     for (let i = 0, maxi = sessionNames.length; i < maxi; i += 1) {
-      let prop = props[(i + 1).toString()];
-      let name = sessionNames[i];
-      let sessionName = typeof prop.name === "number" ? name : prop.name.trim();
-      let mode = prop.opt.scrType;
-      let id = randomUUID();
-      let solves = data[name];
-      let session = {
+      const prop = props[(i + 1).toString()];
+      const name = sessionNames[i];
+      const sessionName = typeof prop.name === "number" ? name : prop.name.trim();
+      const mode = prop.opt.scrType;
+      const id = randomUUID();
+      const solves = data[name];
+      const session = {
         _id: id,
         name: sessionName,
         settings: genSettings(),
@@ -58,7 +58,7 @@ export class CSTimer implements CubicDBAdaptor {
       res.sessions.push(session);
 
       for (let j = 0, maxj = solves.length; j < maxj; j += 1) {
-        let pz = identifyPuzzle(solves[j][1]);
+        const pz = identifyPuzzle(solves[j][1]);
 
         res.solves.push({
           date: solves[j][3] * 1000,

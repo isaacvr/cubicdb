@@ -45,7 +45,7 @@ export class AlgorithmSequence {
     if (!MOVE_REG.test(move)) return false;
     if (this.cursor >= this.scramble.length) return false;
 
-    let m = this.scramble[this.cursor];
+    const m = this.scramble[this.cursor];
 
     // Incoming move is the current one on the scramble
     if (m === move && this.recovery.length === 0) {
@@ -58,10 +58,10 @@ export class AlgorithmSequence {
       return false;
     }
 
-    let mdata = getMoveParts(move);
-    let moveMap = "URFDLB";
-    let index = (l: string) => moveMap.indexOf(l);
-    let discardTopRecovery = () => {
+    const mdata = getMoveParts(move);
+    const moveMap = "URFDLB";
+    const index = (l: string) => moveMap.indexOf(l);
+    const discardTopRecovery = () => {
       while (this.recovery.length && this.recovery[0] === this.scramble[this.cursor]) {
         this.recovery.shift();
         this.cursor += 1;
@@ -72,10 +72,10 @@ export class AlgorithmSequence {
       lasti = -1;
 
     for (let i = 0, maxi = this.recovery.length; i < maxi; i += 1) {
-      let rdata = getMoveParts(this.recovery[i]);
+      const rdata = getMoveParts(this.recovery[i]);
 
       if (rdata.move === mdata.move) {
-        let res = (rdata.dir + mdata.dir + 4) & 3;
+        const res = (rdata.dir + mdata.dir + 4) & 3;
 
         if (res === 0) {
           this.recovery.splice(i, 1);

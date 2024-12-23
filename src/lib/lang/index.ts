@@ -3,7 +3,7 @@ import { English } from "./en-EN";
 import { Spanish } from "./es-ES";
 import { Chinese } from "./zh-ZH";
 
-export let LANGUAGES: [RegExp, Language, LanguageCode][] = [
+export const LANGUAGES: [RegExp, Language, LanguageCode][] = [
   [/^en/i, English, "EN"],
   [/^es/i, Spanish, "ES"],
   [/^zh/i, Chinese, "ZH"],

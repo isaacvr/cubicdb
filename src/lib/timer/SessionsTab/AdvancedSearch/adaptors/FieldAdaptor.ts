@@ -92,7 +92,7 @@ export class FieldAdaptor implements LogicBlock {
   }
 
   private updateParams() {
-    let p = " ".repeat(this._filter.fn.length).split(" ").slice(2);
+    const p = " ".repeat(this._filter.fn.length).split(" ").slice(2);
 
     if (this.params.length < p.length) {
       this.params = [...this.params, ...p.slice(this.params.length)];

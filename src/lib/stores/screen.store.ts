@@ -1,6 +1,6 @@
 import { writable, type Writable } from "svelte/store";
 
-let screen: Writable<{
+const screen: Writable<{
   width: number;
   height: number;
   isMobile: boolean;

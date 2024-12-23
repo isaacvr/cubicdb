@@ -25,25 +25,25 @@ export function IVY(): PuzzleInterface {
   const PI_2 = PI / 2;
   const ANG = (2 * PI) / 3;
 
-  let p1 = LEFT.add(UP).add(BACK);
-  let p2 = LEFT.add(UP).add(FRONT);
-  let p3 = RIGHT.add(UP).add(FRONT);
-  let p4 = RIGHT.add(UP).add(BACK);
-  let p5 = RIGHT.add(DOWN).add(FRONT);
-  let p6 = LEFT.add(DOWN).add(BACK);
+  const p1 = LEFT.add(UP).add(BACK);
+  const p2 = LEFT.add(UP).add(FRONT);
+  const p3 = RIGHT.add(UP).add(FRONT);
+  const p4 = RIGHT.add(UP).add(BACK);
+  const p5 = RIGHT.add(DOWN).add(FRONT);
+  const p6 = LEFT.add(DOWN).add(BACK);
 
-  let cornerSticker = new Sticker([p1]);
+  const cornerSticker = new Sticker([p1]);
 
-  let curvePoints: Vector3D[] = [];
+  const curvePoints: Vector3D[] = [];
 
   for (let i = 0, maxi = 25; i <= maxi; i += 1) {
-    let alpha = i / maxi;
+    const alpha = i / maxi;
     curvePoints.push(p3.add(LEFT.mul(2).rotate(CENTER, DOWN, alpha * PI_2)));
   }
 
   cornerSticker.points.push(...curvePoints.map(e => e.clone()));
 
-  let centerPiece = new Piece([
+  const centerPiece = new Piece([
     new Sticker([
       ...curvePoints.map(e => e.clone()).reverse(),
       ...curvePoints.map((e: Vector3D) => e.rotate(CENTER, UP, PI)).reverse(),
@@ -54,7 +54,7 @@ export function IVY(): PuzzleInterface {
 
   centerPiece.stickers[0].points.pop();
 
-  let corner = new Piece([
+  const corner = new Piece([
     cornerSticker,
     cornerSticker.rotate(CENTER, p1, ANG),
     cornerSticker.rotate(CENTER, p1, -ANG),
@@ -62,7 +62,7 @@ export function IVY(): PuzzleInterface {
 
   corner.stickers.forEach(s => (s.vecs = [p1.unit()]));
 
-  let pieces = ivy.pieces;
+  const pieces = ivy.pieces;
 
   pieces.push(
     corner,
@@ -82,7 +82,7 @@ export function IVY(): PuzzleInterface {
 
   const moveMap = "RLDBxyz";
 
-  let planes = [
+  const planes = [
     [0, 1, 2].map(n => p3.rotate(CENTER, p4, ANG * n)), // R
     [0, 1, 2].map(n => p3.rotate(CENTER, p2, ANG * n)), // L
     [0, 1, 2].map(n => p3.rotate(CENTER, p5, ANG * n)), // D
@@ -93,15 +93,15 @@ export function IVY(): PuzzleInterface {
   ];
 
   ivy.move = function (scramble: string[]) {
-    let moves = scramble[0].match(new RegExp(`[${moveMap}]'?`, "g"));
+    const moves = scramble[0].match(new RegExp(`[${moveMap}]'?`, "g"));
 
     if (moves) {
       for (let i = 0, maxi = moves.length; i < maxi; i += 1) {
-        let mv = moves[i];
-        let moveId = moveMap.indexOf(mv[0]);
-        let plane = planes[moveId];
-        let u = Vector3D.cross(plane[0], plane[1], plane[2]).unit();
-        let pcs = pieces.filter(p => p.direction1(plane[0], u) >= 0);
+        const mv = moves[i];
+        const moveId = moveMap.indexOf(mv[0]);
+        const plane = planes[moveId];
+        const u = Vector3D.cross(plane[0], plane[1], plane[2]).unit();
+        const pcs = pieces.filter(p => p.direction1(plane[0], u) >= 0);
         let ang = Math.sign(mv.indexOf("'") + 0.1) * ANG;
 
         // Accept only double movements on x, y and z.
@@ -117,8 +117,8 @@ export function IVY(): PuzzleInterface {
   };
 
   ivy.toMove = function (piece: Piece, sticker: Sticker, dir: Vector3D) {
-    let mc = sticker.updateMassCenter();
-    let toMovePieces = pieces.filter(p => p.direction1(mc, dir) === 0);
+    const mc = sticker.updateMassCenter();
+    const toMovePieces = pieces.filter(p => p.direction1(mc, dir) === 0);
     return {
       pieces: toMovePieces,
       ang: ANG,
@@ -132,11 +132,11 @@ export function IVY(): PuzzleInterface {
     const corners = pieces.slice(0, 4);
 
     for (let i = 0; i < MOVES; i += 1) {
-      let p = random(corners) as Piece;
-      let s = random(p.stickers.filter(s => !/^[xd]{1}$/.test(s.color))) as Sticker;
-      let vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > EPS));
-      let pcs = ivy.toMove(p, s, vec) as ToMoveResult;
-      let cant = 1 + random(2);
+      const p = random(corners) as Piece;
+      const s = random(p.stickers.filter(s => !/^[xd]{1}$/.test(s.color))) as Sticker;
+      const vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > EPS));
+      const pcs = ivy.toMove(p, s, vec) as ToMoveResult;
+      const cant = 1 + random(2);
       pcs.pieces.forEach((p: Piece) => p.rotate(CENTER, vec, pcs.ang * cant, true));
     }
   };

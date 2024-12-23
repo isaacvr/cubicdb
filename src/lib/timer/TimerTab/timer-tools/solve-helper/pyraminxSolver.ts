@@ -4,7 +4,7 @@ import { ScrambleParser } from "@classes/scramble-parser";
 
 export function pyraminxSolver(scramble: string): string[][] {
   let curScramble: ReturnType<typeof ScrambleParser.parsePyraminx>;
-  let curScrambleStrArr: string[] = [];
+  const curScrambleStrArr: string[] = [];
   let sol: any[] = [];
 
   function stateInit(doMove: Function, state: string) {
@@ -19,7 +19,7 @@ export function pyraminxSolver(scramble: string): string[][] {
     return state;
   }
 
-  let F0 = 0,
+  const F0 = 0,
     F1 = 1,
     F2 = 2,
     F3 = 3,
@@ -53,7 +53,7 @@ export function pyraminxSolver(scramble: string): string[][] {
           x504x
            132
             x  */
-  let moveData = [
+  const moveData = [
     [
       [F5, R3, D4],
       [F0, R1, D2],
@@ -77,16 +77,16 @@ export function pyraminxSolver(scramble: string): string[][] {
   ];
 
   function pyraMove(state: string, move: string) {
-    let ret: any = state.split("");
-    let swaps = moveData["RULB".indexOf(move[0])];
-    let pow = "? '".indexOf(move[1]);
+    const ret: any = state.split("");
+    const swaps = moveData["RULB".indexOf(move[0])];
+    const pow = "? '".indexOf(move[1]);
     for (let i = 0; i < swaps.length; i += 1) {
       acycle(ret, swaps[i], pow);
     }
     return ret.join("");
   }
 
-  let solv = new gSolver(
+  const solv = new gSolver(
     ["????FF??RRR??L?L?L?DDDDD"],
     pyraMove,
     appendSuffix(
@@ -102,7 +102,7 @@ export function pyraminxSolver(scramble: string): string[][] {
 
   curScramble = ScrambleParser.parsePyraminx(scramble, "RULBrulb");
 
-  let scr = [];
+  const scr = [];
 
   for (let i = 0; i < curScramble.length; i += 1) {
     if (curScramble[i][2] == 2) {
@@ -110,23 +110,23 @@ export function pyraminxSolver(scramble: string): string[][] {
     }
   }
 
-  let faceStr = ["D", "L", "R", "F"];
-  let rawMap = "RULB";
-  let moveMaps = [
+  const faceStr = ["D", "L", "R", "F"];
+  const rawMap = "RULB";
+  const moveMaps = [
     ["RULB", "LUBR", "BURL"],
     ["URBL", "LRUB", "BRLU"],
     ["RLBU", "ULRB", "BLUR"],
     ["RBUL", "UBLR", "LBRU"],
   ];
 
-  let res: string[][] = [];
+  const res: string[][] = [];
 
   for (let i = 0; i < 4; i += 1) {
     sol = [];
     let sol1;
     out: for (let depth = 0; depth < 99; depth += 1) {
       for (let j = 0; j < 3; j += 1) {
-        let moveMap = moveMaps[i][j];
+        const moveMap = moveMaps[i][j];
 
         curScrambleStrArr.length = 0;
 

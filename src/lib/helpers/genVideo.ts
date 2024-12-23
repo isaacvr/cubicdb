@@ -20,16 +20,16 @@ export async function genVideo(alg: ITutorialAlg, dims: number, FPS = 60): Promi
   //   return URL.createObjectURL(b);
   // }
 
-  let sequence = parseReconstruction(
+  const sequence = parseReconstruction(
     alg.scramble,
     nameToPuzzle(alg.puzzle || "333").type || "rubik",
     alg.order
   ).sequence;
 
-  let cube = algorithmToPuzzle({ ...alg, scramble: "" }, false, false);
+  const cube = algorithmToPuzzle({ ...alg, scramble: "" }, false, false);
 
   try {
-    let nc = Puzzle.fromSequence("", {
+    const nc = Puzzle.fromSequence("", {
       type: nameToPuzzle(alg.puzzle || "333").type || "rubik",
       view: "trans",
       order: [alg.order],
@@ -37,7 +37,7 @@ export async function genVideo(alg: ITutorialAlg, dims: number, FPS = 60): Promi
     });
 
     if (nc.p.applySequence) {
-      let canvas = document.createElement("canvas");
+      const canvas = document.createElement("canvas");
       canvas.width = dims;
       canvas.height = dims;
 
@@ -57,17 +57,17 @@ export async function genVideo(alg: ITutorialAlg, dims: number, FPS = 60): Promi
       threeAdaptor.resetPuzzle("", false, "");
       controlAdaptor.reset();
 
-      let seq = nc.p.applySequence(sequence);
+      const seq = nc.p.applySequence(sequence);
       controlAdaptor.applySequence(nc, seq);
 
-      let images: string[] = [];
+      const images: string[] = [];
 
-      let maxAlpha = controlAdaptor.states.length - 1;
+      const maxAlpha = controlAdaptor.states.length - 1;
       const MD_DUR_MS = 600;
       const alphaConst = Math.ceil((FPS * MD_DUR_MS) / 1000);
 
       for (let i = 0, maxi = maxAlpha * alphaConst; i <= maxi; i += 1) {
-        let a = i / alphaConst;
+        const a = i / alphaConst;
         controlAdaptor.handleAlpha(a, true);
         threeAdaptor.render();
         images.push(canvas.toDataURL("image/png"));

@@ -32,7 +32,7 @@ export function RUBIK(_a: number, _b: number, _c: number): PuzzleInterface {
     },
   };
 
-  let fc = rubik.faceColors;
+  const fc = rubik.faceColors;
 
   rubik.getAllStickers = getAllStickers.bind(rubik);
 
@@ -50,21 +50,21 @@ export function RUBIK(_a: number, _b: number, _c: number): PuzzleInterface {
     [RIGHT, PI_2 * (1 + (a === 1 ? 1 : (b ^ c) & 1))],
   ];
 
-  let pieces = rubik.pieces;
+  const pieces = rubik.pieces;
 
   for (let z = 0; z < c; z += 1) {
     for (let y = 0; y < b; y += 1) {
       for (let x = 0; x < a; x += 1) {
         if (z > 0 && z < c - 1 && y > 0 && y < b - 1 && x > 0 && x < a - 1) continue;
 
-        let anchor = ref.add(DOWN.mul(z).add(FRONT.mul(y)).add(RIGHT.mul(x)).mul(len));
-        let center = anchor.add(
+        const anchor = ref.add(DOWN.mul(z).add(FRONT.mul(y)).add(RIGHT.mul(x)).mul(len));
+        const center = anchor.add(
           FRONT.add(RIGHT)
             .add(DOWN)
             .mul(len / 2)
         );
-        let p = new Piece();
-        let sUp = new Sticker(
+        const p = new Piece();
+        const sUp = new Sticker(
           [
             anchor,
             anchor.add(FRONT.mul(len)),
@@ -73,7 +73,7 @@ export function RUBIK(_a: number, _b: number, _c: number): PuzzleInterface {
           ],
           fc[0]
         );
-        let sLeft = new Sticker(
+        const sLeft = new Sticker(
           [
             anchor,
             anchor.add(DOWN.mul(len)),
@@ -110,12 +110,12 @@ export function RUBIK(_a: number, _b: number, _c: number): PuzzleInterface {
 
   const MOVE_MAP = "URFDLB";
 
-  let ref1 = ref
+  const ref1 = ref
     .add(RIGHT.mul(a * len))
     .add(FRONT.mul(b * len))
     .add(DOWN.mul(c * len));
 
-  let planes = [
+  const planes = [
     [ref, ref.add(FRONT), ref.add(RIGHT)],
     [ref1, ref1.add(BACK), ref1.add(UP)],
     [ref1, ref1.add(UP), ref1.add(LEFT)],
@@ -124,11 +124,11 @@ export function RUBIK(_a: number, _b: number, _c: number): PuzzleInterface {
     [ref, ref.add(RIGHT), ref.add(DOWN)],
   ];
 
-  let trySingleMove = (mv: any): PiecesToMove | null => {
-    let moveId = MOVE_MAP.indexOf(mv[1]);
+  const trySingleMove = (mv: any): PiecesToMove | null => {
+    const moveId = MOVE_MAP.indexOf(mv[1]);
     let layers = mv[0];
-    let turns = mv[2];
-    let span = mv[3];
+    const turns = mv[2];
+    const span = mv[3];
     const pts1 = planes[moveId];
     const u = Vector3D.cross(pts1[0], pts1[1], pts1[2]).unit();
     const mu = u.mul(-1);
@@ -148,10 +148,10 @@ export function RUBIK(_a: number, _b: number, _c: number): PuzzleInterface {
     const pts3 = pts2.map(p => p.add(u.mul(len * span)));
     const ang = (Math.PI / 2) * turns;
 
-    let pcs = [];
+    const pcs = [];
 
     for (let i = 0, maxi = pieces.length; i < maxi; i += 1) {
-      let d = pieces[i].direction1(pts2[0], u, true);
+      const d = pieces[i].direction1(pts2[0], u, true);
 
       if (d === 0) {
         console.log("Invalid move. Piece intersection detected.", "URFDLB"[moveId], turns, mv);
@@ -165,7 +165,7 @@ export function RUBIK(_a: number, _b: number, _c: number): PuzzleInterface {
       }
 
       if (span) {
-        let d1 = pieces[i].direction1(pts3[0], u, true);
+        const d1 = pieces[i].direction1(pts3[0], u, true);
 
         if (d * d1 < 0) {
           pcs.push(pieces[i]);
@@ -184,23 +184,23 @@ export function RUBIK(_a: number, _b: number, _c: number): PuzzleInterface {
 
   rubik.move = function (moves: any[]) {
     for (let m = 0, maxm = moves.length; m < maxm; m += 1) {
-      let mv = moves[m];
-      let pcs = trySingleMove(mv);
+      const mv = moves[m];
+      const pcs = trySingleMove(mv);
 
       if (!pcs) {
         return false;
       }
 
-      let { u, ang } = pcs;
+      const { u, ang } = pcs;
       pcs.pieces.forEach(p => p.rotate(CENTER, u, ang, true));
     }
     return true;
   };
 
   rubik.toMove = function (piece: Piece, sticker: Sticker, dir: Vector3D) {
-    let mc = sticker.updateMassCenter();
-    let toMovePieces = pieces.filter(p => p.direction1(mc, dir) === 0);
-    let tn = turns.map(e => [e[0].cross(dir).abs2(), e[1]]).sort((a, b) => a[0] - b[0]);
+    const mc = sticker.updateMassCenter();
+    const toMovePieces = pieces.filter(p => p.direction1(mc, dir) === 0);
+    const tn = turns.map(e => [e[0].cross(dir).abs2(), e[1]]).sort((a, b) => a[0] - b[0]);
     return {
       pieces: toMovePieces,
       ang: tn[0][1],
@@ -213,18 +213,18 @@ export function RUBIK(_a: number, _b: number, _c: number): PuzzleInterface {
     const MOVES = a >= 2 ? (a - 2) * 30 + 10 : 0;
 
     for (let i = 0; i < MOVES; i += 1) {
-      let p = random(pieces) as Piece;
-      let s = random(p.stickers.filter(s => !/^[xd]{1}$/.test(s.color))) as Sticker;
-      let vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > EPS));
-      let pcs = rubik.toMove(p, s, vec) as ToMoveResult;
-      let cant = 1 + random(3);
+      const p = random(pieces) as Piece;
+      const s = random(p.stickers.filter(s => !/^[xd]{1}$/.test(s.color))) as Sticker;
+      const vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > EPS));
+      const pcs = rubik.toMove(p, s, vec) as ToMoveResult;
+      const cant = 1 + random(3);
       pcs.pieces.forEach((p: Piece) => p.rotate(CENTER, vec, pcs.ang * cant, true));
     }
   };
 
   rubik.applySequence = function (seq: string[]) {
-    let moves = seq.map(mv => ScrambleParser.parseNNN(mv, { a, b, c })[0]);
-    let res: { u: Vector3D; ang: number; pieces: string[] }[] = [];
+    const moves = seq.map(mv => ScrambleParser.parseNNN(mv, { a, b, c })[0]);
+    const res: { u: Vector3D; ang: number; pieces: string[] }[] = [];
 
     for (let i = 0, maxi = moves.length; i < maxi; i += 1) {
       let pcs;
@@ -239,7 +239,7 @@ export function RUBIK(_a: number, _b: number, _c: number): PuzzleInterface {
         continue;
       }
 
-      let { u, ang } = pcs;
+      const { u, ang } = pcs;
 
       res.push({ u, ang, pieces: pcs.pieces.map(p => p.id) });
 
@@ -250,7 +250,7 @@ export function RUBIK(_a: number, _b: number, _c: number): PuzzleInterface {
   };
 
   rubik.toMoveSeq = function (seq: string) {
-    let mv = ScrambleParser.parseNNN(seq, { a, b, c })[0];
+    const mv = ScrambleParser.parseNNN(seq, { a, b, c })[0];
     let pcs;
 
     try {
@@ -270,7 +270,7 @@ export function RUBIK(_a: number, _b: number, _c: number): PuzzleInterface {
       };
     }
 
-    let { u, ang } = pcs;
+    const { u, ang } = pcs;
 
     return { dir: u, ang, pieces: pcs.pieces, animationTime: 0, center: rubik.center };
   };

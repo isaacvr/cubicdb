@@ -20,18 +20,18 @@
  */
 
 import { acycle, get8Perm, getNParity, rn, set8Perm, Solver } from "../lib/mathlib";
-import { regScrambler } from './scramble';
+import { regScrambler } from "./scramble";
 
-let solv = new Solver(4, 1, [[0, doMove, 384]]);
-let movePieces = [
+const solv = new Solver(4, 1, [[0, doMove, 384]]);
+const movePieces = [
   [0, 1],
   [2, 3],
   [0, 3],
-  [1, 2]
+  [1, 2],
 ];
 
 function doMove(idx, m) {
-  let arr = set8Perm([], idx >> 4, 4);
+  const arr = set8Perm([], idx >> 4, 4);
   acycle(arr, movePieces[m]);
   return (get8Perm(arr, 4) << 4) + ((idx & 15) ^ (1 << m));
 }
@@ -42,4 +42,4 @@ function generateScramble() {
   return solv.toStr(solv.search([c], 0), "RLFB", [""]);
 }
 
-regScrambler('133', generateScramble);
+regScrambler("133", generateScramble);

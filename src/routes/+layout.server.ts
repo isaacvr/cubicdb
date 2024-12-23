@@ -8,8 +8,8 @@ export const load: LayoutServerLoad = ({ request, url }) => {
   const languages = acceptLanguage ? acceptLanguage.split(",") : ["EN"];
   const preferredLanguage = languages[0]?.split(";")[0];
 
-  let localLang = getLanguage(preferredLanguage);
-  let titleMeta = getTitleMeta(url.pathname, localLang);
+  const localLang = getLanguage(preferredLanguage);
+  const titleMeta = getTitleMeta(url.pathname, localLang);
 
   return {
     title: titleMeta.title,

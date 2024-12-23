@@ -3,8 +3,8 @@ import { adjustScramble, appendSuffix } from "./utils";
 import { ScrambleParser } from "@classes/scramble-parser";
 
 export function pocketCube(scramble: string): string[][] {
-  let faceStr = ["U", "R", "F", "D", "L", "B"];
-  let moveData = [
+  const faceStr = ["U", "R", "F", "D", "L", "B"];
+  const moveData = [
     [
       [0, 1, 3, 2],
       [4, 8, 16, 20],
@@ -23,16 +23,16 @@ export function pocketCube(scramble: string): string[][] {
   ];
 
   function pocketMove(state: string, move: string) {
-    let ret: any = state.split("");
-    let swaps = moveData["URF".indexOf(move[0])];
-    let pow = "? 2'".indexOf(move[1]);
+    const ret: any = state.split("");
+    const swaps = moveData["URF".indexOf(move[0])];
+    const pow = "? 2'".indexOf(move[1]);
     for (let i = 0; i < swaps.length; i++) {
       acycle(ret, swaps[i], pow);
     }
     return ret.join("");
   }
 
-  let solv = new gSolver(
+  const solv = new gSolver(
     [
       "XXXX????????????????????",
       "????XXXX????????????????",
@@ -49,23 +49,23 @@ export function pocketCube(scramble: string): string[][] {
     })
   );
 
-  let scr = ScrambleParser.parseNNN(scramble, { a: 2, b: 2, c: 2 }, "URF");
-  let res: string[][] = [];
+  const scr = ScrambleParser.parseNNN(scramble, { a: 2, b: 2, c: 2 }, "URF");
+  const res: string[][] = [];
 
   let state = "UUUURRRRFFFFDDDDLLLLBBBB";
 
   for (let i = 0; i < scr.length; i++) {
-    let m = scr[i] as any[];
+    const m = scr[i] as any[];
 
     state = pocketMove(state, "URF".charAt("URF".indexOf(m[1])) + "'  2".charAt(m[2] + 1));
   }
 
   for (let face = 0; face < 6; face++) {
-    let faceState = [];
+    const faceState = [];
     for (let i = 0; i < 24; i++) {
       faceState.push(state[i] == "URFDLB".charAt(face) ? "X" : "?");
     }
-    let sol = solv.search(faceState.join(""), 0);
+    const sol = solv.search(faceState.join(""), 0);
 
     if (!sol) {
       console.log("SOL FALSE: ", sol);

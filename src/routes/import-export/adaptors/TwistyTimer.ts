@@ -30,7 +30,7 @@ export class TwistyTimer implements CubicDBAdaptor {
   }
 
   toCubicDB(str: string, mode?: number): CubicDBData {
-    let m = between(mode || 0, 0, this.modes.length - 1);
+    const m = between(mode || 0, 0, this.modes.length - 1);
     if (m === 0) {
       return this.fromBackup(str);
     } else if (m === 1) {
@@ -41,27 +41,27 @@ export class TwistyTimer implements CubicDBAdaptor {
   }
 
   private fromBackup(str: string): CubicDBData {
-    let sessionMap: Map<string, string> = new Map();
-    let res: CubicDBData = {
+    const sessionMap: Map<string, string> = new Map();
+    const res: CubicDBData = {
       sessions: [],
       solves: [],
     };
-    let rows = str.split("\n").slice(1);
+    const rows = str.split("\n").slice(1);
 
     for (let i = 0, maxi = rows.length; i < maxi; i += 1) {
-      let parts: string[] = rows[i].trim().split(";");
+      const parts: string[] = rows[i].trim().split(";");
 
       if (parts.length < 7) {
         continue;
       }
 
-      let cat: string = parts.shift()?.slice(1, -1) || "";
-      let session: string = cat + "_" + (parts.shift()?.slice(1, -1) || "");
-      let time = +(parts.shift()?.slice(1, -1) || 0);
-      let date = +(parts.shift()?.slice(1, -1) || 0);
-      let scramble: string = parts.shift()?.slice(1, -1) || "";
-      let penalty = +(parts.shift()?.slice(1, -1) || 0);
-      let comments = parts.join(";").slice(1, -1);
+      const cat: string = parts.shift()?.slice(1, -1) || "";
+      const session: string = cat + "_" + (parts.shift()?.slice(1, -1) || "");
+      const time = +(parts.shift()?.slice(1, -1) || 0);
+      const date = +(parts.shift()?.slice(1, -1) || 0);
+      const scramble: string = parts.shift()?.slice(1, -1) || "";
+      const penalty = +(parts.shift()?.slice(1, -1) || 0);
+      const comments = parts.join(";").slice(1, -1);
 
       if (!sessionMap.has(session)) {
         sessionMap.set(session, randomUUID());
@@ -89,12 +89,12 @@ export class TwistyTimer implements CubicDBAdaptor {
   }
 
   private fromTXT(str: string): CubicDBData {
-    let res: CubicDBData = {
+    const res: CubicDBData = {
       sessions: [],
       solves: [],
     };
-    let rows = str.split("\n");
-    let s: Session = {
+    const rows = str.split("\n");
+    const s: Session = {
       _id: randomUUID(),
       name: "My session",
       settings: genSettings(),
@@ -103,17 +103,19 @@ export class TwistyTimer implements CubicDBAdaptor {
     res.sessions.push(s);
 
     for (let i = 0, maxi = rows.length; i < maxi; i += 1) {
-      let parts = rows[i].trim().split(";");
+      const parts = rows[i].trim().split(";");
 
       if (parts.length < 3) {
         continue;
       }
 
-      let time = +(parts.shift()?.slice(1, -1) || 0) * 1000;
-      let scramble: string = parts.shift()?.slice(1, -1) || "";
-      let date = moment(parts.shift()?.slice(1, -1)).toDate().getTime();
-      let penalty: string = parts.shift() || "";
-      let pz = identifyPuzzle(scramble);
+      const time = +(parts.shift()?.slice(1, -1) || 0) * 1000;
+      const scramble: string = parts.shift()?.slice(1, -1) || "";
+      const date = moment(parts.shift()?.slice(1, -1))
+        .toDate()
+        .getTime();
+      const penalty: string = parts.shift() || "";
+      const pz = identifyPuzzle(scramble);
 
       if (s.name == "My session") {
         console.log("PZ: ", pz);
@@ -138,7 +140,7 @@ export class TwistyTimer implements CubicDBAdaptor {
   }
 
   fromCubicDB(data: CubicDBData, mode?: number): string {
-    let m = between(mode || 0, 0, this.modes.length - 1);
+    const m = between(mode || 0, 0, this.modes.length - 1);
     if (m === 0) {
       return this.toBackup(data);
     } else if (m === 1) {

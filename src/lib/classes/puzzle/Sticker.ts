@@ -51,7 +51,7 @@ export class Sticker {
   }
 
   computeBoundingBox(): Vector3D[] {
-    let box = this.points.reduce(
+    const box = this.points.reduce(
       (ac, p) => {
         return [
           Math.min(ac[0], p.x),
@@ -72,7 +72,7 @@ export class Sticker {
   }
 
   updateMassCenter(): Vector3D {
-    let pts = this.points;
+    const pts = this.points;
     this._cached_mass_center = pts
       .reduce((s, e) => s.add(e, true), new Vector3D())
       .div(pts.length || 1);
@@ -90,7 +90,7 @@ export class Sticker {
       this._cached_mass_center.add(ref, true);
       return this;
     }
-    let cp = this.clone(true);
+    const cp = this.clone(true);
     // cp.boundingBox = this.boundingBox.map(e => e.add(ref));
     cp.points = this.points.map(e => e.add(ref));
     cp._cached_mass_center = cp._cached_mass_center.add(ref);
@@ -104,7 +104,7 @@ export class Sticker {
       this._cached_mass_center.sub(ref, true);
       return this;
     }
-    let cp = this.clone(true);
+    const cp = this.clone(true);
     // cp.boundingBox = this.boundingBox.map(e => e.sub(ref));
     cp.points = this.points.map(e => e.sub(ref));
     cp._cached_mass_center = cp._cached_mass_center.sub(ref);
@@ -118,7 +118,7 @@ export class Sticker {
       this._cached_mass_center.mul(f, true);
       return this;
     }
-    let cp = this.clone(true);
+    const cp = this.clone(true);
     // cp.boundingBox = this.boundingBox.map(e => e.mul(f));
     cp.points = this.points.map(e => e.mul(f));
     cp._cached_mass_center = cp._cached_mass_center.mul(f);
@@ -132,7 +132,7 @@ export class Sticker {
       this._cached_mass_center.div(f, true);
       return this;
     }
-    let cp = this.clone(true);
+    const cp = this.clone(true);
     // cp.boundingBox = this.boundingBox.map(e => e.div(f));
     cp.points = this.points.map(e => e.div(f));
     cp._cached_mass_center = cp._cached_mass_center.div(f);
@@ -144,8 +144,8 @@ export class Sticker {
   }
 
   getOrientation(): Vector3D {
-    let n = this.points.length;
-    let i = [0, 1, 2].map(e => Math.round((e / 3) * n));
+    const n = this.points.length;
+    const i = [0, 1, 2].map(e => Math.round((e / 3) * n));
     return Vector3D.cross(this.points[i[0]], this.points[i[1]], this.points[i[2]]).unit();
   }
 
@@ -166,7 +166,7 @@ export class Sticker {
       return this;
     }
 
-    let res = this.clone(true);
+    const res = this.clone(true);
     res.points = this.points.map(e => e.rotate(ref, dir, ang));
     res._cached_mass_center = this._cached_mass_center.rotate(ref, dir, ang);
     res.color = col || res.color;
@@ -192,7 +192,7 @@ export class Sticker {
       return this;
     }
 
-    let res = this.clone(true);
+    const res = this.clone(true);
     res._cached_mass_center = this._cached_mass_center.rotate(ref, dir, ang);
     res.color = col || res.color;
     res.vecs.map(v => v.rotate(CENTER, dir, ang, true));
@@ -214,7 +214,7 @@ export class Sticker {
       return this;
     }
 
-    let res = this.clone(true);
+    const res = this.clone(true);
     res.points = points;
     res._cached_mass_center = this._cached_mass_center.rotate(ref, dir, ang);
     res.color = col || res.color;
@@ -223,7 +223,7 @@ export class Sticker {
   }
 
   clone(excludePoints?: boolean): Sticker {
-    let s = new Sticker(
+    const s = new Sticker(
       excludePoints ? [] : this.points,
       this.color,
       this.vecs,
@@ -238,9 +238,9 @@ export class Sticker {
   }
 
   direction1(anchor: Vector3D, u: Vector3D, useMc?: boolean): -1 | 0 | 1 {
-    let dirs = [0, 0, 0];
-    let pts = useMc ? [this.getMassCenter()] : this.points;
-    let len = pts.length;
+    const dirs = [0, 0, 0];
+    const pts = useMc ? [this.getMassCenter()] : this.points;
+    const len = pts.length;
 
     for (let i = 0; i < len; i += 1) {
       dirs[Vector3D.direction1(anchor, u, pts[i]) + 1] += 1;
@@ -264,9 +264,9 @@ export class Sticker {
   }
 
   reflect1(a: Vector3D, _u: Vector3D, preserveOrientation?: boolean): Sticker {
-    let u = _u.unit();
-    let s = this.clone(true);
-    let dist = (p: Vector3D) => p.sub(a).dot(u);
+    const u = _u.unit();
+    const s = this.clone(true);
+    const dist = (p: Vector3D) => p.sub(a).dot(u);
 
     s.points = this.points.map(p => p.add(u.mul(-2 * dist(p))));
     if (preserveOrientation) {
@@ -284,7 +284,7 @@ export class Sticker {
       this.points.pop();
       return this;
     }
-    let s = this.clone(true);
+    const s = this.clone(true);
     s.points = this.points.map(p => p.clone()).reverse();
     s.points.unshift(s.points[s.points.length - 1]);
     s.points.pop();
@@ -310,8 +310,8 @@ export class Sticker {
   }
 
   equal(s: Sticker): boolean {
-    let p1 = this.points;
-    let p2 = s.points;
+    const p1 = this.points;
+    const p2 = s.points;
 
     if (this.color != s.color || p1.length != p2.length) {
       return false;
@@ -330,8 +330,8 @@ export class Sticker {
     const inters: Vector3D[] = [];
 
     // Iterate through pairs of points to form segments
-    let p = this.points;
-    let interIndex: number[] = [];
+    const p = this.points;
+    const interIndex: number[] = [];
 
     for (let i = 0, maxi = p.length; i < maxi; i += 1) {
       const p1 = p[i];
@@ -365,13 +365,13 @@ export class Sticker {
       }
     }
 
-    let parts: Vector3D[][] = [[], []];
+    const parts: Vector3D[][] = [[], []];
 
     if (inters.length > 1) {
       let pIndex = 0;
       for (let i = 0, maxi = p.length; i < maxi; i += 1) {
         parts[pIndex].push(p[i]);
-        let pos = interIndex.indexOf(i);
+        const pos = interIndex.indexOf(i);
 
         if (pos > -1) {
           parts[pIndex].push(inters[pos]);

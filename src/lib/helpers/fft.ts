@@ -6,10 +6,10 @@ export function fft(real: number[], imag: number[]) {
   if (n <= 1) return;
 
   // Divide y conquista: divide los datos en partes pares e impares
-  const evenReal = new Array(n_2);
-  const evenImag = new Array(n_2);
-  const oddReal = new Array(n_2);
-  const oddImag = new Array(n_2);
+  const evenReal: number[] = Array.from({ length: n_2 });
+  const evenImag: number[] = Array.from({ length: n_2 });
+  const oddReal: number[] = Array.from({ length: n_2 });
+  const oddImag: number[] = Array.from({ length: n_2 });
 
   for (let i = 0; i < n_2; i += 1) {
     evenReal[i] = real[i * 2];

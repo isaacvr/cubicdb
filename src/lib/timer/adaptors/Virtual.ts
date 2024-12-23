@@ -40,8 +40,6 @@ type KeyMap = Partial<Record<KEY | (string & {}), string>>;
 
 type VirtualActor = (data: Actor<VirtualContext>) => any;
 
-const debug = false;
-
 const clear: VirtualActor = ({ context: { state, time, decimals, ready } }) => {
   state.set(TimerState.CLEAN);
   time.set(0);
@@ -51,13 +49,13 @@ const clear: VirtualActor = ({ context: { state, time, decimals, ready } }) => {
 
 const setTimerRunner = fromCallback(
   ({ input: { decimals, state, time, timeRef, createNewSolve } }: { input: VirtualContext }) => {
-    let ref = performance.now();
+    const ref = performance.now();
     decimals.set(true);
     state.set(TimerState.RUNNING);
     timeRef.set(ref);
     createNewSolve();
 
-    let itv = setInterval(() => time.set(performance.now() - ref));
+    const itv = setInterval(() => time.set(performance.now() - ref));
 
     return () => {
       clearInterval(itv);
@@ -71,19 +69,19 @@ const saveSolve = fromCallback(
   }: {
     input: VirtualContext;
   }) => {
-    let p = performance.now();
+    const p = performance.now();
     time.set(p - get(timeRef));
     state.set(TimerState.STOPPED);
     initScrambler();
 
-    let t = get(time);
-    let ls = get(lastSolve) as Solve;
+    const t = get(time);
+    const ls = get(lastSolve) as Solve;
 
     t > 0 && addSolve(t, ls?.penalty);
     time.set(0);
 
     // Prevent keyboard to run after pressing some key + space to stop the timer
-    let kbe = get(keyboardEnabled);
+    const kbe = get(keyboardEnabled);
     keyboardEnabled.set(false);
     setTimeout(() => keyboardEnabled.set(kbe), 1000);
   }
@@ -255,7 +253,7 @@ export class VirtualInput implements TimerInputHandler {
 
   keyDownHandler(ev: KeyboardEvent) {
     if (/^Key[A-Z]/.test(ev.code) && !ev.ctrlKey && !ev.shiftKey) {
-      let k = ev.code.slice(3);
+      const k = ev.code.slice(3);
       if (k in this.keymap) {
         this.emit("move", [this.keymap[k], 100]);
         return;

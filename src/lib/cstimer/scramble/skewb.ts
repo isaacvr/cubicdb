@@ -29,14 +29,14 @@ import { regScrambler } from "./scramble";
 //twstcor: URF ULB DRB DLF
 //fixedco: UBR UFL DFR DBL
 
-let fixedCorn = [
+const fixedCorn = [
   [4, 16, 7], // U4 B1 R2
   [1, 11, 22], // U1 F1 L2
   [26, 14, 8], // D1 F4 R3
   [29, 19, 23], // D4 B4 L3
 ];
 
-let twstCorn = [
+const twstCorn = [
   [3, 6, 12], // U3 R1 F2
   [2, 21, 17], // U2 L1 B2
   [27, 9, 18], // D2 R4 B3
@@ -44,11 +44,11 @@ let twstCorn = [
 ];
 
 function checkNoBar(perm: number, _twst: number) {
-  let corner = cpcord.set([], perm % 12);
-  let center = ctcord.set([], ~~(perm / 12));
-  let fixedtwst = ftcord.set([], _twst % 81);
-  let twst = twcord.set([], ~~(_twst / 81));
-  let f = [];
+  const corner = cpcord.set([], perm % 12);
+  const center = ctcord.set([], ~~(perm / 12));
+  const fixedtwst = ftcord.set([], _twst % 81);
+  const twst = twcord.set([], ~~(_twst / 81));
+  const f = [];
   for (let i = 0; i < 6; i++) {
     f[i * 5] = center[i];
   }
@@ -64,47 +64,47 @@ function checkNoBar(perm: number, _twst: number) {
   return true;
 }
 
-let moveCenters = [
+const moveCenters = [
   [0, 3, 1],
   [0, 2, 4],
   [1, 5, 2],
   [3, 4, 5],
 ];
 
-let moveCorners = [
+const moveCorners = [
   [0, 1, 2],
   [0, 3, 1],
   [0, 2, 3],
   [1, 3, 2],
 ];
 
-let ctcord = new coord("p", 6, -1);
-let cpcord = new coord("p", 4, -1);
-let ftcord = new coord("o", 4, 3);
-let twcord = new coord("o", 4, -3);
+const ctcord = new coord("p", 6, -1);
+const cpcord = new coord("p", 4, -1);
+const ftcord = new coord("o", 4, 3);
+const twcord = new coord("o", 4, -3);
 
 function ctcpMove(idx: number, m: any) {
-  let corner = cpcord.set([], idx % 12);
-  let center = ctcord.set([], ~~(idx / 12));
+  const corner = cpcord.set([], idx % 12);
+  const center = ctcord.set([], ~~(idx / 12));
   acycle(center, moveCenters[m]);
   acycle(corner, moveCorners[m]);
   return ctcord.get(center) * 12 + cpcord.get(corner);
 }
 
 function twstMove(idx: number, move: any) {
-  let fixedtwst = ftcord.set([], idx % 81);
-  let twst = twcord.set([], ~~(idx / 81));
+  const fixedtwst = ftcord.set([], idx % 81);
+  const twst = twcord.set([], ~~(idx / 81));
   fixedtwst[move]++;
   acycle(twst, moveCorners[move], 1, [0, 2, 1, 3]);
   return twcord.get(twst) * 81 + ftcord.get(fixedtwst);
 }
 
-let solv = new Solver(4, 2, [
+const solv = new Solver(4, 2, [
   [0, ctcpMove, 4320],
   [0, twstMove, 2187],
 ]);
 
-let solvivy = new Solver(4, 2, [
+const solvivy = new Solver(4, 2, [
   [
     0,
     function (idx: number, m: any) {
@@ -122,11 +122,11 @@ let solvivy = new Solver(4, 2, [
 ]);
 
 function sol2str(sol: any) {
-  let ret = [];
-  let move2str: any = ["L", "R", "B", "U"]; //RLDB (in jaap's notation) rotated by z2
+  const ret = [];
+  const move2str: any = ["L", "R", "B", "U"]; //RLDB (in jaap's notation) rotated by z2
   for (let i = 0; i < sol.length; i++) {
-    let axis = sol[i][0];
-    let pow = 1 - sol[i][1];
+    const axis = sol[i][0];
+    const pow = 1 - sol[i][1];
     if (axis == 2) {
       //step two.
       acycle(move2str, [0, 3, 1], pow + 1);
@@ -136,12 +136,12 @@ function sol2str(sol: any) {
   return ret.join(" ");
 }
 
-let ori = [0, 1, 2, 0, 2, 1, 1, 2, 0, 2, 1, 0];
+const ori = [0, 1, 2, 0, 2, 1, 1, 2, 0, 2, 1, 0];
 
 export function getScramble(type: string) {
   let perm, twst;
-  let lim = type == "skbso" ? 6 : 2;
-  let minl = type == "skbo" ? 0 : 8;
+  const lim = type == "skbso" ? 6 : 2;
+  const minl = type == "skbo" ? 0 : 8;
   do {
     perm = rn(4320);
     twst = rn(2187);

@@ -38,7 +38,7 @@ export class Flip {
   invert(el: Element, from: Rect, to: Rect, options: Options = {}) {
     this.animating = true;
 
-    let anim = el.animate(
+    const anim = el.animate(
       [
         {
           width: `${from.width}px`,

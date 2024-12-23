@@ -27,7 +27,7 @@ export class AlgorithmElectronIPC implements AlgorithmIPC {
   }
 
   updateAlgorithm(alg: Algorithm) {
-    let cp = { ...alg };
+    const cp = { ...alg };
 
     delete cp._puzzle;
 
@@ -35,13 +35,13 @@ export class AlgorithmElectronIPC implements AlgorithmIPC {
   }
 
   addAlgorithm(alg: Algorithm) {
-    let cp = { ...alg };
+    const cp = { ...alg };
     delete cp._puzzle;
     return this.ipc.addAlgorithm(cp);
   }
 
   removeAlgorithm(alg: Algorithm) {
-    let cp = { ...alg };
+    const cp = { ...alg };
     delete cp._puzzle;
     return this.ipc.removeAlgorithm(cp);
   }

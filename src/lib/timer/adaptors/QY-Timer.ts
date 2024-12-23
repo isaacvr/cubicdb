@@ -2,7 +2,7 @@ import { getUint8DataView } from "@helpers/object";
 import type { InputContext, TimerInputHandler } from "@interfaces";
 
 function logUint8Array(data: Uint8Array) {
-  let arr = Array.from(data);
+  const arr = Array.from(data);
 
   return arr.map(n => "0x" + ("00" + n.toString(16)).slice(-2)).join(" ");
 }
@@ -77,17 +77,17 @@ export class QiYiSmartTimerInput implements TimerInputHandler {
     console.log("SERVER: ", server);
 
     try {
-      let service = await server.getPrimaryService(QiYiSmartTimerInput.QY_PRIMARY_SERVICE);
+      const service = await server.getPrimaryService(QiYiSmartTimerInput.QY_PRIMARY_SERVICE);
 
       console.log("SERVICE: ", service);
 
-      let c1 = await service.getCharacteristic("00000001-0000-1001-8001-00805f9b07d0");
+      const c1 = await service.getCharacteristic("00000001-0000-1001-8001-00805f9b07d0");
 
-      let val1 = [
+      const val1 = [
         0x00, 0x21, 0x40, 0x00, 0xb1, 0x84, 0xec, 0x1d, 0xd4, 0x5d, 0x0c, 0xc8, 0x25, 0xb1, 0x58,
         0x66, 0x4e, 0x35, 0x0c, 0x03,
       ];
-      let val2 = [
+      const val2 = [
         0x01, 0x2c, 0xdb, 0xdc, 0x10, 0x5e, 0x47, 0xea, 0x3f, 0xc1, 0x01, 0x7b, 0xa3, 0x7c, 0xa3,
         0xb3, 0x66,
       ];
@@ -118,12 +118,12 @@ export class QiYiSmartTimerInput implements TimerInputHandler {
     }
 
     for (let i = 0, maxi = services.length; i < maxi; i += 1) {
-      let cv = await services[i].getCharacteristics();
+      const cv = await services[i].getCharacteristics();
 
       console.log(`CHAR [${services[i].uuid}] => `, cv);
 
       for (let j = 0, maxj = cv.length; j < maxj; j += 1) {
-        let p = cv[j].properties;
+        const p = cv[j].properties;
 
         if (p.read) {
           console.log(
@@ -136,7 +136,7 @@ export class QiYiSmartTimerInput implements TimerInputHandler {
           let lastEvent = performance.now();
 
           cv[j].addEventListener("characteristicvaluechanged", ev => {
-            let curEvent = performance.now();
+            const curEvent = performance.now();
 
             console.log(curEvent - lastEvent);
 

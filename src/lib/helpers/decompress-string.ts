@@ -43,8 +43,8 @@ class DecompressorImpl implements IDecompressor {
     resetValue: number,
     getNextValue: (a: number) => number
   ): Promise<string> {
-    return new Promise(async resolve => {
-      let context: IDecompressionContext = {
+    return new Promise(resolve => {
+      const context: IDecompressionContext = {
         bits: 0,
 
         c: 0,

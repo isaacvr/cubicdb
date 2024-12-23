@@ -97,7 +97,7 @@ export function convertRgbToHsl(rgbcolor: RGBAColor): HSLColor {
 
   let hue;
   let saturation;
-  let lightness = basis;
+  const lightness = basis;
 
   if (maximum === minimum) {
     hue = 0;
@@ -472,7 +472,7 @@ export function getLuminance(color: RGBAColor) {
 }
 
 export function getClosesLuminanceColor(color: RGBAColor, ranges: number[]): number {
-  let value = getLuminance(color);
+  const value = getLuminance(color);
 
   for (let i = 0, maxi = ranges.length - 1; i < maxi; i += 1) {
     if (ranges[i] <= value && value <= ranges[i + 1]) {
@@ -493,10 +493,10 @@ export function orderedDither(
   ratio: number,
   algorithm: IColorDistance
 ) {
-  let data: RGBAColor[][] = cloneRGBMatrix(imageData);
-  let w = imageData[0].length;
-  let h = imageData.length;
-  let m = [
+  const data: RGBAColor[][] = cloneRGBMatrix(imageData);
+  const w = imageData[0].length;
+  const h = imageData.length;
+  const m = [
     [1, 9, 3, 11],
     [13, 5, 15, 7],
     [4, 12, 2, 10],
@@ -505,13 +505,13 @@ export function orderedDither(
 
   for (let y = 0; y < h; y += 1) {
     for (let x = 0; x < w; x += 1) {
-      let rgb = data[y][x];
+      const rgb = data[y][x];
 
       rgb.red += m[x % 4][y % 4] * ratio;
       rgb.green += m[x % 4][y % 4] * ratio;
       rgb.blue += m[x % 4][y % 4] * ratio;
 
-      let color: RGBAColor = { ...rgb };
+      const color: RGBAColor = { ...rgb };
       data[y][x] = getClosestColorInThePalette(color, palette, algorithm);
     }
   }
@@ -525,15 +525,15 @@ export function errorDiffusionDither(
   algorithm: IColorDistance,
   ratioDenom = 3
 ) {
-  let d = new Uint8ClampedArray(imageData.data);
-  let out = getColorMatrix(imageData);
-  let w = imageData.width;
-  let h = imageData.height;
-  let step = 1;
-  let ratioDenomScaled = 1.5 + (ratioDenom / 5) * (15 - 1.5);
-  let ratio = 1 / (ratioDenomScaled * 4);
+  const d = new Uint8ClampedArray(imageData.data);
+  const out = getColorMatrix(imageData);
+  const w = imageData.width;
+  const h = imageData.height;
+  const step = 1;
+  const ratioDenomScaled = 1.5 + (ratioDenom / 5) * (15 - 1.5);
+  const ratio = 1 / (ratioDenomScaled * 4);
 
-  let $i = function (x: number, y: number) {
+  const $i = function (x: number, y: number) {
     return 4 * x + 4 * y * w;
   };
 
@@ -550,7 +550,7 @@ export function errorDiffusionDither(
       a = i + 3;
 
       // color = [d[r], d[g], d[b]];
-      let color: RGBAColor = { red: d[r], green: d[g], blue: d[b], alpha: d[a] };
+      const color: RGBAColor = { red: d[r], green: d[g], blue: d[b], alpha: d[a] };
 
       approx = getClosestColorInThePalette(color, palette, algorithm);
 
@@ -582,12 +582,12 @@ export function errorDiffusionDither(
 }
 
 export function getColorMatrix(data: ImageData): RGBAColor[][] {
-  let res: RGBAColor[][] = [];
-  let width = data.width;
-  let height = data.height;
+  const res: RGBAColor[][] = [];
+  const width = data.width;
+  const height = data.height;
 
   for (let y = 0; y < height; y += 1) {
-    let row: RGBAColor[] = [];
+    const row: RGBAColor[] = [];
 
     for (let x = 0; x < width; x += 1) {
       row.push(getRgbFromImageData(data, x, y));
@@ -607,10 +607,10 @@ export function closestColorMethod(
   dithering: boolean,
   useLuminance: boolean
 ) {
-  let width = imageData[0].length;
-  let height = imageData.length;
+  const width = imageData[0].length;
+  const height = imageData.length;
   let noise: RGBAColor[][] = [];
-  let res: RGBAColor[][] = [];
+  const res: RGBAColor[][] = [];
 
   for (let y = 0; y < height; y += 1) {
     const row = [];
@@ -622,7 +622,7 @@ export function closestColorMethod(
         averageColor = applyDithering(noise, averageColor, x, y);
       }
 
-      let referenceColor: RGBAColor = { ...averageColor };
+      const referenceColor: RGBAColor = { ...averageColor };
 
       const closestColor = useLuminance
         ? palette[getClosesLuminanceColor(referenceColor, ranges)]
@@ -668,8 +668,8 @@ export async function pixelate(
   // ];
 
   const { height, width } = cnv;
-  let imageData = ctx.getImageData(0, 0, width, height);
-  let data = getColorMatrix(imageData);
+  const imageData = ctx.getImageData(0, 0, width, height);
+  const data = getColorMatrix(imageData);
 
   switch (method) {
     case "ERROR_DIFFUSION": {

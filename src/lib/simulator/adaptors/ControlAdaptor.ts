@@ -30,16 +30,19 @@ export class ControlAdaptor {
     if (!mounted) return;
     if (a < 0 || a >= this.states.length) return;
 
-    let id = ~~a;
-    let state = this.states[id];
-    let angs = this.stateAngle[id];
-    let centers = this.stateCenter[id];
-    let us = this.stateDir[id];
-    let filters = this.stateFilter[id];
-    let easings = this.easings[id];
-    let alphas = easings.map(e => getEasing(e)(a - id));
+    const id = ~~a;
+    const state = this.states[id];
+    const angs = this.stateAngle[id];
+    const centers = this.stateCenter[id];
+    const us = this.stateDir[id];
+    const filters = this.stateFilter[id];
+    const easings = this.easings[id];
+    const alphas = easings.map(e => getEasing(e)(a - id));
 
-    let allObjects = [...this.threeAdaptor.group.children, ...this.threeAdaptor.backFace.children];
+    const allObjects = [
+      ...this.threeAdaptor.group.children,
+      ...this.threeAdaptor.backFace.children,
+    ];
 
     allObjects.forEach((d, idx) => {
       d.rotation.setFromRotationMatrix(state[idx]);
@@ -51,12 +54,12 @@ export class ControlAdaptor {
 
       for (let i = 0, maxi = filters.length; i < maxi; i += 1) {
         if (filters[i][idx]) {
-          let alpha = alphas[i];
-          let center = centers[i];
-          let u = us[i];
-          let c = new Vector3(center.x, center.y, center.z);
-          let nu = new Vector3(u.x, u.y, u.z);
-          let ang = angs[i];
+          const alpha = alphas[i];
+          const center = centers[i];
+          const u = us[i];
+          const c = new Vector3(center.x, center.y, center.z);
+          const nu = new Vector3(u.x, u.y, u.z);
+          const ang = angs[i];
 
           d.parent?.localToWorld(d.position);
           d.position.sub(c);
@@ -71,39 +74,42 @@ export class ControlAdaptor {
   }
 
   applySequence(nc: Puzzle, seq: (SequenceResult | SequenceResult[])[]) {
-    let cube = this.threeAdaptor.cube;
-    let cubeIDs = cube.p.pieces.map(p => p.id);
-    let ncIDs = nc.p.pieces.map(p => p.id);
-    let idMap: Map<string, string> = new Map(ncIDs.map((id, pos) => [id, cubeIDs[pos]]));
+    const cube = this.threeAdaptor.cube;
+    const cubeIDs = cube.p.pieces.map(p => p.id);
+    const ncIDs = nc.p.pieces.map(p => p.id);
+    const idMap: Map<string, string> = new Map(ncIDs.map((id, pos) => [id, cubeIDs[pos]]));
 
-    let getMatrices = (data: Object3D[]) => {
+    const getMatrices = (data: Object3D[]) => {
       return data.map(d => d.matrixWorld.clone());
     };
 
-    let allObjects = [...this.threeAdaptor.group.children, ...this.threeAdaptor.backFace.children];
+    const allObjects = [
+      ...this.threeAdaptor.group.children,
+      ...this.threeAdaptor.backFace.children,
+    ];
 
     this.states.push(getMatrices(allObjects));
 
-    let center = cube.p.center;
+    const center = cube.p.center;
 
     for (let i = 0, maxi = seq.length; i < maxi; i += 1) {
-      let s = (Array.isArray(seq[i]) ? seq[i] : [seq[i]]) as SequenceResult[];
+      const s = (Array.isArray(seq[i]) ? seq[i] : [seq[i]]) as SequenceResult[];
 
-      let stateFilter: boolean[][] = [];
-      let stateAngle: number[] = [];
-      let stateCenter: Vector3D[] = [];
-      let stateDir: Vector3D[] = [];
-      let easings: EasingFunction[] = [];
+      const stateFilter: boolean[][] = [];
+      const stateAngle: number[] = [];
+      const stateCenter: Vector3D[] = [];
+      const stateDir: Vector3D[] = [];
+      const easings: EasingFunction[] = [];
 
       for (let j = 0, maxj = s.length; j < maxj; j += 1) {
-        let ss = s[j];
-        let nu = new Vector3(ss.u.x, ss.u.y, ss.u.z).normalize();
-        let ang = ss.ang;
-        let ids = ss.pieces;
-        let c = ss.center
+        const ss = s[j];
+        const nu = new Vector3(ss.u.x, ss.u.y, ss.u.z).normalize();
+        const ang = ss.ang;
+        const ids = ss.pieces;
+        const c = ss.center
           ? new Vector3(ss.center.x, ss.center.y, ss.center.z)
           : new Vector3(center.x, center.y, center.z);
-        let e = ss.easing || "easeIn";
+        const e = ss.easing || "easeIn";
 
         stateFilter.push(
           allObjects.map(d => {
@@ -141,7 +147,7 @@ export class ControlAdaptor {
       d.position.setFromMatrixPosition(this.states[0][idx]);
     });
 
-    let lastST = this.states[this.states.length - 1];
+    const lastST = this.states[this.states.length - 1];
 
     this.stateAngle.push(lastST.map(() => 0));
     this.stateCenter.push(lastST.map(() => CENTER));

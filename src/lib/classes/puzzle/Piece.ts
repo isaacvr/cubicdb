@@ -50,12 +50,12 @@ export class Piece {
       this.stickers.forEach(s => s.updateMassCenter());
     }
 
-    let sum = this.stickers.reduce(
+    const sum = this.stickers.reduce(
       (s, st) => s.add(st.getMassCenter().mul(st.points.length), true),
       new Vector3D()
     );
 
-    let points = this.stickers.reduce((acc, st) => acc + st.points.length, 0);
+    const points = this.stickers.reduce((acc, st) => acc + st.points.length, 0);
 
     this._cached_mass_center = sum.div(points || 1);
 
@@ -68,7 +68,7 @@ export class Piece {
 
   get totalPoints(): number {
     let res = 0;
-    let stickers = this.stickers;
+    const stickers = this.stickers;
     for (let i = 0, maxi = stickers.length; i < maxi; i += 1) {
       res += stickers[i].points.length;
     }
@@ -76,7 +76,7 @@ export class Piece {
   }
 
   getAllGeneratorPoints(): Vector3D[] {
-    let res = [];
+    const res = [];
     for (let i = 0, maxi = this.stickers.length; i < maxi; i += 1) {
       res.push(...this.stickers[i]._generator.points);
     }
@@ -84,7 +84,7 @@ export class Piece {
   }
 
   getAllPoints(): Vector3D[] {
-    let res = [];
+    const res = [];
     for (let i = 0, maxi = this.stickers.length; i < maxi; i += 1) {
       res.push(...this.stickers[i].points);
     }
@@ -152,22 +152,22 @@ export class Piece {
   }
 
   rotate(ref: Vector3D, dir: Vector3D, ang: number, self?: boolean): Piece {
-    let st = this.stickers.filter(s => !(s instanceof BezierSticker)) as Sticker[];
-    let bz = this.stickers.filter(s => s instanceof BezierSticker);
+    const st = this.stickers.filter(s => !(s instanceof BezierSticker)) as Sticker[];
+    const bz = this.stickers.filter(s => s instanceof BezierSticker);
 
     if (self) {
       // Rotate pure stickers
-      let pts: Vector3D[] = [];
+      const pts: Vector3D[] = [];
 
       for (let i = 0, maxi = st.length; i < maxi; i += 1) {
-        let p = st[i].points;
+        const p = st[i].points;
 
         for (let j = 0, maxj = p.length; j < maxj; j += 1) {
           pts.push(p[j]);
         }
       }
 
-      let pts1 = rotateBundle(pts, ref, dir, ang) as Vector3D[];
+      const pts1 = rotateBundle(pts, ref, dir, ang) as Vector3D[];
 
       for (let i = 0, maxi = pts.length; i < maxi; i += 1) {
         pts[i].setCoords(pts1[i].x, pts1[i].y, pts1[i].z);
@@ -185,9 +185,9 @@ export class Piece {
       return this;
     }
 
-    let pc = new Piece();
+    const pc = new Piece();
     pc.stickers = st.map(s => {
-      let res = s.rotateBundle(ref, dir, ang);
+      const res = s.rotateBundle(ref, dir, ang);
       res.name = s.name;
       return res;
     });
@@ -207,17 +207,17 @@ export class Piece {
   }
 
   direction1(anchor: Vector3D, u: Vector3D, useMassCenter?: boolean, disc?: Function): -1 | 0 | 1 {
-    let dirs = [0, 0, 0];
-    let st = this.stickers;
+    const dirs = [0, 0, 0];
+    const st = this.stickers;
     let len = 0;
-    let fn = disc || (() => true);
+    const fn = disc || (() => true);
 
     for (let i = 0, maxi = st.length; i < maxi; i += 1) {
       if (st[i].nonInteractive || st[i] instanceof TextSticker) continue;
 
       if (fn(st[i])) {
         len += 1;
-        let d = st[i].direction1(anchor, u, useMassCenter);
+        const d = st[i].direction1(anchor, u, useMassCenter);
         dirs[d + 1] += 1;
 
         if (!useMassCenter && d === 0) {
@@ -234,7 +234,7 @@ export class Piece {
   }
 
   reflect(p1: Vector3D, p2: Vector3D, p3: Vector3D, preserveOrientation?: boolean): Piece {
-    let res = this.clone();
+    const res = this.clone();
     res.stickers = res.stickers.map(s => s.reflect(p1, p2, p3));
     res.anchor && (res.anchor = res.anchor.reflect(p1, p2, p3));
     // res.computeBoundingBox();
@@ -245,7 +245,7 @@ export class Piece {
   }
 
   reflect1(a: Vector3D, u: Vector3D, preserveOrientation?: boolean): Piece {
-    let res = this.clone();
+    const res = this.clone();
     res.stickers = res.stickers.map(s => s.reflect1(a, u));
     res.anchor && (res.anchor = res.anchor.reflect1(a, u));
     // res.computeBoundingBox();
@@ -273,7 +273,7 @@ export class Piece {
   }
 
   clone(withCallback?: boolean) {
-    let res = new Piece(this.stickers);
+    const res = new Piece(this.stickers);
     if (withCallback && this.hasCallback) {
       res.hasCallback = this.hasCallback;
       res.callback = this.callback;
@@ -284,8 +284,8 @@ export class Piece {
   }
 
   equal(p1: Piece): boolean {
-    let s1 = this.stickers;
-    let s2 = p1.stickers;
+    const s1 = this.stickers;
+    const s2 = p1.stickers;
 
     if (s1.length != s2.length) {
       return false;
@@ -303,12 +303,12 @@ export class Piece {
   cutPlane(p0: Vector3D, n: Vector3D) {
     if (this.direction1(p0, n) != 0) return [this];
 
-    let inters = [];
+    const inters = [];
     const stickers = this.stickers;
-    let nonIntersStickers: Sticker[] = [];
+    const nonIntersStickers: Sticker[] = [];
 
     for (let i = 0, maxi = stickers.length; i < maxi; i += 1) {
-      let it = stickers[i].cutPlane(p0, n);
+      const it = stickers[i].cutPlane(p0, n);
 
       if (it.intersection) {
         inters.push(it);
@@ -318,18 +318,18 @@ export class Piece {
     }
 
     function simplify(paths: Vector3D[][]): Vector3D[][] {
-      let sPaths: Vector3D[][] = [];
+      const sPaths: Vector3D[][] = [];
 
       for (let i = 0, maxi = paths.length; i < maxi; i += 1) {
         let fnd = false;
-        let path = paths[i];
-        let pIni = path[0];
-        let pFin = path[path.length - 1];
+        const path = paths[i];
+        const pIni = path[0];
+        const pFin = path[path.length - 1];
 
         for (let j = 0, maxj = sPaths.length; j < maxj && !fnd; j += 1) {
-          let sPath = sPaths[j];
-          let spIni = sPath[0];
-          let spFin = sPath[sPath.length - 1];
+          const sPath = sPaths[j];
+          const spIni = sPath[0];
+          const spFin = sPath[sPath.length - 1];
 
           if (pIni.equals(spIni)) {
             path.slice(1).forEach(p => sPath.unshift(p));
@@ -361,22 +361,22 @@ export class Piece {
       return simplify(sPaths);
     }
 
-    let path = simplify(inters.map(it => it.points.slice()))[0];
+    const path = simplify(inters.map(it => it.points.slice()))[0];
 
     if (path.length > 1 && path[0].sub(path[path.length - 1]).abs() < EPS) {
       path.pop();
     }
 
     if (inters.length) {
-      let allStickers = inters.reduce((acc, e) => [...acc, ...e.parts], nonIntersStickers);
-      let interSticker = new Sticker(path);
-      let o = interSticker.getOrientation();
+      const allStickers = inters.reduce((acc, e) => [...acc, ...e.parts], nonIntersStickers);
+      const interSticker = new Sticker(path);
+      const o = interSticker.getOrientation();
 
       // Same direction / Opposite direction
-      let res: Piece[] = [new Piece([interSticker]), new Piece([interSticker.reverse()])];
+      const res: Piece[] = [new Piece([interSticker]), new Piece([interSticker.reverse()])];
 
       for (let i = 0, maxi = allStickers.length; i < maxi; i += 1) {
-        let mc = allStickers[i].getMassCenter();
+        const mc = allStickers[i].getMassCenter();
 
         if (o.dot(mc.sub(p0)) < 0) {
           res[0].stickers.push(allStickers[i]);
@@ -396,8 +396,8 @@ export class Piece {
   }
 
   computeBoundingBox(): Vector3D[] {
-    let bbs = this.stickers.map(s => s.computeBoundingBox());
-    let box = bbs.reduce(
+    const bbs = this.stickers.map(s => s.computeBoundingBox());
+    const box = bbs.reduce(
       (ac, p) => {
         return [
           Math.min(ac[0], p[0].x),

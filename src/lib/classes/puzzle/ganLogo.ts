@@ -2,8 +2,8 @@ import { CENTER, LEFT, Vector3D } from "@classes/vector3d";
 import { FaceSticker } from "./FaceSticker";
 
 function getFaceSticker(pts: number[]): FaceSticker {
-  let p: Vector3D[] = [];
-  let f: number[][] = [];
+  const p: Vector3D[] = [];
+  const f: number[][] = [];
 
   for (let i = 0, maxi = pts.length; i < maxi; i += 2) {
     p.push(new Vector3D(pts[i], pts[i + 1]));

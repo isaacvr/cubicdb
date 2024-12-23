@@ -42,7 +42,7 @@ export async function transView(
   cv.height = W;
   renderer.setSize(W, W, false);
 
-  let threeAdaptor = new ThreeJSAdaptor({
+  const threeAdaptor = new ThreeJSAdaptor({
     canvas: cv,
     enableDrag: false,
     order: cube.order.a,

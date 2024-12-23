@@ -39,17 +39,18 @@ const setTimerInspection = fromCallback(
     ready.set(false);
     decimals.set(false);
 
-    let { settings } = get(session);
+    const { settings } = get(session);
 
     if (!settings.hasInspection) {
       return sendBack({ type: "RUN" });
     }
 
-    let ref = performance.now() + (settings.hasInspection ? (settings.inspection || 15) * 1000 : 0);
-    let ls = get(lastSolve) as Solve;
+    const ref =
+      performance.now() + (settings.hasInspection ? (settings.inspection || 15) * 1000 : 0);
+    const ls = get(lastSolve) as Solve;
 
-    let itv = setInterval(() => {
-      let t = Math.round((ref - performance.now()) / 1000) * 1000;
+    const itv = setInterval(() => {
+      const t = Math.round((ref - performance.now()) / 1000) * 1000;
 
       if (t < -2000) {
         sendBack({ type: "DNF" });
@@ -82,8 +83,8 @@ const setTimerRunner = fromCallback(
     currentStep.set(1);
     stepsTime.set([]);
 
-    let ref = performance.now() - (get(lastSolve)?.penalty === Penalty.P2 ? 2000 : 0);
-    let itv = setInterval(() => time.set(performance.now() - ref));
+    const ref = performance.now() - (get(lastSolve)?.penalty === Penalty.P2 ? 2000 : 0);
+    const itv = setInterval(() => time.set(performance.now() - ref));
 
     timeRef.set(ref);
 
@@ -109,21 +110,21 @@ const saveSolve = fromCallback(
   }: {
     input: KeyboardContext;
   }) => {
-    let p = performance.now();
+    const p = performance.now();
     time.set(p - get(timeRef));
     state.set(TimerState.STOPPED);
     initScrambler();
 
-    let type = get(session).settings.sessionType;
-    let t = get(time);
-    let ls = get(lastSolve) as Solve;
-    let ref = get(timeRef);
-    let steps = get(stepsTime).map(tm => tm - ref);
+    const type = get(session).settings.sessionType;
+    const t = get(time);
+    const ls = get(lastSolve) as Solve;
+    const ref = get(timeRef);
+    const steps = get(stepsTime).map(tm => tm - ref);
 
     steps.push(t);
 
     for (let i = 1, s = steps[0], maxi = steps.length; i < maxi; i += 1) {
-      let sp = steps[i];
+      const sp = steps[i];
       steps[i] -= s;
       s = sp;
     }
@@ -136,7 +137,7 @@ const saveSolve = fromCallback(
     time.set(0);
 
     // Prevent keyboard to run after pressing some key + space to stop the timer
-    let kbe = get(keyboardEnabled);
+    const kbe = get(keyboardEnabled);
     keyboardEnabled.set(false);
     setTimeout(() => keyboardEnabled.set(kbe), 1000);
   }
@@ -281,7 +282,7 @@ export class KeyboardInput implements TimerInputHandler {
   interpreter;
 
   constructor(context: InputContext) {
-    let ctx: KeyboardContext = {
+    const ctx: KeyboardContext = {
       steps: writable(+(get(context.session).settings.steps || "") || 1),
       stepsTime: writable([]),
       currentStep: writable(1),

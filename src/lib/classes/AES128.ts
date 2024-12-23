@@ -1,4 +1,4 @@
-let Sbox = [
+const Sbox = [
   99, 124, 119, 123, 242, 107, 111, 197, 48, 1, 103, 43, 254, 215, 171, 118, 202, 130, 201, 125,
   250, 89, 71, 240, 173, 212, 162, 175, 156, 164, 114, 192, 183, 253, 147, 38, 54, 63, 247, 204, 52,
   165, 229, 241, 113, 216, 49, 21, 4, 199, 35, 195, 24, 150, 5, 154, 7, 18, 128, 226, 235, 39, 178,
@@ -13,9 +13,9 @@ let Sbox = [
   135, 233, 206, 85, 40, 223, 140, 161, 137, 13, 191, 230, 66, 104, 65, 153, 45, 15, 176, 84, 187,
   22,
 ];
-let SboxI: number[] = [];
-let ShiftTabI = [0, 13, 10, 7, 4, 1, 14, 11, 8, 5, 2, 15, 12, 9, 6, 3];
-let xtime: number[] = [];
+const SboxI: number[] = [];
+const ShiftTabI = [0, 13, 10, 7, 4, 1, 14, 11, 8, 5, 2, 15, 12, 9, 6, 3];
+const xtime: number[] = [];
 
 declare type State = number[];
 
@@ -26,7 +26,7 @@ export class AES128 {
   constructor(key: number[]) {
     this.init();
 
-    let exKey = key.slice();
+    const exKey = key.slice();
     let Rcon = 1;
 
     for (let i = 16; i < 176; i += 4) {
@@ -87,11 +87,11 @@ export class AES128 {
 
   mixColumns(state: State) {
     for (let i = 12; i >= 0; i -= 4) {
-      let s0 = state[i + 0];
-      let s1 = state[i + 1];
-      let s2 = state[i + 2];
-      let s3 = state[i + 3];
-      let h = s0 ^ s1 ^ s2 ^ s3;
+      const s0 = state[i + 0];
+      const s1 = state[i + 1];
+      const s2 = state[i + 2];
+      const s3 = state[i + 3];
+      const h = s0 ^ s1 ^ s2 ^ s3;
       state[i + 0] ^= h ^ xtime[s0 ^ s1];
       state[i + 1] ^= h ^ xtime[s1 ^ s2];
       state[i + 2] ^= h ^ xtime[s2 ^ s3];
@@ -100,7 +100,7 @@ export class AES128 {
   }
 
   shiftSubAddI(state: State, rkey: number[]) {
-    let state0 = state.slice();
+    const state0 = state.slice();
 
     for (let i = 0; i < 16; i++) {
       state[ShiftTabI[i]] = Sbox[state0[i] ^ rkey[i]];
@@ -114,7 +114,7 @@ export class AES128 {
   }
 
   shiftSubAdd(state: State, rkey: number[]) {
-    let state0 = state.slice();
+    const state0 = state.slice();
 
     for (let i = 0; i < 16; i++) {
       state[i] = SboxI[state0[ShiftTabI[i]]] ^ rkey[i];
@@ -123,14 +123,14 @@ export class AES128 {
 
   mixColumnsInv(state: State) {
     for (let i = 0; i < 16; i += 4) {
-      let s0 = state[i + 0];
-      let s1 = state[i + 1];
-      let s2 = state[i + 2];
-      let s3 = state[i + 3];
-      let h = s0 ^ s1 ^ s2 ^ s3;
-      let xh = xtime[h];
-      let h1 = xtime[xtime[xh ^ s0 ^ s2]] ^ h;
-      let h2 = xtime[xtime[xh ^ s1 ^ s3]] ^ h;
+      const s0 = state[i + 0];
+      const s1 = state[i + 1];
+      const s2 = state[i + 2];
+      const s3 = state[i + 3];
+      const h = s0 ^ s1 ^ s2 ^ s3;
+      const xh = xtime[h];
+      const h1 = xtime[xtime[xh ^ s0 ^ s2]] ^ h;
+      const h2 = xtime[xtime[xh ^ s1 ^ s3]] ^ h;
       state[i + 0] ^= h1 ^ xtime[s0 ^ s1];
       state[i + 1] ^= h2 ^ xtime[s1 ^ s2];
       state[i + 2] ^= h1 ^ xtime[s2 ^ s3];

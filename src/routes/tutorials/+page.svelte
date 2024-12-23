@@ -73,12 +73,11 @@
       })
     );
 
-    // if (groupNames.length) {
-    //   currentGroup = groupNames[0];
-    // } else {
-    //   currentGroup = "";
-    // }
-    currentGroup = "fundamentals";
+    if (groupNames.length) {
+      currentGroup = groupNames[0];
+    } else {
+      currentGroup = "fundamentals";
+    }
   }
 
   function getLevel(lv: number): string {

@@ -28,10 +28,10 @@ export function SQUARE1_STAR(): PuzzleInterface {
   const POINTS = 30;
   const UP_FACE = UP.mul(R1);
 
-  let pieces = sq1Star.pieces;
+  const pieces = sq1Star.pieces;
 
   // Center
-  let centerSticker = new Sticker(
+  const centerSticker = new Sticker(
     [
       RIGHT.mul(R1),
       ...newArr(POINTS)
@@ -44,11 +44,11 @@ export function SQUARE1_STAR(): PuzzleInterface {
     [BACK]
   ).add(UP_FACE);
 
-  let centerPiece = new Piece([centerSticker, centerSticker.rotate(CENTER, FRONT, PI)]);
+  const centerPiece = new Piece([centerSticker, centerSticker.rotate(CENTER, FRONT, PI)]);
 
   // Large piece
-  let bsDir = RIGHT.mul(R3).rotate(CENTER, UP, PI_6).unit();
-  let bigSticker = new Sticker(
+  const bsDir = RIGHT.mul(R3).rotate(CENTER, UP, PI_6).unit();
+  const bigSticker = new Sticker(
     [
       RIGHT.mul(R3).rotate(CENTER, UP, PI_6),
       RIGHT.mul(R2).rotate(CENTER, UP, PI_3),
@@ -61,7 +61,7 @@ export function SQUARE1_STAR(): PuzzleInterface {
     [UP, bsDir]
   ).add(UP_FACE);
 
-  let smallSticker = new Sticker(
+  const smallSticker = new Sticker(
     [
       RIGHT.mul(R2),
       RIGHT.mul(R3).rotate(CENTER, UP, PI_6),
@@ -72,7 +72,7 @@ export function SQUARE1_STAR(): PuzzleInterface {
     [UP, bsDir]
   );
 
-  let bigPiece = new Piece([
+  const bigPiece = new Piece([
     bigSticker,
     smallSticker,
     smallSticker.reflect(
@@ -93,10 +93,10 @@ export function SQUARE1_STAR(): PuzzleInterface {
   // pieces.forEach((p, p_i) => p.stickers.forEach(s => s.vecs = [ UP.clone() ]));
   // pieces.forEach((p, p_i) => p.stickers.forEach(s => s.vecs = [ UP.clone(), bInd.indexOf(p_i) > -1 ? BACK.clone() : FRONT.clone() ]))
 
-  let sideColors = ["red", "violet", "white", "yellow", "pink", "orange"];
+  const sideColors = ["red", "violet", "white", "yellow", "pink", "orange"];
 
   for (let i = 0; i < 6; i += 1) {
-    let p = bigPiece.rotate(CENTER, UP, i * PI_3);
+    const p = bigPiece.rotate(CENTER, UP, i * PI_3);
     sq1Star.faceColors.push(sideColors[i], sideColors[i]);
     sq1Star.faceVectors.push(p.stickers[1].getOrientation(), p.stickers[2].getOrientation());
   }
@@ -104,15 +104,15 @@ export function SQUARE1_STAR(): PuzzleInterface {
   assignColors(sq1Star, sq1Star.faceColors);
 
   sq1Star.toMove = function (piece: Piece, sticker: Sticker, dir: Vector3D) {
-    let mc = sticker.updateMassCenter();
-    let ang = dir.cross(UP).abs() < 1e-4 ? PI_3 : PI;
+    const mc = sticker.updateMassCenter();
+    const ang = dir.cross(UP).abs() < 1e-4 ? PI_3 : PI;
     let d = dir;
 
     if (ang > PI_3) {
       d = mc.dot(BACK) > 0 ? BACK : FRONT;
     }
 
-    let toMovePieces = pieces.filter(
+    const toMovePieces = pieces.filter(
       p =>
         p.direction1(CENTER, d, true) >= 0 &&
         (ang > PI_3 ? true : p.stickers.some(s => s.getOrientation().cross(UP).abs() > 1e-4))
@@ -131,11 +131,11 @@ export function SQUARE1_STAR(): PuzzleInterface {
     const MOVES = 50;
 
     for (let i = 0; i < MOVES; i += 1) {
-      let p = random(pieces) as Piece;
-      let s = random(p.stickers.filter(s => !/^[xd]{1}$/.test(s.color))) as Sticker;
-      let vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > EPS));
-      let pcs = sq1Star.toMove(p, s, vec) as ToMoveResult;
-      let cant = FRONT.cross(pcs.dir!).abs() < EPS ? random(2) : 1 + random(5);
+      const p = random(pieces) as Piece;
+      const s = random(p.stickers.filter(s => !/^[xd]{1}$/.test(s.color))) as Sticker;
+      const vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > EPS));
+      const pcs = sq1Star.toMove(p, s, vec) as ToMoveResult;
+      const cant = FRONT.cross(pcs.dir!).abs() < EPS ? random(2) : 1 + random(5);
       pcs.pieces.forEach((p: Piece) => p.rotate(CENTER, pcs.dir!, pcs.ang * cant, true));
     }
   };

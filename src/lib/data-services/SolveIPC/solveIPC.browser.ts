@@ -35,7 +35,7 @@ export class SolveBrowserIPC implements SolveIPC {
       this.isInit = true;
     } else {
       await new Promise(res => {
-        let itv = setInterval(() => {
+        const itv = setInterval(() => {
           if (!this.isInit) {
             clearInterval(itv);
             res(null);
@@ -76,7 +76,7 @@ export class SolveBrowserIPC implements SolveIPC {
     const sv = clone(s);
     delete sv._id;
 
-    let res = await Promise.all([tx.store.put(sv), tx.done]);
+    const res = await Promise.all([tx.store.put(sv), tx.done]);
     sv._id = res[0];
     return sv;
   }
@@ -85,7 +85,7 @@ export class SolveBrowserIPC implements SolveIPC {
     await this.init();
     if (!this.DB) return s;
 
-    let ss = s.map(sv => {
+    const ss = s.map(sv => {
       const res: Solve = clone(sv);
       delete res._id;
       return res;
@@ -93,7 +93,7 @@ export class SolveBrowserIPC implements SolveIPC {
 
     const tx = this.DB.transaction(SolveStore, "readwrite");
 
-    let res = await Promise.all([...ss.map(sv => tx.store.put(sv)), tx.done]);
+    const res = await Promise.all([...ss.map(sv => tx.store.put(sv)), tx.done]);
 
     res.pop();
     res.forEach((id, p) => (ss[p]._id = id));
@@ -105,7 +105,7 @@ export class SolveBrowserIPC implements SolveIPC {
     await this.init();
     if (!this.DB) return s;
 
-    let rs: Solve | undefined = await this.DB.get(SolveStore, s._id);
+    const rs: Solve | undefined = await this.DB.get(SolveStore, s._id);
 
     if (rs) {
       rs.comments = s.comments;
@@ -122,7 +122,7 @@ export class SolveBrowserIPC implements SolveIPC {
   async removeSolves(s: Solve[]): Promise<Solve[]> {
     await this.init();
 
-    let res = s.map(s => clone(s));
+    const res = s.map(s => clone(s));
 
     if (!this.DB) return res;
 

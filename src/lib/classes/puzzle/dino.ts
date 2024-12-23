@@ -28,10 +28,10 @@ export function DINO(): PuzzleInterface {
   const PI_2 = PI / 2;
   const ANG = (2 * PI) / 3;
 
-  let pieces = dino.pieces;
-  let ref = cmd("LUB");
+  const pieces = dino.pieces;
+  const ref = cmd("LUB");
 
-  let pieceLT = new Piece([
+  const pieceLT = new Piece([
     new Sticker([cmd("LUB"), cmd("LUF"), UP]),
     new Sticker([cmd("LUB"), LEFT, cmd("LUF")]),
   ]);
@@ -45,8 +45,8 @@ export function DINO(): PuzzleInterface {
   }
 
   dino.toMove = function (piece: Piece, sticker: Sticker, dir: Vector3D) {
-    let mc = sticker.updateMassCenter();
-    let toMovePieces = pieces.filter(p => p.direction1(mc, dir) === 0);
+    const mc = sticker.updateMassCenter();
+    const toMovePieces = pieces.filter(p => p.direction1(mc, dir) === 0);
     return {
       pieces: toMovePieces,
       ang: ANG,
@@ -59,11 +59,11 @@ export function DINO(): PuzzleInterface {
     const MOVES = 20;
 
     for (let i = 0; i < MOVES; i += 1) {
-      let p = random(pieces) as Piece;
-      let s = random(p.stickers.filter(s => !/^[xd]{1}$/.test(s.color))) as Sticker;
-      let vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > EPS));
-      let pcs = dino.toMove(p, s, vec) as ToMoveResult;
-      let cant = 1 + random(2);
+      const p = random(pieces) as Piece;
+      const s = random(p.stickers.filter(s => !/^[xd]{1}$/.test(s.color))) as Sticker;
+      const vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > EPS));
+      const pcs = dino.toMove(p, s, vec) as ToMoveResult;
+      const cant = 1 + random(2);
       pcs.pieces.forEach((p: Piece) => p.rotate(CENTER, vec, pcs.ang * cant, true));
     }
   };

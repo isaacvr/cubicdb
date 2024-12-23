@@ -39,13 +39,13 @@ export const INITIAL_STATISTICS: Statistics = {
 };
 
 export function mean(values: number[]): number {
-  let cant = values.length;
+  const cant = values.length;
   return values.reduce((a, b) => a + b, 0) / (cant || 1);
 }
 
 export function median(values: number[]): number {
-  let cant = values.length;
-  let v1 = values.slice().sort((a, b) => a - b);
+  const cant = values.length;
+  const v1 = values.slice().sort((a, b) => a - b);
   if (cant % 2 === 0) {
     return mean(v1.slice(cant / 2 - 1, cant / 2 + 1));
   }
@@ -67,17 +67,17 @@ export function stdDevS(values: Solve[], avg: number): number {
 }
 
 export function getAverage(n: number, arr: number[], calc: AverageSetting): (number | null)[] {
-  let res: (number | null)[] = [];
-  let set: MultiSet<number> = new MultiSet();
-  let d = n === 3 ? 0 : Math.ceil(n * 0.05);
-  let len = arr.length - 1;
+  const res: (number | null)[] = [];
+  const set: MultiSet<number> = new MultiSet();
+  const d = n === 3 ? 0 : Math.ceil(n * 0.05);
+  const len = arr.length - 1;
   let infP = 0;
   let sum = 0;
 
-  let getIndex = (i: number) => len - i;
+  const getIndex = (i: number) => len - i;
 
   for (let i = 0, maxi = len; i <= maxi; i += 1) {
-    let t = arr[getIndex(i)];
+    const t = arr[getIndex(i)];
 
     set.add(t);
     infP += isFinite(t) ? 0 : 1;
@@ -89,7 +89,7 @@ export function getAverage(n: number, arr: number[], calc: AverageSetting): (num
       if (infP > d) {
         res.push(null);
       } else {
-        let elems = set.toArray();
+        const elems = set.toArray();
         let s = sum;
 
         elems.slice(0, d).forEach(v => (s -= v));
@@ -110,7 +110,7 @@ export function getAverage(n: number, arr: number[], calc: AverageSetting): (num
       }
 
       if (calc === AverageSetting.SEQUENTIAL) {
-        let t1 = arr[getIndex(i - n + 1)];
+        const t1 = arr[getIndex(i - n + 1)];
         set.rem(t1);
         infP -= isFinite(t1) ? 0 : 1;
         sum -= isFinite(t1) ? t1 : 0;
@@ -141,25 +141,25 @@ export function bundleAverageS(
   arr: Solve[],
   calc: AverageSetting
 ): (number | null)[][] {
-  let res: (number | null)[][] = newArr(N.length)
+  const res: (number | null)[][] = newArr(N.length)
     .fill(0)
     .map(_ => []);
-  let sets: MultiSet<number>[] = newArr(N.length)
+  const sets: MultiSet<number>[] = newArr(N.length)
     .fill(0)
     .map(_ => new MultiSet());
-  let disc = N.map(n => (n === 3 ? 0 : Math.ceil(n * 0.05)));
-  let len = arr.length - 1;
-  let infP: number[] = newArr(N.length).fill(0);
-  let sums: number[] = newArr(N.length).fill(0);
+  const disc = N.map(n => (n === 3 ? 0 : Math.ceil(n * 0.05)));
+  const len = arr.length - 1;
+  const infP: number[] = newArr(N.length).fill(0);
+  const sums: number[] = newArr(N.length).fill(0);
 
-  let getIndex = (i: number) => len - i;
+  const getIndex = (i: number) => len - i;
 
   for (let i = 0, maxi = arr.length; i < maxi; i += 1) {
-    let ip = getIndex(i);
+    const ip = getIndex(i);
 
     for (let j = 0, maxj = N.length; j < maxj; j += 1) {
-      let t = sTime(arr[ip]);
-      let d = disc[j];
+      const t = sTime(arr[ip]);
+      const d = disc[j];
 
       sets[j].add(t);
       infP[j] += isFinite(t) ? 0 : 1;
@@ -172,7 +172,7 @@ export function bundleAverageS(
         if (infP[j] > d) {
           res[j].push(null);
         } else {
-          let elems = sets[j].toArray();
+          const elems = sets[j].toArray();
           let s = sums[j];
 
           elems.slice(0, d).forEach(v => (s -= v));
@@ -182,7 +182,7 @@ export function bundleAverageS(
               .filter(isFinite)
               .forEach(v => (s -= v));
 
-          let av = adjustMillis(s / (N[j] - 2 * d), true);
+          const av = adjustMillis(s / (N[j] - 2 * d), true);
 
           if (av < BEST[j]) {
             BEST[j] = av;
@@ -194,7 +194,7 @@ export function bundleAverageS(
         }
 
         if (calc === AverageSetting.SEQUENTIAL) {
-          let t1 = sTime(arr[getIndex(i - N[j] + 1)]);
+          const t1 = sTime(arr[getIndex(i - N[j] + 1)]);
           sets[j].rem(t1);
           infP[j] -= isFinite(t1) ? 0 : 1;
           sums[j] -= isFinite(t1) ? t1 : 0;
@@ -218,7 +218,7 @@ export function trendLSV(values: number[][]): { m: number; n: number } {
     Sxy = 0;
 
   for (let i = 0; i < n; i += 1) {
-    let x = values[i][0],
+    const x = values[i][0],
       y = values[i][1];
     Sx += x;
     Sy += y;
@@ -226,8 +226,8 @@ export function trendLSV(values: number[][]): { m: number; n: number } {
     Sxy += x * y;
   }
 
-  let beta = (n * Sxy - Sx * Sy) / (n * Sxx - Sx ** 2);
-  let alpha = (Sy - beta * Sx) / n;
+  const beta = (n * Sxy - Sx * Sy) / (n * Sxx - Sx ** 2);
+  const alpha = (Sy - beta * Sx) / n;
 
   return { m: beta, n: alpha };
 }
@@ -266,7 +266,7 @@ export function getUpdatedStatistics(
   window: (number | null)[][];
 } {
   let AVG: number[] = [];
-  let BEST: number[] = [
+  const BEST: number[] = [
     stats.Mo3.best ?? Infinity,
     stats.Ao5.best ?? Infinity,
     stats.Ao12.best ?? Infinity,
@@ -280,9 +280,9 @@ export function getUpdatedStatistics(
     stats.worst.best ?? 0,
   ];
 
-  let PREV_BEST = BEST.slice();
+  const PREV_BEST = BEST.slice();
 
-  let BEST_IDS: string[] = [
+  const BEST_IDS: string[] = [
     stats.Mo3.id || "",
     stats.Ao5.id || "",
     stats.Ao12.id || "",
@@ -296,13 +296,13 @@ export function getUpdatedStatistics(
     stats.worst.id || "",
   ];
 
-  let IS_BEST = BEST.map(() => false);
+  const IS_BEST = BEST.map(() => false);
 
   let len = solves.length;
   let sum = 0,
     avg = 0,
     dev = 0;
-  let pMap: Map<Penalty, number> = new Map();
+  const pMap: Map<Penalty, number> = new Map();
 
   solves.reduce(
     (ac: number[], e) => {
@@ -335,7 +335,7 @@ export function getUpdatedStatistics(
   avg = len > 0 ? sum / len : 0;
   dev = stdDevS(solves, avg);
 
-  let avgs = bundleAverageS(
+  const avgs = bundleAverageS(
     AON,
     BEST,
     BEST_IDS,
@@ -347,7 +347,7 @@ export function getUpdatedStatistics(
 
   AVG = avgs.map(a => a.slice(-1)[0] || -1);
 
-  let ps = Object.assign({}, stats);
+  const ps = Object.assign({}, stats);
 
   return {
     stats: {
@@ -451,16 +451,16 @@ export function computeMoves(
   moves: number;
   values: any[][];
 } {
-  let scr = scramble.split(/\s+/g).filter(m => scrambleReg.test(m));
+  const scr = scramble.split(/\s+/g).filter(m => scrambleReg.test(m));
   let cant = 0;
-  let values: any[][] = [];
+  const values: any[][] = [];
 
   for (let i = 0, maxi = scr.length; i < maxi; i += 1) {
-    let isRotation = /^[xyz]([2'])?$/.test(scr[i]);
-    let isSlice = /^[EMS]([2'])?$/.test(scr[i]);
-    let isDouble = scr[i].includes("2");
-    let isBlock = /^[frubld]([2'])?$/.test(scr[i]) || /[w]/.test(scr[i]);
-    let isNormal = /^([FRUBLD])([2'])?$/.test(scr[i]);
+    const isRotation = /^[xyz]([2'])?$/.test(scr[i]);
+    const isSlice = /^[EMS]([2'])?$/.test(scr[i]);
+    const isDouble = scr[i].includes("2");
+    const isBlock = /^[frubld]([2'])?$/.test(scr[i]) || /[w]/.test(scr[i]);
+    const isNormal = /^([FRUBLD])([2'])?$/.test(scr[i]);
     let v = 0;
 
     if (metric === "HTM") {
@@ -500,10 +500,10 @@ export function statsReplaceId(stats: Statistics, prevId: string, currId: string
 }
 
 export function getAnomalies(solves: Solve[], threshold = 2): { pos: number; val: Solve }[] {
-  let times = solves.map((sv, pos) => ({ pos, val: sTime(sv) })).filter(t => t.val != Infinity);
-  let vals = times.map(t => t.val);
-  let m = mean(vals);
-  let s = stdDev(vals, m);
+  const times = solves.map((sv, pos) => ({ pos, val: sTime(sv) })).filter(t => t.val != Infinity);
+  const vals = times.map(t => t.val);
+  const m = mean(vals);
+  const s = stdDev(vals, m);
   return times
     .map((t, p) => ({ pos: t.pos, val: (vals[p] - m) / s }))
     .sort((a, b) => b.val - a.val)
@@ -530,20 +530,20 @@ export function autocorrelate(values: number[]): number[] {
 }
 
 export function solveSummary(sv: Solve[]) {
-  let n = sv.length;
-  let minTime = (a: Solve, b: Solve) => {
+  const n = sv.length;
+  const minTime = (a: Solve, b: Solve) => {
     if (infinitePenalty(a)) return b;
     if (infinitePenalty(b)) return a;
     return a.time < b.time ? a : b;
   };
 
-  let minMax = sv.reduce(
+  const minMax = sv.reduce(
     (acc, s) => [minTime(acc[0], s) === s ? s : acc[0], minTime(acc[1], s) === s ? acc[1] : s],
     [sv[0], sv[0]]
   );
 
-  let avg = getAverageS(n, sv, AverageSetting.SEQUENTIAL)[n - 1];
-  let svParts = sv.map((s, p) => {
+  const avg = getAverageS(n, sv, AverageSetting.SEQUENTIAL)[n - 1];
+  const svParts = sv.map((s, p) => {
     return [
       (sv.length >= 10 && p < 9 ? "0" : "") + (p + 1),
       s === minMax[0] || s === minMax[1]
@@ -552,7 +552,7 @@ export function solveSummary(sv: Solve[]) {
       s.scramble,
     ];
   });
-  let maxTime = svParts.reduce((acc, s) => Math.max(acc, s[1].length), 0);
+  const maxTime = svParts.reduce((acc, s) => Math.max(acc, s[1].length), 0);
 
   return `${get(localLang).global.generatedByCubicDB} - ${moment().format("DD/MM/YYYY hh:mma")}
   ${n === 3 ? "M" : "A"}o${n}: ${avg ? timer(avg, true, true) : "DNF"}

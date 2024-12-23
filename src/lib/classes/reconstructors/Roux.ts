@@ -95,10 +95,10 @@ export class Roux implements IReconstructor {
     this.currTime = 0;
     this.moves = [];
 
-    let pieces = this.cube.p.pieces;
+    const pieces = this.cube.p.pieces;
 
     for (let i = 0, maxi = pieces.length; i < maxi; i += 1) {
-      let colorst = getColoredStickers(pieces[i]).length;
+      const colorst = getColoredStickers(pieces[i]).length;
 
       if (colorst === 1) {
         this.centers.push(pieces[i]);
@@ -126,7 +126,7 @@ export class Roux implements IReconstructor {
   }
 
   getBlocks(): BlockResult[] {
-    let blocks = this.centers
+    const blocks = this.centers
       .map(c => ({
         center: c,
         corners: this.corners.filter(cn => pieceInCenterColor(c, cn)),
@@ -134,15 +134,15 @@ export class Roux implements IReconstructor {
       }))
       .map(cn => {
         if (cn.corners.length < 2 || cn.edges.length < 3) return [];
-        let { corners, edges } = cn;
+        const { corners, edges } = cn;
 
-        let res = [];
+        const res = [];
 
         for (let i = 0, maxi = corners.length; i < maxi - 1; i += 1) {
           for (let j = i + 1; j < maxi; j += 1) {
             if (piecesCorrectRelative(corners[i], corners[j])) {
-              let edges1 = edges.filter(ed => piecesCorrectRelative(corners[i], ed));
-              let edges2 = edges.filter(ed => piecesCorrectRelative(corners[j], ed));
+              const edges1 = edges.filter(ed => piecesCorrectRelative(corners[i], ed));
+              const edges2 = edges.filter(ed => piecesCorrectRelative(corners[j], ed));
 
               if (edges1.length < 2 || edges2.length < 2) continue;
 
@@ -176,16 +176,16 @@ export class Roux implements IReconstructor {
   }
 
   getCO(block1: BlockResult[]): COResult[] {
-    let results: COResult[] = [];
+    const results: COResult[] = [];
 
     for (let i = 0, maxi = block1.length; i < maxi; i += 1) {
-      let b1 = block1[i];
-      let downColor = b1.corners[0].stickers.filter(
+      const b1 = block1[i];
+      const downColor = b1.corners[0].stickers.filter(
         st => nonGray(st) && st.getOrientation().sub(b1.vecDown).abs() < EPS
       )[0].color;
 
-      let corners = this.corners.filter(corner => !corner.contains(downColor));
-      let upColor = getColoredStickers(corners[0]).filter(st =>
+      const corners = this.corners.filter(corner => !corner.contains(downColor));
+      const upColor = getColoredStickers(corners[0]).filter(st =>
         corners.every(c => c.contains(st.color))
       )[0].color;
 
@@ -209,12 +209,12 @@ export class Roux implements IReconstructor {
     return co.map((c, pos) => {
       if (!c.co) return false;
 
-      let bl = block1[pos].vecDown;
-      let downColor = block1[pos].corners[0].stickers.filter(
+      const bl = block1[pos].vecDown;
+      const downColor = block1[pos].corners[0].stickers.filter(
         st => nonGray(st) && st.getOrientation().sub(bl).abs() < EPS
       )[0].color;
 
-      let corners = this.corners.filter(corner => !corner.contains(downColor));
+      const corners = this.corners.filter(corner => !corner.contains(downColor));
 
       for (let i = 0, maxi = corners.length; i < maxi; i += 1) {
         let aligned = 0;
@@ -237,9 +237,9 @@ export class Roux implements IReconstructor {
       return null;
     }
 
-    let co = this.getCO(block1);
+    const co = this.getCO(block1);
     if (co.every(c => !c)) return null;
-    let cp = this.getCP(block1, co);
+    const cp = this.getCP(block1, co);
 
     return block1.map((_, pos) => ({
       block1: block1[pos],
@@ -251,20 +251,20 @@ export class Roux implements IReconstructor {
 
   getEO(_cmll: CMLLResult[] | null): boolean[] | null {
     if (!_cmll || _cmll.length === 0) return null;
-    let cmll = _cmll.filter(c => c.cp);
+    const cmll = _cmll.filter(c => c.cp);
 
     if (cmll.length === 0) return null;
 
     return cmll.map(c => {
-      let {
+      const {
         block1: { vecDown },
       } = c;
-      let sideColors = [c.block1.center, c.block2.center].map(
+      const sideColors = [c.block1.center, c.block2.center].map(
         pc => getColoredStickers(pc)[0].color
       );
-      let { upColor, downColor } = c.co;
+      const { upColor, downColor } = c.co;
 
-      let remEdges = this.edges.filter(
+      const remEdges = this.edges.filter(
         e => (!e.contains(sideColors[0]) && !e.contains(sideColors[1])) || e.contains(upColor)
       );
 
@@ -282,21 +282,21 @@ export class Roux implements IReconstructor {
     for (let i = 0, maxi = eo.length; i < maxi; i += 1) {
       if (!eo[i]) continue;
 
-      let { upColor } = cmll[i].co;
-      let color1 = getColoredStickers(cmll[i].block1.center)[0].color;
-      let color2 = getColoredStickers(cmll[i].block2.center)[0].color;
+      const { upColor } = cmll[i].co;
+      const color1 = getColoredStickers(cmll[i].block1.center)[0].color;
+      const color2 = getColoredStickers(cmll[i].block2.center)[0].color;
 
-      let corners1 = this.corners.filter(
+      const corners1 = this.corners.filter(
         corner => corner.contains(upColor) && corner.contains(color1)
       );
 
-      let corners2 = this.corners.filter(
+      const corners2 = this.corners.filter(
         corner => corner.contains(upColor) && corner.contains(color2)
       );
 
-      let edge1 = this.edges.filter(edge => edge.contains(upColor) && edge.contains(color1))[0];
+      const edge1 = this.edges.filter(edge => edge.contains(upColor) && edge.contains(color1))[0];
 
-      let edge2 = this.edges.filter(edge => edge.contains(upColor) && edge.contains(color2))[0];
+      const edge2 = this.edges.filter(edge => edge.contains(upColor) && edge.contains(color2))[0];
 
       if (
         corners1.every(cn => piecesCorrectRelative(cn, edge1)) &&
@@ -310,8 +310,8 @@ export class Roux implements IReconstructor {
   }
 
   getStatus(): RouxStatus {
-    let blocks = this.getBlocks();
-    let blockPair = [];
+    const blocks = this.getBlocks();
+    const blockPair = [];
 
     for (let i = 0, maxi = blocks.length; i + 1 < maxi; i += 1) {
       for (let j = i + 1; j < maxi; j += 1) {
@@ -334,10 +334,10 @@ export class Roux implements IReconstructor {
       block1 = blocks;
     }
 
-    let cmll = this.getCMLL(block1, block2);
-    let eo = this.getEO(cmll);
-    let ulur = this.getULUR(cmll, eo);
-    let completed = this.cube.isComplete();
+    const cmll = this.getCMLL(block1, block2);
+    const eo = this.getEO(cmll);
+    const ulur = this.getULUR(cmll, eo);
+    const completed = this.cube.isComplete();
 
     if (blocks.length === 0) {
       this.stage = Stage.SCRAMBLED;
@@ -380,8 +380,8 @@ export class Roux implements IReconstructor {
 
     this.currTime = seq.time;
     this.cube.move(seq.move);
-    let st = this.getStatus();
-    let lastStage = this.status[this.status.length - 1];
+    const st = this.getStatus();
+    const lastStage = this.status[this.status.length - 1];
     lastStage.moves.push({ move: seq.move, time: this.currTime });
     lastStage.time = this.currTime - this.lastTime;
 
@@ -401,22 +401,22 @@ export class Roux implements IReconstructor {
       this.moves.length = 0;
     }
 
-    let timeline = this.getTimeline();
-    let steps = [
+    const timeline = this.getTimeline();
+    const steps = [
       [Stage.SCRAMBLED], // Block1
       [Stage.BLOCK_123_1], // Block2
       [Stage.BLOCK_123_2, Stage.CO], // CMLL
       [Stage.CP, Stage.EO, Stage.UL_UR, Stage.EP, Stage.COMPLETED], // LSE
     ];
 
-    let moveCounts = steps.map(subs => subs.map(_ => 0));
-    let time = steps.map(subs => subs.map(_ => 0));
-    let moves = steps.map(subs => subs.map(_ => <string[]>[]));
+    const moveCounts = steps.map(subs => subs.map(_ => 0));
+    const time = steps.map(subs => subs.map(_ => 0));
+    const moves = steps.map(subs => subs.map(_ => <string[]>[]));
     let st = timeline[0].status;
-    let timelineLen = timeline.length;
+    const timelineLen = timeline.length;
 
     for (let s = 0, maxs = steps.length, i = 0; s < maxs && i < timelineLen; s += 1) {
-      let substep = steps[s];
+      const substep = steps[s];
 
       for (let j = 0, maxj = substep.length; j < maxj && i < timelineLen; j += 1) {
         if (st.stage === substep[j]) {
@@ -430,8 +430,8 @@ export class Roux implements IReconstructor {
       }
     }
 
-    let moveSum = sum(time.map(sum));
-    let factor = totalTime / moveSum;
+    const moveSum = sum(time.map(sum));
+    const factor = totalTime / moveSum;
 
     for (let i = 0, maxi = time.length; i < maxi; i += 1) {
       for (let j = 0, maxj = time[i].length; j < maxj; j += 1) {
@@ -439,9 +439,9 @@ export class Roux implements IReconstructor {
       }
     }
 
-    let percents = calcPercents(time.map(sum), totalTime);
-    let CMLLPercents = calcPercents(time[2], sum(time[2]));
-    let LSEPercents = calcPercents(time[3], sum(time[3]));
+    const percents = calcPercents(time.map(sum), totalTime);
+    const CMLLPercents = calcPercents(time[2], sum(time[2]));
+    const LSEPercents = calcPercents(time[3], sum(time[3]));
 
     return {
       name: "Roux",

@@ -51,7 +51,7 @@ export class CubeDesk implements CubicDBAdaptor {
   }
 
   toCubicDB(str: string): CubicDBData {
-    let { solves, sessions } = JSON.parse(str);
+    const { solves, sessions } = JSON.parse(str);
     return {
       sessions: (sessions as CubeDeskSession[]).map(s => ({
         _id: s.id,

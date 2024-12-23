@@ -7,7 +7,7 @@ import { EPS, STANDARD_PALETTE } from "@constants";
 import { ScrambleParser } from "@classes/scramble-parser";
 
 export function PYRAMINX(n: number): PuzzleInterface {
-  let pyra: PuzzleInterface = {
+  const pyra: PuzzleInterface = {
     center: new Vector3D(0, 0, 0),
     palette: STANDARD_PALETTE,
     pieces: [],
@@ -28,13 +28,13 @@ export function PYRAMINX(n: number): PuzzleInterface {
   const V = L / Math.sqrt(3);
   const H = Math.sqrt(L ** 2 - V ** 2);
   const R = (Math.sqrt(6) * L) / 12;
-  let PU = UP.mul(H - R);
-  let PR = DOWN.mul(R).add(FRONT.mul(V)).rotate(CENTER, UP, PI_3);
-  let PB = PR.rotate(CENTER, UP, 2 * PI_3);
-  let PL = PB.rotate(CENTER, UP, 2 * PI_3);
+  const PU = UP.mul(H - R);
+  const PR = DOWN.mul(R).add(FRONT.mul(V)).rotate(CENTER, UP, PI_3);
+  const PB = PR.rotate(CENTER, UP, 2 * PI_3);
+  const PL = PB.rotate(CENTER, UP, 2 * PI_3);
 
   pyra.pieces = [];
-  let pieces = pyra.pieces;
+  const pieces = pyra.pieces;
 
   const ANCHORS = [PU, PR, PB, PL];
 
@@ -54,14 +54,14 @@ export function PYRAMINX(n: number): PuzzleInterface {
     UNITS[3][0].cross(UNITS[3][1]).unit(),
   ];
 
-  let createPiece = function (v1: Vector3D, v2: Vector3D, v3: Vector3D): Piece {
-    let pts = [v1, v2, v3];
-    let v = pts[2]
+  const createPiece = function (v1: Vector3D, v2: Vector3D, v3: Vector3D): Piece {
+    const pts = [v1, v2, v3];
+    const v = pts[2]
       .sub(pts[1])
       .cross(pts[1].sub(pts[0]))
       .unit()
       .mul(H / n);
-    let c = pts
+    const c = pts
       .reduce((ac, vc) => ac.add(vc), new Vector3D(0, 0, 0))
       .div(3)
       .add(v);
@@ -93,32 +93,32 @@ export function PYRAMINX(n: number): PuzzleInterface {
     }
   }
 
-  let planes = [
+  const planes = [
     [PL, PB, PR], // D plane
     [PL, PU, PB], // L plane
     [PR, PB, PU], // R plane
     [PR, PU, PL], // F plane
   ];
 
-  let len = PU.sub(PL).div(n).y;
+  const len = PU.sub(PL).div(n).y;
 
   pieces.forEach(p => p.stickers.forEach(s => (s.vecs = pyra.faceVectors.map(v => v.clone()))));
 
-  let trySingleMove = (mv: any): { pieces: Piece[]; u: Vector3D; ang: number } | null => {
-    let moveId = mv[0];
-    let turns = mv[1];
-    let layers = mv[2];
-    let direction = mv[3];
+  const trySingleMove = (mv: any): { pieces: Piece[]; u: Vector3D; ang: number } | null => {
+    const moveId = mv[0];
+    const turns = mv[1];
+    const layers = mv[2];
+    const direction = mv[3];
     const pts1 = planes[moveId];
     const u = Vector3D.cross(pts1[0], pts1[1], pts1[2]).unit();
     const mu = u.mul(-1);
     const pts2 = pts1.map(p => p.add(mu.mul(len * (n - layers))));
     const ang = ((2 * Math.PI) / 3) * turns;
 
-    let pcs = [];
+    const pcs = [];
 
     for (let i = 0, maxi = pieces.length; i < maxi; i += 1) {
-      let d = pieces[i].direction1(pts2[0], u, false, (s: Sticker) => !/^[xd]$/.test(s.color));
+      const d = pieces[i].direction1(pts2[0], u, false, (s: Sticker) => !/^[xd]$/.test(s.color));
 
       if (d * direction < 0) {
         pcs.push(pieces[i]);
@@ -135,22 +135,22 @@ export function PYRAMINX(n: number): PuzzleInterface {
   /// [ id, turns, layers, direction ]
   pyra.move = function (moves: any[]) {
     for (let m = 0, maxm = moves.length; m < maxm; m += 1) {
-      let mv = moves[m];
-      let pcs = trySingleMove(mv);
+      const mv = moves[m];
+      const pcs = trySingleMove(mv);
 
       if (!pcs) {
         return false;
       }
 
-      let { u, ang } = pcs;
+      const { u, ang } = pcs;
       pcs.pieces.forEach(p => p.rotate(CENTER, u, ang, true));
     }
     return true;
   };
 
   pyra.toMove = function (piece: Piece, sticker: Sticker, dir: Vector3D) {
-    let mc = sticker.updateMassCenter();
-    let toMovePieces = pieces.filter(p => p.direction1(mc, dir) === 0);
+    const mc = sticker.updateMassCenter();
+    const toMovePieces = pieces.filter(p => p.direction1(mc, dir) === 0);
     return {
       pieces: toMovePieces,
       ang: (2 * PI) / 3,
@@ -163,17 +163,17 @@ export function PYRAMINX(n: number): PuzzleInterface {
     const MOVES = n >= 2 ? (n - 2) * 20 + 10 : 0;
 
     for (let i = 0; i < MOVES; i += 1) {
-      let p = random(pieces) as Piece;
-      let s = random(p.stickers.filter(s => /^[^xd]$/.test(s.color))) as Sticker;
-      let vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > EPS));
-      let pcs = pyra.toMove(p, s, vec) as ToMoveResult;
+      const p = random(pieces) as Piece;
+      const s = random(p.stickers.filter(s => /^[^xd]$/.test(s.color))) as Sticker;
+      const vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > EPS));
+      const pcs = pyra.toMove(p, s, vec) as ToMoveResult;
       pcs.pieces.forEach((p: Piece) => p.rotate(CENTER, vec, pcs.ang, true));
     }
   };
 
   pyra.applySequence = function (seq: string[]) {
-    let moves = seq.map(mv => ScrambleParser.parsePyraminx(mv)[0]);
-    let res: { u: Vector3D; ang: number; pieces: string[] }[] = [];
+    const moves = seq.map(mv => ScrambleParser.parsePyraminx(mv)[0]);
+    const res: { u: Vector3D; ang: number; pieces: string[] }[] = [];
 
     for (let i = 0, maxi = moves.length; i < maxi; i += 1) {
       let pcs;
@@ -188,7 +188,7 @@ export function PYRAMINX(n: number): PuzzleInterface {
         continue;
       }
 
-      let { u, ang } = pcs;
+      const { u, ang } = pcs;
 
       res.push({ u, ang, pieces: pcs.pieces.map(p => p.id) });
 

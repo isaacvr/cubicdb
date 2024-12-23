@@ -47,38 +47,38 @@ export function PYRAMINX_CRYSTAL(): PuzzleInterface {
   const PLANE_NORM = 0.4472135954999585;
   const FACE_ANG = PI - Math.acos(Math.tan((18 * PI) / 180) * Math.tan((54 * PI) / 180));
 
-  let anchors: Vector3D[] = [];
-  let getRatio = (from: Vector3D, to: Vector3D) => from.add(to.sub(from).mul(RATIO));
+  const anchors: Vector3D[] = [];
+  const getRatio = (from: Vector3D, to: Vector3D) => from.add(to.sub(from).mul(RATIO));
 
   for (let i = 0; i < 5; i += 1) {
     anchors.push(UP.mul(R_INT).add(BACK.mul(RAD).rotate(CENTER, UP, i * INNER_ANG)));
   }
 
   // Helper to find the RATIO and PLANE_NORM
-  let topFace = new Sticker(anchors);
-  let topCenter = topFace.getMassCenter();
+  const topFace = new Sticker(anchors);
+  const topCenter = topFace.getMassCenter();
 
   pCrystal.getAllStickers = getAllStickers.bind(pCrystal);
 
-  let pieces = pCrystal.pieces;
-  let vdir = [UP, ...[0, 1, 2].map(n => topCenter.rotate(CENTER, anchors[n], ANG))];
+  const pieces = pCrystal.pieces;
+  const vdir = [UP, ...[0, 1, 2].map(n => topCenter.rotate(CENTER, anchors[n], ANG))];
 
   // Corners
-  let cornerSticker = new Sticker(
+  const cornerSticker = new Sticker(
     [getRatio(anchors[0], anchors[4]), anchors[0], getRatio(anchors[0], anchors[1]), topCenter],
     "",
     vdir.slice(0, 3)
   );
 
-  let cornerPiece = new Piece(
+  const cornerPiece = new Piece(
     [0, 1, 2].map(n => cornerSticker.rotate(CENTER, anchors[0], ANG * n))
   );
 
-  let topCorners = [0, 1, 2, 3, 4].map(n => cornerPiece.rotate(CENTER, UP, INNER_ANG * n));
+  const topCorners = [0, 1, 2, 3, 4].map(n => cornerPiece.rotate(CENTER, UP, INNER_ANG * n));
 
-  let fv = (pCrystal.faceVectors = [UP, ...topCorners.map(c => c.stickers[2].getOrientation())]);
+  const fv = (pCrystal.faceVectors = [UP, ...topCorners.map(c => c.stickers[2].getOrientation())]);
 
-  let fv1 = pCrystal.faceVectors.slice().map(v => v.rotate(CENTER, RIGHT, PI));
+  const fv1 = pCrystal.faceVectors.slice().map(v => v.rotate(CENTER, RIGHT, PI));
 
   for (let i = 1; i <= 3; i += 1) {
     fv1.splice(1, 0, fv1.pop()!);
@@ -89,7 +89,7 @@ export function PYRAMINX_CRYSTAL(): PuzzleInterface {
   pieces.push(...topCorners);
   pieces.push(...topCorners.map(c => c.rotate(CENTER, RIGHT, PI)));
 
-  let midCorners = topCorners.reduce(
+  const midCorners = topCorners.reduce(
     (acc: Piece[], tc, v) => [
       ...acc,
       ...[1, 2].map(n => tc.rotate(CENTER, fv[v + 1], INNER_ANG * n)),
@@ -100,23 +100,23 @@ export function PYRAMINX_CRYSTAL(): PuzzleInterface {
   pieces.push(...midCorners);
 
   // Edges
-  let topSticker = new Sticker(
+  const topSticker = new Sticker(
     [getRatio(anchors[0], anchors[1]), getRatio(anchors[1], anchors[0]), topCenter],
     "",
     vdir
   );
 
-  let topEdge = new Piece([
+  const topEdge = new Piece([
     topSticker,
     topSticker.reflect1(CENTER, Vector3D.cross(CENTER, anchors[0], anchors[1]), true),
   ]);
 
-  let topEdges = [0, 1, 2, 3, 4].map(n => topEdge.rotate(CENTER, UP, INNER_ANG * n));
-  let bottomEdges = topEdges.map(e => e.rotate(CENTER, RIGHT, PI));
+  const topEdges = [0, 1, 2, 3, 4].map(n => topEdge.rotate(CENTER, UP, INNER_ANG * n));
+  const bottomEdges = topEdges.map(e => e.rotate(CENTER, RIGHT, PI));
 
   pieces.push(...topEdges, ...bottomEdges);
 
-  let midTopEdges = topEdges.reduce(
+  const midTopEdges = topEdges.reduce(
     (acc: Piece[], te, v) => [
       ...acc,
       ...[1, 2, 3].map(n => te.rotate(CENTER, fv[v + 1], INNER_ANG * n)),
@@ -136,12 +136,12 @@ export function PYRAMINX_CRYSTAL(): PuzzleInterface {
 
   assignColors(pCrystal, pCrystal.faceColors);
 
-  let getPointsFromSticker = (s: Sticker) => {
-    let mc = s.getMassCenter();
+  const getPointsFromSticker = (s: Sticker) => {
+    const mc = s.getMassCenter();
     return s.points.map(p => p.add(mc.unit().mul(-0.5)));
   };
 
-  let planes = [
+  const planes = [
     getPointsFromSticker(topEdge.stickers[0]), // U
     getPointsFromSticker(midTopEdges[6].stickers[0]), // L
     getPointsFromSticker(midTopEdges[9].stickers[0]), // F
@@ -160,22 +160,22 @@ export function PYRAMINX_CRYSTAL(): PuzzleInterface {
     midTopEdges[12].stickers[0].points.map(p => p.clone()), // [r]
   ];
 
-  let trySingleMove = (mv: any): { pieces: Piece[]; u: Vector3D; ang: number } | null => {
-    let moveId = mv[0];
+  const trySingleMove = (mv: any): { pieces: Piece[]; u: Vector3D; ang: number } | null => {
+    const moveId = mv[0];
 
     if (moveId >= planes.length) {
       return null;
     }
 
-    let turns = mv[1];
+    const turns = mv[1];
     const pts1 = planes[moveId].map(e => e.clone());
     const u = Vector3D.cross(pts1[0], pts1[1], pts1[2]).unit();
     const ang = INNER_ANG * turns;
 
-    let pcs = [];
+    const pcs = [];
 
     for (let i = 0, maxi = pieces.length; i < maxi; i += 1) {
-      let d = pieces[i].direction1(pts1[0], u, true);
+      const d = pieces[i].direction1(pts1[0], u, true);
 
       // if (d === 0) {
       //   console.log("Invalid move. Piece intersection detected.", "URFDLB"[moveId], turns, mv);
@@ -197,14 +197,14 @@ export function PYRAMINX_CRYSTAL(): PuzzleInterface {
 
   pCrystal.move = function (moves: any[]) {
     for (let m = 0, maxm = moves.length; m < maxm; m += 1) {
-      let mv = moves[m];
-      let pcs = trySingleMove(mv);
+      const mv = moves[m];
+      const pcs = trySingleMove(mv);
 
       if (!pcs) {
         return false;
       }
 
-      let { u, ang } = pcs;
+      const { u, ang } = pcs;
       pcs.pieces.forEach(p => p.rotate(CENTER, u, ang, true));
     }
 
@@ -213,8 +213,8 @@ export function PYRAMINX_CRYSTAL(): PuzzleInterface {
 
   pCrystal.toMove = function (piece: Piece, sticker: Sticker, dir: Vector3D) {
     // let mc = sticker.updateMassCenter();
-    let mc = dir.unit().mul(PLANE_NORM);
-    let toMovePieces = pieces.filter(p => p.direction1(mc, dir, true) >= 0);
+    const mc = dir.unit().mul(PLANE_NORM);
+    const toMovePieces = pieces.filter(p => p.direction1(mc, dir, true) >= 0);
 
     return {
       pieces: toMovePieces,
@@ -228,11 +228,11 @@ export function PYRAMINX_CRYSTAL(): PuzzleInterface {
     const MOVES = 100;
 
     for (let i = 0; i < MOVES; i += 1) {
-      let p = random(pieces) as Piece;
-      let s = random(p.stickers.filter(s => !/^[xd]{1}$/.test(s.color))) as Sticker;
-      let vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > EPS));
-      let pcs = pCrystal.toMove(p, s, vec) as ToMoveResult;
-      let cant = 1 + random(4);
+      const p = random(pieces) as Piece;
+      const s = random(p.stickers.filter(s => !/^[xd]{1}$/.test(s.color))) as Sticker;
+      const vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > EPS));
+      const pcs = pCrystal.toMove(p, s, vec) as ToMoveResult;
+      const cant = 1 + random(4);
       pcs.pieces.forEach((p: Piece) => p.rotate(CENTER, vec, pcs.ang * cant, true));
     }
   };

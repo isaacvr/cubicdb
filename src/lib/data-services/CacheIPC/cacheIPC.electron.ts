@@ -72,13 +72,13 @@ export class CacheElectronIPC implements CacheIPC {
   }
 
   async getStorageInfo(): Promise<IStorageInfo> {
-    let algorithms = await this.ipc.algorithmsStorage();
-    let cache = await this.ipc.cacheStorage();
-    let vcache = await this.ipc.vCacheStorage();
-    let sessions = await this.ipc.sessionsStorage();
-    let solves = await this.ipc.solvesStorage();
-    let tutorials = await this.ipc.tutorialsStorage();
-    let reconstructions = await this.ipc.reconstructionsStorage();
+    const algorithms = await this.ipc.algorithmsStorage();
+    const cache = await this.ipc.cacheStorage();
+    const vcache = await this.ipc.vCacheStorage();
+    const sessions = await this.ipc.sessionsStorage();
+    const solves = await this.ipc.solvesStorage();
+    const tutorials = await this.ipc.tutorialsStorage();
+    const reconstructions = await this.ipc.reconstructionsStorage();
 
     return {
       algorithms,

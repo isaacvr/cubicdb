@@ -25,7 +25,7 @@ export class ThemeBrowserIPC implements ThemeIPC {
 
     if (!save) return;
 
-    let configIPC = getConfigIPC();
+    const configIPC = getConfigIPC();
     configIPC.global.theme = t.id;
     configIPC.saveConfig();
   }

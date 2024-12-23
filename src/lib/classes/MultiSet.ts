@@ -14,7 +14,7 @@ export class MultiSet<T = number> {
       fin = this.data.length;
 
     while (ini < fin) {
-      let mid = (ini + fin) >> 1;
+      const mid = (ini + fin) >> 1;
 
       if (this.data[mid] === v) {
         return mid;
@@ -32,7 +32,7 @@ export class MultiSet<T = number> {
   }
 
   add(v: T) {
-    let pos = this.search(v, true);
+    const pos = this.search(v, true);
     this.data.splice(pos, 0, v);
   }
 
@@ -45,7 +45,7 @@ export class MultiSet<T = number> {
   }
 
   delete(v: T) {
-    let pos = this.search(v);
+    const pos = this.search(v);
 
     if (pos > -1) {
       this.data.splice(pos, 1);
@@ -65,7 +65,7 @@ export class MultiSet<T = number> {
 
   deleteAll(v: T) {
     while (true) {
-      let pos = this.search(v);
+      const pos = this.search(v);
       if (pos === -1) break;
       this.data.splice(pos, 1);
     }

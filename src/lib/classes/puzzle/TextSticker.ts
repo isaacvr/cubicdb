@@ -14,7 +14,7 @@ export class TextSticker extends Sticker {
   }
 
   clone(): TextSticker {
-    let pts = [this.points[0], this.points[1], this.points[2], this.points[3]] as const;
+    const pts = [this.points[0], this.points[1], this.points[2], this.points[3]] as const;
     return new TextSticker(pts, this.text, this.color);
   }
 }

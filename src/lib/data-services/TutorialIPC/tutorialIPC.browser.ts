@@ -31,7 +31,7 @@ export class TutorialBrowserIPC implements TutorialIPC {
       this.isInit = true;
     } else {
       await new Promise(res => {
-        let itv = setInterval(() => {
+        const itv = setInterval(() => {
           if (!this.isInit) {
             clearInterval(itv);
             res(null);
@@ -55,7 +55,7 @@ export class TutorialBrowserIPC implements TutorialIPC {
   async getTutorial(_puzzle: string, _shortName: string, _lang: string) {
     await this.init();
     for (let i = 0, maxi = tuts.length; i < maxi; i += 1) {
-      let { puzzle, shortName, lang } = tuts[i];
+      const { puzzle, shortName, lang } = tuts[i];
       if (_puzzle === puzzle && _shortName === shortName && _lang === lang) {
         return tuts[i];
       }

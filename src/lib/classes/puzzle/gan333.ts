@@ -39,7 +39,7 @@ export function GAN333(): PuzzleInterface {
     move: () => false,
     roundParams: {
       rd: (s: Sticker, i: number) => {
-        let acc = s.points.reduce((acc, v) => acc + (edgePoint(v) >= 2 ? 1 : 0), 0);
+        const acc = s.points.reduce((acc, v) => acc + (edgePoint(v) >= 2 ? 1 : 0), 0);
         const smallRound = 0.05;
 
         if (acc === 3) {
@@ -79,15 +79,15 @@ export function GAN333(): PuzzleInterface {
   const PI_2 = PI / 2;
   const vdir = [RIGHT, FRONT, UP];
 
-  let pieces = gan.pieces;
+  const pieces = gan.pieces;
 
-  let sticker = new Sticker(
+  const sticker = new Sticker(
     [ref, ref.add(FRONT.mul(len)), ref.add(FRONT.add(RIGHT).mul(len)), ref.add(RIGHT.mul(len))],
     undefined,
     vdir
   );
 
-  let stickerMB = new Sticker(
+  const stickerMB = new Sticker(
     [
       magnetRef,
       magnetRef.add(FRONT.mul(MF)),
@@ -99,10 +99,10 @@ export function GAN333(): PuzzleInterface {
     true
   ).add(UP.mul(0.005), true);
 
-  let stickerM = scaleSticker(stickerMB, 0.6);
+  const stickerM = scaleSticker(stickerMB, 0.6);
   stickerM.color = stickerM.oColor = "cornerMagnet";
 
-  let cornerPiece = new Piece([
+  const cornerPiece = new Piece([
     sticker,
     sticker.rotate(CENTER, ref, (2 * PI) / 3),
     sticker.rotate(CENTER, ref, (-2 * PI) / 3),
@@ -124,7 +124,7 @@ export function GAN333(): PuzzleInterface {
   stickerM.color = stickerM.oColor = "edgeMagnet";
   stickerMB.nonInteractive = stickerM.nonInteractive = true;
 
-  let edgePiece = new Piece([
+  const edgePiece = new Piece([
     sticker.add(RIGHT.mul(len)),
     sticker.add(RIGHT.mul(len)).rotate(CENTER, BACK.add(UP), PI),
     ...[sticker, stickerMB, stickerM].map(s =>
@@ -134,7 +134,7 @@ export function GAN333(): PuzzleInterface {
         .add(RIGHT.mul(len))
     ),
     ...[sticker, stickerMB, stickerM].map((s, p) => {
-      let st = s.rotate(CENTER, ref, (-2 * PI) / 3);
+      const st = s.rotate(CENTER, ref, (-2 * PI) / 3);
       return p ? st.add(RIGHT.mul(len)) : st.reflect1(cornerCenter, RIGHT);
     }),
   ]);
@@ -145,7 +145,7 @@ export function GAN333(): PuzzleInterface {
     pieces.push(edgePiece.rotate(CENTER, FRONT, PI).rotate(CENTER, UP, PI_2 * i));
   }
 
-  let centerPiece = new Piece([
+  const centerPiece = new Piece([
     sticker.add(FRONT.add(RIGHT).mul(len)),
     sticker.add(FRONT.add(RIGHT).add(DOWN).mul(len)),
   ]);
@@ -163,12 +163,12 @@ export function GAN333(): PuzzleInterface {
 
   const MOVE_MAP = "URFDLB";
 
-  let ref1 = ref
+  const ref1 = ref
     .add(RIGHT.mul(n * len))
     .add(FRONT.mul(n * len))
     .add(DOWN.mul(n * len));
 
-  let planes = [
+  const planes = [
     [ref, ref.add(FRONT), ref.add(RIGHT)],
     [ref1, ref1.add(BACK), ref1.add(UP)],
     [ref1, ref1.add(UP), ref1.add(LEFT)],
@@ -179,10 +179,10 @@ export function GAN333(): PuzzleInterface {
 
   gan.move = function (moves: any[]) {
     for (let m = 0, maxm = moves.length; m < maxm; m += 1) {
-      let mv = moves[m];
-      let moveId = MOVE_MAP.indexOf(mv[1]);
-      let layers = mv[0] === n ? mv[0] + 1 : mv[0];
-      let turns = mv[2];
+      const mv = moves[m];
+      const moveId = MOVE_MAP.indexOf(mv[1]);
+      const layers = mv[0] === n ? mv[0] + 1 : mv[0];
+      const turns = mv[2];
       const pts1 = planes[moveId];
       const u = Vector3D.cross(pts1[0], pts1[1], pts1[2]).unit();
       const mu = u.mul(-1);
@@ -190,7 +190,7 @@ export function GAN333(): PuzzleInterface {
       const ang = (Math.PI / 2) * turns;
 
       for (let i = 0, maxi = pieces.length; i < maxi; i += 1) {
-        let d = pieces[i].direction(pts2[0], pts2[1], pts2[2], true);
+        const d = pieces[i].direction(pts2[0], pts2[1], pts2[2], true);
 
         if (d === 0) {
           console.log("Invalid move. Piece intersection detected.", "URFDLB"[moveId], turns, mv);
@@ -207,8 +207,8 @@ export function GAN333(): PuzzleInterface {
   };
 
   gan.toMove = function (piece: Piece, sticker: Sticker, dir: Vector3D) {
-    let mc = sticker.updateMassCenter();
-    let toMovePieces = pieces.filter(p => p.direction1(mc, dir) === 0);
+    const mc = sticker.updateMassCenter();
+    const toMovePieces = pieces.filter(p => p.direction1(mc, dir) === 0);
     return {
       pieces: toMovePieces,
       ang: PI_2,
@@ -216,8 +216,8 @@ export function GAN333(): PuzzleInterface {
   };
 
   gan.toMoveSeq = function (m: string) {
-    let mv = ["R", "L", "U", "D", "F", "B"];
-    let mc = [
+    const mv = ["R", "L", "U", "D", "F", "B"];
+    const mc = [
       new Vector3D(0.9, 0, 0),
       new Vector3D(-0.9, 0, 0),
       new Vector3D(0, 0.9, 0),
@@ -226,7 +226,7 @@ export function GAN333(): PuzzleInterface {
       new Vector3D(0, 0, -0.9),
     ];
 
-    let pos = mv.indexOf(m[0]);
+    const pos = mv.indexOf(m[0]);
 
     if (pos < 0) {
       return {
@@ -238,9 +238,9 @@ export function GAN333(): PuzzleInterface {
       };
     }
 
-    let dir = m[1] === "'" ? 1 : -1;
-    let u: any = mc[pos];
-    let toMovePieces = pieces.filter(p => p.direction1(u, u) === 0);
+    const dir = m[1] === "'" ? 1 : -1;
+    const u: any = mc[pos];
+    const toMovePieces = pieces.filter(p => p.direction1(u, u) === 0);
 
     return {
       ang: PI_2 * dir,

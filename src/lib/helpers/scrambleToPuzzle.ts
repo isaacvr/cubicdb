@@ -8,7 +8,7 @@ export function scrambleToPuzzle(scramble: string, mode: string) {
   let cb: Puzzle[] = [];
 
   if (MISC.some(mmode => (typeof mmode === "string" ? mmode === mode : mmode.indexOf(mode) > -1))) {
-    let options: PuzzleOptions[] = all.pScramble.options.get(mode)! as PuzzleOptions[];
+    const options: PuzzleOptions[] = all.pScramble.options.get(mode)! as PuzzleOptions[];
 
     cb = ScrambleParser.parseMisc(scramble, mode).map((scr, pos) =>
       Puzzle.fromSequence(

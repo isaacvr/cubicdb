@@ -21,16 +21,16 @@ export function GHOST(): PuzzleInterface {
   };
 
   ghost.getAllStickers = getAllStickers.bind(ghost);
-  let pieces = ghost.pieces;
+  const pieces = ghost.pieces;
 
   // Constants
   const PI = Math.PI;
   const PI_2 = PI / 2;
 
   // Piece type 1
-  let topSticker = new Sticker([cmd("ULB"), cmd("ULF"), cmd("URF"), cmd("URB")]);
+  const topSticker = new Sticker([cmd("ULB"), cmd("ULF"), cmd("URF"), cmd("URB")]);
 
-  let topPiece = new Piece([
+  const topPiece = new Piece([
     ...[0, 1, 2].map(n => topSticker.rotate(CENTER, cmd("ULB"), (2 * n * PI) / 3)),
     ...[0, 1, 2].map(n =>
       topSticker
@@ -39,7 +39,7 @@ export function GHOST(): PuzzleInterface {
     ),
   ]);
 
-  let planes = [RIGHT, UP, FRONT, DOWN, LEFT, BACK].map(v => [v.mul(1 / 3), v.clone()]);
+  const planes = [RIGHT, UP, FRONT, DOWN, LEFT, BACK].map(v => [v.mul(1 / 3), v.clone()]);
   let pieceList = [topPiece];
 
   planes.forEach(plane => {
@@ -65,7 +65,7 @@ export function GHOST(): PuzzleInterface {
   }
 
   for (let i = 0, maxi = planes.length; i < maxi; i += 1) {
-    let pcs = pieceList.filter(pc => pc.direction1(planes[i][0], planes[i][1], true) > 0);
+    const pcs = pieceList.filter(pc => pc.direction1(planes[i][0], planes[i][1], true) > 0);
 
     pcs.forEach(pc =>
       pc.stickers.forEach(
@@ -78,10 +78,10 @@ export function GHOST(): PuzzleInterface {
 
   // Interaction
   ghost.toMove = function (pc: Piece, st: Sticker, u: Vector3D) {
-    let pl = planes.filter(p => p[1].equals(u))[0];
-    let cnt = pl[0].sub(ghost.center).mul(1.5).add(ghost.center);
-    let v = pl[1];
-    let pcs = pieces.filter(
+    const pl = planes.filter(p => p[1].equals(u))[0];
+    const cnt = pl[0].sub(ghost.center).mul(1.5).add(ghost.center);
+    const v = pl[1];
+    const pcs = pieces.filter(
       p => p.direction1(cnt, v, false, (x: Sticker) => !/[xd]/.test(x.color)) >= 0
     );
 
@@ -97,23 +97,23 @@ export function GHOST(): PuzzleInterface {
     const MOVES = 30;
 
     for (let i = 0; i < MOVES; i += 1) {
-      let p = random(pieces) as Piece;
+      const p = random(pieces) as Piece;
       if (!p) {
         i -= 1;
         continue;
       }
-      let s = random(p.stickers.filter(s => !/^[xd]{1}$/.test(s.color))) as Sticker;
+      const s = random(p.stickers.filter(s => !/^[xd]{1}$/.test(s.color))) as Sticker;
       if (!s) {
         i -= 1;
         continue;
       }
-      let vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > EPS));
+      const vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > EPS));
       if (!vec) {
         i -= 1;
         continue;
       }
-      let pcs = ghost.toMove!(p, s, vec) as ToMoveResult;
-      let cant = 1 + random(3);
+      const pcs = ghost.toMove!(p, s, vec) as ToMoveResult;
+      const cant = 1 + random(3);
       pcs.pieces.forEach((p: Piece) => p.rotate(ghost.center, vec, pcs.ang * cant, true));
     }
   };

@@ -19,15 +19,16 @@
   Modified by Isaac Vega <isaacvega1996@gmail.com>
  */
 
-import { circle, createPrun, get8Perm, getPruning, rn, set8Perm } from '../lib/mathlib';
-import { regScrambler } from './scramble';
+import { circle, createPrun, get8Perm, getPruning, rn, set8Perm } from "../lib/mathlib";
+import { regScrambler } from "./scramble";
 
-let cmv = [];
-let cprun = [];
+const cmv = [];
+const cprun = [];
 
 function initCornerMoveTable() {
-  let g = [], temp;
-  
+  let g = [],
+    temp;
+
   for (let i = 0; i < 40320; i++) {
     cmv[i] = [];
   }
@@ -48,7 +49,7 @@ function doEdgeMove(idx, m) {
   if (m < 2) {
     return idx;
   }
-  let g = set8Perm([], idx, 3);
+  const g = set8Perm([], idx, 3);
   if (m == 2) {
     circle(g, 0, 1);
   } else if (m == 3) {
@@ -60,7 +61,7 @@ function doEdgeMove(idx, m) {
 let initRet = false;
 
 function init() {
-  if ( initRet ) {
+  if (initRet) {
     return;
   }
   initRet = true;
@@ -97,7 +98,7 @@ function generateScramble() {
     c = rn(40320);
     b = rn(6);
   } while (b + c == 0);
-  let d = [];
+  const d = [];
   for (let a = 0; a < 99; a++) {
     if (search(c, b, a, -1, d)) {
       break;
@@ -106,4 +107,4 @@ function generateScramble() {
   return d.reverse().join(" ");
 }
 
-regScrambler('223', generateScramble)
+regScrambler("223", generateScramble);

@@ -1,4 +1,12 @@
-import type { BluetoothCubeInfo, FONT_NAME, LanguageCode, UpdateCommand } from "@interfaces";
+import type {
+  BluetoothCubeInfo,
+  ContestPDFOptions,
+  ContestPDFResult,
+  FONT_NAME,
+  LanguageCode,
+  Sheet,
+  UpdateCommand,
+} from "@interfaces";
 import type { ConfigIPC } from "./configIPC.interface";
 import type { GANInput } from "$lib/timer/adaptors/GAN";
 import type { QiYiSmartTimerInput } from "$lib/timer/adaptors/QY-Timer";
@@ -94,4 +102,19 @@ export class ConfigNoopIPC implements ConfigIPC {
   getPath(path: string) {
     return null;
   }
+
+  async generateContestPDF(args: ContestPDFOptions): Promise<ContestPDFResult> {
+    return {
+      buffer: Buffer.from([]),
+      mode: "",
+      name: "",
+      round: 0,
+    };
+  }
+
+  async zipPDF(s: { name: string; files: Sheet[] }): Promise<string> {
+    return "";
+  }
+
+  async revealFile(f: string): Promise<void> {}
 }

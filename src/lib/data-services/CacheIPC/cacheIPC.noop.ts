@@ -38,13 +38,13 @@ export class CacheNoopIPC implements CacheIPC {
 
   // TODO
   async getStorageInfo(): Promise<IStorageInfo> {
-    let algorithms = 0;
-    let cache = 0;
-    let vcache = 0;
-    let sessions = 0;
-    let solves = 0;
-    let tutorials = 0;
-    let reconstructions = 0;
+    const algorithms = 0;
+    const cache = 0;
+    const vcache = 0;
+    const sessions = 0;
+    const solves = 0;
+    const tutorials = 0;
+    const reconstructions = 0;
 
     return {
       algorithms,

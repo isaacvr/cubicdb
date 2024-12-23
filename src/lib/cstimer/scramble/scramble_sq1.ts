@@ -36,12 +36,12 @@ function FullCube_doMove(obj, move) {
   if (move > 24) {
     move = 48 - move;
     temp = obj.ul;
-    obj.ul = (obj.ul >> move | obj.ur << 24 - move) & 16777215;
-    obj.ur = (obj.ur >> move | temp << 24 - move) & 16777215;
+    obj.ul = ((obj.ul >> move) | (obj.ur << (24 - move))) & 16777215;
+    obj.ur = ((obj.ur >> move) | (temp << (24 - move))) & 16777215;
   } else if (move > 0) {
     temp = obj.ul;
-    obj.ul = (obj.ul << move | obj.ur >> 24 - move) & 16777215;
-    obj.ur = (obj.ur << move | temp >> 24 - move) & 16777215;
+    obj.ul = ((obj.ul << move) | (obj.ur >> (24 - move))) & 16777215;
+    obj.ur = ((obj.ur << move) | (temp >> (24 - move))) & 16777215;
   } else if (move == 0) {
     temp = obj.ur;
     obj.ur = obj.dl;
@@ -50,13 +50,13 @@ function FullCube_doMove(obj, move) {
   } else if (move >= -24) {
     move = -move;
     temp = obj.dl;
-    obj.dl = (obj.dl << move | obj.dr >> 24 - move) & 16777215;
-    obj.dr = (obj.dr << move | temp >> 24 - move) & 16777215;
+    obj.dl = ((obj.dl << move) | (obj.dr >> (24 - move))) & 16777215;
+    obj.dr = ((obj.dr << move) | (temp >> (24 - move))) & 16777215;
   } else if (move < -24) {
     move = 48 + move;
     temp = obj.dl;
-    obj.dl = (obj.dl >> move | obj.dr << 24 - move) & 16777215;
-    obj.dr = (obj.dr >> move | temp << 24 - move) & 16777215;
+    obj.dl = ((obj.dl >> move) | (obj.dr << (24 - move))) & 16777215;
+    obj.dr = ((obj.dr >> move) | (temp << (24 - move))) & 16777215;
   }
 }
 
@@ -81,20 +81,22 @@ function FullCube_getShapeIdx(obj) {
   urx = obj.ur & 1118481;
   urx |= urx >> 3;
   urx |= urx >> 6;
-  urx = urx & 15 | urx >> 12 & 48;
+  urx = (urx & 15) | ((urx >> 12) & 48);
   ulx = obj.ul & 1118481;
   ulx |= ulx >> 3;
   ulx |= ulx >> 6;
-  ulx = ulx & 15 | ulx >> 12 & 48;
+  ulx = (ulx & 15) | ((ulx >> 12) & 48);
   drx = obj.dr & 1118481;
   drx |= drx >> 3;
   drx |= drx >> 6;
-  drx = drx & 15 | drx >> 12 & 48;
+  drx = (drx & 15) | ((drx >> 12) & 48);
   dlx = obj.dl & 1118481;
   dlx |= dlx >> 3;
   dlx |= dlx >> 6;
-  dlx = dlx & 15 | dlx >> 12 & 48;
-  return Shape_getShape2Idx(FullCube_getParity(obj) << 24 | ulx << 18 | urx << 12 | dlx << 6 | drx);
+  dlx = (dlx & 15) | ((dlx >> 12) & 48);
+  return Shape_getShape2Idx(
+    (FullCube_getParity(obj) << 24) | (ulx << 18) | (urx << 12) | (dlx << 6) | drx
+  );
 }
 
 function FullCube_getSquare(obj, sq) {
@@ -105,20 +107,24 @@ function FullCube_getSquare(obj, sq) {
   sq.cornperm = get8Perm(obj.prm);
   sq.topEdgeFirst = FullCube_pieceAt(obj, 0) == FullCube_pieceAt(obj, 1);
   a = sq.topEdgeFirst ? 2 : 0;
-  for (b = 0; b < 4; a += 3, ++b)
-    obj.prm[b] = FullCube_pieceAt(obj, a) >> 1;
+  for (b = 0; b < 4; a += 3, ++b) obj.prm[b] = FullCube_pieceAt(obj, a) >> 1;
   sq.botEdgeFirst = FullCube_pieceAt(obj, 12) == FullCube_pieceAt(obj, 13);
   a = sq.botEdgeFirst ? 14 : 12;
-  for (; b < 8; a += 3, ++b)
-    obj.prm[b] = FullCube_pieceAt(obj, a) >> 1;
+  for (; b < 8; a += 3, ++b) obj.prm[b] = FullCube_pieceAt(obj, a) >> 1;
   sq.edgeperm = get8Perm(obj.prm);
   sq.ml = obj.ml;
 }
 
 function FullCube_pieceAt(obj, idx) {
   let ret;
-  idx < 6 ? (ret = obj.ul >> (5 - idx << 2)) : idx < 12 ? (ret = obj.ur >> (11 - idx << 2)) : idx < 18 ? (ret = obj.dl >> (17 - idx << 2)) : (ret = obj.dr >> (23 - idx << 2));
-  return (ret & 15);
+  idx < 6
+    ? (ret = obj.ul >> ((5 - idx) << 2))
+    : idx < 12
+      ? (ret = obj.ur >> ((11 - idx) << 2))
+      : idx < 18
+        ? (ret = obj.dl >> ((17 - idx) << 2))
+        : (ret = obj.dr >> ((23 - idx) << 2));
+  return ret & 15;
 }
 
 function FullCube_setPiece(obj, idx, value) {
@@ -144,12 +150,13 @@ function FullCube_FullCube__Ljava_lang_String_2V() {
 
 function FullCube_randomEP() {
   let f, i, shape, edge, n_edge, n_corner, rnd, m;
-  f = new FullCube_FullCube__Ljava_lang_String_2V;
+  f = new FullCube_FullCube__Ljava_lang_String_2V();
   shape = Shape_ShapeIdx[FullCube_getShapeIdx(f) >> 1];
   edge = 0x01234567 << 1;
   n_edge = 8;
   for (i = 0; i < 24; i++) {
-    if (((shape >> i) & 1) == 0) { //edge
+    if (((shape >> i) & 1) == 0) {
+      //edge
       rnd = rn(n_edge) << 2;
       FullCube_setPiece(f, 23 - i, (edge >> rnd) & 0xf);
       m = (1 << rnd) - 1;
@@ -168,19 +175,21 @@ function FullCube_randomCube(indice?) {
   if (indice === undefined) {
     indice = rn(3678);
   }
-  f = new FullCube_FullCube__Ljava_lang_String_2V;
+  f = new FullCube_FullCube__Ljava_lang_String_2V();
   shape = Shape_ShapeIdx[indice];
-  corner = 0x01234567 << 1 | 0x11111111;
+  corner = (0x01234567 << 1) | 0x11111111;
   edge = 0x01234567 << 1;
   n_corner = n_edge = 8;
   for (i = 0; i < 24; i++) {
-    if (((shape >> i) & 1) == 0) { //edge
+    if (((shape >> i) & 1) == 0) {
+      //edge
       rnd = rn(n_edge) << 2;
       FullCube_setPiece(f, 23 - i, (edge >> rnd) & 0xf);
       m = (1 << rnd) - 1;
       edge = (edge & m) + ((edge >> 4) & ~m);
       --n_edge;
-    } else { //corner
+    } else {
+      //corner
       rnd = rn(n_corner) << 2;
       FullCube_setPiece(f, 23 - i, (corner >> rnd) & 0xf);
       FullCube_setPiece(f, 22 - i, (corner >> rnd) & 0xf);
@@ -196,7 +205,7 @@ function FullCube_randomCube(indice?) {
 
 function FullCube() {}
 
-let _ = FullCube_FullCube__Ljava_lang_String_2V.prototype = FullCube.prototype;
+let _ = (FullCube_FullCube__Ljava_lang_String_2V.prototype = FullCube.prototype);
 _.dl = 10062778;
 _.dr = 14536702;
 _.ml = 0;
@@ -213,9 +222,24 @@ function Search_init2(obj) {
   edge = obj.Search_sq.edgeperm;
   corner = obj.Search_sq.cornperm;
   ml = obj.Search_sq.ml;
-  prun = Math.max(SquarePrun[obj.Search_sq.edgeperm << 1 | ml], SquarePrun[obj.Search_sq.cornperm << 1 | ml]);
+  prun = Math.max(
+    SquarePrun[(obj.Search_sq.edgeperm << 1) | ml],
+    SquarePrun[(obj.Search_sq.cornperm << 1) | ml]
+  );
   for (i = prun; i < obj.Search_maxlen2; ++i) {
-    if (Search_phase2(obj, edge, corner, obj.Search_sq.topEdgeFirst, obj.Search_sq.botEdgeFirst, ml, i, obj.Search_length1, 0)) {
+    if (
+      Search_phase2(
+        obj,
+        edge,
+        corner,
+        obj.Search_sq.topEdgeFirst,
+        obj.Search_sq.botEdgeFirst,
+        ml,
+        i,
+        obj.Search_length1,
+        0
+      )
+    ) {
       for (j = 0; j < i; ++j) {
         FullCube_doMove(obj.Search_d, obj.Search_move[obj.Search_length1 + j]);
       }
@@ -234,12 +258,12 @@ function Search_move2string(obj, len) {
     let val = obj.Search_move[i];
     if (val > 0) {
       val = 12 - val;
-      top = (val > 6) ? (val - 12) : val;
+      top = val > 6 ? val - 12 : val;
     } else if (val < 0) {
       val = 12 + val;
-      bottom = (val > 6) ? (val - 12) : val;
+      bottom = val > 6 ? val - 12 : val;
     } else {
-      let twst = " /";
+      const twst = " /";
       // if (i == obj.Search_length1 - 1) {
       //   twst = "`/`";
       // }
@@ -251,7 +275,8 @@ function Search_move2string(obj, len) {
       top = bottom = 0;
     }
   }
-  if (top == 0 && bottom == 0) {} else {
+  if (top == 0 && bottom == 0) {
+  } else {
     s += " (" + top + "," + bottom + ") ";
   }
   return s; // + " (" + len + "t)";
@@ -325,9 +350,24 @@ function Search_phase2(obj, edge, corner, topEdgeFirst, botEdgeFirst, ml, maxl, 
   if (lm != 0 && topEdgeFirst == botEdgeFirst) {
     edgex = Square_TwistMove[edge];
     cornerx = Square_TwistMove[corner];
-    if (SquarePrun[edgex << 1 | 1 - ml] < maxl && SquarePrun[cornerx << 1 | 1 - ml] < maxl) {
+    if (
+      SquarePrun[(edgex << 1) | (1 - ml)] < maxl &&
+      SquarePrun[(cornerx << 1) | (1 - ml)] < maxl
+    ) {
       obj.Search_move[depth] = 0;
-      if (Search_phase2(obj, edgex, cornerx, topEdgeFirst, botEdgeFirst, 1 - ml, maxl - 1, depth + 1, 0)) {
+      if (
+        Search_phase2(
+          obj,
+          edgex,
+          cornerx,
+          topEdgeFirst,
+          botEdgeFirst,
+          1 - ml,
+          maxl - 1,
+          depth + 1,
+          0
+        )
+      ) {
         return true;
       }
     }
@@ -337,23 +377,35 @@ function Search_phase2(obj, edge, corner, topEdgeFirst, botEdgeFirst, ml, maxl, 
     edgex = topEdgeFirstx ? Square_TopMove[edge] : edge;
     cornerx = topEdgeFirstx ? corner : Square_TopMove[corner];
     m = topEdgeFirstx ? 1 : 2;
-    prun1 = SquarePrun[edgex << 1 | ml];
-    prun2 = SquarePrun[cornerx << 1 | ml];
+    prun1 = SquarePrun[(edgex << 1) | ml];
+    prun2 = SquarePrun[(cornerx << 1) | ml];
     while (m < 12 && prun1 <= maxl && prun1 <= maxl) {
       if (prun1 < maxl && prun2 < maxl) {
         obj.Search_move[depth] = m;
-        if (Search_phase2(obj, edgex, cornerx, topEdgeFirstx, botEdgeFirst, ml, maxl - 1, depth + 1, 1)) {
+        if (
+          Search_phase2(
+            obj,
+            edgex,
+            cornerx,
+            topEdgeFirstx,
+            botEdgeFirst,
+            ml,
+            maxl - 1,
+            depth + 1,
+            1
+          )
+        ) {
           return true;
         }
       }
       topEdgeFirstx = !topEdgeFirstx;
       if (topEdgeFirstx) {
         edgex = Square_TopMove[edgex];
-        prun1 = SquarePrun[edgex << 1 | ml];
+        prun1 = SquarePrun[(edgex << 1) | ml];
         m += 1;
       } else {
         cornerx = Square_TopMove[cornerx];
-        prun2 = SquarePrun[cornerx << 1 | ml];
+        prun2 = SquarePrun[(cornerx << 1) | ml];
         m += 2;
       }
     }
@@ -363,23 +415,35 @@ function Search_phase2(obj, edge, corner, topEdgeFirst, botEdgeFirst, ml, maxl, 
     edgex = botEdgeFirstx ? Square_BottomMove[edge] : edge;
     cornerx = botEdgeFirstx ? corner : Square_BottomMove[corner];
     m = botEdgeFirstx ? 1 : 2;
-    prun1 = SquarePrun[edgex << 1 | ml];
-    prun2 = SquarePrun[cornerx << 1 | ml];
+    prun1 = SquarePrun[(edgex << 1) | ml];
+    prun2 = SquarePrun[(cornerx << 1) | ml];
     while (m < (maxl > 6 ? 6 : 12) && prun1 <= maxl && prun1 <= maxl) {
       if (prun1 < maxl && prun2 < maxl) {
         obj.Search_move[depth] = -m;
-        if (Search_phase2(obj, edgex, cornerx, topEdgeFirst, botEdgeFirstx, ml, maxl - 1, depth + 1, 2)) {
+        if (
+          Search_phase2(
+            obj,
+            edgex,
+            cornerx,
+            topEdgeFirst,
+            botEdgeFirstx,
+            ml,
+            maxl - 1,
+            depth + 1,
+            2
+          )
+        ) {
           return true;
         }
       }
       botEdgeFirstx = !botEdgeFirstx;
       if (botEdgeFirstx) {
         edgex = Square_BottomMove[edgex];
-        prun1 = SquarePrun[edgex << 1 | ml];
+        prun1 = SquarePrun[(edgex << 1) | ml];
         m += 1;
       } else {
         cornerx = Square_BottomMove[cornerx];
-        prun2 = SquarePrun[cornerx << 1 | ml];
+        prun2 = SquarePrun[(cornerx << 1) | ml];
         m += 2;
       }
     }
@@ -402,8 +466,8 @@ function Search_solution(obj, c) {
 
 function Search_Search() {
   this.Search_move = [];
-  this.Search_d = new FullCube_FullCube__Ljava_lang_String_2V;
-  this.Search_sq = new Square_Square;
+  this.Search_d = new FullCube_FullCube__Ljava_lang_String_2V();
+  this.Search_sq = new Square_Square();
 }
 
 function Search() {}
@@ -417,7 +481,7 @@ _.Search_sol_string = null;
 let Shape_$clinitRet = false;
 
 function Shape_$clinit() {
-  if ( Shape_$clinitRet ) {
+  if (Shape_$clinitRet) {
     return;
   }
   Shape_$clinitRet = true;
@@ -440,18 +504,17 @@ function Shape_bottomMove(obj) {
       obj.bottom = obj.bottom << 1;
     } else {
       move += 2;
-      obj.bottom = obj.bottom << 2 ^ 12291;
+      obj.bottom = (obj.bottom << 2) ^ 12291;
     }
     moveParity = 1 - moveParity;
-  }
-  while ((bitCount(obj.bottom & 63) & 1) != 0);
+  } while ((bitCount(obj.bottom & 63) & 1) != 0);
   (bitCount(obj.bottom) & 2) == 0 && (obj.Shape_parity ^= moveParity);
   return move;
 }
 
 function Shape_getIdx(obj) {
   let ret;
-  ret = binarySearch(Shape_ShapeIdx, obj.top << 12 | obj.bottom) << 1 | obj.Shape_parity;
+  ret = (binarySearch(Shape_ShapeIdx, (obj.top << 12) | obj.bottom) << 1) | obj.Shape_parity;
   return ret;
 }
 
@@ -472,11 +535,10 @@ function Shape_topMove(obj) {
       obj.top = obj.top << 1;
     } else {
       move += 2;
-      obj.top = obj.top << 2 ^ 12291;
+      obj.top = (obj.top << 2) ^ 12291;
     }
     moveParity = 1 - moveParity;
-  }
-  while ((bitCount(obj.top & 63) & 1) != 0);
+  } while ((bitCount(obj.top & 63) & 1) != 0);
   (bitCount(obj.top) & 2) == 0 && (obj.Shape_parity ^= moveParity);
   return move;
 }
@@ -485,7 +547,7 @@ function Shape_Shape() {}
 
 function Shape_getShape2Idx(shp) {
   let ret;
-  ret = binarySearch(Shape_ShapeIdx, shp & 16777215) << 1 | shp >> 24;
+  ret = (binarySearch(Shape_ShapeIdx, shp & 16777215) << 1) | (shp >> 24);
   return ret;
 }
 
@@ -497,10 +559,10 @@ function Shape_init() {
     dl = Shape_halflayer[~~(i / 13) % 13];
     ur = Shape_halflayer[~~(~~(i / 13) / 13) % 13];
     ul = Shape_halflayer[~~(~~(~~(i / 13) / 13) / 13)];
-    value = ul << 18 | ur << 12 | dl << 6 | dr;
+    value = (ul << 18) | (ur << 12) | (dl << 6) | dr;
     bitCount(value) == 16 && (Shape_ShapeIdx[count++] = value);
   }
-  s = new Shape_Shape;
+  s = new Shape_Shape();
   for (i = 0; i < 7356; ++i) {
     Shape_setIdx(s, i);
     Shape_TopMove[i] = Shape_topMove(s);
@@ -512,9 +574,9 @@ function Shape_init() {
     temp = s.top & 63;
     p1 = bitCount(temp);
     p3 = bitCount(s.bottom & 4032);
-    s.Shape_parity ^= 1 & (p1 & p3) >> 1;
-    s.top = s.top & 4032 | s.bottom >> 6 & 63;
-    s.bottom = s.bottom & 63 | temp << 6;
+    s.Shape_parity ^= 1 & ((p1 & p3) >> 1);
+    s.top = (s.top & 4032) | ((s.bottom >> 6) & 63);
+    s.bottom = (s.bottom & 63) | (temp << 6);
     Shape_TwistMove[i] = Shape_getIdx(s);
   }
   for (i = 0; i < 7536; ++i) {
@@ -542,8 +604,7 @@ function Shape_init() {
             ++done;
             ShapePrun[idx] = depth + 1;
           }
-        }
-        while (m != 12);
+        } while (m != 12);
         m = 0;
         idx = i;
         do {
@@ -554,8 +615,7 @@ function Shape_init() {
             ++done;
             ShapePrun[idx] = depth + 1;
           }
-        }
-        while (m != 12);
+        } while (m != 12);
         idx = Shape_TwistMove[i];
         if (ShapePrun[idx] == -1) {
           ++done;
@@ -577,7 +637,7 @@ let Shape_BottomMove, Shape_ShapeIdx, ShapePrun, Shape_TopMove, Shape_TwistMove,
 let Square_$clinitRet = false;
 
 function Square_$clinit() {
-  if ( Square_$clinitRet ) {
+  if (Square_$clinitRet) {
     return;
   }
   Square_$clinitRet = true;
@@ -619,30 +679,27 @@ function Square_init() {
       if (SquarePrun[i] == find) {
         idx = i >> 1;
         ml = i & 1;
-        idxx = Square_TwistMove[idx] << 1 | 1 - ml;
+        idxx = (Square_TwistMove[idx] << 1) | (1 - ml);
         if (SquarePrun[idxx] == check) {
           ++done;
           SquarePrun[inv ? i : idxx] = depth;
-          if (inv)
-            continue OUT;
+          if (inv) continue OUT;
         }
         idxx = idx;
         for (m = 0; m < 4; ++m) {
           idxx = Square_TopMove[idxx];
-          if (SquarePrun[idxx << 1 | ml] == check) {
+          if (SquarePrun[(idxx << 1) | ml] == check) {
             ++done;
-            SquarePrun[inv ? i : idxx << 1 | ml] = depth;
-            if (inv)
-              continue OUT;
+            SquarePrun[inv ? i : (idxx << 1) | ml] = depth;
+            if (inv) continue OUT;
           }
         }
         for (m = 0; m < 4; ++m) {
           idxx = Square_BottomMove[idxx];
-          if (SquarePrun[idxx << 1 | ml] == check) {
+          if (SquarePrun[(idxx << 1) | ml] == check) {
             ++done;
-            SquarePrun[inv ? i : idxx << 1 | ml] = depth;
-            if (inv)
-              continue OUT;
+            SquarePrun[inv ? i : (idxx << 1) | ml] = depth;
+            if (inv) continue OUT;
           }
         }
       }
@@ -661,9 +718,9 @@ _.topEdgeFirst = false;
 let Square_BottomMove, SquarePrun, Square_TopMove, Square_TwistMove;
 
 function bitCount(x) {
-  x -= x >> 1 & 1431655765;
-  x = (x >> 2 & 858993459) + (x & 858993459);
-  x = (x >> 4) + x & 252645135;
+  x -= (x >> 1) & 1431655765;
+  x = ((x >> 2) & 858993459) + (x & 858993459);
+  x = ((x >> 4) + x) & 252645135;
   x += x >> 8;
   x += x >> 16;
   return x & 63;
@@ -687,18 +744,24 @@ function binarySearch(sortedArray, key) {
   return -low - 1;
 }
 
-let cspcases: any[] = [0, 1, 3, 18, 19, 1004, 1005, 1006, 1007, 1008, 1009, 1011, 1015, 1016, 1018, 1154, 1155, 1156, 1157, 1158, 1159, 1161, 1166, 1168, 424, 425, 426, 427, 428, 429, 431, 436, 95, 218, 341, 482, 528, 632, 1050, 342, 343, 345, 346, 348, 353, 223, 487, 533, 535, 1055, 219, 225, 483, 489, 639, 1051, 1057, 486, 1054, 1062, 6, 21, 34, 46, 59, 71, 144, 157, 182, 305, 7, 22, 35, 47, 60, 72, 145, 158, 183, 306, 8, 23, 36, 48, 61, 73, 146, 159, 184, 307];
+const cspcases: any[] = [
+  0, 1, 3, 18, 19, 1004, 1005, 1006, 1007, 1008, 1009, 1011, 1015, 1016, 1018, 1154, 1155, 1156,
+  1157, 1158, 1159, 1161, 1166, 1168, 424, 425, 426, 427, 428, 429, 431, 436, 95, 218, 341, 482,
+  528, 632, 1050, 342, 343, 345, 346, 348, 353, 223, 487, 533, 535, 1055, 219, 225, 483, 489, 639,
+  1051, 1057, 486, 1054, 1062, 6, 21, 34, 46, 59, 71, 144, 157, 182, 305, 7, 22, 35, 47, 60, 72,
+  145, 158, 183, 306, 8, 23, 36, 48, 61, 73, 146, 159, 184, 307,
+];
 
 let CSPInitRet = false;
 
 function CSPInit() {
-  if ( CSPInitRet ) {
+  if (CSPInitRet) {
     return;
   }
   CSPInitRet = true;
-  let s = new Shape_Shape;
+  const s = new Shape_Shape();
   for (let csp = 0; csp < cspcases.length; csp++) {
-    let curCases = [cspcases[csp]];
+    const curCases = [cspcases[csp]];
     for (let i = 0; i < curCases.length; i++) {
       let shape = curCases[i];
       do {
@@ -714,7 +777,7 @@ function CSPInit() {
         }
       } while (shape != curCases[i]);
       Shape_setIdx(s, shape << 1);
-      let tmp = s.top;
+      const tmp = s.top;
       s.top = s.bottom;
       s.bottom = tmp;
       shape = Shape_getIdx(s) >> 1;
@@ -726,15 +789,111 @@ function CSPInit() {
   }
 }
 
-let cspfilter = ['Star-x8', 'Star-x71', 'Star-x62', 'Star-x44', 'Star-x53', 'Square-Scallop', 'Square-rPawn', 'Square-Shield', 'Square-Barrel', 'Square-rFist', 'Square-Mushroom', 'Square-lPawn', 'Square-Square', 'Square-lFist', 'Square-Kite', 'Kite-Scallop', 'Kite-rPawn', 'Kite-Shield', 'Kite-Barrel', 'Kite-rFist', 'Kite-Mushroom', 'Kite-lPawn', 'Kite-lFist', 'Kite-Kite', 'Barrel-Scallop', 'Barrel-rPawn', 'Barrel-Shield', 'Barrel-Barrel', 'Barrel-rFist', 'Barrel-Mushroom', 'Barrel-lPawn', 'Barrel-lFist', 'Scallop-Scallop', 'Scallop-rPawn', 'Scallop-Shield', 'Scallop-rFist', 'Scallop-Mushroom', 'Scallop-lPawn', 'Scallop-lFist', 'Shield-rPawn', 'Shield-Shield', 'Shield-rFist', 'Shield-Mushroom', 'Shield-lPawn', 'Shield-lFist', 'Mushroom-rPawn', 'Mushroom-rFist', 'Mushroom-Mushroom', 'Mushroom-lPawn', 'Mushroom-lFist', 'Pawn-rPawn-rPawn', 'Pawn-rPawn-lPawn', 'Pawn-rPawn-rFist', 'Pawn-lPawn-rFist', 'Pawn-lPawn-lPawn', 'Pawn-rPawn-lFist', 'Pawn-lPawn-lFist', 'Fist-rFist-rFist', 'Fist-lFist-rFist', 'Fist-lFist-lFist', 'Pair-x6', 'Pair-r42', 'Pair-x411', 'Pair-r51', 'Pair-l42', 'Pair-l51', 'Pair-x33', 'Pair-x312', 'Pair-x321', 'Pair-x222', 'L-x6', 'L-r42', 'L-x411', 'L-r51', 'L-l42', 'L-l51', 'L-x33', 'L-x312', 'L-x321', 'L-x222', 'Line-x6', 'Line-r42', 'Line-x411', 'Line-r51', 'Line-l42', 'Line-l51', 'Line-x33', 'Line-x312', 'Line-x321', 'Line-x222'];
-let cspprobs = [16, 16, 16, 10, 16, 24, 16, 24, 16, 24, 16, 16, 4, 24, 16, 48, 32, 48, 32, 48, 32, 32, 48, 16, 48, 32, 48, 16, 48, 32, 32, 48, 36, 48, 72, 72, 48, 48, 72, 48, 36, 72, 48, 48, 72, 32, 48, 16, 32, 48, 16, 32, 48, 48, 16, 48, 48, 36, 72, 36, 72, 96, 96, 72, 96, 72, 72, 72, 72, 24, 48, 64, 64, 48, 64, 48, 48, 48, 48, 16, 24, 32, 32, 24, 32, 24, 24, 24, 24, 8];
+const cspfilter = [
+  "Star-x8",
+  "Star-x71",
+  "Star-x62",
+  "Star-x44",
+  "Star-x53",
+  "Square-Scallop",
+  "Square-rPawn",
+  "Square-Shield",
+  "Square-Barrel",
+  "Square-rFist",
+  "Square-Mushroom",
+  "Square-lPawn",
+  "Square-Square",
+  "Square-lFist",
+  "Square-Kite",
+  "Kite-Scallop",
+  "Kite-rPawn",
+  "Kite-Shield",
+  "Kite-Barrel",
+  "Kite-rFist",
+  "Kite-Mushroom",
+  "Kite-lPawn",
+  "Kite-lFist",
+  "Kite-Kite",
+  "Barrel-Scallop",
+  "Barrel-rPawn",
+  "Barrel-Shield",
+  "Barrel-Barrel",
+  "Barrel-rFist",
+  "Barrel-Mushroom",
+  "Barrel-lPawn",
+  "Barrel-lFist",
+  "Scallop-Scallop",
+  "Scallop-rPawn",
+  "Scallop-Shield",
+  "Scallop-rFist",
+  "Scallop-Mushroom",
+  "Scallop-lPawn",
+  "Scallop-lFist",
+  "Shield-rPawn",
+  "Shield-Shield",
+  "Shield-rFist",
+  "Shield-Mushroom",
+  "Shield-lPawn",
+  "Shield-lFist",
+  "Mushroom-rPawn",
+  "Mushroom-rFist",
+  "Mushroom-Mushroom",
+  "Mushroom-lPawn",
+  "Mushroom-lFist",
+  "Pawn-rPawn-rPawn",
+  "Pawn-rPawn-lPawn",
+  "Pawn-rPawn-rFist",
+  "Pawn-lPawn-rFist",
+  "Pawn-lPawn-lPawn",
+  "Pawn-rPawn-lFist",
+  "Pawn-lPawn-lFist",
+  "Fist-rFist-rFist",
+  "Fist-lFist-rFist",
+  "Fist-lFist-lFist",
+  "Pair-x6",
+  "Pair-r42",
+  "Pair-x411",
+  "Pair-r51",
+  "Pair-l42",
+  "Pair-l51",
+  "Pair-x33",
+  "Pair-x312",
+  "Pair-x321",
+  "Pair-x222",
+  "L-x6",
+  "L-r42",
+  "L-x411",
+  "L-r51",
+  "L-l42",
+  "L-l51",
+  "L-x33",
+  "L-x312",
+  "L-x321",
+  "L-x222",
+  "Line-x6",
+  "Line-r42",
+  "Line-x411",
+  "Line-r51",
+  "Line-l42",
+  "Line-l51",
+  "Line-x33",
+  "Line-x312",
+  "Line-x321",
+  "Line-x222",
+];
+const cspprobs = [
+  16, 16, 16, 10, 16, 24, 16, 24, 16, 24, 16, 16, 4, 24, 16, 48, 32, 48, 32, 48, 32, 32, 48, 16, 48,
+  32, 48, 16, 48, 32, 32, 48, 36, 48, 72, 72, 48, 48, 72, 48, 36, 72, 48, 48, 72, 32, 48, 16, 32,
+  48, 16, 32, 48, 48, 16, 48, 48, 36, 72, 36, 72, 96, 96, 72, 96, 72, 72, 72, 72, 24, 48, 64, 64,
+  48, 64, 48, 48, 48, 48, 16, 24, 32, 32, 24, 32, 24, 24, 24, 24, 8,
+];
 
-let search = new Search_Search;
+const search = new Search_Search();
 
 export function square1SolverGetRandomScramble() {
   Shape_$clinit();
   Square_$clinit();
-  let scrambleString = Search_solution(search, FullCube_randomCube());
+  const scrambleString = Search_solution(search, FullCube_randomCube());
   return scrambleString;
 }
 
@@ -743,11 +902,10 @@ function square1CubeShapeParityScramble(type: any, length: any, cases: any) {
   Shape_$clinit();
   Square_$clinit();
   CSPInit();
-  let idx = rndEl(cspcases[fixCase(cases, cspprobs)]);
-  let scrambleString = Search_solution(search, FullCube_randomCube(idx));
+  const idx = rndEl(cspcases[fixCase(cases, cspprobs)]);
+  const scrambleString = Search_solution(search, FullCube_randomCube(idx));
   return scrambleString;
 }
 
-
-regScrambler('sqrs', square1SolverGetRandomScramble);
-regScrambler('sqrcsp', square1CubeShapeParityScramble, [cspfilter, cspprobs]);
+regScrambler("sqrs", square1SolverGetRandomScramble);
+regScrambler("sqrcsp", square1CubeShapeParityScramble, [cspfilter, cspprobs]);

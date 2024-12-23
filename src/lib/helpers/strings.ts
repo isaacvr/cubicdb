@@ -2,13 +2,14 @@ import { ScrambleParser } from "@classes/scramble-parser";
 import { Interpreter } from "@classes/scrambleInterpreter";
 import type { IReconstruction, PuzzleType } from "@interfaces";
 import { newArr } from "./object";
+import type { SCRAMBLE_MENU } from "@constants";
 
 export function getSearchParams(loc: string): Map<string, string> {
   return loc
     .slice(1)
     .split("&")
     .reduce((m, e) => {
-      let p = e.split("=").map(s => decodeURIComponent(s));
+      const p = e.split("=").map(s => decodeURIComponent(s));
       m.set(p[0], p[1]);
       return m;
     }, new Map());
@@ -17,7 +18,7 @@ export function getSearchParams(loc: string): Map<string, string> {
 // Process Keybindings signature
 // Copy scramble [Ctrl + C]
 export function processKey(str: string) {
-  let m = str.match(/\[.*\]$/);
+  const m = str.match(/\[.*\]$/);
 
   if (m) {
     return [str.slice(0, m.index).trim(), m[0]];
@@ -38,8 +39,8 @@ export function randomUUID() {
     return crypto.randomUUID();
   }
 
-  let lens = [8, 4, 4, 4, 12];
-  let res: string[][] = [];
+  const lens = [8, 4, 4, 4, 12];
+  const res: string[][] = [];
 
   for (let i = 0; i < 5; i += 1) {
     res[i] = [];
@@ -63,21 +64,21 @@ export function defaultInner(s: string, withSuffix = true) {
 type IToken = ReturnType<Interpreter["getTree"]>["program"];
 
 export function getTreeString(token: IToken, puzzle: PuzzleType): string {
-  let { value } = token;
+  const { value } = token;
 
   switch (token.type) {
     case "Move": {
       if (puzzle === "square1" && token.value != "/") {
-        let regs = [
+        const regs = [
           /^(\()(\s*)(-?\d)(,)(\s*)(-?\d)(\s*)(\))/,
           /^(-?\d)(,)(\s*)(-?\d)/,
           /^(-?\d)(-?\d)/,
           /^(-?\d)/,
         ];
-        let operators = /^[(,)]$/;
+        const operators = /^[(,)]$/;
 
         for (let i = 0, maxi = regs.length; i < maxi; i += 1) {
-          let m = regs[i].exec(value);
+          const m = regs[i].exec(value);
 
           if (m) {
             return m
@@ -210,22 +211,22 @@ function getMoveLength(sequence: string[], puzzle: PuzzleType, order: number): n
 }
 
 export function parseReconstruction(s: string, puzzle: PuzzleType, order: number): IReconstruction {
-  let itp = new Interpreter(false, puzzle);
+  const itp = new Interpreter(false, puzzle);
 
   let errorCursor = -1;
 
   try {
-    let tree = itp.getTree(s);
+    const tree = itp.getTree(s);
 
     if (tree.error) {
       errorCursor = typeof tree.cursor === "number" ? tree.cursor : 0;
     } else {
-      let program = itp.getFlat(tree.program);
-      let flat = program.filter(token => token.cursor >= 0);
+      const program = itp.getFlat(tree.program);
+      const flat = program.filter(token => token.cursor >= 0);
 
-      let sequence: string[] = flat.map(token => token.value);
+      const sequence: string[] = flat.map(token => token.value);
       let sequenceIndex: number[] = [];
-      let finalAlpha = getMoveLength(sequence, puzzle, order);
+      const finalAlpha = getMoveLength(sequence, puzzle, order);
 
       switch (puzzle) {
         case "square1": {
@@ -255,9 +256,9 @@ export function parseReconstruction(s: string, puzzle: PuzzleType, order: number
   }
 
   if (errorCursor != -1) {
-    let pref = defaultInner(s.slice(0, errorCursor), false);
+    const pref = defaultInner(s.slice(0, errorCursor), false);
     let middle = "";
-    let match = /^([^\s\n]+)/.exec(s.slice(errorCursor));
+    const match = /^([^\s\n]+)/.exec(s.slice(errorCursor));
 
     if (match) {
       middle = `<span class="error">${match[0]}</span>`;
@@ -298,11 +299,11 @@ export function replaceParams(str: string, params: string[]): string {
 }
 
 export function formatMoves(moves: string[]): string[] {
-  let res: string[] = [];
+  const res: string[] = [];
 
   for (let i = 0, maxi = moves.length; i < maxi; ) {
     let cant = 0;
-    let mv = moves[i].trim();
+    const mv = moves[i].trim();
     for (let j = i; j < maxi && moves[j] === moves[i]; j += 1) cant += 1;
 
     if (cant === 1) {
@@ -318,7 +319,7 @@ export function formatMoves(moves: string[]): string[] {
 }
 
 export function capitalize(str: string): string {
-  let parts = str.split(" ");
+  const parts = str.split(" ");
   return parts.map(p => p[0].toUpperCase() + p.slice(1)).join(" ");
 }
 
@@ -332,4 +333,34 @@ export function parseDB(strDB: string): any[] {
       return "";
     })
     .filter(e => e);
+}
+
+type MODE = SCRAMBLE_MENU["1"][number];
+
+export function modeToName(mode: MODE, alt: string): string {
+  const modeToName: Record<string, string> = {
+    "333": "3x3x3",
+    "222so": "2x2x2",
+    "444wca": "4x4x4",
+    "555wca": "5x5x5",
+    "666wca": "6x6x6",
+    "777wca": "7x7x7",
+    "333ni": "3x3x3 BLD",
+    r3ni: "3x3x3 MBLD",
+    "333fm": "3x3 FM",
+    "333oh": "3x3 OH",
+    clkwca: "Clock",
+    mgmp: "Megaminx",
+    pyrso: "Pyraminx",
+    skbso: "Skewb",
+    sqrs: "Square-1",
+    "444bld": "4x4 BLD",
+    "555bld": "5x5 BLD",
+  };
+
+  if (mode[1] in modeToName) {
+    return modeToName[mode[1]];
+  }
+
+  return alt;
 }

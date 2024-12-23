@@ -7,7 +7,7 @@ import { Piece } from "./Piece";
 import { assignColors, getAllStickers, random } from "./puzzleUtils";
 
 export function WINDMILL(): PuzzleInterface {
-  let windmill: PuzzleInterface = {
+  const windmill: PuzzleInterface = {
     center: new Vector3D(0, 0, 0),
     faceVectors: [],
     palette: STANDARD_PALETTE,
@@ -33,9 +33,9 @@ export function WINDMILL(): PuzzleInterface {
   const anchor2 = RIGHT.add(UP).add(FRONT);
   const vdir = new Vector3D(Math.cos(ANG), 0, -Math.sin(ANG));
 
-  let pieces = windmill.pieces;
+  const pieces = windmill.pieces;
 
-  let edgePiece = new Piece([
+  const edgePiece = new Piece([
     new Sticker([
       anchor,
       anchor.add(RIGHT.mul(D2)),
@@ -73,7 +73,7 @@ export function WINDMILL(): PuzzleInterface {
     ...[0, 1, 2, 3].map(n => edgePiece.rotate(CENTER, UP, PI_2 * n).add(DOWN.mul(4 / 3)))
   );
 
-  let cornerPiece = new Piece([
+  const cornerPiece = new Piece([
     new Sticker([anchor1, anchor2, anchor1.add(vdir.mul(L2))]),
     new Sticker([anchor1, anchor1.add(DOWN.mul(2 / 3)), anchor2.add(DOWN.mul(2 / 3)), anchor2]),
     new Sticker([
@@ -99,10 +99,10 @@ export function WINDMILL(): PuzzleInterface {
     ...[0, 1, 2, 3].map(n => cornerPiece.rotate(CENTER, UP, PI_2 * n).add(DOWN.mul(4 / 3)))
   );
 
-  let centerSticker = new Sticker(
+  const centerSticker = new Sticker(
     [0, 1, 2, 3].map(n => anchor1.add(vdir.mul(L2)).rotate(CENTER, UP, n * PI_2))
   );
-  let centerPiece = new Piece([centerSticker, centerSticker.add(DOWN.mul(2 / 3)).reverse()]);
+  const centerPiece = new Piece([centerSticker, centerSticker.add(DOWN.mul(2 / 3)).reverse()]);
 
   pieces.push(centerPiece, centerPiece.reflect1(CENTER, UP, true));
 
@@ -111,8 +111,8 @@ export function WINDMILL(): PuzzleInterface {
   });
 
   windmill.toMove = function (piece: Piece, sticker: Sticker, dir: Vector3D) {
-    let mc = piece.getMassCenter();
-    let pcs = pieces.filter(p => p.direction1(mc, dir) === 0);
+    const mc = piece.getMassCenter();
+    const pcs = pieces.filter(p => p.direction1(mc, dir) === 0);
     return {
       pieces: pcs,
       ang: PI_2,
@@ -125,10 +125,10 @@ export function WINDMILL(): PuzzleInterface {
     const MOVES = 30;
 
     for (let i = 0; i < MOVES; i += 1) {
-      let p = random(pieces) as Piece;
-      let s = random(p.stickers.filter(s => !/^[xd]{1}$/.test(s.color))) as Sticker;
-      let vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > EPS));
-      let pcs = windmill.toMove(p, s, vec) as ToMoveResult;
+      const p = random(pieces) as Piece;
+      const s = random(p.stickers.filter(s => !/^[xd]{1}$/.test(s.color))) as Sticker;
+      const vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > EPS));
+      const pcs = windmill.toMove(p, s, vec) as ToMoveResult;
       pcs.pieces.forEach((p: Piece) => p.rotate(CENTER, vec, pcs.ang, true));
     }
   };

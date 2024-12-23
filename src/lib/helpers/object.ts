@@ -46,7 +46,7 @@ export function createPath(obj: any, path: string[], def: any, useMap: boolean =
   const mapSetter = (m: Map<any, any>, p: any, v: any) => m.set(p, v);
 
   path.reduce((acc, p, pos) => {
-    let altV = pos + 1 === path.length ? def : useMap ? new Map<string, any>() : {};
+    const altV = pos + 1 === path.length ? def : useMap ? new Map<string, any>() : {};
 
     if ((!pos && acc instanceof Map) || (pos && useMap)) {
       mapSetter(acc, p, altV);
@@ -87,7 +87,7 @@ export function clone(obj: any, ignore: string[] = []): any {
 }
 
 export function getUint8DataView(dt: DataView): Uint8Array {
-  let res = newArr(dt.byteLength);
+  const res = newArr(dt.byteLength);
 
   for (let i = 0, maxi = dt.byteLength; i < maxi; i += 1) {
     res[i] = dt.getUint8(i);
@@ -101,8 +101,8 @@ export function binSearch<T>(elem: T, arr: T[], cmp: (a: T, b: T) => number) {
   let to = arr.length;
 
   while (from < to) {
-    let mid = (to + from) >> 1;
-    let comp = cmp(elem, arr[mid]);
+    const mid = (to + from) >> 1;
+    const comp = cmp(elem, arr[mid]);
 
     if (comp === 0) {
       return mid;
@@ -139,9 +139,9 @@ export function getByteSize(obj: any): number {
 
     if (b < 0n) b = b * -1n;
 
-    let s = b.toString();
-    let pot = s.length - 1;
-    let base = +(s[0] + "." + (s.slice(1) || "0"));
+    const s = b.toString();
+    const pot = s.length - 1;
+    const base = +(s[0] + "." + (s.slice(1) || "0"));
     return b === 0n ? 4 : (2 + Math.ceil(((Math.log10(base) + pot) / Math.log(2) + 1) / 64)) * 8;
   }
 
@@ -155,11 +155,11 @@ export function getByteSize(obj: any): number {
 }
 
 export function algorithmToPuzzle(alg: ITutorialAlg, addZ2: boolean, invert = true): Puzzle {
-  let args = nameToPuzzle(alg.puzzle || "");
-  let noZ2: PuzzleType[] = ["megaminx", "pyraminx", "clock"];
-  let seq = alg.scramble + (addZ2 && noZ2.indexOf(args.type) === -1 ? " z2" : "");
+  const args = nameToPuzzle(alg.puzzle || "");
+  const noZ2: PuzzleType[] = ["megaminx", "pyraminx", "clock"];
+  const seq = alg.scramble + (addZ2 && noZ2.indexOf(args.type) === -1 ? " z2" : "");
 
-  let res = Puzzle.fromSequence(
+  const res = Puzzle.fromSequence(
     seq,
     {
       type: args.type,

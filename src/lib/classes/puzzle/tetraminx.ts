@@ -6,7 +6,7 @@ import type { PuzzleInterface, ToMoveResult } from "@interfaces";
 import { EPS, STANDARD_PALETTE } from "@constants";
 
 export function TETRAMINX(): PuzzleInterface {
-  let tetra: PuzzleInterface = {
+  const tetra: PuzzleInterface = {
     center: new Vector3D(0, 0, 0),
     palette: STANDARD_PALETTE,
     pieces: [],
@@ -27,10 +27,10 @@ export function TETRAMINX(): PuzzleInterface {
   const V = L / Math.sqrt(3);
   const H = Math.sqrt(L ** 2 - V ** 2);
   const R = (Math.sqrt(6) * L) / 12;
-  let PU = UP.mul(H - R);
-  let PR = DOWN.mul(R).add(FRONT.mul(V)).rotate(CENTER, UP, PI_3);
-  let PB = PR.rotate(CENTER, UP, 2 * PI_3);
-  let PL = PB.rotate(CENTER, UP, 2 * PI_3);
+  const PU = UP.mul(H - R);
+  const PR = DOWN.mul(R).add(FRONT.mul(V)).rotate(CENTER, UP, PI_3);
+  const PB = PR.rotate(CENTER, UP, 2 * PI_3);
+  const PL = PB.rotate(CENTER, UP, 2 * PI_3);
 
   tetra.pieces = [];
 
@@ -54,10 +54,10 @@ export function TETRAMINX(): PuzzleInterface {
     UNITS[2][0].cross(UNITS[2][1]).unit(), // down
   ];
 
-  let fv = tetra.faceVectors;
-  let pieces = tetra.pieces;
+  const fv = tetra.faceVectors;
+  const pieces = tetra.pieces;
 
-  let topSticker = new Sticker(
+  const topSticker = new Sticker(
     [
       ANCHORS[0].add(UNITS[0][0]),
       ANCHORS[0].add(UNITS[0][0].add(UNITS[0][1])),
@@ -67,7 +67,7 @@ export function TETRAMINX(): PuzzleInterface {
     [UP, fv[0], fv[1], fv[3]]
   );
 
-  let centerSticker = new Sticker(
+  const centerSticker = new Sticker(
     [
       PU.add(UNITS[0][0]),
       PU.add(UNITS[0][0].mul(2)).add(UNITS[0][1]),
@@ -77,7 +77,7 @@ export function TETRAMINX(): PuzzleInterface {
     [UP, fv[1], fv[2]]
   );
 
-  let topPC = new Piece([
+  const topPC = new Piece([
     topSticker,
     ...[0, 1, 2].map(n => centerSticker.rotate(CENTER, UP, 2 * PI_3 * n)),
   ]);
@@ -89,13 +89,13 @@ export function TETRAMINX(): PuzzleInterface {
     topPC.reflect(CENTER, PB, PL, true)
   );
 
-  let midSticker = new Sticker([
+  const midSticker = new Sticker([
     PU.add(UNITS[0][0]),
     PU.add(UNITS[0][0].mul(2)),
     PU.add(UNITS[0][0].mul(2)).add(UNITS[0][1]),
   ]);
 
-  let midPiece = new Piece([midSticker, midSticker.reflect(CENTER, PU, PL, true)]);
+  const midPiece = new Piece([midSticker, midSticker.reflect(CENTER, PU, PL, true)]);
 
   midPiece.stickers.forEach(s => (s.vecs = [UP, fv[0], fv[1].mul(-1), fv[2]].map(v => v.clone())));
 
@@ -105,8 +105,8 @@ export function TETRAMINX(): PuzzleInterface {
   );
 
   tetra.toMove = function (piece: Piece, sticker: Sticker, dir: Vector3D) {
-    let mc = piece.updateMassCenter();
-    let toMovePieces = pieces.filter(p => p.direction1(mc, dir) === 0);
+    const mc = piece.updateMassCenter();
+    const toMovePieces = pieces.filter(p => p.direction1(mc, dir) === 0);
     return {
       pieces: toMovePieces,
       ang: (2 * PI) / 3,
@@ -119,11 +119,11 @@ export function TETRAMINX(): PuzzleInterface {
     const MOVES = 40;
 
     for (let i = 0; i < MOVES; i += 1) {
-      let p = random(pieces) as Piece;
-      let s = random(p.stickers.filter(s => !/^[xd]{1}$/.test(s.color))) as Sticker;
-      let vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > EPS));
-      let pcs = tetra.toMove(p, s, vec) as ToMoveResult;
-      let cant = 1 + random(4);
+      const p = random(pieces) as Piece;
+      const s = random(p.stickers.filter(s => !/^[xd]{1}$/.test(s.color))) as Sticker;
+      const vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > EPS));
+      const pcs = tetra.toMove(p, s, vec) as ToMoveResult;
+      const cant = 1 + random(4);
       pcs.pieces.forEach((p: Piece) => p.rotate(CENTER, vec, pcs.ang * cant, true));
     }
   };

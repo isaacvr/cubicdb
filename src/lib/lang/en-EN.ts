@@ -79,7 +79,7 @@ export const English: Language = {
   NAVBAR: {
     home: "Home",
     routeMap: (r: string) => {
-      let mp: [RegExp, string, string][] = [
+      const mp: [RegExp, string, string][] = [
         [
           /tutorials/i,
           "Tutorials",
@@ -501,7 +501,7 @@ export const English: Language = {
         ["Megaminx", "mgmp", -70, 55, [5]],
         ["Pyraminx", "pyrso", -10, 36, [3]],
         ["Skewb", "skbso", 0, 33, [3]],
-        ["Sq-1", "sqrs", 0, 50, [8, 2]],
+        ["Square-1", "sqrs", 0, 50, [8, 2]],
         ["4x4 BLD", "444bld", -40, 40, [4]],
         ["5x5 BLD", "555bld", -60, 48, [4]],
       ],
@@ -511,10 +511,8 @@ export const English: Language = {
       [
         ["WCA", "333", 0],
         ["Random Move", "333o", 25],
-        // ['3x3 for noobs', "333noob", 25],
         ["Edges only", "edges", 0],
         ["Corners only", "corners", 0],
-        // ['BLD Helper', "nocache_333bldspec", 0], // new
         ["3x3 FT", "333ft", 0],
         ["Custom", "333custom", 0],
         ["2-generator R,U", "2gen", 25],
@@ -639,8 +637,8 @@ export const English: Language = {
     [
       "Kilominx",
       [
-        ["Random State", "klmso", 0],
-        ["Pochmann", "klmp", 30],
+        ["Random State", "klmso", 0, 48, [6]],
+        ["Pochmann", "klmp", 30, 48, [6]],
       ],
     ],
     [
@@ -744,7 +742,7 @@ export const English: Language = {
     ],
     ["Square-2", [["Random", "sq2", 20]]],
     ["Super Floppy", [["Random", "sfl", 25]]],
-    ["Super Square-1", [["Twist Metric", "ssq1t", 20]]],
+    ["Super Square-1", [["Twist Metric", "ssq1t", 20, 48, [14, 2]]]],
     ["UFO", [["Jaap Style", "ufo", 25]]],
     [
       "Bandaged Cube",
@@ -767,6 +765,32 @@ export const English: Language = {
         ["234567 Relay", "r234567", 0],
       ],
     ],
-    ["FTO (Face-Turning Octahedron)", [["Random", "fto", 25]]],
+    ["FTO", [["Random", "fto", 25, 36, [4]]]],
   ],
+  CONTEST: {
+    round: "Round",
+    rounds: "Rounds",
+    format: "Format",
+    extraScrambles: "Extra scrambles",
+    addCategory: "Add category",
+    fmcRules: [
+      "You have 60 minutes to find and write a solution.",
+      "Write 1 move per bar. To delete a move, clearly blacken it.",
+      "Your solution must not be directly derived from any part of the scrambling algorithm.",
+      "Your solution must be at most 80 moves, including rotations.",
+      "Your result will be counted in OBTM.",
+      "Only use notation from Article 12 of the WCA Regulations. If you are uncertain, use only the exact moves listed here:",
+    ],
+    faceMoves: "Face Moves",
+    rotations: "Rotations",
+    competitor: "Competitor",
+    doNotFillWarning: "DO NOT FILL IF YOU ARE THE COMPETITOR.",
+    gradedBy: "Graded by",
+    result: "Result",
+    ccaID: "CCA ID",
+    registrantID: "Registrant ID",
+    clockwise: "Clockwise",
+    counterClockwise: "Counter-Clockwise",
+    double: "Double",
+  },
 };

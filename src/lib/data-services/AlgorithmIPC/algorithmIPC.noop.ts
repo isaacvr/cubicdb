@@ -25,7 +25,7 @@ export class AlgorithmNoopIPC implements AlgorithmIPC {
   }
 
   async updateAlgorithm(alg: Algorithm) {
-    let cp = { ...alg };
+    const cp = { ...alg };
 
     delete cp._puzzle;
 
@@ -35,14 +35,14 @@ export class AlgorithmNoopIPC implements AlgorithmIPC {
   }
 
   async addAlgorithm(alg: Algorithm) {
-    let cp = { ...alg };
+    const cp = { ...alg };
     delete cp._puzzle;
     return alg;
     // return this.ipc.addAlgorithm(cp);
   }
 
   async removeAlgorithm(alg: Algorithm) {
-    let cp = { ...alg };
+    const cp = { ...alg };
     delete cp._puzzle;
     return false;
     // return this.ipc.removeAlgorithm(cp);

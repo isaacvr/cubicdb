@@ -33,7 +33,7 @@ const isOwner: AblyActor = ({ context: { game, clientID } }) => {
 };
 
 const isPlayer: AblyActor = ({ context: { game, clientID } }) => {
-  let _clientID = get(clientID);
+  const _clientID = get(clientID);
   return get(game).players.some(p => p[0] === _clientID);
 };
 

@@ -7,7 +7,7 @@ import { Sticker } from "./Sticker";
 import { assignColors, getAllStickers, random } from "./puzzleUtils";
 
 export function FISHER(): PuzzleInterface {
-  let fisher: PuzzleInterface = {
+  const fisher: PuzzleInterface = {
     center: new Vector3D(0, 0, 0),
     faceVectors: [],
     palette: STANDARD_PALETTE,
@@ -31,14 +31,14 @@ export function FISHER(): PuzzleInterface {
   const L1 = (L * R2) / 3;
   const LB = (L - L1) * 2;
 
-  let A = LEFT.add(UP).add(BACK).mul(L);
-  let B = LEFT.add(UP).add(FRONT).mul(L);
-  let C = RIGHT.add(UP).add(BACK).mul(L);
-  let AB = B.sub(A).unit();
-  let AC = C.sub(A).unit();
-  let VL = AB.mul(LB * R2_2).rotate(CENTER, UP, PI / 4);
+  const A = LEFT.add(UP).add(BACK).mul(L);
+  const B = LEFT.add(UP).add(FRONT).mul(L);
+  const C = RIGHT.add(UP).add(BACK).mul(L);
+  const AB = B.sub(A).unit();
+  const AC = C.sub(A).unit();
+  const VL = AB.mul(LB * R2_2).rotate(CENTER, UP, PI / 4);
 
-  let piece1 = new Piece([
+  const piece1 = new Piece([
     new Sticker([
       A.clone(),
       A.add(AB.mul(L1)),
@@ -64,7 +64,7 @@ export function FISHER(): PuzzleInterface {
   piece1.stickers.push(piece1.stickers[1].rotate(A, UP, -PI_2).add(RIGHT.mul(L1)));
   piece1.stickers.push(piece1.stickers[2].add(RIGHT.sub(FRONT).mul(L1)).reverse());
 
-  let piece2 = new Piece([
+  const piece2 = new Piece([
     new Sticker([A.add(AC.mul(L1)), A.add(AC.mul(L1)).add(VL), C.sub(AC.mul(L1))]),
     piece1.stickers[2].add(RIGHT.sub(FRONT).mul(L1)),
     piece1.stickers[2].rotate(A.add(FRONT.mul(L1)), UP, PI_2).add(RIGHT.sub(FRONT).mul(L1).add(VL)),
@@ -78,25 +78,25 @@ export function FISHER(): PuzzleInterface {
 
   piece2.stickers.push(piece2.stickers[0].add(DOWN.mul(L23)));
 
-  let upFace = [piece2, piece1];
+  const upFace = [piece2, piece1];
 
   for (let i = 1; i <= 3; i += 1) {
     upFace.push(upFace[0].rotate(CENTER, UP, i * PI_2));
     upFace.push(upFace[1].rotate(CENTER, UP, i * PI_2));
   }
 
-  let centerSticker = new Sticker(
+  const centerSticker = new Sticker(
     [0, 1, 2, 3].map(e => upFace[e * 2 + 1].stickers[0].points[2].clone())
   );
 
   upFace.push(new Piece([centerSticker, centerSticker.rotate(UP.mul(2 / 3), RIGHT, PI)]));
 
-  let midFace = upFace.map(p => p.add(DOWN.mul(L23)));
-  let downFace = upFace.map(p => p.rotate(CENTER, RIGHT, PI));
+  const midFace = upFace.map(p => p.add(DOWN.mul(L23)));
+  const downFace = upFace.map(p => p.rotate(CENTER, RIGHT, PI));
 
   midFace.pop();
 
-  let pieces = fisher.pieces;
+  const pieces = fisher.pieces;
 
   pieces.push(...upFace);
   pieces.push(...midFace);
@@ -120,8 +120,8 @@ export function FISHER(): PuzzleInterface {
   // };
 
   fisher.toMove = function (piece: Piece, sticker: Sticker, dir: Vector3D) {
-    let mc = piece.updateMassCenter();
-    let toMovePieces = pieces.filter(p => p.direction1(mc, dir) === 0);
+    const mc = piece.updateMassCenter();
+    const toMovePieces = pieces.filter(p => p.direction1(mc, dir) === 0);
     return {
       pieces: toMovePieces,
       ang: PI_2,
@@ -134,11 +134,11 @@ export function FISHER(): PuzzleInterface {
     const MOVES = 40;
 
     for (let i = 0; i < MOVES; i += 1) {
-      let p = random(pieces) as Piece;
-      let s = random(p.stickers.filter(s => !/^[xd]{1}$/.test(s.color))) as Sticker;
-      let vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > EPS));
-      let pcs = fisher.toMove(p, s, vec) as ToMoveResult;
-      let cant = 1 + random(3);
+      const p = random(pieces) as Piece;
+      const s = random(p.stickers.filter(s => !/^[xd]{1}$/.test(s.color))) as Sticker;
+      const vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > EPS));
+      const pcs = fisher.toMove(p, s, vec) as ToMoveResult;
+      const cant = 1 + random(3);
       pcs.pieces.forEach((p: Piece) => p.rotate(CENTER, vec, pcs.ang * cant, true));
     }
   };

@@ -1,8 +1,11 @@
 import type {
   BluetoothCubeInfo,
   CONFIG,
+  ContestPDFOptions,
+  ContestPDFResult,
   FONT_NAME,
   LanguageCode,
+  Sheet,
   UpdateCommand,
 } from "@interfaces";
 import type { ConfigIPC } from "./configIPC.interface";
@@ -98,15 +101,15 @@ export class ConfigBrowserIPC implements ConfigIPC {
   async pairingBluetoothResponse() {}
 
   async searchBluetooth(inp: GANInput | QiYiSmartTimerInput): Promise<string> {
-    let filters = inp.adaptor === "GAN" ? GAN_BLUETOOTH_FILTERS : QIYI_BLUETOOTH_FILTERS;
+    const filters = inp.adaptor === "GAN" ? GAN_BLUETOOTH_FILTERS : QIYI_BLUETOOTH_FILTERS;
 
     return new Promise((res, rej) => {
       navigator.bluetooth
         .requestDevice(filters)
         .then(async device => {
-          let mac = prompt("MAC:");
+          const mac = prompt("MAC:");
 
-          let type = inp.adaptor === "GAN" ? "GAN" : "QYTimer";
+          const type = inp.adaptor === "GAN" ? "GAN" : "QYTimer";
           const config = get(dataService).config;
 
           config.setPath(`timer/inputs/${type}`, { mac });
@@ -169,4 +172,19 @@ export class ConfigBrowserIPC implements ConfigIPC {
 
     localStorage.setItem("config", JSON.stringify(config));
   }
+
+  async generateContestPDF(args: ContestPDFOptions): Promise<ContestPDFResult> {
+    return {
+      buffer: Buffer.from([]),
+      mode: "",
+      name: "",
+      round: 0,
+    };
+  }
+
+  async zipPDF(s: { name: string; files: Sheet[] }): Promise<string> {
+    return "";
+  }
+
+  async revealFile(f: string): Promise<void> {}
 }

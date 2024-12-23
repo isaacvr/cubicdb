@@ -39,7 +39,7 @@ export class AlgorithmBrowserIPC implements AlgorithmIPC {
       this.isInit = true;
     } else {
       await new Promise(res => {
-        let itv = setInterval(() => {
+        const itv = setInterval(() => {
           if (!this.isInit) {
             clearInterval(itv);
             res(null);
@@ -58,13 +58,13 @@ export class AlgorithmBrowserIPC implements AlgorithmIPC {
   async getAlgorithms(options: AlgorithmOptions): Promise<Algorithm[]> {
     await this.init();
     if (options.all) return clone(algs) as Algorithm[];
-    let fAlgs = algs.filter(a => a.parentPath === options.path) as Algorithm[];
+    const fAlgs = algs.filter(a => a.parentPath === options.path) as Algorithm[];
     return clone(fAlgs);
   }
 
   async getAlgorithm(options: AlgorithmOptions): Promise<Algorithm | null> {
     await this.init();
-    let fAlgs = algs.filter(
+    const fAlgs = algs.filter(
       a => a.parentPath === options.path && a.shortName === options.shortName
     ) as Algorithm[];
     return fAlgs.length === 0 ? null : clone(fAlgs[0]);

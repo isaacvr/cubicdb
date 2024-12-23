@@ -19,18 +19,18 @@
   Modified by Isaac Vega <isaacvega1996@gmail.com>
  */
 
-import type { PuzzleOptions } from '@interfaces';
-import { rn, rndEl, rndProb } from '../lib/mathlib';
+import type { PuzzleOptions } from "@interfaces";
+import { rn, rndEl, rndProb } from "../lib/mathlib";
 
 export function mega(turns: any, suffixes: any, length: number) {
   turns = turns || [[""]];
   suffixes = suffixes || [""];
   length = length || 0;
-  var donemoves = 0;
-  var lastaxis = -1;
-  var s = [];
-  var first, second;
-  for (var i = 0; i < length; i++) {
+  let donemoves = 0;
+  let lastaxis = -1;
+  const s = [];
+  let first, second;
+  for (let i = 0; i < length; i++) {
     do {
       first = rn(turns.length);
       second = rn(turns[first].length);
@@ -46,26 +46,29 @@ export function mega(turns: any, suffixes: any, length: number) {
       s.push(turns[first][second] + rndEl(suffixes));
     }
   }
-  return s.join(' ');
+  return s.join(" ");
 }
 
-export let scramblers: Map<string, Function> = new Map<string, Function> ();
+export const scramblers: Map<string, Function> = new Map<string, Function>();
 
-export let filters: Map<string, string[]> = new Map<string, string[]>();
+export const filters: Map<string, string[]> = new Map<string, string[]>();
 
-export let probs: Map<string, number[]> = new Map<string, number[]>();
+export const probs: Map<string, number[]> = new Map<string, number[]>();
 
-export let options: Map<string, PuzzleOptions | PuzzleOptions[]> = new Map<string, PuzzleOptions | PuzzleOptions[]> ();
+export const options: Map<string, PuzzleOptions | PuzzleOptions[]> = new Map<
+  string,
+  PuzzleOptions | PuzzleOptions[]
+>();
 
 export function regScrambler(mode: string | string[], callback: Function, filter_and_probs?: any) {
-  if ( Array.isArray(mode) ) {
+  if (Array.isArray(mode)) {
     for (let i = 0; i < mode.length; i++) {
       scramblers.set(mode[i], callback);
       filters.set(mode[i], []);
       probs.set(mode[i], []);
     }
   } else {
-    scramblers.set(mode, callback);    
+    scramblers.set(mode, callback);
     if (filter_and_probs != undefined) {
       filters.set(mode, filter_and_probs[0]);
       probs.set(mode, filter_and_probs[1]);
@@ -77,24 +80,24 @@ export function regScrambler(mode: string | string[], callback: Function, filter
 
 /**
  *	format string,
-  *		${args} => scramblers[scrType](scrType, scrArg)
-  *		#{args} => mega(args)
-  */
+ *		${args} => scramblers[scrType](scrType, scrArg)
+ *		#{args} => mega(args)
+ */
 export function formatScramble(str: string) {
-  var repfunc = function(match: string, p1: any) {
-    if (match[0] == '$') {
-      var args = [p1];
-      if (p1[0] == '[') {
+  const repfunc = function (match: string, p1: any) {
+    if (match[0] == "$") {
+      let args = [p1];
+      if (p1[0] == "[") {
         args = JSON.parse(p1);
       }
-      return scramblers.get( args[0].toString() )?.apply(this, args);
-    } else if (match[0] == '#') {
-      return mega.apply(this, JSON.parse('[' + p1 + ']'));
+      return scramblers.get(args[0].toString())?.apply(this, args);
+    } else if (match[0] == "#") {
+      return mega.apply(this, JSON.parse("[" + p1 + "]"));
     } else {
-      return '';
+      return "";
     }
   };
-  var re1 = /[$#]\{([^}]+)\}/g;
+  const re1 = /[$#]\{([^}]+)\}/g;
   return str.replace(re1, repfunc);
 }
 
@@ -102,11 +105,11 @@ export function rndState(filter, probs) {
   if (probs == undefined) {
     return undefined;
   }
-  var ret = probs.slice();
+  const ret = probs.slice();
   if (filter == undefined) {
     filter = ret;
   }
-  for (var i = 0; i < filter.length; i++) {
+  for (let i = 0; i < filter.length; i++) {
     if (!filter[i]) {
       ret[i] = 0;
     }

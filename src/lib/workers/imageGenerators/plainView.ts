@@ -36,7 +36,7 @@ export function planView(cube: Puzzle, DIM: number, format: "raster" | "svg" = "
 
   roundCorners({ p: nCube.p, ...nCube.p.roundParams, calcPath: true });
 
-  let pieces = nCube.pieces;
+  const pieces = nCube.pieces;
   let topPieces: Piece[] = [];
 
   if (nCube.type === "pyraminx") {
@@ -46,8 +46,8 @@ export function planView(cube: Puzzle, DIM: number, format: "raster" | "svg" = "
   } else {
     for (let i = 0, maxi = pieces.length; i < maxi; i += 1) {
       if (getOColoredStickers(pieces[i]).some(st => pointing(st))) {
-        let pc = pieces[i];
-        let st = getOColoredStickers(pieces[i]).find(st => nPointing(st));
+        const pc = pieces[i];
+        const st = getOColoredStickers(pieces[i]).find(st => nPointing(st));
 
         if (st && nCube.p.toMove) {
           topPieces = (nCube.p.toMove(pc, st, UP) as ToMoveResult).pieces;
@@ -73,7 +73,7 @@ export function planView(cube: Puzzle, DIM: number, format: "raster" | "svg" = "
       )
       .map(s => s.rotate(CENTER, RIGHT, PI_2))
       .sort((a: Sticker, b: Sticker) => {
-        let ca = a._generator.updateMassCenter(),
+        const ca = a._generator.updateMassCenter(),
           cb = b._generator.updateMassCenter();
 
         if (Math.abs(ca.y - cb.y) < EPS) {
@@ -89,32 +89,32 @@ export function planView(cube: Puzzle, DIM: number, format: "raster" | "svg" = "
         [] as Sticker[]
       )
       .map(s => {
-        let o = s.getOrientation();
-        let ac = s._generator;
-        let a = ac.points.reduce((a, b) => (a.y > b.y ? a : b));
-        let newS = s.rotate(a, o.cross(UP), SIDE_ANG, true);
+        const o = s.getOrientation();
+        const ac = s._generator;
+        const a = ac.points.reduce((a, b) => (a.y > b.y ? a : b));
+        const newS = s.rotate(a, o.cross(UP), SIDE_ANG, true);
 
         o.y = 0; // Always get the horizontal plane only
 
         const factor = nCube.type === "megaminx" ? 1 / 2 : 2 / 3;
 
-        let shrink = (V: Vector3D) => {
-          let O = V.reflect1(a, o).add(V).div(2);
+        const shrink = (V: Vector3D) => {
+          const O = V.reflect1(a, o).add(V).div(2);
           return O.add(V.sub(O).mul(factor));
         };
 
         // Scale and move closer to the original sticker
         newS.points.forEach(p => {
-          let s = shrink(p);
+          const s = shrink(p);
           p.setCoords(s.x, s.y, s.z);
         });
 
         if (newS instanceof BezierSticker) {
           newS.parts.forEach(p => {
-            let pts = p instanceof Vector3D ? [p] : p.anchors;
+            const pts = p instanceof Vector3D ? [p] : p.anchors;
 
             pts.forEach(pt => {
-              let s = shrink(pt);
+              const s = shrink(pt);
               pt.setCoords(s.x, s.y, s.z);
             });
           });

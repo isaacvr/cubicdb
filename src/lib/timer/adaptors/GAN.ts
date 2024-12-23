@@ -50,7 +50,7 @@ function updateSequence(
 
 // Guards
 const isScrambled: GANActor = ({ context, event }) => {
-  let seq = context.sequencer;
+  const seq = context.sequencer;
   seq.feed(event.data.move.trim());
   updateSequence(seq, context.input.sequenceParts, context.input.recoverySequence);
 
@@ -92,7 +92,7 @@ const enterConnected: GANActor = ({
   sequencer.clear();
   moves.length = 0;
 
-  let scr = event?.data?.scramble || get(scramble);
+  const scr = event?.data?.scramble || get(scramble);
   sequencer.setScramble(scr);
   cfop.setSequence(scr);
   roux.setSequence(scr);
@@ -132,17 +132,18 @@ const setTimerInspection = fromCallback(
     ready.set(false);
     decimals.set(false);
 
-    let { settings } = get(session);
+    const { settings } = get(session);
 
     if (!settings.hasInspection) {
       return sendBack({ type: "RUN" });
     }
 
-    let ref = performance.now() + (settings.hasInspection ? (settings.inspection || 15) * 1000 : 0);
-    let ls = get(lastSolve) as Solve;
+    const ref =
+      performance.now() + (settings.hasInspection ? (settings.inspection || 15) * 1000 : 0);
+    const ls = get(lastSolve) as Solve;
 
-    let itv = setInterval(() => {
-      let t = Math.round((ref - performance.now()) / 1000) * 1000;
+    const itv = setInterval(() => {
+      const t = Math.round((ref - performance.now()) / 1000) * 1000;
 
       if (t < -2000) {
         sendBack({ type: "DNF" });
@@ -176,11 +177,11 @@ const setTimerRunner = fromCallback(
     decimals.set(true);
     state.set(TimerState.RUNNING);
 
-    let ref = performance.now() - (get(lastSolve)?.penalty === Penalty.P2 ? 2000 : 0);
-    let itv = setInterval(() => time.set(performance.now() - ref));
+    const ref = performance.now() - (get(lastSolve)?.penalty === Penalty.P2 ? 2000 : 0);
+    const itv = setInterval(() => time.set(performance.now() - ref));
 
     return () => {
-      let p = performance.now();
+      const p = performance.now();
       clearInterval(itv);
       time.set(p - ref);
     };
@@ -205,7 +206,7 @@ const saveSolve = fromCallback(
     //   cfop,
     //   roux,
     // }: GANContext) => {
-    let t = get(time);
+    const t = get(time);
 
     Promise.all([cfop.getAnalysis(t), roux.getAnalysis(t)]).then(res =>
       get(dataService).emitBluetoothData("reconstructor", res)
@@ -215,7 +216,7 @@ const saveSolve = fromCallback(
     sequencer.clear();
     initScrambler();
 
-    let ls = get(lastSolve) as Solve;
+    const ls = get(lastSolve) as Solve;
 
     t > 0 && addSolve(t, ls?.penalty);
     time.set(0);
@@ -571,7 +572,7 @@ export class GANInput implements TimerInputHandler {
   stopTimer() {}
 
   private handleScramble(s: string) {
-    let ctx = this.context;
+    const ctx = this.context;
     ctx.sequencer.setScramble(s);
     ctx.cfop.setSequence(s);
     ctx.roux.setSequence(s);
@@ -582,7 +583,7 @@ export class GANInput implements TimerInputHandler {
     this.clear();
     this.disconnect();
 
-    let data = get(dataService).config.getPath(`timer/inputs/GAN`);
+    const data = get(dataService).config.getPath(`timer/inputs/GAN`);
 
     this.device = device;
     this.deviceMac = data ? data.mac : "";
@@ -596,7 +597,7 @@ export class GANInput implements TimerInputHandler {
       return "";
     }
 
-    let services: BluetoothRemoteGATTService[] | undefined = await server?.getPrimaryServices();
+    const services: BluetoothRemoteGATTService[] | undefined = await server?.getPrimaryServices();
 
     if (!services) {
       this.disconnect();
@@ -604,7 +605,7 @@ export class GANInput implements TimerInputHandler {
     }
 
     for (let i = 0, maxi = services?.length || 0; i < maxi; i++) {
-      let service = services[i];
+      const service = services[i];
       if (matchUUID(service.uuid, GANInput.SERVICE_UUID_META)) {
         this.service_meta = service;
       } else if (matchUUID(service.uuid, GANInput.SERVICE_UUID_DATA)) {
@@ -615,7 +616,7 @@ export class GANInput implements TimerInputHandler {
     }
 
     if (this.service_v2data) {
-      let res = await this.v2init((device.name || "").startsWith("AiCube") ? 1 : 0);
+      const res = await this.v2init((device.name || "").startsWith("AiCube") ? 1 : 0);
 
       if (res) {
         this.connected = true;
@@ -680,13 +681,13 @@ export class GANInput implements TimerInputHandler {
   }
 
   private async v2initDecoder(mac: string, ver: any) {
-    let value: number[] = [];
+    const value: number[] = [];
 
     for (let i = 0; i < 6; i++) {
       value.push(parseInt(mac.slice(i * 3, i * 3 + 2), 16));
     }
 
-    let keyiv = await this.getKeyV2(value, ver);
+    const keyiv = await this.getKeyV2(value, ver);
 
     // debug && console.log("[gancube] ver=", ver, " key=", JSON.stringify(keyiv));
 
@@ -699,7 +700,7 @@ export class GANInput implements TimerInputHandler {
       return ret;
     }
 
-    let iv = this.decoder.iv || [];
+    const iv = this.decoder.iv || [];
 
     for (let i = 0; i < 16; i++) {
       ret[i] ^= ~~iv[i];
@@ -708,8 +709,8 @@ export class GANInput implements TimerInputHandler {
     this.decoder.encrypt(ret);
 
     if (ret.length > 16) {
-      let offset = ret.length - 16;
-      let block = ret.slice(offset);
+      const offset = ret.length - 16;
+      const block = ret.slice(offset);
 
       for (let i = 0; i < 16; i++) {
         block[i] ^= ~~iv[i];
@@ -730,14 +731,14 @@ export class GANInput implements TimerInputHandler {
       return;
     }
 
-    let encodedReq = this.encode(req.slice());
+    const encodedReq = this.encode(req.slice());
 
     // debug && console.log("[gancube] v2sendRequest", req, encodedReq);
     return this.chrct_v2write.writeValue(new Uint8Array(encodedReq).buffer);
   }
 
   private v2sendSimpleRequest(opcode: number) {
-    let req = valuedArray(20, 0);
+    const req = valuedArray(20, 0);
     req[0] = opcode;
     return this.v2sendRequest(req);
   }
@@ -755,7 +756,7 @@ export class GANInput implements TimerInputHandler {
   }
 
   private onStateChangedV2(event: any) {
-    let value = event.target.value;
+    const value = event.target.value;
 
     if (this.decoder == null) {
       return;
@@ -801,11 +802,11 @@ export class GANInput implements TimerInputHandler {
     }
 
     for (let i = moveDiff - 1; i >= 0; i--) {
-      let m = "URFDLB".indexOf(this.prevMoves[i][0]) * 3 + " 2'".indexOf(this.prevMoves[i][1]);
+      const m = "URFDLB".indexOf(this.prevMoves[i][0]) * 3 + " 2'".indexOf(this.prevMoves[i][1]);
       CubieCube.EdgeMult(this.prevCubie, CubieCube.moveCube[m], this.curCubie);
       CubieCube.CornMult(this.prevCubie, CubieCube.moveCube[m], this.curCubie);
       this.deviceTime += this.timeOffs[i];
-      let tmp = this.curCubie;
+      const tmp = this.curCubie;
       this.curCubie = this.prevCubie;
       this.prevCubie = tmp;
 
@@ -822,7 +823,7 @@ export class GANInput implements TimerInputHandler {
         },
       });
 
-      let st = this.interpreter.getSnapshot().value.toString();
+      const st = this.interpreter.getSnapshot().value.toString();
 
       if (st === "RUNNING" || st === "STOPPED") {
         this.context.cfop.addMove(this.prevMoves[i]);
@@ -836,7 +837,7 @@ export class GANInput implements TimerInputHandler {
   }
 
   private parseV2Data(value: any) {
-    let locTime = Date.now();
+    const locTime = Date.now();
 
     value = this.decode(value);
 
@@ -846,7 +847,7 @@ export class GANInput implements TimerInputHandler {
 
     value = value.join("");
 
-    let mode = parseInt(value.slice(0, 4), 2);
+    const mode = parseInt(value.slice(0, 4), 2);
 
     if (mode == 1) {
       // gyro
@@ -867,7 +868,7 @@ export class GANInput implements TimerInputHandler {
       let keyChkInc = 0;
 
       for (let i = 0; i < 7; i++) {
-        let m = parseInt(value.slice(12 + i * 5, 17 + i * 5), 2);
+        const m = parseInt(value.slice(12 + i * 5, 17 + i * 5), 2);
         this.timeOffs[i] = parseInt(value.slice(47 + i * 16, 63 + i * 16), 2);
         this.prevMoves[i] = "URFDLB".charAt(m >> 1) + " '".charAt(m & 1);
 
@@ -893,13 +894,13 @@ export class GANInput implements TimerInputHandler {
         return;
       }
 
-      let cc = new CubieCube();
+      const cc = new CubieCube();
       let echk = 0;
       let cchk = 0xf00;
 
       for (let i = 0; i < 7; i++) {
-        let perm = parseInt(value.slice(12 + i * 3, 15 + i * 3), 2);
-        let ori = parseInt(value.slice(33 + i * 2, 35 + i * 2), 2);
+        const perm = parseInt(value.slice(12 + i * 3, 15 + i * 3), 2);
+        const ori = parseInt(value.slice(33 + i * 2, 35 + i * 2), 2);
         cchk -= ori << 3;
         cchk ^= perm;
         cc.ca[i] = (ori << 3) | perm;
@@ -908,8 +909,8 @@ export class GANInput implements TimerInputHandler {
       cc.ca[7] = (cchk & 0xff8) % 24 | (cchk & 0x7);
 
       for (let i = 0; i < 11; i++) {
-        let perm = parseInt(value.slice(47 + i * 4, 51 + i * 4), 2);
-        let ori = parseInt(value.slice(91 + i, 92 + i), 2);
+        const perm = parseInt(value.slice(47 + i * 4, 51 + i * 4), 2);
+        const ori = parseInt(value.slice(91 + i, 92 + i), 2);
         echk ^= (perm << 1) | ori;
         cc.ea[i] = (perm << 1) | ori;
       }
@@ -941,9 +942,9 @@ export class GANInput implements TimerInputHandler {
       // hardware info
       debug && console.log("[gancube]", "v2 received hardware info event", value);
       debug && console.log("[gancube]", "v2 received hardware info event");
-      let hardwareVersion =
+      const hardwareVersion =
         parseInt(value.slice(8, 16), 2) + "." + parseInt(value.slice(16, 24), 2);
-      let softwareVersion =
+      const softwareVersion =
         parseInt(value.slice(24, 32), 2) + "." + parseInt(value.slice(32, 40), 2);
       let deviceName = "";
 
@@ -951,7 +952,7 @@ export class GANInput implements TimerInputHandler {
         deviceName += String.fromCharCode(parseInt(value.slice(40 + i * 8, 48 + i * 8), 2));
       }
 
-      let gyro = 1 === parseInt(value.slice(104, 105), 2);
+      const gyro = 1 === parseInt(value.slice(104, 105), 2);
 
       debug && console.log("[gancube]", "Hardware Version", hardwareVersion);
       debug && console.log("[gancube]", "Software Version", softwareVersion);
@@ -970,7 +971,7 @@ export class GANInput implements TimerInputHandler {
   }
 
   private decode(value: DataView) {
-    let ret = [];
+    const ret = [];
 
     for (let i = 0; i < value.byteLength; i++) {
       ret[i] = value.getUint8(i);
@@ -979,10 +980,10 @@ export class GANInput implements TimerInputHandler {
     if (this.decoder == null) {
       return ret;
     }
-    let iv = this.decoder.iv || [];
+    const iv = this.decoder.iv || [];
     if (ret.length > 16) {
-      let offset = ret.length - 16;
-      let block = this.decoder.decrypt(ret.slice(offset));
+      const offset = ret.length - 16;
+      const block = this.decoder.decrypt(ret.slice(offset));
       for (let i = 0; i < 16; i++) {
         ret[i + offset] = block[i] ^ ~~iv[i];
       }
@@ -1013,9 +1014,9 @@ export class GANInput implements TimerInputHandler {
   // }
 
   private async getKeyV2(value: number[], ver: any): Promise<number[][]> {
-    let v = ver || 0;
-    let key = JSON.parse(await decompressFromBase64(GANInput.KEYS[2 + v * 2]));
-    let iv = JSON.parse(await decompressFromBase64(GANInput.KEYS[3 + v * 2]));
+    const v = ver || 0;
+    const key = JSON.parse(await decompressFromBase64(GANInput.KEYS[2 + v * 2]));
+    const iv = JSON.parse(await decompressFromBase64(GANInput.KEYS[3 + v * 2]));
     for (let i = 0; i < 6; i++) {
       key[i] = (key[i] + value[5 - i]) % 255;
       iv[i] = (iv[i] + value[5 - i]) % 255;
@@ -1039,7 +1040,7 @@ export class GANInput implements TimerInputHandler {
         debug && console.log("[gancube] v2init find chrcts", chrcts);
 
         for (let i = 0; i < chrcts.length; i++) {
-          let chrct = chrcts[i];
+          const chrct = chrcts[i];
           debug && console.log("[gancube] v2init find chrct", chrct);
           if (matchUUID(chrct.uuid, GANInput.CHRCT_UUID_V2READ)) {
             this.chrct_v2read = chrct;
@@ -1078,7 +1079,7 @@ export class GANInput implements TimerInputHandler {
   sendEvent(ev: { type: string; data?: any }) {
     if (ev.type === "sync-solved") {
       solvedState = this.latestFacelet;
-      let ds = get(dataService);
+      const ds = get(dataService);
 
       ds.emitBluetoothData("facelet", SOLVED_FACELET);
       ds.config.setPath(`timer/inputs/GAN/${this.deviceMac}`, { solvedState });

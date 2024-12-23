@@ -11,19 +11,19 @@ import { FaceSticker } from "./FaceSticker";
 function getArc(a: Vector3D, b: Vector3D, c: Vector3D, mh: number) {
   const PPC = 40;
 
-  let path: Vector3D[] = getCircle(a, b, c, PPC);
+  const path: Vector3D[] = getCircle(a, b, c, PPC);
   console.log("PATH: ", path[0], path[path.length - 1], a, b, c);
 
   return path.map((n, p) => {
-    let a = p / (path.length - 1);
-    let h = -mh * a * (a - 1) * 4;
+    const a = p / (path.length - 1);
+    const h = -mh * a * (a - 1) * 4;
     return new Vector3D(n.x, h, n.z);
   });
 }
 
 function getStickerFromPaths(p1: Vector3D[], p2: Vector3D[]) {
-  let petalFaces: number[][] = [];
-  let pathLen = p1.length;
+  const petalFaces: number[][] = [];
+  const pathLen = p1.length;
 
   for (let i = 0, maxi = pathLen - 1; i < maxi; i += 1) {
     petalFaces.push([i, i + pathLen + 1, i + pathLen]);
@@ -49,7 +49,7 @@ export function REDI_BARREL(): PuzzleInterface {
   };
 
   redib.getAllStickers = getAllStickers.bind(redib);
-  let pieces = redib.pieces;
+  const pieces = redib.pieces;
 
   // Constants
   const PI = Math.PI;
@@ -58,16 +58,16 @@ export function REDI_BARREL(): PuzzleInterface {
   const ANG = (2 * PI) / 3;
 
   // Center petal
-  let petalStickerB = getStickerFromPaths(
+  const petalStickerB = getStickerFromPaths(
     getArc(LEFT, LEFT.rotate(CENTER, UP, PI_4), FRONT, 0.25),
     getArc(LEFT, LEFT.rotate(CENTER, UP, PI_4), FRONT, -0.25)
   );
 
   petalStickerB.color = petalStickerB.oColor = "d";
 
-  let VC = LEFT.mul(1.001);
-  let HC = 0.23;
-  let petalStickerC = getStickerFromPaths(
+  const VC = LEFT.mul(1.001);
+  const HC = 0.23;
+  const petalStickerC = getStickerFromPaths(
     getArc(
       VC.rotate(CENTER, UP, 0.05),
       VC.rotate(CENTER, UP, PI_4),
@@ -93,7 +93,7 @@ export function REDI_BARREL(): PuzzleInterface {
   );
 
   // Center
-  let centerSticker1 = getStickerFromPaths(
+  const centerSticker1 = getStickerFromPaths(
     getArc(LEFT, LEFT.rotate(CENTER, UP, PI_4), FRONT, 0.25),
     getArc(LEFT, LEFT.rotate(CENTER, UP, PI_4), FRONT, -0.25)
   );
@@ -103,19 +103,19 @@ export function REDI_BARREL(): PuzzleInterface {
   // Piece type 3
 
   // Interaction
-  let planes: Vector3D[][] = [];
+  const planes: Vector3D[][] = [];
 
-  let trySingleMove = (mv: any): PiecesToMove | null => {
-    let moveId = mv[0];
-    let turns = mv[1];
+  const trySingleMove = (mv: any): PiecesToMove | null => {
+    const moveId = mv[0];
+    const turns = mv[1];
     const pts1 = planes[moveId];
     const u = Vector3D.cross(pts1[0], pts1[1], pts1[2]).unit();
     const anc = pts1[0];
 
-    let pcs = [];
+    const pcs = [];
 
     for (let i = 0, maxi = pieces.length; i < maxi; i += 1) {
-      let d = pieces[i].direction1(anc, u, true);
+      const d = pieces[i].direction1(anc, u, true);
 
       if (d === 0) {
         console.log("Invalid move. Piece intersection detected.", mv, turns, mv);
@@ -137,15 +137,15 @@ export function REDI_BARREL(): PuzzleInterface {
 
   redib.move = function (moves: any[]) {
     for (let m = 0, maxm = moves.length; m < maxm; m += 1) {
-      let mv = moves[m];
-      let pcs = trySingleMove(mv);
+      const mv = moves[m];
+      const pcs = trySingleMove(mv);
 
       if (!pcs) {
         return false;
       }
 
-      let { u, ang, center } = pcs;
-      let p = pcs.pieces;
+      const { u, ang, center } = pcs;
+      const p = pcs.pieces;
 
       for (let i = 0, maxi = p.length; i < maxi; i += 1) {
         p[i].rotate(center || redib.center, u, ang, true);
@@ -155,8 +155,8 @@ export function REDI_BARREL(): PuzzleInterface {
   };
 
   redib.toMove = function (pc: Piece, st: Sticker, u: Vector3D) {
-    let mc = st.updateMassCenter();
-    let pcs = pieces.filter(p => p.direction1(mc, u) === 0);
+    const mc = st.updateMassCenter();
+    const pcs = pieces.filter(p => p.direction1(mc, u) === 0);
 
     return {
       pieces: pcs,
@@ -168,30 +168,30 @@ export function REDI_BARREL(): PuzzleInterface {
     const MOVES = 50;
 
     for (let i = 0; i < MOVES; i += 1) {
-      let p = random(pieces) as Piece;
+      const p = random(pieces) as Piece;
       if (!p) {
         i -= 1;
         continue;
       }
-      let s = random(p.stickers.filter(s => !/^[xd]{1}$/.test(s.color))) as Sticker;
+      const s = random(p.stickers.filter(s => !/^[xd]{1}$/.test(s.color))) as Sticker;
       if (!s) {
         i -= 1;
         continue;
       }
-      let vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > EPS));
+      const vec = random(s.vecs.filter(v => v.unit().sub(s.getOrientation()).abs() > EPS));
       if (!vec) {
         i -= 1;
         continue;
       }
-      let pcs = redib.toMove!(p, s, vec) as ToMoveResult;
-      let cant = 1 + random(3);
+      const pcs = redib.toMove!(p, s, vec) as ToMoveResult;
+      const cant = 1 + random(3);
       pcs.pieces.forEach((p: Piece) => p.rotate(CENTER, vec, pcs.ang * cant, true));
     }
   };
 
   redib.applySequence = function (seq: string[]) {
-    let moves = seq.map(mv => ScrambleParser.parseNNN(mv, { a: 3, b: 3, c: 3 })[0]);
-    let res: { u: Vector3D; ang: number; pieces: string[] }[] = [];
+    const moves = seq.map(mv => ScrambleParser.parseNNN(mv, { a: 3, b: 3, c: 3 })[0]);
+    const res: { u: Vector3D; ang: number; pieces: string[] }[] = [];
 
     for (let i = 0, maxi = moves.length; i < maxi; i += 1) {
       let pcs;
@@ -206,7 +206,7 @@ export function REDI_BARREL(): PuzzleInterface {
         continue;
       }
 
-      let { u, ang } = pcs;
+      const { u, ang } = pcs;
       res.push({ u, ang, pieces: pcs.pieces.map(p => p.id) });
       pcs.pieces.forEach(p => p.rotate(CENTER, u, ang, true));
     }
