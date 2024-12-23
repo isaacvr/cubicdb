@@ -4,6 +4,7 @@
   import { CubicDBICON } from "@constants";
   import { onMount } from "svelte";
   import { calcPercents } from "@helpers/math";
+  import { dataService } from "$lib/data-services/data.service";
 
   onMount(() => {
     console.log(calcPercents([1, 1, 9, 39, 26, 31, 4], 109));
@@ -69,12 +70,14 @@
     </li>
 
     <!-- Contest -->
-    <li>
-      <a class="flex flex-col items-center justify-between w-full h-full" href="/contest">
-        <img class="mx-auto" src={CubicDBICON} alt="" />
-        <h2 class="text-sm text-center">{$localLang.HOME.contest}</h2>
-      </a>
-    </li>
+    {#if $dataService.isElectron}
+      <li>
+        <a class="flex flex-col items-center justify-between w-full h-full" href="/contest">
+          <img class="mx-auto" src={CubicDBICON} alt="" />
+          <h2 class="text-sm text-center">{$localLang.HOME.contest}</h2>
+        </a>
+      </li>
+    {/if}
 
     <!-- Tools -->
     <li>
