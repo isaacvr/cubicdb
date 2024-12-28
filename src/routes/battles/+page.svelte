@@ -456,7 +456,7 @@
     </div>
 
     <ul id="actions" class="absolute top-2 right-2 flex items-center gap-2">
-      <li class="bg-gray-500 text-gray-300">
+      <li class="bg-gray-500 text-gray-300 cursor-pointer">
         <button
           on:click={() => {
             socket.disconnect();
@@ -465,7 +465,7 @@
           }}>D</button
         >
       </li>
-      <li class="bg-gray-500 text-gray-300">
+      <li class="bg-gray-500 text-gray-300 cursor-pointer">
         <Tooltip position="top" text="Observers">
           <div class="flex items-center gap-1">
             <EyeIcon size="1.2rem" />
@@ -553,7 +553,7 @@
 
 <style lang="postcss">
   #actions li {
-    @apply w-14 h-8 flex items-center justify-center cursor-pointer rounded-md shadow-md;
+    @apply w-14 h-8 flex items-center justify-center rounded-md shadow-md;
   }
 
   .disconnected {

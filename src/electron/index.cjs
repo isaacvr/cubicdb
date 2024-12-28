@@ -1,9 +1,9 @@
 const {
   BrowserWindow,
   app,
-  globalShortcut,
   ipcMain,
   powerSaveBlocker,
+  session,
   screen,
   shell,
 } = require("electron");
@@ -251,9 +251,18 @@ function createWindow() {
     webPreferences: {
       contextIsolation: true,
       backgroundThrottling: false,
+      sandbox: true,
       preload: join(__dirname, "preload.js"),
     },
     icon: join(__dirname, "icon.png"),
+  });
+
+  // SECURITY: CSP
+  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+    callback({
+      ...details.responseHeaders,
+      "Content-Security-Policy": ["default-src 'none'"],
+    });
   });
 
   // Disable closing window with Ctrl + W

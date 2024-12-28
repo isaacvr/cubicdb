@@ -3,37 +3,61 @@
   import { getColorByName } from "@constants";
   import { mod } from "@helpers/math";
   import { weakRandomUUID } from "@helpers/strings";
-  import ExpandIcon from "@icons/ChevronDown.svelte";
   import type { Placement, Side } from "@interfaces";
-
-  import { Button, Dropdown, DropdownDivider, DropdownItem } from "flowbite-svelte";
+  import { Dropdown, DropdownDivider, DropdownItem } from "flowbite-svelte";
   import { createEventDispatcher, onMount, tick } from "svelte";
+  import { ChevronDown } from "lucide-svelte";
+  import Button from "$lib/cubicdbKit/Button.svelte";
 
-  let cl = "";
-  export { cl as class };
-  export let type: "color" | "select" = "select";
-  export let placeholder: string = "";
-  export let value: any = placeholder;
-  export let items: readonly any[];
-  export let onChange = (item: any, pos: number, arr: readonly any[]) => {};
-  export let label = (item: any, pos: number): string => (item || "").toString();
-  export let transform = (item: any, pos?: number, arr?: readonly any[]) => item.value;
-  export let hasIcon: null | ((v: any) => any) = null;
-  export let disabled = (item: any, pos: number, arr?: readonly any[]) => false;
-  export let placement: Side | Placement = "bottom";
-  export let useFixed = false;
-  export let iconComponent: any = WcaCategory;
-  export let iconKey = "icon";
-  export let iconSize: string | null = "1.2rem";
-  export let preferIcon = false;
+  interface SelectProps {
+    class?: string;
+    type?: "color" | "select";
+    placeholder?: string;
+    value?: any;
+    items: readonly any[];
+    onChange?: (item: any, pos: number, arr: readonly any[]) => void;
+    label?: (item: any, pos: number) => string;
+    transform?: (item: any, pos?: number, arr?: readonly any[]) => any;
+    hasIcon?: null | ((v: any) => any);
+    disabled?: (item: any, pos: number, arr?: readonly any[]) => boolean;
+    placement?: Side | Placement;
+    useFixed?: boolean;
+    IconComponent?: any;
+    iconKey?: string;
+    iconSize?: string | null;
+    preferIcon?: boolean;
+    [key: string]: any;
+  }
+
+  let {
+    class: cl = "",
+    type = "select",
+    placeholder = "",
+    value = $bindable(""),
+    items = [],
+    onChange = (item: any, pos: number, arr: readonly any[]) => {},
+    label = (item: any, pos: number): string => (item || "").toString(),
+    transform = (item: any, pos?: number, arr?: readonly any[]) => item.value,
+    hasIcon = null,
+    disabled = (item: any, pos: number, arr?: readonly any[]) => false,
+    placement = "bottom",
+    useFixed = false,
+    IconComponent = WcaCategory,
+    iconKey = "icon",
+    iconSize = "1.2rem",
+    preferIcon = false,
+    ...otherProps
+  }: SelectProps = $props();
 
   const selectID = "s" + weakRandomUUID().replace(/-/g, "");
   const dispatch = createEventDispatcher();
 
-  let showOptions = false;
+  let showOptions = $state(false);
   let mounted = false;
-  let gridW = 1;
+  let gridW = $state(1);
   let focused = 0;
+  let lastWord = "";
+  let lastTime = 0;
 
   function findValuePosition() {
     for (let i = 0, maxi = items.length; i < maxi; i += 1) {
@@ -71,9 +95,10 @@
   }
 
   function focusElement(list: any) {
-    (
-      (list.children[0].children[focused * 2] as HTMLLIElement).firstChild as HTMLButtonElement
-    )?.focus();
+    let elem = (list.children[0].children[focused * 2] as HTMLLIElement)
+      .firstElementChild as HTMLButtonElement;
+    if (!elem) return;
+    elem.focus();
   }
 
   function handleKeydown(ev: KeyboardEvent) {
@@ -94,7 +119,7 @@
     if (ev.code === "ArrowUp" || ev.code === "ArrowDown") {
       focused = mod(
         ev.code === "ArrowUp" ? focused - 1 : focused + 1,
-        list.children[0].children.length
+        Math.floor(list.children[0].children.length / 2) + 1
       );
 
       tick().then(() => focusElement(list));
@@ -113,32 +138,57 @@
       ? ev.code.slice(-1)
       : ev.code.slice(3).toLowerCase();
 
-    let ini = mod(focused + 1, data.length);
+    let toFind = performance.now() - lastTime > 700 ? letter : lastWord + letter;
+    lastTime = performance.now();
+
+    let ini = mod(focused + (toFind.length === 1 ? 1 : 0), data.length);
+
+    console.log(`toFind: <${toFind}>, <${letter}>, <${lastWord}>`);
 
     for (let i = 0, maxi = data.length; i < maxi; i += 1) {
       let p = mod(ini + i, data.length);
 
-      if (data[p].label.startsWith(letter)) {
+      if (data[p].label.startsWith(toFind)) {
+        lastWord = toFind;
+        console.log("lastWord = toFind 1");
         focused = p;
         tick().then(() => focusElement(list));
         return;
       }
     }
+
+    toFind = letter;
+    ini = mod(focused + 1, data.length);
+    console.log("searching letter");
+
+    for (let i = 0, maxi = data.length; i < maxi; i += 1) {
+      let p = mod(ini + i, data.length);
+
+      if (data[p].label.startsWith(toFind)) {
+        lastWord = toFind;
+        console.log("lastWord = toFind 2");
+        focused = p;
+        tick().then(() => focusElement(list));
+        return;
+      }
+    }
+
+    lastWord = "";
+    console.log("not found");
   }
 
   onMount(() => (mounted = true));
 
-  $: emitStatus(showOptions);
-  $: updateGridW(items);
+  $effect(() => emitStatus(showOptions));
+  $effect(() => updateGridW(items));
 </script>
 
-<svelte:window on:keydown|capture={handleKeydown} />
+<svelte:window onkeydown={handleKeydown} />
 
 <Button
-  color="alternative"
-  class={"gap-1 h-9 py-1 px-2 " + cl}
-  on:click={handleClick}
-  {...$$restProps}
+  class={"gap-1 h-9 py-1 px-2 input font-normal text-base-content " + cl}
+  onclick={handleClick}
+  {...otherProps}
 >
   {#if items.some((a, p, i) => transform(a, p, i) === value)}
     {@const item = items.reduce(
@@ -146,15 +196,15 @@
       [null, -1]
     )}
 
-    {#if hasIcon && iconComponent}
+    {#if hasIcon && IconComponent}
       {@const iconProps = Object.assign(iconSize ? { size: iconSize } : {}, {
         [iconKey]: hasIcon(item[0]),
       })}
 
-      <svelte:component this={iconComponent} {...iconProps} noFallback />
+      <IconComponent {...iconProps} noFallback></IconComponent>
     {/if}
 
-    {#if !(hasIcon && iconComponent && preferIcon)}
+    {#if !(hasIcon && IconComponent && preferIcon)}
       {#if type === "color"}
         <div
           class="color w-4 h-4"
@@ -168,13 +218,15 @@
     {placeholder}
   {/if}
 
-  <ExpandIcon size="1.2rem" class="ml-auto" />
+  <ChevronDown size="1.3rem" class="ml-auto" />
 </Button>
 
 <Dropdown
   bind:open={showOptions}
+  trigger="click"
   id={selectID}
-  containerClass={"max-h-[20rem] overflow-y-auto z-50 w-max bg-backgroundLevel2 " +
+  containerClass={`max-h-[20rem] overflow-y-auto overflow-x-hidden rounded-md
+    z-50 w-max bg-base-200 ` +
     (useFixed ? " !fixed " : "") +
     (type === "color"
       ? " [&>ul]:grid-cols-[repeat(var(--grid-w),1fr)] [&>ul]:grid [&>ul>div]:hidden  "
@@ -188,14 +240,12 @@
     {/if}
 
     <DropdownItem
-      class={`flex items-center gap-2 py-2 px-2
+      class={`flex items-center gap-2 py-2 px-2 text-base-content hover:bg-base-100 rounded-md
         ` +
         (disabled(item, pos, items)
-          ? " text-gray-500 [&>div]:opacity-40 pointer-events-none select-none "
+          ? " [&>div]:opacity-40 pointer-events-none select-none "
           : " ") +
-        (transform(item, pos, items) === value
-          ? " bg-primary-600 tx-text hover:bg-primary-400 "
-          : " ")}
+        (transform(item, pos, items) === value ? " bg-base-100 hover:bg-primary " : " ")}
       on:click={() => {
         if (disabled(item, pos, items)) return;
 
@@ -204,11 +254,12 @@
         onChange(item, pos, items);
       }}
     >
-      {#if hasIcon && iconComponent}
+      {#if hasIcon && IconComponent}
         {@const iconProps = Object.assign(iconSize ? { size: iconSize } : {}, {
           [iconKey]: hasIcon(item),
         })}
-        <svelte:component this={iconComponent} {...iconProps} noFallback />
+
+        <IconComponent {...iconProps} noFallback></IconComponent>
       {/if}
 
       {#if label(item, pos).trim()}

@@ -17,24 +17,24 @@ interface StackmatContext extends InputContext {
 
 type STActor = (data: Actor<StackmatContext>) => any;
 
-const enterDisconnect: STActor = ({ context: { state, stackmatStatus } }) => {
+const enterDisconnect: STActor = ({ context: { timerState: state, stackmatStatus } }) => {
   stackmatStatus.set(false);
   state.set(TimerState.CLEAN);
 };
 
-const enterClean: STActor = ({ context: { state } }) => {
+const enterClean: STActor = ({ context: { timerState: state } }) => {
   state.set(TimerState.CLEAN);
 };
 
-const enterInspection: STActor = ({ context: { state } }) => {
+const enterInspection: STActor = ({ context: { timerState: state } }) => {
   state.set(TimerState.INSPECTION);
 };
 
-const enterRunning: STActor = ({ context: { state } }) => {
+const enterRunning: STActor = ({ context: { timerState: state } }) => {
   state.set(TimerState.RUNNING);
 };
 
-const enterStopped: STActor = ({ context: { state, time, addSolve } }) => {
+const enterStopped: STActor = ({ context: { timerState: state, time, addSolve } }) => {
   state.set(TimerState.STOPPED);
   addSolve(get(time));
 };

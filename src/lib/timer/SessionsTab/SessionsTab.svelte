@@ -575,10 +575,10 @@
         {$localLang.TIMER.copyScramble}
       </button>
     </li>
-    {#if solveIndex(sSolve) >= (isMo3($session.settings.mode || "") ? 3 : 5)}
+    {#if solveIndex(sSolve) >= (isMo3($session?.settings.mode || "") ? 3 : 5)}
       <li>
-        <button on:click={() => copyAverage(sSolve, isMo3($session.settings.mode || "") ? 3 : 5)}>
-          {#if isMo3($session.settings.mode || "")}
+        <button on:click={() => copyAverage(sSolve, isMo3($session?.settings.mode || "") ? 3 : 5)}>
+          {#if isMo3($session?.settings.mode || "")}
             <Avg3Icon /> {$localLang.global.copy} Mo3
           {:else}
             <Avg5Icon /> {$localLang.global.copy} Ao5
@@ -679,7 +679,7 @@
 
       <div class="col-span-2 flex mb-4 text-center -mt-4">
         {#each solveSteps as s, p (p)}
-          <span style={`width: ${s}%; `}>{($session.settings.stepNames || [])[p] || ""}</span>
+          <span style={`width: ${s}%; `}>{($session?.settings.stepNames || [])[p] || ""}</span>
         {/each}
       </div>
     {/if}
@@ -839,7 +839,7 @@
   }
 
   .context-menu li button {
-    @apply pointer-events-auto pr-2 hover:pl-2 hover:pr-1 p-1 rounded-md transition-all duration-200 cursor-pointer
+    @apply pointer-events-auto pr-2 hover:pl-2 hover:pr-1 p-1 rounded-md transition-all duration-200
     hover:bg-white hover:bg-opacity-10 w-full flex gap-2 justify-start items-center;
   }
 

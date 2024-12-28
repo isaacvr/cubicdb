@@ -1,5 +1,6 @@
 import { DEFAULT_THEME } from "$lib/themes/default";
-import { applyTheme, transformTheme } from "$lib/themes/manageThemes";
+// import { applyTheme, transformTheme } from "$lib/themes/manageThemes";
+import { applyTheme } from "$lib/themes/manageThemes";
 import { getConfigIPC } from "../ConfigIPC";
 import type { ThemeIPC } from "./themeIPC.interface";
 import type { Theme } from "@interfaces";
@@ -8,8 +9,8 @@ export class ThemeElectronIPC implements ThemeIPC {
   currentTheme = DEFAULT_THEME;
 
   private constructor() {
-    this.currentTheme = transformTheme(DEFAULT_THEME);
-    applyTheme(this.currentTheme, false);
+    // this.currentTheme = transformTheme(DEFAULT_THEME);
+    // applyTheme(this.currentTheme, false);
   }
 
   private static _instance: ThemeElectronIPC | null = null;
@@ -29,7 +30,7 @@ export class ThemeElectronIPC implements ThemeIPC {
     if (!save) return;
 
     const configIPC = getConfigIPC();
-    configIPC.global.theme = t.id;
+    configIPC.global.theme = t.meta.id;
     configIPC.saveConfig();
   }
 

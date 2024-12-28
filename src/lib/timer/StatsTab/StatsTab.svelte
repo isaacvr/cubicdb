@@ -474,12 +474,12 @@
     // @ts-ignore
     distChart.setOption(distOption);
 
-    if (!$session.settings || $session.settings.sessionType != "multi-step") {
+    if (!$session?.settings || $session?.settings.sessionType != "multi-step") {
       return;
     }
 
     // Splits
-    let sessionSteps = $session.settings.steps || 0;
+    let sessionSteps = $session?.settings.steps || 0;
     steps = newArr(sessionSteps).fill(0);
 
     for (let i = 0, maxi = $solves.length; i < maxi; i += 1) {
@@ -523,8 +523,8 @@
     });
 
     if (
-      !$session.settings ||
-      $session.settings.sessionType != "multi-step" ||
+      !$session?.settings ||
+      $session?.settings.sessionType != "multi-step" ||
       !stepTimeChart ||
       !stepPercentChart
     ) {
@@ -569,6 +569,8 @@
   }
 
   async function updateMultiSteps(ss: Session) {
+    if (!ss) return;
+
     if (!ss.settings || ss.settings.sessionType != "multi-step") {
       stepTimeChart?.dispose();
       stepPercentChart?.dispose();
@@ -745,7 +747,7 @@
 
 <svelte:window on:resize={handleResize} />
 
-<main class:headless class:multi={$session.settings?.sessionType === "multi-step"} class="tx-text">
+<main class:headless class:multi={$session?.settings?.sessionType === "multi-step"} class="tx-text">
   <div
     class={`canvas card grid place-items-center max-sm:col-span-1 col-span-2 row-span-2 ` +
       (headless ? "max-md:col-span-full" : "")}
@@ -830,7 +832,7 @@
       </div>
     </div>
 
-    {#if $session.settings?.sessionType === "multi-step"}
+    {#if $session?.settings?.sessionType === "multi-step"}
       <div class="steps-graph card" bind:this={stepTimeSerie}></div>
       <div class="steps-percents card" bind:this={stepPercentSerie}></div>
     {/if}

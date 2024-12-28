@@ -275,49 +275,51 @@
         <WcaCategory icon={category.mode[1]} size="3rem" />
 
         <table>
-          <tr>
-            <td>
-              <Input bind:value={category.name} class="w-fit py-1 text-center" />
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <div class="grid grid-cols-2 gap-x-2">
-                <h4 class="text-center">{$localLang.CONTEST.rounds}</h4>
-                <h4 class="text-center">{$localLang.CONTEST.format}</h4>
-
-                <Input
-                  bind:value={category.rounds}
-                  class="py-1 text-center"
-                  min={1}
-                  max={4}
-                  type="number"
-                />
-
-                <Select
-                  bind:value={category.format}
-                  items={getModeFormats(category.mode[1])}
-                  transform={e => e}
-                  class="w-full !bg-gray-600 !text-white"
-                  placement="right"
-                />
-              </div>
-            </td>
-          </tr>
-          {#if mbld}
+          <tbody>
             <tr>
               <td>
-                <h4 class="text-center">{$localLang.global.scrambles}</h4>
-                <Input
-                  bind:value={category.scrambles}
-                  class="py-1 text-center"
-                  min={2}
-                  max={200}
-                  type="number"
-                />
+                <Input bind:value={category.name} class="w-fit py-1 text-center" />
               </td>
             </tr>
-          {/if}
+            <tr>
+              <td>
+                <div class="grid grid-cols-2 gap-x-2">
+                  <h4 class="text-center">{$localLang.CONTEST.rounds}</h4>
+                  <h4 class="text-center">{$localLang.CONTEST.format}</h4>
+
+                  <Input
+                    bind:value={category.rounds}
+                    class="py-1 text-center"
+                    min={1}
+                    max={4}
+                    type="number"
+                  />
+
+                  <Select
+                    bind:value={category.format}
+                    items={getModeFormats(category.mode[1])}
+                    transform={e => e}
+                    class="w-full !bg-gray-600 !text-white"
+                    placement="right"
+                  />
+                </div>
+              </td>
+            </tr>
+            {#if mbld}
+              <tr>
+                <td>
+                  <h4 class="text-center">{$localLang.global.scrambles}</h4>
+                  <Input
+                    bind:value={category.scrambles}
+                    class="py-1 text-center"
+                    min={2}
+                    max={200}
+                    type="number"
+                  />
+                </td>
+              </tr>
+            {/if}
+          </tbody>
         </table>
 
         <Button

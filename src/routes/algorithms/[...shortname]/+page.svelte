@@ -29,25 +29,37 @@
   const algorithms = config.algorithms;
 
   let lastUrl: string = "";
-  let cards: ICard[] = [];
-  let cases: Algorithm[] = [];
-  let type: number = 0;
-  let selectedCase: Algorithm | null = null;
-  let allSolutions = false;
-  let imgExpanded = false;
+  let cards: ICard[] = $state([]);
+  let cases: Algorithm[] = $state([]);
+  let images: string[] = $state([]);
+  let type: number = $state(0);
+  let selectedCase: Algorithm | null = $state(null);
+  let allSolutions = $state(false);
+  let imgExpanded = $state(false);
   const NUMBER_REG = /^[+-]?[\d]+(\.[\d]+)?$/;
   let currentList: Algorithm[] = [];
-  let allowAlgAdmin = false;
+  let allowAlgAdmin = $state(false);
   let currentAlg: Algorithm | null = null;
   let meta = getTitleMeta($page.url.pathname, $localLang);
 
   // Modal
-  let show = false;
-  let isAdding = false;
-  let sAlg: { alg: Algorithm; tutorial: false };
-  let tipTemp: string[] = [];
-  let solTemp: Solution[] = [];
-  let img = "";
+  let show = $state(false);
+  let isAdding = $state(false);
+  let sAlg: { alg: Algorithm; tutorial: false } = $state({
+    alg: {
+      mode: CubeMode.NORMAL,
+      name: "",
+      order: 3,
+      ready: true,
+      scramble: "",
+      shortName: "",
+      _id: "",
+    },
+    tutorial: false,
+  });
+  let tipTemp: string[] = $state([]);
+  let solTemp: Solution[] = $state([]);
+  let img = $state("");
 
   function handleAlgorithms(list: Algorithm[]) {
     if (list.length === 0) return;
@@ -115,16 +127,6 @@
         cases.push(e);
       }
     }
-
-    let arr: Puzzle[] =
-      type < 2 ? cards.map(e => e.puzzle as Puzzle) : cases.map(e => e._puzzle as Puzzle);
-
-    pGenerateCubeBundle(arr, 1000, true, false, true)
-      .then(_ => {
-        cards = cards;
-        cases = cases;
-      })
-      .catch(err => console.log("ERROR: ", err));
   }
 
   function toggleListView() {
@@ -226,12 +228,6 @@
   }
 
   function saveAlgorithm() {
-    // sAlg.alg.rotation = {
-    //   x: rotation.x,
-    //   y: rotation.y,
-    //   z: rotation.z,
-    // };
-
     (isAdding
       ? $dataService.algorithms.addAlgorithm(sAlg.alg)
       : $dataService.algorithms.updateAlgorithm(sAlg.alg)
@@ -375,7 +371,16 @@
 
   onDestroy(() => pageSub && pageSub());
 
-  $: updateMeta($localLang);
+  $effect(() => updateMeta($localLang));
+
+  $effect(() => {
+    let arr: Puzzle[] =
+      type < 2 ? cards.map(e => e.puzzle as Puzzle) : cases.map(e => e._puzzle as Puzzle);
+
+    pGenerateCubeBundle(arr, 1000, false, false, true)
+      .then(res => (images = res))
+      .catch(err => console.log("ERROR: ", err));
+  });
 </script>
 
 <svelte:head>
@@ -393,7 +398,7 @@
       <button
         class={"flex mx-auto items-center justify-center transition-all duration-200 " +
           (imgExpanded ? "h-[min(20rem,100%)] w-[min(20rem,100%)]" : "h-40 w-40")}
-        on:click={() => (imgExpanded = !imgExpanded)}
+        onclick={() => (imgExpanded = !imgExpanded)}
       >
         {#if selectedCase?._puzzle?.img}
           <PuzzleImage
@@ -408,14 +413,14 @@
       </button>
 
       <div class="grid grid-cols-6 gap-1">
-        <h2 class="max-sm:hidden col-span-1 font-bold text-xl">&nbsp;</h2>
+        <span class="max-sm:hidden col-span-1 font-bold text-xl"></span>
         <h2 class="max-sm:col-span-5 col-span-3 font-bold text-xl tx-text">
           {$localLang.ALGORITHMS.solution}
         </h2>
         <h2 class="max-sm:col-span-1 col-span-1 font-bold text-xl text-right tx-text">
           {$localLang.ALGORITHMS.moves}
         </h2>
-        <h2 class="max-sm:hidden col-span-1 font-bold text-xl">&nbsp</h2>
+        <span class="max-sm:hidden col-span-1 font-bold text-xl"></span>
 
         {#each selectedCase?.solutions || [] as sol, i}
           <span class="max-sm:hidden col-span-1"></span>
@@ -428,7 +433,7 @@
             <button
               role="link"
               tabindex="0"
-              on:click={() => toClipboard(sol.moves)}
+              onclick={() => toClipboard(sol.moves)}
               class="cursor-pointer hover:tx-text transition-all tx-text
                 text-left duration-200 pl-2 underline underline-offset-4">{sol.moves}</button
             >
@@ -481,7 +486,7 @@
     <!-- Cards -->
     {#if type < 2}
       <ul class="cards w-full grid py-4">
-        {#each cards as card, pos (card.route)}
+        {#each cards as card, pos}
           <li aria-label={card.title} class="flex w-full">
             <a
               href={card.route}
@@ -490,8 +495,8 @@
             hover:shadow-2xl relative"
             >
               <div>
-                {#if card?.puzzle?.img}
-                  <PuzzleImage src={card.puzzle.img} />
+                {#if images[pos]}
+                  <PuzzleImage src={images[pos]} />
                 {:else}
                   <Spinner size="10" color="yellow" class="m-auto" />
                 {/if}
@@ -504,7 +509,8 @@
               {#if allowAlgAdmin}
                 <div class="absolute no-grid flex flex-col gap-2 justify-start top-0 left-0">
                   <button
-                    on:click|preventDefault={e => {
+                    onclick={e => {
+                      e.preventDefault();
                       selectAlg(currentList[pos]);
                     }}
                     class="p-1 bg-primary-600 rounded-md"
@@ -530,7 +536,7 @@
           <span class="tx-text font-bold">{$localLang.ALGORITHMS.algorithms}</span>
         </div>
 
-        {#each cases as c (c._id)}
+        {#each cases as c, p (c._id)}
           <div class="row min-h-[8rem] relative gap-2">
             <span class="font-bold text-center tx-text">{c.name}</span>
 
@@ -538,8 +544,8 @@
               class="img-btn flex items-center justify-center my-2"
               href={c.parentPath + "?case=" + c.shortName}
             >
-              {#if c?._puzzle?.img}
-                <PuzzleImage src={c._puzzle.img} glowOnHover />
+              {#if images[p]}
+                <PuzzleImage src={images[p]} glowOnHover />
               {:else}
                 <Spinner size="10" color="white" />
               {/if}

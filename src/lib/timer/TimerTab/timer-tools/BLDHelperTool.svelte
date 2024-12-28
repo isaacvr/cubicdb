@@ -270,171 +270,175 @@
     {/if}
 
     <table class="bordered mt-4">
-      <tr>
-        <th class="text-center">Piece</th>
-        <th class="text-center">Scheme</th>
-        <th class="text-center">Buffers</th>
-        {#if hasHelper}
-          <th class="text-center">Helpers</th>
-        {/if}
-      </tr>
+      <thead>
+        <tr>
+          <th class="text-center">Piece</th>
+          <th class="text-center">Scheme</th>
+          <th class="text-center">Buffers</th>
+          {#if hasHelper}
+            <th class="text-center">Helpers</th>
+          {/if}
+        </tr>
+      </thead>
 
       <!-- Corners -->
-      <tr>
-        <td>
-          <h3 class="text-center tx-emphasis p-0">Corners</h3>
-        </td>
-        <td>
-          <Select
-            class="bg-backgroundLevel2 flex mx-auto"
-            bind:value={cschema}
-            items={SCHEMAS}
-            transform={e => e}
-            label={e => e.name}
-            placement="right"
-          />
-        </td>
-        <td class="">
-          <Select
-            class="py-2 bg-backgroundLevel2 flex mx-auto"
-            placement="right"
-            items={SPEFFZ_SCH[0]}
-            bind:value={cornerBuffer}
-            transform={e => e}
-            onChange={nv => {
-              if (cornerHelper === nv) {
-                const SCH = SPEFFZ_SCH[0];
-                cornerHelper = SCH[(SCH.indexOf(nv) + 1) % SCH.length];
-              }
-            }}
-            useFixed
-          />
-        </td>
-        {#if hasHelper}
+      <tbody>
+        <tr>
+          <td>
+            <h3 class="text-center tx-emphasis p-0">Corners</h3>
+          </td>
+          <td>
+            <Select
+              class="bg-backgroundLevel2 flex mx-auto"
+              bind:value={cschema}
+              items={SCHEMAS}
+              transform={e => e}
+              label={e => e.name}
+              placement="right"
+            />
+          </td>
           <td class="">
             <Select
               class="py-2 bg-backgroundLevel2 flex mx-auto"
               placement="right"
               items={SPEFFZ_SCH[0]}
-              bind:value={cornerHelper}
+              bind:value={cornerBuffer}
               transform={e => e}
-              disabled={e => e === cornerBuffer}
+              onChange={nv => {
+                if (cornerHelper === nv) {
+                  const SCH = SPEFFZ_SCH[0];
+                  cornerHelper = SCH[(SCH.indexOf(nv) + 1) % SCH.length];
+                }
+              }}
               useFixed
             />
-          </td>
-        {/if}
-      </tr>
-
-      <!-- Edges -->
-      {#if order > 2}
-        <tr>
-          <td>
-            <h3 class="text-center tx-emphasis">Edges</h3>
-          </td>
-          <td>
-            <Select
-              class="bg-backgroundLevel2 flex mx-auto"
-              bind:value={eschema}
-              items={SCHEMAS}
-              transform={e => e}
-              label={e => e.name}
-              placement="right"
-            />
-          </td>
-          <td class="">
-            <div class="flex flex-wrap gap-2 justify-evenly">
-              {#each edgeBuffers as e, pos}
-                <div class="flex items-center gap-1">
-                  <span
-                    class={"flex items-center gap-2 justify-center w-min " +
-                      (order > 3 ? "" : "hidden")}>{getName("edge", pos, order, true)}</span
-                  >
-                  <Select
-                    class="py-2 bg-backgroundLevel2"
-                    placement="right"
-                    items={SPEFFZ_SCH[1]}
-                    bind:value={e}
-                    transform={e => e}
-                    onChange={nv => {
-                      if (edgeHelpers[pos] === nv) {
-                        const SCH = SPEFFZ_SCH[1];
-                        edgeHelpers[pos] = SCH[(SCH.indexOf(nv) + 1) % SCH.length];
-                      }
-                    }}
-                    useFixed
-                  />
-                </div>
-              {/each}
-            </div>
-          </td>
-          {#if hasHelper}
-            <td class="">
-              <div class="flex flex-wrap gap-2 justify-evenly">
-                {#each edgeHelpers as e, pos}
-                  <Select
-                    class="py-2 bg-backgroundLevel2"
-                    placement="right"
-                    items={SPEFFZ_SCH[1]}
-                    bind:value={e}
-                    transform={e => e}
-                    disabled={e => e === edgeBuffers[pos]}
-                    useFixed
-                  />
-                {/each}
-              </div>
-            </td>
-          {/if}
-        </tr>
-      {/if}
-
-      <!-- Centers -->
-      {#if order > 3}
-        <tr>
-          <td>
-            <h3 class="text-center tx-emphasis">Centers</h3>
-          </td>
-          <td>
-            <Select
-              class="bg-backgroundLevel2 flex mx-auto"
-              bind:value={cnschema}
-              items={SCHEMAS}
-              transform={e => e}
-              label={e => e.name}
-            />
-          </td>
-          <td class="">
-            <div class="flex flex-wrap gap-2 justify-evenly">
-              {#each centerBuffers as c, pos}
-                <div class="flex items-center gap-1">
-                  <span class="flex items-center gap-2 justify-center w-min"
-                    >{getName("center", pos, order, true)}</span
-                  >
-                  <Select
-                    class="py-2 bg-backgroundLevel2"
-                    placement="right"
-                    items={SPEFFZ_SCH[2]}
-                    bind:value={c}
-                    transform={e => e}
-                    useFixed
-                  />
-                </div>
-              {/each}
-            </div>
           </td>
           {#if hasHelper}
             <td class="">
               <Select
-                class="py-2 bg-backgroundLevel2"
+                class="py-2 bg-backgroundLevel2 flex mx-auto"
                 placement="right"
                 items={SPEFFZ_SCH[0]}
-                bind:value={cornerBuffer}
+                bind:value={cornerHelper}
                 transform={e => e}
+                disabled={e => e === cornerBuffer}
                 useFixed
               />
             </td>
           {/if}
         </tr>
-      {/if}
+
+        <!-- Edges -->
+        {#if order > 2}
+          <tr>
+            <td>
+              <h3 class="text-center tx-emphasis">Edges</h3>
+            </td>
+            <td>
+              <Select
+                class="bg-backgroundLevel2 flex mx-auto"
+                bind:value={eschema}
+                items={SCHEMAS}
+                transform={e => e}
+                label={e => e.name}
+                placement="right"
+              />
+            </td>
+            <td class="">
+              <div class="flex flex-wrap gap-2 justify-evenly">
+                {#each edgeBuffers as e, pos}
+                  <div class="flex items-center gap-1">
+                    <span
+                      class={"flex items-center gap-2 justify-center w-min " +
+                        (order > 3 ? "" : "hidden")}>{getName("edge", pos, order, true)}</span
+                    >
+                    <Select
+                      class="py-2 bg-backgroundLevel2"
+                      placement="right"
+                      items={SPEFFZ_SCH[1]}
+                      bind:value={e}
+                      transform={e => e}
+                      onChange={nv => {
+                        if (edgeHelpers[pos] === nv) {
+                          const SCH = SPEFFZ_SCH[1];
+                          edgeHelpers[pos] = SCH[(SCH.indexOf(nv) + 1) % SCH.length];
+                        }
+                      }}
+                      useFixed
+                    />
+                  </div>
+                {/each}
+              </div>
+            </td>
+            {#if hasHelper}
+              <td class="">
+                <div class="flex flex-wrap gap-2 justify-evenly">
+                  {#each edgeHelpers as e, pos}
+                    <Select
+                      class="py-2 bg-backgroundLevel2"
+                      placement="right"
+                      items={SPEFFZ_SCH[1]}
+                      bind:value={e}
+                      transform={e => e}
+                      disabled={e => e === edgeBuffers[pos]}
+                      useFixed
+                    />
+                  {/each}
+                </div>
+              </td>
+            {/if}
+          </tr>
+        {/if}
+
+        <!-- Centers -->
+        {#if order > 3}
+          <tr>
+            <td>
+              <h3 class="text-center tx-emphasis">Centers</h3>
+            </td>
+            <td>
+              <Select
+                class="bg-backgroundLevel2 flex mx-auto"
+                bind:value={cnschema}
+                items={SCHEMAS}
+                transform={e => e}
+                label={e => e.name}
+              />
+            </td>
+            <td class="">
+              <div class="flex flex-wrap gap-2 justify-evenly">
+                {#each centerBuffers as c, pos}
+                  <div class="flex items-center gap-1">
+                    <span class="flex items-center gap-2 justify-center w-min"
+                      >{getName("center", pos, order, true)}</span
+                    >
+                    <Select
+                      class="py-2 bg-backgroundLevel2"
+                      placement="right"
+                      items={SPEFFZ_SCH[2]}
+                      bind:value={c}
+                      transform={e => e}
+                      useFixed
+                    />
+                  </div>
+                {/each}
+              </div>
+            </td>
+            {#if hasHelper}
+              <td class="">
+                <Select
+                  class="py-2 bg-backgroundLevel2"
+                  placement="right"
+                  items={SPEFFZ_SCH[0]}
+                  bind:value={cornerBuffer}
+                  transform={e => e}
+                  useFixed
+                />
+              </td>
+            {/if}
+          </tr>
+        {/if}
+      </tbody>
     </table>
 
     <Button
@@ -458,108 +462,110 @@
         </h3>
       {/if}
       <table class={"w-full" + (pos % 2 === 1 ? " bg-backgroundLevel2" : "")}>
-        <!-- CORNERS -->
-        {#if cicle.corners.length}
-          <tr>
-            <td class="text-green-300 flex items-center">
-              {#if cicle.twistedCornerBuffer === -1}
-                Corners <ClockwiseIcon class="cursor-help ml-1" />:
-                <Tooltip class="!bg-green-700"
-                  >The buffer should be rotated clockwise at the end</Tooltip
-                >
-              {:else if cicle.twistedCornerBuffer === 1}
-                Corners <CounterClockwiseIcon class="cursor-help ml-1" />:
-                <Tooltip class="!bg-green-700">
-                  The buffer should be rotated counterclockwise at the end
-                </Tooltip>
-              {:else}
-                Corners:
-              {/if}
-            </td>
-            <td>{getPairs(cicle.corners)}</td>
-          </tr>
-
-          {#if cicle.twistedCorners.length > 0}
-            <tr>
-              <td class="text-yellow-300">Twisted: </td>
-              <td>
-                <ul class="flex gap-3">
-                  {#each cicle.twistedCorners as cn}
-                    <li class="flex items-center gap-2 border-b">
-                      {cn.letter}
-
-                      {#if cn.dir === -1}
-                        <ClockwiseIcon class="cursor-help" />
-                        <Tooltip class="!bg-green-700"
-                          >This piece should be rotated clockwise at the end</Tooltip
-                        >
-                      {:else}
-                        <CounterClockwiseIcon class="cursor-help" />
-                        <Tooltip class="!bg-green-700"
-                          >This piece should be rotated counterclockwise at the end</Tooltip
-                        >
-                      {/if}
-                    </li>
-                  {/each}
-                </ul>
-              </td>
-            </tr>
-          {/if}
-        {/if}
-
-        <!-- EDGES -->
-        {#if cicle.edges.reduce((a, b) => a + b.length, 0)}
+        <tbody>
+          <!-- CORNERS -->
           {#if cicle.corners.length}
             <tr>
-              <td colspan="2"><hr class="border-gray-500 my-2" /></td>
-            </tr>
-          {/if}
-
-          {#each cicle.edges as edge, pos}
-            {#if pos}
-              <tr>
-                <td><hr class="border-gray-400" /></td>
-              </tr>
-            {/if}
-
-            <tr>
               <td class="text-green-300 flex items-center">
-                {getName("edge", pos, order)}:
-
-                {#if cicle.edgeBufferState[pos] != "normal"}
-                  <FlippedIcon class="outline-none cursor-help" />
-                  <Tooltip class="!bg-green-700">The buffer will be flipped at the end</Tooltip>
+                {#if cicle.twistedCornerBuffer === -1}
+                  Corners <ClockwiseIcon class="cursor-help ml-1" />:
+                  <Tooltip class="!bg-green-700"
+                    >The buffer should be rotated clockwise at the end</Tooltip
+                  >
+                {:else if cicle.twistedCornerBuffer === 1}
+                  Corners <CounterClockwiseIcon class="cursor-help ml-1" />:
+                  <Tooltip class="!bg-green-700">
+                    The buffer should be rotated counterclockwise at the end
+                  </Tooltip>
+                {:else}
+                  Corners:
                 {/if}
               </td>
-              <td>{getPairs(edge)}</td>
+              <td>{getPairs(cicle.corners)}</td>
             </tr>
 
-            {#if cicle.flippedEdges[pos] && cicle.flippedEdges[pos].length > 0}
+            {#if cicle.twistedCorners.length > 0}
               <tr>
-                <td class="text-yellow-300"
-                  >Flipped{cicle.edges.length > 1 ? " " + (pos + 1) : ""}:
+                <td class="text-yellow-300">Twisted: </td>
+                <td>
+                  <ul class="flex gap-3">
+                    {#each cicle.twistedCorners as cn}
+                      <li class="flex items-center gap-2 border-b">
+                        {cn.letter}
+
+                        {#if cn.dir === -1}
+                          <ClockwiseIcon class="cursor-help" />
+                          <Tooltip class="!bg-green-700"
+                            >This piece should be rotated clockwise at the end</Tooltip
+                          >
+                        {:else}
+                          <CounterClockwiseIcon class="cursor-help" />
+                          <Tooltip class="!bg-green-700"
+                            >This piece should be rotated counterclockwise at the end</Tooltip
+                          >
+                        {/if}
+                      </li>
+                    {/each}
+                  </ul>
                 </td>
-                <td>{cicle.flippedEdges[pos].join(", ")}</td>
               </tr>
             {/if}
-          {/each}
-        {/if}
-
-        <!-- CENTERS -->
-        {#if cicle.centers.length}
-          {#if cicle.corners.length || cicle.edges.reduce((a, b) => a + b.length, 0)}
-            <tr>
-              <td colspan="2"><hr class="border-gray-500 my-2" /></td>
-            </tr>
           {/if}
 
-          {#each cicle.centers as center, pos}
-            <tr>
-              <td class="text-green-300">{getName("center", pos, order)}: </td>
-              <td>{getPairs(center)}</td>
-            </tr>
-          {/each}
-        {/if}
+          <!-- EDGES -->
+          {#if cicle.edges.reduce((a, b) => a + b.length, 0)}
+            {#if cicle.corners.length}
+              <tr>
+                <td colspan="2"><hr class="border-gray-500 my-2" /></td>
+              </tr>
+            {/if}
+
+            {#each cicle.edges as edge, pos}
+              {#if pos}
+                <tr>
+                  <td><hr class="border-gray-400" /></td>
+                </tr>
+              {/if}
+
+              <tr>
+                <td class="text-green-300 flex items-center">
+                  {getName("edge", pos, order)}:
+
+                  {#if cicle.edgeBufferState[pos] != "normal"}
+                    <FlippedIcon class="outline-none cursor-help" />
+                    <Tooltip class="!bg-green-700">The buffer will be flipped at the end</Tooltip>
+                  {/if}
+                </td>
+                <td>{getPairs(edge)}</td>
+              </tr>
+
+              {#if cicle.flippedEdges[pos] && cicle.flippedEdges[pos].length > 0}
+                <tr>
+                  <td class="text-yellow-300"
+                    >Flipped{cicle.edges.length > 1 ? " " + (pos + 1) : ""}:
+                  </td>
+                  <td>{cicle.flippedEdges[pos].join(", ")}</td>
+                </tr>
+              {/if}
+            {/each}
+          {/if}
+
+          <!-- CENTERS -->
+          {#if cicle.centers.length}
+            {#if cicle.corners.length || cicle.edges.reduce((a, b) => a + b.length, 0)}
+              <tr>
+                <td colspan="2"><hr class="border-gray-500 my-2" /></td>
+              </tr>
+            {/if}
+
+            {#each cicle.centers as center, pos}
+              <tr>
+                <td class="text-green-300">{getName("center", pos, order)}: </td>
+                <td>{getPairs(center)}</td>
+              </tr>
+            {/each}
+          {/if}
+        </tbody>
       </table>
     {/each}
   {/if}

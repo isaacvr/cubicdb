@@ -75,6 +75,9 @@ export class ControlAdaptor {
 
   applySequence(nc: Puzzle, seq: (SequenceResult | SequenceResult[])[]) {
     const cube = this.threeAdaptor.cube;
+
+    if (!cube) return;
+
     const cubeIDs = cube.p.pieces.map(p => p.id);
     const ncIDs = nc.p.pieces.map(p => p.id);
     const idMap: Map<string, string> = new Map(ncIDs.map((id, pos) => [id, cubeIDs[pos]]));

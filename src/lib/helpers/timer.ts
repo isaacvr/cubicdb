@@ -1,4 +1,4 @@
-import { Penalty, type Solve } from "@interfaces";
+import { Penalty, type Callback, type Solve } from "@interfaces";
 import { toInt } from "./math";
 import { R666, R777 } from "@constants";
 
@@ -76,4 +76,21 @@ export function formatHour(n: number): string {
 
 export function isMo3(format: string): boolean {
   return R666.includes(format) || R777.includes(format);
+}
+
+export function debounce(
+  fn: Callback,
+  pre: Callback = () => {},
+  pos: Callback = () => {},
+  time = 500
+) {
+  let timerId: any;
+  return () => {
+    pre();
+    clearTimeout(timerId);
+    timerId = setTimeout(() => {
+      fn();
+      pos();
+    }, time);
+  };
 }

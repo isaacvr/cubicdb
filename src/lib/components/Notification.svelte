@@ -52,18 +52,19 @@
   position="bottom-right"
   on:close={close}
 >
-  {#if icon}
-    {#if typeof icon === "string"}
-      <Avatar slot="icon" src={icon} class="bg-backgroundLevel1 tx-text aspect-square" />
-    {:else}
-      <svelte:component
-        this={icon}
-        slot="icon"
-        size="1.2rem"
-        class="bg-backgroundLevel1 tx-text aspect-square"
-      />
+  <svelte:fragment slot="icon">
+    {#if icon}
+      {#if typeof icon === "string"}
+        <Avatar src={icon} class="bg-backgroundLevel1 tx-text aspect-square" />
+      {:else}
+        <svelte:component
+          this={icon}
+          size="1.2rem"
+          class="bg-backgroundLevel1 tx-text aspect-square"
+        />
+      {/if}
     {/if}
-  {/if}
+  </svelte:fragment>
 
   <div class="ms-3 text-sm font-normal tx-text">
     <span class="text-lg font-semibold tx-text">{header}</span>

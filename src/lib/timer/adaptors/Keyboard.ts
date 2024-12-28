@@ -12,7 +12,7 @@ import { createActor, fromCallback, setup } from "xstate";
 
 type KBActor = (data: Actor<KeyboardContext>) => any;
 
-const clear: KBActor = ({ context: { state, time, decimals, stepsTime, ready } }) => {
+const clear: KBActor = ({ context: { timerState: state, time, decimals, stepsTime, ready } }) => {
   state.set(TimerState.CLEAN);
   time.set(0);
   decimals.set(true);
@@ -21,7 +21,13 @@ const clear: KBActor = ({ context: { state, time, decimals, stepsTime, ready } }
 };
 
 const checkPrevention = fromCallback(
-  ({ input: { state, session }, sendBack }: { input: KeyboardContext; sendBack: any }) => {
+  ({
+    input: { timerState: state, session },
+    sendBack,
+  }: {
+    input: KeyboardContext;
+    sendBack: any;
+  }) => {
     state.set(TimerState.PREVENTION);
     get(session).settings.withoutPrevention && sendBack({ type: "READY" });
   }
@@ -29,7 +35,7 @@ const checkPrevention = fromCallback(
 
 const setTimerInspection = fromCallback(
   ({
-    input: { state, session, time, lastSolve, ready, decimals, addSolve },
+    input: { timerState: state, session, time, lastSolve, ready, decimals, addSolve },
     sendBack,
   }: {
     input: KeyboardContext;
@@ -74,7 +80,7 @@ const setTimerInspection = fromCallback(
 
 const setTimerRunner = fromCallback(
   ({
-    input: { decimals, state, currentStep, lastSolve, stepsTime, timeRef, time },
+    input: { decimals, timerState: state, currentStep, lastSolve, stepsTime, timeRef, time },
   }: {
     input: KeyboardContext;
   }) => {
@@ -97,7 +103,7 @@ const setTimerRunner = fromCallback(
 const saveSolve = fromCallback(
   ({
     input: {
-      state,
+      timerState: state,
       session,
       time,
       lastSolve,

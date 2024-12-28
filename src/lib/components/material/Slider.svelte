@@ -9,7 +9,7 @@
 
   let dispatch = createEventDispatcher();
   let wrapper: HTMLButtonElement;
-  let mark: HTMLButtonElement;
+  let mark: HTMLSpanElement;
   let moving = false;
   let isMounted = false;
   let cl = "";
@@ -66,17 +66,18 @@
 <svelte:window on:mousemove={mousemoveHandler} on:mouseup={mouseupHandler} />
 
 <button
+  aria-label="slider"
   bind:this={wrapper}
-  class={"wrapper " + (cl || "")}
+  class={"wrapper cursor-pointer " + (cl || "")}
   on:click={wrapperClickHandler}
   on:mousedown={mousedownHandler}
 >
-  <button bind:this={mark} class="mark"></button>
+  <span bind:this={mark} class="mark"></span>
 </button>
 
 <style lang="postcss">
   .wrapper {
-    @apply flex items-center w-full h-1 bg-gray-500 cursor-pointer rounded-full my-3 relative;
+    @apply flex items-center w-full h-1 bg-gray-500 rounded-full my-3 relative;
   }
 
   .mark {

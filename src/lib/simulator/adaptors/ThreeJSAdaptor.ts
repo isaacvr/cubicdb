@@ -321,8 +321,9 @@ export class ThreeJSAdaptor {
     this.H = Math.min(window.innerHeight, window.screen.availHeight * (isElectron ? 2 : 1));
 
     if (contained && this.canvas?.parentElement) {
-      this.W = (this.canvas.parentElement as any).clientWidth;
-      this.H = (this.canvas.parentElement as any).clientHeight;
+      const parent = this.canvas.parentElement;
+      this.W = parent.clientWidth;
+      this.H = parent.clientHeight;
     }
 
     this.renderer.setSize(this.W, this.H);
@@ -509,7 +510,7 @@ export class ThreeJSAdaptor {
     return true;
   }
 
-  moveFromKeyboard(vec: Vector2) {
+  moveFromKeyboard(vec: Vector2, contained: boolean) {
     if (this.animating || !this.enableKeyboard) return;
 
     const allStickers: Object3D[] = [];
@@ -518,7 +519,20 @@ export class ThreeJSAdaptor {
       allStickers.push(...c.children);
     });
 
-    const mcm = new Vector3((this.mcx / this.W) * 2 - 1, -(this.mcy / this.H) * 2 + 1);
+    let offsetX = 0;
+    let offsetY = 0;
+
+    if (contained && this.canvas?.parentElement) {
+      const rec = this.canvas.parentElement.getBoundingClientRect();
+
+      offsetX = rec.x;
+      offsetY = rec.y;
+    }
+
+    const mcm = new Vector3(
+      ((this.mcx - offsetX) / this.W) * 2 - 1,
+      -((this.mcy - offsetY) / this.H) * 2 + 1
+    );
 
     const intersects = this.mouseIntersection(mcm.x, mcm.y, allStickers, this.camera);
 
@@ -867,26 +881,26 @@ export class ThreeJSAdaptor {
     this.resetCamera();
   }
 
-  keyDownHandler(e: KeyboardEvent) {
+  keyDownHandler(e: KeyboardEvent, contained: boolean) {
     if (!this.enableKeyboard) return;
 
     const mc = new Vector2(this.mcx, this.mcy);
 
     switch (e.code) {
       case "ArrowUp": {
-        this.moveFromKeyboard(mc.add(new Vector2(0, -50)));
+        this.moveFromKeyboard(mc.add(new Vector2(0, -50)), contained);
         break;
       }
       case "ArrowDown": {
-        this.moveFromKeyboard(mc.add(new Vector2(0, 50)));
+        this.moveFromKeyboard(mc.add(new Vector2(0, 50)), contained);
         break;
       }
       case "ArrowLeft": {
-        this.moveFromKeyboard(mc.add(new Vector2(-50, 0)));
+        this.moveFromKeyboard(mc.add(new Vector2(-50, 0)), contained);
         break;
       }
       case "ArrowRight": {
-        this.moveFromKeyboard(mc.add(new Vector2(50, 0)));
+        this.moveFromKeyboard(mc.add(new Vector2(50, 0)), contained);
         break;
       }
       case "KeyS": {
@@ -895,7 +909,18 @@ export class ThreeJSAdaptor {
         }
         break;
       }
+      case "KeyD": {
+        if (e.ctrlKey) {
+          this.resetPuzzle();
+        }
+        break;
+      }
+      default: {
+        return;
+      }
     }
+
+    e.preventDefault();
   }
 
   destroy() {

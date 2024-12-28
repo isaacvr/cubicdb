@@ -450,7 +450,7 @@ export interface Statistics {
 }
 
 export interface TimerContext {
-  state: Writable<TimerState>;
+  timerState: Writable<TimerState>;
   ready: Writable<boolean>;
   tab: Writable<number>;
   solves: Writable<Solve[]>;
@@ -785,7 +785,7 @@ export interface INotification {
 }
 
 export interface InputContext {
-  state: Writable<TimerState>;
+  timerState: Writable<TimerState>;
   ready: Writable<boolean>;
   session: Writable<Session>;
   time: Writable<number>;
@@ -920,13 +920,14 @@ export interface Language {
     timer: string;
     reconstructions: string;
     battle: string;
-    pll_recognition: string;
+    training: string;
     simulator: string;
     settings: string;
     importExport: string;
     contest: string;
     tools: string;
     about: string;
+    support: string;
   };
   SETTINGS: {
     title: string;
@@ -1358,24 +1359,30 @@ export interface CONFIG {
 }
 
 export interface Theme {
-  id: string;
-  appFont: FONT_NAME;
-  timerFont: FONT_NAME;
-  name: string;
-  text: string;
-  primary: string;
-  background: string;
-  backgroundLevel1: string;
-  backgroundLevel2: string;
-  backgroundLevel3: string;
-  mark: string;
-  emphasis: string;
-  cancelButton: string;
-  acceptButton: string;
-  urgentButton: string;
-  accent: string;
+  meta: {
+    id: string;
+    appFont: FONT_NAME;
+    timerFont: FONT_NAME;
+    name: string;
+  };
+  colors: {
+    text: string;
+    primary: string;
+    background: string;
+    background1: string;
+    background2: string;
+    background3: string;
+    mark: string;
+    emphasis: string;
+    cancelButton: string;
+    acceptButton: string;
+    urgentButton: string;
+    accent: string;
+  };
 }
 
 export type Side = "top" | "right" | "bottom" | "left";
 export type Alignment = "start" | "end";
 export type Placement = `${Side}-${Alignment}`;
+
+export type Callback = Function | ((...args: any[]) => any);

@@ -22,24 +22,44 @@
   import I333Cross from "./I333Cross.svelte";
   import FundamentalsIcon from "@icons/HumanMaleBoardPoll.svelte";
 
-  export let icon: any = "333";
-  export let size = "2rem";
-  export let selected = false;
-  export let width = size;
-  export let height = size;
-  export let color = "currentColor";
-  export let ariaLabel = "";
-  export let ariaHidden = false;
-  export let title = "";
-  export let desc = "";
-  export let buttonClass = "";
-  export let noFallback = false;
-  export let tabindex = -1;
+  interface WCACategoryProps {
+    icon?: string;
+    size?: string;
+    selected?: boolean;
+    width?: string;
+    height?: string;
+    color?: string;
+    ariaLabel?: string;
+    ariaHidden?: boolean;
+    title?: string;
+    desc?: string;
+    buttonClass?: string;
+    noFallback?: boolean;
+    tabindex?: number;
+    class?: string;
+  }
+
+  let {
+    icon = "333",
+    size = "2rem",
+    selected = false,
+    width = size,
+    height = size,
+    color = "currentColor",
+    ariaLabel = "",
+    ariaHidden = false,
+    title = "",
+    desc = "",
+    buttonClass = "",
+    noFallback = false,
+    tabindex = -1,
+    class: cl = "",
+  }: WCACategoryProps = $props();
 
   const dispatch = createEventDispatcher();
 
-  let cl = "";
-  export { cl as class };
+  // let cl = "";
+  // export { cl as class };
 
   function handleClick(ev: MouseEvent) {
     dispatch("click", ev);
@@ -89,21 +109,11 @@
   {tabindex}
   class={"rounded-md p-1 grid place-items-center w-fit cursor-default " + buttonClass}
   class:selected
-  on:click={handleClick}
+  onclick={handleClick}
 >
   {#if findIcon(icon)}
-    <svelte:component
-      this={iconMap[findIcon(icon) || "333"]}
-      {size}
-      {width}
-      {height}
-      {color}
-      {ariaLabel}
-      {ariaHidden}
-      {title}
-      {desc}
-      class={cl}
-    />
+    {@const Icon = iconMap[findIcon(icon) || "333"]}
+    <Icon {size} {width} {height} {color} {ariaLabel} {ariaHidden} {title} {desc} class={cl} />
   {:else if !noFallback}
     <I333 {size} {width} {height} {color} {ariaLabel} {ariaHidden} {title} {desc} class={cl} />
   {/if}

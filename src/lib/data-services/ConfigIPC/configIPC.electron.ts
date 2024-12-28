@@ -35,7 +35,7 @@ export class ConfigElectronIPC implements ConfigIPC {
   private constructor() {
     this.ipc = (<any>window).electronAPI as IPC;
     this.global = {
-      theme: DEFAULT_THEME.id,
+      theme: DEFAULT_THEME.meta.id,
       lang: "EN",
       zoomFactor: 100,
       appFont: "Ubuntu",
@@ -77,7 +77,7 @@ export class ConfigElectronIPC implements ConfigIPC {
 
   private loadConfig(c: CONFIG) {
     this.global = {
-      theme: c?.global?.theme || DEFAULT_THEME.id,
+      theme: c?.global?.theme || DEFAULT_THEME.meta.id,
       lang: c?.global?.lang || "EN",
       zoomFactor: c?.global?.zoomFactor || 100,
       appFont: c?.global?.appFont || "Ubuntu",

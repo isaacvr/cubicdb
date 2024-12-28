@@ -1,5 +1,5 @@
 <script context="module">
-  export async function load({ error, status }) {
+  export async function load({ error, status }: any) {
     return {
       props: {
         error,
@@ -11,10 +11,7 @@
 
 <script lang="ts">
   import { page } from "$app/stores";
-
-  export let error;
-  export let status;
 </script>
 
 <h1>{$page.status}</h1>
-<h2>{$page.error}</h2>
+<h2>{JSON.stringify($page.error, null, 2)}</h2>

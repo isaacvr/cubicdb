@@ -61,7 +61,7 @@
     label={getLabel}
     onChange={e => updateOperator(e)}
     hasIcon={e => e.code}
-    iconComponent={OperatorIcon}
+    IconComponent={OperatorIcon}
     iconKey="operator"
     preferIcon
     placement="right"

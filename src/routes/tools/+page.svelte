@@ -506,7 +506,7 @@
       
               hover:shadow-lg hover:bg-opacity-20
             "
-            on:click={() => ($solves = $solves.filter(s => s != $solves[$solves.length - p - 1]))}
+            onclick={() => ($solves = $solves.filter(s => s != $solves[$solves.length - p - 1]))}
           >
             <span class="text-center font-bold"
               >{sTimer($solves[$solves.length - p - 1], true)}</span
@@ -568,12 +568,13 @@
     </div>
   {:else if option === "solver"}
     <div class="solver" bind:this={solverDiv} style={`--fcw: ${dim};`}>
-      <div class="colors">
+      <div class="colors cursor-pointer">
         {#each fColors as f, p}
           <Tooltip text={keys[p]} hasKeybinding>
             <button
+              aria-label="Color"
               class="color"
-              on:click={() => (color = p)}
+              onclick={() => (color = p)}
               class:selected={p === color}
               style={`background-color: ${f}`}
             ></button>
@@ -586,10 +587,11 @@
           <div class={face[1]}>
             {#each facelets[+face[0]] as f, p}
               <button
+                aria-label="Facelet"
                 class="facelet"
                 style={`background-color: ${f === "-" ? DEFAULT_COLOR : f}`}
-                on:click={() => assignColor(+face[0], p)}
-                on:mousemove={() =>
+                onclick={() => assignColor(+face[0], p)}
+                onmousemove={() =>
                   md && facelets[+face[0]][p] != fColors[color] && assignColor(+face[0], p)}
               ></button>
             {/each}
@@ -652,7 +654,7 @@
   }
 
   .colors {
-    @apply flex flex-wrap gap-2 items-center justify-center cursor-pointer sm:flex-col;
+    @apply flex flex-wrap gap-2 items-center justify-center sm:flex-col;
     grid-area: colors;
   }
 

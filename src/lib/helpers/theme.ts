@@ -16,7 +16,7 @@ export function generateRandomImage(
 
   const data = ctx.createImageData(W, H);
 
-  const f = factor || 0.001;
+  const f = factor || 0.002;
   const rgb1 = new Color(from).toArray();
   const rgb2 = new Color(to).toArray();
 
@@ -38,9 +38,9 @@ export function generateRandomImage(
   return canvas.toDataURL();
 }
 
-export function updateBackground(from: string, to: string) {
-  const W = window.screen.width * 1.5;
-  const H = window.screen.height * 1.5;
-  const res = generateRandomImage(from, to, W, H);
+export function updateBackground(from: string, to: string, factor = 0.001) {
+  const W = window.innerWidth;
+  const H = window.innerHeight;
+  const res = generateRandomImage(from, to, W, H, factor);
   document.body.style.backgroundImage = "url(" + res + ")";
 }

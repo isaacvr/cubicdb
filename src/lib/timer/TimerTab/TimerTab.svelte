@@ -63,7 +63,7 @@
   export let cleanOnScramble = false;
 
   const {
-    state,
+    timerState,
     ready,
     tab,
     solves,
@@ -183,7 +183,7 @@
     lastSolve,
     ready,
     session,
-    state,
+    timerState,
     time,
     stackmatStatus,
     decimals,
@@ -269,7 +269,7 @@
   function reset() {
     $inputMethod.stopTimer();
     $time = 0;
-    $state = TimerState.CLEAN;
+    $timerState = TimerState.CLEAN;
     $ready = false;
     $lastSolve = null;
   }
@@ -430,7 +430,7 @@
   }
 
   function clean() {
-    $state = TimerState.CLEAN;
+    $timerState = TimerState.CLEAN;
     $time = 0;
     $decimals = true;
   }
@@ -612,7 +612,7 @@
   $: $session && initInputHandler();
   $: $localLang, updateTexts();
   $: $scramble && handleScrambleChange();
-  $: $dataService.config.sleep($state === TimerState.RUNNING);
+  $: $dataService.config.sleep($timerState === TimerState.RUNNING);
 </script>
 
 <svelte:window on:keyup={keyUp} on:keydown={keyDown} on:pointerup={handlePointerUp} />
@@ -623,7 +623,7 @@
   class:battle
   class="timer-tab w-full h-full"
   class:simulator={showSimulator($session)}
-  data-timerstate={getTimerState($state)}
+  data-timerstate={getTimerState($timerState)}
   data-timerinput={getTimerInput($session?.settings?.input || "Keyboard")}
 >
   <!-- Options -->
@@ -676,12 +676,12 @@
       <div
         class="flex flex-col pointer-events-none items-center transition-all duration-200 mx-auto"
       >
-        {#if $state === TimerState.RUNNING}
+        {#if $timerState === TimerState.RUNNING}
           <span
             class="timer tx-text max-sm:text-7xl max-sm:[line-height:8rem]"
             in:scale
             class:ready={$ready}
-            hidden={$state === TimerState.RUNNING && !$session.settings.showElapsedTime}
+            hidden={$timerState === TimerState.RUNNING && !$session.settings.showElapsedTime}
           >
             {timer($time, $decimals, false)}
           </span>
@@ -694,15 +694,15 @@
         {:else}
           <span
             class="timer tx-text max-sm:text-7xl max-sm:[line-height:8rem]"
-            class:prevention={$state === TimerState.PREVENTION}
+            class:prevention={$timerState === TimerState.PREVENTION}
             class:ready={$ready}
           >
-            {$state === TimerState.STOPPED
+            {$timerState === TimerState.STOPPED
               ? sTimer($lastSolve, $decimals, false)
               : timer($time, $decimals, false)}
           </span>
 
-          {#if $state === TimerState.INSPECTION && !$dataService.isElectron}
+          {#if $timerState === TimerState.INSPECTION && !$dataService.isElectron}
             <Button
               color="alternative"
               class="w-min mx-auto pointer-events-auto"
@@ -712,10 +712,10 @@
             </Button>
           {/if}
 
-          {#if !timerOnly && $state === TimerState.STOPPED}
+          {#if !timerOnly && $timerState === TimerState.STOPPED}
             <div
               class="flex justify-center w-full z-10"
-              class:show={$state === TimerState.STOPPED}
+              class:show={$timerState === TimerState.STOPPED}
               transition:blur
             >
               {#each solveControl.slice(Number(battle), solveControl.length) as control}
@@ -738,7 +738,7 @@
         {/if}
       </div>
 
-      {#if $session.settings.sessionType === "multi-step" && $state === TimerState.RUNNING}
+      {#if $session?.settings.sessionType === "multi-step" && $timerState === TimerState.RUNNING}
         <div class="step-progress w-[min(100%,30rem)] text-base" transition:scale>
           <StepIndicator currentStep={$currentStep} steps={$session.settings.stepNames} />
         </div>
@@ -761,7 +761,8 @@
     <span
       transition:blur
       class="timer"
-      hidden={!($state === TimerState.RUNNING && !$session.settings.showElapsedTime)}>----</span
+      hidden={!($timerState === TimerState.RUNNING && !$session.settings.showElapsedTime)}
+      >----</span
     >
   </div>
 

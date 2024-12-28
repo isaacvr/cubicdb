@@ -1,0 +1,24 @@
+/* DaisyUI overrides */
+.range::-webkit-slider-thumb {
+  border-radius: 0.3rem;
+  background-color: currentColor;
+  box-shadow: none;
+}
+
+.range::-webkit-slider-runnable-track {
+  background-color: transparent;
+}
+
+.input.input.input {
+  height: 2.5rem;
+  min-height: 2.5rem;
+  padding: 0.5rem;
+}
+
+input[type="checkbox"].toggle {
+  --handle-offset: 1.4rem;
+  border-radius: 0.4rem;
+  border: none;
+  height: 2rem;
+  width: 3.5rem;
+}

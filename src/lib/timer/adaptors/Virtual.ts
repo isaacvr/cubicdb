@@ -40,7 +40,7 @@ type KeyMap = Partial<Record<KEY | (string & {}), string>>;
 
 type VirtualActor = (data: Actor<VirtualContext>) => any;
 
-const clear: VirtualActor = ({ context: { state, time, decimals, ready } }) => {
+const clear: VirtualActor = ({ context: { timerState: state, time, decimals, ready } }) => {
   state.set(TimerState.CLEAN);
   time.set(0);
   decimals.set(true);
@@ -48,7 +48,11 @@ const clear: VirtualActor = ({ context: { state, time, decimals, ready } }) => {
 };
 
 const setTimerRunner = fromCallback(
-  ({ input: { decimals, state, time, timeRef, createNewSolve } }: { input: VirtualContext }) => {
+  ({
+    input: { decimals, timerState: state, time, timeRef, createNewSolve },
+  }: {
+    input: VirtualContext;
+  }) => {
     const ref = performance.now();
     decimals.set(true);
     state.set(TimerState.RUNNING);
@@ -65,7 +69,15 @@ const setTimerRunner = fromCallback(
 
 const saveSolve = fromCallback(
   ({
-    input: { state, time, lastSolve, timeRef, keyboardEnabled, initScrambler, addSolve },
+    input: {
+      timerState: state,
+      time,
+      lastSolve,
+      timeRef,
+      keyboardEnabled,
+      initScrambler,
+      addSolve,
+    },
   }: {
     input: VirtualContext;
   }) => {

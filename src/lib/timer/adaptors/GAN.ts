@@ -81,7 +81,15 @@ const isScrambleReady: GANActor = ({ context }) => {
 // Flow control
 const enterConnected: GANActor = ({
   context: {
-    input: { bluetoothStatus, state, time, decimals, scramble, sequenceParts, recoverySequence },
+    input: {
+      bluetoothStatus,
+      timerState: state,
+      time,
+      decimals,
+      scramble,
+      sequenceParts,
+      recoverySequence,
+    },
     moves,
     sequencer,
     cfop,
@@ -109,19 +117,19 @@ const enterConnected: GANActor = ({
 const enterDisconnect: GANActor = ({ context: { input } }) => {
   debug && console.log("[enterDisconnect]");
   input.bluetoothStatus.set(false);
-  input.state.set(TimerState.CLEAN);
+  input.timerState.set(TimerState.CLEAN);
 };
 
 const setReady: GANActor = ({ context: { input } }) => {
   debug && console.log("[setReady]");
   input.createNewSolve();
-  input.state.set(TimerState.CLEAN);
+  input.timerState.set(TimerState.CLEAN);
 };
 
 const setTimerInspection = fromCallback(
   ({
     input: {
-      input: { state, ready, decimals, session, lastSolve, time, addSolve },
+      input: { timerState: state, ready, decimals, session, lastSolve, time, addSolve },
     },
     sendBack,
   }: {
@@ -168,7 +176,7 @@ const setTimerInspection = fromCallback(
 const setTimerRunner = fromCallback(
   ({
     input: {
-      input: { state, decimals, lastSolve, time },
+      input: { timerState: state, decimals, lastSolve, time },
     },
   }: {
     input: GANContext;
@@ -191,7 +199,7 @@ const setTimerRunner = fromCallback(
 const saveSolve = fromCallback(
   ({
     input: {
-      input: { state, lastSolve, time, addSolve, initScrambler },
+      input: { timerState: state, lastSolve, time, addSolve, initScrambler },
       sequencer,
       cfop,
       roux,
@@ -344,7 +352,7 @@ const GANMachine = setup({
       entry: ({ context: { input, sequencer } }) => {
         input.initScrambler();
         input.time.set(0);
-        input.state.set(TimerState.CLEAN);
+        input.timerState.set(TimerState.CLEAN);
         sequencer.clear();
       },
       always: "CONNECTED",

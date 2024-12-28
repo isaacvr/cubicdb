@@ -1,7 +1,7 @@
 <script lang="ts">
   import { createEventDispatcher, onMount } from "svelte";
   import { pGenerateCubeBundle } from "@helpers/cube-draw";
-  import { derived, writable, type Readable } from "svelte/store";
+  import { derived, writable, type Readable, type Writable } from "svelte/store";
 
   /// Modules
   import { pScramble } from "@cstimer/scramble";
@@ -62,20 +62,36 @@
   import { dataService } from "$lib/data-services/data.service";
   import { scrambleToPuzzle } from "@helpers/scrambleToPuzzle";
 
-  let MENU: SCRAMBLE_MENU[] = getLanguage($globalLang).MENU;
+  let BASE_MENU = getLanguage($globalLang).MENU;
+  let MENU: SCRAMBLE_MENU[] = $state(BASE_MENU);
 
-  export let battle = false;
-  export let useScramble = "";
-  export let useMode: string = "";
-  export let useLen: number = 0;
-  export let useProb: number = -1;
-  export let genScramble = true;
-  export let enableKeyboard = writable(true);
-  export let timerOnly = false;
-  export let scrambleOnly = false;
-  export let cleanOnScramble = false;
+  interface TimerProps {
+    battle?: boolean;
+    useScramble?: string;
+    useMode?: string;
+    useLen?: number;
+    useProb?: number;
+    genScramble?: boolean;
+    enableKeyboard?: Writable<boolean>;
+    timerOnly?: boolean;
+    scrambleOnly?: boolean;
+    cleanOnScramble?: boolean;
+  }
 
-  let groups: string[] = MENU.map(e => e[0]);
+  let {
+    battle = false,
+    useScramble = "",
+    useMode = "",
+    useLen = 0,
+    useProb = -1,
+    genScramble = true,
+    enableKeyboard = writable(true),
+    timerOnly = false,
+    scrambleOnly = false,
+    cleanOnScramble = false,
+  }: TimerProps = $props();
+
+  let groups: string[] = $state(BASE_MENU.map(e => e[0]));
 
   let localLang: Readable<Language> = derived(globalLang, $lang => {
     let l = getLanguage($lang);
@@ -89,28 +105,28 @@
   const notService = NotificationService.getInstance();
 
   /// GENERAL
-  let modes: { 0: string; 1: string; 2: number }[] = MENU[0][1];
-  let filters: string[] = [];
-  let sessions: Session[] = [];
-  let tabs: TabGroup;
-  let showDeleteSession = false;
+  let modes: { 0: string; 1: string; 2: number }[] = $state(BASE_MENU[0][1]);
+  let filters: string[] = $state([]);
+  let sessions: Session[] = $state([]);
+  let tabs: TabGroup | null = $state(null);
+  let showDeleteSession = $state(false);
   let dispatch = createEventDispatcher();
-  let sessionsTab: SessionsTab;
+  let sessionsTab: SessionsTab | null = $state(null);
   let mounted = false;
 
   /// MODAL
-  let openEdit = false;
-  let creatingSession = false;
-  let newSessionName = "";
-  let newSessionType: SessionType = "mixed";
-  let newSessionSteps = 2;
-  let newSessionGroup = 0;
-  let newSessionMode = 0;
-  let stepNames: string[] = ["", ""];
+  let openEdit = $state(false);
+  let creatingSession = $state(false);
+  let newSessionName = $state("");
+  let newSessionType: SessionType = $state("mixed");
+  let newSessionSteps = $state(2);
+  let newSessionGroup = $state(0);
+  let newSessionMode = $state(0);
+  let stepNames: string[] = $state(["", ""]);
   let sSession: Session;
 
   /// CONTEXT
-  let state = writable<TimerState>(TimerState.CLEAN);
+  let timerState = writable<TimerState>(TimerState.CLEAN);
   let ready = writable(false);
   let tab = writable(0);
   let solves = writable<Solve[]>([]);
@@ -126,7 +142,7 @@
   let stats = writable<Statistics>(INITIAL_STATISTICS);
   let scramble = writable("");
   let group = writable<number>();
-  let mode = writable<{ 0: string; 1: string; 2: number }>(modes[0]);
+  let mode = writable<{ 0: string; 1: string; 2: number }>(BASE_MENU[0][1][0]);
   let preview = writable<HTMLImgAttributes[]>([]);
   let prob = writable<number>();
   let isRunning = writable(false);
@@ -141,8 +157,6 @@
   let lastPreview = 0;
 
   let confetti: JSConfetti;
-
-  $: $isRunning = $state === TimerState.INSPECTION || $state === TimerState.RUNNING;
 
   function selectSolve(s: Solve) {
     s.selected = !s.selected;
@@ -163,8 +177,8 @@
           $selected += 1;
         }
 
-        $tab === 0 && tabs.nextTab();
-        $tab === 2 && tabs.prevTab();
+        $tab === 0 && tabs?.nextTab();
+        $tab === 2 && tabs?.prevTab();
         break;
       }
     }
@@ -258,11 +272,11 @@
   function handleKeyUp(e: KeyboardEvent) {
     if (!enableKeyboard) return;
 
-    if (!battle && ($state === TimerState.CLEAN || $state === TimerState.STOPPED)) {
+    if (!battle && ($timerState === TimerState.CLEAN || $timerState === TimerState.STOPPED)) {
       if (e.key === "ArrowRight") {
-        tabs.nextTab();
+        tabs?.nextTab();
       } else if (e.key === "ArrowLeft") {
-        tabs.prevTab();
+        tabs?.prevTab();
       }
     }
   }
@@ -531,9 +545,9 @@
   }
 
   function editSolve(s: Solve) {
-    $tab === 0 && tabs.nextTab();
-    $tab === 2 && tabs.prevTab();
-    sessionsTab.editSolve(s);
+    $tab === 0 && tabs?.nextTab();
+    $tab === 2 && tabs?.prevTab();
+    sessionsTab?.editSolve(s);
   }
 
   function sortSessions() {
@@ -632,7 +646,7 @@
   });
 
   let context: TimerContext = {
-    state,
+    timerState,
     ready,
     tab,
     solves,
@@ -669,12 +683,17 @@
     editSessions,
   };
 
-  $: {
+  $effect(() => {
+    $isRunning = $timerState === TimerState.INSPECTION || $timerState === TimerState.RUNNING;
+  });
+
+  $effect(() => {
     (useScramble || useMode || useProb != -1) && initScrambler(useScramble, useMode, useProb);
-  }
-  $: {
+  });
+
+  $effect(() => {
     $enableKeyboard = !scrambleOnly;
-  }
+  });
 </script>
 
 <svelte:window on:keyup={handleKeyUp} />
@@ -709,10 +728,10 @@
           setTimeout(selectedSession, 10);
         }}
         hasIcon={e => e.settings.sessionType || "mixed"}
-        iconComponent={TimerSessionIcon}
+        IconComponent={TimerSessionIcon}
       />
 
-      {#if $tab === 0 && ($session.settings.sessionType || "mixed") === "mixed"}
+      {#if $tab === 0 && ($session?.settings.sessionType || "mixed") === "mixed"}
         <Select
           placeholder={$localLang.TIMER.selectGroup}
           value={groups[$group]}
@@ -802,7 +821,7 @@
             bind:value={newSessionType}
             class="mx-auto"
             hasIcon={e => e}
-            iconComponent={TimerSessionIcon}
+            IconComponent={TimerSessionIcon}
             placement="right"
           />
 
@@ -876,7 +895,7 @@
                     <Input
                       style={`border-color: ${STEP_COLORS[p]}; border-width: .15rem;`}
                       placeholder={$localLang.global.step + " " + (p + 1)}
-                      bind:value={sn}
+                      bind:value={stepNames[p]}
                     />
                   </li>
                 {/each}
@@ -890,7 +909,10 @@
           style="grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr));"
         >
           {#each sessions as s}
-            <button
+            <div
+              role="button"
+              tabindex="0"
+              onkeydown={() => {}}
               class={"grid h-max border rounded-md relative " +
                 (s.settings.sessionType === "mixed"
                   ? "border-purple-400"
@@ -898,7 +920,7 @@
                     ? "border-green-400"
                     : "border-sky-500") +
                 (s.icon ? " pl-8" : "")}
-              on:click={() => {
+              onclick={() => {
                 sessions.forEach(s1 => (s1.editing = false));
                 s.editing = true;
               }}
@@ -940,21 +962,28 @@
                   <button
                     tabindex="0"
                     class="text-gray-400 w-full h-8 cursor-pointer hover:text-blue-500"
-                    on:click|stopPropagation={ev => renameSession(s)}
+                    onclick={ev => {
+                      ev.stopPropagation();
+                      renameSession(s);
+                    }}
                   >
                     <CheckIcon size="1.2rem" />
                   </button>
                   <button
                     tabindex="0"
                     class="text-gray-400 w-full h-8 cursor-pointer hover:text-blue-500"
-                    on:click|stopPropagation={() => (s.editing = false)}
+                    onclick={ev => {
+                      ev.stopPropagation();
+                      s.editing = false;
+                    }}
                   >
                     <CloseIcon size="1.2rem" />
                   </button>
                   <button
                     tabindex="0"
                     class="text-gray-400 w-full h-8 cursor-pointer hover:text-blue-500"
-                    on:click|stopPropagation={() => {
+                    onclick={ev => {
+                      ev.stopPropagation();
                       sSession = s;
                       showDeleteSession = true;
                     }}
@@ -963,7 +992,7 @@
                   </button>
                 {/if}
               </div>
-            </button>
+            </div>
           {/each}
         </div>
       {/if}

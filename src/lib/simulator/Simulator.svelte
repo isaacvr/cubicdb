@@ -1,91 +1,63 @@
 <script lang="ts">
-  import { onDestroy, onMount, createEventDispatcher } from "svelte";
+  import { onMount } from "svelte";
   import { Puzzle } from "@classes/puzzle/puzzle";
   import type { PuzzleType } from "@interfaces";
-  import { puzzleReg } from "@classes/puzzle/puzzleRegister";
-
-  import SettingsIcon from "@icons/Cog.svelte";
-  import Refresh from "@icons/Refresh.svelte";
-  import Tooltip from "@material/Tooltip.svelte";
-  import Input from "@material/Input.svelte";
-
-  import { localLang } from "@stores/language.service";
   import { screen } from "@stores/screen.store";
-  import { Button, Modal, Toggle } from "flowbite-svelte";
-  import Select from "@material/Select.svelte";
   import { ThreeJSAdaptor } from "$lib/simulator/adaptors/ThreeJSAdaptor";
   import { ControlAdaptor } from "$lib/simulator/adaptors/ControlAdaptor";
   import { CubeMode } from "@constants";
-  import { pGenerateCubeBundle } from "@helpers/cube-draw";
-  import PuzzleImage from "@components/PuzzleImage.svelte";
-  import { sha1 } from "object-hash";
-  import { dataService } from "$lib/data-services/data.service";
+  import { browser } from "$app/environment";
 
-  export let enableKeyboard = true;
-  export let enableDrag = true;
-  export let enableRotation = true;
-  export let gui = true;
-  export let contained = false;
-  export let selectedPuzzle: PuzzleType = "rubik";
-  export let order = 3;
-  export let animationTime = $screen.isMobile ? 150 : 200; /// Default animation time: 200ms
-  export let showBackFace = false;
-  export let sequence: string[] = [];
-  export let sequenceAlpha = 0;
-  export let useScramble = "";
-  export let zoom = 12;
-  export let controlled = false;
+  interface SimulatorProps {
+    enableKeyboard?: boolean;
+    enableDrag?: boolean;
+    enableRotation?: boolean;
+    contained?: boolean;
+    selectedPuzzle?: PuzzleType;
+    order?: number;
+    animationTime?: number;
+    showBackFace?: boolean;
+    sequence?: string[];
+    sequenceAlpha?: number;
+    useScramble?: string;
+    zoom?: number;
+    controlled?: boolean;
+    class?: string;
+    movestart?: (...args: any[]) => void;
+    moveend?: (...args: any[]) => void;
+    solved?: (...args: any[]) => void;
+  }
 
-  let _cl = "";
+  function noop() {}
 
-  export { _cl as class };
-
-  const dispatch = createEventDispatcher();
+  let {
+    enableKeyboard = $bindable(true),
+    enableDrag = $bindable(true),
+    enableRotation = $bindable(true),
+    contained = $bindable(false),
+    selectedPuzzle = $bindable("rubik"),
+    order = $bindable(3),
+    animationTime = $bindable($screen.isMobile ? 150 : 200),
+    showBackFace = $bindable(false),
+    sequence = $bindable([]),
+    sequenceAlpha = $bindable(0),
+    useScramble = $bindable(""),
+    zoom = $bindable(12),
+    controlled = $bindable(false),
+    class: _cl = $bindable(""),
+    movestart = $bindable(noop),
+    moveend = $bindable(noop),
+    solved = $bindable(noop),
+  }: SimulatorProps = $props();
 
   let canvas: HTMLCanvasElement;
   let threeAdaptor: ThreeJSAdaptor;
   let controlAdaptor: ControlAdaptor;
 
   /// GUI
-  let excludedPuzzles: PuzzleType[] = ["icarry", "redibarrel"];
-  let puzzles: { name: string; value: PuzzleType; order: boolean; img: string }[] = [];
-  let hasOrder = true;
-  let GUIExpanded = false;
   let mounted = false;
   let lastS: string[] = [];
   let lastScr: string = "";
-
-  for (let [key, value] of puzzleReg) {
-    if (excludedPuzzles.indexOf(key as PuzzleType) === -1) {
-      puzzles.push({
-        name: value.name,
-        value: key as PuzzleType,
-        order: value.order,
-        img: "",
-      });
-    }
-  }
-
-  (async () => {
-    if (!gui) return;
-
-    let hashes = puzzles.map(sha1);
-    let imgCache = await $dataService.cache.cacheGetImageBundle(hashes);
-
-    // Assign images
-    imgCache.forEach((img, p) => (puzzles[p].img = img));
-
-    let missingPos = imgCache.reduce((acc, e, p) => (e ? acc : [...acc, p]), [] as number[]);
-    let cubes = missingPos.map(p => new Puzzle({ type: puzzles[p].value, order: [3] }));
-    let imgs = await pGenerateCubeBundle(cubes);
-
-    // Reassign the missing ones
-    for (let i = 0, maxi = missingPos.length; i < maxi; i += 1) {
-      let mp = missingPos[i];
-      puzzles[mp].img = imgs[i];
-      await $dataService.cache.cacheSaveImage(hashes[mp], imgs[i]);
-    }
-  })();
 
   export async function handleSequence(s: string[], scr: string) {
     lastS = s;
@@ -134,46 +106,23 @@
     threeAdaptor.resetPuzzle("", false, s);
   }
 
-  // export function
-
-  /// GUI
-  function scramble() {
+  export function scramble() {
     threeAdaptor.resetPuzzle(undefined, true);
   }
 
-  function setOrder() {
-    hasOrder = !!puzzles.find(p => p.value === selectedPuzzle)?.order;
-  }
-
-  setOrder();
-
-  function hideGUI() {
-    GUIExpanded = false;
-  }
-
-  function showGUI() {
-    GUIExpanded = true;
+  export function handleResize() {
+    if (contained) {
+      threeAdaptor.resizeHandler(true);
+    }
   }
 
   function keyDownHandler(e: KeyboardEvent) {
     if (!enableKeyboard) return;
-    threeAdaptor.keyDownHandler(e);
+    threeAdaptor.keyDownHandler(e, contained);
     switch (e.code) {
       case "KeyB": {
         if (e.ctrlKey) {
           showBackFace = !showBackFace;
-        }
-        break;
-      }
-      case "KeyD": {
-        if (e.ctrlKey) {
-          threeAdaptor.resetPuzzle();
-        }
-        break;
-      }
-      case "Comma": {
-        if (e.ctrlKey) {
-          showGUI();
         }
         break;
       }
@@ -194,9 +143,9 @@
       canvas,
     });
 
-    threeAdaptor.on("move:start", () => dispatch("move:start"));
-    threeAdaptor.on("move:end", () => dispatch("move:end"));
-    threeAdaptor.on("solved", () => dispatch("solved"));
+    threeAdaptor.on("move:start", movestart);
+    threeAdaptor.on("move:end", () => moveend);
+    threeAdaptor.on("solved", () => solved);
 
     controlAdaptor = new ControlAdaptor(threeAdaptor);
 
@@ -207,119 +156,27 @@
     threeAdaptor.render();
 
     setTimeout(() => threeAdaptor.resizeHandler(contained), 1000);
+
+    return () => {
+      threeAdaptor?.destroy();
+    };
   });
 
-  onDestroy(() => {
-    threeAdaptor?.destroy();
-  });
-
-  $: mounted && threeAdaptor.controls && (threeAdaptor.controls.noRotate = !enableRotation);
-  $: mounted && controlled && handleSequence(sequence, useScramble);
-  $: mounted && controlled && controlAdaptor.handleAlpha(sequenceAlpha, mounted);
-  $: mounted && (threeAdaptor.enableKeyboard = enableKeyboard);
-  $: mounted && (threeAdaptor.enableDrag = enableDrag);
-  $: mounted && (threeAdaptor.selectedPuzzle = selectedPuzzle);
-  $: mounted && (threeAdaptor.order = order);
-  $: mounted && (threeAdaptor.animationTime = animationTime);
-  $: mounted && (threeAdaptor.showBackFace = showBackFace);
-  $: mounted && threeAdaptor.setZoom(zoom);
+  $effect(() => (threeAdaptor.controls.noRotate = !enableRotation) as any);
+  $effect(() => controlled && (handleSequence(sequence, useScramble) as any));
+  $effect(() => controlled && (controlAdaptor.handleAlpha(sequenceAlpha, mounted) as any));
+  $effect(() => (threeAdaptor.enableKeyboard = enableKeyboard) as any);
+  $effect(() => (threeAdaptor.enableDrag = enableDrag) as any);
+  $effect(() => (threeAdaptor.selectedPuzzle = selectedPuzzle) as any);
+  $effect(() => (threeAdaptor.order = order) as any);
+  $effect(() => (threeAdaptor.animationTime = animationTime) as any);
+  $effect(() => (threeAdaptor.showBackFace = showBackFace) as any);
+  $effect(() => threeAdaptor.setZoom(zoom));
 </script>
 
 <svelte:window
-  on:resize={() => threeAdaptor.resizeHandler(contained)}
-  on:keydown={keyDownHandler}
+  on:resize={() => !contained && threeAdaptor.resizeHandler(false)}
+  onkeydown={keyDownHandler}
 />
 
-<canvas bind:this={canvas} class={_cl || ""} />
-
-{#if gui}
-  <div class="absolute right-2 top-[5rem] flex flex-col gap-2 items-center ps-3">
-    <Tooltip
-      hasKeybinding
-      position="left"
-      on:click={showGUI}
-      text={$localLang.SIMULATOR.settings + "[Ctrl + ,]"}
-    >
-      <Button
-        color="alternative"
-        class="h-8 w-8 p-0 me-3 rounded-full"
-        aria-label={$localLang.SIMULATOR.settings}
-      >
-        <SettingsIcon size="1.2rem" />
-      </Button>
-    </Tooltip>
-
-    {#if threeAdaptor && threeAdaptor.cube?.p.scramble}
-      <Tooltip hasKeybinding position="left" text={$localLang.global.toScramble + "[Ctrl + S]"}>
-        <Button
-          on:click={scramble}
-          color="alternative"
-          class="h-8 w-8 p-0 me-3 rounded-full"
-          aria-label={$localLang.global.toScramble}
-        >
-          <Refresh size="1.2rem" />
-        </Button>
-      </Tooltip>
-    {/if}
-
-    <Tooltip hasKeybinding text={$localLang.global.showBackFace + "[Ctrl + B]"} position="left">
-      <Toggle
-        class="cursor-pointer"
-        bind:checked={showBackFace}
-        aria-label={$localLang.global.showBackFace}
-      />
-    </Tooltip>
-  </div>
-{/if}
-
-<Modal bind:open={GUIExpanded} size="xs" title={$localLang.SIMULATOR.puzzleSettings} outsideclose>
-  <div class="grid grid-cols-[auto_auto] gap-4 place-items-center text-gray-400">
-    <span>{$localLang.SIMULATOR.puzzle}</span>
-
-    <Select
-      items={puzzles}
-      label={e => e.name}
-      bind:value={selectedPuzzle}
-      onChange={setOrder}
-      class="text-gray-400 w-full max-w-[unset]"
-      hasIcon={e => e.img}
-      iconComponent={PuzzleImage}
-      iconKey="src"
-      iconSize="3rem"
-    />
-
-    {#if hasOrder}
-      <span>{$localLang.SIMULATOR.order}</span>
-      <Input
-        on:UENTER={() => {
-          threeAdaptor.resetPuzzle();
-          hideGUI();
-        }}
-        type="number"
-        min={1}
-        bind:value={order}
-        class="bg-white bg-opacity-10 text-gray-400 !w-20"
-      />
-    {/if}
-  </div>
-
-  <svelte:fragment slot="footer">
-    <div class="flex flex-wrap items-center mx-auto gap-2">
-      <Button color="alternative" on:click={hideGUI} aria-label={$localLang.global.cancel}>
-        {$localLang.global.cancel}
-      </Button>
-
-      <Button
-        color="green"
-        on:click={() => {
-          threeAdaptor.resetPuzzle();
-          hideGUI();
-          dispatch("config", { puzzle: selectedPuzzle, order: order });
-        }}
-        aria-label={$localLang.SIMULATOR.setPuzzle}
-      >
-        {$localLang.SIMULATOR.setPuzzle}
-      </Button>
-    </div>
-  </svelte:fragment>
-</Modal>
+<canvas bind:this={canvas} class={_cl}></canvas>

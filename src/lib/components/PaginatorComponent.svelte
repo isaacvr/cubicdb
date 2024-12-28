@@ -47,7 +47,7 @@
   }
 
   .paginator-item button {
-    @apply w-8 h-8 bg-violet-400 bg-opacity-30 grid place-items-center rounded-md cursor-pointer shadow-md
+    @apply w-8 h-8 bg-violet-400 bg-opacity-30 grid place-items-center rounded-md shadow-md
     transition-all duration-300 select-none
     
     hover:bg-opacity-40 hover:text-gray-300;
