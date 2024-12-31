@@ -23,7 +23,7 @@
   let excludedPuzzles: PuzzleType[] = ["icarry", "redibarrel"];
   let puzzles: { name: string; value: PuzzleType; order: boolean; img: string }[] = $state([]);
   let hasOrder = $state(true);
-  let showOptions = $state(false);
+  let showOptions = $state(true);
   let showBackFace = $state(false);
 
   let simulator: Simulator;
@@ -161,7 +161,7 @@
       <div class="flex items-center gap-2 ml-auto w-fit">
         <input bind:checked={showBackFace} type="checkbox" class="toggle" />
 
-        <Tooltip keyBindings={["Ctrl", "B"]}>
+        <Tooltip keyBindings={["control", "b"]}>
           {$localLang.global.showBackFace}
         </Tooltip>
 
@@ -169,7 +169,7 @@
           <RefreshCw size="1.2rem" />
         </Button>
 
-        <Tooltip keyBindings={["Ctrl", "S"]}>
+        <Tooltip keyBindings={["control", "d"]}>
           {$localLang.global.toScramble}
         </Tooltip>
 
@@ -181,7 +181,7 @@
           <Settings2 size="1.2rem" />
         </Button>
 
-        <Tooltip keyBindings={["Ctrl", ","]}>
+        <Tooltip keyBindings={["control", "comma"]}>
           {$localLang.global.settings}
         </Tooltip>
       </div>

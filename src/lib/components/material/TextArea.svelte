@@ -1,22 +1,45 @@
 <script lang="ts">
   import { defaultInner } from "@helpers/strings";
-  import { createEventDispatcher, tick } from "svelte";
+  import { twMerge } from "tailwind-merge";
 
-  export let value = "";
-  export let cClass = "";
-  export let placeholder = "";
-  export let blurOnEscape = false;
-  export let spellcheck = false;
-  export let readOnly = false;
-  export let getInnerText = defaultInner;
+  interface TextareaProps {
+    value?: string;
+    cClass?: string;
+    placeholder?: string;
+    blurOnEscape?: boolean;
+    spellcheck?: boolean;
+    readOnly?: boolean;
+    class?: string;
+    getInnerText?: (s: string, withSuffix?: boolean) => string;
+    onclick?: (ev: MouseEvent) => any;
+    onkeyup?: (ev: KeyboardEvent) => any;
+    onkeydown?: (ev: KeyboardEvent) => any;
+    onfocus?: (ev: FocusEvent) => any;
+    onblur?: (ev: FocusEvent) => any;
+  }
 
-  let cl = "";
-  export { cl as class };
+  let {
+    value = $bindable(""),
+    cClass = $bindable(""),
+    placeholder = $bindable(""),
+    blurOnEscape = $bindable(false),
+    spellcheck = $bindable(false),
+    readOnly = $bindable(false),
+    class: cl = $bindable(""),
+    getInnerText = $bindable(defaultInner),
+    onclick,
+    onkeyup,
+    onkeydown,
+    onfocus,
+    onblur,
+  }: TextareaProps = $props();
 
-  let innerText = "<br>";
-  let dispatch = createEventDispatcher();
-  let textarea: HTMLTextAreaElement;
-  let cedit: HTMLPreElement;
+  let innerText = $state("<br>");
+  let textarea: HTMLTextAreaElement | undefined = $state();
+  let cedit: HTMLPreElement | undefined = $state();
+
+  const commonStyle = `lesp bg-transparent outline-none p-2 rounded-md text-start
+    h-full break-words whitespace-pre-wrap overflow-auto ubuntu-mono stable`;
 
   export function getTextArea() {
     return textarea;
@@ -27,82 +50,68 @@
   }
 
   export function updateInnerText(v: string = value) {
-    let rnd = Math.random().toString(16);
     innerText = getInnerText(v);
   }
 
   function keyup(e: KeyboardEvent) {
-    dispatch("keyup", e);
-
+    onkeyup && onkeyup(e);
     if (blurOnEscape && e.code === "Escape") {
-      textarea.blur();
+      textarea?.blur();
     }
   }
 
-  function keydown(e: KeyboardEvent) {
-    dispatch("keydown", e);
-  }
-
-  function focus(e: FocusEvent) {
-    dispatch("focus", e);
-  }
-
-  function blur(e: FocusEvent) {
-    dispatch("blur", e);
-  }
-
-  function click(e: MouseEvent) {
-    dispatch("click", e);
-  }
-
   function focusTextArea() {
-    cedit.blur();
-    textarea.focus();
+    cedit?.blur();
+    textarea?.focus();
   }
 
   function handleScrollFactory(A: HTMLElement, B: HTMLElement) {
     return () => (A.scrollTop = B.scrollTop);
   }
 
-  $: updateInnerText(value);
+  $effect(() => updateInnerText(value));
 </script>
 
-<div class="relative {cClass || ''}" on:focus={focusTextArea}>
+<div class={twMerge("relative bg-base-100 rounded-md", cClass)} onfocus={focusTextArea}>
   <pre
-    on:focus={focusTextArea}
+    onfocus={focusTextArea}
     bind:this={cedit}
-    on:scroll={handleScrollFactory(textarea, cedit)}
-    class={`lesp bg-transparent outline-none p-2 pointer-events-none rounded-md text-start
-      h-full break-words whitespace-pre-wrap overflow-auto stable monaco ` +
-      (cl || "bg-gray-600 text-gray-300")}
+    onscroll={handleScrollFactory(textarea!, cedit!)}
+    class={twMerge(commonStyle, "pointer-events-none", cl)}
     bind:innerHTML={innerText}
     contenteditable="false"
     {spellcheck}></pre>
+
   <textarea
     disabled={readOnly}
-    on:keyup={keyup}
-    on:keydown={keydown}
-    on:focus={focus}
-    on:blur={blur}
-    on:click={click}
-    on:scroll={handleScrollFactory(cedit, textarea)}
+    onkeyup={keyup}
+    {onkeydown}
+    {onfocus}
+    {onblur}
+    {onclick}
+    onscroll={handleScrollFactory(cedit, textarea!)}
     {placeholder}
     bind:this={textarea}
     {spellcheck}
     bind:value
-    class={`lesp bg-transparent outline-none p-2 rounded-md text-start text-transparent
-    caret-white transition-all duration-200 absolute inset-0 w-full h-full resize-none
-        break-words whitespace-pre-wrap overflow-auto stable monaco ` +
-      (cl || "bg-gray-600 text-gray-300")}
+    class={twMerge(
+      commonStyle,
+      `text-transparent caret-white absolute inset-0 w-full h-full resize-none`,
+      cl
+    )}
   ></textarea>
 </div>
 
-<style>
+<style lang="postcss">
   .lesp {
-    letter-spacing: 1.1px;
+    letter-spacing: normal;
   }
 
   .stable {
     scrollbar-gutter: stable;
+  }
+
+  textarea::placeholder {
+    @apply text-base-content;
   }
 </style>

@@ -1,22 +1,8 @@
 <script lang="ts">
-  import { onMount, tick } from "svelte";
-  import {
-    ArrowKeyLeft,
-    ArrowKeyRight,
-    Button,
-    Dropdown,
-    DropdownItem,
-    Kbd,
-    Modal,
-    Range,
-    Toggle,
-    Tooltip,
-  } from "flowbite-svelte";
+  import { onMount, tick, untrack } from "svelte";
   import Simulator from "$lib/simulator/Simulator.svelte";
   import type { IDBReconstruction, PuzzleType, Scrambler } from "@interfaces";
   import TextArea from "@material/TextArea.svelte";
-  import Input from "@material/Input.svelte";
-  import Select from "@material/Select.svelte";
   import { screen } from "@stores/screen.store";
   import { localLang } from "@stores/language.service";
   import { NotificationService } from "@stores/notification.service";
@@ -25,37 +11,37 @@
 
   import { errorIndex } from "./ReconstructionC";
 
-  // ICONS
-  import RestartIcon from "@icons/Restart.svelte";
-  import PlayIcon from "@icons/Play.svelte";
-  import PauseIcon from "@icons/Pause.svelte";
-  import StepBackIcon from "@icons/ChevronLeft.svelte";
-  import StepForwardIcon from "@icons/ChevronRight.svelte";
-  import BackIcon from "@icons/History.svelte";
-  import SearchIcon from "@icons/SearchWeb.svelte";
-  import ChevronLeft from "@icons/ChevronLeft.svelte";
-  import CopyIcon from "@icons/ClipboardOutline.svelte";
-  import SettingsIcon from "@icons/Cog.svelte";
-  import CameraIcon from "@icons/Cctv.svelte";
   import { page } from "$app/stores";
   import { DOMAIN } from "@constants";
   import { dataService } from "$lib/data-services/data.service";
+  import Tooltip from "$lib/cubicdbKit/Tooltip.svelte";
+  import {
+    Copy,
+    Pause,
+    Play,
+    RotateCcw,
+    Search,
+    Settings2,
+    StepBack,
+    StepForward,
+    SwitchCamera,
+  } from "lucide-svelte";
+  import Button from "$lib/cubicdbKit/Button.svelte";
+  import Select from "@components/material/Select.svelte";
+  import Range from "$lib/cubicdbKit/Range.svelte";
+  import { fly } from "svelte/transition";
+  import { debounce } from "@helpers/timer";
 
-  export let type: "full" | "controlled" = "full";
-  export let scramble = "";
-  export let reconstruction = "";
-  export let puzzleType: PuzzleType = "rubik";
-  export let puzzleOrder = 3;
+  let scramble = $state("");
+  let reconstruction = $state("");
 
   let recs: IDBReconstruction[] = [];
 
   let recIndex = 1;
-  let showRecSearch = false;
-  let recSearch = "";
+  let recSearch = $state("");
 
-  const iconSize = "1.3rem";
   const PUZZLES: { puzzle: PuzzleType; name: string; order: number; scrambler: Scrambler | "" }[] =
-    [
+    $state([
       { puzzle: "rubik", name: "2x2x2", order: 2, scrambler: "222so" }, // 0
       { puzzle: "rubik", name: "3x3x3", order: 3, scrambler: "333" }, // 1
       { puzzle: "rubik", name: "4x4x4", order: 4, scrambler: "444wca" }, // 2
@@ -70,32 +56,33 @@
       { puzzle: "clock", name: "Clock", order: -1, scrambler: "clkwca" }, // 11
       { puzzle: "masterskewb", name: "Master Skewb", order: -1, scrambler: "skbso" }, // 12
       { puzzle: "void", name: "Void Cube", order: 3, scrambler: "333" }, // 13
-    ];
+    ]);
 
-  let puzzle = PUZZLES[1];
+  let puzzle = $state(PUZZLES[1]);
 
-  let simulator: Simulator;
-  let sTextarea: TextArea;
-  let rTextarea: TextArea;
+  let simulator = $state<ReturnType<typeof Simulator>>();
+  let sTextarea = $state<ReturnType<typeof TextArea>>();
+  let rTextarea = $state<ReturnType<typeof TextArea>>();
 
-  let showBackFace = type === "full";
-  let title = "";
+  let showBackFace = $state(true);
+  let title = $state("");
   let backURL = "";
 
-  let sequence: string[] = [];
+  let sequence: string[] = $state([]);
   let sequenceIndex: number[] = [];
-  let sequenceAlpha = 0;
-  let playing = false;
+  let sequenceAlpha = $state(0);
+  let playing = $state(false);
   let initTime = 0;
   let finalTime = 0;
   let initAlpha = 0;
-  let finalAlpha = 0;
-  let speed = 1;
+  let finalAlpha = $state(0);
+  let speed = $state(1);
   let lastId = -1;
   let mounted = false;
   let limit = -1;
   let dir: 1 | -1 = 1;
-  let drawerOpen = false;
+  let showOptions = $state(true);
+  let fRecs: IDBReconstruction[] = $state([]);
 
   function isSameArray(a: any[], b: any[]): boolean {
     if (a.length != b.length) return false;
@@ -138,6 +125,7 @@
       if ((a - limit) * dir > 0) {
         a = limit;
         playing = false;
+        limit = -1;
       }
     }
 
@@ -145,21 +133,26 @@
 
     if (a < initAlpha || a > finalAlpha) {
       playing = false;
+      limit = -1;
+    } else if (playing) {
+      requestAnimationFrame(play);
     }
-
-    requestAnimationFrame(play);
   }
 
   function recomputeTimeBounds(s: number, inv = false) {
-    let percent = (sequenceAlpha - initAlpha) / (finalAlpha - initAlpha);
-    let total = (finalAlpha * 1000) / s;
+    untrack(() => {
+      let percent = (sequenceAlpha - initAlpha) / (finalAlpha - initAlpha);
+      let total = (finalAlpha * 1000) / s;
 
-    finalTime = performance.now() + total * (1 - (inv ? 1 - percent : percent));
-    initTime = finalTime - total;
+      finalTime = performance.now() + total * (1 - (inv ? 1 - percent : percent));
+      initTime = finalTime - total;
+    });
   }
 
   function handlePlay() {
     if (finalAlpha === 0) return;
+
+    limit = -1;
 
     if (playing) {
       playing = false;
@@ -169,7 +162,6 @@
       }
 
       playing = true;
-      limit = -1;
       dir = 1;
       recomputeTimeBounds(speed);
       play();
@@ -182,20 +174,14 @@
     let id = sequenceIndex[~~a];
 
     if (lastId != id && id >= initAlpha && id < finalAlpha) {
-      if (type === "full") {
-        let allMoves = rTextarea.getContentEdit().querySelectorAll(".move:not(.silent)");
-        allMoves.forEach(mv => mv.classList.remove("current"));
-        if (allMoves[id]) {
-          allMoves[id].classList.add("current");
-          drawerOpen && allMoves[id].scrollIntoView({ block: "nearest" });
-        }
+      let allMoves = rTextarea?.getContentEdit()?.querySelectorAll(".move:not(.silent)") || [];
+      allMoves.forEach(mv => mv.classList.remove("current"));
+      if (allMoves[id]) {
+        allMoves[id].classList.add("current");
+        showOptions && allMoves[id].scrollIntoView({ block: "nearest" });
       }
       lastId = id;
     }
-  }
-
-  function pause() {
-    playing = false;
   }
 
   function step(d: 1 | -1) {
@@ -224,12 +210,15 @@
       }
 
       case "Comma": {
-        ev.ctrlKey && ((recIndex -= 1), setRecIndex());
+        if (ev.ctrlKey) {
+          showOptions = true;
+        }
+        // ev.ctrlKey && ((recIndex -= 1), setRecIndex());
         break;
       }
 
       case "Period": {
-        ev.ctrlKey && ((recIndex += 1), setRecIndex());
+        // ev.ctrlKey && ((recIndex += 1), setRecIndex());
         break;
       }
 
@@ -242,14 +231,31 @@
         ev.ctrlKey && step(1);
         break;
       }
+
+      case "ArrowUp": {
+        ev.ctrlKey && (speed = minmax(speed + 0.1, 0.1, 10));
+        break;
+      }
+
+      case "ArrowDown": {
+        ev.ctrlKey && (speed = minmax(speed - 0.1, 0.1, 10));
+        break;
+      }
+
+      case "Escape": {
+        if (showOptions) {
+          showOptions = false;
+        }
+        break;
+      }
     }
   }
 
   async function resetPuzzle() {
     await tick();
-    simulator.handleSequence(sequence, scramble);
-    sTextarea.updateInnerText();
-    rTextarea.updateInnerText();
+    simulator?.handleSequence(sequence, scramble);
+    sTextarea?.updateInnerText();
+    rTextarea?.updateInnerText();
   }
 
   async function handleLocation(loc: URL) {
@@ -370,16 +376,6 @@
     });
   }
 
-  function handleControlled(type: PuzzleType, order: number) {
-    let p = PUZZLES.find(pz => pz.puzzle === type && (pz.order === -1 || pz.order === order));
-
-    if (!p) return;
-
-    puzzle = p;
-    scramble = scramble;
-    parse(reconstruction, true);
-  }
-
   // function handleTextareaClick(ev: MouseEvent, textarea: HTMLTextAreaElement, pre: HTMLPreElement) {
   //   const spans = pre.querySelectorAll('span[data-cursor]:not([data-cursor="-1"])');
   //   const pos = { x: ev.x, y: ev.y };
@@ -402,38 +398,107 @@
       let pw = controls.parentElement?.clientWidth;
       (controls as any).style.width = pw + "px";
     }
+
+    simulator?.handleResize();
+  }
+
+  function reset() {
+    puzzle = PUZZLES[1];
+    scramble = "";
+    reconstruction = "";
+    sequenceAlpha = 0;
+    playing = false;
+    limit = -1;
+    showOptions = true;
+    simulator?.resetCamera();
+    simulator?.resetPuzzle(puzzle.puzzle, puzzle.order, "");
+  }
+
+  async function handleRangeClick() {
+    playing = false;
+    limit = -1;
+    recomputeTimeBounds(speed);
   }
 
   onMount(() => {
     mounted = true;
 
-    if (type === "full") {
-      handleLocation($page.url);
+    handleLocation($page.url);
 
-      $dataService.reconstruction.getReconstructions().then(r => {
-        recs = r.filter(rec => errorIndex.indexOf(rec.num) < 0);
-      });
-    }
+    $dataService.reconstruction.getReconstructions().then(r => {
+      recs = r.filter(rec => errorIndex.indexOf(rec.num) < 0);
+    });
 
     handleResize();
   });
 
-  $: recomputeTimeBounds(speed);
-  $: handleSequenceAlpha(sequenceAlpha);
-  $: drawerOpen = !$screen.isMobile ? true : drawerOpen;
-  $: type === "controlled" && handleControlled(puzzleType, ~~puzzleOrder);
+  $effect(() => recomputeTimeBounds(speed));
+  $effect(() => handleSequenceAlpha(sequenceAlpha));
+
+  $effect(() => {
+    showOptions;
+    setTimeout(() => simulator?.handleResize(), 250);
+  });
+
+  const updateFRecs = debounce(() => {
+    fRecs = findReconstructions(recSearch);
+  }, 400);
+
+  $effect(() => {
+    recSearch;
+    updateFRecs();
+  });
 </script>
 
 <svelte:window on:keydown={handleKeydown} on:resize={handleResize} />
 
-<main class:full={type === "full"}>
-  <section>
+<div class="simulator" class:expanded={showOptions}>
+  <div class="shaded-card relative overflow-hidden flex flex-col">
+    <div class="config flex items-center justify-between relative z-20">
+      <h2 class="name font-bold">{title}</h2>
+
+      <div class="flex items-center gap-2 ml-auto w-fit">
+        <input bind:checked={showBackFace} type="checkbox" class="toggle" />
+
+        <Tooltip keyBindings={["control", "b"]}>
+          {$localLang.global.showBackFace}
+        </Tooltip>
+
+        <Button onclick={() => simulator?.resetCamera()} style="--dash: 18;">
+          <SwitchCamera size="1.2rem" />
+        </Button>
+
+        <Tooltip>
+          {$localLang.RECONSTRUCTIONS.resetCamera}
+        </Tooltip>
+
+        <Button onclick={reset} style="--dash: 18;">
+          <RotateCcw size="1.2rem" />
+        </Button>
+
+        <Tooltip>
+          {$localLang.global.reset}
+        </Tooltip>
+
+        <Button
+          onclick={() => (showOptions = true)}
+          class={showOptions ? "!hidden" : ""}
+          style="--dash: 18;"
+        >
+          <Settings2 size="1.2rem" />
+        </Button>
+
+        <Tooltip keyBindings={["control", "comma"]}>
+          {$localLang.global.settings}
+        </Tooltip>
+      </div>
+    </div>
+
     <Simulator
       contained
       controlled
       enableDrag={false}
-      enableRotation={type === "full"}
-      gui={false}
+      enableRotation
       {sequence}
       bind:selectedPuzzle={puzzle.puzzle}
       bind:order={puzzle.order}
@@ -442,369 +507,167 @@
       bind:useScramble={scramble}
       bind:sequenceAlpha
       enableKeyboard={false}
-      zoom={type === "full" ? 12 : 6}
+      zoom={12}
     />
 
-    <div class={"controls " + (type === "full" ? "grid h-16" : "flex items-center h-0")}>
-      <button
-        class="flex px-3 py-2"
-        on:mousedown={pause}
-        aria-label={$localLang.RECONSTRUCTIONS.reconstructionProgress}
-      >
+    {#if finalAlpha > 0}
+      <div class="grid relative z-10 mt-auto gap-2" in:fly={{ y: 20 }} out:fly={{ y: 20 }}>
         <Range
           bind:value={sequenceAlpha}
           min={initAlpha}
           max={finalAlpha}
-          step="0.025"
-          size={type === "full" ? "md" : "sm"}
+          step={0.025}
+          onmousedown={handleRangeClick}
+          class="range-xs"
+          variant="progress"
           aria-label={$localLang.RECONSTRUCTIONS.reconstructionProgress}
         />
-      </button>
 
-      <div class="flex justify-evenly">
-        {#if type === "full"}
-          <Button
-            color="none"
-            class="w-full h-full rounded-none shadow-none hover:bg-purple-600"
-            on:click={() => step(-1)}
-            aria-label={$localLang.RECONSTRUCTIONS.stepBack}
-          >
-            <StepBackIcon size={iconSize} />
-          </Button>
-
-          <Tooltip placement="top" class="flex items-center justify-center gap-2">
-            {$localLang.RECONSTRUCTIONS.stepBack}
-            <span class="text-yellow-300 flex items-center gap-2">
-              [Ctrl + <Kbd class="inline-flex items-center -ml-1 -mr-3 p-1 scale-75"
-                ><ArrowKeyLeft /></Kbd
-              >]
-            </span>
-          </Tooltip>
-        {/if}
-
-        <Button
-          color="none"
-          on:click={handlePlay}
-          class={"w-full h-full rounded-none shadow-none hover:bg-green-600 " +
-            (type === "full" ? "" : "!p-1 mr-1")}
-          aria-label={$localLang.RECONSTRUCTIONS.playPause}
-        >
-          {#if playing}
-            <PauseIcon size={iconSize} />
-          {:else if sequenceAlpha === finalAlpha}
-            <RestartIcon size={iconSize} />
-          {:else}
-            <PlayIcon size={iconSize} />
-          {/if}
-        </Button>
-
-        {#if type === "full"}
-          <Tooltip placement="top" class="flex items-center justify-center gap-2">
-            {$localLang.RECONSTRUCTIONS.playPause}
-            <span class="text-yellow-300 flex items-center gap-2"> [Ctrl + P] </span>
-          </Tooltip>
-        {/if}
-
-        {#if type === "full"}
-          <Button
-            color="none"
-            class="w-full h-full rounded-none shadow-none hover:bg-purple-600"
-            on:click={() => step(1)}
-            aria-label={$localLang.RECONSTRUCTIONS.stepForward}
-          >
-            <StepForwardIcon size={iconSize} />
-          </Button>
-          <Tooltip placement="top" class="flex items-center justify-center gap-2">
-            {$localLang.RECONSTRUCTIONS.stepForward}
-            <span class="text-yellow-300 flex items-center gap-2">
-              [Ctrl + <Kbd class="inline-flex items-center -ml-1 -mr-3 p-1 scale-75"
-                ><ArrowKeyRight /></Kbd
-              >]
-            </span>
-          </Tooltip>
-        {/if}
-      </div>
-    </div>
-  </section>
-
-  {#if type === "full"}
-    <section class="settings" class:open={drawerOpen}>
-      <div class="content">
-        <TextArea
-          bind:value={title}
-          placeholder={$localLang.RECONSTRUCTIONS.title}
-          class="rounded-none border-none bg-gray-800 px-2 py-1 border-t border-t-blue-800 text-xl text-center"
-        />
-
-        <div>
-          <h2>{$localLang.global.scramble}</h2>
-          <TextArea
-            bind:value={scramble}
-            getInnerText={s => parse(s, false)}
-            placeholder={$localLang.RECONSTRUCTIONS.scramble}
-            class="bg-transparent rounded-none w-full border-none"
-            cClass="h-[10vh]"
-            bind:this={sTextarea}
-          />
-        </div>
-
-        <div>
-          <h2 class="flex items-center gap-2">
-            {$localLang.global.reconstruction}
-
-            <button aria-label={$localLang.global.copy} on:click={copyReconstruction}>
-              <CopyIcon size={iconSize} />
-            </button>
-            <Tooltip>{$localLang.global.copy}</Tooltip>
-          </h2>
-
-          <TextArea
-            class="rounded-none border-none absolute inset-0"
-            placeholder={$localLang.RECONSTRUCTIONS.reconstruction}
-            bind:value={reconstruction}
-            cClass="h-[30vh]"
-            getInnerText={s => parse(s, true)}
-            bind:this={rTextarea}
-          />
-        </div>
-
-        <div>
-          <h2 class="flex gap-2 items-center">
-            {$localLang.global.settings}
-          </h2>
-
-          <ul class="setting-list no-grid p-2 gap-4 place-items-center">
-            <!-- Settings -->
-            <li>
-              <Button color="purple" class="!p-2" aria-label={$localLang.global.settings}>
-                <SettingsIcon class="text-inherit cursor-pointer" size={iconSize} />
-              </Button>
-
-              <Dropdown>
-                {@const dropdownItemClass = "grid grid-cols-[3rem_auto]"}
-                <DropdownItem
-                  class={dropdownItemClass}
-                  on:click={() => (showBackFace = !showBackFace)}
-                >
-                  <Toggle bind:checked={showBackFace} size="small"></Toggle>
-                  <span>
-                    {$localLang.global.showBackFace}
-                  </span>
-                </DropdownItem>
-
-                <DropdownItem class={dropdownItemClass} on:click={() => simulator.resetCamera()}>
-                  <CameraIcon size={iconSize} />
-                  {$localLang.RECONSTRUCTIONS.resetCamera}
-                </DropdownItem>
-
-                <DropdownItem
-                  class={dropdownItemClass}
-                  on:click={() => (scramble = reconstruction = title = "")}
-                >
-                  <RestartIcon size={iconSize} />
-                  {$localLang.global.reset}
-                </DropdownItem>
-
-                <DropdownItem class={dropdownItemClass} on:click={copyReconstruction}>
-                  <CopyIcon size={iconSize} />
-                  {$localLang.global.copy}
-                </DropdownItem>
-              </Dropdown>
-            </li>
-
-            <!-- Find Reconstruction -->
-            <li>
-              <Button
-                color="purple"
-                class="!p-2"
-                on:click={() => (showRecSearch = true)}
-                aria-label={$localLang.RECONSTRUCTIONS.findReconstruction}
-              >
-                <SearchIcon size={iconSize} />
-                <Tooltip>
-                  {$localLang.RECONSTRUCTIONS.findReconstruction}
-                </Tooltip>
-              </Button>
-            </li>
-
-            <!-- Puzzle -->
-            <li>
-              <Select
-                bind:value={puzzle}
-                items={PUZZLES}
-                transform={e => e}
-                label={e => e.name}
-                onChange={resetPuzzle}
-                hasIcon={e => e.scrambler}
-              />
-            </li>
-
-            <!-- Speed -->
-            <li class="w-full max-w-[15rem] flex flex-col">
-              <span> {$localLang.RECONSTRUCTIONS.speed}: {Math.floor(speed * 10) / 10}x</span>
-              <Range
-                bind:value={speed}
-                min={0.1}
-                max={10}
-                step="0.1"
-                aria-label={$localLang.RECONSTRUCTIONS.speed}
-              />
-            </li>
-
-            <!-- Back -->
-            {#if backURL}
-              <li>
-                <Button href={backURL} aria-label={$localLang.RECONSTRUCTIONS.return}>
-                  <BackIcon size={iconSize} />
-                  {$localLang.RECONSTRUCTIONS.return}
-                </Button>
-              </li>
-            {/if}
-          </ul>
-
-          <div class="actions hidden justify-evenly">
-            <Input type="number" class="max-w-[6rem]" bind:value={recIndex} min={0} />
-            <Button
-              on:click={() => {
-                recIndex -= 1;
-                setRecIndex();
-              }}>&lt;</Button
+        <div class="grid grid-cols-[1fr_auto_1fr]">
+          <div></div>
+          <div class="flex justify-center gap-2">
+            <Button onclick={() => step(-1)}><StepBack size="1rem" /></Button>
+            <Tooltip keyBindings={["control", "left"]}
+              >{$localLang.RECONSTRUCTIONS.stepBack}</Tooltip
             >
-            <Button
-              on:click={() => {
-                recIndex += 1;
-                setRecIndex();
-              }}>&gt;</Button
+
+            <Button onclick={handlePlay}>
+              {#if playing}
+                <Pause size="1rem" />
+              {:else if sequenceAlpha === finalAlpha}
+                <RotateCcw size="1rem" />
+              {:else}
+                <Play size="1rem" />
+              {/if}
+            </Button>
+            <Tooltip keyBindings={["control", "p"]}>{$localLang.RECONSTRUCTIONS.playPause}</Tooltip>
+
+            <Button onclick={() => step(1)}><StepForward size="1rem" /></Button>
+            <Tooltip keyBindings={["control", "right"]}
+              >{$localLang.RECONSTRUCTIONS.stepForward}</Tooltip
             >
-            <Button on:click={() => setRecIndex()}>Set</Button>
-            <Button on:click={() => saveToIndex()}>Save</Button>
-            <Button on:click={() => downloadRecs()}>Download</Button>
+          </div>
+          <div class="flex justify-end">
+            <div class="grid">
+              <span class="text-xs text-center">
+                {$localLang.RECONSTRUCTIONS.speed} ({Math.floor(speed * 10) / 10}x)
+              </span>
+              <Range min={0.1} max={10} step={0.1} bind:value={speed} class="max-w-[8rem]" />
+            </div>
+            <Tooltip keyBindings={["control", "updown"]}></Tooltip>
           </div>
         </div>
       </div>
+    {/if}
+  </div>
 
-      <Button
-        color="none"
-        class="max-md:absolute md:hidden left-0 top-1/2 -translate-x-full -translate-y-1/2 px-[0.3rem] py-8
-      rounded-none rounded-tl-md rounded-bl-md bg-background border-2 border-primary-500 border-r-0"
-        on:click={() => (drawerOpen = !drawerOpen)}
-        aria-label={drawerOpen ? $localLang.global.minimize : $localLang.global.maximize}
-      >
-        <ChevronLeft size="1.2rem" class={drawerOpen ? "rotate-180" : ""} />
-      </Button>
-    </section>
-  {/if}
-</main>
+  <div class="shaded-card relative flex flex-col overflow-y-auto overflow-x-clip">
+    <h2 class="tx-primary-50 mb-2 font-bold">{$localLang.global.settings}</h2>
 
-<Modal
-  bind:open={showRecSearch}
-  autoclose
-  outsideclose
-  size="sm"
-  title={$localLang.RECONSTRUCTIONS.findReconstruction}
->
-  <span class="text-yellow-500 my-2">eg. 3x3 Max Park</span>
-  <Input bind:value={recSearch} />
+    <div class="grid gap-2 text-sm">
+      <label class="input grid grid-cols-[1.2rem_100%] items-center gap-2 text-sm relative">
+        <Search size="1.2rem" />
+        <input
+          type="text"
+          bind:value={recSearch}
+          class="w-[calc(100%-1.7rem)]"
+          placeholder={$localLang.RECONSTRUCTIONS.findReconstruction}
+        />
 
-  <ul
-    class="mt-4 max-h-[10rem] overflow-x-clip overflow-y-scroll pr-4 overscroll-contain"
-    style="scrollbar-gutter: stable;"
-  >
-    {#each findReconstructions(recSearch).slice(0, 500) as rec}
-      <li>
-        <button
-          on:click={() => {
-            recIndex = rec.num;
-            setRecIndex();
-            showRecSearch = false;
-          }}
-          aria-label={rec.title}
-          class="cursor-pointer rounded-md p-1 hover:bg-blue-600 hover:text-white w-full transition-all duration-200"
-        >
-          {rec.title}
+        {#if fRecs.length > 0}
+          <ul
+            class="shaded-card !bg-base-100 rounded-md p-2 shadow-md max-h-[20rem]
+          absolute top-[calc(100%+.25rem)] w-full overflow-y-auto z-10 grid gap-2
+          grid-cols-1 overflow-x-clip"
+          >
+            {#each fRecs as rec}
+              <li>
+                <Button
+                  class="w-[unset] font-normal"
+                  onclick={() => {
+                    recIndex = rec.num;
+                    setRecIndex();
+                    recSearch = "";
+                  }}
+                >
+                  {rec.title}
+                </Button>
+              </li>
+            {/each}
+          </ul>
+        {/if}
+      </label>
+
+      <span>{$localLang.SIMULATOR.puzzle}</span>
+
+      <Select
+        class="w-full"
+        bind:value={puzzle}
+        items={PUZZLES}
+        transform={e => e}
+        label={e => e.name}
+        onChange={resetPuzzle}
+        hasIcon={e => e.scrambler}
+      />
+
+      <span>{$localLang.global.scramble}</span>
+
+      <TextArea
+        bind:value={scramble}
+        getInnerText={s => parse(s, false)}
+        placeholder={$localLang.RECONSTRUCTIONS.scramble}
+        bind:this={sTextarea}
+      />
+
+      <span class="flex items-center gap-2">
+        {$localLang.global.reconstruction}
+
+        <button aria-label={$localLang.global.copy} onclick={copyReconstruction}>
+          <Copy size="1rem" />
         </button>
-      </li>
-    {/each}
-  </ul>
-</Modal>
+        <Tooltip>{$localLang.global.copy}</Tooltip>
+      </span>
 
-<style lang="postcss">
-  main {
-    @apply relative grid mt-1 w-full h-[calc(100dvh-3.4rem)] overflow-hidden;
-  }
+      <TextArea
+        class="rounded-none border-none absolute inset-0"
+        placeholder={$localLang.RECONSTRUCTIONS.reconstruction}
+        bind:value={reconstruction}
+        cClass="h-[30vh]"
+        getInnerText={s => parse(s, true)}
+        bind:this={rTextarea}
+      />
+    </div>
 
-  main.full {
-    @apply md:grid-cols-2;
-  }
+    <div class="action mt-auto flex items-center gap-2">
+      <Button class="flex-1 bg-primary" onclick={() => (showOptions = false)}>
+        {$localLang.global.accept}
+      </Button>
+    </div>
+  </div>
+</div>
 
-  main:not(.full) {
-    @apply border rounded-md;
-    border-color: var(--th-primary-900);
-    background-color: var(--th-backgroundLevel1);
-  }
-
-  main:not(.full) .controls {
-    @apply overflow-hidden;
-  }
-
-  main:not(.full):hover .controls {
-    @apply h-8;
-  }
-
-  main section {
-    @apply relative h-full;
-  }
-
-  main.full section {
-    @apply h-[calc(100vh-3.5rem)];
-  }
-
-  .controls {
-    @apply transition-all duration-200 fixed bottom-0;
-    background-color: var(--th-backgroundLevel2);
-  }
-
-  .settings {
-    @apply border border-blue-800 flex flex-col relative;
-  }
-
-  .settings .content {
-    @apply overflow-auto;
-  }
-
-  @media not all and (min-width: 768px) {
-    .settings {
-      @apply absolute w-[min(calc(100%-2rem),25rem)] right-0 transition-all duration-200;
-      background-color: var(--th-background);
-    }
-
-    .settings:not(.open) {
-      transform: translateX(100%);
-    }
-  }
-
-  .settings .content > div {
-    @apply border-t border-t-blue-800;
-  }
-
-  .settings div h2 {
-    @apply bg-gray-800 px-2 py-1 text-xl;
-  }
-
-  .setting-list {
-    min-height: 4rem;
-    display: flex;
-    /* flex-wrap: wrap; */
+<style>
+  .simulator {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-template-columns: 1fr 0;
+    transition: all 200ms;
+    gap: 0.5rem;
     overflow: hidden;
   }
 
-  .setting-list li {
-    display: flex;
-    gap: 0.25rem;
-    align-items: center;
-    height: 100%;
-    border-radius: 0.3rem;
-    box-shadow: 0px 0px 0.3rem #fff3;
-    padding: 0.3rem;
+  .simulator.expanded {
+    grid-template-columns: 1fr 16rem;
+  }
+
+  .simulator > :last-child {
+    opacity: 0;
+    visibility: hidden;
+  }
+
+  .simulator.expanded > :last-child {
+    opacity: 1;
+    visibility: visible;
   }
 </style>

@@ -143,14 +143,11 @@
 
     let ini = mod(focused + (toFind.length === 1 ? 1 : 0), data.length);
 
-    console.log(`toFind: <${toFind}>, <${letter}>, <${lastWord}>`);
-
     for (let i = 0, maxi = data.length; i < maxi; i += 1) {
       let p = mod(ini + i, data.length);
 
       if (data[p].label.startsWith(toFind)) {
         lastWord = toFind;
-        console.log("lastWord = toFind 1");
         focused = p;
         tick().then(() => focusElement(list));
         return;
@@ -159,14 +156,12 @@
 
     toFind = letter;
     ini = mod(focused + 1, data.length);
-    console.log("searching letter");
 
     for (let i = 0, maxi = data.length; i < maxi; i += 1) {
       let p = mod(ini + i, data.length);
 
       if (data[p].label.startsWith(toFind)) {
         lastWord = toFind;
-        console.log("lastWord = toFind 2");
         focused = p;
         tick().then(() => focusElement(list));
         return;
@@ -174,7 +169,6 @@
     }
 
     lastWord = "";
-    console.log("not found");
   }
 
   onMount(() => (mounted = true));
@@ -186,7 +180,7 @@
 <svelte:window onkeydown={handleKeydown} />
 
 <Button
-  class={"gap-1 h-9 py-1 px-2 input font-normal text-base-content " + cl}
+  class={"gap-1 h-9 py-1 px-2 input font-normal text-sm text-base-content " + cl}
   onclick={handleClick}
   {...otherProps}
 >

@@ -221,7 +221,7 @@
     {/if}
 
     {#if $dataService.isElectron && $screen.width > 640}
-      <span>{date}</span>
+      <span class="text-sm">{date}</span>
 
       <div class="w-0 mx-2 rounded-full h-6 border border-primary"></div>
 
@@ -250,37 +250,53 @@
   <div class="navigation flex flex-col justify-between overflow-auto">
     <ul class="menu">
       <li>
-        <a class="svg-container hover:text-success" style="--dash: 50;" href="/timer">
+        <a class="svg-container hover:text-success text-primary" style="--dash: 50;" href="/timer">
           <Timer size="1.2rem" />
           {$localLang.HOME.timer}
         </a>
       </li>
       <li>
-        <a class="svg-container hover:text-success" style="--dash: 70;" href="/algorithms">
+        <a
+          class="svg-container hover:text-success text-secondary"
+          style="--dash: 70;"
+          href="/algorithms"
+        >
           <BrainCog size="1.2rem" />
           {$localLang.HOME.algorithms}
         </a>
       </li>
       <li>
-        <a class="svg-container hover:text-success" style="--dash: 16;" href="/tutorials">
+        <a
+          class="svg-container hover:text-success text-accent"
+          style="--dash: 16;"
+          href="/tutorials"
+        >
           <Library size="1.2rem" />
           {$localLang.HOME.tutorials}
         </a>
       </li>
       <li>
-        <a class="svg-container hover:text-success" style="--dash: 65;" href="/reconstructions">
+        <a
+          class="svg-container hover:text-success text-success"
+          style="--dash: 65;"
+          href="/reconstructions"
+        >
           <Blocks size="1.2rem" />
           {$localLang.HOME.reconstructions}
         </a>
       </li>
       <li>
-        <a class="svg-container hover:text-success" style="--dash: 40;" href="/training">
+        <a class="svg-container hover:text-success text-info" style="--dash: 40;" href="/training">
           <Dumbbell size="1.2rem" />
           {$localLang.HOME.training}
         </a>
       </li>
       <li>
-        <a class="svg-container hover:text-success" style="--dash: 43;" href="/simulator">
+        <a
+          class="svg-container hover:text-success text-warning"
+          style="--dash: 43;"
+          href="/simulator"
+        >
           <Rotate3D size="1.2rem" />
           {$localLang.HOME.simulator}
         </a>
@@ -291,7 +307,7 @@
 
     <ul class="menu">
       <li>
-        <a class="svg-container hover:text-warning" style="--dash: 30;" href="/tools">
+        <a class="svg-container hover:text-warning text-error" style="--dash: 30;" href="/tools">
           <Hammer size="1.2rem" />
           {$localLang.HOME.tools}
         </a>
@@ -332,7 +348,7 @@
     {@render children()}
   </div>
 
-  <div class="footer-content shaded-card !p-0 grid place-items-center">
+  <div class="footer-content shaded-card !p-0 gr-id place-items-center hidden">
     <ul class="flex gap-1">
       <li><Button size="sm"><Timer size="1rem"></Timer></Button></li>
       <li><Button size="sm"><Hammer size="1rem"></Hammer></Button></li>
@@ -380,7 +396,8 @@
       "footer footer";
 
     grid-template-columns: auto 1fr;
-    grid-template-rows: 2.5rem calc(100svh - 5rem) 2.5rem;
+    /* grid-template-rows: 2.5rem calc(100svh - 5rem) 2.5rem; */
+    grid-template-rows: 2.5rem calc(100svh - 2.5rem);
 
     height: 100%;
     overflow: hidden;

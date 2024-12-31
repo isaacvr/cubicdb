@@ -8,7 +8,7 @@
     "sourceMap": true,
     "strict": true,
     "moduleResolution": "bundler",
-    "target": "ES6"
+    "target": "ESNext"
   }
   // Path aliases are handled by https://kit.svelte.dev/docs/configuration#alias
   // except $lib which is handled by https://kit.svelte.dev/docs/configuration#files

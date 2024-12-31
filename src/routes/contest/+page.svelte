@@ -95,15 +95,14 @@
       let pages =
         mode[1] === "r3ni"
           ? imgs.reduce(
-              (acc, e) => {
+              (acc: string[][], e) => {
                 if (acc[acc.length - 1].length < SCRAMBLES_PER_PAGE) {
                   acc[acc.length - 1].push(e);
                   return acc;
                 }
-
                 return [...acc, [e]];
               },
-              <string[][]>[[]]
+              [[]]
             )
           : [imgs];
 

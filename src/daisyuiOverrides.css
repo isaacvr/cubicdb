@@ -1,8 +1,17 @@
 /* DaisyUI overrides */
 .range::-webkit-slider-thumb {
-  border-radius: 0.3rem;
-  background-color: currentColor;
-  box-shadow: none;
+  @apply rounded-md;
+  box-shadow:
+    0 0 0 0px var(--range-shdw) inset,
+    var(--focus-shadow, 0 0),
+    calc(var(--filler-size) * -1 - var(--filler-offset)) 0 0 var(--filler-size);
+
+  background-color: var(--fallback-bc, oklch(var(--tb) / var(--tw-bg-opacity)));
+}
+
+.range:focus-visible::-webkit-slider-thumb {
+  --focus-shadow: 0 0 0 2px var(--fallback-b1, oklch(var(--tf) / 1)) inset,
+    0 0 0 2rem var(--range-shdw) inset;
 }
 
 .range::-webkit-slider-runnable-track {

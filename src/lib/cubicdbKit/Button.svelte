@@ -21,7 +21,7 @@
   };
 
   const COLOR_CLASS: Record<Color, string> = {
-    primary: "btn-primary",
+    primary: "bg-base-100 hover:bg-primary text-base-content",
     accept: "btn-secondary",
     cancel: "btn-neutral",
     urgent: "btn-accent",

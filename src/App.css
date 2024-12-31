@@ -21,7 +21,6 @@
 
 body {
   background: url(/assets/background.svg);
-  cursor: url(/assets/cursors/default.svg), auto;
   margin: 0;
   display: flex;
   min-width: 320px;
@@ -44,6 +43,16 @@ body {
   overflow: hidden;
 }
 
+body,
+label {
+  cursor: url(/assets/cursors/default.svg), auto;
+}
+/* 
+textarea,
+input {
+  cursor: url(/assets/cursors/text.svg) 12 12, text;
+} */
+
 a:hover:hover,
 button:hover:hover,
 .cursor-pointer:hover:hover,
@@ -55,6 +64,9 @@ input[type="range"]:hover {
 
 .ubuntu {
   font-family: "Ubuntu";
+}
+.ubuntu-mono {
+  font-family: "Ubuntu-Mono";
 }
 .ropa-sans {
   font-family: "RopaSans";
@@ -140,25 +152,24 @@ pre .space {
 }
 
 pre .move {
-  color: #b5cea8;
+  @apply text-move relative z-0;
 }
 
 pre .move.current {
-  background-color: #3f69df;
-  color: white;
+  @apply bg-primary rounded-sm text-current;
+  box-shadow: 0 0 0 0.2rem oklch(var(--p));
 }
 
 pre .comment {
-  color: #59966d;
-  display: inline;
+  @apply text-comment;
 }
 
 pre .error {
-  color: #e04a4a;
+  @apply text-error;
 }
 
 pre .operator {
-  color: #ce70d6;
+  @apply text-operator;
 }
 
 /* Custom scrollbar */
@@ -203,7 +214,7 @@ pre .operator {
 
 /* Theme stuff */
 .shaded-card {
-  @apply rounded-md p-2 border-primary border-opacity-[0.15];
+  @apply rounded-lg p-2 border-primary border-opacity-[0.15];
   border-width: max(0.1rem, 1px);
   border-style: solid;
   background: linear-gradient(to top, oklch(var(--p) / 0.07), oklch(var(--p) / 0.03));

@@ -80,9 +80,9 @@ export function isMo3(format: string): boolean {
 
 export function debounce(
   fn: Callback,
+  time = 500,
   pre: Callback = () => {},
-  pos: Callback = () => {},
-  time = 500
+  pos: Callback = () => {}
 ) {
   let timerId: any;
   return () => {

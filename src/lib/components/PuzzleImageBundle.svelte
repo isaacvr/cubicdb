@@ -1,10 +1,10 @@
 <script lang="ts">
   import PuzzleImage from "$lib/components/PuzzleImage.svelte";
   import { Button } from "flowbite-svelte";
-  import { ChevronLeftSolid, ChevronRightSolid } from "flowbite-svelte-icons";
   import { minmax } from "@helpers/math";
   import { blur } from "svelte/transition";
   import { localLang } from "$lib/stores/language.service";
+  import { ChevronLeft, ChevronRight } from "lucide-svelte";
 
   let _cl = "";
 
@@ -46,7 +46,7 @@
   disabled={selectedImg === 0}
   class={"rounded-full w-[3rem] h-[3rem] " + (preview.length < 2 ? "hidden" : "mt-2")}
 >
-  <ChevronLeftSolid class="pointer-events-none" />
+  <ChevronLeft class="pointer-events-none" />
 </Button>
 
 <PuzzleImage
@@ -66,5 +66,5 @@
   disabled={selectedImg + 1 === preview.length}
   class={"rounded-full w-[3rem] h-[3rem] " + (preview.length < 2 ? "hidden" : "mt-2")}
 >
-  <ChevronRightSolid class="pointer-events-none" />
+  <ChevronRight class="pointer-events-none" />
 </Button>
