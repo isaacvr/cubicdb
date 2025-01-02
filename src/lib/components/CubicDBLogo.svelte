@@ -14,7 +14,7 @@
     height="100%"
     class="ml-1 w-8 flex my-auto"
   />
-  <span class="text-white max-sm:hidden self-center whitespace-nowrap text-base font-semibold ml-2">
+  <span class="text-white max-sm:hidden self-center whitespace-nowrap text-base ml-2">
     CubicDB
   </span>
 </a>

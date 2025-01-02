@@ -9,6 +9,7 @@
     children?: any;
     onclick?: Function;
     class?: string;
+    contentClass?: string;
     size?: Size;
     color?: Color;
     [key: string]: any;
@@ -32,13 +33,14 @@
     loading = $bindable(false),
     size = $bindable("md"),
     color = $bindable("primary"),
+    contentClass = $bindable(""),
     children,
     onclick = () => {},
     ...restProps
   }: ButtonProps = $props();
 
   let buttonClass = $derived(
-    twMerge("btn h-auto min-h-[unset]", COLOR_CLASS[color], SIZE_CLASS[size], cl)
+    twMerge("btn h-auto min-h-[unset] font-normal", COLOR_CLASS[color], SIZE_CLASS[size], cl)
   );
 
   function handleClick(ev: MouseEvent) {
@@ -48,7 +50,7 @@
 
 <button class={buttonClass} class:isLoading={loading} onclick={handleClick} {...restProps}>
   <div class="loading loading-spinner loading-sm mx-auto"></div>
-  <div class="content flex gap-2 items-center justify-center">
+  <div class={twMerge("content flex gap-2 items-center justify-center", contentClass)}>
     {@render children?.()}
   </div>
 </button>

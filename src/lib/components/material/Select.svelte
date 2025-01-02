@@ -103,6 +103,11 @@
 
   function handleKeydown(ev: KeyboardEvent) {
     if (!showOptions) return;
+    if (ev.code === "Escape") {
+      showOptions = false;
+      return;
+    }
+
     if (ev.code === "Space") {
       ev.stopPropagation();
       ev.preventDefault();
@@ -114,9 +119,8 @@
     let list = document.querySelector(`#${selectID}`);
     if (!list) return;
 
-    ev.preventDefault();
-
     if (ev.code === "ArrowUp" || ev.code === "ArrowDown") {
+      ev.preventDefault();
       focused = mod(
         ev.code === "ArrowUp" ? focused - 1 : focused + 1,
         Math.floor(list.children[0].children.length / 2) + 1
@@ -161,6 +165,7 @@
       let p = mod(ini + i, data.length);
 
       if (data[p].label.startsWith(toFind)) {
+        ev.preventDefault();
         lastWord = toFind;
         focused = p;
         tick().then(() => focusElement(list));
@@ -230,7 +235,7 @@
 >
   {#each items as item, pos}
     {#if pos}
-      <DropdownDivider />
+      <li class="divider my-1 h-0 !border-red-500"></li>
     {/if}
 
     <DropdownItem

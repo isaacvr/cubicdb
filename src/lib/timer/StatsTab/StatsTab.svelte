@@ -19,10 +19,10 @@
   import { getLanguage } from "@lang/index";
   import { AON, STEP_COLORS } from "@constants";
   import { screen } from "@stores/screen.store";
-  import { Button } from "flowbite-svelte";
   import * as echarts from "echarts";
   import ExternalIcon from "@icons/OpenInNew.svelte";
   import { dataService } from "$lib/data-services/data.service";
+  import Button from "$lib/cubicdbKit/Button.svelte";
 
   export let context: TimerContext;
   export let headless = false;
@@ -186,7 +186,7 @@
           left: "center",
           textStyle: {
             fontSize: $screen.isMobile ? 20 : 30,
-            color: $dataService.theme.currentTheme.text,
+            color: $dataService.theme.currentTheme.colors.text,
           },
         },
       ],
@@ -331,7 +331,7 @@
           left: "center",
           textStyle: {
             fontSize: $screen.isMobile ? 20 : 30,
-            color: $dataService.theme.currentTheme.text,
+            color: $dataService.theme.currentTheme.colors.text,
           },
         },
       ],
@@ -386,7 +386,7 @@
           left: "center",
           textStyle: {
             fontSize: $screen.isMobile ? 20 : 30,
-            color: $dataService.theme.currentTheme.text,
+            color: $dataService.theme.currentTheme.colors.text,
           },
         },
       ],
@@ -445,7 +445,7 @@
           left: "center",
           textStyle: {
             fontSize: $screen.isMobile ? 20 : 30,
-            color: $dataService.theme.currentTheme.text,
+            color: $dataService.theme.currentTheme.colors.text,
           },
         },
       ],
@@ -639,7 +639,7 @@
             left: "center",
             textStyle: {
               fontSize: $screen.isMobile ? 20 : 30,
-              color: $dataService.theme.currentTheme.text,
+              color: $dataService.theme.currentTheme.colors.text,
             },
           },
         ],
@@ -701,7 +701,7 @@
             left: "center",
             textStyle: {
               fontSize: $screen.isMobile ? 20 : 30,
-              color: $dataService.theme.currentTheme.text,
+              color: $dataService.theme.currentTheme.colors.text,
             },
           },
         ],
@@ -814,7 +814,6 @@
               {ao.title}:
 
               <Button
-                color="none"
                 class="px-1 text-sm h-6 hover:tx-primary-300 tx-text"
                 ariaLabel={$localLang.TIMER.go}
                 on:click={() => selectSolveById($stats[ao.key].id || "", ao.select)}

@@ -1,7 +1,7 @@
 import { EPS } from "@constants";
 import type { IDrawer } from "../utils";
 import { sha1 } from "object-hash";
-import { randomCSSId, randomUUID } from "@helpers/strings";
+import { randomCSSId } from "@helpers/strings";
 
 interface PathElement {
   type: "path";
