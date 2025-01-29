@@ -71,7 +71,7 @@
 
 <Modal
   bind:show
-  onClose={() => {
+  onclose={() => {
     show = false;
     isAdding = false;
   }}
@@ -165,7 +165,7 @@
     </section>
 
     <section class="place-items-center max-h-52 w-full h-full">
-      <PuzzleImage src={img} interactive on:position={ev => selectPosition(ev.detail)} />
+      <PuzzleImage src={img} interactive onposition={ev => selectPosition(ev)} />
     </section>
 
     {#if !alg.tutorial}

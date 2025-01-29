@@ -1,32 +1,17 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { derived, type Writable } from "svelte/store";
+  import { derived, writable, type Writable } from "svelte/store";
   import { getSeed, setSeed } from "@cstimer/lib/mathlib";
   import { dataService } from "$lib/data-services/data.service";
-  import {
-    Button,
-    Modal,
-    Popover,
-    Range,
-    Spinner,
-    Dropdown,
-    DropdownItem,
-    Table,
-    TableBody,
-    TableBodyCell,
-    TableBodyRow,
-    Input,
-  } from "flowbite-svelte";
+  import { Popover, Spinner, Dropdown, DropdownItem, Input } from "flowbite-svelte";
   import { NotificationService } from "@stores/notification.service";
   import { localLang } from "@stores/language.service";
   import {
     DIALOG_MODES,
     TIMER_INPUT,
     type ActiveTool,
-    type InputContext,
     type Solve,
     type TimerContext,
-    type TimerInputHandler,
     type ToolItem,
   } from "@interfaces";
   import { copyToClipboard } from "@helpers/strings";
@@ -34,7 +19,6 @@
   import TextArea from "@material/TextArea.svelte";
   import Select from "@material/Select.svelte";
   import Checkbox from "@material/Checkbox.svelte";
-  import Tooltip from "@material/Tooltip.svelte";
   import { timer } from "@helpers/timer";
   import { GANInput } from "$lib/timer/adaptors/GAN";
   import { QiYiSmartTimerInput } from "$lib/timer/adaptors/QY-Timer";
@@ -44,38 +28,48 @@
   import DailyStatsTool from "./timer-tools/DailyStatsTool.svelte";
   import MetronomeTool from "./timer-tools/MetronomeTool.svelte";
   import SolverTool from "./timer-tools/SolverTool.svelte";
-  // import { ExternalTimerInput } from "./adaptors/ExternalTimer";
+  import Tooltip from "$lib/cubicdbKit/Tooltip.svelte";
+  import Button from "$lib/cubicdbKit/Button.svelte";
 
   // ICONS
-  import WCACategory from "@components/wca/WCACategory.svelte";
-  import TuneIcon from "@icons/Tune.svelte";
-  import RefreshIcon from "@icons/Refresh.svelte";
-  import PencilIcon from "@icons/PencilOutline.svelte";
-  import CalendarIcon from "@icons/CalendarTextOutline.svelte";
-  import CopyIcon from "@icons/ContentCopy.svelte";
-  import SettingsIcon from "@icons/Cog.svelte";
-  import BluetoothOnIcon from "@icons/Bluetooth.svelte";
-  import BluetoothOffIcon from "@icons/BluetoothOff.svelte";
+  import CubeCategory from "@components/wca/CubeCategory.svelte";
+  // import TuneIcon from "@icons/Tune.svelte";
+  // import RefreshIcon from "@icons/Refresh.svelte";
+  // import PencilIcon from "@icons/PencilOutline.svelte";
+  // import CalendarIcon from "@icons/CalendarTextOutline.svelte";
+  // import CopyIcon from "@icons/ContentCopy.svelte";
+  // import SettingsIcon from "@icons/Cog.svelte";
+  // import BluetoothOnIcon from "@icons/Bluetooth.svelte";
+  // import BluetoothOffIcon from "@icons/BluetoothOff.svelte";
   import ToolsIcon from "@icons/Tools.svelte";
   import ChartIcon from "@icons/ChartLineVariant.svelte";
   import MetronomeIcon from "@icons/Metronome.svelte";
-  import SeedIcon from "@icons/Leaf.svelte";
-  import SyncIcon from "@icons/Sync.svelte";
+  import { BeanIcon, LightbulbIcon, Settings2Icon } from "lucide-svelte";
+  import Modal from "@components/Modal.svelte";
+  import InputAdaptorIcon from "$lib/cubicdbKit/InputAdaptorIcon.svelte";
+  import Range from "$lib/cubicdbKit/Range.svelte";
 
   type TModal = "" | "edit-scramble" | "old-scrambles" | "settings";
 
-  export let context: TimerContext;
-  export let timerOnly: boolean;
-  export let battle: boolean;
-  export let enableKeyboard: Writable<boolean>;
-  export let initInputHandler: Function;
-  export let bluetoothStatus: Writable<boolean>;
-  export let bluetoothHardware: any;
-  export let bluetoothBattery: any;
-  export let deviceID: Writable<string>;
-  export let inputContext: InputContext;
-  export let inputMethod: Writable<TimerInputHandler>;
-  export let deviceList: string[][];
+  interface TimerOptionsProps {
+    context: TimerContext;
+    timerOnly?: boolean;
+    battle?: boolean;
+    enableKeyboard: Writable<boolean>;
+    deviceID: Writable<string>;
+    deviceList: string[][];
+    // initInputHandler: Function;
+  }
+
+  let {
+    context,
+    timerOnly,
+    battle,
+    enableKeyboard,
+    deviceID,
+    deviceList,
+    // initInputHandler,
+  }: TimerOptionsProps = $props();
 
   const {
     tab,
@@ -90,6 +84,8 @@
     editSessions,
   } = context;
 
+  const iconSize = "1.2rem";
+
   let timerInput = derived(session, $s => {
     return DIALOG_MODES.indexOf($s.settings.mode || $mode[1] || "") > -1
       ? TIMER_INPUT
@@ -99,75 +95,30 @@
   let notification = NotificationService.getInstance();
 
   /// MODAL
-  let show = false;
-  let type: TModal = "";
-  let modalData: any = null;
+  let show = $state(false);
+  let type: TModal = $state("");
+  let modalData: any = $state(null);
   let closeHandler: Function = () => {};
 
-  let showSeedModal = false;
-  let seedStr = "";
-  let seedCounter = 0;
+  let showSeedModal = $state(false);
+  let seedStr = $state("");
+  let seedCounter = $state(0);
 
   // OTHER
-  let isSearching = false;
-  let showToolsMenu = false;
-  let connectingPos = -1;
-  let ulElement: HTMLUListElement;
+  let isSearching = $state(false);
+  let showToolsMenu = $state(false);
+  let connectingPos = $state(-1);
 
-  const BUTTON_CLASS = "w-7 h-7 p-1 ";
-  const DD_CLASS = "font-medium p-2 text-sm dark:hover:bg-gray-600 flex items-center";
-
-  const options = [
-    { text: "Reload scramble [Ctrl + S]", icon: RefreshIcon, handler: () => initScrambler() },
-    {
-      text: "Edit [Ctrl + E]",
-      icon: PencilIcon,
-      handler: () => {
-        openDialog("edit-scramble", $scramble, (scr: string) => scr && initScrambler(scr));
-      },
-    },
-    {
-      text: "Use old scramble [Ctrl + O]",
-      icon: CalendarIcon,
-      handler: () => {
-        openDialog("old-scrambles", null, () => {});
-      },
-    },
-    { text: "Copy scramble [Ctrl + C]", icon: CopyIcon, handler: () => toClipboard() },
-    {
-      text: "Settings",
-      icon: SettingsIcon,
-      handler: () => {
-        let initialCalc = $session?.settings?.calcAoX;
-
-        if (!$session.settings.input) {
-          $session.settings.input = "Keyboard";
-        }
-
-        openDialog("settings", $session, (data: any) => {
-          if (data) {
-            $session = $session;
-
-            if (timerOnly) return;
-
-            initInputHandler();
-
-            $dataService.session.updateSession($session);
-            initialCalc != $session.settings.calcAoX && updateStatistics(false);
-          }
-        });
-      },
-    },
-  ];
+  const DD_CLASS = "font-medium p-2 text-sm hover:bg-primary flex items-center";
 
   const tools: ToolItem[] = [
     {
       id: "cross-xcross",
       text: "Cross & XCross",
-      icon: WCACategory,
+      icon: CubeCategory,
       iconParams: {
         icon: "333cross",
-        buttonClass: " pointer-events-none text-green-300 ",
+        containerClass: " pointer-events-none text-green-300 ",
       },
       component: CrossTool,
       handler: () => {},
@@ -175,10 +126,10 @@
     {
       id: "bld-helper",
       text: "BLD Helper",
-      icon: WCACategory,
+      icon: CubeCategory,
       iconParams: {
         icon: "333ni",
-        buttonClass: " pointer-events-none text-orange-300 ",
+        containerClass: " pointer-events-none text-orange-300 ",
       },
       component: BldHelperTool,
       hasSettings: true,
@@ -217,10 +168,10 @@
     {
       id: "solver",
       text: "Solver",
-      icon: WCACategory,
+      icon: CubeCategory,
       iconParams: {
         icon: "333",
-        buttonClass: " pointer-events-none text-green-300 ",
+        containerClass: " pointer-events-none text-green-300 ",
       },
       component: SolverTool,
       handler: () => {},
@@ -228,6 +179,27 @@
   ];
 
   let toolList: ActiveTool[] = [];
+
+  function handleSettingsDialog() {
+    let initialCalc = $session?.settings?.calcAoX;
+
+    if (!$session.settings.input) {
+      $session.settings.input = "Keyboard";
+    }
+
+    openDialog("settings", $session, (data: any) => {
+      if (data) {
+        $session = $session;
+
+        if (timerOnly) return;
+
+        // initInputHandler();
+
+        $dataService.session.updateSession({ ...$session });
+        initialCalc != $session.settings.calcAoX && updateStatistics(false);
+      }
+    });
+  }
 
   function toClipboard() {
     copyToClipboard($scramble).then(() => {
@@ -288,7 +260,7 @@
           } else if (code === "KeyC") {
             toClipboard();
           } else if (code === "Comma") {
-            options[4].handler();
+            handleSettingsDialog();
           }
         }
         break;
@@ -296,27 +268,11 @@
     }
   }
 
-  function handleResize() {
-    if (!ulElement) return;
+  function modalKeyupHandler(e: KeyboardEvent) {
+    e.stopPropagation();
+    show = e.code === "Escape" ? closeHandler() : show;
 
-    // let rec = ulElement.getBoundingClientRect();
-    // console.log(window.innerWidth, window.innerHeight, rec.height);
-  }
-
-  function updateTexts() {
-    options[0].text = `${$localLang.TIMER.reloadScramble} [Ctrl + S]`;
-    options[1].text = `${$localLang.TIMER.edit} [Ctrl + E]`;
-    options[2].text = `${$localLang.TIMER.useOldScramble} [Ctrl + O]`;
-    options[3].text = `${$localLang.TIMER.copyScramble} [Ctrl + C]`;
-    options[4].text = `${$localLang.TIMER.settings} [Ctrl + ,]`;
-  }
-
-  function modalKeyupHandler(e: CustomEvent) {
-    let kevent: KeyboardEvent = e.detail;
-    kevent.stopPropagation();
-    show = kevent.code === "Escape" ? closeHandler() : show;
-
-    if (kevent.code === "Enter" && kevent.ctrlKey) {
+    if (e.code === "Enter" && e.ctrlKey) {
       closeHandler(modalData.trim());
       show = false;
     }
@@ -329,30 +285,27 @@
   }
 
   function searchBluetooth() {
-    let gn =
-      modalData.settings.input === "GAN Cube"
-        ? new GANInput(inputContext)
-        : new QiYiSmartTimerInput(inputContext);
-
-    isSearching = true;
-    $bluetoothList.length = 0;
-
-    $dataService.config
-      .searchBluetooth(gn)
-      .then(() => {
-        if ($inputMethod instanceof GANInput && $inputMethod.connected) {
-          $inputMethod.disconnect();
-        }
-
-        inputMethod.set(gn);
-      })
-      .catch(err => {
-        console.log("ERROR: ", err);
-      })
-      .finally(() => {
-        connectingPos = -1;
-        isSearching = false;
-      });
+    // let gn =
+    //   modalData.settings.input === "GAN Cube"
+    //     ? new GANInput(inputContext)
+    //     : new QiYiSmartTimerInput(inputContext);
+    // isSearching = true;
+    // $bluetoothList.length = 0;
+    // $dataService.config
+    //   .searchBluetooth(gn)
+    //   .then(() => {
+    //     if ($inputMethod instanceof GANInput && $inputMethod.connected) {
+    //       $inputMethod.disconnect();
+    //     }
+    //     inputMethod.set(gn);
+    //   })
+    //   .catch(err => {
+    //     console.log("ERROR: ", err);
+    //   })
+    //   .finally(() => {
+    //     connectingPos = -1;
+    //     isSearching = false;
+    //   });
   }
 
   function cancelSearch() {
@@ -368,7 +321,7 @@
       $dataService.config.saveConfig();
       $dataService.config.connectBluetoothDevice(id);
     } else {
-      $inputMethod.disconnect();
+      // $inputMethod.disconnect();
     }
   }
 
@@ -413,57 +366,15 @@
   onMount(() => {
     // toolList = [{ tool: tools[4], open: true }];
   });
-
-  $: $localLang, updateTexts();
 </script>
 
-<svelte:window on:keydown={handleKeydown} on:resize={handleResize} />
+<svelte:window onkeydown={handleKeydown} />
 
-<ul
-  class="timer-options-container border-r border-r-gray-700 border-t border-t-gray-700 pt-2"
-  class:timerOnly
-  bind:this={ulElement}
->
-  <li>
-    <Tooltip position="right" text={$localLang.TIMER.manageSessions}>
-      <Button
-        aria-label={$localLang.TIMER.manageSessions}
-        color="none"
-        class={BUTTON_CLASS + " text-yellow-400"}
-        on:click={editSessions}
-        on:keydown={e => (e.code === "Space" ? e.preventDefault() : null)}
-      >
-        <TuneIcon width="100%" height="100%" />
-      </Button>
-    </Tooltip>
-  </li>
-
-  {#each options.filter((_, p) => (!battle ? true : p === 3 || p === 5)) as option}
-    <li class:timerOnly={option.icon === SettingsIcon}>
-      <Tooltip class="cursor-pointer" position="right" text={option.text} hasKeybinding>
-        <Button
-          aria-label={option.text}
-          color="none"
-          class={BUTTON_CLASS}
-          on:click={option.handler}
-          on:keydown={e => (e.code === "Space" ? e.preventDefault() : null)}
-        >
-          <svelte:component
-            this={option.icon}
-            width="100%"
-            height="100%"
-            class="pointer-events-none tx-text"
-          />
-        </Button>
-      </Tooltip>
-    </li>
-  {/each}
-
-  {#if $session?.settings?.input === "GAN Cube"}
+<!-- {#if $session?.settings?.input === "GAN Cube"}
     <li>
       <Button
         aria-label={"GAN Cube"}
-        color="none"
+        
         class="{BUTTON_CLASS} {$bluetoothStatus ? 'text-blue-500' : 'text-gray-400'}"
         on:keydown={e => (e.code === "Space" ? e.preventDefault() : null)}
       >
@@ -511,58 +422,55 @@
         {/if}
       </Popover>
     </li>
-  {/if}
+  {/if} -->
 
-  <!-- <li>
-    <Button
-      aria-label="Ao5"
-      color="none"
-      class={BUTTON_CLASS}
-      on:keydown={e => (e.code === "Space" ? e.preventDefault() : null)}
-    >
-      <Ao5Icon width="100%" height="100%" />
-    </Button>
-  </li> -->
+<Button color="neutral" class="group" aria-label={"Seed"} onclick={prepareShowSeedModal}>
+  <BeanIcon class="group-hover:text-green-500" size={iconSize} />
+</Button>
+<Tooltip placement="bottom" class="z-10">Seed</Tooltip>
 
-  <li>
-    <Tooltip text="Seed ">
-      <Button
-        aria-label={"Seed"}
-        color="none"
-        class={BUTTON_CLASS + " text-green-300"}
-        on:click={prepareShowSeedModal}
-      >
-        <SeedIcon size="100%" />
-      </Button>
-    </Tooltip>
-  </li>
+<Button
+  color="neutral"
+  class="group"
+  id="tools"
+  aria-label={$localLang.HOME.tools}
+  on:keydown={e => (e.code === "Space" ? e.preventDefault() : null)}
+>
+  <ToolsIcon class="group-hover:text-warning" size={iconSize} />
+</Button>
+<Tooltip placement="bottom" class="z-10">
+  {$localLang.HOME.tools}
+</Tooltip>
 
-  <li class="menu">
-    <Button
-      aria-label={$localLang.HOME.tools}
-      color="none"
-      class={BUTTON_CLASS + " text-orange-400"}
-      on:keydown={e => (e.code === "Space" ? e.preventDefault() : null)}
-    >
-      <ToolsIcon width="100%" height="100%" />
-    </Button>
+<Dropdown
+  bind:open={showToolsMenu}
+  placement="bottom"
+  class="max-h-[20rem] w-max overflow-y-scroll bg-base-100 rounded-md text-base-content"
+  triggeredBy="#tools"
+>
+  {#each tools as tool}
+    {@const Icon = tool.icon}
+    <DropdownItem defaultClass={DD_CLASS} onclick={() => addTool(tool)}>
+      <Icon {...tool.iconParams} size="1.2rem" />
+      {tool.text}
+    </DropdownItem>
+  {/each}
+</Dropdown>
 
-    <Dropdown
-      bind:open={showToolsMenu}
-      placement="right"
-      class="max-h-[20rem] w-max overflow-y-scroll bg-backgroundLevel2 rounded-md tx-text"
-    >
-      {#each tools as tool}
-        <DropdownItem defaultClass={DD_CLASS} on:click={() => addTool(tool)}>
-          <svelte:component this={tool.icon} {...tool.iconParams} size="1.2rem" />
-          {tool.text}
-        </DropdownItem>
-      {/each}
-    </Dropdown>
-  </li>
+<Button color="neutral" class="group">
+  <LightbulbIcon class="group-hover:text-warning" size={iconSize} />
+</Button>
+<Tooltip placement="bottom" class="z-10">Hints</Tooltip>
 
-  <!-- Tools list -->
-  <ul class="tool-container" class:open={toolList.some(t => t.open)}>
+<Button color="neutral" class="group" onclick={handleSettingsDialog}>
+  <Settings2Icon class="group-hover:text-warning" size={iconSize} />
+</Button>
+<Tooltip placement="bottom" class="z-10" keyBindings={["control", "comma"]}>
+  {$localLang.global.settings}
+</Tooltip>
+
+<!-- Tools list -->
+<!-- <ul class="tool-container" class:open={toolList.some(t => t.open)}>
     {#each toolList as tool}
       <ToolFrame
         {tool}
@@ -573,21 +481,15 @@
         <svelte:component this={tool.tool.component} {context} />
       </ToolFrame>
     {/each}
-  </ul>
-</ul>
+  </ul> -->
+
+<!-- title={$localLang.TIMER.modal[type || "settings"]} -->
 
 <!-- Timer tab modal -->
-<Modal
-  bind:open={show}
-  size="xs"
-  outsideclose
-  title={$localLang.TIMER.modal[type || "settings"]}
-  bodyClass="space-y-2"
-  on:close={recoverEnableKeyboard}
->
+<Modal bind:show class="space-y-2" onclose={recoverEnableKeyboard}>
   {#if type === "edit-scramble"}
     <TextArea
-      on:keyup={modalKeyupHandler}
+      onkeyup={modalKeyupHandler}
       class="bg-gray-900 text-gray-200 border border-gray-600"
       bind:value={modalData}
     />
@@ -599,14 +501,12 @@
       <h2 class="col-span-1">{$localLang.TIMER.time}</h2>
       {#each $solves.slice(0, 500) as s}
         <Button
-          color="none"
           aria-label={$localLang.TIMER.scramble}
-          tabindex="0"
           class="
           col-span-3 cursor-pointer hover:text-blue-400 my-2 justify-start p-0 rounded-none
           text-ellipsis overflow-hidden whitespace-nowrap
         "
-          on:click={() => select(s)}>{s.scramble}</Button
+          onclick={() => select(s)}>{s.scramble}</Button
         >
         <span class="col-span-1 flex items-center justify-center">{timer(s.time, true, true)}</span>
       {/each}
@@ -623,6 +523,8 @@
           items={$timerInput}
           transform={e => e}
           placement="right"
+          hasIcon={e => e}
+          IconComponent={InputAdaptorIcon}
         />
       </section>
     {/if}
@@ -639,7 +541,6 @@
           {#each $session.settings.stepNames || [] as st, p}
             <Button
               class="pointer-events-none text-black"
-              color="none"
               style={`background-color: ${STEP_COLORS[p]}`}>{st}</Button
             >
           {/each}
@@ -659,7 +560,7 @@
               <Button
                 color={id === $deviceID ? "red" : "green"}
                 loading={isConnecting}
-                on:click={() => selectExternalTimer(id)}
+                onclick={() => selectExternalTimer(id)}
               >
                 {id === $deviceID ? $localLang.TIMER.disconnect : $localLang.TIMER.connect}
               </Button>
@@ -686,7 +587,7 @@
     {#if modalData.settings.input === "GAN Cube" || modalData.settings.input === "QY-Timer"}
       <section class="bg-white bg-opacity-10 p-2 shadow-md rounded-md">
         <div class="flex justify-center gap-2">
-          <Button color="purple" on:click={() => !isSearching && searchBluetooth()}>
+          <Button onclick={() => !isSearching && searchBluetooth()}>
             {#if isSearching}
               <Spinner size="4" color="white" />
             {:else}
@@ -695,7 +596,7 @@
           </Button>
 
           {#if isSearching}
-            <Button color="alternative" on:click={cancelSearch}>
+            <Button onclick={cancelSearch}>
               {$localLang.global.cancel}
             </Button>
           {/if}
@@ -708,19 +609,19 @@
 
               <!-- {#if deviceId === $deviceID}
               <Tooltip text={$localLang.TIMER.syncSolved} position="top" class="ml-auto">
-                <Button on:click={syncSolved} class="bg-primary-800 tx-text px-3">
+                <Button onclick={syncSolved} class="bg-primary-800 tx-text px-3">
                   <SyncIcon size="1.2rem" />
                 </Button>
               </Tooltip>
               {/if} -->
               <Button
-                color={deviceId === $deviceID ? "red" : "green"}
+                color={deviceId === $deviceID ? "error" : "primary"}
                 class="gap-2 ml-auto"
-                on:click={() => {
+                onclick={() => {
                   if (pos === connectingPos) return;
                   if (deviceId === $deviceID) {
                     deviceList = [];
-                    $inputMethod.disconnect();
+                    // $inputMethod.disconnect();
                     $deviceID = "default";
                     return;
                   }
@@ -754,7 +655,7 @@
           bind:value={modalData.settings.inspection}
           min={5}
           max={60}
-          step="5"
+          step={5}
         />
       {/if}
     </section>
@@ -835,50 +736,39 @@
     {/if}
   {/if}
 
-  <svelte:fragment slot="footer">
-    <div class="flex w-full justify-center gap-2">
+  <div class="flex w-full justify-center gap-2">
+    <Button color="cancel" aria-label={$localLang.global.cancel} onclick={() => (show = false)}>
+      {$localLang.global.cancel}
+    </Button>
+
+    {#if type === "edit-scramble" || type === "settings"}
       <Button
-        ariaLabel={$localLang.global.cancel}
-        color="alternative"
-        on:click={() => (show = false)}
+        aria-label={$localLang.global.save}
+        onclick={() => {
+          closeHandler(type === "settings" ? true : modalData.trim());
+          show = false;
+        }}
       >
-        {$localLang.global.cancel}
+        {$localLang.global.save}
       </Button>
-      {#if type === "edit-scramble" || type === "settings"}
-        <Button
-          color="purple"
-          ariaLabel={$localLang.global.save}
-          on:click={() => {
-            closeHandler(type === "settings" ? true : modalData.trim());
-            show = false;
-          }}
-        >
-          {$localLang.global.save}
-        </Button>
-      {/if}
-    </div>
-  </svelte:fragment>
+    {/if}
+  </div>
 </Modal>
 
+<!-- title={"Seed"} -->
+
 <!-- Seed Modal -->
-<Modal
-  bind:open={showSeedModal}
-  size="xs"
-  outsideclose
-  title={"Seed"}
-  on:close={recoverEnableKeyboard}
->
+<Modal bind:show={showSeedModal} onclose={recoverEnableKeyboard}>
   <Input bind:value={seedStr} />
   <Input type="number" bind:value={seedCounter} min={1} max={5000} />
 
   <div class="flex justify-center gap-2">
-    <Button color="alternative" on:click={() => (showSeedModal = false)}>
+    <Button onclick={() => (showSeedModal = false)}>
       {$localLang.global.cancel}
     </Button>
-    <Button color="purple" on:click={prepareShowSeedModal}>{$localLang.global.reset}</Button>
+    <Button onclick={prepareShowSeedModal}>{$localLang.global.reset}</Button>
     <Button
-      color="green"
-      on:click={() => {
+      onclick={() => {
         setSeed(seedCounter, seedStr);
         initScrambler();
         showSeedModal = false;
@@ -888,61 +778,3 @@
     </Button>
   </div>
 </Modal>
-
-<style lang="postcss">
-  .timer-options-container {
-    @apply rounded-tr-md;
-    grid-area: options;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.25rem;
-    position: relative;
-    background-color: var(--th-backgroundLevel1);
-  }
-
-  .timer-options-container li {
-    --size: 1.6rem;
-    width: var(--size);
-    height: var(--size);
-  }
-
-  .timer-options-container li.menu {
-    position: relative;
-  }
-
-  .timer-options-container li.menu::after {
-    --dims: 0.4rem;
-    content: "";
-    position: absolute;
-    width: var(--dims);
-    height: var(--dims);
-    right: 0;
-    top: 50%;
-    background-color: white;
-    clip-path: polygon(0% 0%, 100% 50%, 0% 100%);
-    translate: 100% -50%;
-  }
-
-  .timer-options-container.timerOnly > li:not(.timerOnly) {
-    display: none;
-  }
-
-  .tool-container {
-    @apply absolute top-0 grid gap-2 w-min z-10 max-h-full overflow-y-scroll;
-    left: calc(100% + 0.5rem);
-    max-width: min(calc(100vw - 3rem), 30rem);
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-  }
-
-  .tool-container::-webkit-scrollbar {
-    width: 0;
-    height: 0;
-  }
-
-  .tool-container.open {
-    grid-template-columns: repeat(auto-fit, minmax(2.5rem, 1fr));
-  }
-</style>

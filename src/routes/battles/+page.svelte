@@ -5,7 +5,6 @@
   import { infinitePenalty, isMo3 } from "@helpers/timer";
   import * as all from "@cstimer/scramble";
   import { onDestroy, onMount } from "svelte";
-  import Tooltip from "@material/Tooltip.svelte";
   import Checkbox from "@material/Checkbox.svelte";
   import { getAverage } from "@helpers/statistics";
   import { derived, writable, type Readable, type Writable } from "svelte/store";
@@ -21,6 +20,7 @@
   import CloseIcon from "@icons/Close.svelte";
   import CopyIcon from "@icons/ContentCopy.svelte";
   import ResultView from "./components/ResultView.svelte";
+  import Tooltip from "$lib/cubicdbKit/Tooltip.svelte";
 
   const notification = NotificationService.getInstance();
 
@@ -419,7 +419,7 @@
   {#if state === "join"}
     <div class="max-w-xs justify-center mx-auto grid gap-4 grid-cols-3">
       <span class="col-span-1 flex justify-end items-center">Name:</span>
-      <div class="col-span-2"><Input bind:value={username} focus={true} /></div>
+      <div class="col-span-2"><Input bind:value={username} /></div>
 
       <span class="col-span-1 flex justify-end items-center">Game ID:</span>
       <div class="col-span-2">
@@ -466,17 +466,16 @@
         >
       </li>
       <li class="bg-gray-500 text-gray-300 cursor-pointer">
-        <Tooltip position="top" text="Observers">
-          <div class="flex items-center gap-1">
-            <EyeIcon size="1.2rem" />
-            {$game.observers.length}
-          </div>
-        </Tooltip>
+        <div class="flex items-center gap-1">
+          <EyeIcon size="1.2rem" />
+          {$game.observers.length}
+        </div>
+        <Tooltip placement="top">Observers</Tooltip>
       </li>
+
       <button class="bg-red-700 text-gray-300" on:click={exit}>
-        <Tooltip position="top" text="Exit">
-          <div class="flex items-center"><CloseIcon size="1.2rem" /></div>
-        </Tooltip>
+        <div class="flex items-center"><CloseIcon size="1.2rem" /></div>
+        <Tooltip placement="top">Exit</Tooltip>
       </button>
     </ul>
 
@@ -503,8 +502,8 @@
       {/if}
 
       <div class="rounded-md relative w-full" class:disconnected={!socket.connected}>
+        <!-- onsolve={updateSolve} -->
         <Timer
-          on:solve={updateSolve}
           battle={true}
           useScramble={scramble || "R U R' U'"}
           useMode={mode}

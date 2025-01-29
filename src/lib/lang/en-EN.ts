@@ -265,9 +265,9 @@ export const English: Language = {
     settings: "Settings",
 
     // Tab accesibility
-    timerTab: "Timer tab",
-    sessionsTab: "Sessions tab",
-    chartsTab: "Charts tab",
+    timerTab: "Timer",
+    historyTab: "History",
+    statsTab: "Statistics",
 
     // Global Timer settings
     manageSessions: "Manage sessions",

@@ -11,7 +11,7 @@
   import { ICONS, getModeMap } from "@constants";
   import { Card, Heading } from "flowbite-svelte";
   import Button from "@material/Button.svelte";
-  import WcaCategory from "@components/wca/WCACategory.svelte";
+  import CubeCategory from "@components/wca/CubeCategory.svelte";
   import { dataService } from "$lib/data-services/data.service";
 
   let MODE_MAP: Map<string, string>;
@@ -238,7 +238,7 @@
                   class="absolute bg-purple-700 p-[.05rem] rounded-sm text-white
                   left-[.5rem] top-1/2 -translate-y-1/2"
                 >
-                  <WcaCategory icon={s.icon.icon} size="1rem" buttonClass="!p-[.1rem]" />
+                  <CubeCategory icon={s.icon.icon} size="1rem" containerClass="!p-[.1rem]" />
                 </span>
               {/if}
               {s.name}

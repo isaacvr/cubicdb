@@ -1,6 +1,4 @@
 <script lang="ts">
-  import { createEventDispatcher } from "svelte";
-  import Button from "@material/Button.svelte";
   import DownloadIcon from "@icons/Download.svelte";
   import CopyIcon from "@icons/ContentCopy.svelte";
   import CopyCodeIcon from "@icons/CodeBrackets.svelte";
@@ -8,34 +6,54 @@
   import { localLang } from "$lib/stores/language.service";
   import { copyToClipboard, randomCSSId, replaceParams } from "@helpers/strings";
   import { NotificationService } from "@stores/notification.service";
-  import type { Placement, Side } from "@interfaces";
-  import e from "cors";
+  import type { Placement } from "@interfaces";
   import { toInt } from "@helpers/math";
+  import Button from "$lib/cubicdbKit/Button.svelte";
 
   const notification = NotificationService.getInstance();
 
-  export let src = "";
-  export let glowOnHover = false;
-  export let interactive = false;
-  export let size = "";
-  export let width = "";
-  export let height = "";
-  export let downloadDivClass = "";
-  export let allowDownload = false;
-  export let placement: Side | Placement = "left";
+  interface PuzzleImageBundleProps {
+    src?: string;
+    size?: string;
+    width?: string;
+    height?: string;
+    class?: string;
+    downloadDivClass?: string;
+    placement?: Placement;
+    glowOnHover?: boolean;
+    interactive?: boolean;
+    allowDownload?: boolean;
+    onclick?: (ev: MouseEvent) => any;
+    onposition?: (data: { pos: number; type: number; consecutive: boolean }) => any;
+  }
 
-  let _cl = "";
-  export { _cl as class };
+  let {
+    src = $bindable(""),
+    size = $bindable(""),
+    width = $bindable(""),
+    height = $bindable(""),
+    downloadDivClass = $bindable(""),
+    placement = $bindable("left"),
+    class: _cl = $bindable(""),
+    glowOnHover = $bindable(false),
+    interactive = $bindable(false),
+    allowDownload = $bindable(false),
+    onclick = () => {},
+    onposition = () => {},
+  }: PuzzleImageBundleProps = $props();
+
+  // let _cl = "";
+  // export { _cl as class };
 
   type ImageType = "raster" | "svg";
 
-  let dispatch = createEventDispatcher();
-  let type: ImageType = "raster";
-  let imgWidth: number = 0;
-  let imgHeight: number = 0;
+  // let dispatch = createEventDispatcher();
+  let type: ImageType = $state("raster");
+  let imgWidth: number = $state(0);
+  let imgHeight: number = $state(0);
   const downloadFactors = [0.25, 0.5, 1, 2, 5, 10];
 
-  function detect(s: string) {
+  function detect(s?: string) {
     if (!s) return s;
 
     if (s.startsWith("<?xml")) {
@@ -52,13 +70,15 @@
   }
 
   function handleClick(e: MouseEvent) {
+    onclick(e);
+
     if (!interactive || type != "svg") return;
 
     let tg = e.target as SVGPathElement;
     let pos = tg.getAttribute("data-position");
 
-    if (pos) {
-      dispatch("position", { pos: +pos, type: e.ctrlKey ? 1 : 0, consecutive: e.shiftKey });
+    if (pos && onposition) {
+      onposition({ pos: +pos, type: e.ctrlKey ? 1 : 0, consecutive: e.shiftKey });
     }
   }
 
@@ -180,19 +200,21 @@
     copyToClipboard(src).then(notifyDone);
   }
 
-  $: detect(src);
+  $effect(() => {
+    detect(src);
+  });
 </script>
 
 <div
-  class={"rounded flex items-center justify-center puzzle-img " +
+  class={"rounded flex place-items-center puzzle-img w-full h-full " +
     (!src ? " bg-gray-700 animate-pulse " : " ") +
     (_cl || "")}
   style:width={width || size || "100%"}
-  style:height={height || size || "100%"}
+  style:height={height || size}
   class:interactive
   class:glow={glowOnHover}
   role={type === "svg" ? "document" : "img"}
-  on:click={handleClick}
+  onclick={handleClick}
 >
   {#if !src}
     <svg
@@ -217,36 +239,42 @@
   {#if allowDownload}
     <div
       class={"options absolute top-0 right-0 gap-1 grid " + downloadDivClass}
-      on:click|stopPropagation={e => e}
+      onclick={e => e.stopPropagation()}
       role="button"
       tabindex="-1"
-      on:keyup={() => {}}
+      onkeyup={() => {}}
     >
-      <Button class="bg-backgroundLevel3 hover:bg-urgentButton !px-2">
+      <Button class="bg-base-200">
         <DownloadIcon />
       </Button>
-      <Dropdown trigger="hover" placement="right-start" class="bg-backgroundLevel3 rounded-md">
+      <Dropdown
+        trigger="hover"
+        placement="right-start"
+        class="bg-base-100 text-base-content rounded-md"
+      >
         {#each downloadFactors as f}
-          <DropdownItem on:click={() => handleDownload(f)}>
+          <DropdownItem class="hover:bg-primary" onclick={() => handleDownload(f)}>
             {toInt(imgWidth * f, 0)}x{toInt(imgHeight * f, 0)}
           </DropdownItem>
         {/each}
       </Dropdown>
 
-      <Button class="bg-backgroundLevel3 hover:bg-urgentButton !px-2"><CopyIcon /></Button>
-      <Dropdown trigger="hover" placement="right-start" class="bg-backgroundLevel3 rounded-md">
+      <Button class="bg-base-200"><CopyIcon /></Button>
+      <Dropdown
+        trigger="hover"
+        placement="right-start"
+        class="bg-base-100 text-base-content rounded-md"
+      >
         {#each downloadFactors as f}
-          <DropdownItem on:click={() => handleCopy(f)}>
+          <DropdownItem class="hover:bg-primary" onclick={() => handleCopy(f)}>
             {toInt(imgWidth * f, 0)}x{toInt(imgHeight * f, 0)}
           </DropdownItem>
         {/each}
       </Dropdown>
 
       {#if type === "svg"}
-        <Button class="bg-backgroundLevel3 hover:bg-urgentButton !px-2" on:click={handleCopyCode}
-          ><CopyCodeIcon /></Button
-        >
-        <Tooltip class="bg-backgroundLevel3 z-10" {placement}
+        <Button class="bg-base-200" onclick={handleCopyCode}><CopyCodeIcon /></Button>
+        <Tooltip class="bg-base-100 text-base-content z-10" {placement}
           >{replaceParams($localLang.global.copyCode, ["SVG"])}</Tooltip
         >
       {/if}
@@ -266,10 +294,11 @@
 
   :global(.puzzle-img > img, .puzzle-img > svg) {
     object-fit: contain;
-    aspect-ratio: 1;
-    width: 100%;
-    height: 100%;
-    /* background-color: red; */
+    height: auto;
+    width: fit-content;
+    margin: auto;
+    max-height: 100%;
+    max-width: 100%;
   }
 
   :global(.puzzle-img.interactive path:not([data-position])) {

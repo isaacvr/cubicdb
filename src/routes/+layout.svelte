@@ -6,7 +6,7 @@
 
   import moment from "moment";
   import { onDestroy, onMount, untrack } from "svelte";
-  import { Popover, Tooltip } from "flowbite-svelte";
+  import { Dropdown, DropdownItem, Popover, Tooltip } from "flowbite-svelte";
   import { LANGUAGES } from "@lang/index";
   import { globalLang, localLang } from "@stores/language.service";
   import { NotificationService } from "@stores/notification.service";
@@ -19,7 +19,6 @@
   import type { INotification } from "@interfaces";
   import Notification from "@components/Notification.svelte";
   import { goto } from "$app/navigation";
-  import { page } from "$app/stores";
   import type { Unsubscriber } from "svelte/store";
   import type { LayoutServerData } from "./$types";
   import { getTitleMeta } from "$lib/meta/title";
@@ -28,21 +27,25 @@
 
   // Icons
   import {
-    Timer,
-    Hammer,
-    Heart,
-    Info,
-    Settings,
-    ArrowDownUp,
-    Rotate3D,
-    Dumbbell,
-    Blocks,
-    Library,
-    BrainCog,
-    Minus,
-    X,
+    TimerIcon,
+    HammerIcon,
+    HeartIcon,
+    InfoIcon,
+    SettingsIcon,
+    ArrowDownUpIcon,
+    Rotate3DIcon,
+    DumbbellIcon,
+    BlocksIcon,
+    LibraryIcon,
+    BrainCogIcon,
+    MinusIcon,
+    XIcon,
   } from "lucide-svelte";
   import Button from "$lib/cubicdbKit/Button.svelte";
+  import { sessions } from "@stores/sessions.store";
+  import CubeCategory from "@components/wca/CubeCategory.svelte";
+  import TimerSessionIcon from "$lib/timer/TimerSessionIcon.svelte";
+  import { page } from "$app/state";
 
   let { data, children }: { data: LayoutServerData; children: any } = $props();
 
@@ -58,6 +61,7 @@
   let progress = $state(0);
   let parts: { link: string; name: string }[] = $state([]);
   let jsonld = $state("");
+  let dropdownOpen = $state(false);
 
   function handleProgress(p: number) {
     progress = Math.round(p * 100) / 100;
@@ -144,6 +148,13 @@
     $dataService.on("update-downloaded", handleDone);
 
     handleResize();
+
+    $dataService.session
+      .getSessions()
+      .then(res => {
+        $sessions = res;
+      })
+      .catch(err => console.log("ERROR", err));
   });
 
   onDestroy(() => {
@@ -153,7 +164,7 @@
   });
 
   $effect(() => {
-    const rt = $page.url;
+    const rt = page.url;
 
     let titleMeta = getTitleMeta(rt.pathname, $localLang);
 
@@ -177,6 +188,12 @@
       }));
     });
   });
+
+  $effect(() => {
+    if (dropdownOpen) {
+      $sessions.sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+    }
+  });
 </script>
 
 <svelte:head>
@@ -193,7 +210,47 @@
   </div>
 
   <div class="topbar-content">
-    <h1 class="mr-auto text-white text-lg">{data.title}</h1>
+    <div class="breadcrumbs text-sm mr-auto">
+      <ul>
+        {#each parts as part, pos}
+          {#if parts[0].link === "/timer" && pos === 1}
+            {@const session = $sessions.find(s => s._id === part.name)}
+
+            <li class="cursor-pointer last-of-type:font-bold">
+              <a href={part.link} class="gap-1">
+                <TimerSessionIcon icon={session?.settings.sessionType} size="1.2rem" />
+                {session?.name || ""}
+              </a>
+            </li>
+
+            <Dropdown
+              bind:open={dropdownOpen}
+              containerClass="max-h-[20rem] overflow-y-auto overflow-x-hidden rounded-md
+                z-50 w-max bg-base-200"
+            >
+              {#each $sessions as ss}
+                <DropdownItem
+                  href={"/timer/" + ss._id}
+                  onclick={() => (dropdownOpen = false)}
+                  class={"flex items-center gap-2 py-2 px-2 text-base-content hover:bg-base-100 rounded-md " +
+                    (ss._id === part.name ? "bg-base-100 font-bold hover:bg-primary" : "")}
+                >
+                  <TimerSessionIcon icon={ss.settings.sessionType} size="1.2rem" />
+                  {ss.name}
+                </DropdownItem>
+              {/each}
+            </Dropdown>
+          {:else}
+            <li class="cursor-pointer last-of-type:font-bold">
+              <a href={part.link}>{part.name}</a>
+            </li>
+          {/if}
+        {/each}
+        <!-- <li class="cursor-pointer hover:underline font-bold">{data.title}</li>
+        <li class="cursor-pointer hover:underline">3x3</li> -->
+      </ul>
+    </div>
+
     {#if progress}
       <div role="button" class="mr-2 tx-emphasis cursor-default">{progress + "%"}</div>
       <Popover class="z-50 bg-base-200">
@@ -203,21 +260,6 @@
           {$localLang.global.cancel}
         </Button>
       </Popover>
-    {/if}
-
-    {#if browser}
-      <Select
-        class="mr-2 px-2"
-        items={LANGUAGES}
-        bind:value={$globalLang}
-        transform={e => e[1].code}
-        label={e => e[1].name}
-        hasIcon={e => e[2]}
-        IconComponent={FlagIcon}
-        onChange={() => localStorage.setItem("language", $globalLang)}
-        preferIcon
-        aria-label={$localLang.global.selectLanguage}
-      />
     {/if}
 
     {#if $dataService.isElectron && $screen.width > 640}
@@ -230,14 +272,14 @@
         aria-label={$localLang.global.minimize}
         onclick={minimize}
       >
-        <Minus size="1.2rem" />
+        <MinusIcon size="1.2rem" />
       </Button>
 
       <Button
         class="bg-transparent text-base-content hover:bg-error border-none px-3"
         onclick={close}
       >
-        <X size="1.2rem" />
+        <XIcon size="1.2rem" />
       </Button>
     {:else if browser && !document.fullscreenElement}
       <Button class="p-2" on:click={fullScreen}>
@@ -250,54 +292,38 @@
   <div class="navigation flex flex-col justify-between overflow-auto">
     <ul class="menu">
       <li>
-        <a class="svg-container hover:text-success text-primary" style="--dash: 50;" href="/timer">
-          <Timer size="1.2rem" />
+        <a class="svg-container hover:text-success" style="--dash: 50;" href="/timer">
+          <TimerIcon size="1.2rem" />
           {$localLang.HOME.timer}
         </a>
       </li>
       <li>
-        <a
-          class="svg-container hover:text-success text-secondary"
-          style="--dash: 70;"
-          href="/algorithms"
-        >
-          <BrainCog size="1.2rem" />
+        <a class="svg-container hover:text-success" style="--dash: 70;" href="/algorithms">
+          <BrainCogIcon size="1.2rem" />
           {$localLang.HOME.algorithms}
         </a>
       </li>
       <li>
-        <a
-          class="svg-container hover:text-success text-accent"
-          style="--dash: 16;"
-          href="/tutorials"
-        >
-          <Library size="1.2rem" />
+        <a class="svg-container hover:text-success" style="--dash: 16;" href="/tutorials">
+          <LibraryIcon size="1.2rem" />
           {$localLang.HOME.tutorials}
         </a>
       </li>
       <li>
-        <a
-          class="svg-container hover:text-success text-success"
-          style="--dash: 65;"
-          href="/reconstructions"
-        >
-          <Blocks size="1.2rem" />
+        <a class="svg-container hover:text-success" style="--dash: 65;" href="/reconstructions">
+          <BlocksIcon size="1.2rem" />
           {$localLang.HOME.reconstructions}
         </a>
       </li>
       <li>
-        <a class="svg-container hover:text-success text-info" style="--dash: 40;" href="/training">
-          <Dumbbell size="1.2rem" />
+        <a class="svg-container hover:text-success" style="--dash: 40;" href="/training">
+          <DumbbellIcon size="1.2rem" />
           {$localLang.HOME.training}
         </a>
       </li>
       <li>
-        <a
-          class="svg-container hover:text-success text-warning"
-          style="--dash: 43;"
-          href="/simulator"
-        >
-          <Rotate3D size="1.2rem" />
+        <a class="svg-container hover:text-success" style="--dash: 43;" href="/simulator">
+          <Rotate3DIcon size="1.2rem" />
           {$localLang.HOME.simulator}
         </a>
       </li>
@@ -307,20 +333,20 @@
 
     <ul class="menu">
       <li>
-        <a class="svg-container hover:text-warning text-error" style="--dash: 30;" href="/tools">
-          <Hammer size="1.2rem" />
+        <a class="svg-container hover:text-warning" style="--dash: 30;" href="/tools">
+          <HammerIcon size="1.2rem" />
           {$localLang.HOME.tools}
         </a>
       </li>
       <li>
         <a class="svg-container hover:text-warning" style="--dash: 16;" href="/import-export">
-          <ArrowDownUp size="1.2rem" />
+          <ArrowDownUpIcon size="1.2rem" />
           {$localLang.HOME.importExport}
         </a>
       </li>
       <li>
-        <a class="svg-container hover:text-warning" style="--dash: 67;" href="/">
-          <Settings size="1.2rem" />
+        <a class="svg-container hover:text-warning" style="--dash: 67;" href="/settings">
+          <SettingsIcon size="1.2rem" />
           {$localLang.HOME.settings}
         </a>
       </li>
@@ -331,17 +357,31 @@
     <ul class="menu mt-auto pb-0">
       <li>
         <a class="svg-container hover:text-error" style="--dash: 60;" href="/">
-          <Heart size="1.2rem" />
+          <HeartIcon size="1.2rem" />
           {$localLang.HOME.support}
         </a>
       </li>
       <li>
         <a class="svg-container hover:text-info" style="--dash: 62;" href="/">
-          <Info size="1.2rem" />
+          <InfoIcon size="1.2rem" />
           {$localLang.HOME.about}
         </a>
       </li>
     </ul>
+
+    {#if browser}
+      <Select
+        class="!h-4 !py-0 mb-3 mx-2 mt-1"
+        items={LANGUAGES}
+        bind:value={$globalLang}
+        transform={e => e[1].code}
+        label={e => e[1].name}
+        hasIcon={e => e[2]}
+        IconComponent={FlagIcon}
+        onChange={() => localStorage.setItem("language", $globalLang)}
+        aria-label={$localLang.global.selectLanguage}
+      />
+    {/if}
   </div>
 
   <div class="content">
@@ -350,18 +390,18 @@
 
   <div class="footer-content shaded-card !p-0 gr-id place-items-center hidden">
     <ul class="flex gap-1">
-      <li><Button size="sm"><Timer size="1rem"></Timer></Button></li>
-      <li><Button size="sm"><Hammer size="1rem"></Hammer></Button></li>
-      <li><Button size="sm"><Heart size="1rem"></Heart></Button></li>
-      <li><Button size="sm"><Info size="1rem"></Info></Button></li>
-      <li><Button size="sm"><Settings size="1rem"></Settings></Button></li>
-      <li><Button size="sm"><ArrowDownUp size="1rem"></ArrowDownUp></Button></li>
-      <li><Button size="sm"><Rotate3D size="1rem"></Rotate3D></Button></li>
-      <li><Button size="sm"><Dumbbell size="1rem"></Dumbbell></Button></li>
-      <li><Button size="sm"><Blocks size="1rem"></Blocks></Button></li>
-      <li><Button size="sm"><Library size="1rem"></Library></Button></li>
-      <li><Button size="sm"><BrainCog size="1rem"></BrainCog></Button></li>
-      <li><Button size="sm"><Minus size="1rem"></Minus></Button></li>
+      <li><Button size="sm"><TimerIcon size="1rem" /></Button></li>
+      <li><Button size="sm"><HammerIcon size="1rem" /></Button></li>
+      <li><Button size="sm"><HeartIcon size="1rem" /></Button></li>
+      <li><Button size="sm"><InfoIcon size="1rem" /></Button></li>
+      <li><Button size="sm"><SettingsIcon size="1rem" /></Button></li>
+      <li><Button size="sm"><ArrowDownUpIcon size="1rem" /></Button></li>
+      <li><Button size="sm"><Rotate3DIcon size="1rem" /></Button></li>
+      <li><Button size="sm"><DumbbellIcon size="1rem" /></Button></li>
+      <li><Button size="sm"><BlocksIcon size="1rem" /></Button></li>
+      <li><Button size="sm"><LibraryIcon size="1rem" /></Button></li>
+      <li><Button size="sm"><BrainCogIcon size="1rem" /></Button></li>
+      <li><Button size="sm"><MinusIcon size="1rem" /></Button></li>
     </ul>
   </div>
 </div>

@@ -16,15 +16,15 @@
   import { dataService } from "$lib/data-services/data.service";
   import Tooltip from "$lib/cubicdbKit/Tooltip.svelte";
   import {
-    Copy,
-    Pause,
-    Play,
-    RotateCcw,
-    Search,
-    Settings2,
-    StepBack,
-    StepForward,
-    SwitchCamera,
+    CopyIcon,
+    PauseIcon,
+    PlayIcon,
+    RotateCcwIcon,
+    SearchIcon,
+    Settings2Icon,
+    StepBackIcon,
+    StepForwardIcon,
+    SwitchCameraIcon,
   } from "lucide-svelte";
   import Button from "$lib/cubicdbKit/Button.svelte";
   import Select from "@components/material/Select.svelte";
@@ -465,7 +465,7 @@
         </Tooltip>
 
         <Button onclick={() => simulator?.resetCamera()} style="--dash: 18;">
-          <SwitchCamera size="1.2rem" />
+          <SwitchCameraIcon size="1.2rem" />
         </Button>
 
         <Tooltip>
@@ -473,7 +473,7 @@
         </Tooltip>
 
         <Button onclick={reset} style="--dash: 18;">
-          <RotateCcw size="1.2rem" />
+          <RotateCcwIcon size="1.2rem" />
         </Button>
 
         <Tooltip>
@@ -485,7 +485,7 @@
           class={showOptions ? "!hidden" : ""}
           style="--dash: 18;"
         >
-          <Settings2 size="1.2rem" />
+          <Settings2Icon size="1.2rem" />
         </Button>
 
         <Tooltip keyBindings={["control", "comma"]}>
@@ -526,23 +526,23 @@
         <div class="grid grid-cols-[1fr_auto_1fr]">
           <div></div>
           <div class="flex justify-center gap-2">
-            <Button onclick={() => step(-1)}><StepBack size="1rem" /></Button>
+            <Button onclick={() => step(-1)}><StepBackIcon size="1rem" /></Button>
             <Tooltip keyBindings={["control", "left"]}
               >{$localLang.RECONSTRUCTIONS.stepBack}</Tooltip
             >
 
             <Button onclick={handlePlay}>
               {#if playing}
-                <Pause size="1rem" />
+                <PauseIcon size="1rem" />
               {:else if sequenceAlpha === finalAlpha}
-                <RotateCcw size="1rem" />
+                <RotateCcwIcon size="1rem" />
               {:else}
-                <Play size="1rem" />
+                <PlayIcon size="1rem" />
               {/if}
             </Button>
             <Tooltip keyBindings={["control", "p"]}>{$localLang.RECONSTRUCTIONS.playPause}</Tooltip>
 
-            <Button onclick={() => step(1)}><StepForward size="1rem" /></Button>
+            <Button onclick={() => step(1)}><StepForwardIcon size="1rem" /></Button>
             <Tooltip keyBindings={["control", "right"]}
               >{$localLang.RECONSTRUCTIONS.stepForward}</Tooltip
             >
@@ -566,7 +566,7 @@
 
     <div class="grid gap-2 text-sm">
       <label class="input grid grid-cols-[1.2rem_100%] items-center gap-2 text-sm relative">
-        <Search size="1.2rem" />
+        <SearchIcon size="1.2rem" />
         <input
           type="text"
           bind:value={recSearch}
@@ -623,7 +623,7 @@
         {$localLang.global.reconstruction}
 
         <button aria-label={$localLang.global.copy} onclick={copyReconstruction}>
-          <Copy size="1rem" />
+          <CopyIcon size="1rem" />
         </button>
         <Tooltip>{$localLang.global.copy}</Tooltip>
       </span>

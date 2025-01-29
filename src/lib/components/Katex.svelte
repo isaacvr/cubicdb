@@ -1,16 +1,19 @@
 <script lang="ts">
   import katex from "katex";
-  export let math: string;
-  export let displayMode = false;
 
-  let katexString = "";
+  interface KatexProps {
+    math: string;
+    displayMode?: boolean;
+  }
 
-  const options = {
-    displayMode: displayMode,
-    throwOnError: false,
-  };
+  let { math = $bindable(), displayMode = $bindable(false) }: KatexProps = $props();
 
-  $: katexString = katex.renderToString(math, options);
+  let katexString = $derived(
+    katex.renderToString(math, {
+      displayMode,
+      throwOnError: false,
+    })
+  );
 </script>
 
 {@html katexString}

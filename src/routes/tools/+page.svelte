@@ -17,7 +17,6 @@
   import { getLanguage } from "@lang/index";
   import { STANDARD_PALETTE, SessionDefaultSettings, type SCRAMBLE_MENU, AON } from "@constants";
   import * as all from "@cstimer/scramble";
-  import Tooltip from "@material/Tooltip.svelte";
   import CopyIcon from "@icons/ContentCopy.svelte";
   import DownArrowIcon from "@icons/ArrowDown.svelte";
   import { copyToClipboard, parseReconstruction, randomUUID } from "@helpers/strings";
@@ -31,6 +30,7 @@
   import { isBetween } from "@helpers/math";
   import { Button } from "flowbite-svelte";
   import Input from "@material/Input.svelte";
+  import Tooltip from "$lib/cubicdbKit/Tooltip.svelte";
 
   type ToolOption =
     | "timer-only"
@@ -469,16 +469,10 @@
         </ul>
 
         <div class="flex gap-2 items-center justify-center pt-4">
-          <Tooltip
-            class="cursor-pointer transition-all duration-200
-          hover:text-purple-300 text-gray-400"
-            position="bottom"
-            text={$localLang.global.clickToCopy}
+          <Button color="alternative" class="h-8 w-8 p-0 me-3 rounded-full" on:click={toClipboard}
+            ><CopyIcon size="1.2rem" /></Button
           >
-            <Button color="alternative" class="h-8 w-8 p-0 me-3 rounded-full" on:click={toClipboard}
-              ><CopyIcon size="1.2rem" /></Button
-            >
-          </Tooltip>
+          <Tooltip placement="bottom">{$localLang.global.clickToCopy}</Tooltip>
         </div>
       </div>
     {/if}
@@ -499,20 +493,17 @@
       class="text-gray-400 gap-2 mx-8 my-4 grid max-h-[15rem] overflow-x-hidden overflow-y-auto"
     >
       {#each $solves as _, p}
-        <Tooltip text={$localLang.TOOLS.clickToDelete} position="top">
-          <button
-            class="shadow-md w-24 h-12 rounded-md p-1 bg-white bg-opacity-10 relative
-              flex items-center justify-center transition-all duration-200 select-none cursor-pointer
-      
-              hover:shadow-lg hover:bg-opacity-20
-            "
-            onclick={() => ($solves = $solves.filter(s => s != $solves[$solves.length - p - 1]))}
-          >
-            <span class="text-center font-bold"
-              >{sTimer($solves[$solves.length - p - 1], true)}</span
-            >
-          </button>
-        </Tooltip>
+        <button
+          class="shadow-md w-24 h-12 rounded-md p-1 bg-white bg-opacity-10 relative
+          flex items-center justify-center transition-all duration-200 select-none cursor-pointer
+  
+          hover:shadow-lg hover:bg-opacity-20
+        "
+          onclick={() => ($solves = $solves.filter(s => s != $solves[$solves.length - p - 1]))}
+        >
+          <span class="text-center font-bold">{sTimer($solves[$solves.length - p - 1], true)}</span>
+        </button>
+        <Tooltip placement="top">{$localLang.TOOLS.clickToDelete}</Tooltip>
       {/each}
     </div>
 
@@ -570,15 +561,14 @@
     <div class="solver" bind:this={solverDiv} style={`--fcw: ${dim};`}>
       <div class="colors cursor-pointer">
         {#each fColors as f, p}
-          <Tooltip text={keys[p]} hasKeybinding>
-            <button
-              aria-label="Color"
-              class="color"
-              onclick={() => (color = p)}
-              class:selected={p === color}
-              style={`background-color: ${f}`}
-            ></button>
-          </Tooltip>
+          <button
+            aria-label="Color"
+            class="color"
+            onclick={() => (color = p)}
+            class:selected={p === color}
+            style={`background-color: ${f}`}
+          ></button>
+          <Tooltip>{keys[p]}</Tooltip>
         {/each}
       </div>
 

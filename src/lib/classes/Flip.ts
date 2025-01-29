@@ -70,8 +70,11 @@ export class Flip {
 
     const from = this.measure();
 
+    console.log("FROM: ", from);
+
     requestAnimationFrame(() => {
       const to = this.measure();
+      console.log("TO: ", to);
       this.invert(from.el, from, to, { ...this.defaults, ...options });
     });
   }

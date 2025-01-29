@@ -6,7 +6,6 @@ import type { CubeMode, SCRAMBLE_MENU, ICONS } from "@constants";
 import type { Writable } from "svelte/store";
 import type { Display } from "electron";
 import type { HTMLImgAttributes } from "svelte/elements";
-import type { FILTER_OPERATOR } from "$lib/timer/SessionsTab/AdvancedSearch/adaptors/types";
 import type { BezierSticker } from "@classes/puzzle/BezierSticker";
 
 export const PuzzleTypeName = [
@@ -50,6 +49,7 @@ export const PuzzleTypeName = [
   "redibarrel",
   "twisty33",
   "ghost",
+  "barrel33",
 ] as const;
 
 export declare type PuzzleType = (typeof PuzzleTypeName)[number];
@@ -108,6 +108,7 @@ export enum TimerState {
   PREVENTION = 2,
   INSPECTION = 3,
   RUNNING = 4,
+  PAUSE = 5,
 }
 
 export enum AverageSetting {
@@ -1019,8 +1020,8 @@ export interface Language {
 
     // Tab accesibility
     timerTab: string;
-    sessionsTab: string;
-    chartsTab: string;
+    historyTab: string;
+    statsTab: string;
 
     // Global Timer settings
     manageSessions: string;
@@ -1078,7 +1079,7 @@ export interface Language {
     // ['Ao5', 'Ao12', 'Ao50', 'Ao100', 'Ao200', 'Ao500', 'Ao1k', 'Ao2k' ]
 
     // Advanced Search Operators
-    operators: Record<FILTER_OPERATOR, string>;
+    operators: Record<string, string>;
     gateResultIndicator: string[];
   };
   RECONSTRUCTIONS: {
@@ -1383,6 +1384,6 @@ export interface Theme {
 
 export type Side = "top" | "right" | "bottom" | "left";
 export type Alignment = "start" | "end";
-export type Placement = `${Side}-${Alignment}`;
+export type Placement = `${Side}-${Alignment}` | Side;
 
 export type Callback = Function | ((...args: any[]) => any);

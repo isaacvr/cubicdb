@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { FILTER_OPERATOR } from "$lib/timer/SessionsTab/AdvancedSearch/adaptors/types";
+  import type { FILTER_OPERATOR } from "$lib/timer/HistoryTab/AdvancedSearch/adaptors/types";
   import EqualIcon from "@icons/Equal.svelte";
   import NEqualIcon from "@icons/NotEqualVariant.svelte";
   import ContainsIcon from "@icons/Contain.svelte";

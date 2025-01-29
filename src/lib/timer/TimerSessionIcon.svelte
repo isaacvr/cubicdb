@@ -4,13 +4,18 @@
   import MixedIcon from "@icons/CubeScan.svelte";
   import SingleIcon from "@icons/CubeOutline.svelte";
 
-  export let icon: SessionType = "mixed";
+  interface TimerSessionIconProps {
+    icon?: SessionType;
+    size?: string;
+  }
+
+  let { icon = $bindable("single"), size = $bindable("1.2rem") }: TimerSessionIconProps = $props();
 </script>
 
 {#if icon === "mixed"}
-  <MixedIcon size="1.2rem" class="text-purple-300 shrink-0" />
+  <MixedIcon {size} class="text-purple-300 shrink-0" />
 {:else if icon === "single"}
-  <SingleIcon size="1.2rem" class="text-green-400 shrink-0" />
+  <SingleIcon {size} class="text-green-400 shrink-0" />
 {:else if icon === "multi-step"}
-  <StepIcon size="1.2rem" class="text-sky-400 shrink-0" />
+  <StepIcon {size} class="text-sky-400 shrink-0" />
 {/if}

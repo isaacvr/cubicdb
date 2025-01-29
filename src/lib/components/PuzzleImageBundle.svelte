@@ -4,33 +4,46 @@
   import { minmax } from "@helpers/math";
   import { blur } from "svelte/transition";
   import { localLang } from "$lib/stores/language.service";
-  import { ChevronLeft, ChevronRight } from "lucide-svelte";
+  import { ChevronLeftIcon, ChevronRightIcon } from "lucide-svelte";
 
-  let _cl = "";
+  interface PuzzleImageBundleProps {
+    src?: string | string[];
+    size?: string;
+    width?: string;
+    height?: string;
+    class?: string;
+    glowOnHover?: boolean;
+    interactive?: boolean;
+    allowDownload?: boolean;
+    onclick?: (ev: MouseEvent) => any;
+  }
 
-  export let src: string | string[] = "";
-  export let glowOnHover = false;
-  export let interactive = false;
-  export let size = "";
-  export let width = "";
-  export let height = "";
-  export let allowDownload = false;
-  export { _cl as class };
+  let {
+    src = $bindable(""),
+    size = $bindable(""),
+    width = $bindable(""),
+    height = $bindable(""),
+    class: _cl = $bindable(""),
+    glowOnHover = $bindable(false),
+    interactive = $bindable(false),
+    allowDownload = $bindable(false),
+    onclick = () => {},
+  }: PuzzleImageBundleProps = $props();
 
-  let preview: string[] = [];
-  let selectedImg = 0;
+  let preview: string[] = $state([]);
+  let selectedImg = $state(0);
 
   function step(ev: MouseEvent, v: number) {
     ev.stopPropagation();
     selectedImg = minmax(selectedImg + v, 0, preview.length);
   }
 
-  function updatePreview(s: string | string[]) {
-    preview = Array.isArray(s) ? s : [s];
+  function updatePreview() {
+    preview = Array.isArray(src) ? src : [src];
     selectedImg = 0;
   }
 
-  $: updatePreview(src);
+  $effect(() => updatePreview());
 </script>
 
 {#if preview.length > 1}
@@ -44,9 +57,9 @@
   color="none"
   on:click={ev => step(ev, -1)}
   disabled={selectedImg === 0}
-  class={"rounded-full w-[3rem] h-[3rem] " + (preview.length < 2 ? "hidden" : "mt-2")}
+  class={preview.length < 2 ? "hidden" : "rounded-full p-2 mt-2"}
 >
-  <ChevronLeft class="pointer-events-none" />
+  <ChevronLeftIcon class="pointer-events-none" />
 </Button>
 
 <PuzzleImage
@@ -58,13 +71,14 @@
   {height}
   class={_cl + (preview.length > 1 ? "pt-4" : "")}
   {allowDownload}
+  {onclick}
 />
 
 <Button
   color="none"
   on:click={ev => step(ev, 1)}
   disabled={selectedImg + 1 === preview.length}
-  class={"rounded-full w-[3rem] h-[3rem] " + (preview.length < 2 ? "hidden" : "mt-2")}
+  class={preview.length < 2 ? "hidden" : "rounded-full p-2 mt-2"}
 >
-  <ChevronRight class="pointer-events-none" />
+  <ChevronRightIcon class="pointer-events-none" />
 </Button>

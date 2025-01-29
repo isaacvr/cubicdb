@@ -4,9 +4,9 @@
   import Select from "@material/Select.svelte";
   import DeleteIcon from "@icons/Delete.svelte";
   import ChevronIcon from "@icons/ChevronDown.svelte";
-  import { FieldAdaptor, GateAdaptor } from "$lib/timer/SessionsTab/AdvancedSearch/adaptors";
+  import { FieldAdaptor, GateAdaptor } from "$lib/timer/HistoryTab/AdvancedSearch/adaptors";
   import type { Writable } from "svelte/store";
-  import type { SearchFilter } from "$lib/timer/SessionsTab/AdvancedSearch/adaptors/types";
+  import type { SearchFilter } from "$lib/timer/HistoryTab/AdvancedSearch/adaptors/types";
   import { createEventDispatcher, getContext } from "svelte";
   import FieldSearch from "./FieldSearch.svelte";
 

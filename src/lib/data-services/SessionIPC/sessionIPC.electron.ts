@@ -1,13 +1,20 @@
 import type { IPC, Session } from "@interfaces";
 import type { SessionIPC } from "./sessionIPC.interface";
+import { sessions } from "@stores/sessions.store";
 
 export class SessionElectronIPC implements SessionIPC {
   ipc: IPC;
   private constructor() {
     this.ipc = (<any>window).electronAPI as IPC;
+
+    this.updateSessionStore();
   }
 
   private static _instance: SessionElectronIPC | null = null;
+
+  private async updateSessionStore() {
+    sessions.set(await this.getSessions());
+  }
 
   static getInstance() {
     if (!SessionElectronIPC._instance) {
@@ -21,19 +28,27 @@ export class SessionElectronIPC implements SessionIPC {
     return this.ipc.getSessions();
   }
 
-  addSession(s: Session) {
-    return this.ipc.addSession(s);
+  async addSession(s: Session) {
+    let res = await this.ipc.addSession(s);
+    await this.updateSessionStore();
+    return res;
   }
 
-  removeSession(s: Session) {
-    return this.ipc.removeSession(s);
+  async removeSession(s: Session) {
+    let res = await this.ipc.removeSession(s);
+    await this.updateSessionStore();
+    return res;
   }
 
-  renameSession(s: Session) {
-    return this.ipc.renameSession(s);
+  async renameSession(s: Session) {
+    let res = await this.ipc.renameSession(s);
+    await this.updateSessionStore();
+    return res;
   }
 
-  updateSession(s: Session) {
-    return this.ipc.updateSession(s);
+  async updateSession(s: Session) {
+    let res = await this.ipc.updateSession(s);
+    await this.updateSessionStore();
+    return res;
   }
 }

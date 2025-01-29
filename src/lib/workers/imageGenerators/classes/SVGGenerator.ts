@@ -227,7 +227,7 @@ export class SVGGenerator implements IDrawer {
     return `<?xml version="1.0" encoding="UTF-8" standalone="no"?>
     <svg xmlns="http://www.w3.org/2000/svg" x="0" y="0" width="${this.W}" height="${
       this.H
-    }" viewBox="0 0 ${this.W} ${this.H}" class="${cl}">
+    }" viewBox="0 0 ${this.W} ${this.H}" class="${cl}" preserveAspectRatio="xMinYMin">
       <style>${style}</style>
       ${this.elements.map(e => this.getNodeStr(e, classes)).join("\n      ")}
     </svg>`;

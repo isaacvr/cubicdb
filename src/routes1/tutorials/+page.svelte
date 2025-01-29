@@ -11,7 +11,7 @@
     Modal,
     Tooltip,
   } from "flowbite-svelte";
-  import WCACategory from "@components/wca/WCACategory.svelte";
+  import WCACategory from "@components/wca/CubeCategory.svelte";
   import { globalLang, localLang } from "@stores/language.service";
   import Select from "@material/Select.svelte";
   import { LANGUAGES } from "@lang/index";

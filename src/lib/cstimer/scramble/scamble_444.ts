@@ -2756,30 +2756,19 @@ const Ljava_lang_Object_2_classLit = createForClass("java.lang.", "Object", 1, n
     Lcs_threephase_FullCube_2_classLit
   );
 
-let searcher;
-
-let initRet = false;
-
-function init() {
-  if (initRet) {
-    return;
-  }
-  initRet = true;
-  $clinit_Moves();
-  $clinit_Util_0();
-  $clinit_Center1();
-  $clinit_Center2();
-  $clinit_Center3();
-  $clinit_Edge3();
-  $clinit_CenterCube();
-  $clinit_CornerCube();
-  $clinit_EdgeCube();
-  $clinit_FullCube_0();
-  searcher = new Search_4();
-}
+$clinit_Moves();
+$clinit_Util_0();
+$clinit_Center1();
+$clinit_Center2();
+$clinit_Center3();
+$clinit_Edge3();
+$clinit_CenterCube();
+$clinit_CornerCube();
+$clinit_EdgeCube();
+$clinit_FullCube_0();
+let searcher = new Search_4();
 
 export function getRandomScramble() {
-  init();
   return (scramble_333.getRandomScramble() + $randomState(searcher, Math)).replace(/\s+/g, " ");
 }
 

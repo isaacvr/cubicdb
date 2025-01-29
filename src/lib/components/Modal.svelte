@@ -1,15 +1,29 @@
 <script lang="ts">
-  import { onMount } from "svelte";
+  import Button from "$lib/cubicdbKit/Button.svelte";
+  import { XIcon } from "lucide-svelte";
+  import { fly } from "svelte/transition";
 
-  export let show = false;
-  export let cancel = true;
-  export let onClose: Function = () => {};
-  export let closeOnClickOutside = true;
-  export let closeOnEscape = true;
-  export let transitionName = "none";
+  interface ModalProps {
+    show?: boolean;
+    cancel?: boolean;
+    closeOnClickOutside?: boolean;
+    closeOnEscape?: boolean;
+    transitionName?: string;
+    class?: string;
+    onclose?: (...data: any[]) => any;
+    children?: () => any;
+  }
 
-  let _cl = "";
-  export { _cl as class };
+  let {
+    show = $bindable(false),
+    cancel = $bindable(true),
+    closeOnClickOutside = $bindable(true),
+    closeOnEscape = $bindable(true),
+    class: _cl = $bindable(""),
+    transitionName = $bindable("none"),
+    onclose = () => {},
+    children = () => {},
+  }: ModalProps = $props();
 
   let modal: HTMLDialogElement;
 
@@ -23,7 +37,7 @@
     e.stopPropagation();
 
     if (e.code === "Escape") {
-      if (closeOnEscape && e.target === modal) {
+      if (closeOnEscape && e.target === e.currentTarget) {
         close(null);
       } else {
         e.preventDefault();
@@ -31,17 +45,10 @@
     }
   }
 
-  function handleShow(s: boolean) {
-    if (!modal) return;
-
-    s && modal.showModal();
-    !s && modal.close();
-  }
-
   function handleClick(ev: MouseEvent) {
     if (!cancel) return;
-
-    if (ev.target != modal) return;
+    if (!modal) return;
+    if (ev.target != ev.currentTarget) return;
 
     let bb = modal.getBoundingClientRect();
     let x1 = bb.x,
@@ -57,39 +64,40 @@
   }
 
   export function close(data: any) {
-    onClose.call(null, data || null);
+    onclose && onclose(data || null);
     show = false;
     return show;
   }
 
-  onMount(() => {
-    handleShow(show);
-
-    modal.addEventListener("cancel", e => {
-      if (!cancel) {
-        e.preventDefault();
-        return;
-      }
-
-      close(null);
-    });
+  $effect(() => {
+    if (show) {
+      modal?.showModal();
+    } else {
+      modal?.close();
+    }
   });
-
-  $: handleShow(show);
 </script>
 
-<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <dialog
-  data-type="modal"
   bind:this={modal}
-  on:mousedown={handleClick}
-  on:keyup={keyUpHandler}
-  on:keydown={keyDownHandler}
-  class="bg-backgroundLevel2 rounded-md show p-4 pt-3 overflow-visible {_cl || ''}"
+  data-type="modal"
+  role="alert"
+  onmousedown={handleClick}
+  onkeyup={keyUpHandler}
+  onkeydown={keyDownHandler}
+  oncancel={e => !cancel && e.preventDefault()}
+  class="bg-base-200 text-sm rounded-md show p-4 pt-3 overflow-visible {_cl || ''}"
   style="view-transition-name: {transitionName};"
 >
+  {#if cancel}
+    <Button color="none" class="rounded-lg p-0 float-right hover:border-primary" onclick={close}>
+      <XIcon size="1rem" />
+    </Button>
+  {/if}
+
   {#if show}
-    <slot />
+    {@render children?.()}
   {/if}
 </dialog>
 

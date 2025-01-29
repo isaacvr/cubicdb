@@ -17,12 +17,11 @@
   import Ipyrso from "./Ipyrso.svelte";
   import Iskbso from "./Iskbso.svelte";
   import Isqrs from "./Isqrs.svelte";
-  import { createEventDispatcher } from "svelte";
   import { ICONS } from "@constants";
   import I333Cross from "./I333Cross.svelte";
   import FundamentalsIcon from "@icons/HumanMaleBoardPoll.svelte";
 
-  interface WCACategoryProps {
+  interface CubeCategoryProps {
     icon?: string;
     size?: string;
     selected?: boolean;
@@ -33,7 +32,7 @@
     ariaHidden?: boolean;
     title?: string;
     desc?: string;
-    buttonClass?: string;
+    containerClass?: string;
     noFallback?: boolean;
     tabindex?: number;
     class?: string;
@@ -50,20 +49,10 @@
     ariaHidden = false,
     title = "",
     desc = "",
-    buttonClass = "",
+    containerClass = "",
     noFallback = false,
-    tabindex = -1,
     class: cl = "",
-  }: WCACategoryProps = $props();
-
-  const dispatch = createEventDispatcher();
-
-  // let cl = "";
-  // export { cl as class };
-
-  function handleClick(ev: MouseEvent) {
-    dispatch("click", ev);
-  }
+  }: CubeCategoryProps = $props();
 
   function findIcon(ic: string): Scrambler | "fundamentals" | null {
     if (ic === "fundamentals") return ic;
@@ -104,12 +93,9 @@
   } as any;
 </script>
 
-<button
-  type="button"
-  {tabindex}
-  class={"rounded-md p-1 grid place-items-center w-fit cursor-default " + buttonClass}
+<div
+  class={"rounded-md p-1 grid place-items-center w-fit cursor-default " + containerClass}
   class:selected
-  onclick={handleClick}
 >
   {#if findIcon(icon)}
     {@const Icon = iconMap[findIcon(icon) || "333"]}
@@ -117,7 +103,7 @@
   {:else if !noFallback}
     <I333 {size} {width} {height} {color} {ariaLabel} {ariaHidden} {title} {desc} class={cl} />
   {/if}
-</button>
+</div>
 
 <style lang="postcss">
   .selected {

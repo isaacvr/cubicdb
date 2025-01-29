@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { createEventDispatcher, onMount } from "svelte";
+  import { onMount, untrack } from "svelte";
   import { pGenerateCubeBundle } from "@helpers/cube-draw";
   import { derived, writable, type Readable, type Writable } from "svelte/store";
 
@@ -8,23 +8,13 @@
   import JSConfetti from "js-confetti";
 
   /// Data
-  import {
-    isNNN,
-    SessionDefaultSettings,
-    type SCRAMBLE_MENU,
-    AON,
-    ICONS,
-    STEP_COLORS,
-  } from "@constants";
+  import { isNNN, SessionDefaultSettings, type SCRAMBLE_MENU, AON, ICONS } from "@constants";
 
   /// Components
   import TabGroup from "@material/TabGroup.svelte";
-  import Tab from "@material/Tab.svelte";
-  import Select from "@material/Select.svelte";
   import TimerTab from "$lib/timer/TimerTab/TimerTab.svelte";
-  import SessionsTab from "$lib/timer/SessionsTab/SessionsTab.svelte";
+  import HistoryTab from "$lib/timer/HistoryTab/HistoryTab.svelte";
   import StatsTab from "$lib/timer/StatsTab/StatsTab.svelte";
-  import TimerSessionIcon from "$lib/timer/TimerSessionIcon.svelte";
 
   /// Types
   import {
@@ -35,9 +25,10 @@
     type TimerContext,
     type Language,
     type BluetoothDeviceData,
-    SESSION_TYPE,
     type SessionType,
     type PuzzleType,
+    type TimerInputHandler,
+    type InputContext,
   } from "@interfaces";
   import { ScrambleParser } from "@classes/scramble-parser";
   import { INITIAL_STATISTICS, getUpdatedStatistics } from "@helpers/statistics";
@@ -46,21 +37,24 @@
   import { getLanguage } from "@lang/index";
   import { NotificationService } from "@stores/notification.service";
   import { prettyScramble } from "@helpers/strings";
-  import { binSearch, newArr } from "@helpers/object";
+  import { binSearch } from "@helpers/object";
   import type { HTMLImgAttributes } from "svelte/elements";
 
   // ICONS
-  import TimerIcon from "@icons/Timer.svelte";
-  import ListIcon from "@icons/FormatListBulleted.svelte";
-  import ChartIcon from "@icons/ChartLineVariant.svelte";
-  import PlusIcon from "@icons/Plus.svelte";
-  import CheckIcon from "@icons/Check.svelte";
-  import CloseIcon from "@icons/Close.svelte";
-  import DeleteIcon from "@icons/Delete.svelte";
-  import { Button, Input, Modal } from "flowbite-svelte";
-  import WcaCategory from "@components/wca/WCACategory.svelte";
   import { dataService } from "$lib/data-services/data.service";
   import { scrambleToPuzzle } from "@helpers/scrambleToPuzzle";
+  import Button from "$lib/cubicdbKit/Button.svelte";
+  import { ChartLineIcon, LogsIcon, TimerIcon } from "lucide-svelte";
+  import { page } from "$app/state";
+  import { sessions } from "@stores/sessions.store";
+  import TimerOptions from "./TimerTab/TimerOptions.svelte";
+  import { between } from "@helpers/math";
+  import { ManualInput } from "./adaptors/Manual";
+  import { StackmatInput } from "./adaptors/Stackmat";
+  import { GANInput } from "./adaptors/GAN";
+  import { QiYiSmartTimerInput } from "./adaptors/QY-Timer";
+  import { KeyboardInput } from "./adaptors/Keyboard";
+  import { VirtualInput } from "./adaptors/Virtual";
 
   let BASE_MENU = getLanguage($globalLang).MENU;
   let MENU: SCRAMBLE_MENU[] = $state(BASE_MENU);
@@ -107,13 +101,11 @@
   /// GENERAL
   let modes: { 0: string; 1: string; 2: number }[] = $state(BASE_MENU[0][1]);
   let filters: string[] = $state([]);
-  let sessions: Session[] = $state([]);
-  let tabs: TabGroup | null = $state(null);
   let showDeleteSession = $state(false);
-  let dispatch = createEventDispatcher();
-  let sessionsTab: SessionsTab | null = $state(null);
+  let sessionsTab: HistoryTab | null = $state(null);
   let mounted = false;
-
+  const iconSize = "1.2rem";
+  
   /// MODAL
   let openEdit = $state(false);
   let creatingSession = $state(false);
@@ -123,7 +115,7 @@
   let newSessionGroup = $state(0);
   let newSessionMode = $state(0);
   let stepNames: string[] = $state(["", ""]);
-  let sSession: Session;
+  let sSession: Session | null = null;
 
   /// CONTEXT
   let timerState = writable<TimerState>(TimerState.CLEAN);
@@ -153,7 +145,9 @@
   let STATS_WINDOW = writable<(number | null)[][]>($AON.map(_ => []));
   let puzzleType = writable<PuzzleType>("rubik");
   let puzzleOrder = writable(3);
-
+  let deviceID: Writable<string> = writable("default");
+  let deviceList: string[][] = [];
+  
   let lastPreview = 0;
 
   let confetti: JSConfetti;
@@ -161,7 +155,6 @@
   function selectSolve(s: Solve) {
     s.selected = !s.selected;
     $selected += s.selected ? 1 : -1;
-    $solves = $solves;
   }
 
   function selectSolveById(id: string, n: number) {
@@ -177,8 +170,7 @@
           $selected += 1;
         }
 
-        $tab === 0 && tabs?.nextTab();
-        $tab === 2 && tabs?.prevTab();
+        $tab = 1;
         break;
       }
     }
@@ -262,21 +254,21 @@
   }
 
   function handleClose() {
-    if (sessions.indexOf($session) < 0) {
-      $session = sessions[0];
+    if ($sessions.indexOf($session) < 0) {
+      $session = $sessions[0];
     }
     closeAddSession();
     openEdit = false;
   }
 
-  function handleKeyUp(e: KeyboardEvent) {
+  function handleKeydown(e: KeyboardEvent) {
     if (!enableKeyboard) return;
 
     if (!battle && ($timerState === TimerState.CLEAN || $timerState === TimerState.STOPPED)) {
       if (e.key === "ArrowRight") {
-        tabs?.nextTab();
+        $tab = between($tab + 1, 0, 2);
       } else if (e.key === "ArrowLeft") {
-        tabs?.prevTab();
+        $tab = between($tab - 1, 0, 2);
       }
     }
   }
@@ -332,8 +324,6 @@
       if (!$mode) {
         $mode = MENU[$group || 0][1][0];
       }
-
-      $scramble = "";
 
       let md = useMode || _mode || $mode[1];
       let len = useLen || ($mode[1] === "r3" || $mode[1] === "r3ni" ? $prob : $mode[2]);
@@ -482,7 +472,6 @@
 
     $dataService.session.addSession({ _id: "", name, settings }).then(ns => {
       ns.tName = ns.name;
-      sessions = [...sessions, ns];
       $session = ns;
 
       updateSessionsIcons();
@@ -493,30 +482,26 @@
       }
 
       selectedSession();
-      sortSessions();
     });
 
     closeAddSession();
   }
 
   function deleteSessionHandler(remove?: boolean) {
-    if (remove) {
+    if (remove && sSession) {
       $dataService.session.removeSession(sSession).then(ss => {
-        sessions = sessions.filter(s1 => s1._id != ss._id);
-
-        if (sessions.length === 0) {
+        if ($sessions.length === 0) {
           newSessionName = "Session 1";
           newSession();
           return;
         }
 
         if (ss._id === $session._id) {
-          $session = sessions[0];
+          $session = $sessions[0];
           selectedSession();
         }
 
         updateSessionsIcons();
-        sortSessions();
       });
     }
 
@@ -524,12 +509,11 @@
   }
 
   function handleUpdateSession(session: Session) {
-    let updatedSession = sessions.find(s => s._id === session._id);
+    let updatedSession = $sessions.find(s => s._id === session._id);
     if (updatedSession) {
       updatedSession.name = session.name;
       updatedSession.settings = session.settings;
     }
-    sortSessions();
   }
 
   function renameSession(s: Session) {
@@ -545,14 +529,8 @@
   }
 
   function editSolve(s: Solve) {
-    $tab === 0 && tabs?.nextTab();
-    $tab === 2 && tabs?.prevTab();
+    $tab = 1;
     sessionsTab?.editSolve(s);
-  }
-
-  function sortSessions() {
-    sessions.sort((s1, s2) => (s1.name.toLowerCase() < s2.name.toLowerCase() ? -1 : 1));
-    sessions = sessions;
   }
 
   function handleUpdateSolve(updatedSolve: Solve) {
@@ -586,25 +564,37 @@
   }
 
   function updateSessionsIcons() {
-    for (let i = 0, maxi = sessions.length; i < maxi; i += 1) {
-      if (sessions[i].settings?.sessionType != "mixed") {
+    for (let i = 0, maxi = $sessions.length; i < maxi; i += 1) {
+      if ($sessions[i].settings?.sessionType != "mixed") {
         for (let j = 0, maxj = ICONS.length; j < maxj; j += 1) {
           if (Array.isArray(ICONS[j].scrambler)) {
             if (
               (ICONS[j].scrambler as string[]).some(
-                s => sessions[i].settings && s === sessions[i].settings.mode
+                s => $sessions[i].settings && s === $sessions[i].settings.mode
               )
             ) {
-              sessions[i].icon = ICONS[j];
+              $sessions[i].icon = ICONS[j];
               break;
             }
-          } else if (sessions[i].settings && ICONS[j].scrambler === sessions[i].settings.mode) {
-            sessions[i].icon = ICONS[j];
+          } else if ($sessions[i].settings && ICONS[j].scrambler === $sessions[i].settings.mode) {
+            $sessions[i].icon = ICONS[j];
             break;
           }
         }
       }
     }
+  }
+
+  function updateCurrentSession() {
+    $sessions.forEach(s => (s.tName = s.name.toLowerCase()));
+    setTimeout(() => $sessions.sort((a, b) => a.tName?.localeCompare(b.tName || "") || 0), 1000);
+
+    let ss = page.params.sessionId;
+    let currentSession = $sessions.find(s => s._id === ss);
+    $session = currentSession || $sessions[0];
+
+    updateSessionsIcons();
+    selectedSession();
   }
 
   onMount(() => {
@@ -621,31 +611,42 @@
       $dataService.solve.getSolves().then(sv => {
         $allSolves = sv;
 
-        $dataService.session.getSessions().then(_sessions => {
-          sessions = _sessions.map(s => {
-            s.tName = s.name;
-            return s;
-          });
+        $sessions.forEach(s => (s.tName = s.name));
 
-          if (sessions.length === 0) {
-            newSessionName = "Session 1";
-            newSession();
-            return;
-          }
+        if ($sessions.length === 0) {
+          newSessionName = "Session 1";
+          newSession();
+          return;
+        }
 
-          let ss = $dataService.config.timer.session;
-          let currentSession = sessions.find(s => s._id.toString() === ss);
-          $session = currentSession || sessions[0];
-
-          updateSessionsIcons();
-          selectedSession();
-          sortSessions();
-        });
+        updateCurrentSession();
       });
     }
   });
 
-  let context: TimerContext = {
+  $effect(() => {
+    $isRunning = $timerState === TimerState.INSPECTION || $timerState === TimerState.RUNNING;
+  });
+
+  $effect(() => {
+    (useScramble || useMode || useProb != -1) && initScrambler(useScramble, useMode, useProb);
+  });
+
+  $effect(() => {
+    $enableKeyboard = !scrambleOnly;
+  });
+
+  $effect(() => {
+    if (page.params.sessionId) {
+      untrack(() => {
+        if ($sessions.length === 0) return;
+
+        updateCurrentSession();
+      });
+    }
+  });
+
+  let context: TimerContext = $state({
     timerState,
     ready,
     tab,
@@ -681,368 +682,67 @@
     editSolve,
     handleRemoveSolves,
     editSessions,
-  };
-
-  $effect(() => {
-    $isRunning = $timerState === TimerState.INSPECTION || $timerState === TimerState.RUNNING;
-  });
-
-  $effect(() => {
-    (useScramble || useMode || useProb != -1) && initScrambler(useScramble, useMode, useProb);
-  });
-
-  $effect(() => {
-    $enableKeyboard = !scrambleOnly;
   });
 </script>
 
-<svelte:window on:keyup={handleKeyUp} />
+<svelte:window onkeydown={handleKeydown} />
 
-<main
-  class={"w-full " +
-    (scrambleOnly || timerOnly || battle ? "h-full" : "h-[calc(100svh-3rem)] pt-14")}
->
-  {#if timerOnly || scrambleOnly}
-    <TimerTab {timerOnly} {scrambleOnly} {context} {battle} />
-  {:else if battle}
-    <TimerTab
-      {cleanOnScramble}
-      {context}
-      {battle}
-      on:solve={s => dispatch("solve", s.detail)}
-      on:update={s => dispatch("solve", s.detail)}
-    />
-  {:else}
-    <div
-      class="fixed mt-1 w-max -translate-x-1/2 left-1/2 z-50 grid grid-flow-col
-      gap-2 top-14 items-center justify-center"
-    >
-      <Select
-        placeholder={$localLang.TIMER.selectSession}
-        value={$session}
-        items={sessions}
-        label={s => (s || {}).name}
-        transform={e => e}
-        onChange={g => {
-          $session = g;
-          setTimeout(selectedSession, 10);
-        }}
-        hasIcon={e => e.settings.sessionType || "mixed"}
-        IconComponent={TimerSessionIcon}
-      />
-
-      {#if $tab === 0 && ($session?.settings.sessionType || "mixed") === "mixed"}
-        <Select
-          placeholder={$localLang.TIMER.selectGroup}
-          value={groups[$group]}
-          items={groups}
-          transform={e => e}
-          onChange={(g, p) => {
-            $group = p || 0;
-            selectedGroup(true, true);
-          }}
-        />
-
-        <Select
-          placeholder={$localLang.TIMER.selectMode}
-          value={$mode}
-          items={modes}
-          label={e => e[0]}
-          transform={e => e}
-          onChange={g => {
-            $mode = g;
-            selectedMode(true, true);
-          }}
-          hasIcon={groups[$group] === "WCA" ? v => v[1] : null}
-        />
-      {/if}
-
-      {#if $tab === 0 && filters.length > 0}
-        <Select
-          placeholder={$localLang.TIMER.selectFilter}
-          value={$prob}
-          items={["", ...filters]}
-          label={e => e.toUpperCase()}
-          transform={(i, p) => (p || 0) - 1}
-          onChange={(i, p) => {
-            $prob = p - 1;
-            selectedFilter(true, true);
-          }}
-        />
-      {:else if $tab === 0 && ($mode[1] === "r3" || $mode[1] === "r3ni")}
-        <Select
-          placeholder={$localLang.global.scrambles}
-          value={$prob}
-          items={[2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]}
-          label={e => e.toString()}
-          transform={e => e}
-          onChange={e => {
-            $prob = e;
-            selectedFilter(true, true);
-          }}
-        />
-      {/if}
-    </div>
-
-    <TabGroup
-      bind:this={tabs}
-      class="h-full"
-      footerClass="bg-backgroundLevel2"
-      onChange={t => ($tab = t || 0)}
-    >
-      <Tab name="" icon={TimerIcon} ariaLabel={$localLang.TIMER.timerTab}>
-        <TimerTab {context} />
-      </Tab>
-      <Tab name="" icon={ListIcon} ariaLabel={$localLang.TIMER.sessionsTab}>
-        <SessionsTab bind:this={sessionsTab} {context} />
-      </Tab>
-      <Tab name="" icon={ChartIcon} ariaLabel={$localLang.TIMER.chartsTab}>
-        <StatsTab {context} />
-      </Tab>
-    </TabGroup>
-  {/if}
-
-  {#if !timerOnly}
-    <Modal
-      bind:open={openEdit}
-      on:close={handleClose}
-      outsideclose
-      title={$localLang.TIMER.manageSessions}
-      size="md"
-      class="max-w-2xl grid bg-backgroundLevel2 tx-text"
-      color="none"
-    >
-      {#if creatingSession}
-        <div class="flex flex-col items-center min-h-[12rem] gap-4">
-          <Select
-            items={SESSION_TYPE}
-            label={e => $localLang.TIMER.sessionTypeMap[e]}
-            transform={e => e}
-            bind:value={newSessionType}
-            class="mx-auto"
-            hasIcon={e => e}
-            IconComponent={TimerSessionIcon}
-            placement="right"
-          />
-
-          <i class="note tx-text">{$localLang.TIMER.sessionTypeDescription[newSessionType]}</i>
-
-          {#if newSessionType != "mixed"}
-            <div class="flex flex-wrap gap-2 justify-center">
-              <Select
-                class="min-w-[8rem]"
-                placeholder={$localLang.TIMER.selectGroup}
-                bind:value={newSessionGroup}
-                items={groups}
-                transform={(_, p) => p}
-                placement="right"
-              />
-
-              <Select
-                class="min-w-[8rem]"
-                placeholder={$localLang.TIMER.selectMode}
-                bind:value={newSessionMode}
-                items={MENU[newSessionGroup][1]}
-                label={e => e[0]}
-                transform={(_, p) => p}
-                placement="right"
-                hasIcon={e => e[1]}
-              />
-            </div>
-          {/if}
-
-          <div class="flex flex-wrap gap-2 justify-center">
-            <div class="flex items-center justify-center gap-2">
-              <span class="tx-text">{$localLang.global.name}</span>
-
-              <Input
-                focus={creatingSession}
-                class="bg-backgroundLevel2 tx-text flex-1 max-w-[20ch]"
-                bind:value={newSessionName}
-                on:keyup={handleInputKeyUp}
-              />
-            </div>
-
-            {#if newSessionType === "multi-step"}
-              <div class="flex items-center justify-center gap-2">
-                <span class="tx-text">{$localLang.global.steps}</span>
-
-                <Input
-                  class="bg-backgroundLevel2 tx-text flex-1 max-w-[10ch]"
-                  inpClass="text-center"
-                  type="number"
-                  min={2}
-                  max={10}
-                  bind:value={newSessionSteps}
-                  on:keyup={handleInputKeyUp}
-                  on:change={_ =>
-                    (stepNames = [...stepNames, ...newArr(newSessionSteps).fill("")].slice(
-                      0,
-                      newSessionSteps
-                    ))}
-                />
-              </div>
-            {/if}
-          </div>
-
-          {#if newSessionType === "multi-step"}
-            <div class="flex flex-col gap-2 justify-center">
-              <h2 class="text-xl tx-text text-center">{$localLang.TIMER.stepNames}</h2>
-
-              <ul class="flex flex-wrap justify-center items-center gap-2">
-                {#each stepNames as sn, p (p)}
-                  <li class="w-20">
-                    <Input
-                      style={`border-color: ${STEP_COLORS[p]}; border-width: .15rem;`}
-                      placeholder={$localLang.global.step + " " + (p + 1)}
-                      bind:value={stepNames[p]}
-                    />
-                  </li>
-                {/each}
-              </ul>
-            </div>
-          {/if}
-        </div>
-      {:else}
-        <div
-          class="grid gap-2 m-2 mt-4"
-          style="grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr));"
-        >
-          {#each sessions as s}
-            <div
-              role="button"
-              tabindex="0"
-              onkeydown={() => {}}
-              class={"grid h-max border rounded-md relative " +
-                (s.settings.sessionType === "mixed"
-                  ? "border-purple-400"
-                  : s.settings.sessionType === "single"
-                    ? "border-green-400"
-                    : "border-sky-500") +
-                (s.icon ? " pl-8" : "")}
-              onclick={() => {
-                sessions.forEach(s1 => (s1.editing = false));
-                s.editing = true;
-              }}
-            >
-              {#if s.icon}
-                <span
-                  class="absolute p-[.05rem] rounded-sm
-                  left-[.5rem] top-1/2 -translate-y-1/2"
-                >
-                  <WcaCategory icon={s.icon.icon} size="1rem" buttonClass="!p-[.1rem]" />
-                </span>
-              {/if}
-
-              <Input
-                class={"!bg-transparent text-center text-ellipsis w-full rounded-none flex-1 tx-text " +
-                  (!s.editing ? " border-none " : "") +
-                  (s.icon ? " text-left pl-1 " : "")}
-                bind:value={s.tName}
-                focus={s.editing}
-                on:keydown={e => {
-                  switch (e.code) {
-                    case "Enter": {
-                      s.editing = false;
-                      renameSession(s);
-                      break;
-                    }
-                    case "Escape": {
-                      s.editing = false;
-                      e.stopPropagation();
-                      // @ts-ignore
-                      e.target.blur();
-                      break;
-                    }
-                  }
-                }}
-              />
-              <div class="flex items-center justify-center">
-                {#if s.editing && !creatingSession}
-                  <button
-                    tabindex="0"
-                    class="text-gray-400 w-full h-8 cursor-pointer hover:text-blue-500"
-                    onclick={ev => {
-                      ev.stopPropagation();
-                      renameSession(s);
-                    }}
-                  >
-                    <CheckIcon size="1.2rem" />
-                  </button>
-                  <button
-                    tabindex="0"
-                    class="text-gray-400 w-full h-8 cursor-pointer hover:text-blue-500"
-                    onclick={ev => {
-                      ev.stopPropagation();
-                      s.editing = false;
-                    }}
-                  >
-                    <CloseIcon size="1.2rem" />
-                  </button>
-                  <button
-                    tabindex="0"
-                    class="text-gray-400 w-full h-8 cursor-pointer hover:text-blue-500"
-                    onclick={ev => {
-                      ev.stopPropagation();
-                      sSession = s;
-                      showDeleteSession = true;
-                    }}
-                  >
-                    <DeleteIcon size="1.2rem" />
-                  </button>
-                {/if}
-              </div>
-            </div>
-          {/each}
-        </div>
-      {/if}
-
-      <svelte:fragment slot="footer">
-        {#if creatingSession}
-          <div class="flex justify-center gap-2 mx-auto">
-            <Button color="alternative" on:click={closeAddSession}
-              >{$localLang.global.cancel}</Button
-            >
-            <Button on:click={newSession}>
-              {$localLang.global.save}
-            </Button>
-          </div>
-        {:else}
-          <Button
-            type="button"
-            ariaLabel={$localLang.TIMER.addNewSession}
-            on:click={openAddSession}
-            class="mx-auto flex bg-primary-700 tx-text"
-          >
-            <PlusIcon />
-            {$localLang.TIMER.addNewSession}
-          </Button>
-        {/if}
-      </svelte:fragment>
-    </Modal>
-  {/if}
-
-  <Modal
-    class="bg-backgroundLevel3 tx-text"
-    color="none"
-    bind:open={showDeleteSession}
-    size="xs"
-    autoclose
-    outsideclose
-  >
-    <h1 class="tx-text mb-4 text-lg">{$localLang.TIMER.removeSession}</h1>
-    <div class="flex justify-evenly">
-      <Button color="alternative" class="bg-cancelButton" ariaLabel={$localLang.global.cancel}>
-        {$localLang.global.cancel}
+<div class="grid grid-rows-[2rem,1fr] gap-2 w-full h-full p-1 overflow-hidden">
+  <div class="actions flex items-center justify-between gap-2">
+    <div role="tablist" class="join gap-1 bg-base-100 p-1 mr-auto">
+      <Button
+        onclick={() => ($tab = 0)}
+        size="sm"
+        role="tab"
+        class={"tab px-4 text-sm py-1.5 " +
+          ($tab === 0 ? "bg-primary" : "shadow-transparent border-transparent")}
+      >
+        <TimerIcon size={iconSize} />
+        {$localLang.TIMER.timerTab}
       </Button>
 
       <Button
-        color="red"
-        ariaLabel={$localLang.global.delete}
-        on:click={() => deleteSessionHandler(true)}
+        onclick={() => ($tab = 1)}
+        size="sm"
+        role="tab"
+        class={"tab px-4 text-sm py-1.5 " +
+          ($tab === 1 ? "bg-primary" : "shadow-transparent border-transparent")}
       >
-        {$localLang.global.delete}
+        <LogsIcon size={iconSize} />
+        {$localLang.TIMER.historyTab}
+      </Button>
+
+      <Button
+        onclick={() => ($tab = 2)}
+        size="sm"
+        role="tab"
+        class={"tab px-4 text-sm py-1.5 " +
+          ($tab === 2 ? "bg-primary" : "shadow-transparent border-transparent")}
+      >
+        <ChartLineIcon size={iconSize} />
+        {$localLang.TIMER.statsTab}
       </Button>
     </div>
-  </Modal>
-</main>
+
+    <TimerOptions
+      {context}
+      {enableKeyboard}
+      {timerOnly}
+      {deviceID}
+      {deviceList}
+    />
+  </div>
+
+  <div class="content overflow-hidden relative">
+    <TimerTab bind:context {deviceID} {deviceList} />
+    <HistoryTab bind:context />
+    <StatsTab bind:context />
+  </div>
+</div>
+
+<style>
+  .content {
+    display: grid;
+    grid-template-areas: "tabs";
+  }
+</style>

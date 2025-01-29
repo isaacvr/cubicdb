@@ -20,7 +20,9 @@
 }
 
 body {
-  background: url(/assets/background.svg);
+  background-image: url(/assets/background-v2.svg);
+  background-position: center;
+  background-size: cover;
   margin: 0;
   display: flex;
   min-width: 320px;
@@ -56,7 +58,8 @@ input {
 a:hover:hover,
 button:hover:hover,
 .cursor-pointer:hover:hover,
-input[type="range"]:hover {
+input[type="range"]:hover,
+input[type="checkbox"]:hover {
   cursor:
     url("/assets/cursors/pointer.svg") 6 0,
     pointer !important;
@@ -143,7 +146,8 @@ mark {
 }
 
 .note {
-  @apply bg-white bg-opacity-10 p-4 text-left border-l-8 border-l-blue-500 shadow-md rounded-sm;
+  @apply bg-white bg-opacity-10 p-2 text-left border-l-8 border-l-info
+    shadow-md rounded-sm text-sm;
 }
 
 /* Reconstructions */

@@ -1,6 +1,7 @@
 import type { Session, Solve } from "@interfaces";
 import type { SessionIPC } from "./sessionIPC.interface";
 import { openDB, type IDBPDatabase } from "idb";
+import { sessions } from "@stores/sessions.store";
 
 const DBName = "CubicDB-data";
 const SessionStore = "Sessions";
@@ -18,6 +19,7 @@ export class SessionBrowserIPC implements SessionIPC {
   private constructor() {
     this.DB = null;
     this.init();
+    this.updateSessionStore();
   }
 
   private static _instance: SessionBrowserIPC | null = null;
@@ -28,6 +30,10 @@ export class SessionBrowserIPC implements SessionIPC {
     }
 
     return SessionBrowserIPC._instance;
+  }
+
+  private async updateSessionStore() {
+    sessions.set(await this.getSessions());
   }
 
   private async init() {
@@ -109,6 +115,7 @@ export class SessionBrowserIPC implements SessionIPC {
 
     const res = await Promise.all([tx.store.put(ss), tx.done]);
     s._id = res[0] as string;
+    this.updateSessionStore();
     return s;
   }
 
@@ -126,6 +133,9 @@ export class SessionBrowserIPC implements SessionIPC {
     const tx = this.DB.transaction(SessionStore, "readwrite");
 
     await Promise.all([tx.store.delete(s._id), tx.done]);
+
+    this.updateSessionStore();
+
     return s;
   }
 
@@ -141,6 +151,8 @@ export class SessionBrowserIPC implements SessionIPC {
       await Promise.all([tx.store.put(rs), tx.done]);
       return rs;
     }
+
+    this.updateSessionStore();
 
     return s;
   }
@@ -159,6 +171,7 @@ export class SessionBrowserIPC implements SessionIPC {
       return rs;
     }
 
+    this.updateSessionStore();
     return s;
   }
 }

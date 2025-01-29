@@ -1,13 +1,14 @@
 <script lang="ts">
-  import WcaCategory from "@components/wca/WCACategory.svelte";
+  import CubeCategory from "@components/wca/CubeCategory.svelte";
   import { getColorByName } from "@constants";
   import { mod } from "@helpers/math";
   import { weakRandomUUID } from "@helpers/strings";
   import type { Placement, Side } from "@interfaces";
-  import { Dropdown, DropdownDivider, DropdownItem } from "flowbite-svelte";
+  import { Dropdown, DropdownItem } from "flowbite-svelte";
   import { createEventDispatcher, onMount, tick } from "svelte";
-  import { ChevronDown } from "lucide-svelte";
   import Button from "$lib/cubicdbKit/Button.svelte";
+  import { twMerge } from "tailwind-merge";
+  import { ChevronDownIcon } from "lucide-svelte";
 
   interface SelectProps {
     class?: string;
@@ -30,7 +31,7 @@
   }
 
   let {
-    class: cl = "",
+    class: cl = $bindable(""),
     type = "select",
     placeholder = "",
     value = $bindable(""),
@@ -42,7 +43,7 @@
     disabled = (item: any, pos: number, arr?: readonly any[]) => false,
     placement = "bottom",
     useFixed = false,
-    IconComponent = WcaCategory,
+    IconComponent = CubeCategory,
     iconKey = "icon",
     iconSize = "1.2rem",
     preferIcon = false,
@@ -184,8 +185,17 @@
 
 <svelte:window onkeydown={handleKeydown} />
 
+{#snippet icon(item: any)}
+  {#if hasIcon && IconComponent}
+    {@const iconProps = Object.assign(iconSize ? { size: iconSize } : {}, {
+      [iconKey]: hasIcon(item[0]),
+    })}
+    <IconComponent {...iconProps} noFallback></IconComponent>
+  {/if}
+{/snippet}
+
 <Button
-  class={"gap-1 h-9 py-1 px-2 input font-normal text-sm text-base-content " + cl}
+  class={twMerge("gap-1 h-9 py-1 px-2 input font-normal text-sm text-base-content", cl)}
   onclick={handleClick}
   {...otherProps}
 >
@@ -195,13 +205,7 @@
       [null, -1]
     )}
 
-    {#if hasIcon && IconComponent}
-      {@const iconProps = Object.assign(iconSize ? { size: iconSize } : {}, {
-        [iconKey]: hasIcon(item[0]),
-      })}
-
-      <IconComponent {...iconProps} noFallback></IconComponent>
-    {/if}
+    {@render icon(item)}
 
     {#if !(hasIcon && IconComponent && preferIcon)}
       {#if type === "color"}
@@ -217,7 +221,7 @@
     {placeholder}
   {/if}
 
-  <ChevronDown size="1.3rem" class="ml-auto" />
+  <ChevronDownIcon size="1.3rem" class="ml-auto" />
 </Button>
 
 <Dropdown
@@ -253,13 +257,7 @@
         onChange(item, pos, items);
       }}
     >
-      {#if hasIcon && IconComponent}
-        {@const iconProps = Object.assign(iconSize ? { size: iconSize } : {}, {
-          [iconKey]: hasIcon(item),
-        })}
-
-        <IconComponent {...iconProps} noFallback></IconComponent>
-      {/if}
+      {@render icon([item])}
 
       {#if label(item, pos).trim()}
         {#if type === "color"}

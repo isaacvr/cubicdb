@@ -12,7 +12,7 @@
   import { getSeed } from "@cstimer/lib/mathlib";
   import { scrambleToPuzzle } from "@helpers/scrambleToPuzzle";
   import { modeToName } from "@helpers/strings";
-  import WcaCategory from "@components/wca/WCACategory.svelte";
+  import CubeCategory from "@components/wca/CubeCategory.svelte";
   import { getHTMLTemplate } from "./getHTMLTemplate";
   import { localLang } from "@stores/language.service";
 
@@ -271,7 +271,7 @@
       <li
         class="shadow-md border rounded-md grid grid-cols-[auto_1fr] place-items-center gap-1 p-2 relative"
       >
-        <WcaCategory icon={category.mode[1]} size="3rem" />
+        <CubeCategory icon={category.mode[1]} size="3rem" />
 
         <table>
           <tbody>

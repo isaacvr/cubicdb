@@ -53,7 +53,7 @@
     innerText = getInnerText(v);
   }
 
-  function keyup(e: KeyboardEvent) {
+  function handleKeyup(e: KeyboardEvent) {
     onkeyup && onkeyup(e);
     if (blurOnEscape && e.code === "Escape") {
       textarea?.blur();
@@ -84,7 +84,7 @@
 
   <textarea
     disabled={readOnly}
-    onkeyup={keyup}
+    onkeyup={handleKeyup}
     {onkeydown}
     {onfocus}
     {onblur}

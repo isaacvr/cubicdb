@@ -2,7 +2,7 @@
   import { twMerge } from "tailwind-merge";
 
   type Size = "sm" | "md" | "lg";
-  type Color = "primary" | "accept" | "cancel" | "urgent";
+  type Color = "primary" | "accept" | "cancel" | "urgent" | "error" | "neutral" | "none";
 
   interface ButtonProps {
     loading?: boolean;
@@ -26,6 +26,9 @@
     accept: "btn-secondary",
     cancel: "btn-neutral",
     urgent: "btn-accent",
+    error: "bg-error hover:bg-error text-error-content",
+    neutral: "bg-base-100 hover:bg-base-200 hover:outline hover:outline-base-100 text-base-content",
+    none: "bg-transparent text-base-content",
   };
 
   let {

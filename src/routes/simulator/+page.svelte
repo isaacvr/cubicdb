@@ -14,7 +14,7 @@
   import Button from "$lib/cubicdbKit/Button.svelte";
   import Select from "@components/material/Select.svelte";
   import PuzzleImage from "@components/PuzzleImage.svelte";
-  import { RefreshCw, Settings2 } from "lucide-svelte";
+  import { RefreshCwIcon, Settings2Icon } from "lucide-svelte";
   import Tooltip from "$lib/cubicdbKit/Tooltip.svelte";
 
   let selectedPuzzle: PuzzleType = $state("rubik");
@@ -154,7 +154,7 @@
 <svelte:window onkeydown={keyDownHandler} onresize={() => simulator.handleResize()} />
 
 <div class="simulator" class:expanded={showOptions}>
-  <div class="shaded-card relative overflow-hidden" onresize={() => console.log("RESIZE")}>
+  <div class="shaded-card relative overflow-hidden">
     <div class="config flex items-center justify-between relative z-20">
       <h2 class="name font-bold">{puzzles.find(p => p.value === currentPuzzle)?.name || ""}</h2>
 
@@ -166,7 +166,7 @@
         </Tooltip>
 
         <Button onclick={() => simulator.scramble()} style="--dash: 23;">
-          <RefreshCw size="1.2rem" />
+          <RefreshCwIcon size="1.2rem" />
         </Button>
 
         <Tooltip keyBindings={["control", "d"]}>
@@ -178,7 +178,7 @@
           class={showOptions ? "!hidden" : ""}
           style="--dash: 18;"
         >
-          <Settings2 size="1.2rem" />
+          <Settings2Icon size="1.2rem" />
         </Button>
 
         <Tooltip keyBindings={["control", "comma"]}>

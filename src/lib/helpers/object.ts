@@ -1,5 +1,5 @@
 import { Puzzle } from "@classes/puzzle/puzzle";
-import { nameToPuzzle, type ITutorialAlg, type PuzzleType } from "@interfaces";
+import { nameToPuzzle, Penalty, type ITutorialAlg, type PuzzleType, type Solve } from "@interfaces";
 
 export function checkPath(obj: any, path: string[], useMap: boolean = false): boolean {
   if (typeof obj === "undefined") return false;
@@ -181,4 +181,22 @@ export function algorithmToPuzzle(alg: ITutorialAlg, addZ2: boolean, invert = tr
 
 export function newArr(length: number): any[] {
   return Array.from({ length });
+}
+
+export function createEmptySolve(): Solve {
+  return {
+    date: Date.now(),
+    penalty: Penalty.NONE,
+    scramble: "",
+    selected: false,
+    session: "",
+    time: 0,
+    _id: "",
+    comments: "",
+    group: -1,
+    len: -1,
+    mode: "",
+    prob: -1,
+    steps: [],
+  };
 }

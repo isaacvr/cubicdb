@@ -8,7 +8,7 @@
   } from "@interfaces";
   import { onMount, tick } from "svelte";
   import { ICONS } from "@constants";
-  import WCACategory from "@components/wca/WCACategory.svelte";
+  import WCACategory from "@components/wca/CubeCategory.svelte";
   import CubesView from "./components/CubesView.svelte";
   import { Button, Dropdown, DropdownItem, Modal, Input } from "flowbite-svelte";
   import TextView from "./components/TextView.svelte";

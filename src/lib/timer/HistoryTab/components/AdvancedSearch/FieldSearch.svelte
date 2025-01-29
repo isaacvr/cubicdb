@@ -5,10 +5,10 @@
   import type {
     InternalFilter,
     SearchFilter,
-  } from "$lib/timer/SessionsTab/AdvancedSearch/adaptors/types";
+  } from "$lib/timer/HistoryTab/AdvancedSearch/adaptors/types";
   import type { Writable } from "svelte/store";
   import { createEventDispatcher, getContext } from "svelte";
-  import { FieldAdaptor } from "$lib/timer/SessionsTab/AdvancedSearch/adaptors";
+  import { FieldAdaptor } from "$lib/timer/HistoryTab/AdvancedSearch/adaptors";
   import OperatorIcon from "./OperatorIcon.svelte";
   import { localLang } from "@stores/language.service";
 

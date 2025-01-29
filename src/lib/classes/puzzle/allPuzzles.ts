@@ -36,6 +36,7 @@ import { VOID } from "./void333";
 import { FISHER44 } from "./fisher44";
 import { GHOST } from "./ghost";
 import { REDI_BARREL } from "./rediBarrel";
+import { BARREL33 } from "./barrel33";
 
 // NxN, Pyraminx, Megaminx, Skewb, Square-1, Clock
 registerPuzzle("rubik", "Rubik", RUBIK, true);
@@ -55,10 +56,11 @@ registerPuzzle("fisher44", "Fisher 4x4", FISHER44, false);
 registerPuzzle("axis", "Axis", AXIS, false);
 registerPuzzle("pandora", "Pandora", PANDORA, false);
 registerPuzzle("mixup", "Mixup", MIXUP, false);
+registerPuzzle("barrel33", "Barrel 3x3", BARREL33, false);
 registerPuzzle("gear", "Gear", GEAR, false);
 registerPuzzle("dreidel", "Dreidel", DREIDEL, false);
-registerPuzzle("timemachine", "Time Machine", TIME_MACHINE, false);
 registerPuzzle("ghost", "Ghost", GHOST, false);
+registerPuzzle("timemachine", "Time Machine", TIME_MACHINE, false);
 registerPuzzle("bandaged222", "Bandaged 2x2x2", BDG, false);
 registerPuzzle("bicube", "Bicube", BICUBE, false);
 

@@ -358,10 +358,19 @@ export class Piece {
       }
 
       if (sPaths.length <= 1) return sPaths;
+      if (
+        paths.length === sPaths.length &&
+        paths.every((pt, i) => pt.every((p1, j) => p1.equals(sPaths[i][j])))
+      ) {
+        return sPaths;
+      }
+
       return simplify(sPaths);
     }
 
     const path = simplify(inters.map(it => it.points.slice()))[0];
+
+    if (!path) return [this];
 
     if (path.length > 1 && path[0].sub(path[path.length - 1]).abs() < EPS) {
       path.pop();

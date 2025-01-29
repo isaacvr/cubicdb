@@ -54,7 +54,7 @@ export async function pGenerateCubeBundle(
           cube.view === "plan"
             ? planView(cube, W, format)
             : cube.view === "2d"
-              ? projectedView({ cube, DIM: W, format, printMode: true })
+              ? projectedView({ cube, DIM: W, format, printMode: printable })
               : birdView(cube, W, format);
         cache && get(dataService).cache.cacheSaveImage(sha1(cube.options), cube.img);
       } else {

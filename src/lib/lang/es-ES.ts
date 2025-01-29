@@ -265,9 +265,9 @@ export const Spanish: Language = {
     settings: "Configuración",
 
     // Tab accesibility
-    timerTab: "Temporizador",
-    sessionsTab: "Sesiones",
-    chartsTab: "Gráficos",
+    timerTab: "Cronómetro",
+    historyTab: "Historial",
+    statsTab: "Estadísticas",
 
     // Global Timer settings
     manageSessions: "Administrar sesiones",

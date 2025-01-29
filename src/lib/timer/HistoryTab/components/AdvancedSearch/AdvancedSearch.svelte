@@ -3,8 +3,8 @@
   import { writable, type Writable } from "svelte/store";
   import { Button } from "flowbite-svelte";
   import { localLang } from "@stores/language.service";
-  import { GateAdaptor } from "$lib/timer/SessionsTab/AdvancedSearch/adaptors";
-  import type { SearchFilter } from "$lib/timer/SessionsTab/AdvancedSearch/adaptors/types";
+  import { GateAdaptor } from "$lib/timer/HistoryTab/AdvancedSearch/adaptors";
+  import type { SearchFilter } from "$lib/timer/HistoryTab/AdvancedSearch/adaptors/types";
   import GateSearch from "./GateSearch.svelte";
 
   export let fields: SearchFilter[];

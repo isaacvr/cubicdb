@@ -24,29 +24,33 @@
   import { dataService } from "$lib/data-services/data.service";
   import Button from "$lib/cubicdbKit/Button.svelte";
 
-  export let context: TimerContext;
-  export let headless = false;
+  interface StatsTabProps {
+    context: TimerContext;
+    headless?: boolean;
+  }
+
+  let { context = $bindable(), headless = $bindable(false) }: StatsTabProps = $props();
 
   let localLang: Readable<Language> = derived(globalLang, $lang => getLanguage($lang));
 
-  let { solves, stats, session, STATS_WINDOW, selectSolveById } = context;
+  let { solves, stats, tab, session, STATS_WINDOW, selectSolveById } = context;
 
   let timeSerie: HTMLDivElement;
   let timeChart: echarts.ECharts;
 
-  let hourSerie: HTMLDivElement;
+  let hourSerie: HTMLDivElement | null = $state(null);
   let hourChart: echarts.ECharts;
 
-  let weekSerie: HTMLDivElement;
+  let weekSerie: HTMLDivElement | null = $state(null);
   let weekChart: echarts.ECharts;
 
-  let distSerie: HTMLDivElement;
+  let distSerie: HTMLDivElement | null = $state(null);
   let distChart: echarts.ECharts;
 
-  let stepTimeSerie: HTMLDivElement;
+  let stepTimeSerie: HTMLDivElement | null = $state(null);
   let stepTimeChart: echarts.ECharts;
 
-  let stepPercentSerie: HTMLDivElement;
+  let stepPercentSerie: HTMLDivElement | null = $state(null);
   let stepPercentChart: echarts.ECharts;
 
   const tooltipStyle: echarts.TooltipComponentOption = {
@@ -276,7 +280,7 @@
     };
 
     // @ts-ignore
-    timeChart.setOption(options);
+    timeChart?.setOption(options);
 
     timeChart.off("dataZoom");
     timeChart.off("legendselectchanged");
@@ -288,7 +292,7 @@
         ((params.batch ? params.batch[0].start : params.start) * sv.length) / 100
       );
 
-      timeChart.setOption({
+      timeChart?.setOption({
         series: [
           {
             smooth: Math.abs(end - start) <= 800,
@@ -313,7 +317,7 @@
       }
 
       // @ts-ignore
-      timeChart.setOption(options);
+      timeChart?.setOption(options);
     });
 
     if (headless) return;
@@ -371,7 +375,7 @@
     };
 
     // @ts-ignore
-    hourChart.setOption(hourOptions);
+    hourChart?.setOption(hourOptions);
 
     // WEEK CHART
     let WData: number[] = sv.reduce((acc, s) => {
@@ -414,7 +418,7 @@
     };
 
     // @ts-ignore
-    weekChart.setOption(weekOptions);
+    weekChart?.setOption(weekOptions);
   }
 
   function updateStats() {
@@ -472,7 +476,7 @@
     };
 
     // @ts-ignore
-    distChart.setOption(distOption);
+    distChart?.setOption(distOption);
 
     if (!$session?.settings || $session?.settings.sessionType != "multi-step") {
       return;
@@ -498,7 +502,7 @@
   }
 
   function updateChartText() {
-    timeChart.setOption({
+    timeChart?.setOption({
       title: [{ text: $localLang.TIMER.timeDistribution }],
       legend: { data: $localLang.TIMER.timeChartLabels },
       series: $localLang.TIMER.timeChartLabels.map(s => ({ name: s })),
@@ -506,18 +510,18 @@
 
     if (headless) return;
 
-    hourChart.setOption({
+    hourChart?.setOption({
       title: [{ text: $localLang.TIMER.hourDistribution }],
       series: [{ name: $localLang.TIMER.solves }],
     });
 
-    weekChart.setOption({
+    weekChart?.setOption({
       title: [{ text: $localLang.TIMER.weekDistribution }],
       series: [{ name: $localLang.TIMER.solves }],
       xAxis: { data: $localLang.TIMER.days },
     });
 
-    distChart.setOption({
+    distChart?.setOption({
       title: [{ text: $localLang.TIMER.histogram }],
       series: [{ name: $localLang.TIMER.solves }],
     });
@@ -531,8 +535,8 @@
       return;
     }
 
-    stepTimeChart.setOption({ title: { text: $localLang.TIMER.stepsAverage } });
-    stepPercentChart.setOption({ title: { text: $localLang.TIMER.stepsPercent } });
+    stepTimeChart?.setOption({ title: { text: $localLang.TIMER.stepsAverage } });
+    stepPercentChart?.setOption({ title: { text: $localLang.TIMER.stepsPercent } });
   }
 
   function handleResize() {
@@ -594,7 +598,7 @@
     ) {
       stepTimeChart &&
         !stepTimeChart.isDisposed() &&
-        stepTimeChart.setOption({
+        stepTimeChart?.setOption({
           xAxis: {
             data: steps.map(
               (_, p) => (ss.settings.stepNames || [])[p] || `${$localLang.global.step} ${p + 1}`
@@ -614,7 +618,7 @@
 
       stepPercentChart &&
         !stepPercentChart.isDisposed() &&
-        stepPercentChart.setOption({
+        stepPercentChart?.setOption({
           series: [
             {
               data: percents.map((e, p) => ({
@@ -686,7 +690,7 @@
       };
 
       // @ts-ignore
-      stepTimeChart.setOption(stepOption);
+      stepTimeChart?.setOption(stepOption);
     }
 
     if (!stepPercentChart || stepPercentChart.isDisposed()) {
@@ -731,23 +735,31 @@
       };
 
       // @ts-ignore
-      stepPercentChart.setOption(stepOption);
+      stepPercentChart?.setOption(stepOption);
     }
   }
 
-  onMount(() => {
-    initGraphs([]);
+  $effect(() => initGraphs($solves, true));
+  $effect(() => updateStats());
+  $effect(() => updateChartText());
+  $effect(() => {
+    updateMultiSteps($session);
   });
-
-  $: timeSerie && initGraphs($solves, true);
-  $: $stats && distChart && updateStats();
-  $: $localLang, timeChart && updateChartText();
-  $: updateMultiSteps($session);
+  $effect(() => {
+    if ($tab === 2) {
+      handleResize();
+    }
+  });
 </script>
 
 <svelte:window on:resize={handleResize} />
 
-<main class:headless class:multi={$session?.settings?.sessionType === "multi-step"} class="tx-text">
+<section
+  role="tabpanel"
+  class:headless
+  class:multi={$session?.settings?.sessionType === "multi-step"}
+  class={"w-full h-full " + ($tab != 2 ? "!hidden" : "")}
+>
   <div
     class={`canvas card grid place-items-center max-sm:col-span-1 col-span-2 row-span-2 ` +
       (headless ? "max-md:col-span-full" : "")}
@@ -840,47 +852,51 @@
     <div class="week-distribution card" bind:this={weekSerie}></div>
     <div class="histogram card" bind:this={distSerie}></div>
   {/if}
-</main>
+</section>
 
 <style lang="postcss">
   @media not all and (min-width: 640px) {
-    main {
+    section {
       --rows: 7;
     }
-    main.multi {
+    section.multi {
       --rows: 9;
     }
   }
 
   @media (min-width: 640px) {
-    main {
+    section {
       --rows: 5;
     }
-    main.multi {
+    section.multi {
       --rows: 6;
     }
   }
 
   @media (min-width: 1024px) {
-    main {
+    section {
       --rows: 4;
     }
-    main.multi {
+    section.multi {
       --rows: 5;
     }
   }
 
-  main:not(.headless) {
+  section:not(.headless) {
     @apply w-full overflow-x-clip overflow-y-scroll p-4 grid gap-4 grid-cols-2
       lg:grid-cols-3 max-sm:grid-cols-1;
     max-height: calc(100vh - 8rem);
     grid-template-rows: repeat(var(--rows), minmax(17rem, 1fr));
   }
 
-  main.headless {
+  section.headless {
     @apply grid grid-cols-3 mx-4 gap-4;
     max-height: calc(40vh);
     grid-template-rows: 1fr 1fr;
+  }
+
+  section {
+    grid-area: tabs;
   }
 
   .card {
@@ -892,11 +908,11 @@
     @apply flex-col items-center justify-between;
   }
 
-  main:not(.headless) .stats {
+  section:not(.headless) .stats {
     @apply row-span-1;
   }
 
-  main.headless .stats {
+  section.headless .stats {
     @apply row-span-2;
   }
 

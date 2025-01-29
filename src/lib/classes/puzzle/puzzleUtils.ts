@@ -71,7 +71,7 @@ export function assignColors(p: PuzzleInterface, cols?: string[], isCube = false
 
     if (!ok) {
       if (dirs[0] > 0) {
-        for (let j = 0, maxj = colors.length; j < maxj; j += 1) {
+        for (let j = 0, maxj = Math.min(colors.length, p.faceVectors.length); j < maxj; j += 1) {
           if (u.sub(p.faceVectors[j]).abs() < EPS) {
             sticker.color = colors[j];
             sticker.oColor = colors[j];

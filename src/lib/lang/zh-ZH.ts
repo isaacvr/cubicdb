@@ -218,9 +218,9 @@ export const Chinese: Language = {
     settings: "设置",
 
     // 标签可访问性
-    timerTab: "计时器标签",
-    sessionsTab: "会话标签",
-    chartsTab: "图表标签",
+    timerTab: "天文台表",
+    historyTab: "记录",
+    statsTab: "统计数据",
 
     // 全局计时器设置
     manageSessions: "管理会话",

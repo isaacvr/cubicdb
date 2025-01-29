@@ -1,5 +1,5 @@
-import { get, writable } from "svelte/store";
-import { isEscape, isSpace, type Actor } from "@helpers/stateMachine";
+import { get, writable, type Writable } from "svelte/store";
+import { isEscape, isKeyCode, isSpace, type Actor } from "@helpers/stateMachine";
 import {
   TimerState,
   type InputContext,
@@ -84,14 +84,20 @@ const setTimerRunner = fromCallback(
   }: {
     input: KeyboardContext;
   }) => {
-    decimals.set(true);
-    state.set(TimerState.RUNNING);
-    currentStep.set(1);
-    stepsTime.set([]);
+    const ref =
+      get(state) === TimerState.PAUSE
+        ? performance.now() - get(time)
+        : performance.now() - (get(lastSolve)?.penalty === Penalty.P2 ? 2000 : 0);
 
-    const ref = performance.now() - (get(lastSolve)?.penalty === Penalty.P2 ? 2000 : 0);
     const itv = setInterval(() => time.set(performance.now() - ref));
 
+    if (get(state) !== TimerState.PAUSE) {
+      currentStep.set(1);
+      stepsTime.set([]);
+    }
+
+    decimals.set(true);
+    state.set(TimerState.RUNNING);
     timeRef.set(ref);
 
     return () => {
@@ -116,9 +122,8 @@ const saveSolve = fromCallback(
   }: {
     input: KeyboardContext;
   }) => {
-    const p = performance.now();
-    time.set(p - get(timeRef));
     state.set(TimerState.STOPPED);
+
     initScrambler();
 
     const type = get(session).settings.sessionType;
@@ -139,8 +144,7 @@ const saveSolve = fromCallback(
       ls.steps = steps;
     }
 
-    t > 0 && addSolve(t, ls?.penalty);
-    time.set(0);
+    t > 0 && setTimeout(() => addSolve(t, ls?.penalty), 100);
 
     // Prevent keyboard to run after pressing some key + space to stop the timer
     const kbe = get(keyboardEnabled);
@@ -154,7 +158,7 @@ const endedSteps: KBActor = ({ context: { steps, currentStep, stepsTime } }) => 
     return true;
   }
 
-  currentStep.set(get(currentStep) + 1);
+  currentStep.update(e => e + 1);
   stepsTime.set([...get(stepsTime), performance.now()]);
 
   return false;
@@ -255,8 +259,28 @@ const KeyboardMachine = setup({
             guard: isEscape,
           },
           {
+            target: "PAUSE",
+            guard: isKeyCode("KeyP"),
+          },
+          {
             target: "STOPPED",
             guard: endedSteps,
+          },
+        ],
+      },
+    },
+
+    PAUSE: {
+      entry: ({ context: { timerState } }) => timerState.set(TimerState.PAUSE),
+      on: {
+        keydown: [
+          {
+            target: "CLEAR",
+            guard: isEscape,
+          },
+          {
+            target: "RUNNING",
+            guard: isSpace,
           },
         ],
       },
@@ -287,17 +311,21 @@ export class KeyboardInput implements TimerInputHandler {
   isActive: boolean;
   interpreter;
 
-  constructor(context: InputContext) {
+  constructor(context: InputContext, currentStep: Writable<number>) {
     const ctx: KeyboardContext = {
       steps: writable(+(get(context.session).settings.steps || "") || 1),
       stepsTime: writable([]),
-      currentStep: writable(1),
+      currentStep,
       timeRef: writable(0),
       ...context,
     };
 
     this.interpreter = createActor(KeyboardMachine, { input: ctx });
     this.isActive = false;
+
+    // this.interpreter.subscribe(ev => {
+    //   console.log(ev.value);
+    // });
   }
 
   init() {

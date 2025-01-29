@@ -241,7 +241,7 @@ export function ease(t: number): number {
 }
 
 export function linear(t: number): number {
-  return cubicBezier(t, 0, 0, 1, 1);
+  return t;
 }
 
 export function easeIn(t: number): number {

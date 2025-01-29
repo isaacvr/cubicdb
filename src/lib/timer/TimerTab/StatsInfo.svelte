@@ -3,19 +3,24 @@
   import { timer } from "@helpers/timer";
   import { type TimerContext } from "@interfaces";
   import { localLang } from "@stores/language.service";
-  import { Button, Modal, Popover } from "flowbite-svelte";
+  import { Popover } from "flowbite-svelte";
   import { solveSummary } from "@helpers/statistics";
   import { copyToClipboard } from "@helpers/strings";
   import { NotificationService } from "@stores/notification.service";
 
-  export let context: TimerContext;
+  interface StatsInfoProps {
+    context: TimerContext;
+  }
 
-  const { isRunning, stats, solves, enableKeyboard } = context;
+  let { context = $bindable() }: StatsInfoProps = $props();
 
+  const { stats, solves, enableKeyboard } = context;
   const notification = NotificationService.getInstance();
 
   let textSummary = "";
   let showModal = false;
+
+  const POPOVER_CLASS = "my-2 mx-auto bg-base-200 text-base-content";
 
   function saveEnableKeyboard() {
     localStorage.setItem("--stats-info-enableKeyboard", $enableKeyboard.toString());
@@ -44,210 +49,170 @@
   }
 </script>
 
-<!-- Left Statistics -->
-<div
-  id="left-stats"
-  class="tx-text transition-all duration-300 max-md:text-xs"
-  class:hide={$isRunning}
->
-  <table class="ml-3">
-    <tbody>
-      <!-- Best -->
-      <tr class:better={$stats.best.better && $stats.counter.value > 0 && $stats.best.value > -1}>
-        <td>{$localLang.TIMER.best}:</td>
-        {#if !$stats.best.value}
-          <td>N/A</td>
-        {/if}
-        {#if $stats.best.value}
-          <td>{timer($stats.best.value, true, true)}</td>
-        {/if}
-      </tr>
+<div class="stats-list w-full transition-all duration-300 max-md:text-xs">
+  <!-- Best -->
+  <div class:better={$stats.best.better && $stats.counter.value > 0 && $stats.best.value > -1}>
+    <span>{$localLang.TIMER.best}:</span>
+    {#if !$stats.best.value}
+      <span>N/A</span>
+    {/if}
+    {#if $stats.best.value}
+      <span>{timer($stats.best.value, true, true)}</span>
+    {/if}
+  </div>
 
-      <!-- Worst -->
-      <tr>
-        <td>{$localLang.TIMER.worst}:</td>
-        {#if !$stats.worst.value}
-          <td>N/A</td>
-        {/if}
-        {#if $stats.worst.value}
-          <td>{timer($stats.worst.value, true, true)}</td>
-        {/if}
-      </tr>
+  <!-- Worst -->
+  <div>
+    <span>{$localLang.TIMER.worst}:</span>
+    {#if !$stats.worst.value}
+      <span>N/A</span>
+    {/if}
+    {#if $stats.worst.value}
+      <span>{timer($stats.worst.value, true, true)}</span>
+    {/if}
+  </div>
 
-      <!-- Average -->
-      <tr class:better={$stats.avg.better && $stats.counter.value > 0}>
-        <td>
-          <span class="stat-info">{$localLang.TIMER.average}:</span>
-          <Popover title={$localLang.TIMER.average} class="max-w-sm z-10">
-            <p>{$localLang.TIMER.stats.average}</p>
+  <!-- Count -->
+  <div>
+    <span>{$localLang.TIMER.count}:</span>
+    <span>{$stats.count.value}</span>
+  </div>
 
-            <span class="my-2 mx-auto w-fit flex tx-text text-xl">
-              <Katex math={`\\mu = \\frac{\\sum_{i=1}^{N} x_i}{N}`} />
-            </span>
-          </Popover>
-        </td>
+  <!-- Average -->
+  <div class:better={$stats.avg.better && $stats.counter.value > 0}>
+    <span>
+      <span class="stat-info">{$localLang.TIMER.average}:</span>
+      <Popover class={POPOVER_CLASS}>
+        <p>{$localLang.TIMER.stats.average}</p>
 
-        {#if !$stats.avg.value}
-          <td>N/A</td>
-        {/if}
-        {#if $stats.avg.value}
-          <td>{timer($stats.avg.value, true, true)}</td>
-        {/if}
-      </tr>
+        <span class="my-2 mx-auto w-fit flex text-xl">
+          <Katex math={`\\mu = \\frac{\\sum_{i=1}^{N} x_i}{N}`} />
+        </span>
+      </Popover>
+    </span>
 
-      <!-- stdDev -->
-      <tr>
-        <td>
-          <span class="stat-info">{$localLang.TIMER.deviation}:</span>
-          <Popover title={$localLang.TIMER.deviation} class="max-w-sm z-10">
-            <p>{$localLang.TIMER.stats.deviation}</p>
+    {#if !$stats.avg.value}
+      <span>N/A</span>
+    {/if}
+    {#if $stats.avg.value}
+      <span>{timer($stats.avg.value, true, true)}</span>
+    {/if}
+  </div>
 
-            <span class="my-2 mx-auto w-fit flex tx-text text-xl">
-              <Katex math={`\\sigma = \\sqrt{\\frac{1}{N} \\sum_{i=1}^{N} (x_i - \\mu)^2}`} />
-            </span>
-          </Popover>
-        </td>
-        {#if !$stats.dev.value}
-          <td>N/A</td>
-        {/if}
-        {#if $stats.dev.value}
-          <td>{timer($stats.dev.value, true, true)}</td>
-        {/if}
-      </tr>
+  <!-- stdDev -->
+  <div>
+    <span>
+      <span class="stat-info">{$localLang.TIMER.deviation}:</span>
+      <Popover class={POPOVER_CLASS}>
+        <p>{$localLang.TIMER.stats.deviation}</p>
 
-      <!-- Count -->
-      <tr>
-        <td>{$localLang.TIMER.count}:</td>
-        <td>{$stats.count.value}</td>
-      </tr>
+        <span class="my-2 mx-auto w-fit flex text-xl">
+          <Katex math={`\\sigma = \\sqrt{\\frac{1}{N} \\sum_{i=1}^{N} (x_i - \\mu)^2}`} />
+        </span>
+      </Popover>
+    </span>
+    {#if !$stats.dev.value}
+      <span>N/A</span>
+    {/if}
+    {#if $stats.dev.value}
+      <span>{timer($stats.dev.value, true, true)}</span>
+    {/if}
+  </div>
 
-      <!-- Mo3 -->
-      <tr class:better={$stats.Mo3.better && $stats.counter.value > 0 && $stats.Mo3.value > -1}>
-        <td>
-          <span class="stat-info">Mo3:</span>
-          <Popover title="Mo3" class="max-w-sm z-10">
-            <p>{$localLang.TIMER.stats.mo3}</p>
+  <!-- Mo3 -->
+  <div class:better={$stats.Mo3.better && $stats.counter.value > 0 && $stats.Mo3.value > -1}>
+    <span>
+      <span class="stat-info">Mo3:</span>
+      <Popover class={POPOVER_CLASS}>
+        <p>{$localLang.TIMER.stats.mo3}</p>
 
-            <span class="my-2 mx-auto w-fit flex tx-text text-xl">
-              <Katex math={`Mo3 = \\frac{x_1 + x_2 + x_3}{3}`} />
-            </span>
-          </Popover>
-        </td>
+        <span class="my-2 mx-auto w-fit flex text-xl">
+          <Katex math={`Mo3 = \\frac{x_1 + x_2 + x_3}{3}`} />
+        </span>
+      </Popover>
+    </span>
 
-        <td class="cursor-pointer hover:tx-primary-300" on:click={() => summary(3)}>
-          {#if $stats.Mo3.value > -1}
-            {timer($stats.Mo3.value, true, true)}
-          {:else}
-            N/A
-          {/if}
-        </td>
-      </tr>
+    <button class="cursor-pointer hover:text-primary" onclick={() => summary(3)}>
+      {#if $stats.Mo3.value > -1}
+        {timer($stats.Mo3.value, true, true)}
+      {:else}
+        N/A
+      {/if}
+    </button>
+  </div>
 
-      <!-- Ao5 -->
-      <tr class:better={$stats.Ao5.better && $stats.counter.value > 0 && $stats.Ao5.value > -1}>
-        <td>
-          <span class="stat-info">Ao5:</span>
-          <Popover title="Ao5" class="max-w-sm z-10">
-            <p>{$localLang.TIMER.stats.ao5}</p>
+  <!-- Ao5 -->
+  <div class:better={$stats.Ao5.better && $stats.counter.value > 0 && $stats.Ao5.value > -1}>
+    <span>
+      <span class="stat-info">Ao5:</span>
+      <Popover class={POPOVER_CLASS}>
+        <p>{$localLang.TIMER.stats.ao5}</p>
 
-            <span class="my-2 mx-auto w-fit flex tx-text text-xl">
-              <Katex math={`Ao5 = \\frac{(\\sum_{i=1}^{5} x_i) - max - min}{3}`} />
-            </span>
-          </Popover>
-        </td>
+        <span class="my-2 mx-auto w-fit flex text-xl">
+          <Katex math={`Ao5 = \\frac{(\\sum_{i=1}^{5} x_i) - max - min}{3}`} />
+        </span>
+      </Popover>
+    </span>
 
-        <td class="cursor-pointer hover:tx-primary-300" on:click={() => summary(5)}>
-          {#if $stats.Ao5.value > -1}
-            {timer($stats.Ao5.value, true, true)}
-          {:else}
-            N/A
-          {/if}
-        </td>
-      </tr>
-    </tbody>
-  </table>
-</div>
+    <button class="cursor-pointer hover:text-primary" onclick={() => summary(5)}>
+      {#if $stats.Ao5.value > -1}
+        {timer($stats.Ao5.value, true, true)}
+      {:else}
+        N/A
+      {/if}
+    </button>
+  </div>
 
-<!-- Right Statistics -->
-<div
-  id="right-stats"
-  class="tx-text transition-all duration-300 max-md:text-xs"
-  class:hide={$isRunning}
->
-  <table class="mr-3">
-    <tbody>
-      {#each ["Ao12", "Ao50", "Ao100", "Ao200", "Ao500", "Ao1k", "Ao2k"] as stat, pos}
-        <tr
-          class:better={$stats[stat].better && $stats.counter.value > 0 && $stats[stat].value > -1}
+  {#each [["Ao12", 12], ["Ao50", 50], ["Ao100", 100], ["Ao200", 200], ["Ao500", 500], ["Ao1k", 1000], ["Ao2k", 2000]] as stat, pos}
+    {#if $stats.count.value >= Number(stat[1])}
+      <div class:better={$stats[stat[0]].better && $stats.counter.value > 0}>
+        <span>{stat[0]}:</span>
+
+        <button
+          class={pos < 2 ? "cursor-pointer hover:text-primary" : "pointer-events-none"}
+          onclick={() => (pos < 2 ? summary([12, 50][pos]) : null)}
         >
-          <td>{stat}:</td>
-
-          <td
-            class={pos < 2 ? "cursor-pointer hover:tx-primary-300" : ""}
-            on:click={() => (pos < 2 ? summary([12, 50][pos]) : null)}
-          >
-            {#if $stats[stat].value > -1}
-              {timer($stats[stat].value, true, true)}
-            {:else}
-              N/A
-            {/if}
-          </td>
-        </tr>
-      {/each}
-    </tbody>
-  </table>
+          {timer($stats[stat[0]].value, true, true)}
+        </button>
+      </div>
+    {/if}
+  {/each}
 </div>
 
-<Modal
+<!-- <Modal
   bind:open={showModal}
   outsideclose
   title={$localLang.global.summary}
   on:close={recoverEnableKeyboard}
-  class="max-w-2xl grid bg-backgroundLevel2 tx-text"
+  class="max-w-2xl grid bg-backgroundLevel2 "
   color="none"
 >
-  <pre
-    class="w-full text-xs whitespace-pre-wrap tx-text max-h-[60vh] overflow-auto">{textSummary}</pre>
+  <pre class="w-full text-xs whitespace-pre-wrap max-h-[60vh] overflow-auto">{textSummary}</pre>
 
   <svelte:fragment slot="footer">
     <div class="flex justify-center gap-4 w-full">
-      <Button
-        color="alternative"
-        class="bg-cancelButton tx-text"
-        on:click={() => toClipboard(textSummary)}>{$localLang.global.clickToCopy}</Button
+      <Button color="alternative" class="bg-cancelButton " on:click={() => toClipboard(textSummary)}
+        >{$localLang.global.clickToCopy}</Button
       >
-      <Button color="none" class="bg-urgentButton tx-text" on:click={() => (showModal = false)}
+      <Button color="none" class="bg-urgentButton " on:click={() => (showModal = false)}
         >{$localLang.global.accept}</Button
       >
     </div>
   </svelte:fragment>
-</Modal>
+</Modal> -->
 
 <style lang="postcss">
-  td:not(.cursor-pointer) {
-    cursor: default;
-  }
-
-  #left-stats {
-    grid-area: leftStats;
-  }
-
-  #right-stats {
-    grid-area: rightStats;
-  }
-
-  #left-stats tr.better,
-  #right-stats tr.better {
+  .better {
     text-decoration: underline;
     font-weight: bold;
   }
 
-  .hide {
-    @apply transition-all duration-200 pointer-events-none opacity-0;
+  .stats-list {
+    @apply grid grid-cols-[repeat(auto-fit,minmax(6rem,1fr))] px-2;
+    gap: 0.5rem;
   }
 
-  .stat-info {
-    @apply cursor-help;
-    color: var(--th-emphasis);
+  .stats-list > * {
+    @apply flex justify-between bg-base-content bg-opacity-5 p-1 rounded-md;
   }
 </style>
