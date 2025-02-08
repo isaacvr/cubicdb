@@ -1,4 +1,4 @@
-import type { Language } from "@interfaces";
+import type { Language } from "$lib/interfaces/language.types";
 
 export const Chinese: Language = {
   name: "英文",
@@ -80,22 +80,23 @@ export const Chinese: Language = {
     home: "主页",
     routeMap: (r: string) => {
       const mp: [RegExp, string, string][] = [
-        [/tutorials/i, "教程", "通过我们的综合教程学习如何解决和提高你的速解魔方技能."],
-        [/algorithms/i, "算法", "探索大量的速解魔方算法, 帮助你更快地解决谜题."],
-        [/timer/i, "计时器", "使用我们的计时器跟踪你的解题时间并分析你的表现."],
-        [/battle/i, "战斗", "与其他魔方爱好者进行实时战斗, 展示你的技能."],
-        [/pll-trainer/i, "PLL 识别", "通过我们的专业训练器练习和提高你的 PLL 识别能力."],
-        [/simulator/i, "模拟器", "模拟不同的谜题并在虚拟环境中练习解决它们."],
-        [/contest/i, "比赛", "参加在线比赛, 挑战自己与最好的选手竞争."],
-        [/import-export/i, "导入-导出", "轻松导入和导出你的解题数据和设置."],
-        [/settings/i, "设置", "通过各种设置和偏好自定义你的体验."],
-        [/tools/i, "工具", "访问一系列工具, 以提高你的速解魔方练习和表现."],
-        [/reconstructions/i, "重建", "通过顶级魔方选手的详细重构分析和学习."],
+        [/tutorials/i, "教程", "通过我们的综合教程学习如何解决和提高你的速解魔方技能。"],
+        [/algorithms/i, "算法", "探索大量的速解魔方算法, 帮助你更快地解决谜题。"],
+        [/timer/i, "计时器", "使用我们的计时器跟踪你的解题时间并分析你的表现。"],
+        [/battle/i, "战斗", "与其他魔方爱好者进行实时战斗, 展示你的技能。"],
+        [/pll-trainer/i, "PLL 识别", "通过我们的专业训练器练习和提高你的 PLL 识别能力。"],
+        [/simulator/i, "模拟器", "模拟不同的谜题并在虚拟环境中练习解决它们。"],
+        [/contest/i, "比赛", "参加在线比赛, 挑战自己与最好的选手竞争。"],
+        [/import-export/i, "导入-导出", "轻松导入和导出你的解题数据和设置。"],
+        [/settings/i, "设置", "通过各种设置和偏好自定义你的体验。"],
+        [/tools/i, "工具", "访问一系列工具, 以提高你的速解魔方练习和表现。"],
+        [/reconstructions/i, "重建", "通过顶级魔方选手的详细重构分析和学习。"],
         [
           /about-cubicdb/i,
           "关于 CubicDB",
-          "了解有关 CubicDB 的更多信息, 其功能及如何帮助你提高速解魔方.",
+          "了解有关 CubicDB 的更多信息, 其功能及如何帮助你提高速解魔方。",
         ],
+        [/devices/i, "设备", "添加设备来控制应用程序的特定部分。"],
       ];
 
       for (let i = 0, maxi = mp.length; i < maxi; i += 1) {
@@ -121,6 +122,7 @@ export const Chinese: Language = {
     tools: "工具",
     about: "关于 CubicDB",
     support: "支持",
+    devices: "设备",
   },
   SETTINGS: {
     title: "设置",

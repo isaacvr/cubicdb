@@ -558,7 +558,7 @@
                   showDeleteSession = true;
                 }}
               >
-                <DeleteIcon size="1.2rem" />
+                <TrashIcon size="1.2rem" />
               </button>
             {/if}
           </div>

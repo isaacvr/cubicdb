@@ -1,12 +1,6 @@
 <script lang="ts">
   import moment from "moment";
-  import {
-    AverageSetting,
-    Penalty,
-    type Language,
-    type Solve,
-    type TimerContext,
-  } from "@interfaces";
+  import { AverageSetting, Penalty, type Solve, type TimerContext } from "@interfaces";
   import { infinitePenalty, isMo3, sTimer, timer } from "@helpers/timer";
   import Modal from "@components/Modal.svelte";
   import TextArea from "@material/TextArea.svelte";
@@ -16,31 +10,11 @@
   import { STEP_COLORS } from "@constants";
   import { Paginator } from "@classes/Paginator";
 
-  /// ICONS
-  import CommentPlusIcon from "@icons/CommentPlusOutline.svelte";
-  import CommentIcon from "@icons/Comment.svelte";
-  import CalendarIcon from "@icons/Calendar.svelte";
-  import Dice5Icon from "@icons/Dice5.svelte";
-  import DeleteIcon from "@icons/Delete.svelte";
-  import CloseIcon from "@icons/Close.svelte";
-  import SendIcon from "@icons/Send.svelte";
-  import DeleteAllIcon from "@icons/DeleteSweepOutline.svelte";
-  import ChevronDown from "@icons/ChevronDown.svelte";
-  import ShareIcon from "@icons/Share.svelte";
-  import EditIcon from "@icons/Pencil.svelte";
-  import SelectIcon from "@icons/Select.svelte";
-  import CopyIcon from "@icons/ClipboardOutline.svelte";
-  import FilterIcon from "@icons/Filter.svelte";
-  import Avg3Icon from "@icons/Numeric3BoxOutline.svelte";
-  import Avg5Icon from "@icons/Numeric5BoxOutline.svelte";
-  import Avg12Icon from "@icons/DiceD12Outline.svelte";
-
   import { getAverageS, solveSummary } from "@helpers/statistics";
   import { NotificationService } from "@stores/notification.service";
-  import { derived, type Readable } from "svelte/store";
-  import { globalLang } from "@stores/language.service";
-  import { getLanguage } from "@lang/index";
-  import { tick, untrack } from "svelte";
+
+  import { localLang } from "@stores/language.service";
+  import { tick } from "svelte";
   import { copyToClipboard, defaultInner, parseReconstruction } from "@helpers/strings";
   import { calcPercents } from "@helpers/math";
   import { startViewTransition } from "@helpers/DOM";
@@ -56,8 +30,23 @@
   import Button from "$lib/cubicdbKit/Button.svelte";
   import Tooltip from "$lib/cubicdbKit/Tooltip.svelte";
   import { createEmptySolve } from "@helpers/object";
-
-  let localLang: Readable<Language> = derived(globalLang, $lang => getLanguage($lang));
+  import {
+    CalendarIcon,
+    ChevronDownIcon,
+    CopyIcon,
+    Dice3Icon,
+    Dice5Icon,
+    DicesIcon,
+    FilterIcon,
+    MessageSquarePlusIcon,
+    MessageSquareTextIcon,
+    PencilIcon,
+    SaveIcon,
+    Share2Icon,
+    SquareDashedIcon,
+    TrashIcon,
+    XIcon,
+  } from "lucide-svelte";
 
   const notification = NotificationService.getInstance();
 
@@ -451,7 +440,7 @@
             <span class="font-small">+2</span>
           {/if}
           {#if solve.comments}
-            <CommentPlusIcon width=".8rem" />
+            <MessageSquarePlusIcon size="1rem" />
           {/if}
         </div>
       </button>
@@ -462,7 +451,7 @@
   <div class="absolute top-3 right-2 my-3 mx-1 flex flex-col gap-2">
     {#if $solves.length > 0}
       <button onclick={deleteAll} class="cursor-pointer grid place-items-center">
-        <DeleteAllIcon width="1.2rem" height="1.2rem" />
+        <TrashIcon size="1.2rem" />
       </button>
       <Tooltip placement="left" keyBindings={["d"]}>
         {$localLang.TIMER.deleteAll}
@@ -470,12 +459,12 @@
     {/if}
 
     <button onclick={() => shareAoX(5)} class="cursor-pointer grid place-items-center">
-      <ShareIcon width="1.2rem" height="1.2rem" />
+      <Share2Icon size="1.2rem" />
     </button>
     <Tooltip placement="left">{$localLang.TIMER.shareAo5}</Tooltip>
 
     <button onclick={() => shareAoX(12)} class="cursor-pointer grid place-items-center">
-      <ShareIcon width="1.2rem" height="1.2rem" />
+      <Share2Icon size="1.2rem" />
     </button>
     <Tooltip placement="left">{$localLang.TIMER.shareAo12}</Tooltip>
 
@@ -483,7 +472,7 @@
       onclick={() => (searchModal = true)}
       class="cursor-pointer grid place-items-center relative"
     >
-      <FilterIcon width="1.2rem" height="1.2rem" />
+      <FilterIcon size="1.2rem" />
     </button>
     <Tooltip placement="left">{$localLang.global.filter}</Tooltip>
   </div>
@@ -525,19 +514,19 @@
   >
     <li>
       <button onclick={() => editSolve(sSolve)}>
-        <EditIcon />
+        <PencilIcon size="1.2rem" />
         {$localLang.TIMER.edit}
       </button>
     </li>
     <li>
       <button onclick={() => selectSolve(sSolve)}>
-        <SelectIcon />
+        <SquareDashedIcon size="1.2rem" />
         {$localLang.TIMER.select}
       </button>
     </li>
     <li>
       <button onclick={() => toClipboard(sSolve.scramble)}>
-        <CopyIcon />
+        <CopyIcon size="1.2rem" />
         {$localLang.TIMER.copyScramble}
       </button>
     </li>
@@ -545,9 +534,9 @@
       <li>
         <button onclick={() => copyAverage(sSolve, isMo3($session?.settings.mode || "") ? 3 : 5)}>
           {#if isMo3($session?.settings.mode || "")}
-            <Avg3Icon /> {$localLang.global.copy} Mo3
+            <Dice3Icon size="1.2rem" /> {$localLang.global.copy} Mo3
           {:else}
-            <Avg5Icon /> {$localLang.global.copy} Ao5
+            <Dice5Icon size="1.2rem" /> {$localLang.global.copy} Ao5
           {/if}
         </button>
       </li>
@@ -556,14 +545,14 @@
     {#if solveIndex(sSolve) >= 12}
       <li>
         <button onclick={() => copyAverage(sSolve, 12)}>
-          <Avg12Icon />
+          <DicesIcon size="1.2rem" />
           {$localLang.global.copy} Ao12
         </button>
       </li>
     {/if}
     <li>
       <button onclick={() => _delete([sSolve])}>
-        <DeleteIcon />
+        <TrashIcon size="1.2rem" />
         {$localLang.global.delete}
       </button>
     </li>
@@ -577,7 +566,7 @@
   transitionName="modal"
 >
   <div class="flex justify-between items-center m-2">
-    <span class="view-time m-1 w-max">
+    <span class="view-time m-1 w-max text-lg font-bold">
       {#if sSolve.penalty === Penalty.NONE || sSolve.penalty === Penalty.P2}
         {sTimer(sSolve, true, true)}
       {/if}
@@ -592,7 +581,7 @@
       {/if}
     </span>
     <span class="flex items-center font-small">
-      <CalendarIcon width="1.2rem" height="1.2rem" />
+      <CalendarIcon size="1.2rem" />
       <span class="ml-2">
         {moment(sSolve?.date).format("D MMM YYYY")} <br />
         {moment(sSolve?.date).format("HH:MM")}
@@ -603,15 +592,18 @@
     class={"algorithm-container m-2 transition-all duration-300 delay-100 " +
       (fComment || collapsed ? "collapsed" : "")}
   >
-    <Dice5Icon />
+    <Dice5Icon size="1.2rem" />
 
-    <span contenteditable="false" class="text-center overflow-auto max-h-[20svh]">
-      {@html sSolve?.scramble?.replaceAll("\n", "<br>") || ""}
-    </span>
+    <pre
+      contenteditable="false"
+      class="text-center text-sm overflow-auto max-h-[20svh]">{@html sSolve?.scramble?.replaceAll(
+        "\n",
+        "<br>"
+      ) || ""}</pre>
 
     <div
       class="preview col-span-2 mx-auto overflow-hidden w-full h-full
-        flex items-center justify-center relative px-1 max-h-[50vh]"
+        flex items-center justify-center relative px-1 max-h-[30vh]"
     >
       {#if preview}
         <PuzzleImageBundle
@@ -652,7 +644,7 @@
       </div>
     {/if}
 
-    <CommentIcon />
+    <MessageSquareTextIcon size="1.2rem" />
 
     <TextArea
       blurOnEscape
@@ -674,7 +666,7 @@
         // modal.close();
       }}
     >
-      <DeleteIcon />
+      <TrashIcon size="1.2rem" />
       {$localLang.global.delete}
     </Button>
 
@@ -685,7 +677,7 @@
         /*modal.close()*/
       }}
     >
-      <CloseIcon />
+      <XIcon size="1.2rem" />
       {$localLang.global.cancel}
     </Button>
 
@@ -696,7 +688,7 @@
       }}
       class="text-purple-400 hover:bg-purple-900 hover:text-gray-200 mr-2 text-sm gap-1 px-2"
     >
-      <SendIcon />
+      <SaveIcon size="1.2rem" />
       {$localLang.global.save}
     </Button>
 
@@ -715,7 +707,7 @@
         p => p.penalty === sSolve.penalty
       )?.label || $localLang.TIMER.noPenalty}
 
-      <ChevronDown size="1.2rem" />
+      <ChevronDownIcon size="1.2rem" />
     </Button>
     <Dropdown bind:open={showDropdown} class="bg-backgroundLevel2 rounded-md">
       {#each [{ label: $localLang.TIMER.noPenalty, penalty: Penalty.NONE }, ...PENALTIES] as p}

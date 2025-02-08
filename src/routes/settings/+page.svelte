@@ -21,24 +21,15 @@
     Tooltip,
   } from "flowbite-svelte";
   import { localLang } from "@stores/language.service";
-  import {
-    FONTS,
-    type FONT_NAME,
-    type ICacheDB,
-    type IStorageInfo,
-    type Language,
-  } from "@interfaces";
+  import { FONTS, type FONT_NAME, type ICacheDB, type IStorageInfo } from "@interfaces";
   import { byteToString } from "@helpers/math";
   import Modal from "@components/Modal.svelte";
 
   // ICONS
-  import ScreenIcon from "@icons/Monitor.svelte";
-  import TextIcon from "@icons/Text.svelte";
-  import UpdateIcon from "@icons/Update.svelte";
-  import StorageIcon from "@icons/Harddisk.svelte";
-  import CleanIcon from "@icons/DeleteAlert.svelte";
   import { browser } from "$app/environment";
   import { dataService } from "$lib/data-services/data.service";
+  import type { Language } from "$lib/interfaces/language.types";
+  import { AirplayIcon, CaseSensitiveIcon, DatabaseIcon, DownloadIcon, EraserIcon, MonitorDownIcon } from "lucide-svelte";
 
   const notService = NotificationService.getInstance();
 
@@ -364,7 +355,7 @@
   <Tabs divider>
     <TabItem open activeClasses={tabActiveClass}>
       <div slot="title" class="flex items-center gap-2">
-        <TextIcon size="1.2rem" />
+        <CaseSensitiveIcon size="1.2rem" />
         {$localLang.SETTINGS.appFont}
       </div>
 
@@ -422,7 +413,7 @@
       <!-- Displays -->
       <TabItem activeClasses={tabActiveClass}>
         <div slot="title" class="flex items-center gap-2">
-          <ScreenIcon size="1.2rem" />
+          <AirplayIcon size="1.2rem" />
           {$localLang.SETTINGS.screen}
         </div>
 
@@ -430,7 +421,7 @@
           <div class="flex justify-center gap-2">
             {#each displays as display}
               <Button color="alternative" class="gap-2" on:click={() => useDisplay(display.id)}>
-                <ScreenIcon size="1.2rem" />
+                <AirplayIcon size="1.2rem" />
                 {display.label}
               </Button>
             {/each}
@@ -445,7 +436,7 @@
       <!-- Updates -->
       <TabItem activeClasses={tabActiveClass}>
         <div slot="title" class="flex items-center gap-2">
-          <UpdateIcon size="1.2rem" />
+          <MonitorDownIcon size="1.2rem" />
           {$localLang.SETTINGS.update}
         </div>
 
@@ -458,7 +449,7 @@
               {#if !canCheckUpdate}
                 <Spinner size="4" color="white" />
               {:else}
-                <UpdateIcon size="1.2rem" />
+                <DownloadIcon size="1.2rem" />
               {/if}
             </Button>
             <Tooltip>{$localLang.SETTINGS.checkUpdate}</Tooltip>
@@ -472,7 +463,7 @@
               {#if !canCheckAlgs}
                 <Spinner size="4" color="white" />
               {:else}
-                <UpdateIcon size="1.2rem" />
+                <DownloadIcon size="1.2rem" />
               {/if}
             </Button>
             <Tooltip>{$localLang.SETTINGS.checkUpdate}</Tooltip>
@@ -486,7 +477,7 @@
               {#if !canCheckTuts}
                 <Spinner size="4" color="white" />
               {:else}
-                <UpdateIcon size="1.2rem" />
+                <DownloadIcon size="1.2rem" />
               {/if}
             </Button>
             <Tooltip>{$localLang.SETTINGS.checkUpdate}</Tooltip>
@@ -500,7 +491,7 @@
               {#if !canCheckRecs}
                 <Spinner size="4" color="white" />
               {:else}
-                <UpdateIcon size="1.2rem" />
+                <DownloadIcon size="1.2rem" />
               {/if}
             </Button>
             <Tooltip>{$localLang.SETTINGS.checkUpdate}</Tooltip>
@@ -511,7 +502,7 @@
 
     <TabItem activeClasses={tabActiveClass}>
       <div slot="title" class="flex items-center gap-2">
-        <StorageIcon size="1.2rem" />
+        <DatabaseIcon size="1.2rem" />
         {$localLang.global.storage}
       </div>
 
@@ -530,7 +521,7 @@
               <TableBodyCell>
                 {#if st.clean}
                   <Button on:click={() => preClearCache(st.db, st.name)} color="alternative" shadow>
-                    <CleanIcon size="1.2rem" />
+                    <EraserIcon size="1.2rem" />
                   </Button>
 
                   <Tooltip placement="left">{$localLang.global.clear}</Tooltip>
@@ -552,20 +543,20 @@
   </div>
 </Card>
 
-<Modal bind:show={showDelete} onClose={() => (showDelete = false)} closeOnClickOutside>
+<Modal bind:show={showDelete} onclose={() => (showDelete = false)} closeOnClickOutside>
   <h1 class="text-gray-400 mb-4 text-lg">
     {$localLang.global.deleteWarning.replace("$1", getName(sName))}
   </h1>
   <div class="flex justify-evenly">
     <Button
       color="alternative"
-      ariaLabel={$localLang.global.cancel}
+      aria-label={$localLang.global.cancel}
       on:click={() => (showDelete = false)}
     >
       {$localLang.global.cancel}
     </Button>
 
-    <Button color="red" ariaLabel={$localLang.global.delete} on:click={() => clearCache(sDb)}>
+    <Button color="red" aria-label={$localLang.global.delete} on:click={() => clearCache(sDb)}>
       {$localLang.global.delete}
     </Button>
   </div>

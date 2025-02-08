@@ -1,6 +1,6 @@
 <script lang="ts">
+  import type { LanguageCode } from "$lib/interfaces/language.types";
   import { Es, Us, Cn } from "svelte-flag-icons";
-  import { type LanguageCode } from "@interfaces";
 
   export let icon: LanguageCode = "EN";
   export let role: string = "img";

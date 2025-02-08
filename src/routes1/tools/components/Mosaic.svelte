@@ -4,19 +4,11 @@
   import Input from "@material/Input.svelte";
   import { pixelate, type RGBAColor } from "@helpers/imageProcessing";
   import { generatePdf } from "@helpers/pdfComposer";
-  import type { Language } from "@interfaces";
-  import { getLanguage } from "@lang/index";
-  import { globalLang } from "@stores/language.service";
+  
+  import { localLang } from "@stores/language.service";
   import Cropper from "svelte-easy-crop";
-  import DownloadIcon from "svelte-material-icons/Download.svelte";
-  import EyeIcon from "svelte-material-icons/Eye.svelte";
-  import type { Readable } from "svelte/motion";
-  import { derived } from "svelte/store";
-
-  let localLang: Readable<Language> = derived(globalLang, $lang => {
-    return getLanguage($lang);
-  });
-
+  import { DownloadIcon, EyeIcon } from "lucide-svelte";
+  
   let imgStr = "";
   let imgElement: HTMLImageElement;
   let imgW = 25;
@@ -237,7 +229,7 @@
   </ul>
 </div>
 
-<Modal class="!overflow-auto" bind:show={showModal} on:close={() => (showModal = false)}>
+<Modal class="!overflow-auto" bind:show={showModal} onclose={() => (showModal = false)}>
   <div class="mosaic-result in-modal">
     <img src={modalImg} alt="" />
   </div>

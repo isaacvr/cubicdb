@@ -1,7 +1,7 @@
 <script lang="ts">
   import { type SheetRegistry } from "@interfaces";
   import Select from "@components/material/Select.svelte";
-  import DeleteIcon from "@icons/Delete.svelte";
+  import TrashIcon from "@icons/Delete.svelte";
   import { globalLang } from "@stores/language.service";
   import { getLanguage } from "@lang/index";
   import { writable } from "svelte/store";
@@ -325,7 +325,7 @@
           class="w-6 h-6 p-0 absolute -top-2 -right-1"
           on:click={() => {
             categories = categories.filter((_, p) => p != pos);
-          }}><DeleteIcon /></Button
+          }}><TrashIcon /></Button
         >
       </li>
     {/each}

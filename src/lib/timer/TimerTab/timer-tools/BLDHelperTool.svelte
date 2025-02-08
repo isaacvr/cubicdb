@@ -11,15 +11,13 @@
     type BLDCicleResult,
     type Facelet,
   } from "./bld-helper/bld-cicles";
-  import ClockwiseIcon from "@icons/CogClockwise.svelte";
-  import CounterClockwiseIcon from "@icons/CogCounterclockwise.svelte";
-  import FlippedIcon from "@icons/ArrowUpDown.svelte";
   import type { Writable } from "svelte/store";
   import { getContext } from "svelte";
   import { localLang } from "$lib/stores/language.service";
   import { MISC, type ColorName } from "@constants";
   import { ScrambleParser } from "@classes/scramble-parser";
   import { dataService } from "$lib/data-services/data.service";
+  import { ArrowDownUpIcon, RotateCcwIcon, RotateCwIcon } from "lucide-svelte";
 
   export let context: TimerContext;
 
@@ -251,7 +249,7 @@
           disabled={(e, p) => e === frontFace || FACENAME[(p + 3) % 6] === frontFace}
         />
 
-        <Toggle color="orange" class="cursor-pointer" bind:checked={hasHelper}>Helper</Toggle>
+        <input bind:checked={hasHelper} type="checkbox" class="toggle" />
       </div>
     {:else}
       <div class="flex items-center justify-center mx-auto gap-2">
@@ -468,12 +466,12 @@
             <tr>
               <td class="text-green-300 flex items-center">
                 {#if cicle.twistedCornerBuffer === -1}
-                  Corners <ClockwiseIcon class="cursor-help ml-1" />:
+                  Corners <RotateCwIcon size="1rem" class="cursor-help ml-1" />:
                   <Tooltip class="!bg-green-700"
                     >The buffer should be rotated clockwise at the end</Tooltip
                   >
                 {:else if cicle.twistedCornerBuffer === 1}
-                  Corners <CounterClockwiseIcon class="cursor-help ml-1" />:
+                  Corners <RotateCcwIcon size="1rem" class="cursor-help ml-1" />:
                   <Tooltip class="!bg-green-700">
                     The buffer should be rotated counterclockwise at the end
                   </Tooltip>
@@ -494,12 +492,12 @@
                         {cn.letter}
 
                         {#if cn.dir === -1}
-                          <ClockwiseIcon class="cursor-help" />
+                          <RotateCwIcon size="1rem" class="cursor-help" />
                           <Tooltip class="!bg-green-700"
                             >This piece should be rotated clockwise at the end</Tooltip
                           >
                         {:else}
-                          <CounterClockwiseIcon class="cursor-help" />
+                          <RotateCcwIcon size="1rem" class="cursor-help" />
                           <Tooltip class="!bg-green-700"
                             >This piece should be rotated counterclockwise at the end</Tooltip
                           >
@@ -532,7 +530,7 @@
                   {getName("edge", pos, order)}:
 
                   {#if cicle.edgeBufferState[pos] != "normal"}
-                    <FlippedIcon class="outline-none cursor-help" />
+                    <ArrowDownUpIcon size="1rem" class="outline-none cursor-help" />
                     <Tooltip class="!bg-green-700">The buffer will be flipped at the end</Tooltip>
                   {/if}
                 </td>

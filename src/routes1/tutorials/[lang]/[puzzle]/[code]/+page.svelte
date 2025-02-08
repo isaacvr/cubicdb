@@ -1,11 +1,5 @@
 <script lang="ts">
-  import type {
-    ITutorial,
-    ITutorialStep,
-    ITutorialBlock,
-    Scrambler,
-    LanguageCode,
-  } from "@interfaces";
+  import type { ITutorial, ITutorialStep, ITutorialBlock, Scrambler } from "@interfaces";
   import { onMount, tick } from "svelte";
   import { ICONS } from "@constants";
   import WCACategory from "@components/wca/CubeCategory.svelte";
@@ -35,6 +29,7 @@
   import { browser } from "$app/environment";
   import { getTitleMeta } from "$lib/meta/title";
   import { dataService } from "$lib/data-services/data.service";
+  import type { LanguageCode } from "$lib/interfaces/language.types";
 
   const dropdownDefaultClass =
     "font-medium py-2 px-4 text-sm hover:bg-gray-600 flex items-center gap-2 justify-start";

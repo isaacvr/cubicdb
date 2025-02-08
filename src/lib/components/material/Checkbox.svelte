@@ -42,14 +42,14 @@
     class:checked
     class:undef
     class="box {_class}"
-    on:click={toggle}
-    on:keydown={handleKeydown}
+    onclick={toggle}
+    onkeydown={handleKeydown}
     tabindex={disabled ? -1 : tabindex}
   >
     <div class="mark"></div>
   </button>
   {#if label}
-    <button class="label ml-1 cursor-pointer flex" on:click={toggle} on:keydown={handleKeydown}>
+    <button class="label ml-1 cursor-pointer flex" onclick={toggle} onkeydown={handleKeydown}>
       {hasKeybinding ? processKey(label)[0] : label}
 
       {#if hasKeybinding}

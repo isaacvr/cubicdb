@@ -63,12 +63,14 @@
           activeClasses="text-yellow-500 p-4 border-b-2 border-b-yellow-500"
         >
           <table class="w-full">
-            {#each cr as c, pos}
-              <tr>
-                <td>{faceStr[pos]} {rotIdx[pos] ? "(" + rotIdx[pos] + ")" : ""}</td>
-                <td>{c}</td>
-              </tr>
-            {/each}
+            <tbody>
+              {#each cr as c, pos}
+                <tr>
+                  <td>{faceStr[pos]} {rotIdx[pos] ? "(" + rotIdx[pos] + ")" : ""}</td>
+                  <td>{c}</td>
+                </tr>
+              {/each}
+            </tbody>
           </table>
         </TabItem>
       {/each}

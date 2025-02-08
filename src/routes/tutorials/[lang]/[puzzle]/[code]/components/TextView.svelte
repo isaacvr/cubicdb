@@ -1,9 +1,7 @@
 <script lang="ts">
   import type { ITutorialSubtitle } from "@interfaces";
   import { Button, Dropdown, DropdownItem } from "flowbite-svelte";
-  import EditIcon from "@icons/Pencil.svelte";
-  import DotsIcon from "@icons/DotsVertical.svelte";
-  import RemoveIcon from "@icons/Delete.svelte";
+  import { EllipsisVerticalIcon, PencilIcon, TrashIcon } from "lucide-svelte";
   import { createEventDispatcher, tick } from "svelte";
 
   const dispatch = createEventDispatcher();
@@ -48,10 +46,10 @@
     <textarea
       bind:this={textAreaRef}
       bind:value={tempContent}
-      on:input={handleResize}
+      oninput={handleResize}
       spellcheck="false"
       class="border border-primary-500 p-2 rounded-md w-full bg-transparent min-h-[5rem]"
-    />
+    ></textarea>
 
     <div
       class="flex justify-center items-center gap-4 border border-gray-600 transition-all duration-200
@@ -73,16 +71,19 @@
         color="alternative"
         class="w-8 h-8 !p-2 border-none absolute right-0 top-1/2 translate-y-[-50%]"
       >
-        <DotsIcon size="1.2rem" class={block.type === "text" ? "text-white" : "text-purple-400"} />
+        <EllipsisVerticalIcon
+          size="1.2rem"
+          class={block.type === "text" ? "text-white" : "text-purple-400"}
+        />
       </Button>
 
       <Dropdown placement="right" class="z-50 relative" bind:open={showDropdown}>
         <DropdownItem defaultClass={dropdownDefaultClass} on:click={startEditing}>
-          <EditIcon size="1.2rem" /> Edit
+          <PencilIcon size="1.2rem" /> Edit
         </DropdownItem>
 
         <DropdownItem defaultClass={dropdownDefaultClass} on:click={removeText}>
-          <RemoveIcon size="1.2rem" /> Delete
+          <TrashIcon size="1.2rem" /> Delete
         </DropdownItem>
       </Dropdown>
     </div>

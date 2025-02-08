@@ -2,7 +2,7 @@
   import { onDestroy, onMount } from "svelte";
   import { Button, Spinner, Tooltip } from "flowbite-svelte";
   import { CubeMode } from "@constants";
-  import { type Algorithm, type ICard, type Language, type Solution } from "@interfaces";
+  import { type Algorithm, type ICard, type Solution } from "@interfaces";
   import { Puzzle } from "@classes/puzzle/puzzle";
   import { pGenerateCubeBundle } from "@helpers/cube-draw";
   import { copyToClipboard } from "@helpers/strings";
@@ -11,11 +11,6 @@
   import { localLang } from "@stores/language.service";
   import { algorithmToPuzzle, clone } from "@helpers/object";
 
-  import ViewListIcon from "@icons/ViewList.svelte";
-  import ViewGridIcon from "@icons/Grid.svelte";
-  import DeleteIcon from "@icons/Delete.svelte";
-  import AddIcon from "@icons/Plus.svelte";
-  import EditIcon from "@icons/Pencil.svelte";
   import PuzzleImage from "@components/PuzzleImage.svelte";
   import AlgorithmEditorModal from "@components/AlgorithmEditorModal.svelte";
   import { page } from "$app/stores";
@@ -23,6 +18,8 @@
   import { getTitleMeta } from "$lib/meta/title";
   import type { Unsubscriber } from "svelte/store";
   import { dataService } from "$lib/data-services/data.service";
+  import type { Language } from "$lib/interfaces/language.types";
+  import { TrashIcon, LayoutGridIcon, PencilIcon, PlusIcon, Table2Icon } from "lucide-svelte";
 
   const notification = NotificationService.getInstance();
   const config = $dataService.config;
@@ -468,9 +465,9 @@
           aria-label={$localLang.ALGORITHMS.toggleView}
         >
           {#if algorithms.listView}
-            <ViewListIcon size="1.2rem" class="pointer-events-none" />
+            <Table2Icon size="1.2rem" class="pointer-events-none" />
           {:else}
-            <ViewGridIcon size="1.2rem" class="pointer-events-none" />
+            <LayoutGridIcon size="1.2rem" class="pointer-events-none" />
           {/if}
         </Button>
       {/if}
@@ -481,7 +478,7 @@
           class="grid place-items-center !p-0 cursor-pointer w-8 h-8"
           on:click={addAlgorithm}
         >
-          <AddIcon size="1.2rem" />
+          <PlusIcon size="1.2rem" />
         </Button>
       {/if}
     </div>
@@ -505,9 +502,7 @@
                 {/if}
               </div>
 
-              <div>
-                {card.title}
-              </div>
+              <div>{card.title}</div>
 
               {#if allowAlgAdmin}
                 <div class="absolute no-grid flex flex-col gap-2 justify-start top-0 left-0">
@@ -517,10 +512,10 @@
                       selectAlg(currentList[pos]);
                     }}
                     class="p-1 bg-primary-600 rounded-md"
-                    ><EditIcon size="1.2rem" />
+                    ><PencilIcon size="1.2rem" />
                   </button>
                   <Button color="red" on:click={() => removeAlg(currentList[pos])} class="p-1"
-                    ><DeleteIcon size="1.2rem" />
+                    ><TrashIcon size="1.2rem" />
                   </Button>
                 </div>
               {/if}
@@ -563,10 +558,10 @@
             {#if allowAlgAdmin}
               <ul class="absolute no-grid flex flex-col gap-2 justify-start top-0 left-0">
                 <Button on:click={() => selectAlg(c)} class="p-1"
-                  ><EditIcon size="1.2rem" />
+                  ><PencilIcon size="1.2rem" />
                 </Button>
                 <Button color="red" on:click={() => removeAlg(c)} class="p-1"
-                  ><DeleteIcon size="1.2rem" />
+                  ><TrashIcon size="1.2rem" />
                 </Button>
               </ul>
             {/if}

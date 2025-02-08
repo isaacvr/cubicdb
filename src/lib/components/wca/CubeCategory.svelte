@@ -19,7 +19,7 @@
   import Isqrs from "./Isqrs.svelte";
   import { ICONS } from "@constants";
   import I333Cross from "./I333Cross.svelte";
-  import FundamentalsIcon from "@icons/HumanMaleBoardPoll.svelte";
+  import { SchoolIcon } from "lucide-svelte";
 
   interface CubeCategoryProps {
     icon?: string;
@@ -89,7 +89,7 @@
     pyrso: Ipyrso,
     skbso: Iskbso,
     sqrs: Isqrs,
-    fundamentals: FundamentalsIcon,
+    fundamentals: SchoolIcon,
   } as any;
 </script>
 

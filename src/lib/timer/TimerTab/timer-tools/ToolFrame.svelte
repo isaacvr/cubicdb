@@ -2,10 +2,8 @@
   import { createEventDispatcher, setContext } from "svelte";
   import { Button } from "flowbite-svelte";
   import type { ActiveTool } from "@interfaces";
-  import CloseIcon from "@icons/Close.svelte";
-  import ContractIcon from "@icons/ChevronLeft.svelte";
-  import SettingsIcon from "@icons/Cog.svelte";
   import { writable } from "svelte/store";
+  import { ChevronLeftIcon, SettingsIcon, XIcon } from "lucide-svelte";
 
   export let tool: ActiveTool;
 
@@ -47,11 +45,11 @@
         {/if}
 
         <Button size="xs" color="none" class="p-1" on:click={toggle}>
-          <ContractIcon size="1.2rem" />
+          <ChevronLeftIcon size="1.2rem" />
         </Button>
 
         <Button size="xs" color="none" class="p-1" on:click={closeTool}>
-          <CloseIcon size="1.2rem" />
+          <XIcon size="1.2rem" />
         </Button>
       </div>
     {/if}

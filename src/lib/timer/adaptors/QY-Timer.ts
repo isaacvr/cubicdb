@@ -1,5 +1,7 @@
+import type { IQiYiSmartTimerDevice } from "$lib/interfaces/devices.types";
 import { getUint8DataView } from "@helpers/object";
-import type { InputContext, TimerInputHandler } from "@interfaces";
+import { randomUUID } from "@helpers/strings";
+import type { InputContext } from "@interfaces";
 
 function logUint8Array(data: Uint8Array) {
   const arr = Array.from(data);
@@ -22,17 +24,24 @@ export const BLUETOOTH_FILTERS = {
   ],
 };
 
-export class QiYiSmartTimerInput implements TimerInputHandler {
+export class QiYiSmartTimerInput implements IQiYiSmartTimerDevice {
+  readonly type = "qiyi_smart_timer";
   private device: BluetoothDevice | null;
-  private deviceMac: string;
-  private connected: boolean;
 
-  readonly adaptor = "QIYI_TIMER";
+  id = "";
+  name = "QiYi Timer";
 
-  constructor(context: InputContext) {
+  batteryLevel = 0;
+  bluetoothAddress = "";
+  enabled = false;
+  hardwareVersion = "";
+  isConnected = false;
+  macAddress = "";
+  softwareVersion = "";
+
+  constructor() {
     this.device = null;
-    this.deviceMac = "";
-    this.connected = false;
+    this.id = randomUUID();
   }
 
   static get QY_PRIMARY_SERVICE() {
@@ -43,12 +52,12 @@ export class QiYiSmartTimerInput implements TimerInputHandler {
     return BLUETOOTH_FILTERS;
   }
 
-  init() {}
+  init(context: InputContext) {}
 
   disconnect() {
-    if (!this.connected) return;
+    if (!this.isConnected) return;
     this.device?.gatt?.disconnect();
-    this.connected = false;
+    this.isConnected = false;
   }
 
   keyUpHandler() {}
@@ -59,9 +68,9 @@ export class QiYiSmartTimerInput implements TimerInputHandler {
     this.disconnect();
 
     this.device = device;
-    this.deviceMac = localStorage.getItem("bluetooth-mac") || "";
+    this.macAddress = localStorage.getItem("bluetooth-mac") || "";
 
-    console.log("[QY-Timer] deviceMac: ", this.deviceMac);
+    console.log("[QY-Timer] deviceMac: ", this.macAddress);
 
     let server: BluetoothRemoteGATTServer | undefined;
 

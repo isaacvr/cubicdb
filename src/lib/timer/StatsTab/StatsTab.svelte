@@ -6,23 +6,21 @@
   import {
     AverageSetting,
     Penalty,
-    type Language,
     type Solve,
     type TimerContext,
     type Session,
   } from "@interfaces";
-  import { onMount } from "svelte";
   import StatsProgress from "./StatsProgress.svelte";
   import moment from "moment";
   import { derived, type Readable } from "svelte/store";
-  import { globalLang } from "@stores/language.service";
+  import { globalLang, localLang } from "@stores/language.service";
   import { getLanguage } from "@lang/index";
   import { AON, STEP_COLORS } from "@constants";
   import { screen } from "@stores/screen.store";
   import * as echarts from "echarts";
-  import ExternalIcon from "@icons/OpenInNew.svelte";
   import { dataService } from "$lib/data-services/data.service";
   import Button from "$lib/cubicdbKit/Button.svelte";
+  import { ExternalLinkIcon } from "lucide-svelte";
 
   interface StatsTabProps {
     context: TimerContext;
@@ -30,8 +28,6 @@
   }
 
   let { context = $bindable(), headless = $bindable(false) }: StatsTabProps = $props();
-
-  let localLang: Readable<Language> = derived(globalLang, $lang => getLanguage($lang));
 
   let { solves, stats, tab, session, STATS_WINDOW, selectSolveById } = context;
 
@@ -835,7 +831,7 @@
                   true,
                   true
                 )}
-                <ExternalIcon />
+                <ExternalLinkIcon size="1.2rem" />
               </Button>
             </span>
           {/if}

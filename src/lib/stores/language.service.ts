@@ -1,5 +1,5 @@
 import { browser } from "$app/environment";
-import type { Language, LanguageCode } from "@interfaces";
+import type { Language, LanguageCode } from "$lib/interfaces/language.types";
 import { getLanguage } from "@lang/index";
 import { derived, writable, type Writable, type Readable } from "svelte/store";
 

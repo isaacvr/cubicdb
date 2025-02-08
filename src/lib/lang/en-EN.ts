@@ -1,4 +1,4 @@
-import type { Language } from "@interfaces";
+import type { Language } from "$lib/interfaces/language.types";
 
 export const English: Language = {
   name: "English",
@@ -140,6 +140,7 @@ export const English: Language = {
           "About CubicDB",
           "Learn more about CubicDB, its features, and how it can help you improve your speedcubing.",
         ],
+        [/devices/i, "Devices", "Add devices to control specific parts of the application."],
       ];
 
       for (let i = 0, maxi = mp.length; i < maxi; i += 1) {
@@ -165,6 +166,7 @@ export const English: Language = {
     tools: "Tools",
     about: "About CubicDB",
     support: "Support",
+    devices: "Devices",
   },
   SETTINGS: {
     title: "Settings",

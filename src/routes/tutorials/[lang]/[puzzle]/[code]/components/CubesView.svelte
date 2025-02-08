@@ -8,16 +8,16 @@
   import AlgorithmEditorModal from "@components/AlgorithmEditorModal.svelte";
   import { CubeMode } from "@constants";
 
-  import ArrowRight from "@icons/ArrowRight.svelte";
-  import AddIcon from "@icons/Plus.svelte";
-  import EditIcon from "@icons/Pencil.svelte";
-  import DotsIcon from "@icons/DotsVertical.svelte";
-  import RemoveIcon from "@icons/Delete.svelte";
-  import PreviousIcon from "@icons/ChevronLeft.svelte";
-  import NextIcon from "@icons/ChevronRight.svelte";
   import { createEventDispatcher } from "svelte";
-  import Toggle from "@material/Toggle.svelte";
-  import CubeVideo from "@components/CubeVideo.svelte";
+  import {
+    ChevronLeftIcon,
+    ChevronRightIcon,
+    EllipsisVerticalIcon,
+    MoveRightIcon,
+    PencilIcon,
+    PlusIcon,
+    TrashIcon,
+  } from "lucide-svelte";
 
   const dispatch = createEventDispatcher();
 
@@ -47,16 +47,16 @@
   let img = "";
   let sPos = -1;
   let CubeActions = [
-    [edit, EditIcon],
-    [remove, RemoveIcon],
-    [movePrev, PreviousIcon],
-    [moveNext, NextIcon],
+    [edit, PencilIcon],
+    [remove, TrashIcon],
+    [movePrev, ChevronLeftIcon],
+    [moveNext, ChevronRightIcon],
   ] as any;
 
   function updateTemp() {
     tempAlgMode = !!block.algMode;
     tempAnimated = !!block.animated;
-    tempCubes = block.cubes.map(alg => <ITutorialAlg>clone(alg));
+    tempCubes = block.cubes.map(alg => clone(alg));
     tempPreffix = block.preffix || "";
     tempSuffix = block.suffix || "";
     tempProgressive = !!block.progressive;
@@ -73,7 +73,7 @@
   function save() {
     editing = false;
     block.algMode = tempAlgMode;
-    block.cubes = tempCubes.map(alg => <ITutorialAlg>clone(alg));
+    block.cubes = tempCubes.map(alg => clone(alg));
     block.suffix = tempSuffix;
     block.preffix = tempPreffix;
     block.progressive = tempProgressive;
@@ -243,7 +243,7 @@
   <ul class="cube-list" class:algMode={block.algMode || (editing && tempAlgMode)}>
     {#each images as img, pos (pos)}
       {#if block.progressive && pos}
-        <ArrowRight />
+        <MoveRightIcon size="1.2rem" />
       {/if}
 
       <li class="cube-item flex items-center gap-4">
@@ -290,10 +290,10 @@
 
   {#if editing}
     <div class="flex gap-2 justify-center items-center">
-      <Toggle bind:checked={tempAlgMode} />
+      <input bind:checked={tempAlgMode} type="checkbox" class="toggle" />
       <Tooltip>AlgMode</Tooltip>
 
-      <Toggle bind:checked={tempAnimated} />
+      <input bind:checked={tempAnimated} type="checkbox" class="toggle" />
       <Tooltip>Animated</Tooltip>
 
       <Input bind:value={tempPreffix} placeholder="Preffix" class="max-w-[10rem]" />
@@ -302,7 +302,7 @@
       <Input bind:value={tempSuffix} placeholder="Suffix" class="max-w-[10rem]" />
       <Tooltip>Suffix</Tooltip>
 
-      <Toggle bind:checked={tempProgressive} />
+      <input bind:checked={tempProgressive} type="checkbox" class="toggle" />
       <Tooltip>Progressive</Tooltip>
     </div>
 
@@ -310,7 +310,7 @@
       class="flex justify-center items-center gap-4 border border-gray-600 transition-all duration-200
         rounded-md p-2 w-min shadow-sm hover:shadow-lg hover:shadow-primary-800 shadow-primary-800 mx-auto"
     >
-      <Button class="mx-auto" on:click={addAlg}><AddIcon size="1.2rem" /></Button>
+      <Button class="mx-auto" on:click={addAlg}><PlusIcon size="1.2rem" /></Button>
       <Button color="alternative" on:click={() => (editing = false)}>Cancel</Button>
       <Button color="purple" on:click={save}>Save</Button>
     </div>
@@ -323,16 +323,16 @@
         color="alternative"
         class="w-8 h-8 !p-2 border-none absolute right-0 top-1/2 translate-y-[-50%]"
       >
-        <DotsIcon size="1.2rem" class="text-green-400" />
+        <EllipsisVerticalIcon size="1.2rem" class="text-green-400" />
       </Button>
 
       <Dropdown placement="right" class="z-50 relative" bind:open={showDropdown}>
         <DropdownItem defaultClass={dropdownDefaultClass} on:click={startEditing}>
-          <EditIcon size="1.2rem" /> Edit
+          <PencilIcon size="1.2rem" /> Edit
         </DropdownItem>
 
         <DropdownItem defaultClass={dropdownDefaultClass} on:click={removeCubes}>
-          <RemoveIcon size="1.2rem" /> Delete
+          <TrashIcon size="1.2rem" /> Delete
         </DropdownItem>
       </Dropdown>
     </div>

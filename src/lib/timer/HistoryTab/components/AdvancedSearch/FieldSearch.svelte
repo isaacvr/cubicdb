@@ -1,6 +1,5 @@
 <script lang="ts">
   import { Button, Input } from "flowbite-svelte";
-  import DeleteIcon from "@icons/Delete.svelte";
   import Select from "@material/Select.svelte";
   import type {
     InternalFilter,
@@ -11,6 +10,7 @@
   import { FieldAdaptor } from "$lib/timer/HistoryTab/AdvancedSearch/adaptors";
   import OperatorIcon from "./OperatorIcon.svelte";
   import { localLang } from "@stores/language.service";
+  import { TrashIcon } from "lucide-svelte";
 
   const dispatch = createEventDispatcher();
   const fields: Writable<SearchFilter[]> = getContext("advanced-search");
@@ -40,7 +40,7 @@
   class="flex gap-2 items-center justify-center bg-gray-900 rounded-md border-2 border-green-600 p-1 px-2"
 >
   <Button class="p-1 h-6" color="red" on:click={deleteFilter}>
-    <DeleteIcon size="1rem" />
+    <TrashIcon size="1rem" />
   </Button>
 
   <!-- Fields -->

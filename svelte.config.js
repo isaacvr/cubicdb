@@ -20,7 +20,6 @@ const config = {
     adapter: adapter(),
 
     alias: {
-      "@icons": "./node_modules/svelte-material-icons",
       "@components": "./src/lib/components",
       "@classes": "./src/lib/classes",
       "@helpers": "./src/lib/helpers",

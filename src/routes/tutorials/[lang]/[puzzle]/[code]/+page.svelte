@@ -1,11 +1,5 @@
 <script lang="ts">
-  import type {
-    ITutorial,
-    ITutorialStep,
-    ITutorialBlock,
-    Scrambler,
-    LanguageCode,
-  } from "@interfaces";
+  import type { ITutorial, ITutorialStep, ITutorialBlock, Scrambler } from "@interfaces";
   import { onMount, tick } from "svelte";
   import { ICONS } from "@constants";
   import WCACategory from "@components/wca/CubeCategory.svelte";
@@ -17,17 +11,6 @@
   import { LANGUAGES } from "@lang/index";
   import { localLang } from "@stores/language.service";
 
-  import StepIcon from "@icons/SchoolOutline.svelte";
-  import DotsIcon from "@icons/DotsVertical.svelte";
-  import EditIcon from "@icons/Pencil.svelte";
-  import RemoveIcon from "@icons/Delete.svelte";
-  import AddIcon from "@icons/Plus.svelte";
-  import UpIcon from "@icons/ChevronUp.svelte";
-  import DownIcon from "@icons/ChevronDown.svelte";
-  import SubtitleIcon from "@icons/FormatTitle.svelte";
-  import TextIcon from "@icons/Text.svelte";
-  import ListIcon from "@icons/ListBox.svelte";
-  import SettingIcon from "@icons/Cog.svelte";
   import { NotificationService } from "@stores/notification.service";
   import { goto } from "$app/navigation";
   import { page } from "$app/stores";
@@ -35,6 +18,20 @@
   import { browser } from "$app/environment";
   import { getTitleMeta } from "$lib/meta/title";
   import { dataService } from "$lib/data-services/data.service";
+  import type { LanguageCode } from "$lib/interfaces/language.types";
+  import {
+    ChevronDownIcon,
+    ChevronUpIcon,
+    EllipsisVerticalIcon,
+    Heading1Icon,
+    LetterTextIcon,
+    ListIcon,
+    PencilIcon,
+    PlusIcon,
+    SchoolIcon,
+    SettingsIcon,
+    TrashIcon,
+  } from "lucide-svelte";
 
   const dropdownDefaultClass =
     "font-medium py-2 px-4 text-sm hover:bg-gray-600 flex items-center gap-2 justify-start";
@@ -282,7 +279,7 @@
         {#if index > 0 ? currentStep?.icon : tut.icon}
           <WCACategory icon={index > 0 ? currentStep?.icon : tut.icon} class="text-white" />
         {:else}
-          <StepIcon size="2rem" class="text-white" />
+          <SchoolIcon size="2rem" class="text-white" />
         {/if}
       </div>
 
@@ -298,11 +295,11 @@
         {#if editMode}
           <div class="flex items-center justify-center mx-auto gap-2">
             <button class={IBASubtitle} on:click={() => addBlock(0, "subtitle")}>
-              <SubtitleIcon size="1.2rem" />
+              <Heading1Icon size="1.2rem" />
             </button>
 
             <button class={IBAText} on:click={() => addBlock(0, "text")}>
-              <TextIcon size="1.2rem" />
+              <LetterTextIcon size="1.2rem" />
             </button>
 
             <button class={IBAList} on:click={() => addBlock(0, "list")}>
@@ -326,11 +323,11 @@
           {#if editMode}
             <div class="flex items-center justify-center mx-auto gap-2">
               <button class={IBASubtitle} on:click={() => addBlock(pos + 1, "subtitle")}>
-                <SubtitleIcon size="1.2rem" />
+                <Heading1Icon size="1.2rem" />
               </button>
 
               <button class={IBAText} on:click={() => addBlock(pos + 1, "text")}>
-                <TextIcon size="1.2rem" />
+                <LetterTextIcon size="1.2rem" />
               </button>
 
               <button class={IBAList} on:click={() => addBlock(pos + 1, "list")}>
@@ -354,7 +351,7 @@
 
       {#if editMode}
         <Button color="none" pill class="!p-2" on:click={editTutorial}>
-          <SettingIcon />
+          <SettingsIcon />
         </Button>
       {/if}
     </h2>
@@ -386,21 +383,21 @@
               color="alternative"
               class="w-8 h-8 !p-2 border-none absolute right-0 top-1/2 translate-y-[-50%]"
             >
-              <DotsIcon size="1.2rem" />
+              <EllipsisVerticalIcon size="1.2rem" />
             </Button>
 
             <Dropdown placement="right" class="relative w-max">
               <DropdownItem defaultClass={dropdownDefaultClass} on:click={() => edit(pos)}>
-                <EditIcon size="1.2rem" /> Edit
+                <PencilIcon size="1.2rem" /> Edit
               </DropdownItem>
               <DropdownItem defaultClass={dropdownDefaultClass} on:click={() => moveUp(pos)}>
-                <UpIcon size="1.2rem" /> Move Up
+                <ChevronUpIcon size="1.2rem" /> Move Up
               </DropdownItem>
               <DropdownItem defaultClass={dropdownDefaultClass} on:click={() => moveDown(pos)}>
-                <DownIcon size="1.2rem" /> Move Down
+                <ChevronDownIcon size="1.2rem" /> Move Down
               </DropdownItem>
               <DropdownItem defaultClass={dropdownDefaultClass} on:click={() => preRemove(pos)}>
-                <RemoveIcon size="1.2rem" /> Delete
+                <TrashIcon size="1.2rem" /> Delete
               </DropdownItem>
             </Dropdown>
           {/if}
@@ -410,7 +407,7 @@
       {#if editMode}
         <li class="flex justify-center mt-4 gap-2">
           <Button class="gap-2" on:click={() => edit(-1)}>
-            <AddIcon size="1.2rem" /> Add step
+            <PlusIcon size="1.2rem" /> Add step
           </Button>
 
           <Button color="purple" class="gap-2" on:click={saveTutorial}>Save</Button>
@@ -454,7 +451,7 @@
         >{$localLang.global.cancel}</Button
       >
       <Button color="red" on:click={remove} class="flex items-center gap-2">
-        <RemoveIcon size="1.2rem" />
+        <TrashIcon size="1.2rem" />
         {$localLang.global.delete}
       </Button>
     </div>

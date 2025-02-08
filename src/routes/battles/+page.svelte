@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { AverageSetting, type Game, type Language, type Solve } from "@interfaces";
+  import { AverageSetting, type Game, type Solve } from "@interfaces";
   import Select from "@material/Select.svelte";
   import Timer from "$lib/timer/Timer.svelte";
   import { infinitePenalty, isMo3 } from "@helpers/timer";
@@ -16,11 +16,10 @@
   import { AblyHandler } from "./adaptors/AblyHandler";
   import { setSeed } from "@cstimer/lib/mathlib";
   import { Button, Card, Input } from "flowbite-svelte";
-  import EyeIcon from "@icons/Eye.svelte";
-  import CloseIcon from "@icons/Close.svelte";
-  import CopyIcon from "@icons/ContentCopy.svelte";
   import ResultView from "./components/ResultView.svelte";
   import Tooltip from "$lib/cubicdbKit/Tooltip.svelte";
+  import { CopyIcon, EyeIcon, XIcon } from "lucide-svelte";
+  import type { Language } from "$lib/interfaces/language.types";
 
   const notification = NotificationService.getInstance();
 
@@ -31,8 +30,6 @@
     MODES = l.MENU[0][1];
     return l;
   });
-
-  $localLang;
 
   type STATE = "idle" | "create" | "join" | "waiting" | "play" | "error" | "gameover";
   const TITLE: Map<STATE, string> = new Map([
@@ -474,7 +471,7 @@
       </li>
 
       <button class="bg-red-700 text-gray-300" on:click={exit}>
-        <div class="flex items-center"><CloseIcon size="1.2rem" /></div>
+        <div class="flex items-center"><XIcon size="1.2rem" /></div>
         <Tooltip placement="top">Exit</Tooltip>
       </button>
     </ul>

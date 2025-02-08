@@ -5,7 +5,6 @@
   import Timer from "$lib/timer/Timer.svelte";
   import {
     Penalty,
-    type Language,
     type Solve,
     type TimerContext,
     type Session,
@@ -17,8 +16,6 @@
   import { getLanguage } from "@lang/index";
   import { STANDARD_PALETTE, SessionDefaultSettings, type SCRAMBLE_MENU, AON } from "@constants";
   import * as all from "@cstimer/scramble";
-  import CopyIcon from "@icons/ContentCopy.svelte";
-  import DownArrowIcon from "@icons/ArrowDown.svelte";
   import { copyToClipboard, parseReconstruction, randomUUID } from "@helpers/strings";
   import { NotificationService } from "@stores/notification.service";
   import { sTimer, timerToMilli } from "@helpers/timer";
@@ -31,6 +28,8 @@
   import { Button } from "flowbite-svelte";
   import Input from "@material/Input.svelte";
   import Tooltip from "$lib/cubicdbKit/Tooltip.svelte";
+  import type { Language } from "$lib/interfaces/language.types";
+  import { CopyIcon, CornerRightDownIcon } from "lucide-svelte";
 
   type ToolOption =
     | "timer-only"
@@ -512,7 +511,7 @@
     <div class="w-[min(100%,30rem)] grid grid-cols-1 gap-2 mx-auto max-md:place-items-center">
       <i class="text-yellow-500 flex items-center gap-2 justify-start">
         {$localLang.TOOLS.writeYourTime}
-        <DownArrowIcon size="1.2rem" />
+        <CornerRightDownIcon size="1.2rem" />
       </i>
       <div class="flex max-md:grid max-md:w-[min(90%,20rem)] items-center gap-2">
         <Input
@@ -545,7 +544,7 @@
       </ul>
 
       <i class="text-yellow-500 flex items-center gap-2 justify-center">
-        {$localLang.TOOLS.writeYourScramble}<DownArrowIcon size="1.2rem" />
+        {$localLang.TOOLS.writeYourScramble}<CornerRightDownIcon size="1.2rem" />
       </i>
 
       <TextArea

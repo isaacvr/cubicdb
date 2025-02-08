@@ -3,7 +3,6 @@
   import Simulator from "$lib/simulator/Simulator.svelte";
   import type { IDBReconstruction, PuzzleType, Scrambler } from "@interfaces";
   import TextArea from "@material/TextArea.svelte";
-  import { screen } from "@stores/screen.store";
   import { localLang } from "@stores/language.service";
   import { NotificationService } from "@stores/notification.service";
   import { map, minmax } from "@helpers/math";
@@ -11,7 +10,6 @@
 
   import { errorIndex } from "./ReconstructionC";
 
-  import { page } from "$app/stores";
   import { DOMAIN } from "@constants";
   import { dataService } from "$lib/data-services/data.service";
   import Tooltip from "$lib/cubicdbKit/Tooltip.svelte";
@@ -31,6 +29,7 @@
   import Range from "$lib/cubicdbKit/Range.svelte";
   import { fly } from "svelte/transition";
   import { debounce } from "@helpers/timer";
+  import { page } from "$app/state";
 
   let scramble = $state("");
   let reconstruction = $state("");
@@ -423,7 +422,7 @@
   onMount(() => {
     mounted = true;
 
-    handleLocation($page.url);
+    handleLocation(page.url);
 
     $dataService.reconstruction.getReconstructions().then(r => {
       recs = r.filter(rec => errorIndex.indexOf(rec.num) < 0);

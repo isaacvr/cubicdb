@@ -1,7 +1,4 @@
 <script lang="ts">
-  import DownloadIcon from "@icons/Download.svelte";
-  import CopyIcon from "@icons/ContentCopy.svelte";
-  import CopyCodeIcon from "@icons/CodeBrackets.svelte";
   import { Tooltip, Dropdown, DropdownItem } from "flowbite-svelte";
   import { localLang } from "$lib/stores/language.service";
   import { copyToClipboard, randomCSSId, replaceParams } from "@helpers/strings";
@@ -9,6 +6,7 @@
   import type { Placement } from "@interfaces";
   import { toInt } from "@helpers/math";
   import Button from "$lib/cubicdbKit/Button.svelte";
+  import { CodeIcon, CopyIcon, DownloadIcon } from "lucide-svelte";
 
   const notification = NotificationService.getInstance();
 
@@ -238,14 +236,14 @@
 
   {#if allowDownload}
     <div
-      class={"options absolute top-0 right-0 gap-1 grid " + downloadDivClass}
+      class={"options absolute top-0 right-0 gap-1 grid bg-base-200 rounded-md " + downloadDivClass}
       onclick={e => e.stopPropagation()}
       role="button"
       tabindex="-1"
       onkeyup={() => {}}
     >
       <Button class="bg-base-200">
-        <DownloadIcon />
+        <DownloadIcon size="1.2rem" />
       </Button>
       <Dropdown
         trigger="hover"
@@ -259,7 +257,7 @@
         {/each}
       </Dropdown>
 
-      <Button class="bg-base-200"><CopyIcon /></Button>
+      <Button class="bg-base-200"><CopyIcon size="1.2rem" /></Button>
       <Dropdown
         trigger="hover"
         placement="right-start"
@@ -273,7 +271,7 @@
       </Dropdown>
 
       {#if type === "svg"}
-        <Button class="bg-base-200" onclick={handleCopyCode}><CopyCodeIcon /></Button>
+        <Button class="bg-base-200" onclick={handleCopyCode}><CodeIcon size="1.2rem" /></Button>
         <Tooltip class="bg-base-100 text-base-content z-10" {placement}
           >{replaceParams($localLang.global.copyCode, ["SVG"])}</Tooltip
         >

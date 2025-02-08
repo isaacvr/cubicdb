@@ -20,9 +20,6 @@
   import Select from "@material/Select.svelte";
   import Checkbox from "@material/Checkbox.svelte";
   import { timer } from "@helpers/timer";
-  import { GANInput } from "$lib/timer/adaptors/GAN";
-  import { QiYiSmartTimerInput } from "$lib/timer/adaptors/QY-Timer";
-  import ToolFrame from "./timer-tools/ToolFrame.svelte";
   import CrossTool from "./timer-tools/CrossTool.svelte";
   import BldHelperTool from "./timer-tools/BLDHelperTool.svelte";
   import DailyStatsTool from "./timer-tools/DailyStatsTool.svelte";
@@ -33,21 +30,19 @@
 
   // ICONS
   import CubeCategory from "@components/wca/CubeCategory.svelte";
-  // import TuneIcon from "@icons/Tune.svelte";
-  // import RefreshIcon from "@icons/Refresh.svelte";
-  // import PencilIcon from "@icons/PencilOutline.svelte";
-  // import CalendarIcon from "@icons/CalendarTextOutline.svelte";
-  // import CopyIcon from "@icons/ContentCopy.svelte";
-  // import SettingsIcon from "@icons/Cog.svelte";
-  // import BluetoothOnIcon from "@icons/Bluetooth.svelte";
-  // import BluetoothOffIcon from "@icons/BluetoothOff.svelte";
-  import ToolsIcon from "@icons/Tools.svelte";
-  import ChartIcon from "@icons/ChartLineVariant.svelte";
-  import MetronomeIcon from "@icons/Metronome.svelte";
-  import { BeanIcon, LightbulbIcon, Settings2Icon } from "lucide-svelte";
+  
+  import {
+    BeanIcon,
+    ChartSplineIcon,
+    HammerIcon,
+    LightbulbIcon,
+    MusicIcon,
+    Settings2Icon,
+  } from "lucide-svelte";
   import Modal from "@components/Modal.svelte";
   import InputAdaptorIcon from "$lib/cubicdbKit/InputAdaptorIcon.svelte";
   import Range from "$lib/cubicdbKit/Range.svelte";
+  import { clone } from "@helpers/object";
 
   type TModal = "" | "edit-scramble" | "old-scrambles" | "settings";
 
@@ -138,7 +133,7 @@
     {
       id: "daily-stats",
       text: "Daily Stats",
-      icon: ChartIcon,
+      icon: ChartSplineIcon,
       iconParams: {
         class: " m-1 pointer-events-none text-red-300 ",
       },
@@ -148,7 +143,7 @@
     {
       id: "metronome",
       text: "Metronome",
-      icon: MetronomeIcon,
+      icon: MusicIcon,
       iconParams: {
         class: " m-1 pointer-events-none text-purple-300 ",
       },
@@ -189,13 +184,11 @@
 
     openDialog("settings", $session, (data: any) => {
       if (data) {
-        $session = $session;
-
         if (timerOnly) return;
 
         // initInputHandler();
 
-        $dataService.session.updateSession({ ...$session });
+        $dataService.session.updateSession(clone($session));
         initialCalc != $session.settings.calcAoX && updateStatistics(false);
       }
     });
@@ -436,7 +429,7 @@
   aria-label={$localLang.HOME.tools}
   on:keydown={e => (e.code === "Space" ? e.preventDefault() : null)}
 >
-  <ToolsIcon class="group-hover:text-warning" size={iconSize} />
+  <HammerIcon class="group-hover:text-warning" size={iconSize} />
 </Button>
 <Tooltip placement="bottom" class="z-10">
   {$localLang.HOME.tools}

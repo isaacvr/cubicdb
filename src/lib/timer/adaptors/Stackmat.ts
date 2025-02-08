@@ -1,12 +1,11 @@
+import type {
+  IStackmatDevice,
+  StackmatCallback,
+  StackmatState,
+} from "$lib/interfaces/devices.types";
 import type { Actor } from "@helpers/stateMachine";
 import { randomUUID } from "@helpers/strings";
-import {
-  TimerState,
-  type InputContext,
-  type StackmatCallback,
-  type StackmatState,
-  type TimerInputHandler,
-} from "@interfaces";
+import { TimerState, type InputContext } from "@interfaces";
 import { get, writable, type Writable } from "svelte/store";
 import { createActor, setup } from "xstate";
 
@@ -139,29 +138,27 @@ const StackmatMachine = setup({
   },
 });
 
-export class StackmatInput implements TimerInputHandler {
+export class StackmatInput implements IStackmatDevice {
+  readonly type = "stackmat";
   private audio_context: AudioContext;
   private audio_stream: MediaStream | undefined;
   private source: MediaStreamAudioSourceNode | null = null;
   private node: AudioWorkletNode | null = null;
-  private interpreter;
-  private isActive: boolean;
-  private lastState: StackmatState | null;
 
+  name = "Stackmat";
+  interpreter: ReturnType<typeof createActor> | null;
+  lastState: StackmatState | null;
+  isConnected: boolean;
+  enabled: boolean;
   id: string;
 
-  constructor(context: InputContext) {
-    this.interpreter = createActor(StackmatMachine, {
-      input: {
-        ...context,
-        stState: writable({}),
-        lastState: writable(null),
-      },
-    });
+  constructor() {
+    this.interpreter = null;
     this.audio_context = new AudioContext();
     this.id = randomUUID();
-    this.isActive = false;
+    this.isConnected = false;
     this.lastState = null;
+    this.enabled = false;
   }
 
   static async updateInputDevices(): Promise<string[][]> {
@@ -222,9 +219,16 @@ export class StackmatInput implements TimerInputHandler {
   //   return this.device;
   // }
 
-  init(deviceId: string, force: boolean) {
+  async init(context: InputContext, deviceId: string, force: boolean) {
+    this.interpreter = createActor(StackmatMachine, {
+      input: {
+        ...context,
+        stState: writable({}),
+        lastState: writable(null),
+      },
+    });
     this.interpreter.start();
-    this.isActive = true;
+    this.isConnected = true;
 
     const selectObj: any = {
       echoCancellation: false,
@@ -329,7 +333,6 @@ export class StackmatInput implements TimerInputHandler {
 
     this.node.port.onmessage = ev => {
       const { data }: { data: StackmatState } = ev;
-      data.stackmatId = this.id;
       this.callback(data);
     };
 
@@ -338,8 +341,8 @@ export class StackmatInput implements TimerInputHandler {
   }
 
   async disconnect() {
-    this.interpreter.stop();
-    this.isActive = false;
+    this.interpreter?.stop();
+    this.isConnected = false;
     this.lastState = null;
 
     if (this.audio_stream != undefined) {
@@ -359,14 +362,14 @@ export class StackmatInput implements TimerInputHandler {
   }
 
   callback(sst: StackmatState) {
-    if (!this.isActive) return;
+    if (!this.isConnected || !this.enabled) return;
 
-    const ctx = this.interpreter.getSnapshot().context;
+    const ctx = this.interpreter?.getSnapshot().context;
     ctx.time.set(sst.time_milli);
     ctx.stState.set(sst);
     ctx.lastState.set(this.lastState);
 
-    this.interpreter.send({ type: "state", state: sst, lastState: this.lastState });
+    this.interpreter?.send({ type: "state", state: sst, lastState: this.lastState });
     this.lastState = sst;
   }
 

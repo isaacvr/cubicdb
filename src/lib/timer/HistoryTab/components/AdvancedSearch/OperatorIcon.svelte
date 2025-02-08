@@ -1,54 +1,54 @@
 <script lang="ts">
   import type { FILTER_OPERATOR } from "$lib/timer/HistoryTab/AdvancedSearch/adaptors/types";
-  import EqualIcon from "@icons/Equal.svelte";
-  import NEqualIcon from "@icons/NotEqualVariant.svelte";
-  import ContainsIcon from "@icons/Contain.svelte";
-  import StartsIcon from "@icons/ContainStart.svelte";
-  import EndsIcon from "@icons/ContainEnd.svelte";
-  import LessThanIcon from "@icons/LessThan.svelte";
-  import LessThanEqualIcon from "@icons/LessThanOrEqual.svelte";
-  import GreaterThanIcon from "@icons/GreaterThan.svelte";
-  import GreaterThanEqualIcon from "@icons/GreaterThanOrEqual.svelte";
-  import BetweenIcon from "@icons/CodeTags.svelte";
-  import NBetweenIcon from "@icons/Xml.svelte";
+  import {
+    BracketsIcon,
+    ChevronLeftIcon,
+    ChevronRightIcon,
+    CodeIcon,
+    EqualIcon,
+    EqualNotIcon,
+    Icon,
+    ListEndIcon,
+    ListStartIcon,
+  } from "lucide-svelte";
 
   export let operator: FILTER_OPERATOR;
 </script>
 
 {#if operator === "date_after"}
-  <GreaterThanIcon />
+  <ChevronRightIcon />
 {:else if operator === "date_after_eq"}
-  <GreaterThanEqualIcon />
+  <Icon iconNode={[["path", { d: "m9 18 6-6-6-6 m1 16 6-6" }]]} />
 {:else if operator === "date_before"}
-  <LessThanIcon />
+  <ChevronLeftIcon />
 {:else if operator === "date_before_eq"}
-  <LessThanEqualIcon />
+  <Icon iconNode={[["path", { d: "m15 18-6-6 6-6 m-1 16 -6-6" }]]} />
 {:else if operator === "date_equal"}
   <EqualIcon />
 {:else if operator === "number_between"}
-  <BetweenIcon />
+  <BracketsIcon />
 {:else if operator === "number_equal"}
   <EqualIcon />
 {:else if operator === "number_gt"}
-  <GreaterThanIcon />
+  <ChevronRightIcon />
 {:else if operator === "number_gte"}
-  <GreaterThanEqualIcon />
+  <Icon iconNode={[["path", { d: "m9 18 6-6-6-6 m1 16 6-6" }]]} />
 {:else if operator === "number_lt"}
-  <LessThanIcon />
+  <ChevronLeftIcon />
 {:else if operator === "number_lte"}
-  <LessThanEqualIcon />
+  <Icon iconNode={[["path", { d: "m15 18-6-6 6-6 m-1 16 -6-6" }]]} />
 {:else if operator === "number_nbetween"}
-  <NBetweenIcon />
+  <CodeIcon />
 {:else if operator === "number_nequal"}
-  <NEqualIcon />
+  <EqualNotIcon />
 {:else if operator === "string_contain"}
-  <ContainsIcon />
+  <BracketsIcon />
 {:else if operator === "string_ends"}
-  <EndsIcon />
+  <ListEndIcon />
 {:else if operator === "string_equal"}
   <EqualIcon />
 {:else if operator === "string_nequal"}
-  <NEqualIcon />
+  <EqualNotIcon />
 {:else if operator === "string_starts"}
-  <StartsIcon />
+  <ListStartIcon />
 {/if}

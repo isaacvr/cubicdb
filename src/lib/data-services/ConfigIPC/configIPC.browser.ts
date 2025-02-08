@@ -4,7 +4,6 @@ import type {
   ContestPDFOptions,
   ContestPDFResult,
   FONT_NAME,
-  LanguageCode,
   Sheet,
   UpdateCommand,
 } from "@interfaces";
@@ -17,6 +16,7 @@ import {
 import { DEFAULT_THEME } from "$lib/themes/default";
 import { dataService } from "$lib/data-services/data.service";
 import { get } from "svelte/store";
+import type { LanguageCode } from "$lib/interfaces/language.types";
 
 export class ConfigBrowserIPC implements ConfigIPC {
   global: {
@@ -39,7 +39,7 @@ export class ConfigBrowserIPC implements ConfigIPC {
     } catch {}
 
     this.global = {
-      theme: config?.global?.theme || DEFAULT_THEME.id,
+      theme: config?.global?.theme || DEFAULT_THEME.meta.id,
       lang: config?.global?.lang || "EN",
       zoomFactor: config?.global?.zoomFactor || 100,
       appFont: config?.global?.appFont || "Ubuntu",

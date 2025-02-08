@@ -1,4 +1,4 @@
-import type { Language } from "@interfaces";
+import type { Language } from "$lib/interfaces/language.types";
 
 export function getTitleMeta(pathname: string, lang: Language) {
   const arr = pathname.split("/").filter(s => s);

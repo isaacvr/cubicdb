@@ -2,7 +2,7 @@
   import { onDestroy, onMount } from "svelte";
   import { Button, Spinner, Tooltip } from "flowbite-svelte";
   import { CubeMode } from "@constants";
-  import { type Algorithm, type ICard, type Language, type Solution } from "@interfaces";
+  import { type Algorithm, type ICard, type Solution } from "@interfaces";
   import { Puzzle } from "@classes/puzzle/puzzle";
   import { pGenerateCubeBundle } from "@helpers/cube-draw";
   import { copyToClipboard } from "@helpers/strings";
@@ -13,7 +13,7 @@
 
   import ViewListIcon from "@icons/ViewList.svelte";
   import ViewGridIcon from "@icons/Grid.svelte";
-  import DeleteIcon from "@icons/Delete.svelte";
+  import TrashIcon from "@icons/Delete.svelte";
   import AddIcon from "@icons/Plus.svelte";
   import EditIcon from "@icons/Pencil.svelte";
   import PuzzleImage from "@components/PuzzleImage.svelte";
@@ -23,6 +23,7 @@
   import { getTitleMeta } from "$lib/meta/title";
   import type { Unsubscriber } from "svelte/store";
   import { dataService } from "$lib/data-services/data.service";
+  import type { Language } from "$lib/interfaces/language.types";
 
   const notification = NotificationService.getInstance();
   const config = $dataService.config;
@@ -408,14 +409,14 @@
       </button>
 
       <div class="grid grid-cols-6 gap-1">
-        <h2 class="max-sm:hidden col-span-1 font-bold text-xl">&nbsp;</h2>
+        <div class="max-sm:hidden col-span-1 font-bold text-xl"></div>
         <h2 class="max-sm:col-span-5 col-span-3 font-bold text-xl tx-text">
           {$localLang.ALGORITHMS.solution}
         </h2>
         <h2 class="max-sm:col-span-1 col-span-1 font-bold text-xl text-right tx-text">
           {$localLang.ALGORITHMS.moves}
         </h2>
-        <h2 class="max-sm:hidden col-span-1 font-bold text-xl">&nbsp</h2>
+        <div class="max-sm:hidden col-span-1 font-bold text-xl"></div>
 
         {#each selectedCase?.solutions || [] as sol, i}
           <span class="max-sm:hidden col-span-1"></span>
@@ -511,7 +512,7 @@
                     ><EditIcon size="1.2rem" />
                   </button>
                   <Button color="red" on:click={() => removeAlg(currentList[pos])} class="p-1"
-                    ><DeleteIcon size="1.2rem" />
+                    ><TrashIcon size="1.2rem" />
                   </Button>
                 </div>
               {/if}
@@ -557,7 +558,7 @@
                   ><EditIcon size="1.2rem" />
                 </Button>
                 <Button color="red" on:click={() => removeAlg(c)} class="p-1"
-                  ><DeleteIcon size="1.2rem" />
+                  ><TrashIcon size="1.2rem" />
                 </Button>
               </ul>
             {/if}

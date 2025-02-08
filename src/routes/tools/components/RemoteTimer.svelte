@@ -3,15 +3,16 @@
   import { Penalty } from "@interfaces";
   import { Button, Card, Input, Modal } from "flowbite-svelte";
   import { localLang } from "@stores/language.service";
-  import RightHandIcon from "@icons/HandBackRight.svelte";
-  import LeftHandIcon from "@icons/HandBackLeft.svelte";
   import { RemoteMachine } from "./RemoteMachine";
-  import ResetIcon from "@icons/Refresh.svelte";
-  import PowerIcon from "@icons/Power.svelte";
-  import Close from "@icons/Close.svelte";
-  import ThumbDown from "@icons/ThumbDown.svelte";
-  import Flag from "@icons/FlagOutline.svelte";
-  import CommentIcon from "@icons/CommentPlusOutline.svelte";
+  import {
+    HandIcon,
+    MessageSquarePlusIcon,
+    PowerIcon,
+    RotateCcwIcon,
+    ThumbsDownIcon,
+    XIcon,
+  } from "lucide-svelte";
+  import FlagIcon from "@components/FlagIcon.svelte";
 
   let leftDown = false;
   let rightDown = false;
@@ -29,7 +30,7 @@
   let solveControl = [
     {
       text: "Delete",
-      icon: Close,
+      icon: XIcon,
       highlight: (p: any) => false,
       handler: () => {
         machine.delete();
@@ -37,7 +38,7 @@
     },
     {
       text: "DNF",
-      icon: ThumbDown,
+      icon: ThumbsDownIcon,
       highlight: (p: any) => penalty === Penalty.DNF,
       handler: () => {
         penalty = penalty === Penalty.DNF ? Penalty.NONE : Penalty.DNF;
@@ -46,7 +47,7 @@
     },
     {
       text: "+2",
-      icon: Flag,
+      icon: FlagIcon,
       highlight: (p: any) => penalty === Penalty.P2,
       handler: () => {
         penalty = penalty === Penalty.P2 ? Penalty.NONE : Penalty.P2;
@@ -55,7 +56,7 @@
     },
     {
       text: "Comments",
-      icon: CommentIcon,
+      icon: MessageSquarePlusIcon,
       highlight: (p: any) => false,
       handler: () => {
         machine.editSolve();
@@ -168,7 +169,10 @@
       on:pointerdown={handleLeft}
       on:pointerup={handleLeft}
     >
-      <LeftHandIcon size="40%" class={$mLeftDown ? "text-white " : "text-primary-200"} />
+      <HandIcon
+        size="40%"
+        class={"-scale-x-100 " + $mLeftDown ? "text-white " : "text-primary-200"}
+      />
     </button>
   </Card>
 
@@ -202,7 +206,7 @@
         </Button>
       {/if}
       <Button color="none" class="rounded-full border border-primary-500 p-3" on:click={reset}>
-        <ResetIcon size="1.4rem" />
+        <RotateCcwIcon size="1.4rem" />
       </Button>
       <!-- <Button color="none" class="rounded-full border border-purple-500 ring-purple-800 p-3" on:click={ reset }>
         <SettingsIcon size="1.4rem"/>
@@ -220,7 +224,7 @@
       on:pointerdown={handleRight}
       on:pointerup={handleRight}
     >
-      <RightHandIcon size="40%" class={$mRightDown ? "text-white " : "text-primary-200"} />
+      <HandIcon size="40%" class={$mRightDown ? "text-white " : "text-primary-200"} />
     </button>
   </Card>
 </Card>

@@ -4,7 +4,6 @@
   import { pGenerateCubeBundle } from "@helpers/cube-draw";
   import Select from "@material/Select.svelte";
 
-  import CheckIcon from "@icons/Check.svelte";
   import { timer } from "@helpers/timer";
   import { screen } from "@stores/screen.store";
   import {
@@ -21,6 +20,7 @@
   } from "flowbite-svelte";
   import { localLang } from "@stores/language.service";
   import PuzzleImage from "@components/PuzzleImage.svelte";
+  import { CheckIcon } from "lucide-svelte";
 
   interface IBundle {
     id: number;

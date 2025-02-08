@@ -1,8 +1,6 @@
 <script lang="ts">
   import type { SessionType } from "@interfaces";
-  import StepIcon from "@icons/ShoePrint.svelte";
-  import MixedIcon from "@icons/CubeScan.svelte";
-  import SingleIcon from "@icons/CubeOutline.svelte";
+  import { BlendIcon, BoxIcon, FootprintsIcon } from "lucide-svelte";
 
   interface TimerSessionIconProps {
     icon?: SessionType;
@@ -13,9 +11,9 @@
 </script>
 
 {#if icon === "mixed"}
-  <MixedIcon {size} class="text-purple-300 shrink-0" />
+  <BlendIcon {size} class="text-purple-300 shrink-0" />
 {:else if icon === "single"}
-  <SingleIcon {size} class="text-green-400 shrink-0" />
+  <BoxIcon {size} class="text-green-400 shrink-0" />
 {:else if icon === "multi-step"}
-  <StepIcon {size} class="text-sky-400 shrink-0" />
+  <FootprintsIcon {size} class="text-sky-400 shrink-0" />
 {/if}

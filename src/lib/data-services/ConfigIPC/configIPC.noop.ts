@@ -3,7 +3,6 @@ import type {
   ContestPDFOptions,
   ContestPDFResult,
   FONT_NAME,
-  LanguageCode,
   Sheet,
   UpdateCommand,
 } from "@interfaces";
@@ -11,6 +10,7 @@ import type { ConfigIPC } from "./configIPC.interface";
 import type { GANInput } from "$lib/timer/adaptors/GAN";
 import type { QiYiSmartTimerInput } from "$lib/timer/adaptors/QY-Timer";
 import { DEFAULT_THEME } from "$lib/themes/default";
+import type { LanguageCode } from "$lib/interfaces/language.types";
 
 export class ConfigNoopIPC implements ConfigIPC {
   global: {
@@ -27,7 +27,7 @@ export class ConfigNoopIPC implements ConfigIPC {
   private constructor() {
     this.global = {
       lang: "EN",
-      theme: DEFAULT_THEME.id,
+      theme: DEFAULT_THEME.meta.id,
       zoomFactor: 100,
       appFont: "Ubuntu",
       timerFont: "Ubuntu",

@@ -1,4 +1,4 @@
-import type { Language, LanguageCode } from "@interfaces";
+import type { Language, LanguageCode } from "$lib/interfaces/language.types";
 import { English } from "./en-EN";
 import { Spanish } from "./es-ES";
 import { Chinese } from "./zh-ZH";

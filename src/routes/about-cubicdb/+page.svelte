@@ -1,16 +1,12 @@
 <script lang="ts">
   import QRCode from "qrcode";
   import { version } from "@stores/version.store";
-  import GithubIcon from "@icons/Github.svelte";
-  import InstagramIcon from "@icons/Instagram.svelte";
-  import GmailIcon from "@icons/Gmail.svelte";
-
-  import CopyIcon from "@icons/ContentCopy.svelte";
   import { copyToClipboard } from "@helpers/strings";
   import { NotificationService } from "@stores/notification.service";
   import { Card } from "flowbite-svelte";
   import { localLang } from "@stores/language.service";
   import { CubicDBICON } from "@constants";
+  import { CopyIcon, GithubIcon, InstagramIcon, MailIcon } from "lucide-svelte";
 
   const notification = NotificationService.getInstance();
   interface Donation {
@@ -169,7 +165,7 @@
       href="mailto:isaacvega1996@gmail.com"
       target="_blank"
     >
-      <GmailIcon size="1.2rem" /> Gmail
+      <MailIcon size="1.2rem" /> Gmail
     </a>
 
     <a

@@ -5,8 +5,8 @@
   import { Button, Input, Range } from "flowbite-svelte";
   import { CubeModeMap } from "@constants";
   import PuzzleImage from "@components/PuzzleImage.svelte";
-  import DeleteIcon from "@icons/Delete.svelte";
   import { createEventDispatcher } from "svelte";
+  import { TrashIcon } from "lucide-svelte";
 
   type AlgProp = { tutorial: false; alg: Algorithm } | { tutorial: true; alg: ITutorialAlg };
 
@@ -154,7 +154,7 @@
                   tipTemp = tipTemp.filter((_, p) => p != pos);
                 }}
               >
-                <DeleteIcon size="1.2rem" />
+                <TrashIcon size="1.2rem" />
               </button>
             </li>
           {/each}
@@ -184,7 +184,7 @@
                     solTemp = solTemp.filter((_, p) => p != pos);
                   }}
                 >
-                  <DeleteIcon size="1.2rem" />
+                  <TrashIcon size="1.2rem" />
                 </button>
               </li>
             {/each}

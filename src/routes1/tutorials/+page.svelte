@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import type { ITutorial, LanguageCode } from "@interfaces";
+  import type { ITutorial } from "@interfaces";
   import {
     Button,
     Card,
@@ -26,6 +26,7 @@
   import FlagIcon from "@components/FlagIcon.svelte";
   import { goto } from "$app/navigation";
   import { dataService } from "$lib/data-services/data.service";
+  import type { LanguageCode } from "$lib/interfaces/language.types";
 
   type IndicatorColor = "green" | "blue" | "yellow";
 
@@ -206,7 +207,7 @@
       type="button"
       class={"rounded-md grid place-items-center w-6 h-6 cursor-pointer transition-all duration-200 " +
         (currentGroup === "fundamentals" ? "text-purple-400" : "text-gray-500")}
-      on:click={() => (currentGroup = "fundamentals")}
+      onclick={() => (currentGroup = "fundamentals")}
     >
       <FundamentalsIcon class="" size="1.4rem" />
     </button>
@@ -214,12 +215,13 @@
 
     {#each groupNames as gn}
       {#if gn != "fundamentals"}
-        <WCACategory
-          icon={groups[gn][0].icon}
-          class={"w-6 h-6 cursor-pointer transition-all duration-200 " +
-            (currentGroup === gn ? "text-purple-400" : "text-gray-500")}
-          on:click={() => (currentGroup = gn)}
-        />
+        <Button onclick={() => (currentGroup = gn)}>
+          <WCACategory
+            icon={groups[gn][0].icon}
+            class={"w-6 h-6 cursor-pointer transition-all duration-200 " +
+              (currentGroup === gn ? "text-purple-400" : "text-gray-500")}
+          />
+        </Button>
         <Tooltip class="z-10" placement="right">{gn}</Tooltip>
       {/if}
     {/each}
@@ -321,10 +323,10 @@
       <textarea
         bind:this={textAreaRef}
         bind:value={nTut.summary}
-        on:input={handleResize}
+        oninput={handleResize}
         spellcheck="false"
         class="border border-blue-500 p-2 rounded-md w-full bg-transparent min-h-[5rem]"
-      />
+      ></textarea>
       <!-- <Input placeholder="summary" bind:value={nTut.summary} class="max-w-[10rem]" /> -->
     </section>
     <section>

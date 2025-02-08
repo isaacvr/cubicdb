@@ -6,7 +6,6 @@ import type {
   FONT_NAME,
   IPC,
   IStorageInfo,
-  LanguageCode,
   Sheet,
   UpdateCommand,
 } from "@interfaces";
@@ -18,6 +17,7 @@ import {
 } from "$lib/timer/adaptors/QY-Timer";
 import { DEFAULT_THEME } from "$lib/themes/default";
 import { applyThemeByID } from "$lib/themes/manageThemes";
+import type { LanguageCode } from "$lib/interfaces/language.types";
 
 export class ConfigElectronIPC implements ConfigIPC {
   ipc: IPC;

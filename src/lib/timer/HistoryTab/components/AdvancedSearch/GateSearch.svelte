@@ -2,13 +2,12 @@
   import { Button, Checkbox, Tooltip } from "flowbite-svelte";
   import { localLang } from "@stores/language.service";
   import Select from "@material/Select.svelte";
-  import DeleteIcon from "@icons/Delete.svelte";
-  import ChevronIcon from "@icons/ChevronDown.svelte";
   import { FieldAdaptor, GateAdaptor } from "$lib/timer/HistoryTab/AdvancedSearch/adaptors";
   import type { Writable } from "svelte/store";
   import type { SearchFilter } from "$lib/timer/HistoryTab/AdvancedSearch/adaptors/types";
   import { createEventDispatcher, getContext } from "svelte";
   import FieldSearch from "./FieldSearch.svelte";
+  import { ChevronDownIcon, TrashIcon } from "lucide-svelte";
 
   export let gate: GateAdaptor;
   export let canDelete = true;
@@ -45,7 +44,7 @@
   <div class="header">
     {#if canDelete}
       <Button class="p-1" color="red" on:click={deleteGate}>
-        <DeleteIcon size="1rem" />
+        <TrashIcon size="1rem" />
       </Button>
       <Tooltip>{$localLang.global.delete}</Tooltip>
     {/if}
@@ -74,7 +73,7 @@
       class={"p-1 ml-auto action " + (expanded ? "expanded" : "")}
       on:click={() => (expanded = !expanded)}
     >
-      <ChevronIcon size="1.2rem" />
+      <ChevronDownIcon size="1.2rem" />
     </button>
   </div>
 

@@ -5,7 +5,7 @@
   import "../theme.scss";
 
   import moment from "moment";
-  import { onDestroy, onMount, untrack } from "svelte";
+  import { onDestroy, onMount, setContext, untrack } from "svelte";
   import { Dropdown, DropdownItem, Popover, Tooltip } from "flowbite-svelte";
   import { LANGUAGES } from "@lang/index";
   import { globalLang, localLang } from "@stores/language.service";
@@ -19,7 +19,7 @@
   import type { INotification } from "@interfaces";
   import Notification from "@components/Notification.svelte";
   import { goto } from "$app/navigation";
-  import type { Unsubscriber } from "svelte/store";
+  import { writable, type Unsubscriber, type Writable } from "svelte/store";
   import type { LayoutServerData } from "./$types";
   import { getTitleMeta } from "$lib/meta/title";
   import { dataService } from "$lib/data-services/data.service";
@@ -40,12 +40,16 @@
     BrainCogIcon,
     MinusIcon,
     XIcon,
+    MonitorSmartphoneIcon,
   } from "lucide-svelte";
   import Button from "$lib/cubicdbKit/Button.svelte";
   import { sessions } from "@stores/sessions.store";
   import CubeCategory from "@components/wca/CubeCategory.svelte";
   import TimerSessionIcon from "$lib/timer/TimerSessionIcon.svelte";
   import { page } from "$app/state";
+  import { twMerge } from "tailwind-merge";
+  import type { Device } from "$lib/interfaces/devices.types";
+  import DeviceIcon from "$lib/cubicdbKit/DeviceIcon.svelte";
 
   let { data, children }: { data: LayoutServerData; children: any } = $props();
 
@@ -62,6 +66,9 @@
   let parts: { link: string; name: string }[] = $state([]);
   let jsonld = $state("");
   let dropdownOpen = $state(false);
+  let devices: Writable<Device[]> = writable([]);
+
+  setContext("devices", devices);
 
   function handleProgress(p: number) {
     progress = Math.round(p * 100) / 100;
@@ -204,6 +211,32 @@
 
 <svelte:window on:resize={handleResize} />
 
+<!-- list item snippet -->
+{#snippet listItem(
+  type: number,
+  dash: number,
+  href: string,
+  Icon: any,
+  key: keyof typeof $localLang.HOME
+)}
+  {@const colorType = ["text-success", "text-warning", "text-info", "text-error"]}
+  <li>
+    <a
+      class={twMerge(
+        "svg-container text-base-content hover:" + colorType[type],
+        parts.length && parts[0].link === href
+          ? "text-opacity-100 !bg-primary !bg-opacity-20"
+          : "text-opacity-60"
+      )}
+      style={`--dash: ${dash};`}
+      {href}
+    >
+      <Icon size="1.2rem" />
+      {$localLang.HOME[key]}
+    </a>
+  </li>
+{/snippet}
+
 <div class="layout" id="cubicdb-layout">
   <div class="topbar-logo px-2">
     <CubicDbLogo />
@@ -262,6 +295,27 @@
       </Popover>
     {/if}
 
+    <Button color="none" class="p-1">
+      <MonitorSmartphoneIcon />
+    </Button>
+
+    <Dropdown
+      containerClass="max-h-[20rem] overflow-y-auto overflow-x-hidden rounded-md
+        z-50 w-max bg-base-200"
+    >
+      {#each $devices as device}
+        <DropdownItem
+          class={"flex items-center gap-2 py-2 px-2 text-base-content hover:bg-base-100 rounded-md"}
+        >
+          <DeviceIcon type={device.type} />
+          {device.name}
+          <input type="checkbox" class="toggle ml-auto" checked disabled />
+        </DropdownItem>
+      {/each}
+    </Dropdown>
+
+    <div class="w-0 mx-2 rounded-full h-6 border border-primary"></div>
+
     {#if $dataService.isElectron && $screen.width > 640}
       <span class="text-sm">{date}</span>
 
@@ -290,98 +344,49 @@
   </div>
 
   <div class="navigation flex flex-col justify-between overflow-auto">
+    <!-- Normal Pages -->
     <ul class="menu">
-      <li>
-        <a class="svg-container hover:text-success" style="--dash: 50;" href="/timer">
-          <TimerIcon size="1.2rem" />
-          {$localLang.HOME.timer}
-        </a>
-      </li>
-      <li>
-        <a class="svg-container hover:text-success" style="--dash: 70;" href="/algorithms">
-          <BrainCogIcon size="1.2rem" />
-          {$localLang.HOME.algorithms}
-        </a>
-      </li>
-      <li>
-        <a class="svg-container hover:text-success" style="--dash: 16;" href="/tutorials">
-          <LibraryIcon size="1.2rem" />
-          {$localLang.HOME.tutorials}
-        </a>
-      </li>
-      <li>
-        <a class="svg-container hover:text-success" style="--dash: 65;" href="/reconstructions">
-          <BlocksIcon size="1.2rem" />
-          {$localLang.HOME.reconstructions}
-        </a>
-      </li>
-      <li>
-        <a class="svg-container hover:text-success" style="--dash: 40;" href="/training">
-          <DumbbellIcon size="1.2rem" />
-          {$localLang.HOME.training}
-        </a>
-      </li>
-      <li>
-        <a class="svg-container hover:text-success" style="--dash: 43;" href="/simulator">
-          <Rotate3DIcon size="1.2rem" />
-          {$localLang.HOME.simulator}
-        </a>
-      </li>
+      {@render listItem(0, 50, "/timer", TimerIcon, "timer")}
+      {@render listItem(0, 70, "/algorithms", BrainCogIcon, "algorithms")}
+      {@render listItem(0, 16, "/tutorials", LibraryIcon, "tutorials")}
+      {@render listItem(0, 65, "/reconstructions", BlocksIcon, "reconstructions")}
+      {@render listItem(0, 40, "/training", DumbbellIcon, "training")}
+      {@render listItem(0, 43, "/simulator", Rotate3DIcon, "simulator")}
     </ul>
 
     <div class="divider h-0 my-0"></div>
 
+    <!-- Tool-like stuff -->
     <ul class="menu">
-      <li>
-        <a class="svg-container hover:text-warning" style="--dash: 30;" href="/tools">
-          <HammerIcon size="1.2rem" />
-          {$localLang.HOME.tools}
-        </a>
-      </li>
-      <li>
-        <a class="svg-container hover:text-warning" style="--dash: 16;" href="/import-export">
-          <ArrowDownUpIcon size="1.2rem" />
-          {$localLang.HOME.importExport}
-        </a>
-      </li>
-      <li>
-        <a class="svg-container hover:text-warning" style="--dash: 67;" href="/settings">
-          <SettingsIcon size="1.2rem" />
-          {$localLang.HOME.settings}
-        </a>
-      </li>
+      {@render listItem(1, 30, "/tools", HammerIcon, "tools")}
+      {@render listItem(1, 16, "/import-export", ArrowDownUpIcon, "importExport")}
+      {@render listItem(1, 67, "/devices", MonitorSmartphoneIcon, "devices")}
+      {@render listItem(1, 67, "/settings", SettingsIcon, "settings")}
     </ul>
 
     <div class="divider h-0 my-0"></div>
 
+    <!-- Other -->
     <ul class="menu mt-auto pb-0">
-      <li>
-        <a class="svg-container hover:text-error" style="--dash: 60;" href="/">
-          <HeartIcon size="1.2rem" />
-          {$localLang.HOME.support}
-        </a>
-      </li>
-      <li>
-        <a class="svg-container hover:text-info" style="--dash: 62;" href="/">
-          <InfoIcon size="1.2rem" />
-          {$localLang.HOME.about}
-        </a>
-      </li>
+      {@render listItem(3, 60, "/support", HeartIcon, "support")}
+      {@render listItem(2, 62, "/about-cubicdb", InfoIcon, "about")}
     </ul>
 
-    {#if browser}
-      <Select
-        class="!h-4 !py-0 mb-3 mx-2 mt-1"
-        items={LANGUAGES}
-        bind:value={$globalLang}
-        transform={e => e[1].code}
-        label={e => e[1].name}
-        hasIcon={e => e[2]}
-        IconComponent={FlagIcon}
-        onChange={() => localStorage.setItem("language", $globalLang)}
-        aria-label={$localLang.global.selectLanguage}
-      />
-    {/if}
+    <Select
+      class="!h-4 !py-0 mb-3 mx-2 mt-1"
+      items={LANGUAGES}
+      bind:value={$globalLang}
+      transform={e => e[1].code}
+      label={e => e[1].name}
+      hasIcon={e => e[2]}
+      IconComponent={FlagIcon}
+      onChange={() => {
+        const global = $dataService.config.global;
+        global.lang = $globalLang;
+        $dataService.config.saveConfig();
+      }}
+      aria-label={$localLang.global.selectLanguage}
+    />
   </div>
 
   <div class="content">

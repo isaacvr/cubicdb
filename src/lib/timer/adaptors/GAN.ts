@@ -4,17 +4,12 @@ import { CFOP } from "@classes/reconstructors/CFOP";
 import { Roux } from "@classes/reconstructors/Roux";
 import { CubieCube, SOLVED_FACELET, valuedArray } from "@cstimer/lib/mathlib";
 import { isEscape, type Actor } from "@helpers/stateMachine";
-import {
-  TimerState,
-  type InputContext,
-  type TimerInputHandler,
-  type Solve,
-  Penalty,
-} from "@interfaces";
+import { TimerState, type InputContext, type Solve, Penalty } from "@interfaces";
 import { get, type Writable } from "svelte/store";
 import { createActor, setup, fromCallback } from "xstate";
 import { decompressFromBase64 } from "$lib/helpers/decompress-string";
 import { dataService } from "$lib/data-services/data.service";
+import type { IGANiCarryDevice } from "$lib/interfaces/devices.types";
 
 let solvedState = SOLVED_FACELET;
 
@@ -378,7 +373,7 @@ export const BLUETOOTH_FILTERS = {
   ],
 };
 
-export class GANInput implements TimerInputHandler {
+export class GANInput implements IGANiCarryDevice {
   private decoder: AES128 | null;
   private device: BluetoothDevice | null;
   private service_meta: BluetoothRemoteGATTService | null;
@@ -386,11 +381,8 @@ export class GANInput implements TimerInputHandler {
   private service_v2data: BluetoothRemoteGATTService | null;
   private chrct_v2read: BluetoothRemoteGATTCharacteristic | null;
   private chrct_v2write: BluetoothRemoteGATTCharacteristic | null;
-  private deviceMac: string;
   private prevMoves: string[];
   private timeOffs: number[];
-  private prevCubie: CubieCube;
-  private curCubie: CubieCube;
   private latestFacelet: string;
   private deviceTime: number;
   private moveCnt: number;
@@ -398,51 +390,54 @@ export class GANInput implements TimerInputHandler {
   private keyCheck: number;
   private deviceTimeOffset: number;
   private movesFromLastCheck: number;
-  private interpreter;
   private moves: string[];
-  private context: GANContext;
+  private context: GANContext | null;
 
-  readonly adaptor = "GAN";
+  readonly type = "gan_icarry";
 
+  id = "cubicdb:device:gan-icarry";
+  name = "GAN iCarry";
+  bluetoothAddress = "";
+  hardwareVersion = "";
+  softwareVersion = "";
+  currentFacelet = new CubieCube();
+  lastFacelet = new CubieCube();
+  enabled = false;
+  hasGyroscope = false;
+
+  macAddress = "";
   sequencer: AlgorithmSequence;
-  battery: number;
-  connected: boolean;
+  batteryLevel: number;
+  isConnected: boolean;
+  interpreter: ReturnType<typeof createActor> | null;
 
-  constructor(context: InputContext) {
+  constructor() {
     this.sequencer = new AlgorithmSequence();
     this.moves = [];
-    this.context = {
-      input: context,
-      moves: this.moves,
-      sequencer: this.sequencer,
-      cfop: new CFOP(),
-      roux: new Roux(),
-    };
-
-    this.interpreter = createActor(GANMachine, { input: this.context });
-
+    this.context = null;
+    this.interpreter = null;
     this.decoder = null;
+
     this.service_meta = null;
     this.service_data = null;
     this.service_v2data = null;
     this.chrct_v2read = null;
     this.chrct_v2write = null;
-
     this.device = null;
-    this.deviceMac = "";
+    this.macAddress = "";
     this.prevMoves = [];
     this.timeOffs = [];
-    this.prevCubie = new CubieCube();
-    this.curCubie = new CubieCube();
+    this.lastFacelet = new CubieCube();
+    this.currentFacelet = new CubieCube();
     this.latestFacelet = solvedState;
     this.deviceTime = 0;
     this.moveCnt = 0;
     this.prevMoveCnt = -1;
-    this.battery = 100;
+    this.batteryLevel = 100;
     this.keyCheck = 0;
     this.deviceTimeOffset = 0;
     this.movesFromLastCheck = 1000;
-    this.connected = false;
+    this.isConnected = false;
   }
 
   static get UUID_SUFFIX() {
@@ -520,24 +515,30 @@ export class GANInput implements TimerInputHandler {
     return BLUETOOTH_FILTERS;
   }
 
-  init() {
-    get(dataService).off("scramble", this.handleScramble);
-    get(dataService).on("scramble", this.handleScramble.bind(this));
+  init(context: InputContext) {
+    this.context = {
+      input: context,
+      moves: this.moves,
+      sequencer: this.sequencer,
+      cfop: new CFOP(),
+      roux: new Roux(),
+    };
+    this.interpreter = createActor(GANMachine, { input: this.context });
     this.interpreter.start();
   }
 
   disconnect() {
     get(dataService).off("scramble", this.handleScramble);
-    this.interpreter.send({
+    this.interpreter?.send({
       type: "DISCONNECTED",
     });
 
-    if (!this.connected) return;
+    if (!this.isConnected) return;
     this.device?.gatt?.disconnect();
-    this.connected = false;
-    this.context.input.bluetoothStatus.set(false);
+    this.isConnected = false;
+    this.context?.input.bluetoothStatus.set(false);
 
-    this.interpreter.stop();
+    this.interpreter?.stop();
     get(dataService).emitBluetoothData("disconnect", null);
   }
 
@@ -573,14 +574,16 @@ export class GANInput implements TimerInputHandler {
   }
 
   keyDownHandler(ev: KeyboardEvent) {
-    if (!this.connected) return;
-    this.interpreter.send(ev);
+    if (!this.isConnected) return;
+    this.interpreter?.send(ev);
   }
 
   stopTimer() {}
 
   private handleScramble(s: string) {
     const ctx = this.context;
+    if (!ctx) return;
+
     ctx.sequencer.setScramble(s);
     ctx.cfop.setSequence(s);
     ctx.roux.setSequence(s);
@@ -594,7 +597,7 @@ export class GANInput implements TimerInputHandler {
     const data = get(dataService).config.getPath(`timer/inputs/GAN`);
 
     this.device = device;
-    this.deviceMac = data ? data.mac : "";
+    this.macAddress = data ? data.mac : "";
 
     let server: BluetoothRemoteGATTServer | undefined;
 
@@ -627,7 +630,7 @@ export class GANInput implements TimerInputHandler {
       const res = await this.v2init((device.name || "").startsWith("AiCube") ? 1 : 0);
 
       if (res) {
-        this.connected = true;
+        this.isConnected = true;
         this.emit("connect", null);
 
         device.addEventListener("gattserverdisconnected", () => {
@@ -635,17 +638,18 @@ export class GANInput implements TimerInputHandler {
         });
 
         // if (this.interpreter.getSnapshot().status != "active") {
-        this.init();
+        get(dataService).off("scramble", this.handleScramble);
+        get(dataService).on("scramble", this.handleScramble.bind(this));
         // }
 
-        this.interpreter.send({
+        this.interpreter?.send({
           type: "CONNECT",
           data: {
-            scramble: get(this.context.input.scramble),
+            scramble: get(this.context!.input.scramble),
           },
         });
 
-        return this.deviceMac;
+        return this.macAddress;
       }
 
       this.disconnect();
@@ -672,15 +676,15 @@ export class GANInput implements TimerInputHandler {
       this.chrct_v2read = null;
     }
 
-    this.deviceMac = "";
+    this.macAddress = "";
     this.prevMoves = [];
     this.timeOffs = [];
-    this.prevCubie = new CubieCube();
-    this.curCubie = new CubieCube();
+    this.lastFacelet = new CubieCube();
+    this.currentFacelet = new CubieCube();
     this.latestFacelet = solvedState;
     this.deviceTime = 0;
     this.prevMoveCnt = -1;
-    this.battery = 100;
+    this.batteryLevel = 100;
     return result;
   }
 
@@ -778,7 +782,7 @@ export class GANInput implements TimerInputHandler {
     // debug && console.log("[gancube]", "init cube state");
     // callback(latestFacelet, prevMoves, [null, locTime], deviceName);
     // debug && console.log("Prev facelet: ", this.latestFacelet);
-    this.prevCubie.fromFacelet(this.latestFacelet);
+    this.lastFacelet.fromFacelet(this.latestFacelet);
     this.prevMoveCnt = this.moveCnt;
   }
 
@@ -811,31 +815,35 @@ export class GANInput implements TimerInputHandler {
 
     for (let i = moveDiff - 1; i >= 0; i--) {
       const m = "URFDLB".indexOf(this.prevMoves[i][0]) * 3 + " 2'".indexOf(this.prevMoves[i][1]);
-      CubieCube.EdgeMult(this.prevCubie, CubieCube.moveCube[m], this.curCubie);
-      CubieCube.CornMult(this.prevCubie, CubieCube.moveCube[m], this.curCubie);
+      CubieCube.EdgeMult(this.lastFacelet, CubieCube.moveCube[m], this.currentFacelet);
+      CubieCube.CornMult(this.lastFacelet, CubieCube.moveCube[m], this.currentFacelet);
       this.deviceTime += this.timeOffs[i];
-      const tmp = this.curCubie;
-      this.curCubie = this.prevCubie;
-      this.prevCubie = tmp;
+      const tmp = this.currentFacelet;
+      this.currentFacelet = this.lastFacelet;
+      this.lastFacelet = tmp;
 
       debug && console.log("[gancube] move", this.prevMoves[i], this.timeOffs[i]);
       debug &&
-        console.log("[gancube] facelet: ", this.prevCubie.toFaceCube(), this.curCubie.toFaceCube());
+        console.log(
+          "[gancube] facelet: ",
+          this.lastFacelet.toFaceCube(),
+          this.currentFacelet.toFaceCube()
+        );
 
-      this.interpreter.send({
+      this.interpreter?.send({
         type: "MOVE",
         data: {
           move: this.prevMoves[i],
           offset: this.timeOffs[i],
-          facelet: this.prevCubie.toFaceCube(),
+          facelet: this.lastFacelet.toFaceCube(),
         },
       });
 
-      const st = this.interpreter.getSnapshot().value.toString();
+      const st = this.interpreter?.getSnapshot().value.toString();
 
       if (st === "RUNNING" || st === "STOPPED") {
-        this.context.cfop.addMove(this.prevMoves[i]);
-        this.context.roux.addMove(this.prevMoves[i]);
+        this.context?.cfop.addMove(this.prevMoves[i]);
+        this.context?.roux.addMove(this.prevMoves[i]);
       }
 
       this.emit("move", [this.prevMoves[i], this.timeOffs[i]]);
@@ -938,11 +946,11 @@ export class GANInput implements TimerInputHandler {
 
       if (this.prevMoveCnt == -1) {
         this.initCubeState();
-      } else if (this.prevCubie.toFaceCube() != this.latestFacelet) {
+      } else if (this.lastFacelet.toFaceCube() != this.latestFacelet) {
         debug && console.log("[gancube]", "Cube state check error");
-        debug && console.log("[gancube]", "calc", this.prevCubie.toFaceCube());
+        debug && console.log("[gancube]", "calc", this.lastFacelet.toFaceCube());
         debug && console.log("[gancube]", "read", this.latestFacelet);
-        this.prevCubie.fromFacelet(this.latestFacelet);
+        this.lastFacelet.fromFacelet(this.latestFacelet);
         // callback(latestFacelet, prevMoves, [null, locTime], deviceName + '*');
       }
       this.prevMoveCnt = this.moveCnt;
@@ -970,9 +978,9 @@ export class GANInput implements TimerInputHandler {
       this.emit("hardware", { hardwareVersion, softwareVersion, deviceName, gyro });
     } else if (mode == 9) {
       // battery
-      this.battery = parseInt(value.slice(8, 16), 2);
-      this.emit("battery", this.battery);
-      debug && console.log("[gancube]", "v2 received battery event", this.battery);
+      this.batteryLevel = parseInt(value.slice(8, 16), 2);
+      this.emit("battery", this.batteryLevel);
+      debug && console.log("[gancube]", "v2 received battery event", this.batteryLevel);
     } else {
       debug && console.log("[gancube]", "v2 received unknown event", value);
     }
@@ -1036,7 +1044,7 @@ export class GANInput implements TimerInputHandler {
     debug && console.log("[gancube] v2init start");
     this.keyCheck = 0;
 
-    this.v2initDecoder(this.deviceMac, ver);
+    this.v2initDecoder(this.macAddress, ver);
 
     if (!this.service_v2data) {
       return Promise.reject();
@@ -1090,7 +1098,7 @@ export class GANInput implements TimerInputHandler {
       const ds = get(dataService);
 
       ds.emitBluetoothData("facelet", SOLVED_FACELET);
-      ds.config.setPath(`timer/inputs/GAN/${this.deviceMac}`, { solvedState });
+      ds.config.setPath(`timer/inputs/GAN/${this.macAddress}`, { solvedState });
       ds.config.saveConfig();
     }
   }

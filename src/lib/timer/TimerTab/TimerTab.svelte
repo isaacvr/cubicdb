@@ -8,18 +8,8 @@
     type Solve,
     type TimerContext,
     type TimerInput,
-    type TimerInputHandler,
   } from "@interfaces";
   import { writable, type Writable } from "svelte/store";
-
-  /// Icons
-  import Close from "@icons/Close.svelte";
-  import ThumbDown from "@icons/ThumbDown.svelte";
-  import Flag from "@icons/FlagOutline.svelte";
-  import WatchOnIcon from "@icons/Wifi.svelte";
-  import WatchOffIcon from "@icons/WifiOff.svelte";
-  import CommentIcon from "@icons/CommentPlusOutline.svelte";
-  import BluetoothOffIcon from "@icons/BluetoothOff.svelte";
 
   /// Components
   import Simulator from "$lib/simulator/Simulator.svelte";
@@ -52,16 +42,22 @@
   import Button from "$lib/cubicdbKit/Button.svelte";
   import {
     CopyIcon,
+    FlagIcon,
     HistoryIcon,
+    MessageSquareTextIcon,
     PauseIcon,
     PlayIcon,
     RefreshCwIcon,
     SquarePenIcon,
+    ThumbsDownIcon,
+    WifiIcon,
+    WifiOffIcon,
     XIcon,
   } from "lucide-svelte";
   import Tooltip from "$lib/cubicdbKit/Tooltip.svelte";
   import { blur, scale } from "svelte/transition";
   import { twMerge } from "tailwind-merge";
+  import type { Device } from "$lib/interfaces/devices.types";
 
   interface TimerTabContext {
     context: TimerContext;
@@ -111,18 +107,18 @@
   } = context;
 
   const notification = NotificationService.getInstance();
-  let inputMethod: Writable<TimerInputHandler> = writable(new ManualInput());
+  let inputMethod: Writable<Device> = writable(new ManualInput());
   let lastSolve: Writable<Solve | null> = writable(null);
 
   /// CLOCK
-  const TIMER_DIGITS = /^\d+$/;
+  const TIMER_DIGITS = /^\d+\+?$/;
   const TIMER_DNF = /^\s*dnf\s*$/i;
   let time: Writable<number> = writable(0);
   let timeStr: string = $state("");
   let solveControl = $state([
     {
       text: "Delete",
-      icon: Close,
+      icon: XIcon,
       highlight: () => false,
       handler: (ev: MouseEvent) => {
         ev.stopPropagation();
@@ -136,7 +132,7 @@
     },
     {
       text: "DNF",
-      icon: ThumbDown,
+      icon: ThumbsDownIcon,
       highlight: (s: any) => s.penalty === Penalty.DNF,
       handler: (ev: MouseEvent) => {
         ev.stopPropagation();
@@ -155,7 +151,7 @@
     },
     {
       text: "+2",
-      icon: Flag,
+      icon: FlagIcon,
       highlight: (s: any) => s.penalty === Penalty.P2,
       handler: (ev: MouseEvent) => {
         ev.stopPropagation();
@@ -174,7 +170,7 @@
     },
     {
       text: "Comments",
-      icon: CommentIcon,
+      icon: MessageSquareTextIcon,
       highlight: () => false,
       handler: (ev: MouseEvent) => {
         ev.stopPropagation();
@@ -329,7 +325,11 @@
     createNewSolve();
 
     if (TIMER_DIGITS.test(timeStr)) {
-      addSolve(timerToMilli(+timeStr));
+      let isP2 = timeStr.endsWith("+");
+      addSolve(
+        timerToMilli(+timeStr.slice(0, isP2 ? -1 : undefined)),
+        isP2 ? Penalty.P2 : Penalty.NONE
+      );
     } else if (TIMER_DNF.test(timeStr)) {
       addSolve(0, Penalty.DNF);
     }
@@ -409,23 +409,23 @@
     if ($session?.settings?.input === "Manual" && !sameClass) {
       inputMethod.set(new ManualInput());
     } else if ($session?.settings?.input === "StackMat" && !sameClass) {
-      inputMethod.set(new StackmatInput(inputContext));
-      $inputMethod.init($deviceID, true);
-    } else if ($session?.settings?.input === "GAN Cube" && !sameClass) {
-      inputMethod.set(new GANInput(inputContext));
-      $inputMethod.init();
-    } else if ($session?.settings?.input === "Virtual" && !sameClass) {
-      inputMethod.set(new VirtualInput(inputContext));
-      $inputMethod.init();
-    } else if ($session?.settings?.input === "QY-Timer" && !sameClass) {
-      inputMethod.set(new QiYiSmartTimerInput(inputContext));
-      $inputMethod.init();
+      inputMethod.set(new StackmatInput());
+      $inputMethod.init(inputContext);
+      // } else if ($session?.settings?.input === "GAN Cube" && !sameClass) {
+      //   inputMethod.set(new GANInput(inputContext));
+      //   $inputMethod.init();
+      // } else if ($session?.settings?.input === "Virtual" && !sameClass) {
+      //   inputMethod.set(new VirtualInput(inputContext));
+      //   $inputMethod.init();
+      // } else if ($session?.settings?.input === "QY-Timer" && !sameClass) {
+      //   inputMethod.set(new QiYiSmartTimerInput(inputContext));
+      //   $inputMethod.init();
     } else if ($session?.settings?.input === "Keyboard") {
       $inputMethod.disconnect();
-      let ki = new KeyboardInput(inputContext, currentStep);
+      let ki = new KeyboardInput();
 
       inputMethod.set(ki);
-      $inputMethod.init();
+      $inputMethod.init(inputContext, currentStep);
     }
 
     // else if ($session?.settings?.input === "ExternalTimer") {
@@ -795,7 +795,7 @@
       role="timer"
     >
       {#if $session?.settings?.input === "Manual"}
-        <div id="manual-inp">
+        <div id="manual-inp" class="max-w-[30rem]">
           <div class="text-xl w-full text-center tx-text">
             {timeStr.trim()
               ? TIMER_DNF.test(timeStr)
@@ -804,7 +804,19 @@
               : ""}
           </div>
 
-          <input type="text" class="input" />
+          <input
+            type="text"
+            bind:value={timeStr}
+            onkeydown={e => {
+              if (e.code === "Enter" || e.code === "NumpadEnter") {
+                addTimeString();
+              }
+            }}
+            class="input w-full !h-full max-md:w-[min(90%,20rem)] mx-auto text-center
+              text-7xl outline-none text-base-content {validTimeStr(timeStr)
+              ? ''
+              : '!border-error border-2'}"
+          />
 
           <!-- <Input
             bind:value={timeStr}
@@ -845,6 +857,7 @@
                 {#each solveControl.slice(Number(battle), solveControl.length) as control}
                   {@const Icon = control.icon}
                   <Button
+                    color="none"
                     class="flex mx-1 w-5 h-5 p-0 pointer-events-auto {control.highlight(
                       $solves[0] || {}
                     )
@@ -852,7 +865,7 @@
                       : ''}"
                     on:click={control.handler}
                   >
-                    <Icon width="100%" height="100%" />
+                    <Icon size="1.2rem" />
                   </Button>
                   <Tooltip>{control.text}</Tooltip>
                 {/each}
@@ -884,9 +897,9 @@
 
             <span class={$stackmatStatus ? "text-green-600" : "text-red-600"}>
               {#if $stackmatStatus}
-                <WatchOnIcon />
+                <WifiIcon />s
               {:else}
-                <WatchOffIcon />
+                <WifiOffIcon />
               {/if}
             </span>
 

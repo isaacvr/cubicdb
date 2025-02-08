@@ -1,10 +1,12 @@
 <script lang="ts">
   import { createEventDispatcher } from "svelte";
   import type { Paginator } from "@classes/Paginator";
-  import ChevronLeftIcon from "@icons/ChevronLeft.svelte";
-  import ChevronRightIcon from "@icons/ChevronRight.svelte";
-  import ChevronDoubleLeftIcon from "@icons/ChevronDoubleLeft.svelte";
-  import ChevronDoubleRightIcon from "@icons/ChevronDoubleRight.svelte";
+  import {
+    ChevronLeftIcon,
+    ChevronRightIcon,
+    ChevronsLeftIcon,
+    ChevronsRightIcon,
+  } from "lucide-svelte";
 
   export let pg: Paginator;
 
@@ -23,7 +25,7 @@
     (pg.pages > 1 ? "" : "hidden")}
 >
   <li class="paginator-item">
-    <button on:click={() => setPage(1)}> <ChevronDoubleLeftIcon /> </button>
+    <button on:click={() => setPage(1)}> <ChevronsLeftIcon /> </button>
   </li>
   <li class="paginator-item">
     <button on:click={() => setPage(-2)}> <ChevronLeftIcon /> </button>
@@ -37,7 +39,7 @@
     <button on:click={() => setPage(-1)}> <ChevronRightIcon /> </button>
   </li>
   <li class="paginator-item">
-    <button on:click={() => setPage(Infinity)}> <ChevronDoubleRightIcon /> </button>
+    <button on:click={() => setPage(Infinity)}> <ChevronsRightIcon /> </button>
   </li>
 </ul>
 

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import type { ITutorial, LanguageCode } from "@interfaces";
+  import type { ITutorial } from "@interfaces";
   import {
     Button,
     Card,
@@ -17,15 +17,18 @@
   import { LANGUAGES } from "@lang/index";
   import { ICONS } from "@constants";
 
-  import ArrowRightIcon from "@icons/ArrowRight.svelte";
-  import DotsIcon from "@icons/DotsVertical.svelte";
-  import EditIcon from "@icons/Pencil.svelte";
-  import RemoveIcon from "@icons/Delete.svelte";
-  import AddIcon from "@icons/Plus.svelte";
-  import FundamentalsIcon from "@icons/HumanMaleBoardPoll.svelte";
   import FlagIcon from "@components/FlagIcon.svelte";
   import { goto } from "$app/navigation";
   import { dataService } from "$lib/data-services/data.service";
+  import type { LanguageCode } from "$lib/interfaces/language.types";
+  import {
+    EllipsisVerticalIcon,
+    MoveRightIcon,
+    PencilIcon,
+    PlusIcon,
+    SchoolIcon,
+    TrashIcon,
+  } from "lucide-svelte";
 
   type IndicatorColor = "green" | "blue" | "yellow";
 
@@ -206,27 +209,28 @@
       type="button"
       class={"rounded-md grid place-items-center w-6 h-6 cursor-pointer transition-all duration-200 " +
         (currentGroup === "fundamentals" ? "text-purple-400" : "text-gray-500")}
-      on:click={() => (currentGroup = "fundamentals")}
+      onclick={() => (currentGroup = "fundamentals")}
     >
-      <FundamentalsIcon class="" size="1.4rem" />
+      <SchoolIcon size="1.4rem" />
     </button>
     <Tooltip class="z-10" placement="right">{$localLang.TUTORIALS.fundamentals}</Tooltip>
 
     {#each groupNames as gn}
       {#if gn != "fundamentals"}
-        <WCACategory
-          icon={groups[gn][0].icon}
-          class={"w-6 h-6 cursor-pointer transition-all duration-200 " +
-            (currentGroup === gn ? "text-purple-400" : "text-gray-500")}
-          on:click={() => (currentGroup = gn)}
-        />
+        <Button onclick={() => (currentGroup = gn)}>
+          <WCACategory
+            icon={groups[gn][0].icon}
+            class={"w-6 h-6 cursor-pointer transition-all duration-200 " +
+              (currentGroup === gn ? "text-purple-400" : "text-gray-500")}
+          />
+        </Button>
         <Tooltip class="z-10" placement="right">{gn}</Tooltip>
       {/if}
     {/each}
 
     {#if allowAdmin}
       <Button class="w-8 h-8 !p-1 mt-auto" on:click={preAddTutorial}>
-        <AddIcon size="1.2rem" />
+        <PlusIcon size="1.2rem" />
       </Button>
     {/if}
   </section>
@@ -252,7 +256,7 @@
           href={`/tutorials/${tut.lang}/${tut.puzzle}/${tut.shortName}`}
         >
           {$localLang.global.start}
-          <ArrowRightIcon size="1rem" />
+          <MoveRightIcon size="1rem" />
         </Button>
 
         {#if allowAdmin}
@@ -262,7 +266,7 @@
               color="alternative"
               class="w-8 h-8 !p-2 border-none absolute right-0 top-1/2 translate-y-[-50%]"
             >
-              <DotsIcon size="1.2rem" />
+              <EllipsisVerticalIcon size="1.2rem" />
             </Button>
 
             <Dropdown placement="left" class="z-50 relative">
@@ -270,14 +274,14 @@
                 defaultClass={dropdownDefaultClass}
                 on:click={() => viewTutorial(tut, true)}
               >
-                <EditIcon size="1.2rem" /> Edit
+                <PencilIcon size="1.2rem" /> Edit
               </DropdownItem>
 
               <DropdownItem
                 defaultClass={dropdownDefaultClass}
                 on:click={() => preRemoveTutorial(tut)}
               >
-                <RemoveIcon size="1.2rem" /> Delete
+                <TrashIcon size="1.2rem" /> Delete
               </DropdownItem>
             </Dropdown>
           </div>
@@ -301,7 +305,7 @@
   <div class="flex flex-wrap gap-2 justify-center">
     <Button color="alternative" on:click={() => (sTut = null)}>Cancel</Button>
     <Button color="red" on:click={removeTutorial} class="flex items-center gap-2">
-      <RemoveIcon size="1.2rem" /> Delete
+      <TrashIcon size="1.2rem" /> Delete
     </Button>
   </div>
 </Modal>
@@ -321,10 +325,10 @@
       <textarea
         bind:this={textAreaRef}
         bind:value={nTut.summary}
-        on:input={handleResize}
+        oninput={handleResize}
         spellcheck="false"
         class="border border-blue-500 p-2 rounded-md w-full bg-transparent min-h-[5rem]"
-      />
+      ></textarea>
       <!-- <Input placeholder="summary" bind:value={nTut.summary} class="max-w-[10rem]" /> -->
     </section>
     <section>

@@ -1,42 +1,13 @@
 import { dataService } from "$lib/data-services/data.service";
+import type { IVirtualCubeKeyboardDevice } from "$lib/interfaces/devices.types";
 import { isEscape, type Actor } from "@helpers/stateMachine";
-import { TimerState, type InputContext, type TimerInputHandler, type Solve } from "@interfaces";
+import { TimerState, type InputContext, type Solve } from "@interfaces";
 import { get, writable, type Writable } from "svelte/store";
 import { createActor, setup, fromCallback } from "xstate";
 
 interface VirtualContext extends InputContext {
   timeRef: Writable<number>;
 }
-
-type KEY =
-  | "Q"
-  | "W"
-  | "E"
-  | "R"
-  | "T"
-  | "Y"
-  | "U"
-  | "I"
-  | "O"
-  | "P"
-  | "A"
-  | "S"
-  | "D"
-  | "F"
-  | "G"
-  | "H"
-  | "J"
-  | "K"
-  | "L"
-  | "Z"
-  | "X"
-  | "C"
-  | "V"
-  | "B"
-  | "N"
-  | "M";
-
-type KeyMap = Partial<Record<KEY | (string & {}), string>>;
 
 type VirtualActor = (data: Actor<VirtualContext>) => any;
 
@@ -161,62 +132,22 @@ const VirtualMachine = setup({
   },
 });
 
-export class VirtualInput implements TimerInputHandler {
-  private interpreter;
-  private context: VirtualContext;
-  private connected = false;
+export class VirtualInput implements IVirtualCubeKeyboardDevice {
+  private context: VirtualContext | null;
 
-  readonly adaptor = "Virtual";
-  keymap: KeyMap;
+  readonly enabled = true;
+  readonly type = "virtual_cube_keyboard";
+  name = "Virtual";
+  id = "cubicdb:device:virtual";
+  interpreter: ReturnType<typeof createActor> | null;
+  isConnected = false;
+  keyBindings;
 
-  constructor(context: InputContext) {
-    this.context = { ...context, timeRef: writable(0) };
-    this.interpreter = createActor(VirtualMachine, { input: this.context });
-    // this.keymap = {
-    //   // Right hand
-    //   I: "R",
-    //   K: "R'",
-    //   J: "U",
-    //   L: "D'",
-    //   M: "M",
-    //   N: "F",
+  constructor() {
+    this.interpreter = null;
+    this.context = null;
 
-    //   // Left hand
-    //   E: "L'",
-    //   D: "L",
-    //   F: "U'",
-    //   S: "D",
-    //   X: "M'",
-    //   C: "F'",
-    // };
-    // this.keymap = {
-    //   // Mano derecha
-    //   I: "R",
-    //   K: "R'",
-    //   O: "Rw",
-    //   L: "Rw'",
-    //   J: "U", // J
-    //   M: "U'", // F
-    //   P: "Uw", // U
-    //   ";": "Uw'", // R
-    //   U: "D", // C
-    //   ",": "D'", // M
-    //   H: "F",
-    //   N: "F'", // G
-
-    //   // Mano izquierda
-    //   D: "L",
-    //   E: "L'",
-    //   R: "Lw", // S
-    //   F: "Lw'", // W
-    //   T: "B", // N
-    //   G: "B'", // V
-    //   Q: "Dw", // W
-    //   A: "Dw'", // O
-    //   W: "M", // Y
-    //   S: "M'", // X
-    // };
-    this.keymap = {
+    this.keyBindings = {
       // Mano derecha
       I: "R",
       K: "R'",
@@ -241,20 +172,18 @@ export class VirtualInput implements TimerInputHandler {
       V: "B",
       // X: "M'",
     };
-
-    // this.interpreter.subscribe(sn => {
-    //   console.log("STATE: ", sn.value);
-    // });
   }
 
-  init() {
+  init(context: InputContext) {
+    this.context = { ...context, timeRef: writable(0) };
+    this.interpreter = createActor(VirtualMachine, { input: this.context });
     this.interpreter.start();
-    this.connected = true;
+    this.isConnected = true;
   }
 
   disconnect() {
-    this.interpreter.stop();
-    this.connected = false;
+    this.interpreter?.stop();
+    this.isConnected = false;
   }
 
   private emit(type: string, data: any) {
@@ -266,8 +195,8 @@ export class VirtualInput implements TimerInputHandler {
   keyDownHandler(ev: KeyboardEvent) {
     if (/^Key[A-Z]/.test(ev.code) && !ev.ctrlKey && !ev.shiftKey) {
       const k = ev.code.slice(3);
-      if (k in this.keymap) {
-        this.emit("move", [this.keymap[k], 100]);
+      if (k in this.keyBindings) {
+        this.emit("move", [this.keyBindings[k as keyof typeof this.keyBindings], 100]);
         return;
       }
     }
@@ -276,8 +205,8 @@ export class VirtualInput implements TimerInputHandler {
   }
 
   sendEvent(e: { type: string; data?: any }) {
-    if (!this.connected) return;
-    this.interpreter.send(e);
+    if (!this.isConnected) return;
+    this.interpreter?.send(e);
   }
 
   stopTimer() {}

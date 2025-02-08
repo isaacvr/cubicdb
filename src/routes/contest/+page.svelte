@@ -1,7 +1,6 @@
 <script lang="ts">
   import { type SheetRegistry } from "@interfaces";
   import Select from "@components/material/Select.svelte";
-  import DeleteIcon from "@icons/Delete.svelte";
   import { globalLang } from "@stores/language.service";
   import { getLanguage } from "@lang/index";
   import { writable } from "svelte/store";
@@ -15,6 +14,7 @@
   import CubeCategory from "@components/wca/CubeCategory.svelte";
   import { getHTMLTemplate } from "./getHTMLTemplate";
   import { localLang } from "@stores/language.service";
+  import { TrashIcon } from "lucide-svelte";
 
   interface SCRAMBLE_SETTINGS {
     scrambles: number;
@@ -326,7 +326,7 @@
           class="w-6 h-6 p-0 absolute -top-2 -right-1"
           on:click={() => {
             categories = categories.filter((_, p) => p != pos);
-          }}><DeleteIcon /></Button
+          }}><TrashIcon size="1.2rem" /></Button
         >
       </li>
     {/each}

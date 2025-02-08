@@ -1,7 +1,7 @@
 <script lang="ts">
+  import { LoaderCircleIcon } from "lucide-svelte";
   import { ripple } from "./actions/ripple";
   import { createEventDispatcher } from "svelte";
-  import LoadingIcon from "@icons/Loading.svelte";
 
   const dispatch = createEventDispatcher();
 
@@ -52,7 +52,7 @@
   {#if loading}
     <div class="loading-wrapper">
       <div class="loading">
-        <LoadingIcon size="1.2rem" />
+        <LoaderCircleIcon size="1.2rem" />
       </div>
     </div>
   {/if}
