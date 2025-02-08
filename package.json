@@ -114,7 +114,6 @@
     "socket.io": "4.7.4",
     "socket.io-client": "4.7.2",
     "svelte-easy-crop": "3.0.1",
-    "svelte-material-icons": "3.0.5",
     "svelte-routing": "2.13.0",
     "tailwind-merge": "2.5.4",
     "three": "0.165.0",
