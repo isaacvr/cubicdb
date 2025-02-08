@@ -144,7 +144,7 @@
     "@types/qrcode": "1.5.2",
     "@types/three": "0.165.0",
     "@types/web-bluetooth": "0.0.17",
-    "@vitejs/plugin-basic-ssl": "1.1.0",
+    "@vitejs/plugin-basic-ssl": "1.2.0",
     "autoprefixer": "10.4.16",
     "concurrently": "5.1.0",
     "daisyui": "4.12.22",
