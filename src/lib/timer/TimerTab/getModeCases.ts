@@ -162,6 +162,28 @@ export async function getModeCases(group: number, modeIndex: number): Promise<IM
 
     // WVLS
     if (modeIndex === 12) {
+      const { cases: wvlsCases, images: wvlsImages } = await getCasesAndImages("333/wv/wvls");
+
+      const cases = wvlsCases.map((cs, pos) => ({
+        name: cs.name,
+        img: wvlsImages[pos],
+        pos,
+      }));
+
+      const groups = [
+        ["Oriented", [0]],
+        ["Rectangle", [1, 2]],
+        ["Tank", [3, 6]],
+        ["Bowtie", [4, 5, 7, 8]],
+        ["Snake", [9, 18]],
+        ["Adjacent", [10, 11, 19, 20]],
+        ["Gun", [12, 15, 21, 24]],
+        ["Sune", [13, 26]],
+        ["Pi", [14, 16, 23, 25]],
+        ["H", [17, 22]],
+      ].map((e: any) => ({ name: e[0], cases: e[1].map((n: number) => cases[n]) }));
+
+      return { cases, groups };
     }
 
     // VLS
