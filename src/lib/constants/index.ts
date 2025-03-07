@@ -33,6 +33,7 @@ export enum CubeMode {
   DPLL,
   L4E,
   CYCROSS,
+  EOLS,
 }
 
 export const CubeModeMap = [

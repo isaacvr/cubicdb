@@ -446,7 +446,7 @@ export const f2l_map = [
 ] as const;
 
 const f2lprobs = idxArray(f2l_map, 1);
-const f2lfilter = idxArray(f2l_map, 2);
+export const f2lfilter = idxArray(f2l_map, 2);
 
 export function getLSLLScramble(type: any, length: any, cases: any) {
   const caze = f2l_map[fixCase(cases, f2lprobs)][0];

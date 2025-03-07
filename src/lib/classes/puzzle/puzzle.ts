@@ -373,6 +373,18 @@ export class Puzzle {
           }
           break;
         }
+        case CubeMode.EOLS: {
+          if (pieces[i].contains(TOP_COLOR)) {
+            if (stLen === 3) {
+              stickers.forEach(st => (st.color = OFF_COLOR));
+            } else {
+              stickers.forEach(st => (st.color = st.oColor === TOP_COLOR ? st.oColor : OFF_COLOR));
+            }
+          } else {
+            stickers.forEach(st => (st.color = st.oColor));
+          }
+          break;
+        }
         case CubeMode.GRAY: {
           for (let j = 0; j < stLen; j += 1) {
             stickers[j].color = OFF_COLOR;

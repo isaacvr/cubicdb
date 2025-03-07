@@ -1,6 +1,6 @@
 import { dataService } from "$lib/data-services/data.service";
-import { Puzzle } from "@classes/puzzle/puzzle";
 import { CubeMode } from "@constants";
+import { f2lfilter } from "@cstimer/scramble/scramble_333";
 import { pGenerateCubeBundle } from "@helpers/cube-draw";
 import { algorithmToPuzzle } from "@helpers/object";
 import { nameCmp } from "@helpers/strings";
@@ -33,11 +33,14 @@ export interface IModeCase {
   groups: Group[];
 }
 
-async function getCasesAndImages(
-  path: string,
-  prefix = false,
-  sortFnc?: (a: { name: string }, b: { name: string }) => number
-) {
+interface GetCasesOptions {
+  path: string;
+  prefix?: boolean;
+  mode?: CubeMode | null;
+  sortFnc?: (a: { name: string }, b: { name: string }) => number;
+}
+
+async function getCasesAndImages({ path, prefix = false, mode = null, sortFnc }: GetCasesOptions) {
   const cases = (
     prefix
       ? (await get(dataService).algorithms.getAlgorithms({ all: true, path: "" })).filter(
@@ -51,16 +54,24 @@ async function getCasesAndImages(
         })
   ).sort(sortFnc || nameCmp);
 
+  if (mode != null) {
+    cases.forEach(cs => (cs.mode = mode));
+  }
+
   const images = await getAlgImages(cases);
 
   return { cases, images };
 }
 
-export async function getModeCases(group: number, modeIndex: number): Promise<IModeCase> {
+export async function getModeCases(
+  group: number,
+  modeIndex: number,
+  filters: string[] = []
+): Promise<IModeCase> {
   if (group === 2) {
     // PLL
     if (modeIndex === 0) {
-      const { cases: pllCases, images: pllImages } = await getCasesAndImages("333/pll");
+      const { cases: pllCases, images: pllImages } = await getCasesAndImages({ path: "333/pll" });
       const cases = pllCases.map((cs, pos) => ({
         name: cs.name,
         img: pllImages[pos],
@@ -80,7 +91,7 @@ export async function getModeCases(group: number, modeIndex: number): Promise<IM
 
     // OLL
     if (modeIndex === 1) {
-      const { cases: ollCases, images: ollImages } = await getCasesAndImages("333/oll");
+      const { cases: ollCases, images: ollImages } = await getCasesAndImages({ path: "333/oll" });
       const cases = ollCases.map((cs, pos) => ({
         name: cs.name,
         img: ollImages[pos],
@@ -110,7 +121,7 @@ export async function getModeCases(group: number, modeIndex: number): Promise<IM
 
     // Last Slot + LL
     if (modeIndex === 3) {
-      const { cases: f2lCases, images: f2lImages } = await getCasesAndImages("333/f2l");
+      const { cases: f2lCases, images: f2lImages } = await getCasesAndImages({ path: "333/f2l" });
       const cases = f2lCases.map((cs, pos) => ({
         name: cs.name,
         img: f2lImages[pos],
@@ -136,7 +147,9 @@ export async function getModeCases(group: number, modeIndex: number): Promise<IM
 
     // COLL
     if (modeIndex === 5) {
-      const { cases: collCases, images: collImages } = await getCasesAndImages("333/coll");
+      const { cases: collCases, images: collImages } = await getCasesAndImages({
+        path: "333/coll",
+      });
       const cases = collCases.map((cs, pos) => ({
         name: cs.name,
         img: collImages[pos],
@@ -158,11 +171,40 @@ export async function getModeCases(group: number, modeIndex: number): Promise<IM
 
     // EOLS
     if (modeIndex === 11) {
+      const { cases: f2lCases, images: f2lImages } = await getCasesAndImages({
+        path: "333/f2l",
+        mode: CubeMode.EOLS,
+      });
+      const mapFilter = f2lfilter.map((e, p) => [e, p]).filter(e => filters.includes(e[0]));
+      const cases = f2lCases
+        .map((cs, pos) => ({
+          name: cs.name,
+          img: f2lImages[pos],
+          pos,
+        }))
+        .filter(cs => mapFilter.some(e => e[1] === cs.pos));
+      cases.forEach((cs, pos) => (cs.pos = pos));
+
+      const groups = [
+        ["", [11]],
+        ["easy", [0, 1]],
+        ["RE", [2, 3]],
+        ["REFC", [4, 5, 6]],
+        ["SPGO", [7, 8]],
+        ["PMS", [9, 10]],
+        ["CPEU", [12, 13, 14]],
+        ["EPCU", [15, 16, 17]],
+        ["ECP", [18, 19]],
+      ].map((e: any) => ({ name: e[0], cases: e[1].map((n: number) => cases[n]) }));
+
+      return { cases, groups };
     }
 
     // WVLS
     if (modeIndex === 12) {
-      const { cases: wvlsCases, images: wvlsImages } = await getCasesAndImages("333/wv/wvls");
+      const { cases: wvlsCases, images: wvlsImages } = await getCasesAndImages({
+        path: "333/wv/wvls",
+      });
 
       const cases = wvlsCases.map((cs, pos) => ({
         name: cs.name,
@@ -189,10 +231,10 @@ export async function getModeCases(group: number, modeIndex: number): Promise<IM
     // VLS
     if (modeIndex === 13) {
       const nameOrder = ["UB-", "UF-", "UF UB-", "UL-", "UB UL-", "UF UL-", "No Edge-"];
-      const { cases: vlsCases, images: vlsImages } = await getCasesAndImages(
-        "333/vls",
-        true,
-        (a, b) => {
+      const { cases: vlsCases, images: vlsImages } = await getCasesAndImages({
+        path: "333/vls",
+        prefix: true,
+        sortFnc: (a, b) => {
           let pos1 = 0;
           let pos2 = 0;
           for (let i = 0, maxi = nameOrder.length; i < maxi; i += 1) {
@@ -210,9 +252,11 @@ export async function getModeCases(group: number, modeIndex: number): Promise<IM
 
           if (pos1 != pos2) return pos1 - pos2;
           return nameCmp(a, b);
-        }
-      );
-      const { cases: wvlsCases, images: wvlsImages } = await getCasesAndImages("333/wv/wvls");
+        },
+      });
+      const { cases: wvlsCases, images: wvlsImages } = await getCasesAndImages({
+        path: "333/wv/wvls",
+      });
 
       const allCases = [...wvlsCases, ...vlsCases];
       const allImages = [...wvlsImages, ...vlsImages];

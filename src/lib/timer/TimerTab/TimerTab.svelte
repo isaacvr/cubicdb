@@ -485,7 +485,7 @@
   });
 
   $effect(() => {
-    getModeCases($group, modeIndex).then(res => (cases = res));
+    getModeCases($group, modeIndex, $filters).then(res => (cases = res));
   });
 
   $prob = 0;
@@ -523,9 +523,7 @@
     }}
   >
     <PuzzleImage src={cs.img} />
-    <span>
-      {cs.name}
-    </span>
+    <span>{cs.name}</span>
     <!-- <input
       bind:checked={$selectedCases[cs.pos]}
       type="checkbox"
