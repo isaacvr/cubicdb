@@ -79,7 +79,7 @@
 
     if (pos > -1) {
       focused = pos;
-      list.children[0].children[pos * 2].scrollIntoView({ block: "nearest" });
+      list.children[0].children[pos * 2].scrollIntoView({ block: "center" });
       tick().then(() => focusElement(list));
     }
   }

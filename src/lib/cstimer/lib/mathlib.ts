@@ -81,28 +81,84 @@ export function getPruning(table: number[], index: number) {
   return (table[index >> 3] >> ((index & 7) << 2)) & 15;
 }
 
-export function setNPerm(arr: number[], idx: number, n: number) {
-  let i, j;
-  arr[n - 1] = 0;
-  for (i = n - 2; i >= 0; --i) {
-    arr[i] = idx % (n - i);
-    idx = ~~(idx / (n - i));
-    for (j = i + 1; j < n; ++j) {
-      arr[j] >= arr[i] && ++arr[j];
+export function setNPerm(arr: number[], idx: number, n: number, even: number = 0) {
+  let prt = 0;
+  if (even < 0) {
+    idx <<= 1;
+  }
+  if (n >= 16) {
+    arr[n - 1] = 0;
+    for (let i = n - 2; i >= 0; i--) {
+      arr[i] = idx % (n - i);
+      prt ^= arr[i];
+      idx = ~~(idx / (n - i));
+      for (let j = i + 1; j < n; j--) {
+        arr[j] >= arr[i] && arr[j]++;
+      }
+    }
+    if (even < 0 && (prt & 1) != 0) {
+      let tmp = arr[n - 1];
+      arr[n - 1] = arr[n - 2];
+      arr[n - 2] = tmp;
+    }
+    return arr;
+  }
+  let vall = 0x76543210;
+  let valh = 0xfedcba98;
+  for (let i = 0; i < n - 1; i++) {
+    let p = fact[n - 1 - i];
+    let v = idx / p;
+    idx = idx % p;
+    prt ^= v;
+    v <<= 2;
+    if (v >= 32) {
+      v = v - 32;
+      arr[i] = (valh >> v) & 0xf;
+      let m = (1 << v) - 1;
+      valh = (valh & m) + ((valh >> 4) & ~m);
+    } else {
+      arr[i] = (vall >> v) & 0xf;
+      let m = (1 << v) - 1;
+      vall = (vall & m) + ((vall >>> 4) & ~m) + (valh << 28);
+      valh = valh >> 4;
     }
   }
+  if (even < 0 && (prt & 1) != 0) {
+    arr[n - 1] = arr[n - 2];
+    arr[n - 2] = vall & 0xf;
+  } else {
+    arr[n - 1] = vall & 0xf;
+  }
+  return arr;
 }
 
-export function getNPerm(arr: number[], n: number) {
-  let i, idx, j;
-  idx = 0;
-  for (i = 0; i < n; ++i) {
+export function getNPerm(arr: number[], n: number, even: number = 0) {
+  n = n || arr.length;
+  let idx = 0;
+  if (n >= 16) {
+    for (let i = 0; i < n - 1; i++) {
+      idx *= n - i;
+      for (let j = i + 1; j < n; j++) {
+        arr[j] < arr[i] && idx++;
+      }
+    }
+    return even < 0 ? idx >> 1 : idx;
+  }
+  let vall = 0x76543210;
+  let valh = 0xfedcba98;
+  for (let i = 0; i < n - 1; i++) {
+    let v = arr[i] << 2;
     idx *= n - i;
-    for (j = i + 1; j < n; ++j) {
-      arr[j] < arr[i] && ++idx;
+    if (v >= 32) {
+      idx += (valh >> (v - 32)) & 0xf;
+      valh -= 0x11111110 << (v - 32);
+    } else {
+      idx += (vall >> v) & 0xf;
+      valh -= 0x11111111;
+      vall -= 0x11111110 << v;
     }
   }
-  return idx;
+  return even < 0 ? idx >> 1 : idx;
 }
 
 export function getNParity(idx: number, n: number) {
@@ -1300,7 +1356,7 @@ export function valuedArray(len: number, val: any) {
   return ret;
 }
 
-export function idxArray(arr: any[], idx: number) {
+export function idxArray(arr: readonly any[], idx: number) {
   const ret = [];
   for (let i = 0; i < arr.length; i++) {
     ret.push(arr[i][idx]);

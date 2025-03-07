@@ -274,23 +274,11 @@ export interface Solve {
   group?: number;
   mode?: string;
   len?: number;
-  prob?: number;
+  prob?: number | number[];
   steps?: number[];
 }
 
-export type TimerInput = "Keyboard" | "Manual" | "StackMat" | "GAN Cube" | "QY-Timer" | "Virtual";
-// | "ExternalTimer";
 export type SessionType = "mixed" | "single" | "multi-step";
-
-export const TIMER_INPUT: TimerInput[] = [
-  "Keyboard",
-  "Manual",
-  "StackMat",
-  "GAN Cube",
-  "Virtual",
-  // "QY-Timer",
-  // "ExternalTimer",
-];
 
 export const SESSION_TYPE: SessionType[] = ["mixed", "single", "multi-step"];
 
@@ -314,13 +302,13 @@ export interface SessionSettings {
   calcAoX: AverageSetting;
   genImage: boolean;
   scrambleAfterCancel: boolean;
-  input?: TimerInput;
+  input?: string;
   withoutPrevention: boolean;
   recordCelebration?: boolean;
   showBackFace?: boolean;
   sessionType?: SessionType;
   mode?: string;
-  prob?: number;
+  prob?: number | number[];
   steps?: number;
   stepNames?: string[];
 }
@@ -463,13 +451,13 @@ export interface TimerContext {
   scramble: Writable<string>;
   group: Writable<number>;
   mode: Writable<{ 0: string; 1: string; 2: number }>;
+  filters: Writable<string[]>;
   preview: Writable<HTMLImgAttributes[]>;
-  prob: Writable<number>;
+  prob: Writable<number | number[]>;
   isRunning: Writable<boolean>;
   selected: Writable<number>;
   decimals: Writable<boolean>;
   bluetoothList: Writable<BluetoothDeviceData[]>;
-  bluetoothStatus: Writable<boolean>;
   enableKeyboard: Writable<boolean>;
   STATS_WINDOW: Writable<(number | null)[][]>;
   puzzleType: Writable<PuzzleType>;
@@ -480,7 +468,9 @@ export interface TimerContext {
   updateSolves: () => any;
   updateStatistics: (inc?: boolean) => any;
   initScrambler: (scr?: string, _mode?: string) => any;
-  selectedGroup: () => any;
+  selectedGroup: (rescramble?: boolean, saveGroup?: boolean) => any;
+  selectedMode: (rescramble?: boolean, saveMode?: boolean, updateProb?: boolean) => any;
+  selectedFilter: (rescramble?: boolean, saveMode?: boolean) => any;
   selectSolve: (s: Solve) => any;
   selectSolveById: (id: string, n: number) => any;
   editSolve: (s: Solve) => any;
@@ -771,11 +761,10 @@ export interface InputContext {
   ready: Writable<boolean>;
   session: Writable<Session>;
   time: Writable<number>;
+  currentStep: Writable<number>;
   lastSolve: Writable<Solve | null>;
   isRunning: Writable<boolean>;
-  stackmatStatus: Writable<boolean>;
   decimals: Writable<boolean>;
-  bluetoothStatus: Writable<boolean>;
   scramble: Writable<string>;
   sequenceParts: Writable<string[]>;
   recoverySequence: Writable<string>;

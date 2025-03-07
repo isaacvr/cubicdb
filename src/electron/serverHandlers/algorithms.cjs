@@ -44,26 +44,25 @@ module.exports = (ipcMain, Algorithms, dbPath) => {
 
   ipcMain.handle("update-algorithm", async (_, arg) => {
     return await new Promise((res, rej) => {
-      Algorithms.update(
-        { _id: arg._id },
-        {
-          $set: {
-            name: arg.name,
-            order: arg.order,
-            scramble: arg.scramble,
-            puzzle: arg.puzzle,
-            mode: arg.mode,
-            view: arg.view,
-            tips: arg.tips,
-            solutions: arg.solutions,
-          },
-          // @ts-ignore
-        },
-        function (err) {
-          if (err) return rej(err);
-          res(arg);
-        }
-      );
+      let data = {
+        name: arg.name,
+        order: arg.order,
+        scramble: arg.scramble,
+        puzzle: arg.puzzle,
+        mode: arg.mode,
+        view: arg.view,
+        tips: arg.tips,
+        solutions: arg.solutions,
+      };
+
+      if (arg.shortName) {
+        data.shortName = arg.shortName;
+      }
+
+      Algorithms.update({ _id: arg._id }, { $set: data }, function (err) {
+        if (err) return rej(err);
+        res(arg);
+      });
     });
   });
 

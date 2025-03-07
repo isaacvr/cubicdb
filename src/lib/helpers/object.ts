@@ -1,5 +1,12 @@
 import { Puzzle } from "@classes/puzzle/puzzle";
-import { nameToPuzzle, Penalty, type ITutorialAlg, type PuzzleType, type Solve } from "@interfaces";
+import {
+  nameToPuzzle,
+  Penalty,
+  type Algorithm,
+  type ITutorialAlg,
+  type PuzzleType,
+  type Solve,
+} from "@interfaces";
 
 export function checkPath(obj: any, path: string[], useMap: boolean = false): boolean {
   if (typeof obj === "undefined") return false;
@@ -76,9 +83,9 @@ export function clone(obj: any, ignore: string[] = []): any {
     return BigInt(obj);
   }
 
-  if (Array.isArray(obj)) return obj.map(e => clone(e));
+  if (Array.isArray(obj)) return [...obj].map(e => clone(e));
 
-  return Object.entries(obj).reduce((acc: any, e) => {
+  return Object.entries({ ...obj }).reduce((acc: any, e) => {
     if (ignore.indexOf(e[0]) > -1) return acc;
 
     acc[e[0]] = clone(e[1]);

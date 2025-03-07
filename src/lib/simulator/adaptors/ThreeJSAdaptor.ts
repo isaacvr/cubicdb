@@ -783,8 +783,8 @@ export class ThreeJSAdaptor {
     });
   }
 
-  resetCamera() {
-    const pos = new Vector3D(0.68068, 0.34081, 0.6485).setLength(this.zoom);
+  resetCamera(usePos?: Vector3D) {
+    const pos = (usePos || new Vector3D(0.68068, 0.34081, 0.6485)).setLength(this.zoom);
 
     this.camera.position.set(pos.x, pos.y, pos.z);
     this.camera.rotation.set(0, 0, 0);

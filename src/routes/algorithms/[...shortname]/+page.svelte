@@ -5,7 +5,7 @@
   import { type Algorithm, type ICard, type Solution } from "@interfaces";
   import { Puzzle } from "@classes/puzzle/puzzle";
   import { pGenerateCubeBundle } from "@helpers/cube-draw";
-  import { copyToClipboard } from "@helpers/strings";
+  import { copyToClipboard, nameCmp } from "@helpers/strings";
   import { NotificationService } from "@stores/notification.service";
   import { screen } from "@stores/screen.store";
   import { localLang } from "@stores/language.service";
@@ -33,9 +33,8 @@
   let selectedCase: Algorithm | null = $state(null);
   let allSolutions = $state(false);
   let imgExpanded = $state(false);
-  const NUMBER_REG = /^[+-]?[\d]+(\.[\d]+)?$/;
   let currentList: Algorithm[] = [];
-  let allowAlgAdmin = $state(false);
+  let allowAlgAdmin = $state(true);
   let currentAlg: Algorithm | null = null;
   let meta = getTitleMeta($page.url.pathname, $localLang);
 
@@ -90,22 +89,7 @@
       }
     }
 
-    list.sort(function (a, b): number {
-      let A = a.name.split(" ").map(e => e.toLowerCase());
-      let B = b.name.split(" ").map(e => e.toLowerCase());
-
-      for (let i = 0, maxi = Math.min(A.length, B.length); i < maxi; i += 1) {
-        if (A[i] != B[i]) {
-          if (NUMBER_REG.test(A[i]) && NUMBER_REG.test(B[i])) {
-            return parseInt(A[i]) - parseInt(B[i]);
-          } else {
-            return A[i] < B[i] ? -1 : 1;
-          }
-        }
-      }
-
-      return A.length < B.length ? -1 : 1;
-    });
+    list.sort(nameCmp);
 
     let cubes = list.map(alg => algorithmToPuzzle(alg, true));
 
@@ -249,6 +233,7 @@
     });
 
     show = false;
+    isAdding = false;
   }
 
   function selectAlg(a: Algorithm) {
@@ -577,7 +562,6 @@
   on:save={saveAlgorithm}
   bind:alg={sAlg}
   bind:show
-  bind:isAdding
   bind:tipTemp
   bind:img
   bind:solTemp

@@ -101,7 +101,7 @@ export function formatScramble(str: string) {
   return str.replace(re1, repfunc);
 }
 
-export function rndState(filter, probs) {
+export function rndState(filter: any[], probs: any[]) {
   if (probs == undefined) {
     return undefined;
   }
@@ -117,6 +117,6 @@ export function rndState(filter, probs) {
   return rndProb(ret);
 }
 
-export function fixCase(cases, probs) {
+export function fixCase(cases: number, probs: number[]): number {
   return cases == undefined ? rndProb(probs) : cases;
 }

@@ -68,6 +68,8 @@ export const Spanish: Language = {
     next: "Siguiente",
     download: "Descargar",
     copyCode: "Copiar $1",
+    toGroup: "Agrupar",
+    toUngroup: "Desagrupar",
   },
   TUTORIALS: {
     easy: "Fácil",
@@ -363,6 +365,52 @@ export const Spanish: Language = {
     },
 
     gateResultIndicator: ["El resultado es", "si algún valor es"],
+
+    // Case selector
+    caseName(caseCode) {
+      switch (caseCode) {
+        case "edges-only":
+          return "Solo aristas";
+        case "corners-only":
+          return "Solo esquinas";
+        case "adjacent-corners":
+          return "Esquinas adyacentes";
+        case "diagonal-corners":
+          return "Esquinas diagonales";
+        case "double-cycles":
+          return "Ciclos dobles";
+        case "point":
+          return "Punto";
+        case "square":
+          return "Cuadrado";
+        case "small-lightning-ball":
+          return "⚡pequeño";
+        case "big-lightning-ball":
+          return "⚡ grande";
+        case "fish":
+          return "Pez";
+        case "knight":
+          return "Alfil";
+        case "awkward-shape":
+          return "Forma rara";
+        case "easy":
+          return "Fácil";
+        case "same-colors":
+          return "Colores iguales";
+        case "different-colors":
+          return "Colores diferentes";
+        case "white-on-top":
+          return "Blanca arriba";
+        case "corner-in-place":
+          return "Esquina en su lugar";
+        case "edge-in-place":
+          return "Arista en su lugar";
+        case "unoriented":
+          return "Mal orientadas";
+      }
+
+      return caseCode;
+    },
   },
   RECONSTRUCTIONS: {
     stepBack: "Paso atrás",

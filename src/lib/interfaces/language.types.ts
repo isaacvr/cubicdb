@@ -70,6 +70,8 @@ export interface Language {
     start: string;
     download: string;
     copyCode: string;
+    toGroup: string;
+    toUngroup: string;
   };
   TUTORIALS: {
     easy: string;
@@ -249,6 +251,9 @@ export interface Language {
     // Advanced Search Operators
     operators: Record<string, string>;
     gateResultIndicator: string[];
+
+    // Case selector
+    caseName: (caseCode: string) => string;
   };
   RECONSTRUCTIONS: {
     stepBack: string;

@@ -11,7 +11,6 @@
   type AlgProp = { tutorial: false; alg: Algorithm } | { tutorial: true; alg: ITutorialAlg };
 
   export let show: boolean;
-  export let isAdding: boolean;
   export let tipTemp: string[];
   export let solTemp: Solution[];
   export let img;
@@ -73,7 +72,6 @@
   bind:show
   onclose={() => {
     show = false;
-    isAdding = false;
   }}
 >
   <div
@@ -81,30 +79,34 @@
   >
     {#if !alg.tutorial}
       <section>
-        Nombre: <Input bind:value={alg.alg.name} />
+        Nombre: <Input class="bg-base-100 text-base-content" bind:value={alg.alg.name} />
       </section>
       <section>
-        Nombre corto: <Input bind:value={alg.alg.shortName} disabled={!isAdding} />
+        Nombre corto: <Input class="bg-base-100 text-base-content" bind:value={alg.alg.shortName} />
       </section>
       <section>
-        Padre: <Input bind:value={alg.alg.parentPath} />
+        Padre: <Input class="bg-base-100 text-base-content" bind:value={alg.alg.parentPath} />
       </section>
     {/if}
 
     <section>
-      Orden: <Input bind:value={alg.alg.order} type="number" />
+      Orden: <Input
+        class="bg-base-100 text-base-content"
+        bind:value={alg.alg.order}
+        type="number"
+      />
     </section>
     <section>
-      Scramble: <Input bind:value={alg.alg.scramble} />
+      Scramble: <Input class="bg-base-100 text-base-content" bind:value={alg.alg.scramble} />
     </section>
 
     {#if alg.tutorial}
       <section>
-        Solution: <Input bind:value={alg.alg.solution} />
+        Solution: <Input class="bg-base-100 text-base-content" bind:value={alg.alg.solution} />
       </section>
     {/if}
     <section>
-      Puzzle: <Input bind:value={alg.alg.puzzle} />
+      Puzzle: <Input class="bg-base-100 text-base-content" bind:value={alg.alg.puzzle} />
     </section>
     <section>
       Modo <Select
@@ -146,7 +148,7 @@
         <ul class="grid no-grid gap-2">
           {#each tipTemp as tip, pos}
             <li class="flex gap-2 items-center">
-              <Input bind:value={tip} class="py-1" />
+              <Input bind:value={tip} class="py-1 bg-base-100 text-base-content" />
               <button
                 tabindex="0"
                 class="text-gray-400 w-8 h-8 cursor-pointer hover:text-red-500"
@@ -176,7 +178,7 @@
           <ul class="grid gap-2">
             {#each solTemp as solution, pos}
               <li class="flex gap-2 items-center">
-                <Input bind:value={solution.moves} />
+                <Input class="bg-base-100 text-base-content" bind:value={solution.moves} />
                 <button
                   tabindex="0"
                   class="text-gray-400 w-8 h-8 cursor-pointer hover:text-red-500"

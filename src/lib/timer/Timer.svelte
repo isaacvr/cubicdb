@@ -1,17 +1,16 @@
 <script lang="ts">
-  import { onMount, untrack } from "svelte";
+  import { getContext, onMount, untrack } from "svelte";
   import { pGenerateCubeBundle } from "@helpers/cube-draw";
   import { derived, writable, type Readable, type Writable } from "svelte/store";
 
   /// Modules
-  import { pScramble } from "@cstimer/scramble";
+  import { getScramble, pScramble } from "@cstimer/scramble";
   import JSConfetti from "js-confetti";
 
   /// Data
   import { isNNN, SessionDefaultSettings, type SCRAMBLE_MENU, AON, ICONS } from "@constants";
 
   /// Components
-  import TabGroup from "@material/TabGroup.svelte";
   import TimerTab from "$lib/timer/TimerTab/TimerTab.svelte";
   import HistoryTab from "$lib/timer/HistoryTab/HistoryTab.svelte";
   import StatsTab from "$lib/timer/StatsTab/StatsTab.svelte";
@@ -23,21 +22,20 @@
     type Session,
     type Statistics,
     type TimerContext,
-    type Language,
     type BluetoothDeviceData,
     type SessionType,
     type PuzzleType,
-    type TimerInputHandler,
     type InputContext,
+    Penalty,
   } from "@interfaces";
   import { ScrambleParser } from "@classes/scramble-parser";
-  import { INITIAL_STATISTICS, getUpdatedStatistics } from "@helpers/statistics";
-  import { infinitePenalty, timer } from "@helpers/timer";
+  import { INITIAL_STATISTICS, getUpdatedStatistics, statsReplaceId } from "@helpers/statistics";
+  import { adjustMillis, infinitePenalty, timer } from "@helpers/timer";
   import { globalLang } from "@stores/language.service";
   import { getLanguage } from "@lang/index";
   import { NotificationService } from "@stores/notification.service";
-  import { prettyScramble } from "@helpers/strings";
-  import { binSearch } from "@helpers/object";
+  import { prettyScramble, randomUUID } from "@helpers/strings";
+  import { binSearch, clone } from "@helpers/object";
   import type { HTMLImgAttributes } from "svelte/elements";
 
   // ICONS
@@ -49,15 +47,11 @@
   import { sessions } from "@stores/sessions.store";
   import TimerOptions from "./TimerTab/TimerOptions.svelte";
   import { between } from "@helpers/math";
-  import { ManualInput } from "./adaptors/Manual";
-  import { StackmatInput } from "./adaptors/Stackmat";
-  import { GANInput } from "./adaptors/GAN";
-  import { QiYiSmartTimerInput } from "./adaptors/QY-Timer";
-  import { KeyboardInput } from "./adaptors/Keyboard";
-  import { VirtualInput } from "./adaptors/Virtual";
+  import type { Language } from "$lib/interfaces/language.types";
+  import type { Device } from "$lib/interfaces/devices.types";
+  import { rndEl } from "@cstimer/lib/mathlib";
 
-  let BASE_MENU = getLanguage($globalLang).MENU;
-  let MENU: SCRAMBLE_MENU[] = $state(BASE_MENU);
+  let devices: Writable<Device[]> = getContext("devices");
 
   interface TimerProps {
     battle?: boolean;
@@ -79,13 +73,14 @@
     useLen = 0,
     useProb = -1,
     genScramble = true,
-    enableKeyboard = writable(true),
+    enableKeyboard: keyboardEnabled = writable(true),
     timerOnly = false,
     scrambleOnly = false,
     cleanOnScramble = false,
   }: TimerProps = $props();
 
-  let groups: string[] = $state(BASE_MENU.map(e => e[0]));
+  let MENU: SCRAMBLE_MENU[] = [];
+  let groups: string[] = $state([]);
 
   let localLang: Readable<Language> = derived(globalLang, $lang => {
     let l = getLanguage($lang);
@@ -99,13 +94,12 @@
   const notService = NotificationService.getInstance();
 
   /// GENERAL
-  let modes: { 0: string; 1: string; 2: number }[] = $state(BASE_MENU[0][1]);
-  let filters: string[] = $state([]);
-  let showDeleteSession = $state(false);
+  let modes: { 0: string; 1: string; 2: number }[] = $state([]);
+  let filters: Writable<string[]> = writable<string[]>([]);
   let sessionsTab: HistoryTab | null = $state(null);
   let mounted = false;
   const iconSize = "1.2rem";
-  
+
   /// MODAL
   let openEdit = $state(false);
   let creatingSession = $state(false);
@@ -115,7 +109,6 @@
   let newSessionGroup = $state(0);
   let newSessionMode = $state(0);
   let stepNames: string[] = $state(["", ""]);
-  let sSession: Session | null = null;
 
   /// CONTEXT
   let timerState = writable<TimerState>(TimerState.CLEAN);
@@ -134,20 +127,83 @@
   let stats = writable<Statistics>(INITIAL_STATISTICS);
   let scramble = writable("");
   let group = writable<number>();
-  let mode = writable<{ 0: string; 1: string; 2: number }>(BASE_MENU[0][1][0]);
+  let mode = writable<{ 0: string; 1: string; 2: number }>(["", "", 0]);
   let preview = writable<HTMLImgAttributes[]>([]);
-  let prob = writable<number>();
+  let prob = writable<number | number[]>();
   let isRunning = writable(false);
   let selected = writable(0);
   let decimals = writable(true);
   let bluetoothList = writable<BluetoothDeviceData[]>([]);
-  let bluetoothStatus = writable(false);
   let STATS_WINDOW = writable<(number | null)[][]>($AON.map(_ => []));
   let puzzleType = writable<PuzzleType>("rubik");
   let puzzleOrder = writable(3);
-  let deviceID: Writable<string> = writable("default");
   let deviceList: string[][] = [];
-  
+
+  // Input Context
+  let lastSolve: Writable<Solve | null> = writable(null);
+  let time: Writable<number> = writable(0);
+  let sequenceParts = writable<string[]>([]);
+  let recoverySequence = writable<string>("");
+  let device: Writable<Device> = writable($devices[0]);
+  let currentStep = writable(1);
+
+  function addSolve(t?: number, p?: Penalty) {
+    let ls = $lastSolve as Solve;
+
+    ls.date = Date.now();
+    ls.group = $group;
+    ls.mode = $mode[1];
+    ls.len = $mode[2];
+    ls.prob = $prob;
+    ls.session = $session._id;
+    ls.penalty = p || Penalty.NONE;
+    ls.time = adjustMillis(t || $time, false);
+    ls._id = randomUUID();
+
+    $lastSolve = ls;
+    $allSolves.push(ls);
+    $solves.push(ls);
+
+    if (timerOnly || scrambleOnly) return;
+
+    if (battle) {
+      ls.group = -1;
+      // dispatch("solve", $lastSolve);
+    } else {
+      $dataService.solve.addSolve(ls).then(d => {
+        let s = $allSolves.find(s => s.date === d.date);
+
+        if (s) {
+          statsReplaceId($stats, s._id, d._id);
+          s._id = d._id;
+          updateSolves();
+        }
+      });
+      sortSolves();
+      updateStatistics(true);
+    }
+  }
+
+  function reset() {
+    $device.stopTimer();
+    $time = 0;
+    $timerState = TimerState.CLEAN;
+    $ready = false;
+    $lastSolve = null;
+  }
+
+  function createNewSolve() {
+    $lastSolve = {
+      date: Date.now(),
+      penalty: Penalty.NONE,
+      scramble: $scramble,
+      time: $time,
+      comments: "",
+      selected: false,
+      session: "",
+    };
+  }
+
   let lastPreview = 0;
 
   let confetti: JSConfetti;
@@ -244,25 +300,12 @@
     openEdit = true;
   }
 
-  function openAddSession() {
-    creatingSession = true;
-    newSessionName = "";
-  }
-
   function closeAddSession() {
     creatingSession = false;
   }
 
-  function handleClose() {
-    if ($sessions.indexOf($session) < 0) {
-      $session = $sessions[0];
-    }
-    closeAddSession();
-    openEdit = false;
-  }
-
   function handleKeydown(e: KeyboardEvent) {
-    if (!enableKeyboard) return;
+    if (!keyboardEnabled) return;
 
     if (!battle && ($timerState === TimerState.CLEAN || $timerState === TimerState.STOPPED)) {
       if (e.key === "ArrowRight") {
@@ -271,17 +314,6 @@
         $tab = between($tab - 1, 0, 2);
       }
     }
-  }
-
-  function handleInputKeyUp(e: KeyboardEvent) {
-    if (!enableKeyboard) return;
-
-    if (e.key === "Enter") {
-      newSession();
-    } else if (e.key === "Escape") {
-      closeAddSession();
-    }
-    e.stopPropagation();
   }
 
   function setPreview(img: string[], date: number) {
@@ -317,7 +349,7 @@
     // }
   }
 
-  export function initScrambler(scr?: string, _mode?: string, _prob?: number) {
+  export function initScrambler(scr?: string, _mode?: string, _prob?: number | number[]) {
     setTimeout(async () => {
       if (!mounted) return;
 
@@ -326,19 +358,14 @@
       }
 
       let md = useMode || _mode || $mode[1];
-      let len = useLen || ($mode[1] === "r3" || $mode[1] === "r3ni" ? $prob : $mode[2]);
+      let len = useLen || ($mode[1] === "r3" || $mode[1] === "r3ni" ? ($prob as number) : $mode[2]);
       let s = useScramble || scr;
       let pb = useProb != -1 ? useProb : _prob != -1 && typeof _prob === "number" ? _prob : $prob;
 
       if (!genScramble) {
         $scramble = scr || useScramble;
       } else {
-        $scramble = s
-          ? s
-          : (pScramble.scramblers.get(md) || (() => ""))
-              .apply(null, [md, Math.abs(len), pb < 0 ? undefined : pb])
-              .replace(/\\n/g, "<br>")
-              .trim();
+        $scramble = s ? s : getScramble(md, len, Array.isArray(pb) ? rndEl(pb) : pb);
       }
 
       if (isNNN(md)) {
@@ -383,7 +410,7 @@
       saveFilter &&
       ($session.settings.sessionType === "mixed" || $mode[1] === "r3" || $mode[1] === "r3ni")
     ) {
-      $session.settings.prob = $prob;
+      $session.settings.prob = $prob; 
       $dataService.session.updateSession($session).then().catch();
     }
 
@@ -395,7 +422,7 @@
       $session.settings.mode = $mode[1];
       $dataService.session.updateSession($session).then().catch();
     }
-    filters = pScramble.filters.get($mode[1]) || [];
+    $filters = pScramble.filters.get($mode[1]) || [];
     updateProb && ($prob = -1);
     selectedFilter(rescramble);
   }
@@ -475,6 +502,7 @@
       $session = ns;
 
       updateSessionsIcons();
+      initInputHandler($session.settings.input || "");
 
       if (!$session.settings.sessionType) {
         $session.settings.sessionType = $session.settings.sessionType || "mixed";
@@ -487,26 +515,26 @@
     closeAddSession();
   }
 
-  function deleteSessionHandler(remove?: boolean) {
-    if (remove && sSession) {
-      $dataService.session.removeSession(sSession).then(ss => {
-        if ($sessions.length === 0) {
-          newSessionName = "Session 1";
-          newSession();
-          return;
-        }
+  // function deleteSessionHandler(remove?: boolean) {
+  //   if (remove && sSession) {
+  //     $dataService.session.removeSession(sSession).then(ss => {
+  //       if ($sessions.length === 0) {
+  //         newSessionName = "Session 1";
+  //         newSession();
+  //         return;
+  //       }
 
-        if (ss._id === $session._id) {
-          $session = $sessions[0];
-          selectedSession();
-        }
+  //       if (ss._id === $session._id) {
+  //         $session = $sessions[0];
+  //         selectedSession();
+  //       }
 
-        updateSessionsIcons();
-      });
-    }
+  //       updateSessionsIcons();
+  //     });
+  //   }
 
-    showDeleteSession = false;
-  }
+  //   showDeleteSession = false;
+  // }
 
   function handleUpdateSession(session: Session) {
     let updatedSession = $sessions.find(s => s._id === session._id);
@@ -516,17 +544,17 @@
     }
   }
 
-  function renameSession(s: Session) {
-    s.editing = false;
+  // function renameSession(s: Session) {
+  //   s.editing = false;
 
-    if (s.tName?.trim() === "") {
-      return;
-    }
+  //   if (s.tName?.trim() === "") {
+  //     return;
+  //   }
 
-    $dataService.session
-      .updateSession({ _id: s._id, name: s.tName?.trim() || "Session -", settings: s.settings })
-      .then(handleUpdateSession);
-  }
+  //   $dataService.session
+  //     .updateSession({ _id: s._id, name: s.tName?.trim() || "Session -", settings: s.settings })
+  //     .then(handleUpdateSession);
+  // }
 
   function editSolve(s: Solve) {
     $tab = 1;
@@ -593,8 +621,18 @@
     let currentSession = $sessions.find(s => s._id === ss);
     $session = currentSession || $sessions[0];
 
+    initInputHandler($session.settings.input || "");
+
     updateSessionsIcons();
     selectedSession();
+  }
+
+  function initInputHandler(id: string) {
+    $device = $devices.find(d => d.id === id) || $devices[0];
+    $devices.forEach(d => (d.enabled = false));
+    $device.init(inputContext);
+    $session.settings.input = $device.id;
+    $dataService.session.updateSession($session);
   }
 
   onMount(() => {
@@ -633,7 +671,7 @@
   });
 
   $effect(() => {
-    $enableKeyboard = !scrambleOnly;
+    $keyboardEnabled = !scrambleOnly;
   });
 
   $effect(() => {
@@ -659,13 +697,13 @@
     decimals,
     group,
     mode,
+    filters,
     preview,
     prob,
     isRunning,
     selected,
     bluetoothList,
-    bluetoothStatus,
-    enableKeyboard,
+    enableKeyboard: keyboardEnabled,
     STATS_WINDOW,
     puzzleType,
     puzzleOrder,
@@ -677,11 +715,35 @@
     updateStatistics,
     initScrambler,
     selectedGroup,
+    selectedMode,
+    selectedFilter,
     selectSolve,
     selectSolveById,
     editSolve,
     handleRemoveSolves,
     editSessions,
+  });
+
+  let inputContext: InputContext = $state({
+    isRunning,
+    lastSolve,
+    ready,
+    session,
+    timerState,
+    time,
+    currentStep,
+    decimals,
+    scramble,
+    sequenceParts,
+    recoverySequence,
+    keyboardEnabled,
+    addSolve,
+    initScrambler,
+    reset,
+    createNewSolve,
+    handleRemoveSolves,
+    handleUpdateSolve,
+    editSolve,
   });
 </script>
 
@@ -725,16 +787,17 @@
     </div>
 
     <TimerOptions
+      {device}
       {context}
-      {enableKeyboard}
+      enableKeyboard={keyboardEnabled}
       {timerOnly}
-      {deviceID}
       {deviceList}
+      {initInputHandler}
     />
   </div>
 
   <div class="content overflow-hidden relative">
-    <TimerTab bind:context {deviceID} {deviceList} />
+    <TimerTab bind:context {inputContext} {deviceList} {device} />
     <HistoryTab bind:context />
     <StatsTab bind:context />
   </div>

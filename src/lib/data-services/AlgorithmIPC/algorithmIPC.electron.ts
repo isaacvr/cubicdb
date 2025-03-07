@@ -1,5 +1,6 @@
 import type { Algorithm, AlgorithmOptions, IPC } from "@interfaces";
 import type { AlgorithmIPC } from "./algorithmIPC.interface";
+import { clone } from "@helpers/object";
 
 export class AlgorithmElectronIPC implements AlgorithmIPC {
   ipc: IPC;
@@ -27,22 +28,17 @@ export class AlgorithmElectronIPC implements AlgorithmIPC {
   }
 
   updateAlgorithm(alg: Algorithm) {
-    const cp = { ...alg };
-
-    delete cp._puzzle;
-
+    const cp = clone(alg, ["_puzzle"]);
     return this.ipc.updateAlgorithm(cp);
   }
 
   addAlgorithm(alg: Algorithm) {
-    const cp = { ...alg };
-    delete cp._puzzle;
+    const cp = clone(alg, ["_puzzle"]);
     return this.ipc.addAlgorithm(cp);
   }
 
   removeAlgorithm(alg: Algorithm) {
-    const cp = { ...alg };
-    delete cp._puzzle;
+    const cp = clone(alg, ["_puzzle"]);
     return this.ipc.removeAlgorithm(cp);
   }
 

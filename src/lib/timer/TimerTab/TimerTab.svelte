@@ -5,42 +5,31 @@
     TimerState,
     type InputContext,
     type Session,
-    type Solve,
     type TimerContext,
-    type TimerInput,
   } from "@interfaces";
-  import { writable, type Writable } from "svelte/store";
+  import { derived, writable, type Writable } from "svelte/store";
 
   /// Components
   import Simulator from "$lib/simulator/Simulator.svelte";
 
   /// Helpers
-  import { adjustMillis, sTimer, timer, timerToMilli } from "@helpers/timer";
+  import { timer, timerToMilli } from "@helpers/timer";
   import { NotificationService } from "@stores/notification.service";
   import { localLang } from "@stores/language.service";
 
   // Handlers
   import { StackmatInput } from "$lib/timer/adaptors/Stackmat";
-  import { ManualInput } from "$lib/timer/adaptors/Manual";
   import { GANInput } from "$lib/timer/adaptors/GAN";
   import { KeyboardInput } from "$lib/timer/adaptors/Keyboard";
-  import { QiYiSmartTimerInput } from "$lib/timer/adaptors/QY-Timer";
   import { dataService } from "$lib/data-services/data.service";
   // import { ExternalTimerInput } from "./adaptors/ExternalTimer";
 
   // Others
-  import { randomUUID } from "@helpers/strings";
-  import { isBetween, minmax } from "@helpers/math";
-  import { statsReplaceId } from "@helpers/statistics";
-  import { Flip } from "@classes/Flip";
   import type { ReconstructorMethod } from "@classes/reconstructors/interfaces";
-  import Reconstructor from "./Reconstructor.svelte";
-  import TimerOptions from "./TimerOptions.svelte";
   import StatsInfo from "./StatsInfo.svelte";
   import PuzzleImageBundle from "@components/PuzzleImageBundle.svelte";
-  import { VirtualInput } from "../adaptors/Virtual";
-  import Button from "$lib/cubicdbKit/Button.svelte";
   import {
+    BoltIcon,
     CopyIcon,
     FlagIcon,
     HistoryIcon,
@@ -58,25 +47,32 @@
   import { blur, scale } from "svelte/transition";
   import { twMerge } from "tailwind-merge";
   import type { Device } from "$lib/interfaces/devices.types";
+  import Button from "$lib/cubicdbKit/Button.svelte";
+  import Select from "@components/material/Select.svelte";
+  import Modal from "@components/Modal.svelte";
+  import PuzzleImage from "@components/PuzzleImage.svelte";
+  import { getModeCases, type Case, type IModeCase } from "./getModeCases";
+  import { clone } from "@helpers/object";
 
   interface TimerTabContext {
+    inputContext: InputContext;
     context: TimerContext;
+    device: Writable<Device>;
+    deviceList: string[][];
     battle?: boolean;
     timerOnly?: boolean;
     scrambleOnly?: boolean;
     cleanOnScramble?: boolean;
-    deviceID: Writable<string>;
-    deviceList: string[][];
   }
 
   let {
+    inputContext = $bindable(),
     context = $bindable(),
+    device = $bindable(),
     battle = $bindable(false),
     timerOnly = $bindable(false),
     scrambleOnly = $bindable(false),
     cleanOnScramble = $bindable(false),
-    deviceID,
-    deviceList,
   }: TimerTabContext = $props();
 
   const {
@@ -84,12 +80,8 @@
     ready,
     tab,
     solves,
-    allSolves,
     session,
-    stats,
     scramble,
-    group,
-    mode,
     preview,
     isRunning,
     decimals,
@@ -97,23 +89,32 @@
     enableKeyboard,
     puzzleType,
     puzzleOrder,
-    sortSolves,
-    updateSolves,
+    group,
+    mode,
+    prob,
+    filters,
     initScrambler,
-    updateStatistics,
     editSolve,
     handleUpdateSolve,
     handleRemoveSolves,
+    selectedGroup,
+    selectedMode,
   } = context;
 
-  const notification = NotificationService.getInstance();
-  let inputMethod: Writable<Device> = writable(new ManualInput());
-  let lastSolve: Writable<Solve | null> = writable(null);
+  const {
+    lastSolve,
+    time,
+    recoverySequence,
+    sequenceParts,
+    currentStep,
+    reset,
+    createNewSolve,
+    addSolve,
+  } = inputContext;
 
   /// CLOCK
   const TIMER_DIGITS = /^\d+\+?$/;
   const TIMER_DNF = /^\s*dnf\s*$/i;
-  let time: Writable<number> = writable(0);
   let timeStr: string = $state("");
   let solveControl = $state([
     {
@@ -183,123 +184,42 @@
 
   /// LAYOUT
   let selected: number = 0;
-  let prob = -1;
   let prevExpanded: boolean = $state(false);
   let stackmatStatus = writable(false);
+  let showMixedSettingsDialog = $state(false);
+  let modeIndex = $state(0);
+  let groupCases = $state(false);
+  let cases: IModeCase = $state({ cases: [], groups: [] });
 
-  // BLUETOOTH AND EXTERNAL
-  let bluetoothStatus = writable(false);
-  let bluetoothHardware: any = null;
-  let bluetoothBattery: number = 0;
-  let sequenceParts = writable<string[]>([]);
-  let recoverySequence = writable<string>("");
-
-  // ---------------------------------------------------
-  let currentStep = writable(1);
-  let autoConnectId: string[] = [];
+  // // BLUETOOTH AND EXTERNAL
+  // let bluetoothStatus = writable(false);
+  // let bluetoothHardware: any = null;
+  // let bluetoothBattery: number = 0;
 
   // OTHER
   let simulator: Simulator | null = $state(null);
   let reconstructor: ReconstructorMethod[] = [];
   let recIndex = 0;
-  let inputContext: InputContext = {
-    isRunning,
-    lastSolve,
-    ready,
-    session,
-    timerState,
-    time,
-    stackmatStatus,
-    decimals,
-    scramble,
-    sequenceParts,
-    recoverySequence,
-    bluetoothStatus,
-    keyboardEnabled: enableKeyboard,
-    addSolve,
-    initScrambler,
-    reset,
-    createNewSolve,
-    handleRemoveSolves,
-    handleUpdateSolve,
-    editSolve,
-  };
+  let selectedCases: Writable<boolean[]> = writable([]);
 
   function selectNone() {
     selected = 0;
     $solves.forEach(s => (s.selected = false));
   }
 
-  function addSolve(t?: number, p?: Penalty) {
-    let ls = $lastSolve as Solve;
-
-    ls.date = Date.now();
-    ls.group = $group;
-    ls.mode = $mode[1];
-    ls.len = $mode[2];
-    ls.prob = prob;
-    ls.session = $session._id;
-    ls.penalty = p || Penalty.NONE;
-    ls.time = adjustMillis(t || $time, false);
-    ls._id = randomUUID();
-
-    $lastSolve = ls;
-    $allSolves.push(ls);
-    $solves.push(ls);
-
-    if (timerOnly || scrambleOnly) return;
-
-    if (battle) {
-      ls.group = -1;
-      // dispatch("solve", $lastSolve);
-    } else {
-      $dataService.solve.addSolve({ ...ls }).then(d => {
-        let s = $allSolves.find(s => s.date === d.date);
-
-        if (s) {
-          statsReplaceId($stats, s._id, d._id);
-          s._id = d._id;
-          updateSolves();
-        }
-      });
-      sortSolves();
-      updateStatistics(true);
-    }
-  }
-
-  function createNewSolve() {
-    $lastSolve = {
-      date: Date.now(),
-      penalty: Penalty.NONE,
-      scramble: $scramble,
-      time: $time,
-      comments: "",
-      selected: false,
-      session: "",
-    };
-  }
-
-  function reset() {
-    $inputMethod.stopTimer();
-    $time = 0;
-    $timerState = TimerState.CLEAN;
-    $ready = false;
-    $lastSolve = null;
-  }
-
   function keyUp(event: KeyboardEvent) {
     if ($tab || !enableKeyboard) return;
-    $inputMethod.keyUpHandler(event);
+    $device.keyUpHandler(event);
   }
 
   function keyDown(event: KeyboardEvent) {
-    const { code, ctrlKey } = event;
+    const { code } = event;
 
     if (!enableKeyboard) return;
 
     switch ($tab) {
       case 0: {
-        $inputMethod.keyDownHandler(event);
+        $device.keyDownHandler(event);
 
         if (code === "Space" || code === "Escape") {
           prevExpanded = false;
@@ -342,105 +262,57 @@
     return TIMER_DIGITS.test(t) || TIMER_DNF.test(t) || t === "";
   }
 
-  function updateDevices() {
-    StackmatInput.updateInputDevices()?.then(dev => {
-      deviceList = dev;
+  // function updateDevices() {
+  //   StackmatInput.updateInputDevices()?.then(dev => {
+  //     // deviceList = dev;
+  //   });
 
-      // if ( inputMethod instanceof StackmatInput && !deviceList.some(e => e[0] === deviceID) ) {
-      //   deviceID = deviceList[0][0];
-      //   inputMethod.disconnect();
-      //   inputMethod.init(deviceID, true);
-      // }
-    });
+  //   autoConnectId.forEach(id => {
+  //     notification.removeNotification(id);
+  //   });
 
-    autoConnectId.forEach(id => {
-      notification.removeNotification(id);
-    });
+  //   autoConnectId.length = 0;
 
-    autoConnectId.length = 0;
+  //   // Auto detect
+  //   // StackmatInput.autoDetect().then((res) => {
+  //   //   if ( inputMethod instanceof StackmatInput && inputMethod.getDevice() === res.device ) {
+  //   //     return;
+  //   //   }
 
-    // Auto detect
-    // StackmatInput.autoDetect().then((res) => {
-    //   if ( inputMethod instanceof StackmatInput && inputMethod.getDevice() === res.device ) {
-    //     return;
-    //   }
+  //   //   let key = res.id;
+  //   //   autoConnectId.push(key);
 
-    //   let key = res.id;
-    //   autoConnectId.push(key);
-
-    //   notification.addNotification({
-    //     header: $localLang.TIMER.stackmatAvailableHeader,
-    //     text: $localLang.TIMER.stackmatAvailableText,
-    //     fixed: true,
-    //     actions: [
-    //       { text: $localLang.TIMER.cancel, callback: () => {} },
-    //       { text: $localLang.TIMER.connect, callback: () => {
-    //         deviceID = res.device;
-    //         $session.settings.input = 'StackMat';
-    //         initInputHandler();
-    //         $dataService.session.updateSession($session);
-    //       } },
-    //     ],
-    //     key,
-    //   });
-    // })
-    // .catch(() => {});
-  }
-
-  function initInputHandler() {
-    const methodMap = {
-      Manual: ManualInput,
-      StackMat: StackmatInput,
-      "GAN Cube": GANInput,
-      "QY-Timer": QiYiSmartTimerInput,
-      Keyboard: KeyboardInput,
-      Virtual: VirtualInput,
-      // ExternalTimer: ExternalTimerInput,
-    };
-
-    let newClass = methodMap[$session?.settings?.input || "Keyboard"];
-    let sameClass = true;
-
-    if (!($inputMethod instanceof newClass)) {
-      sameClass = false;
-      $inputMethod.disconnect();
-    }
-
-    if ($session?.settings?.input === "Manual" && !sameClass) {
-      inputMethod.set(new ManualInput());
-    } else if ($session?.settings?.input === "StackMat" && !sameClass) {
-      inputMethod.set(new StackmatInput());
-      $inputMethod.init(inputContext);
-      // } else if ($session?.settings?.input === "GAN Cube" && !sameClass) {
-      //   inputMethod.set(new GANInput(inputContext));
-      //   $inputMethod.init();
-      // } else if ($session?.settings?.input === "Virtual" && !sameClass) {
-      //   inputMethod.set(new VirtualInput(inputContext));
-      //   $inputMethod.init();
-      // } else if ($session?.settings?.input === "QY-Timer" && !sameClass) {
-      //   inputMethod.set(new QiYiSmartTimerInput(inputContext));
-      //   $inputMethod.init();
-    } else if ($session?.settings?.input === "Keyboard") {
-      $inputMethod.disconnect();
-      let ki = new KeyboardInput();
-
-      inputMethod.set(ki);
-      $inputMethod.init(inputContext, currentStep);
-    }
-
-    // else if ($session?.settings?.input === "ExternalTimer") {
-    //   if (sameClass) {
-    //     $dataService.config.external($deviceID, { type: "session", value: $session });
-    //   } else {
-    //     inputMethod.set(new ExternalTimerInput(inputContext));
-    //     $inputMethod.init();
-    //   }
-    // }
-  }
+  //   //   notification.addNotification({
+  //   //     header: $localLang.TIMER.stackmatAvailableHeader,
+  //   //     text: $localLang.TIMER.stackmatAvailableText,
+  //   //     fixed: true,
+  //   //     actions: [
+  //   //       { text: $localLang.TIMER.cancel, callback: () => {} },
+  //   //       { text: $localLang.TIMER.connect, callback: () => {
+  //   //         deviceID = res.device;
+  //   //         $session.settings.input = 'StackMat';
+  //   //         initInputHandler();
+  //   //         $dataService.session.updateSession($session);
+  //   //       } },
+  //   //     ],
+  //   //     key,
+  //   //   });
+  //   // })
+  //   // .catch(() => {});
+  // }
 
   function updateTexts() {
     solveControl[0].text = $localLang.global.delete;
     solveControl[3].text = $localLang.TIMER.comments;
+
+    if (isNaN($group)) return;
+
+    for (let i = 0, maxi = $localLang.MENU[$group][1].length; i < maxi; i += 1) {
+      if ($mode[1] === $localLang.MENU[$group][1][i][1]) {
+        modeIndex = i;
+        break;
+      }
+    }
   }
 
   function clean() {
@@ -467,27 +339,6 @@
         break;
       }
 
-      case "hardware": {
-        bluetoothHardware = data;
-        break;
-      }
-
-      case "battery": {
-        bluetoothBattery = data;
-        break;
-      }
-
-      case "connect": {
-        $bluetoothStatus = true;
-        break;
-      }
-
-      case "disconnect": {
-        $bluetoothStatus = false;
-        $deviceID = "default";
-        break;
-      }
-
       case "device-list": {
         $bluetoothList = data;
         break;
@@ -503,74 +354,34 @@
       }
 
       case "sync-solved": {
-        $inputMethod.sendEvent({ type: "sync-solved" });
+        $device.sendEvent({ type: "sync-solved" });
         break;
       }
     }
   }
 
   function handleNewRecord() {
-    $inputMethod.newRecord();
-  }
-
-  function handleMouseDown(ev: MouseEvent) {
-    if ($dataService.isElectron || ev.button) return;
-
-    ev.preventDefault();
-
-    if ($inputMethod instanceof KeyboardInput) {
-      keyDown({
-        type: "keydown",
-        code: "Space",
-      } as KeyboardEvent);
-    }
-  }
-
-  function handleMouseUp(ev: MouseEvent) {
-    if (ev.target) {
-      let br = (ev.target as Element).getBoundingClientRect();
-
-      if (
-        !isBetween(ev.pageX, br.left, br.left + br.width) ||
-        !isBetween(ev.pageY, br.top, br.top + br.height)
-      ) {
-        return;
-      }
-    }
-
-    if ($dataService.isElectron) return;
-
-    ev.preventDefault();
-
-    if ($inputMethod instanceof KeyboardInput) {
-      keyUp({
-        type: "keyup",
-        code: "Space",
-      } as KeyboardEvent);
-
-      ev.stopPropagation();
-      ev.stopImmediatePropagation();
-    }
+    $device.newRecord();
   }
 
   function startTimer() {
-    if (!($inputMethod instanceof KeyboardInput)) return;
+    if (!($device instanceof KeyboardInput)) return;
 
-    $inputMethod.keyUpHandler({ type: "keydown", code: "Space" } as KeyboardEvent);
-    $inputMethod.keyUpHandler({ type: "keyup", code: "Space" } as KeyboardEvent);
+    $device.keyUpHandler({ type: "keydown", code: "Space" } as KeyboardEvent);
+    $device.keyUpHandler({ type: "keyup", code: "Space" } as KeyboardEvent);
   }
 
   function stopTimer() {
-    if (!($inputMethod instanceof KeyboardInput)) return;
-    $inputMethod.stopTimer();
+    if (!($device instanceof KeyboardInput)) return;
+    $device.stopTimer();
   }
 
   function pauseOrResume() {
-    if (!($inputMethod instanceof KeyboardInput)) return;
+    if (!($device instanceof KeyboardInput)) return;
     if ($timerState === TimerState.RUNNING) {
-      $inputMethod.keyDownHandler({ type: "keydown", code: "KeyP" } as KeyboardEvent);
+      $device.keyDownHandler({ type: "keydown", code: "KeyP" } as KeyboardEvent);
     } else if ($timerState === TimerState.PAUSE) {
-      $inputMethod.keyDownHandler({ type: "keydown", code: "Space" } as KeyboardEvent);
+      $device.keyDownHandler({ type: "keydown", code: "Space" } as KeyboardEvent);
     }
   }
 
@@ -579,8 +390,8 @@
 
     ev.preventDefault();
 
-    if ($inputMethod instanceof KeyboardInput) {
-      $inputMethod.keyDownHandler({
+    if ($device instanceof KeyboardInput) {
+      $device.keyDownHandler({
         type: "keydown",
         code: "Escape",
       } as KeyboardEvent);
@@ -607,13 +418,16 @@
     return "clean";
   }
 
-  function getTimerInput(st: TimerInput) {
-    if (st === "GAN Cube") return "gan";
-    if (st === "Manual") return "manual";
-    if (st === "QY-Timer") return "qytimer";
-    if (st === "StackMat") return "stackmat";
-    if (st === "Virtual") return "virtual";
-    return "keyboard";
+  function saveFilters() {
+    showMixedSettingsDialog = false;
+    $dataService.config.setPath(`filters/${$session._id}/${$group}/${modeIndex}`, {
+      selectedCases: clone($selectedCases),
+      groupCases,
+    });
+
+    $dataService.config.saveConfig();
+    $prob = $selectedCases.reduce((acc, e, p) => (e ? [...acc, p] : acc), [] as number[]);
+    initScrambler();
   }
 
   onMount(() => {
@@ -628,7 +442,7 @@
   });
 
   onDestroy(() => {
-    $inputMethod.disconnect();
+    $device.disconnect();
     // navigator.mediaDevices?.removeEventListener("devicechange", updateDevices);
     // document.querySelectorAll("#stackmat-signal").forEach(e => e.remove());
     $dataService.off("bluetooth", bluetoothHandler);
@@ -641,11 +455,6 @@
     }
   });
 
-  $effect(() => {
-    if ($session) {
-      untrack(() => initInputHandler());
-    }
-  });
   $effect(() => updateTexts());
 
   $effect(() => {
@@ -657,9 +466,32 @@
   $effect(() => {
     $dataService.config.sleep($timerState === TimerState.RUNNING);
   });
+
+  $effect(() => {
+    let savedSelectedCases = $dataService.config.getPath(
+      `filters/${$session._id}/${$group}/${modeIndex}`
+    );
+
+    $selectedCases = savedSelectedCases
+      ? savedSelectedCases.selectedCases
+      : cases.cases.map(() => false);
+
+    groupCases = savedSelectedCases?.groupCases;
+
+    untrack(() => {
+      $prob = $selectedCases.reduce((acc, e, p) => (e ? [...acc, p] : acc), [] as number[]);
+      initScrambler();
+    });
+  });
+
+  $effect(() => {
+    getModeCases($group, modeIndex).then(res => (cases = res));
+  });
+
+  $prob = 0;
 </script>
 
-<svelte:window on:keyup={keyUp} on:keydown={keyDown} on:pointerup={handlePointerUp} />
+<svelte:window onkeyup={keyUp} onkeydown={keyDown} onpointerup={handlePointerUp} />
 
 <!-- Snippets -->
 {#snippet textSkeleton()}
@@ -680,6 +512,28 @@
   {/if}
 {/snippet}
 
+{#snippet renderCase(cs: Case)}
+  <Button
+    color="neutral"
+    class={"shaded-card aspect-square " +
+      ($selectedCases[cs.pos] ? "border !border-primary !border-opacity-80" : "")}
+    contentClass="grid"
+    onclick={() => {
+      $selectedCases[cs.pos] = !$selectedCases[cs.pos];
+    }}
+  >
+    <PuzzleImage src={cs.img} />
+    <span>
+      {cs.name}
+    </span>
+    <!-- <input
+      bind:checked={$selectedCases[cs.pos]}
+      type="checkbox"
+      class="checkbox checkbox-secondary checkbox-sm absolute top-0 left-0"
+    /> -->
+  </Button>
+{/snippet}
+
 <!-- Component -->
 <section
   role="tabpanel"
@@ -689,11 +543,10 @@
   class:battle
   class:simulator={showSimulator($session)}
   data-timerstate={getTimerState($timerState)}
-  data-timerinput={getTimerInput($session?.settings?.input || "Keyboard")}
 >
   <div
     class={twMerge(
-      "scramble grid grid-rows-[auto_1fr] shaded-card relative overflow-hidden transition-all duration-500",
+      "scramble grid grid-rows-[auto_1fr] z-10 shaded-card relative transition-all duration-500",
       $isRunning ? "opacity-5" : ""
     )}
   >
@@ -701,6 +554,19 @@
       <h2 class="name font-bold">{$localLang.global.scramble}</h2>
 
       <div class="flex items-center gap-2 ml-auto w-fit">
+        {#if $session.settings.sessionType === "mixed"}
+          <Button
+            style="--dash: 18;"
+            onclick={() => {
+              showMixedSettingsDialog = true;
+            }}
+          >
+            <BoltIcon size="1.2rem" />
+          </Button>
+
+          <Tooltip>{$localLang.global.settings}</Tooltip>
+        {/if}
+
         <Button style="--dash: 18;" onclick={() => initScrambler()}>
           <RefreshCwIcon size="1.2rem" />
         </Button>
@@ -731,7 +597,7 @@
       id="scramble"
       class="transition-all h-full min-h-[4rem] overflow-y-auto my-auto duration-300 max-md:text-xs max-md:leading-5 tx-text"
     >
-      {#if $inputMethod instanceof GANInput}
+      {#if $device instanceof GANInput}
         {#if $recoverySequence}
           <pre class="scramble-content" class:hide={$isRunning} class:battle>{"=> " +
               $recoverySequence}</pre>
@@ -761,32 +627,6 @@
   <div id="timer" class="timer shaded-card relative overflow-hidden">
     <div class="config flex items-center justify-between relative z-20">
       <h2 class="name font-bold">{$localLang.HOME.timer}</h2>
-
-      <!-- <div class="flex items-center gap-2 ml-auto w-fit">
-        <Button style="--dash: 23;">
-          <HistoryIcon size="1.2rem" />
-        </Button>
-
-        <Tooltip keyBindings={["control", "o"]}>{$localLang.TIMER.useOldScramble}</Tooltip>
-
-        <Button style="--dash: 18;">
-          <CopyIcon size="1.2rem" />
-        </Button>
-
-        <Tooltip keyBindings={["control", "c"]}>{$localLang.TIMER.copyScramble}</Tooltip>
-
-        <Button style="--dash: 18;">
-          <SquarePenIcon size="1.2rem" />
-        </Button>
-
-        <Tooltip keyBindings={["control", "e"]}>{$localLang.TIMER.edit}</Tooltip>
-
-        <Button style="--dash: 18;">
-          <RefreshCwIcon size="1.2rem" />
-        </Button>
-
-        <Tooltip keyBindings={["control", "s"]}>{$localLang.global.toScramble}</Tooltip>
-      </div> -->
     </div>
 
     <div
@@ -817,16 +657,6 @@
               ? ''
               : '!border-error border-2'}"
           />
-
-          <!-- <Input
-            bind:value={timeStr}
-            stopKeyupPropagation
-            on:UENTER={addTimeString}
-            class="w-full max-md:w-[min(90%,20rem)] mx-auto h-36 text-center {validTimeStr(timeStr)
-              ? ''
-              : 'border-red-400 border-2'}"
-            inpClass="text-center text-7xl outline-none tx-text"
-          /> -->
         </div>
       {:else}
         <div class="flex flex-col items-center transition-all duration-200 mx-auto">
@@ -974,6 +804,106 @@
   </dialog>
 {/if}
 
+<Modal bind:show={showMixedSettingsDialog} class="w-full max-w-2xl">
+  <h2 class="text-xl text-center">{$localLang.global.settings}</h2>
+
+  <div class="flex flex-wrap gap-2 justify-center w-fit mx-auto mt-2">
+    <Select
+      class="mx-auto"
+      bind:value={$group}
+      items={$localLang.MENU}
+      transform={(_, p) => p}
+      label={e => e[0]}
+      onChange={() => {
+        selectedGroup(true, true);
+        modeIndex = 0;
+      }}
+    />
+
+    <Select
+      class="mx-auto"
+      bind:value={modeIndex}
+      items={$localLang.MENU[$group][1]}
+      transform={(_, p) => p}
+      label={e => e[0]}
+      hasIcon={e => e[1]}
+      onChange={() => {
+        $mode = $localLang.MENU[$group][1][modeIndex];
+        selectedMode(true, true, true);
+      }}
+    />
+  </div>
+
+  <!-- <span class="flex flex-wrap">filters: {$filters}</span> -->
+
+  {#if cases.cases.length > 0}
+    <div class="actions flex gap-2 flex-wrap justify-center items-center my-2">
+      <Button color="accept" onclick={() => ($selectedCases = $selectedCases.map(() => true))}>
+        {$localLang.IMPORT_EXPORT.selectAll}
+      </Button>
+      <Button color="urgent" onclick={() => ($selectedCases = $selectedCases.map(() => false))}>
+        {$localLang.IMPORT_EXPORT.selectNone}
+      </Button>
+
+      {#if cases.groups.length > 0}
+        <Button onclick={() => (groupCases = !groupCases)}>
+          {$localLang.global[groupCases ? "toUngroup" : "toGroup"]}
+        </Button>
+      {/if}
+    </div>
+
+    {#if groupCases && cases.groups.length}
+      <div class="overflow-x-clip overflow-y-auto max-h-[50vh] grid gap-4">
+        {#each cases.groups as group}
+          <div>
+            <h3 class="text-lg flex items-center">
+              {$localLang.TIMER.caseName(group.name)}
+
+              <Button
+                color="none"
+                class="text-success ml-4 text-xs"
+                onclick={() => {
+                  group.cases.forEach(cs => ($selectedCases[cs.pos] = true));
+                }}
+              >
+                {$localLang.IMPORT_EXPORT.selectAll}
+              </Button>
+
+              <Button
+                color="none"
+                class="text-error text-xs"
+                onclick={() => {
+                  group.cases.forEach(cs => ($selectedCases[cs.pos] = false));
+                }}
+              >
+                {$localLang.IMPORT_EXPORT.selectNone}
+              </Button>
+            </h3>
+            <div class="grid grid-cols-[repeat(auto-fill,minmax(5rem,1fr))] gap-2">
+              {#each group.cases as cs}
+                {@render renderCase(cs)}
+              {/each}
+            </div>
+          </div>
+        {/each}
+      </div>
+    {:else}
+      <div
+        class="overflow-x-clip overflow-y-auto grid max-h-[50vh]
+        grid-cols-[repeat(auto-fill,minmax(5rem,1fr))] gap-2"
+      >
+        {#each cases.cases as cs}
+          {@render renderCase(cs)}
+        {/each}
+      </div>
+    {/if}
+  {/if}
+
+  <Button class="mt-4 mx-auto" onclick={saveFilters}>
+    {$localLang.global.accept}
+  </Button>
+</Modal>
+
 <!-- <section
   role="tabpanel"
   class:timerOnly
@@ -1025,8 +955,8 @@
             showBackFace={$session?.settings?.showBackFace}
             bind:this={simulator}
             zoom={9}
-            movestart={() => $inputMethod.sendEvent({ type: "move:start" })}
-            solved={() => $inputMethod.sendEvent({ type: "solved" })}
+            movestart={() => $device.sendEvent({ type: "move:start" })}
+            solved={() => $device.sendEvent({ type: "solved" })}
             animationTime={100}
           />
         {:else}
@@ -1089,7 +1019,7 @@
 
   <!-- Scramble - ->
   <div id="scramble" class="transition-all duration-300 max-md:text-xs max-md:leading-5 tx-text">
-    {#if $inputMethod instanceof GANInput}
+    {#if $device instanceof GANInput}
       {#if $recoverySequence}
         <pre class="scramble-content" class:hide={$isRunning} class:battle>{"=> " +
             $recoverySequence}</pre>
@@ -1327,13 +1257,13 @@
   }
 
   /* TESTING */
-  .timer-tab.simulator[data-timerinput="virtual"][data-timerstate="clean"] #timer {
+  /* .timer-tab.simulator[data-timerinput="virtual"][data-timerstate="clean"] #timer {
     display: none;
   }
 
   .timer-tab.simulator[data-timerinput="virtual"][data-timerstate="running"] #scramble {
     display: none;
-  }
+  } */
 
   .timer-tab.simulator[data-timerstate="running"] {
     grid-template-areas:

@@ -1,6 +1,7 @@
 import type { IPC, Session } from "@interfaces";
 import type { SessionIPC } from "./sessionIPC.interface";
 import { sessions } from "@stores/sessions.store";
+import { clone } from "@helpers/object";
 
 export class SessionElectronIPC implements SessionIPC {
   ipc: IPC;
@@ -29,25 +30,25 @@ export class SessionElectronIPC implements SessionIPC {
   }
 
   async addSession(s: Session) {
-    let res = await this.ipc.addSession(s);
+    let res = await this.ipc.addSession(clone(s));
     await this.updateSessionStore();
     return res;
   }
 
   async removeSession(s: Session) {
-    let res = await this.ipc.removeSession(s);
+    let res = await this.ipc.removeSession(clone(s));
     await this.updateSessionStore();
     return res;
   }
 
   async renameSession(s: Session) {
-    let res = await this.ipc.renameSession(s);
+    let res = await this.ipc.renameSession(clone(s));
     await this.updateSessionStore();
     return res;
   }
 
   async updateSession(s: Session) {
-    let res = await this.ipc.updateSession(s);
+    let res = await this.ipc.updateSession(clone(s));
     await this.updateSessionStore();
     return res;
   }

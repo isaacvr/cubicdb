@@ -35,6 +35,13 @@ import * as pSkewb from "./skewb";
 import * as pUtils from "./utilscramble";
 import * as pKilo from "./kilominx";
 
+function getScramble(mode: string, len: number, pb: number): string {
+  return (pScramble.scramblers.get(mode) || (() => ""))
+    .apply(null, [mode, Math.abs(len), pb < 0 ? undefined : pb])
+    .replace(/\\n/g, "<br>")
+    .trim();
+}
+
 export {
   p133,
   p222,
@@ -46,6 +53,7 @@ export {
   pPyra,
   p444,
   pScramble,
+  getScramble,
   p333,
   pSq1,
   pSkewb,

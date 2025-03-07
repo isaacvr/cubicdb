@@ -50,6 +50,11 @@
   import { twMerge } from "tailwind-merge";
   import type { Device } from "$lib/interfaces/devices.types";
   import DeviceIcon from "$lib/cubicdbKit/DeviceIcon.svelte";
+  import { KeyboardInput } from "$lib/timer/adaptors/Keyboard";
+  import { ManualInput } from "$lib/timer/adaptors/Manual";
+  import { StackmatInput } from "$lib/timer/adaptors/Stackmat";
+  import { VirtualInput } from "$lib/timer/adaptors/Virtual";
+  import { nameCmp } from "@helpers/strings";
 
   let { data, children }: { data: LayoutServerData; children: any } = $props();
 
@@ -66,7 +71,12 @@
   let parts: { link: string; name: string }[] = $state([]);
   let jsonld = $state("");
   let dropdownOpen = $state(false);
-  let devices: Writable<Device[]> = writable([]);
+  let devices: Writable<Device[]> = writable([
+    new KeyboardInput(),
+    new ManualInput(),
+    new StackmatInput(),
+    new VirtualInput(),
+  ]);
 
   setContext("devices", devices);
 
@@ -198,7 +208,9 @@
 
   $effect(() => {
     if (dropdownOpen) {
-      $sessions.sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+      untrack(() => {
+        $sessions = $sessions.sort(nameCmp);
+      });
     }
   });
 </script>
@@ -219,11 +231,17 @@
   Icon: any,
   key: keyof typeof $localLang.HOME
 )}
-  {@const colorType = ["text-success", "text-warning", "text-info", "text-error"]}
+  {@const colorType = [
+    "hover:text-success",
+    "hover:text-warning",
+    "hover:text-info",
+    "hover:text-error",
+  ]}
   <li>
     <a
       class={twMerge(
-        "svg-container text-base-content hover:" + colorType[type],
+        "svg-container",
+        colorType[type],
         parts.length && parts[0].link === href
           ? "text-opacity-100 !bg-primary !bg-opacity-20"
           : "text-opacity-60"

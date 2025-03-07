@@ -1,4 +1,4 @@
-import { get, writable, type Writable } from "svelte/store";
+import { get, writable } from "svelte/store";
 import { isEscape, isKeyCode, isSpace, type Actor } from "@helpers/stateMachine";
 import {
   TimerState,
@@ -309,44 +309,61 @@ const KeyboardMachine = setup({
 
 export class KeyboardInput implements ITimerKeyboardDevice {
   readonly type = "timer_keyboard";
-  enabled = true;
+  private _enabled = false;
   id = "cubicdb:device:timer_keyboard";
   name = "Keyboard";
-  isActive: boolean;
   interpreter: ReturnType<typeof createActor> | null;
 
   constructor() {
     this.interpreter = null;
-    this.isActive = false;
   }
 
-  init(context: InputContext, currentStep: Writable<number>) {
+  public get enabled() {
+    return this._enabled;
+  }
+
+  public set enabled(value) {
+    this._enabled = value;
+
+    if (value) {
+      this.interpreter?.start();
+    } else {
+      this.interpreter?.stop();
+    }
+  }
+
+  init(context: InputContext) {
     const ctx: KeyboardContext = {
       steps: writable(+(get(context.session).settings.steps || "") || 1),
       stepsTime: writable([]),
-      currentStep,
       timeRef: writable(0),
       ...context,
     };
 
     this.interpreter = createActor(KeyboardMachine, { input: ctx });
-    this.isActive = true;
-    this.interpreter.start();
+    this.enabled = true;
   }
 
-  disconnect() {
-    this.isActive = false;
-    this.interpreter?.stop();
-  }
+  disconnect() {}
 
   keyUpHandler(ev: KeyboardEvent) {
-    if (!this.isActive || !get(this.interpreter?.getSnapshot().context.keyboardEnabled)) return;
-    this.interpreter?.send(ev);
+    if (
+      !this.enabled ||
+      !this.interpreter ||
+      !get(this.interpreter.getSnapshot().context.keyboardEnabled)
+    )
+      return;
+    this.interpreter.send(ev);
   }
 
   keyDownHandler(ev: KeyboardEvent) {
-    if (!this.isActive || !get(this.interpreter?.getSnapshot().context.keyboardEnabled)) return;
-    this.interpreter?.send(ev);
+    if (
+      !this.enabled ||
+      !this.interpreter ||
+      !get(this.interpreter.getSnapshot().context.keyboardEnabled)
+    )
+      return;
+    this.interpreter.send(ev);
   }
 
   stopTimer() {

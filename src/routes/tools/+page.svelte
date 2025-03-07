@@ -15,7 +15,7 @@
   import { globalLang } from "@stores/language.service";
   import { getLanguage } from "@lang/index";
   import { STANDARD_PALETTE, SessionDefaultSettings, type SCRAMBLE_MENU, AON } from "@constants";
-  import * as all from "@cstimer/scramble";
+  import { getScramble, pScramble } from "@cstimer/scramble";
   import { copyToClipboard, parseReconstruction, randomUUID } from "@helpers/strings";
   import { NotificationService } from "@stores/notification.service";
   import { sTimer, timerToMilli } from "@helpers/timer";
@@ -130,7 +130,7 @@
   }
 
   function selectedMode() {
-    filters = all.pScramble.filters.get($mode[1]) || [];
+    filters = pScramble.filters.get($mode[1]) || [];
     $prob = -1;
     selectedFilter();
   }
@@ -143,12 +143,7 @@
     scrambleBatch.length = 0;
 
     for (let i = 0; i < batch; i += 1) {
-      scrambleBatch.push(
-        (all.pScramble.scramblers.get($mode[1]) as any)
-          .apply(null, [$mode[1], Math.abs($mode[2]), $prob < 0 ? undefined : $prob])
-          .replace(/\\n/g, "<br>")
-          .trim()
-      );
+      scrambleBatch.push(getScramble($mode[1], $mode[2], $prob));
     }
   }
 

@@ -1,5 +1,6 @@
 import type { IPC, Solve } from "@interfaces";
 import type { SolveIPC } from "./solveIPC.interface";
+import { clone } from "@helpers/object";
 
 export class SolveElectronIPC implements SolveIPC {
   ipc: IPC;
@@ -23,18 +24,18 @@ export class SolveElectronIPC implements SolveIPC {
   }
 
   addSolve(s: Solve) {
-    return this.ipc.addSolve(s);
+    return this.ipc.addSolve(clone(s));
   }
 
   addSolves(s: Solve[]) {
-    return this.ipc.addSolves(s);
+    return this.ipc.addSolves(clone(s));
   }
 
   updateSolve(s: Solve) {
-    return this.ipc.updateSolve(s);
+    return this.ipc.updateSolve(clone(s));
   }
 
   removeSolves(s: Solve[]) {
-    return this.ipc.removeSolves(s);
+    return this.ipc.removeSolves(clone(s));
   }
 }

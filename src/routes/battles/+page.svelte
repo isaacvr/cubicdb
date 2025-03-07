@@ -3,7 +3,7 @@
   import Select from "@material/Select.svelte";
   import Timer from "$lib/timer/Timer.svelte";
   import { infinitePenalty, isMo3 } from "@helpers/timer";
-  import * as all from "@cstimer/scramble";
+  import { getScramble } from "@cstimer/scramble";
   import { onDestroy, onMount } from "svelte";
   import Checkbox from "@material/Checkbox.svelte";
   import { getAverage } from "@helpers/statistics";
@@ -296,10 +296,7 @@
 
         let sMode = MODES.find(m => m[1] === mode) as any;
         log("gen: ", mode, sMode, round + 5, gameID);
-        scramble = (all.pScramble.scramblers.get(mode) as any)
-          .apply(null, [mode, Math.abs(sMode[2]), undefined])
-          .replace(/\\n/g, "<br>")
-          .trim();
+        scramble = getScramble(mode, Math.abs(sMode[2]), -1);
       } catch (e) {
         log("ERROR: ", e);
       }

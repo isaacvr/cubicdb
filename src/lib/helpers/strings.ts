@@ -364,3 +364,22 @@ export function modeToName(mode: MODE, alt: string): string {
 
   return alt;
 }
+
+const NUMBER_REG = /^[+-]?[\d]+(\.[\d]+)?$/;
+
+export function nameCmp(a: { name: string }, b: { name: string }): number {
+  let A = a.name.toLowerCase().split(/[\s-]/);
+  let B = b.name.toLowerCase().split(/[\s-]/);
+
+  for (let i = 0, maxi = Math.min(A.length, B.length); i < maxi; i += 1) {
+    if (A[i] != B[i]) {
+      if (NUMBER_REG.test(A[i]) && NUMBER_REG.test(B[i])) {
+        return parseInt(A[i]) - parseInt(B[i]);
+      } else {
+        return A[i] < B[i] ? -1 : 1;
+      }
+    }
+  }
+
+  return A.length < B.length ? -1 : 1;
+}

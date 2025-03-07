@@ -1,3 +1,4 @@
+import { browser } from "$app/environment";
 import type {
   IStackmatDevice,
   StackmatCallback,
@@ -140,7 +141,7 @@ const StackmatMachine = setup({
 
 export class StackmatInput implements IStackmatDevice {
   readonly type = "stackmat";
-  private audio_context: AudioContext;
+  private audio_context: AudioContext | null;
   private audio_stream: MediaStream | undefined;
   private source: MediaStreamAudioSourceNode | null = null;
   private node: AudioWorkletNode | null = null;
@@ -154,7 +155,7 @@ export class StackmatInput implements IStackmatDevice {
 
   constructor() {
     this.interpreter = null;
-    this.audio_context = new AudioContext();
+    this.audio_context = browser ? new AudioContext() : null;
     this.id = randomUUID();
     this.isConnected = false;
     this.lastState = null;
@@ -241,7 +242,7 @@ export class StackmatInput implements IStackmatDevice {
 
     if (this.audio_stream == undefined) {
       return navigator.mediaDevices.getUserMedia({ audio: selectObj }).then(stream => {
-        if (this.audio_context.state == "suspended" && !force) {
+        if (this.audio_context?.state == "suspended" && !force) {
           return Promise.reject();
         }
         this.success(stream);
@@ -271,6 +272,8 @@ export class StackmatInput implements IStackmatDevice {
   }
 
   async success(stream: MediaStream) {
+    if (!this.audio_context) return;
+
     this.audio_stream = stream;
     this.source = this.audio_context.createMediaStreamSource(stream);
 
@@ -350,11 +353,13 @@ export class StackmatInput implements IStackmatDevice {
         this.audio_stream.getTracks().forEach(t => t.stop());
         this.audio_stream = undefined;
         this.source?.disconnect(this.node as AudioWorkletNode);
-        this.node?.disconnect(this.audio_context.destination);
+        if (this.audio_context) {
+          this.node?.disconnect(this.audio_context.destination);
+        }
         this.node?.port.close();
         this.source?.disconnect();
         this.node?.disconnect();
-        await this.audio_context.close();
+        await this.audio_context?.close();
       } catch (err) {
         console.log("AUDIO_PROCESSOR_ERROR: ", err);
       }

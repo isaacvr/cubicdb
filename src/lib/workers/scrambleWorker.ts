@@ -1,5 +1,5 @@
 // import { pScramble } from "@cstimer/scramble";
-import * as all from "@cstimer/scramble";
+import { getScramble } from "@cstimer/scramble";
 
 interface SETTINGS {
   scrambles: number;
@@ -33,18 +33,13 @@ self.addEventListener("message", function (e) {
 
   if (mode === "r3ni") {
     batch.push(
-      ...((all.pScramble.scramblers.get(mode) || f).apply(null, [mode, total]) as string)
-        .replace(/\\n/g, "<br>")
+      ...getScramble(mode, total, -1)
         .split("<br>")
         .map(s => s.trim().replace(/^\d+\)\s+/, ""))
     );
   } else {
     for (let i = 0; i < total; i += 1) {
-      batch.push(
-        ((all.pScramble.scramblers.get(mode) || f).apply(null, [mode, Math.abs(len)]) as string)
-          .replace(/\\n/g, "<br>")
-          .trim()
-      );
+      batch.push(getScramble(mode, len, -1));
 
       postMessage({
         type: "progress",

@@ -6,6 +6,7 @@
     KeyboardIcon,
     RectangleEllipsisIcon,
     UsbIcon,
+    WholeWordIcon,
     WifiIcon,
   } from "lucide-svelte";
 
@@ -37,7 +38,7 @@
         return UsbIcon;
       }
       case "virtual_cube_keyboard": {
-        return UsbIcon;
+        return WholeWordIcon;
       }
     }
 

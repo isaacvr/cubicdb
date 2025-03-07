@@ -34,10 +34,13 @@
 
   function keyDownHandler(e: KeyboardEvent) {
     if (!show) return;
-    e.stopPropagation();
+
+    if (e.target === e.currentTarget) {
+      e.stopPropagation();
+    }
 
     if (e.code === "Escape") {
-      if (closeOnEscape && e.target === e.currentTarget) {
+      if (closeOnEscape) {
         close(null);
       } else {
         e.preventDefault();
@@ -63,10 +66,9 @@
     }
   }
 
-  export function close(data: any) {
+  function close(data: any) {
     onclose && onclose(data || null);
     show = false;
-    return show;
   }
 
   $effect(() => {
@@ -82,7 +84,7 @@
 <dialog
   bind:this={modal}
   data-type="modal"
-  role="alert"
+  role="alertdialog"
   onmousedown={handleClick}
   onkeyup={keyUpHandler}
   onkeydown={keyDownHandler}
@@ -90,14 +92,19 @@
   class="bg-base-200 text-sm rounded-md show p-4 pt-3 overflow-visible {_cl || ''}"
   style="view-transition-name: {transitionName};"
 >
-  {#if cancel}
-    <Button color="none" class="rounded-lg p-0 float-right hover:border-primary" onclick={close}>
-      <XIcon size="1rem" />
-    </Button>
-  {/if}
-
   {#if show}
     {@render children?.()}
+  {/if}
+
+  {#if cancel}
+    <Button
+      color="none"
+      tabindex="0"
+      class="rounded-lg p-0 absolute top-2 right-4 hover:border-primary"
+      onclick={close}
+    >
+      <XIcon size="1rem" />
+    </Button>
   {/if}
 </dialog>
 

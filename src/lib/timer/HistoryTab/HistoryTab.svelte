@@ -596,10 +596,9 @@
 
     <pre
       contenteditable="false"
-      class="text-center text-sm overflow-auto max-h-[20svh]">{@html sSolve?.scramble?.replaceAll(
-        "\n",
-        "<br>"
-      ) || ""}</pre>
+      class="text-center text-sm break-words whitespace-normal overflow-auto max-h-[20svh]">
+        {@html sSolve?.scramble?.replaceAll("\n", "<br>") || ""}
+      </pre>
 
     <div
       class="preview col-span-2 mx-auto overflow-hidden w-full h-full
@@ -686,7 +685,7 @@
       onclick={() => {
         /*modal.close(sSolve)*/
       }}
-      class="text-purple-400 hover:bg-purple-900 hover:text-gray-200 mr-2 text-sm gap-1 px-2"
+      class="mr-2 text-sm gap-1 px-2"
     >
       <SaveIcon size="1.2rem" />
       {$localLang.global.save}
@@ -711,9 +710,9 @@
     </Button>
     <Dropdown bind:open={showDropdown} class="bg-backgroundLevel2 rounded-md">
       {#each [{ label: $localLang.TIMER.noPenalty, penalty: Penalty.NONE }, ...PENALTIES] as p}
-        <DropdownItem class="bg-backgroundLevel2 " onclick={() => setPenalty(p.penalty)}
-          >{p.label}</DropdownItem
-        >
+        <DropdownItem class="bg-backgroundLevel2 " onclick={() => setPenalty(p.penalty)}>
+          {p.label}
+        </DropdownItem>
       {/each}
     </Dropdown>
   </div>

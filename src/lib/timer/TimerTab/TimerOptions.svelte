@@ -1,19 +1,12 @@
 <script lang="ts">
-  import { onMount } from "svelte";
-  import { derived, writable, type Writable } from "svelte/store";
+  import { getContext, onMount } from "svelte";
+  import { type Writable } from "svelte/store";
   import { getSeed, setSeed } from "@cstimer/lib/mathlib";
   import { dataService } from "$lib/data-services/data.service";
   import { Popover, Spinner, Dropdown, DropdownItem, Input } from "flowbite-svelte";
   import { NotificationService } from "@stores/notification.service";
   import { localLang } from "@stores/language.service";
-  import {
-    DIALOG_MODES,
-    TIMER_INPUT,
-    type ActiveTool,
-    type Solve,
-    type TimerContext,
-    type ToolItem,
-  } from "@interfaces";
+  import { type ActiveTool, type Solve, type TimerContext, type ToolItem } from "@interfaces";
   import { copyToClipboard } from "@helpers/strings";
   import { STEP_COLORS } from "@constants";
   import TextArea from "@material/TextArea.svelte";
@@ -30,7 +23,7 @@
 
   // ICONS
   import CubeCategory from "@components/wca/CubeCategory.svelte";
-  
+
   import {
     BeanIcon,
     ChartSplineIcon,
@@ -40,30 +33,33 @@
     Settings2Icon,
   } from "lucide-svelte";
   import Modal from "@components/Modal.svelte";
-  import InputAdaptorIcon from "$lib/cubicdbKit/InputAdaptorIcon.svelte";
   import Range from "$lib/cubicdbKit/Range.svelte";
   import { clone } from "@helpers/object";
+  import type { Device } from "$lib/interfaces/devices.types";
+  import DeviceIcon from "$lib/cubicdbKit/DeviceIcon.svelte";
+
+  let devices: Writable<Device[]> = getContext("devices");
 
   type TModal = "" | "edit-scramble" | "old-scrambles" | "settings";
 
   interface TimerOptionsProps {
+    device: Writable<Device>;
     context: TimerContext;
     timerOnly?: boolean;
     battle?: boolean;
     enableKeyboard: Writable<boolean>;
-    deviceID: Writable<string>;
     deviceList: string[][];
-    // initInputHandler: Function;
+    initInputHandler: Function;
   }
 
   let {
-    context,
-    timerOnly,
-    battle,
-    enableKeyboard,
-    deviceID,
-    deviceList,
-    // initInputHandler,
+    device = $bindable(),
+    context = $bindable(),
+    timerOnly = $bindable(),
+    battle = $bindable(),
+    enableKeyboard = $bindable(),
+    deviceList = $bindable(),
+    initInputHandler,
   }: TimerOptionsProps = $props();
 
   const {
@@ -81,11 +77,11 @@
 
   const iconSize = "1.2rem";
 
-  let timerInput = derived(session, $s => {
-    return DIALOG_MODES.indexOf($s.settings.mode || $mode[1] || "") > -1
-      ? TIMER_INPUT
-      : TIMER_INPUT.filter(inp => inp != "GAN Cube");
-  });
+  // let timerInput = derived(session, $s => {
+  //   return DIALOG_MODES.indexOf($s.settings.mode || $mode[1] || "") > -1
+  //     ? TIMER_INPUT
+  //     : TIMER_INPUT.filter(inp => inp != "GAN Cube");
+  // });
 
   let notification = NotificationService.getInstance();
 
@@ -183,12 +179,18 @@
     }
 
     openDialog("settings", $session, (data: any) => {
+      let dv = $devices.find(d => d.id === $session.settings.input);
+
+      if (!dv) {
+        $session.settings.input = $devices[0].id;
+      }
+
       if (data) {
         if (timerOnly) return;
 
-        // initInputHandler();
+        initInputHandler($session.settings.input);
 
-        $dataService.session.updateSession(clone($session));
+        $dataService.session.updateSession($session);
         initialCalc != $session.settings.calcAoX && updateStatistics(false);
       }
     });
@@ -306,20 +308,14 @@
   }
 
   function connectBluetooth(id: string) {
-    if (id != $deviceID) {
+    if (id != $device.id) {
       isSearching = false;
-      $deviceID = id;
-      let type = modalData.settings.input === "GAN Cube" ? "GAN" : "QYTimer";
-      $dataService.config.setPath(`timer/inputs/${type}`, { mac: id });
-      $dataService.config.saveConfig();
       $dataService.config.connectBluetoothDevice(id);
-    } else {
-      // $inputMethod.disconnect();
     }
   }
 
   // function selectExternalTimer(id: string) {
-  //   if (id === $deviceID) {
+  //   if (id === $device.id) {
   //     deviceID.set("");
   //   } else {
   //     deviceID.set(id);
@@ -350,10 +346,6 @@
     seedStr = seed[1];
     showSeedModal = true;
     saveEnableKeyboard();
-  }
-
-  function syncSolved() {
-    $dataService.emitBluetoothData("sync-solved", null);
   }
 
   onMount(() => {
@@ -402,7 +394,7 @@
               </TableBodyRow>
               <TableBodyRow>
                 <TableBodyCell>MAC</TableBodyCell>
-                <TableBodyCell>{$deviceID != "default" ? $deviceID : "-"}</TableBodyCell>
+                <TableBodyCell>{$device.id != "default" ? $device.id : "-"}</TableBodyCell>
               </TableBodyRow>
               <TableBodyRow>
                 <TableBodyCell>Battery</TableBodyCell>
@@ -513,11 +505,12 @@
         {$localLang.TIMER.inputMethod}:
         <Select
           bind:value={modalData.settings.input}
-          items={$timerInput}
-          transform={e => e}
+          items={$devices}
+          label={e => e.name}
+          transform={e => e.id}
           placement="right"
-          hasIcon={e => e}
-          IconComponent={InputAdaptorIcon}
+          hasIcon={e => e.type}
+          IconComponent={DeviceIcon}
         />
       </section>
     {/if}
@@ -551,11 +544,11 @@
             >
               {name}
               <Button
-                color={id === $deviceID ? "red" : "green"}
+                color={id === $device.id ? "red" : "green"}
                 loading={isConnecting}
                 onclick={() => selectExternalTimer(id)}
               >
-                {id === $deviceID ? $localLang.TIMER.disconnect : $localLang.TIMER.connect}
+                {id === $device.id ? $localLang.TIMER.disconnect : $localLang.TIMER.connect}
               </Button>
             </li>
           {/each}
@@ -568,7 +561,7 @@
       <section>
         {$localLang.TIMER.device}: <Select
           class="max-w-full"
-          bind:value={$deviceID}
+          bind:value={$device.id}
           items={deviceList}
           label={e => e[1]}
           transform={e => e[0]}
@@ -600,7 +593,7 @@
             <li class="flex items-center gap-2 pl-4 bg-white bg-opacity-10 rounded-md">
               {deviceName}
 
-              <!-- {#if deviceId === $deviceID}
+              <!-- {#if deviceId === $device.id}
               <Tooltip text={$localLang.TIMER.syncSolved} position="top" class="ml-auto">
                 <Button onclick={syncSolved} class="bg-primary-800 tx-text px-3">
                   <SyncIcon size="1.2rem" />
@@ -608,14 +601,14 @@
               </Tooltip>
               {/if} -->
               <Button
-                color={deviceId === $deviceID ? "error" : "primary"}
+                color={deviceId === $device.id ? "error" : "primary"}
                 class="gap-2 ml-auto"
                 onclick={() => {
                   if (pos === connectingPos) return;
-                  if (deviceId === $deviceID) {
+                  if (deviceId === $device.id) {
                     deviceList = [];
                     // $inputMethod.disconnect();
-                    $deviceID = "default";
+                    $device.id = "default";
                     return;
                   }
                   connectingPos = pos;
@@ -625,7 +618,7 @@
                 {#if pos === connectingPos}
                   <Spinner size="4" color="white" />
                 {:else}
-                  {deviceId === $deviceID ? $localLang.TIMER.disconnect : $localLang.TIMER.connect}
+                  {deviceId === $device.id ? $localLang.TIMER.disconnect : $localLang.TIMER.connect}
                 {/if}
               </Button>
             </li>

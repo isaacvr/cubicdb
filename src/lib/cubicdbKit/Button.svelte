@@ -26,7 +26,7 @@
     accept: "btn-secondary",
     cancel: "btn-neutral",
     urgent: "btn-accent",
-    error: "bg-error hover:bg-error text-error-content",
+    error: "bg-error bg-opacity-60 hover:bg-error hover:!bg-opacity-100 !text-error-content",
     neutral: "bg-base-100 hover:bg-base-200 hover:outline hover:outline-base-100 text-base-content",
     none: "bg-transparent text-base-content",
   };
@@ -51,7 +51,13 @@
   }
 </script>
 
-<button class={buttonClass} class:isLoading={loading} onclick={handleClick} {...restProps}>
+<button
+  class={buttonClass}
+  class:isLoading={loading}
+  onclick={handleClick}
+  tabindex="-1"
+  {...restProps}
+>
   <div class="loading loading-spinner loading-sm mx-auto"></div>
   <div class={twMerge("content flex gap-2 items-center justify-center", contentClass)}>
     {@render children?.()}

@@ -68,6 +68,8 @@ export const Chinese: Language = {
     next: "下一步",
     download: "下载中",
     copyCode: "复制 $1",
+    toGroup: "团体",
+    toUngroup: "取消分组",
   },
   TUTORIALS: {
     easy: "简单",
@@ -312,6 +314,52 @@ export const Chinese: Language = {
     },
 
     gateResultIndicator: ["结果是", "如果某个值是"],
+
+    // Case selector
+    caseName(caseCode) {
+      switch (caseCode) {
+        case "edges-only":
+          return "Edges only";
+        case "corners-only":
+          return "Corners only";
+        case "adjacent-corners":
+          return "Adjacent corners";
+        case "diagonal-corners":
+          return "Diagonal corners";
+        case "double-cycles":
+          return "Double cycles";
+        case "point":
+          return "Point";
+        case "square":
+          return "Square";
+        case "small-lightning-ball":
+          return "Small ⚡";
+        case "big-lightning-ball":
+          return "Big ⚡";
+        case "fish":
+          return "Fish";
+        case "knight":
+          return "Knight";
+        case "awkward-shape":
+          return "Awkward shape";
+        case "easy":
+          return "Easy";
+        case "same-colors":
+          return "Same colors";
+        case "different-colors":
+          return "Different colors";
+        case "white-on-top":
+          return "White on top";
+        case "corner-in-place":
+          return "Corner in place";
+        case "edge-in-place":
+          return "Edge in place";
+        case "unoriented":
+          return "Bad orientation";
+      }
+
+      return caseCode;
+    },
   },
   RECONSTRUCTIONS: {
     stepBack: "后退一步",

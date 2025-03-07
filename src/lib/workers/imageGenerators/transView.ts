@@ -3,6 +3,7 @@ import type { PuzzleType } from "@interfaces";
 import { ThreeJSAdaptor } from "$lib/simulator/adaptors/ThreeJSAdaptor";
 import { Mesh, Object3D, Sphere, Vector3, WebGLRenderer } from "three";
 import { degToRad } from "three/src/math/MathUtils.js";
+import { Vector3D } from "@classes/vector3d";
 
 function calculateBoundingSphere(object: Object3D) {
   const positions: Vector3[] = [];
@@ -75,7 +76,9 @@ export async function transView(
   const distance = radius / F / Math.sin(degToRad(threeAdaptor.camera.fov / 2));
 
   threeAdaptor.zoom = distance;
-  threeAdaptor.resetCamera();
+  threeAdaptor.resetCamera(
+    cube.type === "rubik" ? new Vector3D(0.68068, 0.6081, 0.6485) : undefined
+  );
 
   threeAdaptor.renderScene();
 

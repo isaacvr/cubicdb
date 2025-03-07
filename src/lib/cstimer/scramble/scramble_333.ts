@@ -29,6 +29,8 @@ import {
   rndEl,
   valuedArray,
   idxArray,
+  setNOri,
+  getNOri,
 } from "../lib/mathlib";
 import { Search } from "../lib/min2phase";
 import { getEasyCross } from "../tools/cross";
@@ -398,103 +400,56 @@ export function getLLScramble() {
   return getAnyScramble(0xba987654ffff, 0x00000000ffff, 0x7654ffff, 0x0000ffff);
 }
 
-const f2l_map: any[] = [
-  0x2000, // Easy-01
-  0x1011, // Easy-02
-  0x2012, // Easy-03
-  0x1003, // Easy-04
-  0x2003, // RE-05
-  0x1012, // RE-06
-  0x2002, // RE-07
-  0x1013, // RE-08
-  0x2013, // REFC-09
-  0x1002, // REFC-10
-  0x2010, // REFC-11
-  0x1001, // REFC-12
-  0x2011, // REFC-13
-  0x1000, // REFC-14
-  0x2001, // SPGO-15
-  0x1010, // SPGO-16
-  0x0000, // SPGO-17
-  0x0011, // SPGO-18
-  0x0003, // PMS-19
-  0x0012, // PMS-20
-  0x0002, // PMS-21
-  0x0013, // PMS-22
-  0x0001, // Weird-23
-  0x0010, // Weird-24
-  0x0400, // CPEU-25
-  0x0411, // CPEU-26
-  0x1400, // CPEU-27
-  0x2411, // CPEU-28
-  0x1411, // CPEU-29
-  0x2400, // CPEU-30
-  0x0018, // EPCU-31
-  0x0008, // EPCU-32
-  0x2008, // EPCU-33
-  0x1008, // EPCU-34
-  0x2018, // EPCU-35
-  0x1018, // EPCU-36
-  0x0418, // ECP-37
-  0x1408, // ECP-38
-  0x2408, // ECP-39
-  0x1418, // ECP-40
-  0x2418, // ECP-41
-  0x0408, // Solved-42
-];
+export const f2l_map = [
+  [0x2000, 4, "Easy-01"],
+  [0x1011, 4, "Easy-02"],
+  [0x2012, 4, "Easy-03"],
+  [0x1003, 4, "Easy-04"],
+  [0x2003, 4, "RE-05"],
+  [0x1012, 4, "RE-06"],
+  [0x2002, 4, "RE-07"],
+  [0x1013, 4, "RE-08"],
+  [0x2013, 4, "REFC-09"],
+  [0x1002, 4, "REFC-10"],
+  [0x2010, 4, "REFC-11"],
+  [0x1001, 4, "REFC-12"],
+  [0x2011, 4, "REFC-13"],
+  [0x1000, 4, "REFC-14"],
+  [0x2001, 4, "SPGO-15"],
+  [0x1010, 4, "SPGO-16"],
+  [0x0000, 4, "SPGO-17"],
+  [0x0011, 4, "SPGO-18"],
+  [0x0003, 4, "PMS-19"],
+  [0x0012, 4, "PMS-20"],
+  [0x0002, 4, "PMS-21"],
+  [0x0013, 4, "PMS-22"],
+  [0x0001, 4, "Weird-23"],
+  [0x0010, 4, "Weird-24"],
+  [0x0400, 4, "CPEU-25"],
+  [0x0411, 4, "CPEU-26"],
+  [0x1400, 4, "CPEU-27"],
+  [0x2411, 4, "CPEU-28"],
+  [0x1411, 4, "CPEU-29"],
+  [0x2400, 4, "CPEU-30"],
+  [0x0018, 4, "EPCU-31"],
+  [0x0008, 4, "EPCU-32"],
+  [0x2008, 4, "EPCU-33"],
+  [0x1008, 4, "EPCU-34"],
+  [0x2018, 4, "EPCU-35"],
+  [0x1018, 4, "EPCU-36"],
+  [0x0418, 1, "ECP-37"],
+  [0x1408, 1, "ECP-38"],
+  [0x2408, 1, "ECP-39"],
+  [0x1418, 1, "ECP-40"],
+  [0x2418, 1, "ECP-41"],
+  [0x0408, 1, "Solved-42"],
+] as const;
 
-const f2lprobs = [
-  4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
-  4, 4, 4, 1, 1, 1, 1, 1, 1,
-];
-
-const f2lfilter = [
-  "Easy-01",
-  "Easy-02",
-  "Easy-03",
-  "Easy-04",
-  "RE-05",
-  "RE-06",
-  "RE-07",
-  "RE-08",
-  "REFC-09",
-  "REFC-10",
-  "REFC-11",
-  "REFC-12",
-  "REFC-13",
-  "REFC-14",
-  "SPGO-15",
-  "SPGO-16",
-  "SPGO-17",
-  "SPGO-18",
-  "PMS-19",
-  "PMS-20",
-  "PMS-21",
-  "PMS-22",
-  "Weird-23",
-  "Weird-24",
-  "CPEU-25",
-  "CPEU-26",
-  "CPEU-27",
-  "CPEU-28",
-  "CPEU-29",
-  "CPEU-30",
-  "EPCU-31",
-  "EPCU-32",
-  "EPCU-33",
-  "EPCU-34",
-  "EPCU-35",
-  "EPCU-36",
-  "ECP-37",
-  "ECP-38",
-  "ECP-39",
-  "ECP-40",
-  "ECP-41",
-  "Solved-42",
-];
+const f2lprobs = idxArray(f2l_map, 1);
+const f2lfilter = idxArray(f2l_map, 2);
 
 export function getLSLLScramble(type: any, length: any, cases: any) {
-  const caze = f2l_map[fixCase(cases, f2lprobs)];
+  const caze = f2l_map[fixCase(cases, f2lprobs)][0];
   const ep = Math.pow(16, caze & 0xf);
   const eo = 0xf ^ ((caze >> 4) & 1);
   const cp = Math.pow(16, (caze >> 8) & 0xf);
@@ -537,100 +492,94 @@ export function getF2LScramble(_type: any, _length: any, prob: any) {
   return getAnyScramble(_prob[0], _prob[1], 0xffffffff, 0xffffffff);
 }
 
-const zbll_map = [
-  [0x3210, 0x2121], // H-BBFF
-  [0x3012, 0x2121], // H-FBFB
-  [0x3120, 0x2121], // H-RFLF
-  [0x3201, 0x2121], // H-RLFF
-  [0x3012, 0x1020], // L-FBRL
-  [0x3021, 0x1020], // L-LBFF
-  [0x3201, 0x1020], // L-LFFB
-  [0x3102, 0x1020], // L-LFFR
-  [0x3210, 0x1020], // L-LRFF
-  [0x3120, 0x1020], // L-RFBL
-  [0x3102, 0x1122], // Pi-BFFB
-  [0x3120, 0x1122], // Pi-FBFB
-  [0x3012, 0x1122], // Pi-FRFL
-  [0x3021, 0x1122], // Pi-FRLF
-  [0x3210, 0x1122], // Pi-LFRF
-  [0x3201, 0x1122], // Pi-RFFL
-  [0x3120, 0x2220], // S-FBBF
-  [0x3102, 0x2220], // S-FBFB
-  [0x3210, 0x2220], // S-FLFR
-  [0x3201, 0x2220], // S-FLRF
-  [0x3021, 0x2220], // S-LFFR
-  [0x3012, 0x2220], // S-LFRF
-  [0x3210, 0x2100], // T-BBFF
-  [0x3012, 0x2100], // T-FBFB
-  [0x3201, 0x2100], // T-FFLR
-  [0x3120, 0x2100], // T-FLFR
-  [0x3102, 0x2100], // T-RFLF
-  [0x3021, 0x2100], // T-RLFF
-  [0x3021, 0x1200], // U-BBFF
-  [0x3201, 0x1200], // U-BFFB
-  [0x3012, 0x1200], // U-FFLR
-  [0x3120, 0x1200], // U-FRLF
-  [0x3102, 0x1200], // U-LFFR
-  [0x3210, 0x1200], // U-LRFF
-  [0x3102, 0x1101], // aS-FBBF
-  [0x3120, 0x1101], // aS-FBFB
-  [0x3012, 0x1101], // aS-FRFL
-  [0x3021, 0x1101], // aS-FRLF
-  [0x3210, 0x1101], // aS-LFRF
-  [0x3201, 0x1101], // aS-RFFL
-  [0xffff, 0x0000], // PLL
-];
+function genZBLLMap() {
+  let isVisited: number[] = [];
+  let zbll_map = [];
+  let cc = new CubieCube();
+  for (let idx = 0; idx < 27 * 24 * 24; idx++) {
+    if ((isVisited[idx >> 5] >> (idx & 0x1f)) & 1) {
+      continue;
+    }
+    let epi = idx % 24;
+    let cpi = ~~(idx / 24) % 24;
+    let coi = ~~(idx / 24 / 24);
+    if (getNParity(cpi, 4) != getNParity(epi, 4)) {
+      continue;
+    }
+    let co = setNOri(cc.co, coi, 4, -3);
+    let cp = setNPerm(cc.cp, cpi, 4, 0);
+    let ep = setNPerm(cc.ep, epi, 4, 0);
+    let zbcase: any[] = [0, 0, 0, 0, null];
+    for (let i = 0; i < 4; i++) {
+      zbcase[0] += cp[i] << (i * 4);
+      zbcase[1] += co[i] << (i * 4);
+      zbcase[2] += ep[i] << (i * 4);
+    }
+    for (let conj = 0; conj < 16; conj++) {
+      let c0 = conj >> 2;
+      let c1 = conj & 3;
+      let co2 = [],
+        cp2 = [],
+        ep2 = [];
+      for (let i = 0; i < 4; i++) {
+        co2[(i + c0) & 3] = co[i];
+        cp2[(i + c0) & 3] = (cp[i] + c1) & 3;
+        ep2[(i + c0) & 3] = (ep[i] + c1) & 3;
+      }
+      let co2i = getNOri(co2, 4, -3);
+      let cp2i = getNPerm(cp2, 4, 0);
+      let ep2i = getNPerm(ep2, 4, 0);
+      let idx2 = (co2i * 24 + cp2i) * 24 + ep2i;
+      if ((isVisited[idx2 >> 5] >> (idx2 & 0x1f)) & 1) {
+        continue;
+      }
+      isVisited[idx2 >> 5] |= 1 << (idx2 & 0x1f);
+      zbcase[3]++;
+    }
+    if (idx > 0) {
+      // skip solved state
+      zbll_map.push(zbcase);
+    }
+  }
 
-const zbprobs = [
-  1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-  2, 2, 2, 2, 2, 2, 2, 3,
-];
+  let coNames: Record<number, string> = {};
+  coNames[0x0000] = "O";
+  coNames[0x0012] = "U";
+  coNames[0x0021] = "T";
+  coNames[0x0102] = "L";
+  coNames[0x0111] = "aS";
+  coNames[0x0222] = "S";
+  coNames[0x1122] = "Pi";
+  coNames[0x1212] = "H";
+  let coCnts: Record<string, any> = {};
+  for (let i = 0; i < zbll_map.length; i++) {
+    let zbcase = zbll_map[i];
+    let coName = coNames[zbcase[1]];
+    coCnts[coName] = coCnts[coName] || [];
+    let coCnt = coCnts[coName];
+    let cpIdx = coCnt.indexOf(zbcase[0]);
+    if (cpIdx == -1) {
+      cpIdx = coCnt.length;
+      coCnt.push(zbcase[0], 1);
+    } else {
+      coCnt[cpIdx + 1]++;
+    }
+    zbcase[4] = coName + ((cpIdx >> 1) + 1) + "-" + coCnts[coName][cpIdx + 1];
+  }
+  return zbll_map;
+}
 
-const zbfilter = [
-  "H-BBFF",
-  "H-FBFB",
-  "H-RFLF",
-  "H-RLFF",
-  "L-FBRL",
-  "L-LBFF",
-  "L-LFFB",
-  "L-LFFR",
-  "L-LRFF",
-  "L-RFBL",
-  "Pi-BFFB",
-  "Pi-FBFB",
-  "Pi-FRFL",
-  "Pi-FRLF",
-  "Pi-LFRF",
-  "Pi-RFFL",
-  "S-FBBF",
-  "S-FBFB",
-  "S-FLFR",
-  "S-FLRF",
-  "S-LFFR",
-  "S-LFRF",
-  "T-BBFF",
-  "T-FBFB",
-  "T-FFLR",
-  "T-FLFR",
-  "T-RFLF",
-  "T-RLFF",
-  "U-BBFF",
-  "U-BFFB",
-  "U-FFLR",
-  "U-FRLF",
-  "U-LFFR",
-  "U-LRFF",
-  "aS-FBBF",
-  "aS-FBFB",
-  "aS-FRFL",
-  "aS-FRLF",
-  "aS-LFRF",
-  "aS-RFFL",
-  "PLL",
-];
+const zbll_map = genZBLLMap();
+const zbprobs = idxArray(zbll_map, 3);
+const zbfilter = idxArray(zbll_map, 4);
 
 const coll_map: any[] = [
+  [0x3210, 0x1101, "LeFeeeDeRRGFDGLDGBDGB", 4, "aS-1"],
+  [0x2301, 0x1110, "ReFeeeDeLRGBDGLDGFDGB", 4, "aS-2"],
+  [0x3021, 0x1101, "LeBeeeDeFFGLDGRDGBDGR", 4, "aS-3"],
+  [0x2013, 0x1011, "LeFeeeDeBFGRDGLDGBDGR", 4, "aS-4"],
+  [0x1203, 0x1011, "FeBeeeDeLFGBDGRDGLDGR", 4, "aS-5"],
+  [0x3102, 0x1101, "FeBeeeDeRBGFDGRDGLDGL", 4, "aS-6"],
   [0x3210, 0x2121, "FeFeeeBeBLGRDGDRGLDGD", 2, "H-1"],
   [0x2301, 0x1212, "ReLeeeReLBGBDGDFGFDGD", 2, "H-2"],
   [0x1203, 0x1212, "ReBeeeLeBFGRDGDLGFDGD", 4, "H-3"],
@@ -665,12 +614,6 @@ const coll_map: any[] = [
   [0x2013, 0x2001, "BeFeeeDeDFGBRGLDGDLGR", 4, "U-4"],
   [0x1203, 0x2001, "ReFeeeDeDBGRFGLDGDBGL", 4, "U-5"],
   [0x3102, 0x1200, "LeBeeeDeDBGRFGRDGDFGL", 4, "U-6"],
-  [0x3210, 0x1101, "LeFeeeDeRRGFDGLDGBDGB", 4, "aS-1"],
-  [0x2301, 0x1110, "ReFeeeDeLRGBDGLDGFDGB", 4, "aS-2"],
-  [0x3021, 0x1101, "LeBeeeDeFFGLDGRDGBDGR", 4, "aS-3"],
-  [0x2013, 0x1011, "LeFeeeDeBFGRDGLDGBDGR", 4, "aS-4"],
-  [0x1203, 0x1011, "FeBeeeDeLFGBDGRDGLDGR", 4, "aS-5"],
-  [0x3102, 0x1101, "FeBeeeDeRBGFDGRDGLDGL", 4, "aS-6"],
   [0x3021, 0x0000, "DeDeeeDeDBGRFGBRGFLGL", 4, "O-Adj"],
   [0x2301, 0x0000, "DeDeeeDeDBGFLGRFGBRGL", 1, "O-Diag"],
   [0x3210, 0x0000, "DeDeeeDeDBGBRGRFGFLGL", 1, "O-AUF"],
@@ -678,6 +621,11 @@ const coll_map: any[] = [
 
 const coprobs = idxArray(coll_map, 3);
 const cofilter = idxArray(coll_map, 4);
+
+function getCOLLScramble(type: any, length: any, cases: any) {
+  let cocase = coll_map[fixCase(cases, coprobs)];
+  return getAnyScramble(0xba987654ffff, 0, cocase[0] + 0x76540000, cocase[1], aufsuff, aufsuff);
+}
 
 export function getZBLLScramble(type: any, length: any, cases: any) {
   const zbcase = zbll_map[fixCase(cases, zbprobs)];
@@ -750,54 +698,31 @@ export function get2GLLScramble() {
 }
 
 const pll_map = [
-  [0x1032, 0x3210], // H
-  [0x3102, 0x3210], // Ua
-  [0x3021, 0x3210], // Ub
-  [0x2301, 0x3210], // Z
-  [0x3210, 0x3021], // Aa
-  [0x3210, 0x3102], // Ab
-  [0x3210, 0x2301], // E
-  [0x3012, 0x3201], // F
-  [0x2130, 0x3021], // Gb
-  [0x1320, 0x3102], // Ga
-  [0x3021, 0x3102], // Gc
-  [0x3102, 0x3021], // Gd
-  [0x3201, 0x3201], // Ja
-  [0x3120, 0x3201], // Jb
-  [0x1230, 0x3012], // Na
-  [0x3012, 0x3012], // Nb
-  [0x0213, 0x3201], // Ra
-  [0x2310, 0x3201], // Rb
-  [0x1230, 0x3201], // T
-  [0x3120, 0x3012], // V
-  [0x3201, 0x3012], // Y
-];
+  [0x3210, 0x3021, 4, "Aa"],
+  [0x3210, 0x3102, 4, "Ab"],
+  [0x3210, 0x2301, 2, "E"],
+  [0x3012, 0x3201, 4, "F"],
+  [0x2130, 0x3021, 4, "Ga"],
+  [0x1320, 0x3102, 4, "Gb"],
+  [0x3021, 0x3102, 4, "Gc"],
+  [0x3102, 0x3021, 4, "Gd"],
+  [0x1032, 0x3210, 1, "H"],
+  [0x3201, 0x3201, 4, "Ja"],
+  [0x3120, 0x3201, 4, "Jb"],
+  [0x1230, 0x3012, 1, "Na"],
+  [0x3012, 0x3012, 1, "Nb"],
+  [0x0213, 0x3201, 4, "Ra"],
+  [0x2310, 0x3201, 4, "Rb"],
+  [0x1230, 0x3201, 4, "T"],
+  [0x3102, 0x3210, 4, "Ua"],
+  [0x3021, 0x3210, 4, "Ub"],
+  [0x3120, 0x3012, 4, "V"],
+  [0x3201, 0x3012, 4, "Y"],
+  [0x2301, 0x3210, 2, "Z"],
+] as const;
 
-const pllprobs = [1, 4, 4, 2, 4, 4, 2, 4, 4, 4, 4, 4, 4, 4, 1, 1, 4, 4, 4, 4, 4];
-
-export const pllfilter = [
-  "H",
-  "Ua",
-  "Ub",
-  "Z",
-  "Aa",
-  "Ab",
-  "E",
-  "F",
-  "Ga",
-  "Gb",
-  "Gc",
-  "Gd",
-  "Ja",
-  "Jb",
-  "Na",
-  "Nb",
-  "Ra",
-  "Rb",
-  "T",
-  "V",
-  "Y",
-];
+const pllprobs = idxArray(pll_map, 2);
+export const pllfilter: string[] = idxArray(pll_map, 3);
 
 export function getPLLScramble(type: any, length: any, cases: any) {
   const pllcase = pll_map[fixCase(cases, pllprobs)];
@@ -812,129 +737,67 @@ export function getPLLScramble(type: any, length: any, cases: any) {
 }
 
 const oll_map = [
-  [0x0000, 0x0000], // PLL
-  [0x1111, 0x1212], // Point-1
-  [0x1111, 0x1122], // Point-2
-  [0x1111, 0x0222], // Point-3
-  [0x1111, 0x0111], // Point-4
-  [0x0011, 0x2022], // Square-5
-  [0x0011, 0x1011], // Square-6
-  [0x0011, 0x2202], // SLBS-7
-  [0x0011, 0x0111], // SLBS-8
-  [0x0011, 0x1110], // Fish-9
-  [0x0011, 0x2220], // Fish-10
-  [0x0011, 0x0222], // SLBS-11
-  [0x0011, 0x1101], // SLBS-12
-  [0x0101, 0x2022], // Knight-13
-  [0x0101, 0x0111], // Knight-14
-  [0x0101, 0x0222], // Knight-15
-  [0x0101, 0x1011], // Knight-16
-  [0x1111, 0x0102], // Point-17
-  [0x1111, 0x0012], // Point-18
-  [0x1111, 0x0021], // Point-19
-  [0x1111, 0x0000], // CO-20
-  [0x0000, 0x1212], // OCLL-21
-  [0x0000, 0x1122], // OCLL-22
-  [0x0000, 0x0012], // OCLL-23
-  [0x0000, 0x0021], // OCLL-24
-  [0x0000, 0x0102], // OCLL-25
-  [0x0000, 0x0111], // OCLL-26
-  [0x0000, 0x0222], // OCLL-27
-  [0x0011, 0x0000], // CO-28
-  [0x0011, 0x0210], // Awkward-29
-  [0x0011, 0x2100], // Awkward-30
-  [0x0011, 0x0021], // P-31
-  [0x0011, 0x1002], // P-32
-  [0x0101, 0x0021], // T-33
-  [0x0101, 0x0210], // C-34
-  [0x0011, 0x1020], // Fish-35
-  [0x0011, 0x0102], // W-36
-  [0x0011, 0x2010], // Fish-37
-  [0x0011, 0x0201], // W-38
-  [0x0101, 0x1020], // BLBS-39
-  [0x0101, 0x0102], // BLBS-40
-  [0x0011, 0x1200], // Awkward-41
-  [0x0011, 0x0120], // Awkward-42
-  [0x0011, 0x0012], // P-43
-  [0x0011, 0x2001], // P-44
-  [0x0101, 0x0012], // T-45
-  [0x0101, 0x0120], // C-46
-  [0x0011, 0x1221], // L-47
-  [0x0011, 0x1122], // L-48
-  [0x0011, 0x2112], // L-49
-  [0x0011, 0x2211], // L-50
-  [0x0101, 0x1221], // I-51
-  [0x0101, 0x1122], // I-52
-  [0x0011, 0x2121], // L-53
-  [0x0011, 0x1212], // L-54
-  [0x0101, 0x2121], // I-55
-  [0x0101, 0x1212], // I-56
-  [0x0101, 0x0000], // CO-57
-];
-const ollprobs = [
-  1, 2, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 1, 2, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
-  4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 2, 2, 2,
-];
-const ollfilter = [
-  "PLL",
-  "Point-1",
-  "Point-2",
-  "Point-3",
-  "Point-4",
-  "Square-5",
-  "Square-6",
-  "SLBS-7",
-  "SLBS-8",
-  "Fish-9",
-  "Fish-10",
-  "SLBS-11",
-  "SLBS-12",
-  "Knight-13",
-  "Knight-14",
-  "Knight-15",
-  "Knight-16",
-  "Point-17",
-  "Point-18",
-  "Point-19",
-  "CO-20",
-  "OCLL-21",
-  "OCLL-22",
-  "OCLL-23",
-  "OCLL-24",
-  "OCLL-25",
-  "OCLL-26",
-  "OCLL-27",
-  "CO-28",
-  "Awkward-29",
-  "Awkward-30",
-  "P-31",
-  "P-32",
-  "T-33",
-  "C-34",
-  "Fish-35",
-  "W-36",
-  "Fish-37",
-  "W-38",
-  "BLBS-39",
-  "BLBS-40",
-  "Awkward-41",
-  "Awkward-42",
-  "P-43",
-  "P-44",
-  "T-45",
-  "C-46",
-  "L-47",
-  "L-48",
-  "L-49",
-  "L-50",
-  "I-51",
-  "I-52",
-  "L-53",
-  "L-54",
-  "I-55",
-  "I-56",
-  "CO-57",
-];
+  [0x1111, 0x1212, 2, "Point-1", 0xeba00],
+  [0x1111, 0x1122, 4, "Point-2", 0xdda00],
+  [0x1111, 0x0222, 4, "Point-3", 0x5b620],
+  [0x1111, 0x0111, 4, "Point-4", 0x6d380],
+  [0x0011, 0x2022, 4, "Square-5", 0x8360b],
+  [0x0011, 0x1011, 4, "Square-6", 0x60b16],
+  [0x0011, 0x2202, 4, "SLBS-7", 0x1362a],
+  [0x0011, 0x0111, 4, "SLBS-8", 0x64392],
+  [0x0011, 0x1110, 4, "Fish-9", 0x2538a],
+  [0x0011, 0x2220, 4, "Fish-10", 0x9944c],
+  [0x0011, 0x0222, 4, "SLBS-11", 0x9160e],
+  [0x0011, 0x1101, 4, "SLBS-12", 0x44b13],
+  [0x0101, 0x2022, 4, "Knight-13", 0x1a638],
+  [0x0101, 0x0111, 4, "Knight-14", 0x2c398],
+  [0x0101, 0x0222, 4, "Knight-15", 0x8a619],
+  [0x0101, 0x1011, 4, "Knight-16", 0x28b1c],
+  [0x1111, 0x0102, 4, "Point-17", 0x4b381],
+  [0x1111, 0x0012, 4, "Point-18", 0x49705],
+  [0x1111, 0x0021, 4, "Point-19", 0xc9a05],
+  [0x1111, 0x0000, 1, "CO-20", 0x492a5],
+  [0x0000, 0x1212, 2, "OCLL-21", 0x1455a],
+  [0x0000, 0x1122, 4, "OCLL-22", 0xa445a],
+  [0x0000, 0x0012, 4, "OCLL-23", 0x140fa],
+  [0x0000, 0x0021, 4, "OCLL-24", 0x101de],
+  [0x0000, 0x0102, 4, "OCLL-25", 0x2047e],
+  [0x0000, 0x0111, 4, "OCLL-26", 0x2095e],
+  [0x0000, 0x0222, 4, "OCLL-27", 0x1247a],
+  [0x0011, 0x0000, 4, "CO-28", 0x012af],
+  [0x0011, 0x0210, 4, "Awkward-29", 0x1138e],
+  [0x0011, 0x2100, 4, "Awkward-30", 0x232aa],
+  [0x0011, 0x0021, 4, "P-31", 0x50396],
+  [0x0011, 0x1002, 4, "P-32", 0x0562b],
+  [0x0101, 0x0021, 4, "T-33", 0x1839c],
+  [0x0101, 0x0210, 4, "C-34", 0x2a2b8],
+  [0x0011, 0x1020, 4, "Fish-35", 0x4a1d1],
+  [0x0011, 0x0102, 4, "W-36", 0xc4293],
+  [0x0011, 0x2010, 4, "Fish-37", 0x0338b],
+  [0x0011, 0x0201, 4, "W-38", 0x11a2e],
+  [0x0101, 0x1020, 4, "BLBS-39", 0x18a3c],
+  [0x0101, 0x0102, 4, "BLBS-40", 0x8c299],
+  [0x0011, 0x1200, 4, "Awkward-41", 0x152aa],
+  [0x0011, 0x0120, 4, "Awkward-42", 0x0954d],
+  [0x0011, 0x0012, 4, "P-43", 0xe0296],
+  [0x0011, 0x2001, 4, "P-44", 0x03a2b],
+  [0x0101, 0x0012, 4, "T-45", 0xa829c],
+  [0x0101, 0x0120, 4, "C-46", 0x43863],
+  [0x0011, 0x1221, 4, "L-47", 0x52b12],
+  [0x0011, 0x1122, 4, "L-48", 0xa560a],
+  [0x0011, 0x2112, 4, "L-49", 0xe4612],
+  [0x0011, 0x2211, 4, "L-50", 0xec450],
+  [0x0101, 0x1221, 4, "I-51", 0x1ab18],
+  [0x0101, 0x1122, 4, "I-52", 0x53942],
+  [0x0011, 0x2121, 4, "L-53", 0x54712],
+  [0x0011, 0x1212, 4, "L-54", 0x1570a],
+  [0x0101, 0x2121, 2, "I-55", 0x1c718],
+  [0x0101, 0x1212, 2, "I-56", 0xaaa18],
+  [0x0101, 0x0000, 2, "CO-57", 0x082bd],
+] as const;
+
+const ollprobs = idxArray(oll_map, 2);
+export const ollfilter: string[] = idxArray(oll_map, 3);
 
 export function getOLLScramble(type: any, length: any, cases: any) {
   const ollcase = oll_map[fixCase(cases, ollprobs)];
@@ -1153,7 +1016,7 @@ for (let i = 0; i < f2l_map.length; i++) {
   if (f2l_map[i][0] & 0xf0) {
     continue;
   }
-  eols_map.push(f2l_map[i]);
+  eols_map.push(f2l_map[i][0]);
   eolsprobs.push(f2lprobs[i]);
   eolsfilter.push(f2lfilter[i]);
 }
@@ -1279,7 +1142,7 @@ regScrambler("333", getRandomScramble)("333oh", getRandomScramble)("333ft", getR
   eolsprobs,
 ])("wvls", getWVLSScramble, [wvlsfilter, wvlsprobs])("vls", getVLSScramble, [vlsfilter, vlsprobs])(
   "coll",
-  getZBLLScramble,
+  getCOLLScramble,
   [cofilter, coprobs]
 )("sbrx", getSBRouxScramble)("mt3qb", getMehta3QBScramble)("mteole", getMehtaEOLEScramble)(
   "mttdr",
