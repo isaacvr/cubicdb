@@ -31,7 +31,9 @@
   import { debounce } from "@helpers/timer";
   import { page } from "$app/state";
 
-  let scramble = $state("");
+  let scramble = $state(
+    "(-2, -3) / (3, -3) / (-4, -1) / (-5, -2) / (-3, 0) / (0, -1) / (0, -3) / (-1, -2) / (3, -2) / (3, -4) / (4, 0) / (1, 0)"
+  );
   let reconstruction = $state("");
 
   let recs: IDBReconstruction[] = [];
@@ -57,7 +59,7 @@
       { puzzle: "void", name: "Void Cube", order: 3, scrambler: "333" }, // 13
     ]);
 
-  let puzzle = $state(PUZZLES[1]);
+  let puzzle = $state(PUZZLES[7]);
 
   let simulator = $state<ReturnType<typeof Simulator>>();
   let sTextarea = $state<ReturnType<typeof TextArea>>();
@@ -102,7 +104,7 @@
       finalAlpha = rec.finalAlpha;
       sequence = rec.sequence;
       sequenceIndex = rec.sequenceIndex;
-      sequenceAlpha = 0;
+      sequenceAlpha = finalAlpha;
     }
 
     return rec.result;
@@ -299,9 +301,9 @@
       }
     }
 
-    puzzle = PUZZLES[1];
-    scramble = ``;
-    reconstruction = ``;
+    // puzzle = PUZZLES[1];
+    // scramble = ``;
+    // reconstruction = ``;
   }
 
   function setRecIndex() {
@@ -494,7 +496,6 @@
     </div>
 
     <Simulator
-      contained
       controlled
       enableDrag={false}
       enableRotation

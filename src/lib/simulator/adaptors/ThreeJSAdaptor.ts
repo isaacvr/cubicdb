@@ -315,12 +315,12 @@ export class ThreeJSAdaptor {
     return this.dataFromGroup(pc, best, vv, dir);
   }
 
-  resizeHandler(contained: boolean) {
+  resizeHandler() {
     const isElectron = get(dataService).isElectron;
     this.W = Math.min(window.innerWidth, window.screen.availWidth * (isElectron ? 2 : 1));
     this.H = Math.min(window.innerHeight, window.screen.availHeight * (isElectron ? 2 : 1));
 
-    if (contained && this.canvas?.parentElement) {
+    if (this.canvas?.parentElement) {
       const parent = this.canvas.parentElement;
       this.W = parent.clientWidth;
       this.H = parent.clientHeight;
@@ -510,7 +510,7 @@ export class ThreeJSAdaptor {
     return true;
   }
 
-  moveFromKeyboard(vec: Vector2, contained: boolean) {
+  moveFromKeyboard(vec: Vector2) {
     if (this.animating || !this.enableKeyboard) return;
 
     const allStickers: Object3D[] = [];
@@ -522,7 +522,7 @@ export class ThreeJSAdaptor {
     let offsetX = 0;
     let offsetY = 0;
 
-    if (contained && this.canvas?.parentElement) {
+    if (this.canvas?.parentElement) {
       const rec = this.canvas.parentElement.getBoundingClientRect();
 
       offsetX = rec.x;
@@ -866,6 +866,7 @@ export class ThreeJSAdaptor {
     // Puzzle setup
     if (facelet) {
       this.cube = Puzzle.fromFacelet(facelet, this.selectedPuzzle);
+      console.log("CUBE: ", this.cube, facelet, this.selectedPuzzle);
     } else {
       this.cube = Puzzle.fromSequence(useScr, {
         type: this.selectedPuzzle,
@@ -881,26 +882,26 @@ export class ThreeJSAdaptor {
     this.resetCamera();
   }
 
-  keyDownHandler(e: KeyboardEvent, contained: boolean) {
+  keyDownHandler(e: KeyboardEvent) {
     if (!this.enableKeyboard) return;
 
     const mc = new Vector2(this.mcx, this.mcy);
 
     switch (e.code) {
       case "ArrowUp": {
-        this.moveFromKeyboard(mc.add(new Vector2(0, -50)), contained);
+        this.moveFromKeyboard(mc.add(new Vector2(0, -50)));
         break;
       }
       case "ArrowDown": {
-        this.moveFromKeyboard(mc.add(new Vector2(0, 50)), contained);
+        this.moveFromKeyboard(mc.add(new Vector2(0, 50)));
         break;
       }
       case "ArrowLeft": {
-        this.moveFromKeyboard(mc.add(new Vector2(-50, 0)), contained);
+        this.moveFromKeyboard(mc.add(new Vector2(-50, 0)));
         break;
       }
       case "ArrowRight": {
-        this.moveFromKeyboard(mc.add(new Vector2(50, 0)), contained);
+        this.moveFromKeyboard(mc.add(new Vector2(50, 0)));
         break;
       }
       case "KeyS": {

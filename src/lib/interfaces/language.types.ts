@@ -398,4 +398,11 @@ export interface Language {
     counterClockwise: string;
     double: string;
   };
+  DEVICES: {
+    devices: string;
+    addDevice: string;
+    errors: {
+      bluetoothDisabled: string;
+    };
+  };
 }

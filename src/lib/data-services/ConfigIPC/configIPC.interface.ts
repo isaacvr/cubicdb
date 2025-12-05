@@ -1,3 +1,4 @@
+import type { Device } from "$lib/interfaces/devices.types";
 import type { GANInput } from "$lib/timer/adaptors/GAN";
 import type { QiYiSmartTimerInput } from "$lib/timer/adaptors/QY-Timer";
 import type {
@@ -11,6 +12,7 @@ import type {
 import type { Display } from "electron";
 
 export interface ConfigIPC extends CONFIG {
+  ready: boolean;
   addDownloadProgressListener: (cb: (percent: number) => {}) => any;
   addDownloadDoneListener: (cb: () => {}) => any;
   addBluetoothListener: (cb: AnyCallback) => any;
@@ -29,6 +31,7 @@ export interface ConfigIPC extends CONFIG {
   addExternalConnector: (cb: AnyCallback) => any;
   external: (device: string, ...args: any[]) => any;
   saveConfig: () => Promise<void>;
+  saveDevices: (devs: Device[]) => Promise<boolean>;
   setPath: (path: string, config: Record<string, any>) => any;
   getPath: (path: string) => Record<string, any> | null;
   generateContestPDF: (args: ContestPDFOptions) => Promise<ContestPDFResult>;

@@ -143,6 +143,7 @@ export async function getModeCases(
 
     // ZBLL
     if (modeIndex === 4) {
+      console.log("FILTERS: ", filters);
     }
 
     // COLL

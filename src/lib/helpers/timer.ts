@@ -13,14 +13,18 @@ export function timer(val: number, dec?: boolean, suff?: boolean): string {
   v = ~~(v / 60);
   const m = v % 60;
   v = ~~(v / 60);
-  const h = v;
+  const h = v % 24;
+  v = ~~(v / 24);
+  const d = v;
 
   const l2 = (s: number) => ("00" + s).slice(-2);
 
   let res = "";
   let sf = "";
 
-  if (h) {
+  if (d) {
+    res = `${d}d ${h}h ${m}:${l2(s)}`;
+  } else if (h) {
     res = `${h}h ${m}:${l2(s)}`;
   } else if (m) {
     res = `${m}:${l2(s)}`;

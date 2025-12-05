@@ -164,7 +164,7 @@ ipcMain.handle("generate-contest-pdf", async (_, arg) => {
 
   try {
     unlinkSync(tempFile);
-  } catch (err) {}
+  } catch (err) { }
 
   let date = new Date().toLocaleDateString().replace(/\//g, "-");
 
@@ -245,7 +245,6 @@ function createWindow() {
   let win = new BrowserWindow({
     x: 0,
     y: 0,
-    fullscreen: true,
     frame: false,
     closable: true,
     webPreferences: {
@@ -256,6 +255,8 @@ function createWindow() {
     },
     icon: join(__dirname, "icon.png"),
   });
+
+  win.maximize();
 
   // SECURITY: CSP
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
@@ -280,28 +281,32 @@ function createWindow() {
   });
 
   // @ts-ignore
-  const defaultCallback = _ => {};
+  const defaultCallback = _ => { };
   let selectBluetoothCallback = defaultCallback;
   let bluetoothPinCallback = defaultCallback;
 
   // Bluetooth handler
   win.webContents.on("select-bluetooth-device", (event, deviceList, callback) => {
+    console.log("[select-bluetooth-device]: ", event, deviceList, callback);
     event.preventDefault();
     selectBluetoothCallback = callback;
     win.webContents.send("bluetooth", ["device-list", deviceList]);
   });
 
   ipcMain.handle("connect-bluetooth-device", (event, deviceID) => {
+    console.log("[connect-bluetooth-device]: ", event, deviceID);
     selectBluetoothCallback(deviceID);
     selectBluetoothCallback = defaultCallback;
   });
 
-  ipcMain.handle("cancel-bluetooth-request", event => {
+  ipcMain.handle("cancel-bluetooth-request", () => {
     selectBluetoothCallback("");
+    console.log("[cancel-bluetooth-request]");
     selectBluetoothCallback = defaultCallback;
   });
 
   ipcMain.handle("bluetooth-pairing-response", (event, response) => {
+    console.log("[bluetooth-pairing-response]: ", event, response);
     bluetoothPinCallback(response);
     bluetoothPinCallback = defaultCallback;
   });
@@ -443,4 +448,4 @@ try {
       createWindow();
     }
   });
-} catch (e) {}
+} catch (e) { }

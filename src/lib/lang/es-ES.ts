@@ -851,4 +851,11 @@ export const Spanish: Language = {
     counterClockwise: "Antihorario",
     double: "Doble",
   },
+  DEVICES: {
+    devices: "Dispositivos",
+    addDevice: "añadir dispositivo",
+    errors: {
+      bluetoothDisabled: "Por favor, verifique que Bluetooth está activado",
+    },
+  },
 };

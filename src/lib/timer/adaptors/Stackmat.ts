@@ -17,8 +17,11 @@ interface StackmatContext extends InputContext {
 
 type STActor = (data: Actor<StackmatContext>) => any;
 
-const enterDisconnect: STActor = ({ context: { timerState: state, stackmatStatus } }) => {
-  stackmatStatus.set(false);
+const enterDisconnect: STActor = ({ context: { timerState: state, device } }) => {
+  let _device = get(device);
+  if (_device.type === "stackmat") {
+    _device.isConnected = false;
+  }
   state.set(TimerState.CLEAN);
 };
 
@@ -39,30 +42,38 @@ const enterStopped: STActor = ({ context: { timerState: state, time, addSolve } 
   addSolve(get(time));
 };
 
-const isTurnedOn: STActor = ({ context: { stackmatStatus, lastState, stState } }) => {
+const isTurnedOn: STActor = ({ context: { device, lastState, stState } }) => {
   if (!get(lastState)?.on && get(stState).on) {
-    stackmatStatus.set(true);
+    let _device = get(device);
+    if (_device.type === "stackmat") {
+      _device.isConnected = true;
+    }
     return true;
   }
 
   return false;
 };
 
-const isTurnedOff: STActor = ({ context: { stackmatStatus, stState } }) => {
-  if (get(stackmatStatus) && !get(stState).on) {
-    stackmatStatus.set(false);
-    return true;
+const isTurnedOff: STActor = ({ context: { device, stState } }) => {
+  let _device = get(device);
+
+  if (_device.type === "stackmat") {
+    if (_device.isConnected && !get(stState).on) {
+      _device.isConnected = false;
+      return true;
+    }
   }
 
   return false;
 };
 
-const isRunning: STActor = ({
-  context: { lastState, stackmatStatus, stState, createNewSolve },
-}) => {
+const isRunning: STActor = ({ context: { lastState, device, stState, createNewSolve } }) => {
   if (get(stState).on && get(stState).time_milli > (get(lastState)?.time_milli || 0)) {
     createNewSolve();
-    stackmatStatus.set(true);
+    let _device = get(device);
+    if (_device.type === "stackmat") {
+      _device.isConnected = true;
+    }
     return true;
   }
 
@@ -220,7 +231,7 @@ export class StackmatInput implements IStackmatDevice {
   //   return this.device;
   // }
 
-  async init(context: InputContext, deviceId: string, force: boolean) {
+  async init(context: InputContext, deviceId?: string, force?: boolean) {
     this.interpreter = createActor(StackmatMachine, {
       input: {
         ...context,
@@ -229,7 +240,6 @@ export class StackmatInput implements IStackmatDevice {
       },
     });
     this.interpreter.start();
-    this.isConnected = true;
 
     const selectObj: any = {
       echoCancellation: false,
@@ -337,6 +347,7 @@ export class StackmatInput implements IStackmatDevice {
     this.node.port.onmessage = ev => {
       const { data }: { data: StackmatState } = ev;
       this.callback(data);
+      this.isConnected = data.on;
     };
 
     this.source.connect(this.node);
@@ -383,4 +394,18 @@ export class StackmatInput implements IStackmatDevice {
   stopTimer() {}
   newRecord() {}
   sendEvent() {}
+
+  toJSON() {
+    return {
+      type: this.type,
+      id: this.id,
+      name: this.name,
+    };
+  }
+
+  fromJSON(config: Record<string, any>) {
+    if (["id", "name"].some(e => !config[e])) return null;
+    this.id = config.id;
+    this.name = config.name;
+  }
 }

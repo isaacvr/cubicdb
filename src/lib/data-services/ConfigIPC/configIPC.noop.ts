@@ -11,6 +11,7 @@ import type { GANInput } from "$lib/timer/adaptors/GAN";
 import type { QiYiSmartTimerInput } from "$lib/timer/adaptors/QY-Timer";
 import { DEFAULT_THEME } from "$lib/themes/default";
 import type { LanguageCode } from "$lib/interfaces/language.types";
+import type { Device } from "$lib/interfaces/devices.types";
 
 export class ConfigNoopIPC implements ConfigIPC {
   global: {
@@ -23,6 +24,7 @@ export class ConfigNoopIPC implements ConfigIPC {
   algorithms: { listView: boolean };
   timer: { session: string; bluetoothCubes: BluetoothCubeInfo[] };
   configMap: any;
+  ready = true;
 
   private constructor() {
     this.global = {
@@ -92,6 +94,10 @@ export class ConfigNoopIPC implements ConfigIPC {
   async useDisplay(id: number) {}
 
   async saveConfig() {}
+
+  async saveDevices() {
+    return false;
+  }
 
   addExternalConnector(cb: any) {}
 

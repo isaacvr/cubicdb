@@ -268,7 +268,7 @@
       header,
       text,
       fixed: true,
-      actions: [{ text: $localLang.global.done, color: "green", callback: () => {} }],
+      actions: [{ text: $localLang.global.done, color: "accept", callback: () => {} }],
     });
   }
 

@@ -363,6 +363,7 @@ export class CFOP implements IReconstructor {
   }
 
   async detectOLL(status: CFOPStatus): Promise<Algorithm | null> {
+    return null;
     await this.getAlgs();
 
     if (!status.f2l) return null;
@@ -407,6 +408,7 @@ export class CFOP implements IReconstructor {
   }
 
   async detectPLL(status: CFOPStatus): Promise<Algorithm | null> {
+    return;
     await this.getAlgs();
 
     if (!status.f2l) return null;

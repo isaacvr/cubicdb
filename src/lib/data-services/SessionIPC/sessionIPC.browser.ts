@@ -1,7 +1,7 @@
 import type { Session, Solve } from "@interfaces";
 import type { SessionIPC } from "./sessionIPC.interface";
 import { openDB, type IDBPDatabase } from "idb";
-import { sessions } from "@stores/sessions.store";
+import { sessionController } from "$lib/controllers/SessionController";
 
 const DBName = "CubicDB-data";
 const SessionStore = "Sessions";
@@ -33,7 +33,8 @@ export class SessionBrowserIPC implements SessionIPC {
   }
 
   private async updateSessionStore() {
-    sessions.set(await this.getSessions());
+    const s = await this.getSessions();
+    sessionController.sessions.set(s);
   }
 
   private async init() {

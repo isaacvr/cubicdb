@@ -17,6 +17,7 @@ import { DEFAULT_THEME } from "$lib/themes/default";
 import { dataService } from "$lib/data-services/data.service";
 import { get } from "svelte/store";
 import type { LanguageCode } from "$lib/interfaces/language.types";
+import type { Device } from "$lib/timer/adaptors/devices";
 
 export class ConfigBrowserIPC implements ConfigIPC {
   global: {
@@ -29,6 +30,7 @@ export class ConfigBrowserIPC implements ConfigIPC {
   algorithms: { listView: boolean };
   timer: { session: string; bluetoothCubes: BluetoothCubeInfo[] };
   configMap: Map<string, Record<string, any>>;
+  ready = false;
 
   private constructor() {
     let config = {} as CONFIG;
@@ -58,6 +60,7 @@ export class ConfigBrowserIPC implements ConfigIPC {
     this.configMap = new Map(config.configMap);
 
     this.applyConfig();
+    this.ready = true;
   }
 
   private applyConfig() {
@@ -101,7 +104,7 @@ export class ConfigBrowserIPC implements ConfigIPC {
   async pairingBluetoothResponse() {}
 
   async searchBluetooth(inp: GANInput | QiYiSmartTimerInput): Promise<string> {
-    const filters = inp.adaptor === "GAN" ? GAN_BLUETOOTH_FILTERS : QIYI_BLUETOOTH_FILTERS;
+    const filters = inp.type === "gan_icarry" ? GAN_BLUETOOTH_FILTERS : QIYI_BLUETOOTH_FILTERS;
 
     return new Promise((res, rej) => {
       navigator.bluetooth
@@ -109,10 +112,9 @@ export class ConfigBrowserIPC implements ConfigIPC {
         .then(async device => {
           const mac = prompt("MAC:");
 
-          const type = inp.adaptor === "GAN" ? "GAN" : "QYTimer";
           const config = get(dataService).config;
 
-          config.setPath(`timer/inputs/${type}`, { mac });
+          config.setPath(`timer/inputs/${inp.type}`, { mac });
           config.saveConfig();
 
           inp.fromDevice(device).then(res).catch(rej);
@@ -171,6 +173,10 @@ export class ConfigBrowserIPC implements ConfigIPC {
     this.applyConfig();
 
     localStorage.setItem("config", JSON.stringify(config));
+  }
+
+  async saveDevices(devs: Device[]) {
+    return false;
   }
 
   async generateContestPDF(args: ContestPDFOptions): Promise<ContestPDFResult> {

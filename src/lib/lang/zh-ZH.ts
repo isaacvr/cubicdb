@@ -796,4 +796,11 @@ export const Chinese: Language = {
     counterClockwise: "逆时针",
     double: "180度",
   },
+  DEVICES: {
+    devices: "Devices",
+    addDevice: "add device",
+    errors: {
+      bluetoothDisabled: "Please, make sure Bluetooth is enabled",
+    },
+  },
 };

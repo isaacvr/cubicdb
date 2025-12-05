@@ -1,6 +1,6 @@
 import type { IPC, Session } from "@interfaces";
 import type { SessionIPC } from "./sessionIPC.interface";
-import { sessions } from "@stores/sessions.store";
+import { sessionController } from "$lib/controllers/SessionController";
 import { clone } from "@helpers/object";
 
 export class SessionElectronIPC implements SessionIPC {
@@ -14,7 +14,8 @@ export class SessionElectronIPC implements SessionIPC {
   private static _instance: SessionElectronIPC | null = null;
 
   private async updateSessionStore() {
-    sessions.set(await this.getSessions());
+    const s = await this.getSessions();
+    sessionController.sessions.set(s);
   }
 
   static getInstance() {

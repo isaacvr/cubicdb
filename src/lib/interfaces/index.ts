@@ -8,6 +8,7 @@ import type { Display } from "electron";
 import type { HTMLImgAttributes } from "svelte/elements";
 import type { BezierSticker } from "@classes/puzzle/BezierSticker";
 import type { LanguageCode } from "./language.types";
+import type { Device } from "$lib/timer/adaptors/devices";
 
 export const PuzzleTypeName = [
   "rubik",
@@ -439,7 +440,7 @@ export interface Statistics {
   [key: string]: Metric;
 }
 
-export interface TimerContext {
+export interface ITimerController {
   timerState: Writable<TimerState>;
   ready: Writable<boolean>;
   tab: Writable<number>;
@@ -455,18 +456,51 @@ export interface TimerContext {
   preview: Writable<HTMLImgAttributes[]>;
   prob: Writable<number | number[]>;
   isRunning: Writable<boolean>;
-  selected: Writable<number>;
+  enableKeyboard: Writable<boolean>;
   decimals: Writable<boolean>;
   bluetoothList: Writable<BluetoothDeviceData[]>;
-  enableKeyboard: Writable<boolean>;
   STATS_WINDOW: Writable<(number | null)[][]>;
   puzzleType: Writable<PuzzleType>;
   puzzleOrder: Writable<number>;
+  deviceList: Writable<string[][]>;
+  time: Writable<number>;
+  lastSolve: Writable<Solve | null>;
+  device: Writable<Device>;
+  currentStep: Writable<number>;
+  timerOnly: boolean;
+  scrambleOnly: boolean;
+  battle: boolean;
+  updateStatistics: (inc?: boolean) => Promise<any>;
+}
+
+export interface TimerContext {
+  // timerState: Writable<TimerState>;
+  // ready: Writable<boolean>;
+  // tab: Writable<number>;
+  // solves: Writable<Solve[]>;
+  // allSolves: Writable<Solve[]>;
+  // session: Writable<Session>;
+  // Ao5: Writable<number[]>;
+  // stats: Writable<Statistics>;
+  // scramble: Writable<string>;
+  // group: Writable<number>;
+  // mode: Writable<{ 0: string; 1: string; 2: number }>;
+  // filters: Writable<string[]>;
+  // preview: Writable<HTMLImgAttributes[]>;
+  // prob: Writable<number | number[]>;
+  // isRunning: Writable<boolean>;
+  selected: Writable<number>;
+  // decimals: Writable<boolean>;
+  // bluetoothList: Writable<BluetoothDeviceData[]>;
+  enableKeyboard: Writable<boolean>;
+  // STATS_WINDOW: Writable<(number | null)[][]>;
+  // puzzleType: Writable<PuzzleType>;
+  // puzzleOrder: Writable<number>;
 
   setSolves: (rescramble?: boolean) => any;
-  sortSolves: () => any;
-  updateSolves: () => any;
-  updateStatistics: (inc?: boolean) => any;
+  // sortSolves: () => any;
+  // updateSolves: () => any;
+  // updateStatistics: (inc?: boolean) => any;
   initScrambler: (scr?: string, _mode?: string) => any;
   selectedGroup: (rescramble?: boolean, saveGroup?: boolean) => any;
   selectedMode: (rescramble?: boolean, saveMode?: boolean, updateProb?: boolean) => any;
@@ -478,6 +512,8 @@ export interface TimerContext {
   handleUpdateSolve: (s: Solve) => any;
   handleRemoveSolves: (sv: Solve[]) => any;
   editSessions: () => any;
+
+  timerController: ITimerController;
 }
 
 export const ROLES = {
@@ -727,21 +763,11 @@ export type IColor =
   | "primary"
   | undefined;
 
-export type INotColor =
-  | "red"
-  | "yellow"
-  | "green"
-  | "purple"
-  | "blue"
-  | "primary"
-  | "light"
-  | "dark"
-  | "none"
-  | "alternative";
+export type ButtonColor = "primary" | "accept" | "cancel" | "urgent" | "error" | "neutral" | "none";
 
 export interface NotificationAction {
   text: string;
-  color?: INotColor;
+  color?: ButtonColor;
   callback: (e: MouseEvent) => void;
 }
 
@@ -757,19 +783,8 @@ export interface INotification {
 }
 
 export interface InputContext {
-  timerState: Writable<TimerState>;
-  ready: Writable<boolean>;
-  session: Writable<Session>;
-  time: Writable<number>;
-  currentStep: Writable<number>;
-  lastSolve: Writable<Solve | null>;
-  isRunning: Writable<boolean>;
-  decimals: Writable<boolean>;
-  scramble: Writable<string>;
-  sequenceParts: Writable<string[]>;
-  recoverySequence: Writable<string>;
+  timerController: ITimerController;
   keyboardEnabled: Writable<boolean>;
-
   reset: () => void;
   initScrambler: (scr?: string, _mode?: string) => void;
   addSolve: (time?: number, penalty?: Penalty) => void;

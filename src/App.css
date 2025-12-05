@@ -46,8 +46,9 @@ body {
 }
 
 body,
-label {
-  cursor: url(/assets/cursors/default.svg), auto;
+label,
+.custom-cursor {
+  cursor: url(/assets/cursors/default.svg), auto !important;
 }
 /* 
 textarea,
@@ -59,7 +60,8 @@ a:hover:hover,
 button:hover:hover,
 .cursor-pointer:hover:hover,
 input[type="range"]:hover,
-input[type="checkbox"]:hover {
+input[type="checkbox"]:hover,
+.custom-cursor:hover {
   cursor:
     url("/assets/cursors/pointer.svg") 6 0,
     pointer !important;

@@ -18,6 +18,7 @@ import {
 import { DEFAULT_THEME } from "$lib/themes/default";
 import { applyThemeByID } from "$lib/themes/manageThemes";
 import type { LanguageCode } from "$lib/interfaces/language.types";
+import type { Device } from "$lib/interfaces/devices.types";
 
 export class ConfigElectronIPC implements ConfigIPC {
   ipc: IPC;
@@ -31,6 +32,7 @@ export class ConfigElectronIPC implements ConfigIPC {
   algorithms: { listView: boolean };
   timer: { session: string; bluetoothCubes: BluetoothCubeInfo[] };
   configMap: Map<string, Record<string, any>>;
+  ready = false;
 
   private constructor() {
     this.ipc = (<any>window).electronAPI as IPC;
@@ -55,6 +57,7 @@ export class ConfigElectronIPC implements ConfigIPC {
 
     this.ipc.getConfig().then(config => {
       this.loadConfig(config);
+      this.ready = true;
     });
   }
 
@@ -146,22 +149,14 @@ export class ConfigElectronIPC implements ConfigIPC {
     return this.ipc.pairingBluetoothResponse();
   }
 
-  searchBluetooth(inp: GANInput | QiYiSmartTimerInput): Promise<string> {
-    const filters = inp.adaptor === "GAN" ? GAN_BLUETOOTH_FILTERS : QIYI_BLUETOOTH_FILTERS;
+  searchBluetooth(inp: GANInput | QiYiSmartTimerInput, macAddress = ""): Promise<string> {
+    const filters = inp.type === "gan_icarry" ? GAN_BLUETOOTH_FILTERS : QIYI_BLUETOOTH_FILTERS;
 
     return new Promise((res, rej) => {
       navigator.bluetooth
         .requestDevice(filters)
         .then(async device => {
-          device.addEventListener("advertisementreceived", ev =>
-            console.log("[advertisementreceived]: ", ev)
-          );
-
-          device.addEventListener("gattserverdisconnected", ev =>
-            console.log("[gattserverdisconnected]: ", ev)
-          );
-
-          inp.fromDevice(device).then(res).catch(rej);
+          inp.fromDevice(device, macAddress).then(res).catch(rej);
         })
         .catch(rej);
     });
@@ -222,6 +217,13 @@ export class ConfigElectronIPC implements ConfigIPC {
     this.applyConfig();
 
     this.ipc.saveConfig(config);
+  }
+
+  async saveDevices(devs: Device[]) {
+    let devices = devs.filter(dev => !dev.id.startsWith("cubicdb:device")).map(dev => dev.toJSON());
+    this.configMap.set("devices", devices);
+    this.saveConfig();
+    return true;
   }
 
   async generateContestPDF(args: ContestPDFOptions): Promise<ContestPDFResult> {

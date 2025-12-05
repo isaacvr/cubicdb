@@ -1,6 +1,6 @@
 import { sveltekit } from "@sveltejs/kit/vite";
-import { defineConfig } from "vitest/config";
-import pkg from "./package.json" assert { type: "json" };
+import { defineConfig } from "vite";
+import pkg from "./package.json" with { type: "json" };
 // import basicSSL from "@vitejs/plugin-basic-ssl";
 
 const headerPlugin = {

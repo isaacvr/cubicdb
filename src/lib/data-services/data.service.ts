@@ -69,7 +69,7 @@ const dataService = readable({
     emitter.on(ev, cb);
   },
 
-  off(ev: DataEvent, cb: (...args: any[]) => any) {
+  off(ev: DataEvent, cb?: (...args: any[]) => any) {
     emitter.off(ev, cb);
   },
 

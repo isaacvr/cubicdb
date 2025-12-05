@@ -1,6 +1,8 @@
 <script lang="ts">
+  import { solveController } from "$lib/controllers/SolveController";
   import Button from "$lib/cubicdbKit/Button.svelte";
   import { dataService } from "$lib/data-services/data.service";
+  import { sessionController } from "$lib/controllers/SessionController";
   import TimerSessionIcon from "$lib/timer/TimerSessionIcon.svelte";
   import { BezierSticker } from "@classes/puzzle/BezierSticker";
   import { Puzzle } from "@classes/puzzle/puzzle";
@@ -9,18 +11,18 @@
   import Select from "@components/material/Select.svelte";
   import Modal from "@components/Modal.svelte";
   import PuzzleImage from "@components/PuzzleImage.svelte";
+  import CubeCategory from "@components/wca/CubeCategory.svelte";
   import { ICONS, SessionDefaultSettings, STEP_COLORS, type SCRAMBLE_MENU } from "@constants";
   import { options } from "@cstimer/scramble/scramble";
   import { pGenerateCubeBundle } from "@helpers/cube-draw";
   import { map } from "@helpers/math";
   import { newArr } from "@helpers/object";
   import { sTime, timer } from "@helpers/timer";
-  import { SESSION_TYPE, type SessionType, type Solve } from "@interfaces";
+  import { SESSION_TYPE, type Session, type SessionType, type Solve } from "@interfaces";
   import { localLang } from "@stores/language.service";
-  import { sessions } from "@stores/sessions.store";
-  import { Input } from "flowbite-svelte";
   import { LayoutGridIcon, PlusIcon, Table2Icon } from "lucide-svelte";
   import { onMount } from "svelte";
+  import { get } from "svelte/store";
 
   const iconSize = "1.2rem";
   const chartSamples = 40;
@@ -41,12 +43,14 @@
   let newSessionGroup = $state(0);
   let newSessionMode = $state(0);
   let stepNames: string[] = $state(["", ""]);
+  let sessions = $state(get(sessionController.sessions));
 
   // Modals
   let showAddSessionDialog = $state(false);
 
   function sortSessions() {
-    $sessions.sort((a, b) => {
+    console.log("Sorting sessions by", sortBy, sortCmp);
+    sessions.sort((a, b) => {
       if (sortBy === "name") {
         return sortCmp === "asc" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
       }
@@ -139,40 +143,40 @@
       </svg>`;
   }
 
-  function updateData() {
-    $dataService.solve.getSolves().then(s => {
-      let sm: Map<string, Solve[]> = s.reduce((acc, cur) => {
-        if (!acc.has(cur.session)) {
-          acc.set(cur.session, []);
-        }
-        acc.get(cur.session).push(cur);
-        return acc;
-      }, new Map());
-
-      let resSM: Map<string, string> = new Map();
-      let resSA: Map<string, number> = new Map();
-
-      for (let [key, value] of sm) {
-        value.sort((a, b) => a.date - b.date);
-        resSA.set(key, value.length);
-        resSM.set(
-          key,
-          getChart(
-            value
-              .map(sTime)
-              .filter(t => Number.isFinite(t))
-              .slice(-chartSamples)
-          )
-        );
+  async function updateData() {
+    const s = await solveController.loadSolves();
+    let sm: Map<string, Solve[]> = s.reduce((acc, cur) => {
+      if (!acc.has(cur.session)) {
+        acc.set(cur.session, []);
       }
+      acc.get(cur.session).push(cur);
+      return acc;
+    }, new Map());
 
-      sessionData = sm;
-      sessionMap = resSM;
-      sessionAmount = resSA;
-    });
+    let resSM: Map<string, string> = new Map();
+    let resSA: Map<string, number> = new Map();
 
-    layout = ($dataService.config.getPath("/timer/layout") || {}).layout || "table";
+    for (let [key, value] of sm) {
+      value.sort((a, b) => a.date - b.date);
+      resSA.set(key, value.length);
+      resSM.set(
+        key,
+        getChart(
+          value
+            .map(sTime)
+            .filter(t => Number.isFinite(t))
+            .slice(-chartSamples)
+        )
+      );
+    }
+
+    sessionData = sm;
+    sessionMap = resSM;
+    sessionAmount = resSA;
   }
+
+  // read layout from persisted config (safe access)
+  layout = ($dataService.config.getPath("/timer/layout") || {}).layout || "table";
 
   function getBest(sId: string) {
     if (!sessionData.has(sId)) return 0;
@@ -185,20 +189,20 @@
   }
 
   function updateSessionsIcons() {
-    for (let i = 0, maxi = $sessions.length; i < maxi; i += 1) {
-      if ($sessions[i].settings?.sessionType != "mixed") {
+    for (let i = 0, maxi = sessions.length; i < maxi; i += 1) {
+      if (sessions[i].settings?.sessionType != "mixed") {
         for (let j = 0, maxj = ICONS.length; j < maxj; j += 1) {
           if (Array.isArray(ICONS[j].scrambler)) {
             if (
               (ICONS[j].scrambler as string[]).some(
-                s => $sessions[i].settings && s === $sessions[i].settings.mode
+                s => sessions[i].settings && s === sessions[i].settings.mode
               )
             ) {
-              $sessions[i].icon = ICONS[j];
+              sessions[i].icon = ICONS[j];
               break;
             }
-          } else if ($sessions[i].settings && ICONS[j].scrambler === $sessions[i].settings.mode) {
-            $sessions[i].icon = ICONS[j];
+          } else if (sessions[i].settings && ICONS[j].scrambler === sessions[i].settings.mode) {
+            sessions[i].icon = ICONS[j];
             break;
           }
         }
@@ -224,13 +228,16 @@
       settings.stepNames = stepNames;
     }
 
-    $dataService.session.addSession({ _id: "", name, settings }).then(ns => {
-      ns.tName = ns.name;
-      $sessions = [...$sessions, ns];
+    sessionController
+      .addSession({ _id: "", name, settings } as any)
+      .then(ns => {
+        ns.tName = ns.name;
+        sessions = [...sessions, ns];
 
-      updateSessionsIcons();
-      sortSessions();
-    });
+        updateSessionsIcons();
+        sortSessions();
+      })
+      .catch(() => {});
 
     showAddSessionDialog = false;
   }
@@ -239,7 +246,7 @@
 
   $effect(() => {
     pGenerateCubeBundle(
-      $sessions.map(s => {
+      sessions.map(s => {
         let opts = options.get(s.settings.mode || "333");
         return opts
           ? new Puzzle({ ...(Array.isArray(opts) ? opts[0] : opts), view: "trans" })
@@ -314,8 +321,8 @@
       class="content overflow-y-auto overflow-x-clip grid grid-cols-[repeat(auto-fill,minmax(11rem,1fr))]
       grid-rows-[repeat(auto-fit,6.2rem)] gap-2"
     >
-      {#each $sessions as s, p}
-        <li class="h-[6rem]">
+      {#each sessions as s, p}
+        <li class="rounded-md h-[6rem]" data-type={s.settings.sessionType}>
           <a
             href={"/timer/" + s._id}
             class="btn w-full h-full shaded-card hover:bg-base-100 gap-2 grid grid-cols-[40%,60%]"
@@ -324,12 +331,17 @@
               <PuzzleImage src={images[p]} />
             </div>
             <div class="session-content grid text-left h-full">
-              <span class="text-x s font-light">{s.settings.sessionType}</span>
-              <span class="font-normal">{s.name}</span>
+              <span class="font-normal inline-flex items-center gap-1 break-words">
+                <TimerSessionIcon icon={s.settings.sessionType} size="1rem" />
+                {s.name}
+              </span>
               <div class="h-6">
                 {@html sessionMap.get(s._id)}
               </div>
-              <span class="!text-xs font-light bg-base-100 w-fit px-1 py-0 rounded-sm scale-90">
+              <span
+                class="!text-xs font-light bg-base-100 w-fit px-1 py-0 rounded-sm
+                  grid place-items-center"
+              >
                 {sessionAmount.get(s._id) || 0}
               </span>
             </div>
@@ -353,7 +365,7 @@
         </thead>
 
         <tbody>
-          {#each $sessions as s, p}
+          {#each sessions as s, p}
             <tr>
               <td class="p-1 max-w-[2rem]"><PuzzleImage src={images[p]} /></td>
               <td class="p-1">
@@ -390,12 +402,10 @@
     <i class="note">{$localLang.TIMER.sessionTypeDescription[newSessionType]}</i>
     <div class="flex flex-wrap gap-2 justify-center">
       <div class="flex items-center justify-center gap-2">
-        <span class="text-sm">{$localLang.global.name}</span>
-
-        <Input
-          class="bg-base-100 text-base-content flex-1 max-w-[20ch]"
-          bind:value={newSessionName}
-        />
+        <label class="input flex gap-2">
+          <CubeCategory size="1.2rem" containerClass="!p-0" />
+          <input type="text" class="grow" placeholder={$localLang.global.name} />
+        </label>
       </div>
 
       <Select
@@ -406,7 +416,7 @@
         class="mx-auto"
         hasIcon={e => e}
         IconComponent={TimerSessionIcon}
-        placement="right"
+        placement="left"
       />
     </div>
 
@@ -416,18 +426,19 @@
           <div class="flex items-center justify-center gap-2">
             <span class="text-sm">{$localLang.global.steps}</span>
 
-            <Input
-              class="bg-base-100 text-base-content flex-1 max-w-[10ch]"
-              type="number"
-              min={2}
-              max={10}
-              bind:value={newSessionSteps}
-              on:change={_ =>
-                (stepNames = [...stepNames, ...newArr(newSessionSteps).fill("")].slice(
-                  0,
-                  newSessionSteps
-                ))}
-            />
+            <label class="input">
+              <input
+                type="number"
+                min={2}
+                max={10}
+                bind:value={newSessionSteps}
+                onchange={_ =>
+                  (stepNames = [...stepNames, ...newArr(newSessionSteps).fill("")].slice(
+                    0,
+                    newSessionSteps
+                  ))}
+              />
+            </label>
           </div>
         {/if}
 
@@ -460,12 +471,17 @@
         <ul class="flex flex-wrap justify-center items-center gap-2">
           {#each stepNames as _, p (p)}
             <li class="w-20">
-              <Input
-                class="bg-base-100 text-base-content"
+              <label
+                class="input flex w-full"
                 style={`border-color: ${STEP_COLORS[p]}; border-width: .15rem;`}
-                placeholder={$localLang.global.step + " " + (p + 1)}
-                bind:value={stepNames[p]}
-              />
+              >
+                <input
+                  type="text"
+                  class="grow w-full"
+                  bind:value={stepNames[p]}
+                  placeholder={$localLang.global.step + " " + (p + 1)}
+                />
+              </label>
             </li>
           {/each}
         </ul>
@@ -483,107 +499,16 @@
   </div>
 </Modal>
 
-<!-- {:else}
-    <div
-      class="grid gap-2 m-2 mt-4"
-      style="grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr));"
-    >
-      {#each sessions as s}
-        <button
-          class={"grid h-max border rounded-md relative " +
-            (s.settings.sessionType === "mixed"
-              ? "border-purple-400"
-              : s.settings.sessionType === "single"
-                ? "border-green-400"
-                : "border-sky-500") +
-            (s.icon ? " pl-8" : "")}
-          on:click={() => {
-            sessions.forEach(s1 => (s1.editing = false));
-            s.editing = true;
-          }}
-        >
-          {#if s.icon}
-            <span
-              class="absolute p-[.05rem] rounded-sm
-                  left-[.5rem] top-1/2 -translate-y-1/2"
-            >
-              <CubeCategory icon={s.icon.icon} size="1rem" containerClass="!p-[.1rem]" />
-            </span>
-          {/if}
+<style lang="postcss">
+  [data-type="single"] > a {
+    @apply border-green-400/50 border;
+  }
 
-          <Input
-            class={"!bg-transparent text-center text-ellipsis w-full rounded-none flex-1  " +
-              (!s.editing ? " border-none " : "") +
-              (s.icon ? " text-left pl-1 " : "")}
-            bind:value={s.tName}
-            focus={s.editing}
-            on:keydown={e => {
-              switch (e.code) {
-                case "Enter": {
-                  s.editing = false;
-                  renameSession(s);
-                  break;
-                }
-                case "Escape": {
-                  s.editing = false;
-                  e.stopPropagation();
-                  // @ts-ignore
-                  e.target.blur();
-                  break;
-                }
-              }
-            }}
-          />
-          <div class="flex items-center justify-center">
-            {#if s.editing && !creatingSession}
-              <button
-                tabindex="0"
-                class="text-gray-400 w-full h-8 cursor-pointer hover:text-blue-500"
-                on:click|stopPropagation={ev => renameSession(s)}
-              >
-                <CheckIcon size="1.2rem" />
-              </button>
-              <button
-                tabindex="0"
-                class="text-gray-400 w-full h-8 cursor-pointer hover:text-blue-500"
-                on:click|stopPropagation={() => (s.editing = false)}
-              >
-                <CloseIcon size="1.2rem" />
-              </button>
-              <button
-                tabindex="0"
-                class="text-gray-400 w-full h-8 cursor-pointer hover:text-blue-500"
-                on:click|stopPropagation={() => {
-                  sSession = s;
-                  showDeleteSession = true;
-                }}
-              >
-                <TrashIcon size="1.2rem" />
-              </button>
-            {/if}
-          </div>
-        </button>
-      {/each}
-    </div>
-  {/if} -->
+  [data-type="multi-step"] > a {
+    @apply border-sky-400/60 border;
+  }
 
-<!-- <svelte:fragment slot="footer">
-    {#if creatingSession}
-      <div class="flex justify-center gap-2 mx-auto">
-        <Button color="alternative" on:click={closeAddSession}>{$localLang.global.cancel}</Button>
-        <Button on:click={newSession}>
-          {$localLang.global.save}
-        </Button>
-      </div>
-    {:else}
-      <Button
-        type="button"
-        ariaLabel={$localLang.TIMER.addNewSession}
-        on:click={openAddSession}
-        class="mx-auto flex bg-primary-700 "
-      >
-        <PlusIcon />
-        {$localLang.TIMER.addNewSession}
-      </Button>
-    {/if}
-  </svelte:fragment> -->
+  [data-type="mixed"] > a {
+    @apply border-purple-400/70 border;
+  }
+</style>

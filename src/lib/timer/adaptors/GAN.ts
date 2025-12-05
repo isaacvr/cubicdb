@@ -4,18 +4,29 @@ import { CFOP } from "@classes/reconstructors/CFOP";
 import { Roux } from "@classes/reconstructors/Roux";
 import { CubieCube, SOLVED_FACELET, valuedArray } from "@cstimer/lib/mathlib";
 import { isEscape, type Actor } from "@helpers/stateMachine";
-import { TimerState, type InputContext, type Solve, Penalty } from "@interfaces";
-import { get, type Writable } from "svelte/store";
+import {
+  TimerState,
+  type InputContext,
+  type Solve,
+  Penalty,
+  type BluetoothDeviceData,
+  type Callback,
+} from "@interfaces";
+import { get, writable, type Writable } from "svelte/store";
 import { createActor, setup, fromCallback } from "xstate";
 import { decompressFromBase64 } from "$lib/helpers/decompress-string";
 import { dataService } from "$lib/data-services/data.service";
 import type { IGANiCarryDevice } from "$lib/interfaces/devices.types";
+import { weakRandomUUID } from "@helpers/strings";
+import { Emitter } from "@classes/Emitter";
 
 let solvedState = SOLVED_FACELET;
 
 interface GANContext {
   input: InputContext;
   sequencer: AlgorithmSequence;
+  sequenceParts: Writable<string[]>;
+  recoverySequence: Writable<string>;
   moves: string[];
   cfop: CFOP;
   roux: Roux;
@@ -29,25 +40,31 @@ function matchUUID(uuid1: string, uuid2: string) {
   return uuid1.toUpperCase() == uuid2.toUpperCase();
 }
 
-function updateSequence(
-  seq: AlgorithmSequence,
-  parts: Writable<string[]>,
-  recovery: Writable<string>
-) {
-  parts.set([
-    seq.scramble.slice(0, seq.cursor).join(" "),
-    seq.scramble.slice(seq.cursor, seq.cursor + 1).join(" "),
-    seq.scramble.slice(seq.cursor + 1).join(" "),
-  ]);
+function updateSequence(seq: AlgorithmSequence) {
+  return {
+    parts: [
+      seq.scramble.slice(0, seq.cursor).join(" "),
+      seq.scramble.slice(seq.cursor, seq.cursor + 1).join(" "),
+      seq.scramble.slice(seq.cursor + 1).join(" "),
+    ],
+    recovery: seq.getRecoveryScramble(),
+  };
+}
 
-  recovery.set(seq.getRecoveryScramble());
+function logSequenceParts(p: string[]) {
+  console.log("PARTS: ", p);
 }
 
 // Guards
 const isScrambled: GANActor = ({ context, event }) => {
   const seq = context.sequencer;
   seq.feed(event.data.move.trim());
-  updateSequence(seq, context.input.sequenceParts, context.input.recoverySequence);
+
+  let { parts, recovery } = updateSequence(seq);
+
+  context.sequenceParts.set(parts);
+  context.recoverySequence.set(recovery);
+  logSequenceParts(get(context.sequenceParts));
 
   debug &&
     console.log(
@@ -70,28 +87,24 @@ const isCompleteCube: GANActor = ({ event }) => {
 };
 
 const isScrambleReady: GANActor = ({ context }) => {
-  return !!context.sequencer.scramble.length;
+  if (!!context.sequencer.scramble.length) {
+    let {} = updateSequence(context.sequencer);
+    return true;
+  }
+
+  return false;
 };
 
 // Flow control
-const enterConnected: GANActor = ({
-  context: {
-    input: {
-      bluetoothStatus,
-      timerState: state,
-      time,
-      decimals,
-      scramble,
-      sequenceParts,
-      recoverySequence,
-    },
+const enterConnected: GANActor = ({ context, event }) => {
+  let {
+    input: { timerState: state, time, decimals, scramble },
     moves,
     sequencer,
     cfop,
     roux,
-  },
-  event,
-}) => {
+  } = context;
+
   sequencer.clear();
   moves.length = 0;
 
@@ -99,11 +112,15 @@ const enterConnected: GANActor = ({
   sequencer.setScramble(scr);
   cfop.setSequence(scr);
   roux.setSequence(scr);
-  updateSequence(sequencer, sequenceParts, recoverySequence);
+
+  let { parts, recovery } = updateSequence(sequencer);
+
+  context.sequenceParts.set(parts);
+  context.recoverySequence.set(recovery);
+  logSequenceParts(get(context.sequenceParts));
 
   debug && console.log("[enterConnected]: ", event, scr);
 
-  bluetoothStatus.set(true);
   state.set(TimerState.CLEAN);
   time.set(0);
   decimals.set(true);
@@ -111,7 +128,6 @@ const enterConnected: GANActor = ({
 
 const enterDisconnect: GANActor = ({ context: { input } }) => {
   debug && console.log("[enterDisconnect]");
-  input.bluetoothStatus.set(false);
   input.timerState.set(TimerState.CLEAN);
 };
 
@@ -226,9 +242,10 @@ const saveSolve = fromCallback(
   }
 );
 
-const handleOwnEntry: GANActor = ({ context: { input } }) => {
-  input.sequenceParts.set(["", "On your own", ""]);
-  input.recoverySequence.set("");
+const handleOwnEntry: GANActor = ({ context }) => {
+  context.sequenceParts.set(["", "On your own", ""]);
+  context.recoverySequence.set("");
+  logSequenceParts(get(context.sequenceParts));
 };
 
 const GANMachine = setup({
@@ -392,12 +409,15 @@ export class GANInput implements IGANiCarryDevice {
   private movesFromLastCheck: number;
   private moves: string[];
   private context: GANContext | null;
+  private emitter: Emitter = new Emitter();
+  sequenceParts: Writable<string[]> = writable([]);
+  recoverySequence: Writable<string> = writable("");
 
   readonly type = "gan_icarry";
 
-  id = "cubicdb:device:gan-icarry";
+  id = weakRandomUUID();
   name = "GAN iCarry";
-  bluetoothAddress = "";
+  deviceName = "";
   hardwareVersion = "";
   softwareVersion = "";
   currentFacelet = new CubieCube();
@@ -433,11 +453,19 @@ export class GANInput implements IGANiCarryDevice {
     this.deviceTime = 0;
     this.moveCnt = 0;
     this.prevMoveCnt = -1;
-    this.batteryLevel = 100;
+    this.batteryLevel = 0;
     this.keyCheck = 0;
     this.deviceTimeOffset = 0;
     this.movesFromLastCheck = 1000;
     this.isConnected = false;
+  }
+
+  get bluetoothAddress() {
+    return this.macAddress;
+  }
+
+  get strFacelet() {
+    return this.latestFacelet;
   }
 
   static get UUID_SUFFIX() {
@@ -520,23 +548,32 @@ export class GANInput implements IGANiCarryDevice {
       input: context,
       moves: this.moves,
       sequencer: this.sequencer,
+      recoverySequence: this.recoverySequence,
+      sequenceParts: this.sequenceParts,
       cfop: new CFOP(),
       roux: new Roux(),
     };
     this.interpreter = createActor(GANMachine, { input: this.context });
     this.interpreter.start();
+    this.interpreter.subscribe(ev => {
+      console.log("STATE: ", ev);
+    });
   }
 
   disconnect() {
+    console.log("DISCONNECTING");
+    console.trace();
+    this.sequencer.clear();
+    this.sequenceParts.set([]);
+    this.recoverySequence.set("");
+
     get(dataService).off("scramble", this.handleScramble);
     this.interpreter?.send({
       type: "DISCONNECTED",
     });
 
-    if (!this.isConnected) return;
     this.device?.gatt?.disconnect();
     this.isConnected = false;
-    this.context?.input.bluetoothStatus.set(false);
 
     this.interpreter?.stop();
     get(dataService).emitBluetoothData("disconnect", null);
@@ -580,6 +617,14 @@ export class GANInput implements IGANiCarryDevice {
 
   stopTimer() {}
 
+  on(cb: Callback) {
+    this.emitter.on("*", cb);
+  }
+
+  off(cb: Callback) {
+    this.emitter.off("*", cb);
+  }
+
   private handleScramble(s: string) {
     const ctx = this.context;
     if (!ctx) return;
@@ -587,17 +632,18 @@ export class GANInput implements IGANiCarryDevice {
     ctx.sequencer.setScramble(s);
     ctx.cfop.setSequence(s);
     ctx.roux.setSequence(s);
-    updateSequence(ctx.sequencer, ctx.input.sequenceParts, ctx.input.recoverySequence);
+    let { parts, recovery } = updateSequence(ctx.sequencer);
+    ctx.sequenceParts.set(parts);
+    ctx.recoverySequence.set(recovery);
+    logSequenceParts(get(ctx.sequenceParts));
   }
 
-  async fromDevice(device: BluetoothDevice): Promise<string> {
+  async fromDevice(device: BluetoothDevice, macAddress = ""): Promise<string> {
     this.clear();
     this.disconnect();
 
-    const data = get(dataService).config.getPath(`timer/inputs/GAN`);
-
     this.device = device;
-    this.macAddress = data ? data.mac : "";
+    this.macAddress = macAddress || device.id;
 
     let server: BluetoothRemoteGATTServer | undefined;
 
@@ -631,7 +677,8 @@ export class GANInput implements IGANiCarryDevice {
 
       if (res) {
         this.isConnected = true;
-        this.emit("connect", null);
+        this.interpreter?.start();
+        this.emitter.emit("connect");
 
         device.addEventListener("gattserverdisconnected", () => {
           this.disconnect();
@@ -648,6 +695,8 @@ export class GANInput implements IGANiCarryDevice {
             scramble: get(this.context!.input.scramble),
           },
         });
+
+        console.log("CONNECTING");
 
         return this.macAddress;
       }
@@ -686,10 +735,6 @@ export class GANInput implements IGANiCarryDevice {
     this.prevMoveCnt = -1;
     this.batteryLevel = 100;
     return result;
-  }
-
-  private emit(type: string, data: any) {
-    get(dataService).emitBluetoothData(type, data);
   }
 
   private async v2initDecoder(mac: string, ver: any) {
@@ -846,7 +891,7 @@ export class GANInput implements IGANiCarryDevice {
         this.context?.roux.addMove(this.prevMoves[i]);
       }
 
-      this.emit("move", [this.prevMoves[i], this.timeOffs[i]]);
+      this.emitter.emit("move", [this.prevMoves[i], this.timeOffs[i]]);
     }
 
     this.deviceTimeOffset = locTime - this.deviceTime;
@@ -942,7 +987,7 @@ export class GANInput implements IGANiCarryDevice {
 
       debug && console.log("FACELET: ", this.latestFacelet);
 
-      this.emit("facelet", this.latestFacelet);
+      this.emitter.emit("facelet", this.latestFacelet);
 
       if (this.prevMoveCnt == -1) {
         this.initCubeState();
@@ -975,11 +1020,16 @@ export class GANInput implements IGANiCarryDevice {
       debug && console.log("[gancube]", "Device Name", deviceName);
       debug && console.log("[gancube]", "Gyro Enabled", gyro);
 
-      this.emit("hardware", { hardwareVersion, softwareVersion, deviceName, gyro });
+      this.deviceName = deviceName;
+      this.hasGyroscope = gyro;
+      this.hardwareVersion = hardwareVersion;
+      this.softwareVersion = softwareVersion;
+
+      this.emitter.emit("hardware", { hardwareVersion, softwareVersion, deviceName, gyro });
     } else if (mode == 9) {
       // battery
       this.batteryLevel = parseInt(value.slice(8, 16), 2);
-      this.emit("battery", this.batteryLevel);
+      this.emitter.emit("battery", this.batteryLevel);
       debug && console.log("[gancube]", "v2 received battery event", this.batteryLevel);
     } else {
       debug && console.log("[gancube]", "v2 received unknown event", value);
@@ -1092,6 +1142,42 @@ export class GANInput implements IGANiCarryDevice {
 
   newRecord() {}
 
+  toJSON() {
+    return {
+      type: this.type,
+      id: this.id,
+      name: this.name,
+      deviceName: this.deviceName,
+      mac: this.macAddress,
+      enabled: this.enabled,
+      hardwareVersion: this.hardwareVersion,
+      softwareVersion: this.softwareVersion,
+      hasGyroscope: this.hasGyroscope,
+    };
+  }
+
+  fromJSON(config: Record<string, any>, autoconnect = true) {
+    const keys = [
+      "id",
+      "name",
+      "deviceName",
+      "mac",
+      "hardwareVersion",
+      "softwareVersion",
+      "hasGyroscope",
+    ];
+
+    if (keys.some(e => !(e in config))) return null;
+
+    this.id = config.id;
+    this.name = config.name;
+    this.deviceName = config.deviceName;
+    this.macAddress = config.mac;
+    this.hardwareVersion = config.hardwareVersion;
+    this.softwareVersion = config.softwareVersion;
+    this.hasGyroscope = config.hasGyroscope;
+  }
+
   sendEvent(ev: { type: string; data?: any }) {
     if (ev.type === "sync-solved") {
       solvedState = this.latestFacelet;
@@ -1102,4 +1188,64 @@ export class GANInput implements IGANiCarryDevice {
       ds.config.saveConfig();
     }
   }
+}
+
+export async function reconnect(input: GANInput, deviceId: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    let _dataService = get(dataService);
+    let resolved = false;
+    let debug = false;
+
+    _dataService.config.cancelBluetoothRequest();
+
+    debug && console.log("setTimeout");
+    let tm = setTimeout(() => {
+      if (!resolved) {
+        debug && console.log("Cancel request");
+        _dataService.config.cancelBluetoothRequest();
+      }
+    }, 20000);
+
+    function handleBluetoothEvent(...args: any[]) {
+      let list: BluetoothDeviceData[] = args[1];
+
+      if (args[0] === "device-list" && list.some(device => device.deviceId === deviceId)) {
+        _dataService.off("bluetooth", handleBluetoothEvent);
+        _dataService.config.connectBluetoothDevice(deviceId);
+        debug && console.log("found device: ", list);
+      }
+    }
+
+    function cleanup(err: any) {
+      debug && console.log("cleanup");
+      reject(err);
+      resolved = true;
+      _dataService.off("bluetooth", handleBluetoothEvent);
+    }
+
+    debug && console.log("set bluetooth listener");
+    _dataService.on("bluetooth", handleBluetoothEvent);
+
+    debug && console.log("searchBluetooth: start");
+    _dataService.config
+      .searchBluetooth(input, deviceId)
+      .then(() => {
+        debug && console.log("searchBluetooth: resolved: ", resolved);
+
+        input.macAddress = deviceId;
+
+        if (!resolved) {
+          resolved = true;
+          resolve();
+          clearTimeout(tm);
+          _dataService.off("bluetooth", handleBluetoothEvent);
+        } else {
+          cleanup(null);
+        }
+      })
+      .catch(err => {
+        cleanup(err);
+        debug && console.log("searchBluetooth: catch");
+      });
+  });
 }

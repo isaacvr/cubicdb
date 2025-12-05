@@ -11,9 +11,9 @@
 </script>
 
 {#if icon === "mixed"}
-  <BlendIcon {size} class="text-purple-300 shrink-0" />
+  <BlendIcon {size} class="inline text-purple-300 shrink-0" />
 {:else if icon === "single"}
-  <BoxIcon {size} class="text-green-400 shrink-0" />
+  <BoxIcon {size} class="inline text-green-400 shrink-0" />
 {:else if icon === "multi-step"}
-  <FootprintsIcon {size} class="text-sky-400 shrink-0" />
+  <FootprintsIcon {size} class="inline text-sky-400 shrink-0" />
 {/if}

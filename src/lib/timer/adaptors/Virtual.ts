@@ -135,7 +135,7 @@ const VirtualMachine = setup({
 export class VirtualInput implements IVirtualCubeKeyboardDevice {
   private context: VirtualContext | null;
 
-  readonly enabled = true;
+  enabled = true;
   readonly type = "virtual_cube_keyboard";
   name = "Virtual";
   id = "cubicdb:device:virtual";
@@ -212,4 +212,18 @@ export class VirtualInput implements IVirtualCubeKeyboardDevice {
   stopTimer() {}
 
   newRecord() {}
+
+  toJSON() {
+    return {
+      type: this.type,
+      id: this.id,
+      name: this.name,
+    };
+  }
+
+  fromJSON(config: Record<string, any>) {
+    if (["id", "name"].some(e => !config[e])) return null;
+    this.id = config.id;
+    this.name = config.name;
+  }
 }

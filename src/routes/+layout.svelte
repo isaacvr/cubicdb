@@ -5,7 +5,7 @@
   import "../theme.scss";
 
   import moment from "moment";
-  import { onDestroy, onMount, setContext, untrack } from "svelte";
+  import { onDestroy, onMount, setContext, tick, untrack } from "svelte";
   import { Dropdown, DropdownItem, Popover, Tooltip } from "flowbite-svelte";
   import { LANGUAGES } from "@lang/index";
   import { globalLang, localLang } from "@stores/language.service";
@@ -41,20 +41,23 @@
     MinusIcon,
     XIcon,
     MonitorSmartphoneIcon,
+    CirclePowerIcon,
   } from "lucide-svelte";
   import Button from "$lib/cubicdbKit/Button.svelte";
-  import { sessions } from "@stores/sessions.store";
-  import CubeCategory from "@components/wca/CubeCategory.svelte";
   import TimerSessionIcon from "$lib/timer/TimerSessionIcon.svelte";
   import { page } from "$app/state";
   import { twMerge } from "tailwind-merge";
-  import type { Device } from "$lib/interfaces/devices.types";
+  import type { IDevice } from "$lib/interfaces/devices.types";
   import DeviceIcon from "$lib/cubicdbKit/DeviceIcon.svelte";
   import { KeyboardInput } from "$lib/timer/adaptors/Keyboard";
   import { ManualInput } from "$lib/timer/adaptors/Manual";
   import { StackmatInput } from "$lib/timer/adaptors/Stackmat";
   import { VirtualInput } from "$lib/timer/adaptors/Virtual";
   import { nameCmp } from "@helpers/strings";
+  import { GANInput, reconnect } from "$lib/timer/adaptors/GAN";
+  import type { Device } from "$lib/timer/adaptors/devices";
+  import { devices } from "@stores/devices.store";
+  import { sessionController } from "$lib/controllers/SessionController";
 
   let { data, children }: { data: LayoutServerData; children: any } = $props();
 
@@ -65,20 +68,13 @@
 
   let nSub: Unsubscriber;
 
+  const sessions = sessionController.sessions;
   let date: string = $state("");
   let itv: any;
   let progress = $state(0);
   let parts: { link: string; name: string }[] = $state([]);
   let jsonld = $state("");
   let dropdownOpen = $state(false);
-  let devices: Writable<Device[]> = writable([
-    new KeyboardInput(),
-    new ManualInput(),
-    new StackmatInput(),
-    new VirtualInput(),
-  ]);
-
-  setContext("devices", devices);
 
   function handleProgress(p: number) {
     progress = Math.round(p * 100) / 100;
@@ -89,11 +85,11 @@
       header: $localLang.SETTINGS.update,
       text: $localLang.SETTINGS.updateCompleted,
       actions: [
-        { text: $localLang.global.accept, callback: () => {}, color: "alternative" },
+        { text: $localLang.global.accept, callback: () => {}, color: "primary" },
         {
           text: $localLang.global.restart,
           callback: () => $dataService.config.close(),
-          color: "purple",
+          color: "urgent",
         },
       ],
       fixed: true,
@@ -166,12 +162,34 @@
 
     handleResize();
 
-    $dataService.session
-      .getSessions()
+    sessionController
+      .loadSessions()
       .then(res => {
         $sessions = res;
       })
       .catch(err => console.log("ERROR", err));
+
+    let it = setInterval(() => {
+      if ($dataService.config.ready) {
+        let savedDevices: any[] = $dataService.config.configMap.get("devices") || [];
+
+        savedDevices.forEach(sd => {
+          let type: IDevice["type"] = sd.type;
+
+          if (type === "gan_icarry") {
+            let gn = new GANInput();
+            gn.fromJSON(sd);
+            $devices = [...$devices, gn];
+          } else if (type === "stackmat") {
+            let st = new StackmatInput();
+            st.fromJSON(sd);
+            $devices = [...$devices, st];
+          }
+        });
+
+        clearInterval(it);
+      }
+    }, 500);
   });
 
   onDestroy(() => {
@@ -205,20 +223,12 @@
       }));
     });
   });
-
-  $effect(() => {
-    if (dropdownOpen) {
-      untrack(() => {
-        $sessions = $sessions.sort(nameCmp);
-      });
-    }
-  });
 </script>
 
 <svelte:head>
   <title>{data.title}</title>
   <meta name="description" content={data.description} />
-  {@html jsonld}
+  {@html jsonld || ""}
 </svelte:head>
 
 <svelte:window on:resize={handleResize} />
@@ -260,7 +270,7 @@
     <CubicDbLogo />
   </div>
 
-  <div class="topbar-content">
+  <div class="topbar-content draggable custom-cursor">
     <div class="breadcrumbs text-sm mr-auto">
       <ul>
         {#each parts as part, pos}
@@ -278,13 +288,25 @@
               bind:open={dropdownOpen}
               containerClass="max-h-[20rem] overflow-y-auto overflow-x-hidden rounded-md
                 z-50 w-max bg-base-200"
+              id="layout-session-dropdown"
+              on:show={({ detail }) => {
+                if (detail) {
+                  $sessions = $sessions.sort(nameCmp);
+
+                  tick().then(() => {
+                    let elem = document.querySelector("#layout-session-dropdown .active");
+                    if (!elem) return;
+                    elem.scrollIntoView({ block: "center" });
+                  });
+                }
+              }}
             >
               {#each $sessions as ss}
                 <DropdownItem
                   href={"/timer/" + ss._id}
                   onclick={() => (dropdownOpen = false)}
                   class={"flex items-center gap-2 py-2 px-2 text-base-content hover:bg-base-100 rounded-md " +
-                    (ss._id === part.name ? "bg-base-100 font-bold hover:bg-primary" : "")}
+                    (ss._id === part.name ? "active bg-base-100 font-bold hover:bg-primary" : "")}
                 >
                   <TimerSessionIcon icon={ss.settings.sessionType} size="1.2rem" />
                   {ss.name}
@@ -325,9 +347,27 @@
         <DropdownItem
           class={"flex items-center gap-2 py-2 px-2 text-base-content hover:bg-base-100 rounded-md"}
         >
-          <DeviceIcon type={device.type} />
+          <DeviceIcon {device} />
           {device.name}
-          <input type="checkbox" class="toggle ml-auto" checked disabled />
+
+          {#if device.type === "gan_icarry" && !device.isConnected}
+            <button
+              class="btn btn-circle"
+              onclick={() =>
+                reconnect(device as GANInput, device.macAddress).catch(() =>
+                  console.log("Error al conectar")
+                )}
+            >
+              <CirclePowerIcon />
+            </button>
+          {:else}
+            <input
+              type="checkbox"
+              class="toggle ml-auto"
+              bind:checked={device.enabled}
+              disabled={device.id.startsWith("cubicdb:device")}
+            />
+          {/if}
         </DropdownItem>
       {/each}
     </Dropdown>
@@ -408,7 +448,7 @@
   </div>
 
   <div class="content">
-    {@render children()}
+    {@render children?.()}
   </div>
 
   <div class="footer-content shaded-card !p-0 gr-id place-items-center hidden">
@@ -429,14 +469,14 @@
   </div>
 </div>
 
-<div class="notification-container">
+<div class="toast toast-middle toast-end z-50">
   {#each notifications as nt (nt.key)}
     <Notification {...nt} fixed={nt.fixed}></Notification>
   {/each}
 </div>
 
 <style lang="postcss">
-  .notification-container {
+  /* .notification-container {
     max-width: 25rem;
     position: fixed;
     right: 0;
@@ -449,7 +489,7 @@
     gap: 0.5rem;
     justify-content: center;
     z-index: 50;
-  }
+  } */
 
   .layout {
     display: grid;
@@ -491,5 +531,14 @@
 
   .footer-content {
     grid-area: footer;
+  }
+
+  .draggable {
+    @apply select-none;
+    -webkit-app-region: drag;
+  }
+
+  .draggable > * {
+    -webkit-app-region: no-drag;
   }
 </style>

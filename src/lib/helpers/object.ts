@@ -1,10 +1,12 @@
 import { Puzzle } from "@classes/puzzle/puzzle";
 import {
+  AverageSetting,
   nameToPuzzle,
   Penalty,
   type Algorithm,
   type ITutorialAlg,
   type PuzzleType,
+  type Session,
   type Solve,
 } from "@interfaces";
 
@@ -205,5 +207,23 @@ export function createEmptySolve(): Solve {
     mode: "",
     prob: -1,
     steps: [],
+  };
+}
+
+export function createEmptySession(): Session {
+  return {
+    _id: "",
+    name: "",
+    settings: {
+      calcAoX: AverageSetting.SEQUENTIAL,
+      genImage: true,
+      hasInspection: true,
+      inspection: 15000,
+      scrambleAfterCancel: true,
+      showElapsedTime: true,
+      withoutPrevention: false,
+      recordCelebration: true,
+      sessionType: "mixed",
+    },
   };
 }

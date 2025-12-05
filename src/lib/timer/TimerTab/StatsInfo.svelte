@@ -1,7 +1,7 @@
 <script lang="ts">
   import Katex from "@components/Katex.svelte";
   import { timer } from "@helpers/timer";
-  import { type TimerContext } from "@interfaces";
+  import { type ITimerController, type TimerContext } from "@interfaces";
   import { localLang } from "@stores/language.service";
   import { Popover } from "flowbite-svelte";
   import { solveSummary } from "@helpers/statistics";
@@ -10,11 +10,18 @@
 
   interface StatsInfoProps {
     context: TimerContext;
+    timerController: ITimerController;
+    spread?: boolean;
   }
 
-  let { context = $bindable() }: StatsInfoProps = $props();
+  let {
+    context = $bindable(),
+    timerController = $bindable(),
+    spread = false,
+  }: StatsInfoProps = $props();
 
-  const { stats, solves, enableKeyboard } = context;
+  const { enableKeyboard } = context;
+  const { stats, solves } = timerController;
   const notification = NotificationService.getInstance();
 
   let textSummary = "";
@@ -49,7 +56,7 @@
   }
 </script>
 
-<div class="stats-list w-full transition-all duration-300 max-md:text-xs">
+<div class="stats-list w-full transition-all duration-300 max-md:text-xs text-base" class:spread>
   <!-- Best -->
   <div class:better={$stats.best.better && $stats.counter.value > 0 && $stats.best.value > -1}>
     <span>{$localLang.TIMER.best}:</span>
@@ -212,7 +219,20 @@
     gap: 0.5rem;
   }
 
+  .stats-list.spread {
+    display: block;
+    column-count: 2;
+    column-gap: max(1rem, calc(100% - 20rem));
+    margin-top: auto;
+    margin-bottom: 1rem;
+    height: min-content;
+  }
+
   .stats-list > * {
     @apply flex justify-between bg-base-content bg-opacity-5 p-1 rounded-md;
+  }
+
+  .stats-list.spread > * {
+    @apply p-0 bg-transparent;
   }
 </style>

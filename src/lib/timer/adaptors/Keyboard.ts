@@ -12,7 +12,12 @@ import type { ITimerKeyboardDevice } from "$lib/interfaces/devices.types";
 
 type KBActor = (data: Actor<KeyboardContext>) => any;
 
-const clear: KBActor = ({ context: { timerState: state, time, decimals, stepsTime, ready } }) => {
+const clear: KBActor = ({
+  context: {
+    timerController: { time, decimals, ready, timerState: state },
+    stepsTime,
+  },
+}) => {
   state.set(TimerState.CLEAN);
   time.set(0);
   decimals.set(true);
@@ -22,7 +27,9 @@ const clear: KBActor = ({ context: { timerState: state, time, decimals, stepsTim
 
 const checkPrevention = fromCallback(
   ({
-    input: { timerState: state, session },
+    input: {
+      timerController: { timerState: state, session },
+    },
     sendBack,
   }: {
     input: KeyboardContext;
@@ -35,7 +42,10 @@ const checkPrevention = fromCallback(
 
 const setTimerInspection = fromCallback(
   ({
-    input: { timerState: state, session, time, lastSolve, ready, decimals, addSolve },
+    input: {
+      timerController: { timerState: state, session, time, lastSolve, ready, decimals },
+      addSolve,
+    },
     sendBack,
   }: {
     input: KeyboardContext;
@@ -80,7 +90,12 @@ const setTimerInspection = fromCallback(
 
 const setTimerRunner = fromCallback(
   ({
-    input: { decimals, timerState: state, currentStep, lastSolve, stepsTime, timeRef, time },
+    input: {
+      timerController: { decimals, timerState: state, lastSolve, time },
+      currentStep,
+      stepsTime,
+      timeRef,
+    },
   }: {
     input: KeyboardContext;
   }) => {
@@ -89,7 +104,10 @@ const setTimerRunner = fromCallback(
         ? performance.now() - get(time)
         : performance.now() - (get(lastSolve)?.penalty === Penalty.P2 ? 2000 : 0);
 
-    const itv = setInterval(() => time.set(performance.now() - ref));
+    const itv = setInterval(() => {
+      time.set(performance.now() - ref);
+      console.log("TIME: ", performance.now() - ref);
+    });
 
     if (get(state) !== TimerState.PAUSE) {
       currentStep.set(1);
@@ -109,10 +127,7 @@ const setTimerRunner = fromCallback(
 const saveSolve = fromCallback(
   ({
     input: {
-      timerState: state,
-      session,
-      time,
-      lastSolve,
+      timerController: { timerState: state, session, time, lastSolve },
       timeRef,
       stepsTime,
       keyboardEnabled,
@@ -210,7 +225,12 @@ const KeyboardMachine = setup({
     },
 
     READY: {
-      entry: ({ context: { ready, createNewSolve } }) => {
+      entry: ({
+        context: {
+          timerController: { ready },
+          createNewSolve,
+        },
+      }) => {
         ready.set(true);
         createNewSolve();
       },
@@ -271,7 +291,11 @@ const KeyboardMachine = setup({
     },
 
     PAUSE: {
-      entry: ({ context: { timerState } }) => timerState.set(TimerState.PAUSE),
+      entry: ({
+        context: {
+          timerController: { timerState },
+        },
+      }) => timerState.set(TimerState.PAUSE),
       on: {
         keydown: [
           {
@@ -309,7 +333,7 @@ const KeyboardMachine = setup({
 
 export class KeyboardInput implements ITimerKeyboardDevice {
   readonly type = "timer_keyboard";
-  private _enabled = false;
+  private _enabled = true;
   id = "cubicdb:device:timer_keyboard";
   name = "Keyboard";
   interpreter: ReturnType<typeof createActor> | null;
@@ -323,28 +347,31 @@ export class KeyboardInput implements ITimerKeyboardDevice {
   }
 
   public set enabled(value) {
-    this._enabled = value;
-
-    if (value) {
-      this.interpreter?.start();
-    } else {
-      this.interpreter?.stop();
-    }
+    // this._enabled = value;
+    // if (value) {
+    //   this.interpreter?.start();
+    // } else {
+    //   this.interpreter?.stop();
+    // }
   }
 
   init(context: InputContext) {
     const ctx: KeyboardContext = {
-      steps: writable(+(get(context.session).settings.steps || "") || 1),
+      steps: writable(+(get(context.timerController.session).settings.steps || "") || 1),
       stepsTime: writable([]),
       timeRef: writable(0),
+      currentStep: context.timerController.currentStep,
       ...context,
     };
 
     this.interpreter = createActor(KeyboardMachine, { input: ctx });
+    this.interpreter.start();
     this.enabled = true;
   }
 
-  disconnect() {}
+  disconnect() {
+    this.interpreter?.stop();
+  }
 
   keyUpHandler(ev: KeyboardEvent) {
     if (
@@ -372,4 +399,18 @@ export class KeyboardInput implements ITimerKeyboardDevice {
 
   newRecord() {}
   sendEvent() {}
+
+  toJSON() {
+    return {
+      type: this.type,
+      id: this.id,
+      name: this.name,
+    };
+  }
+
+  fromJSON(config: Record<string, any>) {
+    if (["id", "name"].some(e => !config[e])) return null;
+    this.id = config.id;
+    this.name = config.name;
+  }
 }

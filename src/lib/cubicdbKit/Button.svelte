@@ -1,8 +1,8 @@
 <script lang="ts">
+  import type { ButtonColor } from "@interfaces";
   import { twMerge } from "tailwind-merge";
 
   type Size = "sm" | "md" | "lg";
-  type Color = "primary" | "accept" | "cancel" | "urgent" | "error" | "neutral" | "none";
 
   interface ButtonProps {
     loading?: boolean;
@@ -11,7 +11,7 @@
     class?: string;
     contentClass?: string;
     size?: Size;
-    color?: Color;
+    color?: ButtonColor;
     [key: string]: any;
   }
 
@@ -21,7 +21,7 @@
     lg: "px-3 py-2 text-lg",
   };
 
-  const COLOR_CLASS: Record<Color, string> = {
+  const COLOR_CLASS: Record<ButtonColor, string> = {
     primary: "bg-base-100 hover:bg-primary text-base-content",
     accept: "btn-secondary",
     cancel: "btn-neutral",

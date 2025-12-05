@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onDestroy, onMount } from "svelte";
+  import { onMount } from "svelte";
   import { Button, Spinner, Tooltip } from "flowbite-svelte";
   import { CubeMode } from "@constants";
   import { type Algorithm, type ICard, type Solution } from "@interfaces";
@@ -13,13 +13,13 @@
 
   import PuzzleImage from "@components/PuzzleImage.svelte";
   import AlgorithmEditorModal from "@components/AlgorithmEditorModal.svelte";
-  import { page } from "$app/stores";
   import { goto } from "$app/navigation";
   import { getTitleMeta } from "$lib/meta/title";
   import type { Unsubscriber } from "svelte/store";
   import { dataService } from "$lib/data-services/data.service";
   import type { Language } from "$lib/interfaces/language.types";
   import { TrashIcon, LayoutGridIcon, PencilIcon, PlusIcon, Table2Icon } from "lucide-svelte";
+  import { page } from "$app/state";
 
   const notification = NotificationService.getInstance();
   const config = $dataService.config;
@@ -36,7 +36,7 @@
   let currentList: Algorithm[] = [];
   let allowAlgAdmin = $state(true);
   let currentAlg: Algorithm | null = null;
-  let meta = getTitleMeta($page.url.pathname, $localLang);
+  let meta = getTitleMeta(page.url.pathname, $localLang);
 
   // Modal
   let show = $state(false);
@@ -120,7 +120,7 @@
 
   function handlekeyDown(e: KeyboardEvent) {
     if (e.code === "Escape" && allSolutions) {
-      goto($page.url.pathname.split("?")[0]);
+      goto(page.url.pathname.split("?")[0]);
     }
 
     if (e.code === "KeyL" && e.ctrlKey && !allSolutions && (type === 2 || type >= 4)) {
@@ -162,7 +162,7 @@
   async function updateCases(loc: URL, force = false) {
     if (!loc.pathname.startsWith("/algorithms")) return;
 
-    selectCase($page.url);
+    selectCase(page.url);
 
     let p1 = loc.pathname.split("/").slice(2).join("/");
 
@@ -177,7 +177,7 @@
         })
       );
 
-      selectCase($page.url);
+      selectCase(page.url);
 
       let parts = p1.split("/");
       let shortName = parts.pop() || "";
@@ -279,7 +279,7 @@
 
   async function removeAlg(a: Algorithm) {
     await $dataService.algorithms.removeAlgorithm(a);
-    updateCases($page.url, true);
+    updateCases(page.url, true);
   }
 
   function toArray(str: string, suff = "") {
@@ -327,8 +327,6 @@
     return res.length === 1 ? [] : res;
   }
 
-  let pageSub: Unsubscriber;
-
   onMount(() => {
     toArray(``, "").forEach((e, p) => {
       let alg: Algorithm = {
@@ -350,13 +348,15 @@
 
       $dataService.algorithms.addAlgorithm(alg);
     });
-
-    pageSub = page.subscribe(p => updateCases(p.url));
   });
 
-  onDestroy(() => pageSub && pageSub());
+  let lastPage = "";
 
   $effect(() => updateMeta($localLang));
+  $effect(() => {
+    if (lastPage === page.url) return;
+    updateCases((lastPage = page.url));
+  });
 
   $effect(() => {
     let arr: Puzzle[] =

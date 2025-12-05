@@ -3,12 +3,10 @@
   import Select from "@components/material/Select.svelte";
   import { globalLang } from "@stores/language.service";
   import { getLanguage } from "@lang/index";
-  import { writable } from "svelte/store";
   import type { SCRAMBLE_MENU } from "@constants";
   import { pGenerateCubeBundle } from "@helpers/cube-draw";
   import { dataService } from "$lib/data-services/data.service";
-  import { Button, Card, Input } from "flowbite-svelte";
-  import { getSeed } from "@cstimer/lib/mathlib";
+  import { setSeed } from "@cstimer/lib/mathlib";
   import { scrambleToPuzzle } from "@helpers/scrambleToPuzzle";
   import { modeToName } from "@helpers/strings";
   import CubeCategory from "@components/wca/CubeCategory.svelte";
@@ -37,13 +35,14 @@
 
   let MENU: SCRAMBLE_MENU[] = getLanguage($globalLang).MENU;
   let groups: string[] = MENU.map(e => e[0]);
-  let modes: MODE[] = MENU[0][1];
-  let group = writable<number>(0);
-  let mode = writable<MODE>(modes[0]);
-  let categories: CATEGORY[] = [];
+  let modes: MODE[] = $state(MENU[0][1]);
+  let group = $state(0);
+  let mode: MODE = $state(modes[0]);
+  let categories: CATEGORY[] = $state([]);
 
-  let contestName = "";
-  let [seedCounter, seedStr] = getSeed();
+  let contestName = $state("");
+  let seedCounter = $state(0);
+  let seedStr = $state("");
 
   let sheetRegistry: SheetRegistry = {
     count: 0,
@@ -173,6 +172,8 @@
   }
 
   async function generateScrambles() {
+    setSeed(seedCounter, seedStr);
+
     const SyncWorker = await import("@workers/scrambleWorker?worker");
     const imageWorker = new SyncWorker.default();
 
@@ -187,16 +188,23 @@
       let md = ct.mode;
       for (let i = 1, maxi = +ct.rounds; i <= maxi; i += 1) {
         sheetRegistry.addTotal(1);
-        imageWorker.postMessage([i, md, getModeSettings(ct), ct.name]);
+        imageWorker.postMessage([
+          i,
+          $state.snapshot(md),
+          getModeSettings(ct),
+          ct.name,
+          seedCounter,
+          seedStr,
+        ]);
       }
     });
   }
 
   function selectedGroup() {
-    if (typeof $group === "undefined") return;
+    if (typeof group === "undefined") return;
 
-    modes = MENU[$group][1];
-    $mode = modes[0];
+    modes = MENU[group][1];
+    mode = modes[0];
   }
 
   function getModeFormats(mode: string): FORMAT[] {
@@ -216,51 +224,56 @@
   }
 </script>
 
-<Card class="mt-4 max-w-5xl w-[calc(100%-2rem)] mx-auto mb-8 flex flex-col items-center gap-4">
-  <Input
+<div
+  class="shaded-card mt-4 max-w-5xl w-[calc(100%-2rem)] mx-auto mb-8 flex flex-col items-center gap-4"
+>
+  <input
+    type="text"
     bind:value={contestName}
-    class="max-w-xs text-white"
+    class="input max-w-xs text-white"
     placeholder={$localLang.global.name + "..."}
   />
-  <!-- <Input bind:value={seedStr} class="max-w-xs" placeholder="Semilla..." />
-  <Input bind:value={seedCounter} type="number" class="max-w-xs" placeholder="Contador..." /> -->
+
+  <input bind:value={seedStr} class="input" type="text" placeholder="Seed string" />
+
+  <input bind:value={seedCounter} class="input" type="text" placeholder="Seed counter" />
 
   <div class="flex flex-wrap items-center gap-2">
     <Select
-      value={groups[$group]}
+      value={groups[group]}
       items={groups}
       transform={e => e}
       onChange={(g, p) => {
-        $group = p || 0;
+        group = p || 0;
         selectedGroup();
       }}
     />
 
     <Select
-      value={$mode}
+      value={mode}
       items={modes}
       label={e => e[0]}
       transform={e => e}
       onChange={g => {
-        $mode = g;
+        mode = g;
       }}
       hasIcon={v => v[1]}
     />
 
-    <Button
-      class="py-2"
-      on:click={() =>
+    <button
+      class="btn btn-primary py-2"
+      onclick={() =>
         (categories = [
           ...categories,
           {
-            group: $group,
-            mode: $mode,
-            name: modeToName($mode, groups[$group]),
+            group: group,
+            mode: mode,
+            name: modeToName(mode, groups[group]),
             rounds: 1,
-            format: getModeFormat($mode[1]),
-            scrambles: $mode[1] === "r3ni" ? 10 : 1,
+            format: getModeFormat(mode[1]),
+            scrambles: mode[1] === "r3ni" ? 10 : 1,
           },
-        ])}>{$localLang.CONTEST.addCategory}</Button
+        ])}>{$localLang.CONTEST.addCategory}</button
     >
   </div>
 
@@ -277,7 +290,7 @@
           <tbody>
             <tr>
               <td>
-                <Input bind:value={category.name} class="w-fit py-1 text-center" />
+                <input bind:value={category.name} class="input w-fit py-1 text-center" />
               </td>
             </tr>
             <tr>
@@ -286,9 +299,9 @@
                   <h4 class="text-center">{$localLang.CONTEST.rounds}</h4>
                   <h4 class="text-center">{$localLang.CONTEST.format}</h4>
 
-                  <Input
+                  <input
                     bind:value={category.rounds}
-                    class="py-1 text-center"
+                    class="input py-1 text-center"
                     min={1}
                     max={4}
                     type="number"
@@ -308,9 +321,9 @@
               <tr>
                 <td>
                   <h4 class="text-center">{$localLang.global.scrambles}</h4>
-                  <Input
+                  <input
                     bind:value={category.scrambles}
-                    class="py-1 text-center"
+                    class="input py-1 text-center"
                     min={2}
                     max={200}
                     type="number"
@@ -321,18 +334,20 @@
           </tbody>
         </table>
 
-        <Button
+        <button
           color="red"
-          class="w-6 h-6 p-0 absolute -top-2 -right-1"
-          on:click={() => {
+          class="btn btn-error !p-1 w-7 h-7 min-h-0 aspect-square absolute -top-3 -right-2"
+          onclick={() => {
             categories = categories.filter((_, p) => p != pos);
-          }}><TrashIcon size="1.2rem" /></Button
+          }}><TrashIcon size="1rem" /></button
         >
       </li>
     {/each}
   </ul>
 
   {#if categories.length > 0 && contestName.trim()}
-    <Button on:click={generateScrambles}>{$localLang.global.generate}</Button>
+    <button class="btn btn-primary" onclick={generateScrambles}>
+      {$localLang.global.generate}
+    </button>
   {/if}
-</Card>
+</div>

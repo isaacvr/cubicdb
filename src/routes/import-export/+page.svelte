@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { CubicDBData, Language, Session, Solve } from "@interfaces";
+  import type { CubicDBData, Session, Solve } from "@interfaces";
   import Select from "@material/Select.svelte";
   import { onMount } from "svelte";
   import Adaptors from "./adaptors";
@@ -13,6 +13,9 @@
   import Button from "@material/Button.svelte";
   import CubeCategory from "@components/wca/CubeCategory.svelte";
   import { dataService } from "$lib/data-services/data.service";
+  import { sessionController } from "$lib/controllers/SessionController";
+  import { solveController } from "$lib/controllers/SolveController";
+  import type { Language } from "$lib/interfaces/language.types";
 
   let MODE_MAP: Map<string, string>;
 
@@ -80,7 +83,7 @@
         s.tName = s._id;
         s._id = "";
         rem += 1;
-        $dataService.session.addSession(s).then(ss => {
+        sessionController.addSession(s as any).then(ss => {
           rem -= 1;
           if (cubeData) {
             let solves = cubeData.solves.filter(s => {
@@ -92,7 +95,7 @@
               return false;
             });
 
-            $dataService.solve.addSolves(solves);
+            solveController.addSolves(solves).catch(() => {});
           }
           if (rem === 0) {
             cubeData = null;
@@ -144,7 +147,7 @@
   }
 
   onMount(() => {
-    $dataService.solve.getSolves().then(solves => {
+    solveController.loadSolves().then(solves => {
       oSolves = solves
         .map(s => {
           let cp = { ...s };
@@ -154,7 +157,7 @@
         .sort((a, b) => (a.session < b.session ? -1 : 1));
     });
 
-    $dataService.session.getSessions().then(sessions => {
+    sessionController.loadSessions().then(sessions => {
       ownData.sessions = sessions;
       oSession = ownData.sessions[0];
     });

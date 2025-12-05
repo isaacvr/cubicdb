@@ -1,4 +1,4 @@
-type Callback = (...args: any[]) => any;
+import type { Callback } from "@interfaces";
 
 export class Emitter {
   private callbackSet: Set<string>;
@@ -19,6 +19,18 @@ export class Emitter {
   }
 
   off(eventName?: string, callback?: Callback) {
+    if (eventName === "*") {
+      Object.entries(this.callBackObject).forEach(e => {
+        this.callBackObject[e[0]] = e[1].filter(e1 => e1 != callback);
+
+        if (this.callBackObject[e[0]].length === 0) {
+          this.callbackSet.delete(e[0]);
+          delete this.callBackObject[e[0]];
+        }
+      });
+      return;
+    }
+
     if (!eventName) {
       this.callbackSet.clear();
       this.callBackObject = {};
@@ -42,12 +54,14 @@ export class Emitter {
   }
 
   emit<T extends string>(eventName: T, ...args: any[]) {
+    if (this.callbackSet.has("*")) {
+      this.callBackObject["*"].forEach(cb => cb(eventName, ...args));
+    }
+
     if (!this.callbackSet.has(eventName)) {
-      // console.log(`Unknown event "${eventName}"`)
       return;
     }
 
-    // console.log(`Found event "${eventName}"`)
-    this.callBackObject[eventName].forEach(cb => cb.apply(null, args));
+    this.callBackObject[eventName].forEach(cb => cb(...args));
   }
 }

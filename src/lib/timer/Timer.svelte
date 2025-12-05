@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { getContext, onMount, untrack } from "svelte";
+  import { onMount, untrack } from "svelte";
   import { pGenerateCubeBundle } from "@helpers/cube-draw";
-  import { derived, writable, type Readable, type Writable } from "svelte/store";
+  import { derived, get, writable, type Readable, type Writable } from "svelte/store";
 
   /// Modules
   import { getScramble, pScramble } from "@cstimer/scramble";
@@ -35,23 +35,24 @@
   import { getLanguage } from "@lang/index";
   import { NotificationService } from "@stores/notification.service";
   import { prettyScramble, randomUUID } from "@helpers/strings";
-  import { binSearch, clone } from "@helpers/object";
-  import type { HTMLImgAttributes } from "svelte/elements";
+  import { binSearch } from "@helpers/object";
 
   // ICONS
   import { dataService } from "$lib/data-services/data.service";
+  import { SolveController, solveController } from "$lib/controllers/SolveController";
+  import { sessionController } from "$lib/controllers/SessionController";
   import { scrambleToPuzzle } from "@helpers/scrambleToPuzzle";
   import Button from "$lib/cubicdbKit/Button.svelte";
   import { ChartLineIcon, LogsIcon, TimerIcon } from "lucide-svelte";
   import { page } from "$app/state";
-  import { sessions } from "@stores/sessions.store";
+  const sessions = sessionController.sessions;
+  import { SelectSession } from "$lib/core/usecases/SelectSession";
   import TimerOptions from "./TimerTab/TimerOptions.svelte";
   import { between } from "@helpers/math";
   import type { Language } from "$lib/interfaces/language.types";
-  import type { Device } from "$lib/interfaces/devices.types";
   import { rndEl } from "@cstimer/lib/mathlib";
-
-  let devices: Writable<Device[]> = getContext("devices");
+  import { devices } from "@stores/devices.store";
+  import { TimerController } from "$lib/controllers/TimerController";
 
   interface TimerProps {
     battle?: boolean;
@@ -76,28 +77,25 @@
     enableKeyboard: keyboardEnabled = writable(true),
     timerOnly = false,
     scrambleOnly = false,
-    cleanOnScramble = false,
   }: TimerProps = $props();
 
   let MENU: SCRAMBLE_MENU[] = [];
-  let groups: string[] = $state([]);
 
   let localLang: Readable<Language> = derived(globalLang, $lang => {
     let l = getLanguage($lang);
     MENU = l.MENU;
-    groups = MENU.map(e => e[0]);
     selectedGroup(false);
     return l;
   });
 
-  /// SERVICES
-  const notService = NotificationService.getInstance();
-
   /// GENERAL
+  const timerController = new TimerController();
+  const { tab, filters } = timerController;
+  timerController.enableKeyboard = keyboardEnabled;
+  // let tab = timerController.tab;
   let modes: { 0: string; 1: string; 2: number }[] = $state([]);
-  let filters: Writable<string[]> = writable<string[]>([]);
+  // let filters: Writable<string[]> = writable<string[]>([]);
   let sessionsTab: HistoryTab | null = $state(null);
-  let mounted = false;
   const iconSize = "1.2rem";
 
   /// MODAL
@@ -110,103 +108,19 @@
   let newSessionMode = $state(0);
   let stepNames: string[] = $state(["", ""]);
 
-  /// CONTEXT
-  let timerState = writable<TimerState>(TimerState.CLEAN);
-  let ready = writable(false);
-  let tab = writable(0);
-  let solves = writable<Solve[]>([]);
-  let allSolves = writable<Solve[]>([]);
-  let session = writable<Session>({
-    _id: "",
-    name: "Default",
-    settings: Object.assign({}, SessionDefaultSettings),
-    editing: false,
-    tName: "",
-  });
-  let Ao5 = writable<number[]>();
-  let stats = writable<Statistics>(INITIAL_STATISTICS);
-  let scramble = writable("");
-  let group = writable<number>();
-  let mode = writable<{ 0: string; 1: string; 2: number }>(["", "", 0]);
-  let preview = writable<HTMLImgAttributes[]>([]);
-  let prob = writable<number | number[]>();
-  let isRunning = writable(false);
   let selected = writable(0);
-  let decimals = writable(true);
-  let bluetoothList = writable<BluetoothDeviceData[]>([]);
-  let STATS_WINDOW = writable<(number | null)[][]>($AON.map(_ => []));
-  let puzzleType = writable<PuzzleType>("rubik");
-  let puzzleOrder = writable(3);
-  let deviceList: string[][] = [];
-
-  // Input Context
-  let lastSolve: Writable<Solve | null> = writable(null);
-  let time: Writable<number> = writable(0);
-  let sequenceParts = writable<string[]>([]);
-  let recoverySequence = writable<string>("");
-  let device: Writable<Device> = writable($devices[0]);
-  let currentStep = writable(1);
 
   function addSolve(t?: number, p?: Penalty) {
-    let ls = $lastSolve as Solve;
-
-    ls.date = Date.now();
-    ls.group = $group;
-    ls.mode = $mode[1];
-    ls.len = $mode[2];
-    ls.prob = $prob;
-    ls.session = $session._id;
-    ls.penalty = p || Penalty.NONE;
-    ls.time = adjustMillis(t || $time, false);
-    ls._id = randomUUID();
-
-    $lastSolve = ls;
-    $allSolves.push(ls);
-    $solves.push(ls);
-
-    if (timerOnly || scrambleOnly) return;
-
-    if (battle) {
-      ls.group = -1;
-      // dispatch("solve", $lastSolve);
-    } else {
-      $dataService.solve.addSolve(ls).then(d => {
-        let s = $allSolves.find(s => s.date === d.date);
-
-        if (s) {
-          statsReplaceId($stats, s._id, d._id);
-          s._id = d._id;
-          updateSolves();
-        }
-      });
-      sortSolves();
-      updateStatistics(true);
-    }
+    timerController.addSolve(t, p);
   }
 
   function reset() {
-    $device.stopTimer();
-    $time = 0;
-    $timerState = TimerState.CLEAN;
-    $ready = false;
-    $lastSolve = null;
+    timerController.reset();
   }
 
   function createNewSolve() {
-    $lastSolve = {
-      date: Date.now(),
-      penalty: Penalty.NONE,
-      scramble: $scramble,
-      time: $time,
-      comments: "",
-      selected: false,
-      session: "",
-    };
+    solveController.createSolve();
   }
-
-  let lastPreview = 0;
-
-  let confetti: JSConfetti;
 
   function selectSolve(s: Solve) {
     s.selected = !s.selected;
@@ -214,85 +128,12 @@
   }
 
   function selectSolveById(id: string, n: number) {
-    $solves.forEach(s => (s.selected = false));
-    $selected = 0;
-
-    for (let i = 0, maxi = $solves.length; i < maxi; i += 1) {
-      if ($solves[i]._id === id) {
-        for (let j = 0; j < n && i + j < maxi; j += 1) {
-          if ($solves[i + j].selected) continue;
-
-          $solves[i + j].selected = true;
-          $selected += 1;
-        }
-
-        $tab = 1;
-        break;
-      }
-    }
-  }
-
-  async function updateStatistics(inc?: boolean) {
-    let st = getUpdatedStatistics($stats, $solves, $session, $AON, inc);
-    $stats = st.stats;
-    $STATS_WINDOW = st.window;
-
-    let bestList = [];
-
-    for (let e of Object.entries($stats)) {
-      if (e[1].better) {
-        bestList.push({
-          name: e[0] === "best" ? $localLang.TIMER.best : e[0],
-          prev: e[1].prev || 0,
-          now: e[1].best || 0,
-        });
-      }
-    }
-
-    if (bestList.length && $session.settings.recordCelebration) {
-      $dataService.emit("new-record");
-
-      notService.addNotification({
-        header: $localLang.TIMER.congrats,
-        text: "",
-        html: bestList
-          .map(
-            o =>
-              `${o.name}: ${timer(o.now, true)} (${$localLang.TIMER.from} ${timer(o.prev, true)})`
-          )
-          .join("<br>"),
-        timeout: 5000,
-      });
-
-      confetti.addConfetti({
-        confettiNumber: 100,
-        confettiColors: ["#009d54", "#3d81f6", "#ffeb3b"],
-      });
-    }
-  }
-
-  function updateSolves() {
-    $solves = $allSolves.filter(s => s.session === ($session || {})._id);
-
-    // Calc next Ao5
-    let arr = $solves
-      .slice(0, 4)
-      .filter(s => !infinitePenalty(s))
-      .map(s => s.time);
-    let sum = arr.reduce((ac, e) => ac + e, 0);
-    arr.sort();
-
-    $Ao5 = arr.length === 4 ? [(sum - arr[3]) / 3, (sum - arr[0]) / 3].sort((a, b) => a - b) : [];
-  }
-
-  function sortSolves() {
-    $allSolves = $allSolves.sort((a, b) => b.date - a.date);
-    updateSolves();
+    $selected = timerController.selectedSolveById(id, n);
   }
 
   function setSolves(rescramble: boolean = true) {
-    sortSolves();
-    updateStatistics(true);
+    timerController.sortSolves();
+    timerController.updateStatistics(true);
     rescramble && setTimeout(initScrambler, 10);
   }
 
@@ -307,26 +148,15 @@
   function handleKeydown(e: KeyboardEvent) {
     if (!keyboardEnabled) return;
 
-    if (!battle && ($timerState === TimerState.CLEAN || $timerState === TimerState.STOPPED)) {
+    const timerState = get(timerController.timerState);
+
+    if (!battle && (timerState === TimerState.CLEAN || timerState === TimerState.STOPPED)) {
       if (e.key === "ArrowRight") {
-        $tab = between($tab + 1, 0, 2);
+        timerController.nextTab();
       } else if (e.key === "ArrowLeft") {
-        $tab = between($tab - 1, 0, 2);
+        timerController.prevTab();
       }
     }
-  }
-
-  function setPreview(img: string[], date: number) {
-    if (date > lastPreview) {
-      $preview = img.map(src => ({ src, alt: "", title: "" }));
-      lastPreview = date;
-    }
-  }
-
-  async function updateImage(md: string) {
-    let cb = scrambleToPuzzle($scramble, md);
-    let date = Date.now();
-    setPreview(await pGenerateCubeBundle(cb, 500), date);
   }
 
   // For testing only!!
@@ -350,117 +180,91 @@
   }
 
   export function initScrambler(scr?: string, _mode?: string, _prob?: number | number[]) {
-    setTimeout(async () => {
-      if (!mounted) return;
-
-      if (!$mode) {
-        $mode = MENU[$group || 0][1][0];
-      }
-
-      let md = useMode || _mode || $mode[1];
-      let len = useLen || ($mode[1] === "r3" || $mode[1] === "r3ni" ? ($prob as number) : $mode[2]);
-      let s = useScramble || scr;
-      let pb = useProb != -1 ? useProb : _prob != -1 && typeof _prob === "number" ? _prob : $prob;
-
-      if (!genScramble) {
-        $scramble = scr || useScramble;
-      } else {
-        $scramble = s ? s : getScramble(md, len, Array.isArray(pb) ? rndEl(pb) : pb);
-      }
-
-      if (isNNN(md)) {
-        $scramble = ScrambleParser.parseNNNString($scramble);
-      }
-
-      $scramble = prettyScramble($scramble);
-
-      // emit scramble for iCarry and other stuffs
-      $dataService.scramble($scramble);
-
-      // console.log("SCRAMBLE: ", $scramble);
-
-      // $scramble = "U' B2 D L2 B2 D L2 R2 F2 D' F2 B' R' D L' U2 B' D2 B";
-
-      // let cfop = new CFOP(Puzzle.fromSequence($scramble, { type: 'rubik' }).toFacelet());
-      // cfop.getAnalysis();
-
-      // console.log("MODE: ", md);
-
-      let opts = pScramble.options.get(md);
-
-      if (opts) {
-        if (!Array.isArray(opts)) {
-          $puzzleType = opts.type;
-          $puzzleOrder = opts.order ? opts.order[0] : 3;
-        }
-      }
-
-      if (opts && $session?.settings?.genImage) {
-        // console.log("HAS", md);
-
-        updateImage(md);
-      } else {
-        setPreview([], Date.now());
-      }
-    }, 10);
+    timerController.initScrambler(
+      MENU,
+      { useLen, useMode, useScramble, useProb, genScramble },
+      scr,
+      _mode,
+      _prob
+    );
   }
 
-  function selectedFilter(rescramble = true, saveFilter = false) {
+  async function selectedFilter(rescramble = true, saveFilter = false) {
+    let sessionStore = timerController.session;
+    let session = get(sessionStore);
+    let mode = get(timerController.mode);
+    let prob = get(timerController.prob);
+
     if (
       saveFilter &&
-      ($session.settings.sessionType === "mixed" || $mode[1] === "r3" || $mode[1] === "r3ni")
+      (session.settings.sessionType === "mixed" || mode[1] === "r3" || mode[1] === "r3ni")
     ) {
-      $session.settings.prob = $prob; 
-      $dataService.session.updateSession($session).then().catch();
+      const updated = await sessionController
+        .applySettings(session, { prob } as any)
+        .catch(() => null);
+      if (updated) sessionStore.set(updated);
     }
 
     rescramble && initScrambler();
   }
 
-  function selectedMode(rescramble = true, saveMode = false, updateProb = true) {
-    if (saveMode && $session.settings.sessionType === "mixed") {
-      $session.settings.mode = $mode[1];
-      $dataService.session.updateSession($session).then().catch();
+  async function selectedMode(rescramble = true, saveMode = false, updateProb = true) {
+    let sessionStore = timerController.session;
+    let session = get(sessionStore);
+    let mode = get(timerController.mode);
+
+    if (saveMode && session.settings.sessionType === "mixed") {
+      const updated = await sessionController
+        .applySettings(session, { mode: mode[1] } as any)
+        .catch(() => null);
+      if (updated) sessionStore.set(updated);
     }
-    $filters = pScramble.filters.get($mode[1]) || [];
-    updateProb && ($prob = -1);
+    $filters = pScramble.filters.get(mode[1]) || [];
+    updateProb && timerController.prob.set(-1);
     selectedFilter(rescramble);
   }
 
   function selectedGroup(rescramble = true, saveGroup = false) {
-    if (typeof $group === "undefined") return;
+    let group = get(timerController.group);
+    let mode = get(timerController.mode);
 
-    modes = MENU[$group][1];
-    $mode = modes[0];
+    if (typeof group === "undefined") return;
 
-    if ($mode[1] === "r3ni" || $mode[1] === "r3") {
-      $prob = $mode[1] === "r3ni" ? 2 : 5;
+    modes = MENU[group][1];
+    timerController.mode.set(modes[0]);
+    mode = modes[0];
+
+    if (mode[1] === "r3ni" || mode[1] === "r3") {
+      timerController.prob.set(mode[1] === "r3ni" ? 2 : 5);
     }
 
     selectedMode(rescramble, saveGroup);
   }
 
   function selectedSession() {
+    const { mode, group, prob, stats, session } = timerController;
     const config = $dataService.config;
+    let _session = get(session);
+    let _group = get(group);
 
-    config.timer.session = $session._id;
+    config.timer.session = _session._id;
     config.saveConfig();
 
-    let targetMode = $session.settings.mode || "333";
+    let targetMode = _session.settings.mode || "333";
     let fnd = false;
 
     for (let i = 0, maxi = MENU.length; i < maxi; i += 1) {
       let md = MENU[i][1].find(m => m[1] === targetMode);
 
       if (md) {
-        $mode = md;
-        $group = i;
-        modes = MENU[$group][1];
+        mode.set(md);
+        group.set(i);
+        modes = MENU[_group][1];
 
-        if (typeof $session.settings.prob === "undefined") {
+        if (typeof _session.settings.prob === "undefined") {
           selectedMode(false, false);
         } else {
-          $prob = $session.settings.prob;
+          prob.set(_session.settings.prob);
           selectedMode(false, false, false);
         }
 
@@ -470,16 +274,17 @@
     }
 
     if (!fnd) {
-      $mode = MENU[0][1][0];
+      mode.set(MENU[0][1][0]);
     }
 
     // console.log("MODE: ", $mode);
 
-    $stats = INITIAL_STATISTICS;
+    stats.set(INITIAL_STATISTICS);
     setSolves();
   }
 
   function newSession() {
+    const { session } = timerController;
     let name = newSessionName.trim();
 
     if (!name) return;
@@ -497,20 +302,26 @@
       settings.stepNames = stepNames;
     }
 
-    $dataService.session.addSession({ _id: "", name, settings }).then(ns => {
-      ns.tName = ns.name;
-      $session = ns;
+    sessionController
+      .addSession({ _id: "", name, settings } as any)
+      .then(async ns => {
+        ns.tName = ns.name;
+        session.set(ns);
 
-      updateSessionsIcons();
-      initInputHandler($session.settings.input || "");
+        updateSessionsIcons();
+        initInputHandler(ns.settings.input || "");
 
-      if (!$session.settings.sessionType) {
-        $session.settings.sessionType = $session.settings.sessionType || "mixed";
-        $dataService.session.updateSession($session);
-      }
+        if (!ns.settings.sessionType) {
+          ns.settings.sessionType = ns.settings.sessionType || "mixed";
 
-      selectedSession();
-    });
+          await sessionController
+            .applySettings(ns, { sessionType: ns.settings.sessionType } as any)
+            .catch(() => {});
+        }
+
+        selectedSession();
+      })
+      .catch(() => {});
 
     closeAddSession();
   }
@@ -557,36 +368,43 @@
   // }
 
   function editSolve(s: Solve) {
-    $tab = 1;
+    timerController.tab.set(1);
     sessionsTab?.editSolve(s);
   }
 
   function handleUpdateSolve(updatedSolve: Solve) {
-    for (let i = 0, maxi = $allSolves.length; i < maxi; i += 1) {
-      if ($allSolves[i]._id === updatedSolve._id) {
-        $allSolves[i].comments = updatedSolve.comments;
-        $allSolves[i].penalty = updatedSolve.penalty;
-        $allSolves[i].time = updatedSolve.time;
+    let allSolves = get(timerController.allSolves);
+    for (let i = 0, maxi = allSolves.length; i < maxi; i += 1) {
+      if (allSolves[i]._id === updatedSolve._id) {
+        allSolves[i].comments = updatedSolve.comments;
+        allSolves[i].penalty = updatedSolve.penalty;
+        allSolves[i].time = updatedSolve.time;
         break;
       }
     }
-    $stats = INITIAL_STATISTICS;
+    timerController.stats.set(INITIAL_STATISTICS);
     setSolves(false);
   }
 
   function handleRemoveSolves(ids: Solve[]) {
-    let sl = $solves.length;
+    const { solves, allSolves, stats } = timerController;
+    let solvesV = get(solves);
+    let allSolvesV = get(allSolves);
+    let sl = solvesV.length;
 
     for (let i = 0, maxi = ids.length; i < maxi; i += 1) {
-      let pos1 = binSearch<Solve>(ids[i], $solves, (a: Solve, b: Solve) => b.date - a.date);
-      let pos2 = binSearch<Solve>(ids[i], $allSolves, (a: Solve, b: Solve) => b.date - a.date);
+      let pos1 = binSearch<Solve>(ids[i], solvesV, (a: Solve, b: Solve) => b.date - a.date);
+      let pos2 = binSearch<Solve>(ids[i], allSolvesV, (a: Solve, b: Solve) => b.date - a.date);
 
-      pos1 > -1 && $solves.splice(pos1, 1);
-      pos2 > -1 && $allSolves.splice(pos2, 1);
+      pos1 > -1 && solvesV.splice(pos1, 1);
+      pos2 > -1 && allSolvesV.splice(pos2, 1);
     }
 
-    if ($solves.length != sl) {
-      $stats = INITIAL_STATISTICS;
+    // solves.set(solvesV);
+    // allSolves.set(allSolvesV);
+
+    if (solvesV.length != sl) {
+      stats.set(INITIAL_STATISTICS);
       setSolves();
     }
   }
@@ -614,40 +432,50 @@
   }
 
   function updateCurrentSession() {
+    const { session, group, mode, prob } = timerController;
     $sessions.forEach(s => (s.tName = s.name.toLowerCase()));
     setTimeout(() => $sessions.sort((a, b) => a.tName?.localeCompare(b.tName || "") || 0), 1000);
 
     let ss = page.params.sessionId;
     let currentSession = $sessions.find(s => s._id === ss);
-    $session = currentSession || $sessions[0];
+    session.set(currentSession || $sessions[0]);
 
-    initInputHandler($session.settings.input || "");
+    // select mode/group/prob using the use-case
+    const selector = new SelectSession();
+    const res = selector.execute(get(session), MENU as any);
+
+    group.set(res.groupIndex);
+    mode.set(res.mode as any);
+    if (typeof res.prob !== "undefined") prob.set(res.prob);
+
+    initInputHandler(get(session).settings.input || "");
 
     updateSessionsIcons();
     selectedSession();
   }
 
-  function initInputHandler(id: string) {
-    $device = $devices.find(d => d.id === id) || $devices[0];
+  async function initInputHandler(id: string) {
+    const { device, session } = timerController;
+    device.set($devices.find(d => d.id === id) || $devices[0]);
     $devices.forEach(d => (d.enabled = false));
-    $device.init(inputContext);
-    $session.settings.input = $device.id;
-    $dataService.session.updateSession($session);
+    get(device).init(inputContext);
+    const updated = await sessionController
+      .applySettings(get(session), { input: get(device).id } as any)
+      .catch(() => null);
+    if (updated) session.set(updated);
   }
 
   onMount(() => {
-    mounted = true;
-
     testPrediction();
-    confetti = new JSConfetti();
 
     if (timerOnly && scrambleOnly) {
       timerOnly = scrambleOnly = false;
     }
 
     if (!(battle || timerOnly || scrambleOnly)) {
-      $dataService.solve.getSolves().then(sv => {
-        $allSolves = sv;
+      // Use controller to load solves; controller uses the GetSolves use-case + adapter
+      solveController.loadSolves().then(sv => {
+        timerController.allSolves.set(sv);
 
         $sessions.forEach(s => (s.tName = s.name));
 
@@ -663,7 +491,10 @@
   });
 
   $effect(() => {
-    $isRunning = $timerState === TimerState.INSPECTION || $timerState === TimerState.RUNNING;
+    let timerState = get(timerController.timerState);
+    timerController.isRunning.set(
+      timerState === TimerState.INSPECTION || timerState === TimerState.RUNNING
+    );
   });
 
   $effect(() => {
@@ -685,34 +516,12 @@
   });
 
   let context: TimerContext = $state({
-    timerState,
-    ready,
-    tab,
-    solves,
-    allSolves,
-    session,
-    Ao5,
-    stats,
-    scramble,
-    decimals,
-    group,
-    mode,
-    filters,
-    preview,
-    prob,
-    isRunning,
+    timerController,
     selected,
-    bluetoothList,
     enableKeyboard: keyboardEnabled,
-    STATS_WINDOW,
-    puzzleType,
-    puzzleOrder,
     setSolves,
-    sortSolves,
-    updateSolves,
     handleUpdateSession,
     handleUpdateSolve,
-    updateStatistics,
     initScrambler,
     selectedGroup,
     selectedMode,
@@ -725,17 +534,7 @@
   });
 
   let inputContext: InputContext = $state({
-    isRunning,
-    lastSolve,
-    ready,
-    session,
-    timerState,
-    time,
-    currentStep,
-    decimals,
-    scramble,
-    sequenceParts,
-    recoverySequence,
+    timerController,
     keyboardEnabled,
     addSolve,
     initScrambler,
@@ -787,19 +586,23 @@
     </div>
 
     <TimerOptions
-      {device}
       {context}
       enableKeyboard={keyboardEnabled}
       {timerOnly}
-      {deviceList}
       {initInputHandler}
+      options={{
+        seed: true,
+        tools: true,
+        hints: true,
+        sessionSettings: true,
+      }}
     />
   </div>
 
   <div class="content overflow-hidden relative">
-    <TimerTab bind:context {inputContext} {deviceList} {device} />
-    <HistoryTab bind:context />
-    <StatsTab bind:context />
+    <TimerTab bind:context {inputContext} {timerController} />
+    <HistoryTab bind:context {timerController} />
+    <StatsTab bind:context {timerController} />
   </div>
 </div>
 

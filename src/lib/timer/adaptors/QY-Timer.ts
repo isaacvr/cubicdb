@@ -167,4 +167,9 @@ export class QiYiSmartTimerInput implements IQiYiSmartTimerDevice {
 
   newRecord() {}
   sendEvent() {}
+
+  fromJSON(config: Record<string, any>) {}
+  toJSON() {
+    return {};
+  }
 }

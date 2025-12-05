@@ -6,13 +6,12 @@
   import { ThreeJSAdaptor } from "$lib/simulator/adaptors/ThreeJSAdaptor";
   import { ControlAdaptor } from "$lib/simulator/adaptors/ControlAdaptor";
   import { CubeMode } from "@constants";
-  import { browser } from "$app/environment";
+  import type { GANInput } from "$lib/timer/adaptors/GAN";
 
   interface SimulatorProps {
     enableKeyboard?: boolean;
     enableDrag?: boolean;
     enableRotation?: boolean;
-    contained?: boolean;
     selectedPuzzle?: PuzzleType;
     order?: number;
     animationTime?: number;
@@ -20,6 +19,7 @@
     sequence?: string[];
     sequenceAlpha?: number;
     useScramble?: string;
+    useDevice?: GANInput | null;
     zoom?: number;
     controlled?: boolean;
     class?: string;
@@ -34,7 +34,6 @@
     enableKeyboard = $bindable(true),
     enableDrag = $bindable(true),
     enableRotation = $bindable(true),
-    contained = $bindable(false),
     selectedPuzzle = $bindable("rubik"),
     order = $bindable(3),
     animationTime = $bindable($screen.isMobile ? 150 : 200),
@@ -42,6 +41,7 @@
     sequence = $bindable([]),
     sequenceAlpha = $bindable(0),
     useScramble = $bindable(""),
+    useDevice = $bindable(null),
     zoom = $bindable(12),
     controlled = $bindable(false),
     class: _cl = $bindable(""),
@@ -81,7 +81,6 @@
       if (nc.p.applySequence) {
         let seq = nc.p.applySequence(lastS);
         controlAdaptor.applySequence(nc, seq);
-        sequenceAlpha = 0;
       }
     } catch (err) {
       console.log("ERROR: ", err);
@@ -111,14 +110,12 @@
   }
 
   export function handleResize() {
-    if (contained) {
-      threeAdaptor.resizeHandler(true);
-    }
+    threeAdaptor.resizeHandler();
   }
 
   function keyDownHandler(e: KeyboardEvent) {
     if (!enableKeyboard) return;
-    threeAdaptor.keyDownHandler(e, contained);
+    threeAdaptor.keyDownHandler(e);
     switch (e.code) {
       case "KeyB": {
         if (e.ctrlKey) {
@@ -126,6 +123,18 @@
         }
         break;
       }
+    }
+  }
+
+  function handleDevice(...args: any[]) {
+    if (!useDevice) return;
+
+    console.log("ARGS: ", ...args);
+
+    if (args[0] === "move") {
+      applyMove(args[1][0], args[1][1]);
+    } else if (args[0] === "facelet") {
+      fromFacelet(args[1]);
     }
   }
 
@@ -152,13 +161,22 @@
     handleSequence(sequence, useScramble);
     controlAdaptor.handleAlpha(sequenceAlpha, mounted);
 
-    threeAdaptor.resizeHandler(contained);
+    threeAdaptor.resizeHandler();
     threeAdaptor.render();
 
-    setTimeout(() => threeAdaptor.resizeHandler(contained), 1000);
+    setTimeout(() => threeAdaptor.resizeHandler(), 1000);
+
+    if (useDevice) {
+      threeAdaptor.resetPuzzle(useDevice.strFacelet);
+      useDevice.on(handleDevice);
+      console.log("Initial device facelet: ", useDevice.strFacelet);
+    }
 
     return () => {
       threeAdaptor?.destroy();
+      if (useDevice && useDevice.off) {
+        useDevice.off(handleDevice);
+      }
     };
   });
 
@@ -172,11 +190,9 @@
   $effect(() => (threeAdaptor.animationTime = animationTime) as any);
   $effect(() => (threeAdaptor.showBackFace = showBackFace) as any);
   $effect(() => threeAdaptor.setZoom(zoom));
+  $effect(() => (controlled = !!useDevice || controlled) as any);
 </script>
 
-<svelte:window
-  on:resize={() => !contained && threeAdaptor.resizeHandler(false)}
-  onkeydown={keyDownHandler}
-/>
+<svelte:window on:resize={() => threeAdaptor.resizeHandler()} onkeydown={keyDownHandler} />
 
 <canvas bind:this={canvas} class={_cl}></canvas>

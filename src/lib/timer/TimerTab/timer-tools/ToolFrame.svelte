@@ -1,11 +1,17 @@
 <script lang="ts">
   import { createEventDispatcher, setContext } from "svelte";
-  import { Button } from "flowbite-svelte";
   import type { ActiveTool } from "@interfaces";
   import { writable } from "svelte/store";
-  import { ChevronLeftIcon, SettingsIcon, XIcon } from "lucide-svelte";
+  import Button from "$lib/cubicdbKit/Button.svelte";
 
-  export let tool: ActiveTool;
+  interface ToolFrameProps {
+    tool: ActiveTool;
+    onexpand?: () => any;
+    oncollapse?: () => any;
+    onclose?: () => any;
+  }
+
+  let { tool, onexpand, oncollapse, onclose }: ToolFrameProps = $props();
 
   const dispatch = createEventDispatcher();
 
@@ -16,12 +22,12 @@
 
   function toggle() {
     open = !open;
-    open && dispatch("expand");
-    !open && dispatch("collapse");
+    open && onexpand?.();
+    !open && oncollapse?.();
   }
 
   function closeTool() {
-    dispatch("close");
+    onclose?.();
   }
 
   function toggleConfig() {
@@ -29,26 +35,30 @@
   }
 </script>
 
-<li class="tool" class:open>
-  <header class="header">
-    <button on:click={toggle}>
-      <svelte:component this={tool.tool.icon} {...tool.tool.iconParams} size="1.2rem" />
-    </button>
-    <span class="title mr-8 cursor-default select-none">{tool.tool.text}</span>
+<!-- <li class="tool" class:open>
+  <header class="header"> -->
+{#if tool.tool.icon}
+  {@const Icon = tool.tool.icon}
+  <Button onclick={toggle} class="p-1 border border-current">
+    <Icon {...tool.tool.iconParams} size="1.2rem" />
+  </Button>
+{/if}
+
+<!-- <span class="title mr-8 cursor-default select-none">{tool.tool.text}</span>
 
     {#if open}
       <div class="ml-auto">
         {#if tool.tool.hasSettings}
-          <Button size="xs" color="none" class="p-1" on:click={toggleConfig}>
+          <Button color="none" class="p-1" onclick={toggleConfig}>
             <SettingsIcon size="1rem" />
           </Button>
         {/if}
 
-        <Button size="xs" color="none" class="p-1" on:click={toggle}>
+        <Button color="none" class="p-1" onclick={toggle}>
           <ChevronLeftIcon size="1.2rem" />
         </Button>
 
-        <Button size="xs" color="none" class="p-1" on:click={closeTool}>
+        <Button color="none" class="p-1" onclick={closeTool}>
           <XIcon size="1.2rem" />
         </Button>
       </div>
@@ -58,7 +68,7 @@
   <div class="content">
     <slot />
   </div>
-</li>
+</li> -->
 
 <style lang="postcss">
   .tool {

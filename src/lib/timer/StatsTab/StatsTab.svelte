@@ -9,12 +9,11 @@
     type Solve,
     type TimerContext,
     type Session,
+    type ITimerController,
   } from "@interfaces";
   import StatsProgress from "./StatsProgress.svelte";
   import moment from "moment";
-  import { derived, type Readable } from "svelte/store";
-  import { globalLang, localLang } from "@stores/language.service";
-  import { getLanguage } from "@lang/index";
+  import { localLang } from "@stores/language.service";
   import { AON, STEP_COLORS } from "@constants";
   import { screen } from "@stores/screen.store";
   import * as echarts from "echarts";
@@ -24,12 +23,18 @@
 
   interface StatsTabProps {
     context: TimerContext;
+    timerController: ITimerController;
     headless?: boolean;
   }
 
-  let { context = $bindable(), headless = $bindable(false) }: StatsTabProps = $props();
+  let {
+    context = $bindable(),
+    headless = $bindable(false),
+    timerController = $bindable(),
+  }: StatsTabProps = $props();
 
-  let { solves, stats, tab, session, STATS_WINDOW, selectSolveById } = context;
+  const { selectSolveById } = context;
+  const { solves, stats, tab, session, STATS_WINDOW } = timerController;
 
   let timeSerie: HTMLDivElement;
   let timeChart: echarts.ECharts;

@@ -12,4 +12,17 @@ export class ManualInput implements IManualTimeEntryDevice {
   stopTimer() {}
   newRecord() {}
   sendEvent() {}
+  toJSON() {
+    return {
+      type: this.type,
+      id: this.id,
+      name: this.name,
+    };
+  }
+
+  fromJSON(config: Record<string, any>) {
+    if (["id", "name"].some(e => !config[e])) return null;
+    this.id = config.id;
+    this.name = config.name;
+  }
 }

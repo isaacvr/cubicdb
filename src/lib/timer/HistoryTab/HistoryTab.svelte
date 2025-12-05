@@ -1,6 +1,12 @@
 <script lang="ts">
   import moment from "moment";
-  import { AverageSetting, Penalty, type Solve, type TimerContext } from "@interfaces";
+  import {
+    AverageSetting,
+    Penalty,
+    type ITimerController,
+    type Solve,
+    type TimerContext,
+  } from "@interfaces";
   import { infinitePenalty, isMo3, sTimer, timer } from "@helpers/timer";
   import Modal from "@components/Modal.svelte";
   import TextArea from "@material/TextArea.svelte";
@@ -47,16 +53,19 @@
     TrashIcon,
     XIcon,
   } from "lucide-svelte";
+  import { solveController } from "$lib/controllers/SolveController";
 
   const notification = NotificationService.getInstance();
 
   interface HistoryTabProps {
     context: TimerContext;
+    timerController: ITimerController;
   }
 
-  let { context = $bindable() }: HistoryTabProps = $props();
+  let { context = $bindable(), timerController = $bindable() }: HistoryTabProps = $props();
 
-  let { solves, tab, selected, session, handleUpdateSolve, handleRemoveSolves } = context;
+  const { selected, handleUpdateSolve, handleRemoveSolves } = context;
+  const { tab, solves, session } = timerController;
 
   let pg = $state(new Paginator([], 100));
   let LAST_CLICK = 0;
@@ -98,7 +107,7 @@
     if (s) {
       gSolve.comments = (s.comments || "").trim();
       gSolve.penalty = s.penalty;
-      $dataService.solve.updateSolve(s).then(res => {
+      solveController.updateSolve(s).then(res => {
         handleUpdateSolve(res);
       });
     }
@@ -162,7 +171,10 @@
     sSolve.penalty = p;
 
     if (update) {
-      $dataService.solve.updateSolve(sSolve).then(handleUpdateSolve);
+      solveController
+        .updateSolve(sSolve)
+        .then(handleUpdateSolve)
+        .catch(() => {});
     }
 
     showDropdown = false;
@@ -212,7 +224,10 @@
   }
 
   function _delete(s: Solve[]) {
-    $dataService.solve.removeSolves(s.map(s1 => ({ ...s1 }))).then(handleRemoveSolves);
+    solveController
+      .removeSolves(s)
+      .then(handleRemoveSolves)
+      .catch(() => {});
   }
 
   function deleteSelected() {
@@ -418,11 +433,12 @@
   <!-- Solves -->
   <div id="grid" class="pt-4 grid overflow-scroll" bind:this={solvesElement}>
     {#each pSolves as solve (solve._id)}
+      {@const stime = sTimer(solve, true)}
       <button
         class="shadow-md w-full h-full min-h-[3rem] rounded-md p-1 bg-base-200 relative
           flex items-center justify-center transition-all duration-200 select-none cursor-pointer
-          border border-base-100
-          hover:shadow-lg hover:shadow-primary hover:bg-primary hover:text-primary-content
+          border border-primary/50
+          hover:shadow-lg hover:shadow-primary/25 hover:bg-primary hover:text-primary-content
         "
         onclick={ev => handleClick(solve, ev)}
         oncontextmenu={e => handleContextMenu(e, solve)}
@@ -431,13 +447,18 @@
         <div class="pointer-events-none font-small absolute top-0 left-2">
           {moment(solve.date).format("DD/MM")}
         </div>
-        <span class="pointer-events-none time text-center">{sTimer(solve, true)}</span>
+        <span
+          class={"pointer-events-none time text-center font-bold " +
+            (stime === "DNF" ? "text-error font-bold" : "")}
+        >
+          {stime}
+        </span>
 
         <div
           class="pointer-events-none absolute right-1 top-0 h-full flex flex-col items-center justify-evenly"
         >
           {#if solve.penalty === Penalty.P2}
-            <span class="font-small">+2</span>
+            <span class="font-small text-error font-bold">+2</span>
           {/if}
           {#if solve.comments}
             <MessageSquarePlusIcon size="1rem" />
@@ -683,7 +704,7 @@
     <Button
       aria-label={$localLang.global.save}
       onclick={() => {
-        /*modal.close(sSolve)*/
+        closeHandler(sSolve);
       }}
       class="mr-2 text-sm gap-1 px-2"
     >

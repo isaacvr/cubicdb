@@ -66,16 +66,24 @@
     }
   }
 
+  let isCallbackCalled = false;
+
   function close(data: any) {
     onclose && onclose(data || null);
     show = false;
+    isCallbackCalled = true;
   }
 
   $effect(() => {
     if (show) {
+      isCallbackCalled = false;
       modal?.showModal();
     } else {
       modal?.close();
+      if (!isCallbackCalled) {
+        close(null);
+        isCallbackCalled = true;
+      }
     }
   });
 </script>
@@ -89,23 +97,25 @@
   onkeyup={keyUpHandler}
   onkeydown={keyDownHandler}
   oncancel={e => !cancel && e.preventDefault()}
-  class="bg-base-200 text-sm rounded-md show p-4 pt-3 overflow-visible {_cl || ''}"
+  class="modal mx-auto text-sm rounded-md show p-4 pt-3 overflow-visible {_cl || ''}"
   style="view-transition-name: {transitionName};"
 >
-  {#if show}
-    {@render children?.()}
-  {/if}
+  <div class="modal-box bg-base-200">
+    {#if cancel}
+      <Button
+        color="neutral"
+        tabindex="0"
+        class="rounded-full absolute right-2 top-2 hover:border-primary"
+        onclick={close}
+      >
+        <XIcon size="1rem" />
+      </Button>
+    {/if}
 
-  {#if cancel}
-    <Button
-      color="none"
-      tabindex="0"
-      class="rounded-lg p-0 absolute top-2 right-4 hover:border-primary"
-      onclick={close}
-    >
-      <XIcon size="1rem" />
-    </Button>
-  {/if}
+    {#if show}
+      {@render children?.()}
+    {/if}
+  </div>
 </dialog>
 
 <style lang="postcss">

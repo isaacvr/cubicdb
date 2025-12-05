@@ -4,7 +4,6 @@
   import { puzzleReg } from "@classes/puzzle/puzzleRegister";
   import { PuzzleTypeName, type PuzzleType } from "@interfaces";
   import { localLang } from "@stores/language.service";
-  import { page } from "$app/stores";
   import { goto } from "$app/navigation";
   import { browser } from "$app/environment";
   import { pGenerateCubeBundle } from "@helpers/cube-draw";
@@ -16,6 +15,7 @@
   import PuzzleImage from "@components/PuzzleImage.svelte";
   import { RefreshCwIcon, Settings2Icon } from "lucide-svelte";
   import Tooltip from "$lib/cubicdbKit/Tooltip.svelte";
+  import { page } from "$app/state";
 
   let selectedPuzzle: PuzzleType = $state("rubik");
   let currentPuzzle: PuzzleType = $state("rubik");
@@ -33,7 +33,7 @@
 
     if (info) {
       return [
-        getTitleMeta($page.url.pathname, $localLang).title,
+        getTitleMeta(page.url.pathname, $localLang).title,
         ...(info.order ? [info.name + ` ${o}x${o}`] : [info.name]),
       ].join(" - ");
     }
@@ -75,9 +75,9 @@
     order = o;
 
     if (pInfo.order) {
-      goto($page.url.pathname + `/?puzzle=${p}&order=${o}`, { replaceState: true });
+      goto(page.url.pathname + `/?puzzle=${p}&order=${o}`, { replaceState: true });
     } else {
-      goto($page.url.pathname + `/?puzzle=${p}`, { replaceState: true });
+      goto(page.url.pathname + `/?puzzle=${p}`, { replaceState: true });
     }
   }
 
@@ -108,7 +108,7 @@
     currentPuzzle = selectedPuzzle;
   }
 
-  updatePuzzle($page.url);
+  updatePuzzle(page.url);
 
   for (let [key, value] of puzzleReg) {
     if (excludedPuzzles.indexOf(key as PuzzleType) === -1) {

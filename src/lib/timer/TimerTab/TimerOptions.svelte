@@ -1,9 +1,10 @@
 <script lang="ts">
-  import { getContext, onMount } from "svelte";
-  import { type Writable } from "svelte/store";
+  import { untrack } from "svelte";
+  import { writable, type Writable } from "svelte/store";
   import { getSeed, setSeed } from "@cstimer/lib/mathlib";
   import { dataService } from "$lib/data-services/data.service";
-  import { Popover, Spinner, Dropdown, DropdownItem, Input } from "flowbite-svelte";
+  import { sessionController } from "$lib/controllers/SessionController";
+  import { Popover, Dropdown, DropdownItem, Input } from "flowbite-svelte";
   import { NotificationService } from "@stores/notification.service";
   import { localLang } from "@stores/language.service";
   import { type ActiveTool, type Solve, type TimerContext, type ToolItem } from "@interfaces";
@@ -21,67 +22,77 @@
   import Tooltip from "$lib/cubicdbKit/Tooltip.svelte";
   import Button from "$lib/cubicdbKit/Button.svelte";
 
-  // ICONS
   import CubeCategory from "@components/wca/CubeCategory.svelte";
 
   import {
     BeanIcon,
+    BoltIcon,
     ChartSplineIcon,
+    CopyIcon,
     HammerIcon,
+    HistoryIcon,
     LightbulbIcon,
     MusicIcon,
+    RefreshCwIcon,
     Settings2Icon,
+    SquarePenIcon,
   } from "lucide-svelte";
   import Modal from "@components/Modal.svelte";
   import Range from "$lib/cubicdbKit/Range.svelte";
   import { clone } from "@helpers/object";
-  import type { Device } from "$lib/interfaces/devices.types";
   import DeviceIcon from "$lib/cubicdbKit/DeviceIcon.svelte";
-
-  let devices: Writable<Device[]> = getContext("devices");
+  import { getModeCases, type Case, type IModeCase } from "./getModeCases";
+  import PuzzleImage from "@components/PuzzleImage.svelte";
+  import { devices } from "@stores/devices.store";
 
   type TModal = "" | "edit-scramble" | "old-scrambles" | "settings";
 
+  interface OptionSelector {
+    seed?: boolean;
+    tools?: boolean;
+    hints?: boolean;
+    sessionSettings?: boolean;
+    modeSettings?: boolean;
+    refreshScramble?: boolean;
+    copyScramble?: boolean;
+    editScramble?: boolean;
+    oldScramble?: boolean;
+  }
+
   interface TimerOptionsProps {
-    device: Writable<Device>;
     context: TimerContext;
     timerOnly?: boolean;
     battle?: boolean;
     enableKeyboard: Writable<boolean>;
-    deviceList: string[][];
     initInputHandler: Function;
+    options: OptionSelector;
   }
 
   let {
-    device = $bindable(),
     context = $bindable(),
     timerOnly = $bindable(),
     battle = $bindable(),
     enableKeyboard = $bindable(),
-    deviceList = $bindable(),
     initInputHandler,
+    options,
   }: TimerOptionsProps = $props();
 
+  const { initScrambler, selectedGroup, selectedMode, timerController } = context;
   const {
-    tab,
-    solves,
     session,
+    device,
+    deviceList,
+    tab,
+    group,
     scramble,
-    mode,
+    prob,
     isRunning,
-    bluetoothList,
-    initScrambler,
-    updateStatistics,
-    editSessions,
-  } = context;
+    mode,
+    filters,
+    solves,
+  } = timerController;
 
   const iconSize = "1.2rem";
-
-  // let timerInput = derived(session, $s => {
-  //   return DIALOG_MODES.indexOf($s.settings.mode || $mode[1] || "") > -1
-  //     ? TIMER_INPUT
-  //     : TIMER_INPUT.filter(inp => inp != "GAN Cube");
-  // });
 
   let notification = NotificationService.getInstance();
 
@@ -94,11 +105,14 @@
   let showSeedModal = $state(false);
   let seedStr = $state("");
   let seedCounter = $state(0);
+  let showMixedSettingsDialog = $state(false);
+  let modeIndex = $state(0);
+  let groupCases = $state(false);
+  let cases: IModeCase = $state({ cases: [], groups: [] });
+  let selectedCases: Writable<boolean[]> = writable([]);
 
   // OTHER
-  let isSearching = $state(false);
   let showToolsMenu = $state(false);
-  let connectingPos = $state(-1);
 
   const DD_CLASS = "font-medium p-2 text-sm hover:bg-primary flex items-center";
 
@@ -169,29 +183,51 @@
     },
   ];
 
-  let toolList: ActiveTool[] = [];
+  let toolList: ActiveTool[] = $state([]);
 
-  function handleSettingsDialog() {
+  async function handleSettingsDialog() {
     let initialCalc = $session?.settings?.calcAoX;
 
     if (!$session.settings.input) {
-      $session.settings.input = "Keyboard";
+      const updated = await sessionController
+        .applySettings($session, { input: "Keyboard" } as any)
+        .catch(() => null);
+      if (updated) $session = updated;
     }
 
-    openDialog("settings", $session, (data: any) => {
-      let dv = $devices.find(d => d.id === $session.settings.input);
+    openDialog("settings", $session, async (data: any) => {
+      // Persist the whole settings object, then ensure the input device is valid
+      const updated = await sessionController
+        .applySettings($session, modalData.settings)
+        .catch(() => null);
+      if (updated) $session = updated;
+
+      let input = modalData.settings.input;
+      let dv = $devices.find(d => d.id === input);
 
       if (!dv) {
-        $session.settings.input = $devices[0].id;
+        const upd = await sessionController
+          .applySettings($session, { input: $devices[0].id } as any)
+          .catch(() => null);
+        if (upd) $session = upd;
+        $device = $devices[0];
+      } else {
+        const upd = await sessionController
+          .applySettings($session, { input } as any)
+          .catch(() => null);
+        if (upd) $session = upd;
+        $device = dv;
       }
+
+      $devices.forEach(device => (device.enabled = device.id === input));
 
       if (data) {
         if (timerOnly) return;
 
         initInputHandler($session.settings.input);
 
-        $dataService.session.updateSession($session);
-        initialCalc != $session.settings.calcAoX && updateStatistics(false);
+        // Settings already persisted via applySettings above
+        initialCalc != $session.settings.calcAoX && timerController.updateStatistics(false);
       }
     });
   }
@@ -227,7 +263,7 @@
     if (!canOpenDialog(ev)) return;
 
     type = ev;
-    modalData = dt;
+    modalData = { ...dt };
     closeHandler = fn;
     show = true;
     saveEnableKeyboard();
@@ -241,20 +277,20 @@
     switch ($tab) {
       case 0: {
         if (code != "Space" && !$isRunning && !battle && event.ctrlKey) {
-          if (code === "KeyS") {
+          if (code === "KeyS" && options.refreshScramble) {
             event.preventDefault();
             initScrambler();
-          } else if (code === "KeyE") {
+          } else if (code === "KeyE" && options.editScramble) {
             event.preventDefault();
             if (!show || (show && type != "edit-scramble")) {
               openDialog("edit-scramble", $scramble, (scr: string) => scr && initScrambler(scr));
             }
-          } else if (code === "KeyO") {
+          } else if (code === "KeyO" && options.oldScramble) {
             event.preventDefault();
             openDialog("old-scrambles", null, () => {});
-          } else if (code === "KeyC") {
+          } else if (code === "KeyC" && options.copyScramble) {
             toClipboard();
-          } else if (code === "Comma") {
+          } else if (code === "Comma" && options.sessionSettings) {
             handleSettingsDialog();
           }
         }
@@ -279,64 +315,13 @@
     show = false;
   }
 
-  function searchBluetooth() {
-    // let gn =
-    //   modalData.settings.input === "GAN Cube"
-    //     ? new GANInput(inputContext)
-    //     : new QiYiSmartTimerInput(inputContext);
-    // isSearching = true;
-    // $bluetoothList.length = 0;
-    // $dataService.config
-    //   .searchBluetooth(gn)
-    //   .then(() => {
-    //     if ($inputMethod instanceof GANInput && $inputMethod.connected) {
-    //       $inputMethod.disconnect();
-    //     }
-    //     inputMethod.set(gn);
-    //   })
-    //   .catch(err => {
-    //     console.log("ERROR: ", err);
-    //   })
-    //   .finally(() => {
-    //     connectingPos = -1;
-    //     isSearching = false;
-    //   });
-  }
-
-  function cancelSearch() {
-    $dataService.config.cancelBluetoothRequest();
-  }
-
-  function connectBluetooth(id: string) {
-    if (id != $device.id) {
-      isSearching = false;
-      $dataService.config.connectBluetoothDevice(id);
-    }
-  }
-
-  // function selectExternalTimer(id: string) {
-  //   if (id === $device.id) {
-  //     deviceID.set("");
-  //   } else {
-  //     deviceID.set(id);
-
-  //     if (!($inputMethod instanceof ExternalTimerInput)) {
-  //       $inputMethod.disconnect();
-  //       inputMethod.set(new ExternalTimerInput(inputContext));
-  //     }
-
-  //     ($inputMethod as ExternalTimerInput).setExternal(id);
-  //     dataService.external(id, { type: "session", value: $session });
-  //   }
-  // }
-
   function addTool(tool: ToolItem) {
     showToolsMenu = false;
 
     if (toolList.some(t => t.tool.id === tool.id)) {
       toolList.find(t => t.tool.id === tool.id)!.open = true;
     } else {
-      toolList = [...toolList, { tool, open: true }];
+      toolList = [...toolList, { tool, open: false }];
     }
   }
 
@@ -348,125 +333,180 @@
     saveEnableKeyboard();
   }
 
-  onMount(() => {
-    // toolList = [{ tool: tools[4], open: true }];
+  function saveFilters() {
+    showMixedSettingsDialog = false;
+    $dataService.config.setPath(`filters/${$session._id}/${$group}/${modeIndex}`, {
+      selectedCases: clone($selectedCases),
+      groupCases,
+    });
+
+    $dataService.config.saveConfig();
+    $prob = $selectedCases.reduce((acc, e, p) => (e ? [...acc, p] : acc), [] as number[]);
+    initScrambler();
+  }
+
+  $effect(() => {
+    if (!options.modeSettings) return;
+    if (isNaN($group)) return;
+
+    for (let i = 0, maxi = $localLang.MENU[$group][1].length; i < maxi; i += 1) {
+      if ($mode[1] === $localLang.MENU[$group][1][i][1]) {
+        modeIndex = i;
+        break;
+      }
+    }
+  });
+
+  $effect(() => {
+    if (!options.modeSettings) return;
+
+    let savedSelectedCases = $dataService.config.getPath(
+      `filters/${$session._id}/${$group}/${modeIndex}`
+    );
+
+    $selectedCases = savedSelectedCases
+      ? savedSelectedCases.selectedCases
+      : cases.cases.map(() => false);
+
+    groupCases = savedSelectedCases?.groupCases;
+
+    untrack(() => {
+      $prob = $selectedCases.reduce((acc, e, p) => (e ? [...acc, p] : acc), [] as number[]);
+      initScrambler();
+    });
+  });
+
+  $effect(() => {
+    if (!options.modeSettings) return;
+    getModeCases($group, modeIndex, $filters).then(res => (cases = res));
   });
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
 
-<!-- {#if $session?.settings?.input === "GAN Cube"}
-    <li>
-      <Button
-        aria-label={"GAN Cube"}
-        
-        class="{BUTTON_CLASS} {$bluetoothStatus ? 'text-blue-500' : 'text-gray-400'}"
-        on:keydown={e => (e.code === "Space" ? e.preventDefault() : null)}
-      >
-        <svelte:component
-          this={$bluetoothStatus ? BluetoothOnIcon : BluetoothOffIcon}
-          width="100%"
-          height="100%"
-        />
-      </Button>
+{#if options.seed}
+  <Button color="neutral" class="group" aria-label={"Seed"} onclick={prepareShowSeedModal}>
+    <BeanIcon class="group-hover:text-green-500" size={iconSize} />
+  </Button>
+  <Tooltip placement="bottom" class="z-10">Seed</Tooltip>
+{/if}
 
-      <Popover placement="right">
-        {#if $bluetoothStatus}
-          <Table>
-            <TableBody>
-              <TableBodyRow>
-                <TableBodyCell>{$localLang.global.name}</TableBodyCell>
-                <TableBodyCell>{bluetoothHardware?.deviceName || "-"}</TableBodyCell>
-              </TableBodyRow>
-              <TableBodyRow>
-                <TableBodyCell>Hardware Version</TableBodyCell>
-                <TableBodyCell>{bluetoothHardware?.hardwareVersion || "-"}</TableBodyCell>
-              </TableBodyRow>
-              <TableBodyRow>
-                <TableBodyCell>Software Version</TableBodyCell>
-                <TableBodyCell>{bluetoothHardware?.softwareVersion || "-"}</TableBodyCell>
-              </TableBodyRow>
-              <TableBodyRow>
-                <TableBodyCell>Gyroscope</TableBodyCell>
-                <TableBodyCell>
-                  {bluetoothHardware?.gyro ? $localLang.global.yes : $localLang.global.no}
-                </TableBodyCell>
-              </TableBodyRow>
-              <TableBodyRow>
-                <TableBodyCell>MAC</TableBodyCell>
-                <TableBodyCell>{$device.id != "default" ? $device.id : "-"}</TableBodyCell>
-              </TableBodyRow>
-              <TableBodyRow>
-                <TableBodyCell>Battery</TableBodyCell>
-                <TableBodyCell>{bluetoothBattery ? bluetoothBattery + "%" : "-"}</TableBodyCell>
-              </TableBodyRow>
-            </TableBody>
-          </Table>
-        {:else}
-          <BluetoothOffIcon size="2rem" />
-        {/if}
-      </Popover>
-    </li>
-  {/if} -->
+{#if options.tools}
+  <Button
+    color="neutral"
+    class="group"
+    id="tools"
+    aria-label={$localLang.HOME.tools}
+    on:keydown={e => (e.code === "Space" ? e.preventDefault() : null)}
+  >
+    <HammerIcon class="group-hover:text-warning" size={iconSize} />
+  </Button>
+  <Tooltip placement="bottom" class="z-10">
+    {$localLang.HOME.tools}
+  </Tooltip>
 
-<Button color="neutral" class="group" aria-label={"Seed"} onclick={prepareShowSeedModal}>
-  <BeanIcon class="group-hover:text-green-500" size={iconSize} />
-</Button>
-<Tooltip placement="bottom" class="z-10">Seed</Tooltip>
+  <Dropdown
+    bind:open={showToolsMenu}
+    placement="bottom"
+    class="max-h-[20rem] w-max overflow-y-scroll bg-base-100 rounded-md text-base-content"
+    triggeredBy="#tools"
+  >
+    {#each tools as tool}
+      {@const Icon = tool.icon}
+      <DropdownItem defaultClass={DD_CLASS} onclick={() => addTool(tool)}>
+        <Icon {...tool.iconParams} size={iconSize} />
+        {tool.text}
+      </DropdownItem>
+    {/each}
+  </Dropdown>
+{/if}
 
-<Button
-  color="neutral"
-  class="group"
-  id="tools"
-  aria-label={$localLang.HOME.tools}
-  on:keydown={e => (e.code === "Space" ? e.preventDefault() : null)}
->
-  <HammerIcon class="group-hover:text-warning" size={iconSize} />
-</Button>
-<Tooltip placement="bottom" class="z-10">
-  {$localLang.HOME.tools}
-</Tooltip>
+{#if options.hints}
+  <Button color="neutral" class="group">
+    <LightbulbIcon class="group-hover:text-warning" size={iconSize} />
+  </Button>
+  <Tooltip placement="bottom" class="z-10">Hints</Tooltip>
+{/if}
 
-<Dropdown
-  bind:open={showToolsMenu}
-  placement="bottom"
-  class="max-h-[20rem] w-max overflow-y-scroll bg-base-100 rounded-md text-base-content"
-  triggeredBy="#tools"
->
-  {#each tools as tool}
-    {@const Icon = tool.icon}
-    <DropdownItem defaultClass={DD_CLASS} onclick={() => addTool(tool)}>
-      <Icon {...tool.iconParams} size="1.2rem" />
-      {tool.text}
-    </DropdownItem>
-  {/each}
-</Dropdown>
+{#if options.sessionSettings}
+  <Button color="neutral" class="group" onclick={handleSettingsDialog}>
+    <Settings2Icon class="group-hover:text-warning" size={iconSize} />
+  </Button>
+  <Tooltip placement="bottom" class="z-10" keyBindings={["control", "comma"]}>
+    {$localLang.global.settings}
+  </Tooltip>
+{/if}
 
-<Button color="neutral" class="group">
-  <LightbulbIcon class="group-hover:text-warning" size={iconSize} />
-</Button>
-<Tooltip placement="bottom" class="z-10">Hints</Tooltip>
+{#if options.modeSettings && $session.settings.sessionType === "mixed"}
+  <Button
+    style="--dash: 18;"
+    onclick={() => {
+      showMixedSettingsDialog = true;
+    }}
+  >
+    <BoltIcon size={iconSize} />
+  </Button>
 
-<Button color="neutral" class="group" onclick={handleSettingsDialog}>
-  <Settings2Icon class="group-hover:text-warning" size={iconSize} />
-</Button>
-<Tooltip placement="bottom" class="z-10" keyBindings={["control", "comma"]}>
-  {$localLang.global.settings}
-</Tooltip>
+  <Tooltip>{$localLang.global.settings}</Tooltip>
+{/if}
+
+{#if options.refreshScramble}
+  <Button style="--dash: 18;" onclick={() => initScrambler()}>
+    <RefreshCwIcon size={iconSize} />
+  </Button>
+  <Tooltip keyBindings={["control", "s"]}>{$localLang.global.toScramble}</Tooltip>
+{/if}
+
+{#if options.copyScramble}
+  <Button
+    style="--dash: 18;"
+    onclick={() => {
+      copyToClipboard($scramble).then(() => {
+        notification.addNotification({
+          header: $localLang.global.done,
+          text: $localLang.global.scrambleCopied,
+          timeout: 1000,
+        });
+      });
+    }}
+  >
+    <CopyIcon size={iconSize} />
+  </Button>
+  <Tooltip keyBindings={["control", "c"]}>{$localLang.TIMER.copyScramble}</Tooltip>
+{/if}
+
+{#if options.editScramble}
+  <Button
+    style="--dash: 18;"
+    onclick={() =>
+      openDialog("edit-scramble", $scramble, (scr: string) => scr && initScrambler(scr))}
+  >
+    <SquarePenIcon size={iconSize} />
+  </Button>
+  <Tooltip keyBindings={["control", "e"]}>{$localLang.TIMER.edit}</Tooltip>
+{/if}
+
+{#if options.oldScramble}
+  <Button style="--dash: 23;">
+    <HistoryIcon size={iconSize} />
+  </Button>
+  <Tooltip keyBindings={["control", "o"]}>{$localLang.TIMER.useOldScramble}</Tooltip>
+{/if}
 
 <!-- Tools list -->
-<!-- <ul class="tool-container" class:open={toolList.some(t => t.open)}>
-    {#each toolList as tool}
-      <ToolFrame
-        {tool}
-        on:close={() => (toolList = toolList.filter(t => t.tool.id != tool.tool.id))}
-        on:expand={() => (tool.open = true)}
-        on:collapse={() => (tool.open = false)}
-      >
-        <svelte:component this={tool.tool.component} {context} />
-      </ToolFrame>
-    {/each}
-  </ul> -->
+<!-- <ul class="tool-container" class:open={toolList.some(t => t.open)}> -->
+<!-- {#each toolList as tool}
+    {@const ToolComponent = tool.tool.component}
+    <ToolFrame
+      {tool}
+      on:close={() => (toolList = toolList.filter(t => t.tool.id != tool.tool.id))}
+      on:expand={() => (tool.open = true)}
+      on:collapse={() => (tool.open = false)}
+    >
+      <ToolComponent {context} />
+    </ToolFrame>
+  {/each} -->
+<!-- </ul> -->
 
 <!-- title={$localLang.TIMER.modal[type || "settings"]} -->
 
@@ -508,12 +548,15 @@
           items={$devices}
           label={e => e.name}
           transform={e => e.id}
-          placement="right"
+          placement="right-start"
           hasIcon={e => e.type}
+          iconKey="type"
           IconComponent={DeviceIcon}
         />
       </section>
     {/if}
+
+    {@const selectedDevice = $devices.find(d => d.id === modalData.settings.input)}
 
     <!-- Steps -->
     {#if $session.settings.sessionType === "multi-step"}
@@ -557,73 +600,15 @@
     {/if} -->
 
     <!-- Stackmat selector -->
-    {#if modalData.settings.input === "StackMat"}
+    {#if selectedDevice && selectedDevice.type === "stackmat"}
       <section>
         {$localLang.TIMER.device}: <Select
           class="max-w-full"
           bind:value={$device.id}
-          items={deviceList}
+          items={$deviceList}
           label={e => e[1]}
           transform={e => e[0]}
         />
-      </section>
-    {/if}
-
-    <!-- Search Bluetooth -->
-    {#if modalData.settings.input === "GAN Cube" || modalData.settings.input === "QY-Timer"}
-      <section class="bg-white bg-opacity-10 p-2 shadow-md rounded-md">
-        <div class="flex justify-center gap-2">
-          <Button onclick={() => !isSearching && searchBluetooth()}>
-            {#if isSearching}
-              <Spinner size="4" color="white" />
-            {:else}
-              {$localLang.global.search}
-            {/if}
-          </Button>
-
-          {#if isSearching}
-            <Button onclick={cancelSearch}>
-              {$localLang.global.cancel}
-            </Button>
-          {/if}
-        </div>
-
-        <ul class="mt-4">
-          {#each $bluetoothList as { deviceId, deviceName }, pos (deviceId)}
-            <li class="flex items-center gap-2 pl-4 bg-white bg-opacity-10 rounded-md">
-              {deviceName}
-
-              <!-- {#if deviceId === $device.id}
-              <Tooltip text={$localLang.TIMER.syncSolved} position="top" class="ml-auto">
-                <Button onclick={syncSolved} class="bg-primary-800 tx-text px-3">
-                  <SyncIcon size="1.2rem" />
-                </Button>
-              </Tooltip>
-              {/if} -->
-              <Button
-                color={deviceId === $device.id ? "error" : "primary"}
-                class="gap-2 ml-auto"
-                onclick={() => {
-                  if (pos === connectingPos) return;
-                  if (deviceId === $device.id) {
-                    deviceList = [];
-                    // $inputMethod.disconnect();
-                    $device.id = "default";
-                    return;
-                  }
-                  connectingPos = pos;
-                  connectBluetooth(deviceId);
-                }}
-              >
-                {#if pos === connectingPos}
-                  <Spinner size="4" color="white" />
-                {:else}
-                  {deviceId === $device.id ? $localLang.TIMER.disconnect : $localLang.TIMER.connect}
-                {/if}
-              </Button>
-            </li>
-          {/each}
-        </ul>
       </section>
     {/if}
 
@@ -647,7 +632,7 @@
     </section>
 
     <!-- Inspections, Prevention, Elapsed time -->
-    {#if modalData.settings.input === "Keyboard" || modalData.settings.input === "ExternalTimer"}
+    {#if selectedDevice && selectedDevice.type === "timer_keyboard"}
       <section>
         <Checkbox
           bind:checked={modalData.settings.withoutPrevention}
@@ -668,7 +653,7 @@
     {/if}
 
     <!-- Show back face -->
-    {#if modalData.settings.input === "GAN Cube"}
+    {#if selectedDevice && selectedDevice.type === "gan_icarry"}
       <section>
         <Checkbox
           bind:checked={modalData.settings.showBackFace}
@@ -680,7 +665,7 @@
     {/if}
 
     <!-- Scramble after cancel -->
-    {#if modalData.settings.input != "Manual" && !timerOnly}
+    {#if selectedDevice && selectedDevice.type != "manual_entry" && !timerOnly}
       <section class="mt-2">
         <Checkbox
           bind:checked={modalData.settings.scrambleAfterCancel}
@@ -741,8 +726,6 @@
   </div>
 </Modal>
 
-<!-- title={"Seed"} -->
-
 <!-- Seed Modal -->
 <Modal bind:show={showSeedModal} onclose={recoverEnableKeyboard}>
   <Input bind:value={seedStr} />
@@ -763,4 +746,125 @@
       {$localLang.global.update}
     </Button>
   </div>
+</Modal>
+
+{#snippet renderCase(cs: Case)}
+  <Button
+    color="neutral"
+    class={"shaded-card aspect-square " +
+      ($selectedCases[cs.pos] ? "border !border-primary !border-opacity-80" : "")}
+    contentClass="grid"
+    onclick={() => {
+      $selectedCases[cs.pos] = !$selectedCases[cs.pos];
+    }}
+  >
+    <PuzzleImage src={cs.img} />
+    <span>{cs.name}</span>
+    <!-- <input
+      bind:checked={$selectedCases[cs.pos]}
+      type="checkbox"
+      class="checkbox checkbox-secondary checkbox-sm absolute top-0 left-0"
+    /> -->
+  </Button>
+{/snippet}
+
+<!-- Trainer Modal -->
+<Modal bind:show={showMixedSettingsDialog} class="w-full max-w-2xl" onclose={recoverEnableKeyboard}>
+  <h2 class="text-xl text-center">{$localLang.global.settings}</h2>
+
+  <div class="flex flex-wrap gap-2 justify-center w-fit mx-auto mt-2">
+    <Select
+      class="mx-auto"
+      bind:value={$group}
+      items={$localLang.MENU}
+      transform={(_, p) => p}
+      label={e => e[0]}
+      onChange={() => {
+        selectedGroup(true, true);
+        modeIndex = 0;
+      }}
+    />
+
+    <Select
+      class="mx-auto"
+      bind:value={modeIndex}
+      items={$localLang.MENU[$group][1]}
+      transform={(_, p) => p}
+      label={e => e[0]}
+      hasIcon={e => e[1]}
+      onChange={() => {
+        $mode = $localLang.MENU[$group][1][modeIndex];
+        selectedMode(true, true, true);
+      }}
+    />
+  </div>
+
+  <!-- <span class="flex flex-wrap">filters: {$filters}</span> -->
+
+  {#if cases.cases.length > 0}
+    <div class="actions flex gap-2 flex-wrap justify-center items-center my-2">
+      <Button color="accept" onclick={() => ($selectedCases = $selectedCases.map(() => true))}>
+        {$localLang.IMPORT_EXPORT.selectAll}
+      </Button>
+      <Button color="urgent" onclick={() => ($selectedCases = $selectedCases.map(() => false))}>
+        {$localLang.IMPORT_EXPORT.selectNone}
+      </Button>
+
+      {#if cases.groups.length > 0}
+        <Button onclick={() => (groupCases = !groupCases)}>
+          {$localLang.global[groupCases ? "toUngroup" : "toGroup"]}
+        </Button>
+      {/if}
+    </div>
+
+    {#if groupCases && cases.groups.length}
+      <div class="overflow-x-clip overflow-y-auto max-h-[50vh] grid gap-4">
+        {#each cases.groups as group}
+          <div>
+            <h3 class="text-lg flex items-center">
+              {$localLang.TIMER.caseName(group.name)}
+
+              <Button
+                color="none"
+                class="text-success ml-4 text-xs"
+                onclick={() => {
+                  group.cases.forEach(cs => ($selectedCases[cs.pos] = true));
+                }}
+              >
+                {$localLang.IMPORT_EXPORT.selectAll}
+              </Button>
+
+              <Button
+                color="none"
+                class="text-error text-xs"
+                onclick={() => {
+                  group.cases.forEach(cs => ($selectedCases[cs.pos] = false));
+                }}
+              >
+                {$localLang.IMPORT_EXPORT.selectNone}
+              </Button>
+            </h3>
+            <div class="grid grid-cols-[repeat(auto-fill,minmax(5rem,1fr))] gap-2">
+              {#each group.cases as cs}
+                {@render renderCase(cs)}
+              {/each}
+            </div>
+          </div>
+        {/each}
+      </div>
+    {:else}
+      <div
+        class="overflow-x-clip overflow-y-auto grid max-h-[50vh]
+        grid-cols-[repeat(auto-fill,minmax(5rem,1fr))] gap-2"
+      >
+        {#each cases.cases as cs}
+          {@render renderCase(cs)}
+        {/each}
+      </div>
+    {/if}
+  {/if}
+
+  <Button class="mt-4 mx-auto" onclick={saveFilters}>
+    {$localLang.global.accept}
+  </Button>
 </Modal>

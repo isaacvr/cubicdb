@@ -13,7 +13,7 @@
 
   import { NotificationService } from "@stores/notification.service";
   import { goto } from "$app/navigation";
-  import { page } from "$app/stores";
+
   import { capitalize, replaceParams } from "@helpers/strings";
   import { browser } from "$app/environment";
   import { getTitleMeta } from "$lib/meta/title";
@@ -32,6 +32,7 @@
     SettingsIcon,
     TrashIcon,
   } from "lucide-svelte";
+  import { page } from "$app/state";
 
   const dropdownDefaultClass =
     "font-medium py-2 px-4 text-sm hover:bg-gray-600 flex items-center gap-2 justify-start";
@@ -63,7 +64,7 @@
   let currentStep: ITutorialStep | null = null;
   let editMode = true;
   let contentRef: HTMLElement;
-  let meta = getTitleMeta($page.url.pathname, $localLang);
+  let meta = getTitleMeta(page.url.pathname, $localLang);
 
   // Modal
   let sIndex = -1;
@@ -221,10 +222,10 @@
   }
 
   function getTutorial() {
-    let puzzle = $page.params.puzzle;
-    let code = $page.params.code;
-    let lang = $page.params.lang;
-    let map = $page.url.searchParams;
+    let puzzle = page.params.puzzle;
+    let code = page.params.code;
+    let lang = page.params.lang;
+    let map = page.url.searchParams;
     let step = parseInt(map.get("step") || "0");
 
     editMode = JSON.parse(map.get("edit") || "false");
@@ -254,13 +255,13 @@
 
   $: currentStep = index > 0 ? tut.steps[index - 1] : tut.description;
   $: handleScroll(index);
-  $: browser && goto($page.url.pathname + "?step=" + index);
+  $: browser && goto(page.url.pathname + "?step=" + index);
   $: {
-    meta = getTitleMeta($page.url.pathname, $localLang);
+    meta = getTitleMeta(page.url.pathname, $localLang);
     meta.title = [
       meta.title,
-      $page.params.puzzle,
-      capitalize($page.params.code),
+      page.params.puzzle,
+      capitalize(page.params.code),
       currentStep.title || $localLang.global.summary,
     ].join(" - ");
   }

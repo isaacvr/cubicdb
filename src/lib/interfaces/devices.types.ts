@@ -14,6 +14,8 @@ interface BaseDevice {
   keyDownHandler: (e: KeyboardEvent) => void;
   sendEvent: (e: { type: string; data?: any }) => void;
   newRecord: () => void;
+  toJSON: () => Record<string, any>;
+  fromJSON: (config: Record<string, any>) => any;
 }
 
 // Keyboard for controlling the timer
@@ -29,6 +31,7 @@ export interface IManualTimeEntryDevice extends BaseDevice {
 // GAN iCarry timer (Bluetooth)
 export interface IGANiCarryDevice extends BaseDevice {
   type: "gan_icarry";
+  deviceName: string;
   hardwareVersion: string;
   softwareVersion: string;
   bluetoothAddress: string;
@@ -127,7 +130,7 @@ export interface IUSBTimerDevice extends BaseDevice {
 }
 
 // Union type for all device types
-export type Device =
+export type IDevice =
   | ITimerKeyboardDevice
   | IManualTimeEntryDevice
   | IGANiCarryDevice

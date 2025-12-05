@@ -844,4 +844,11 @@ export const English: Language = {
     counterClockwise: "Counter-Clockwise",
     double: "Double",
   },
+  DEVICES: {
+    devices: "Devices",
+    addDevice: "add device",
+    errors: {
+      bluetoothDisabled: "Please, make sure Bluetooth is enabled",
+    },
+  },
 };
