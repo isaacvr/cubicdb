@@ -251,12 +251,12 @@
   }
 
   function saveEnableKeyboard() {
-    localStorage.setItem("--timer-options-enableKeyboard", $enableKeyboard.toString());
-    $enableKeyboard = false;
+    localStorage.setItem("--timer-options-enableKeyboard", enableKeyboard.toString());
+    enableKeyboard.set(false);
   }
 
   function recoverEnableKeyboard() {
-    $enableKeyboard = localStorage.getItem("--timer-options-enableKeyboard") === "true";
+    enableKeyboard.set(localStorage.getItem("--timer-options-enableKeyboard") === "true");
   }
 
   function openDialog(ev: TModal, dt: any, fn: Function) {

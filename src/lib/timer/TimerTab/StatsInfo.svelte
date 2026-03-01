@@ -30,12 +30,12 @@
   const POPOVER_CLASS = "my-2 mx-auto bg-base-200 text-base-content";
 
   function saveEnableKeyboard() {
-    localStorage.setItem("--stats-info-enableKeyboard", $enableKeyboard.toString());
-    $enableKeyboard = false;
+    localStorage.setItem("--stats-info-enableKeyboard", enableKeyboard.toString());
+    enableKeyboard.set(false);
   }
 
   function recoverEnableKeyboard() {
-    $enableKeyboard = localStorage.getItem("--stats-info-enableKeyboard") === "true";
+    enableKeyboard.set(localStorage.getItem("--stats-info-enableKeyboard") === "true");
   }
 
   function summary(n: number) {
