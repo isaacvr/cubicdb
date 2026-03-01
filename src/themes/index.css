@@ -1,0 +1,26 @@
+@import "tailwindcss";
+@plugin "daisyui" {
+  themes:
+    cubicdb --default,
+    dark,
+    night,
+    light;
+}
+
+@import "./theme.cubicdb.css";
+@import "./components.css";
+
+@theme {
+  --color-move: oklch(var(--move) / <alpha-value>);
+  --color-operator: oklch(var(--operator) / <alpha-value>);
+  --color-comment: oklch(var(--comment) / <alpha-value>);
+  --color-current: oklch(var(--current) / <alpha-value>);
+}
+
+/* Defaults */
+:root {
+  --move: 98% 0.09 114.13;
+  --operator: 75% 0.2 341.59;
+  --comment: 77% 0.19 143.39;
+  --current: 100% 0 0;
+}

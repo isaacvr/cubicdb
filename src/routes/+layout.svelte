@@ -1,25 +1,23 @@
 <script lang="ts">
   import "../font.css";
-  import "../App.css";
+  import "../themes/index.css";
   import "../daisyuiOverrides.css";
-  import "../theme.scss";
 
   import moment from "moment";
-  import { onDestroy, onMount, setContext, tick, untrack } from "svelte";
-  import { Dropdown, DropdownItem, Popover, Tooltip } from "flowbite-svelte";
+  import { onDestroy, onMount, tick, untrack } from "svelte";
   import { LANGUAGES } from "@lang/index";
   import { globalLang, localLang } from "@stores/language.service";
   import { NotificationService } from "@stores/notification.service";
   import { screen } from "@stores/screen.store";
   import { DOMAIN } from "@constants";
-  import FlagIcon from "../lib/components/FlagIcon.svelte";
+  import FlagIcon from "@components/FlagIcon.svelte";
   import { ArrowUpRightDownLeftOutline } from "flowbite-svelte-icons";
   import Select from "@material/Select.svelte";
   import { browser } from "$app/environment";
   import type { INotification } from "@interfaces";
   import Notification from "@components/Notification.svelte";
   import { goto } from "$app/navigation";
-  import { writable, type Unsubscriber, type Writable } from "svelte/store";
+  import { type Unsubscriber } from "svelte/store";
   import type { LayoutServerData } from "./$types";
   import { getTitleMeta } from "$lib/meta/title";
   import { dataService } from "$lib/data-services/data.service";
@@ -42,6 +40,7 @@
     XIcon,
     MonitorSmartphoneIcon,
     CirclePowerIcon,
+    HexagonIcon,
   } from "lucide-svelte";
   import Button from "$lib/cubicdbKit/Button.svelte";
   import TimerSessionIcon from "$lib/timer/TimerSessionIcon.svelte";
@@ -58,6 +57,7 @@
   import type { Device } from "$lib/timer/adaptors/devices";
   import { devices } from "@stores/devices.store";
   import { sessionController } from "$lib/controllers/SessionController";
+  import CubeCategory from "@components/wca/CubeCategory.svelte";
 
   let { data, children }: { data: LayoutServerData; children: any } = $props();
 
@@ -252,9 +252,7 @@
       class={twMerge(
         "svg-container",
         colorType[type],
-        parts.length && parts[0].link === href
-          ? "text-opacity-100 !bg-primary !bg-opacity-20"
-          : "text-opacity-60"
+        parts.length && parts[0].link === href ? "bg-primary/20!" : ""
       )}
       style={`--dash: ${dash};`}
       {href}
@@ -265,7 +263,7 @@
   </li>
 {/snippet}
 
-<div class="layout" id="cubicdb-layout">
+<div class="layout">
   <div class="topbar-logo px-2">
     <CubicDbLogo />
   </div>
@@ -284,7 +282,7 @@
               </a>
             </li>
 
-            <Dropdown
+            <!-- <Dropdown
               bind:open={dropdownOpen}
               containerClass="max-h-[20rem] overflow-y-auto overflow-x-hidden rounded-md
                 z-50 w-max bg-base-200"
@@ -312,7 +310,7 @@
                   {ss.name}
                 </DropdownItem>
               {/each}
-            </Dropdown>
+            </Dropdown> -->
           {:else}
             <li class="cursor-pointer last-of-type:font-bold">
               <a href={part.link}>{part.name}</a>
@@ -326,20 +324,20 @@
 
     {#if progress}
       <div role="button" class="mr-2 tx-emphasis cursor-default">{progress + "%"}</div>
-      <Popover class="z-50 bg-base-200">
+      <!-- <Popover class="z-50 bg-base-200">
         <span class="flex justify-center">{$localLang.global.downloading}</span>
         <progress class="w-[10rem] my-3 progress" value={progress} max={100}></progress>
         <Button class="py-2 w-full" on:click={cancelUpdate}>
           {$localLang.global.cancel}
         </Button>
-      </Popover>
+      </Popover> -->
     {/if}
 
     <Button color="none" class="p-1">
       <MonitorSmartphoneIcon />
     </Button>
 
-    <Dropdown
+    <!-- <Dropdown
       containerClass="max-h-[20rem] overflow-y-auto overflow-x-hidden rounded-md
         z-50 w-max bg-base-200"
     >
@@ -370,7 +368,7 @@
           {/if}
         </DropdownItem>
       {/each}
-    </Dropdown>
+    </Dropdown> -->
 
     <div class="w-0 mx-2 rounded-full h-6 border border-primary"></div>
 
@@ -397,13 +395,13 @@
       <Button class="p-2" on:click={fullScreen}>
         <ArrowUpRightDownLeftOutline size="sm" />
       </Button>
-      <Tooltip>{$localLang.global.fullScreen}</Tooltip>
+      <!-- <Tooltip>{$localLang.global.fullScreen}</Tooltip> -->
     {/if}
   </div>
 
-  <div class="navigation flex flex-col justify-between overflow-auto">
+  <div class="navigation outline outline-primary flex flex-col justify-between overflow-auto">
     <!-- Normal Pages -->
-    <ul class="menu">
+    <ul class="menu w-full">
       {@render listItem(0, 50, "/timer", TimerIcon, "timer")}
       {@render listItem(0, 70, "/algorithms", BrainCogIcon, "algorithms")}
       {@render listItem(0, 16, "/tutorials", LibraryIcon, "tutorials")}
@@ -415,7 +413,7 @@
     <div class="divider h-0 my-0"></div>
 
     <!-- Tool-like stuff -->
-    <ul class="menu">
+    <ul class="menu w-full">
       {@render listItem(1, 30, "/tools", HammerIcon, "tools")}
       {@render listItem(1, 16, "/import-export", ArrowDownUpIcon, "importExport")}
       {@render listItem(1, 67, "/devices", MonitorSmartphoneIcon, "devices")}
@@ -425,13 +423,13 @@
     <div class="divider h-0 my-0"></div>
 
     <!-- Other -->
-    <ul class="menu mt-auto pb-0">
+    <ul class="menu w-full mt-auto pb-0">
       {@render listItem(3, 60, "/support", HeartIcon, "support")}
       {@render listItem(2, 62, "/about-cubicdb", InfoIcon, "about")}
     </ul>
 
-    <Select
-      class="!h-4 !py-0 mb-3 mx-2 mt-1"
+    <!-- <Select
+      class="h-4! py-0! mb-3 mx-2 mt-1"
       items={LANGUAGES}
       bind:value={$globalLang}
       transform={e => e[1].code}
@@ -443,15 +441,16 @@
         global.lang = $globalLang;
         $dataService.config.saveConfig();
       }}
+      placement="right"
       aria-label={$localLang.global.selectLanguage}
-    />
+    /> -->
   </div>
 
   <div class="content">
     {@render children?.()}
   </div>
 
-  <div class="footer-content shaded-card !p-0 gr-id place-items-center hidden">
+  <div class="footer-content shaded-card p-0! gr-id place-items-center hidden">
     <ul class="flex gap-1">
       <li><Button size="sm"><TimerIcon size="1rem" /></Button></li>
       <li><Button size="sm"><HammerIcon size="1rem" /></Button></li>
@@ -476,6 +475,8 @@
 </div>
 
 <style lang="postcss">
+  @reference "@src/themes/index.css";
+
   /* .notification-container {
     max-width: 25rem;
     position: fixed;
@@ -504,6 +505,7 @@
 
     height: 100%;
     overflow: hidden;
+    box-sizing: border-box;
   }
 
   .topbar-logo {

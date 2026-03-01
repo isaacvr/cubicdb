@@ -76,6 +76,8 @@
 </button>
 
 <style lang="postcss">
+  @reference "@src/themes/index.css";
+
   .wrapper {
     @apply flex items-center w-full h-1 bg-gray-500 rounded-full my-3 relative;
   }

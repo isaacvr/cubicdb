@@ -44,18 +44,20 @@
 </ul>
 
 <style lang="postcss">
+  @reference "@src/themes/index.css";
+
   .paginator-item {
     @apply rounded-md;
   }
 
   .paginator-item button {
-    @apply w-8 h-8 bg-violet-400 bg-opacity-30 grid place-items-center rounded-md shadow-md
+    @apply w-8 h-8 bg-violet-400/30 grid place-items-center rounded-md shadow-md
     transition-all duration-300 select-none
     
-    hover:bg-opacity-40 hover:text-gray-300;
+    hover:bg-violet-400/40 hover:text-gray-300;
   }
 
   .paginator-item.selected button {
-    @apply bg-violet-500 text-gray-200 bg-opacity-60 hover:bg-opacity-50;
+    @apply bg-violet-500/60 hover:bg-violet-500/50 text-gray-200;
   }
 </style>

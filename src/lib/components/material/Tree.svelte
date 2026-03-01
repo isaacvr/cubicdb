@@ -70,6 +70,8 @@
 </section>
 
 <style lang="postcss">
+  @reference "@src/themes/index.css";
+
   .tree {
     --anim-t: 300ms;
     @apply rounded-md px-4 py-2 text-gray-300;
@@ -77,7 +79,7 @@
   }
 
   .tree .header {
-    @apply py-2 hover:bg-black hover:bg-opacity-20 flex items-center
+    @apply py-2 hover:bg-black/20 flex items-center
       transition-all duration-100 cursor-pointer rounded-sm;
   }
 

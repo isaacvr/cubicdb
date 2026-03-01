@@ -1,11 +1,11 @@
 import { dataService } from "$lib/data-services/data.service";
 import type { IVirtualCubeKeyboardDevice } from "$lib/interfaces/devices.types";
 import { isEscape, type Actor } from "@helpers/stateMachine";
-import { TimerState, type InputContext, type Solve } from "@interfaces";
+import { TimerState, type InputContext, type ITimerController, type Solve } from "@interfaces";
 import { get, writable, type Writable } from "svelte/store";
 import { createActor, setup, fromCallback } from "xstate";
 
-interface VirtualContext extends InputContext {
+interface VirtualContext extends InputContext, ITimerController {
   timeRef: Writable<number>;
 }
 
@@ -175,7 +175,7 @@ export class VirtualInput implements IVirtualCubeKeyboardDevice {
   }
 
   init(context: InputContext) {
-    this.context = { ...context, timeRef: writable(0) };
+    this.context = { ...context, ...context.timerController, timeRef: writable(0) };
     this.interpreter = createActor(VirtualMachine, { input: this.context });
     this.interpreter.start();
     this.isConnected = true;

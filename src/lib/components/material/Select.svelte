@@ -5,14 +5,13 @@
   import { weakRandomUUID } from "@helpers/strings";
   import type { Placement, Side } from "@interfaces";
   import { Dropdown, DropdownItem } from "flowbite-svelte";
-  import { createEventDispatcher, onMount, tick } from "svelte";
+  import { createEventDispatcher, onMount, tick, untrack } from "svelte";
   import Button from "$lib/cubicdbKit/Button.svelte";
   import { twMerge } from "tailwind-merge";
   import { ChevronDownIcon } from "lucide-svelte";
 
   interface SelectProps {
     class?: string;
-    type?: "color" | "select";
     placeholder?: string;
     value?: any;
     items: readonly any[];
@@ -22,7 +21,6 @@
     hasIcon?: null | ((v: any) => any);
     disabled?: (item: any, pos: number, arr?: readonly any[]) => boolean;
     placement?: Side | Placement;
-    useFixed?: boolean;
     IconComponent?: any;
     iconKey?: string;
     iconSize?: string | null;
@@ -32,9 +30,8 @@
 
   let {
     class: cl = $bindable(""),
-    type = "select",
     placeholder = "",
-    value = $bindable(""),
+    value = $bindable(),
     items = [],
     onChange = (item: any, pos: number, arr: readonly any[]) => {},
     label = (item: any, pos: number): string => (item || "").toString(),
@@ -42,16 +39,17 @@
     hasIcon = null,
     disabled = (item: any, pos: number, arr?: readonly any[]) => false,
     placement = "bottom",
-    useFixed = false,
     IconComponent = CubeCategory,
     iconKey = "icon",
     iconSize = "1.2rem",
     preferIcon = false,
-    ...otherProps
   }: SelectProps = $props();
 
   const selectID = "s" + weakRandomUUID().replace(/-/g, "");
   const dispatch = createEventDispatcher();
+
+  let list: HTMLUListElement | null;
+  let dropdown: HTMLDetailsElement | null;
 
   let showOptions = $state(false);
   let mounted = false;
@@ -60,9 +58,17 @@
   let lastWord = "";
   let lastTime = 0;
 
+  function getItemValue(item: any, pos: number) {
+    return transform(item, pos, items);
+  }
+
+  function isSameValue(a: any, b: any) {
+    return Object.is(a, b);
+  }
+
   function findValuePosition() {
     for (let i = 0, maxi = items.length; i < maxi; i += 1) {
-      if (transform(items[i], i, items) === value) {
+      if (isSameValue(getItemValue(items[i], i), value)) {
         return i;
       }
     }
@@ -79,7 +85,7 @@
 
     if (pos > -1) {
       focused = pos;
-      list.children[0].children[pos * 2].scrollIntoView({ block: "center" });
+      list.children[pos].scrollIntoView({ block: "center" });
       tick().then(() => focusElement(list));
     }
   }
@@ -185,92 +191,80 @@
 
 <svelte:window onkeydown={handleKeydown} />
 
-{#snippet icon(item: any)}
-  {#if hasIcon && IconComponent}
-    {@const iconProps = Object.assign(iconSize ? { size: iconSize } : {}, {
-      [iconKey]: hasIcon(item[0]),
-    })}
-    <IconComponent {...iconProps} noFallback></IconComponent>
-  {/if}
-{/snippet}
-
-<Button
-  class={twMerge("gap-1 h-9 py-1 px-2 input font-normal text-sm text-base-content", cl)}
-  onclick={handleClick}
-  {...otherProps}
+<details
+  class={twMerge("dropdown", `dropdown-${placement}`)}
+  bind:this={dropdown}
+  data-dropdown={selectID}
 >
-  {#if items.some((a, p, i) => transform(a, p, i) === value)}
-    {@const item = items.reduce(
-      (acc, e, p, i) => (transform(e, p, i) === value ? [e, p] : acc),
-      [null, -1]
-    )}
+  <summary
+    class={twMerge("btn border border-base-content/20 rounded-lg! gap-1 h-9 py-1 px-2 ", cl)}
+    onclick={handleClick}
+  >
+    {#if items.some((a, p) => isSameValue(getItemValue(a, p), value))}
+      {@const item = items.reduce(
+        (acc, e, p) => (isSameValue(getItemValue(e, p), value) ? [e, p] : acc),
+        [null, -1]
+      )}
 
-    {@render icon(item)}
+      {#if hasIcon && IconComponent}
+        {@const iconProps = Object.assign(iconSize ? { size: iconSize } : {}, {
+          [iconKey]: hasIcon(item[0]),
+        })}
 
-    {#if !(hasIcon && IconComponent && preferIcon)}
-      {#if type === "color"}
-        <div
-          class="color w-4 h-4"
-          style={"background-color: " + getColorByName(label(item[0], item[1])) + ";"}
-        ></div>
-      {:else}
+        <IconComponent {...iconProps} class="pointer-events-none" noFallback />
+      {/if}
+
+      {#if !(hasIcon && IconComponent && preferIcon)}
         {label(item[0], item[1])}
       {/if}
-    {/if}
-  {:else}
-    {placeholder}
-  {/if}
-
-  <ChevronDownIcon size="1.3rem" class="ml-auto" />
-</Button>
-
-<Dropdown
-  bind:open={showOptions}
-  trigger="click"
-  id={selectID}
-  containerClass={`max-h-[20rem] overflow-y-auto overflow-x-hidden rounded-md
-    z-50 w-max bg-base-200 ` +
-    (useFixed ? " !fixed " : "") +
-    (type === "color"
-      ? " [&>ul]:grid-cols-[repeat(var(--grid-w),1fr)] [&>ul]:grid [&>ul>div]:hidden  "
-      : "")}
-  {placement}
-  style={"--grid-w: " + gridW}
->
-  {#each items as item, pos}
-    {#if pos}
-      <li class="divider my-1 h-0 !border-red-500"></li>
+    {:else}
+      {placeholder}
     {/if}
 
-    <DropdownItem
-      class={`flex items-center gap-2 py-2 px-2 text-base-content hover:bg-base-100 rounded-md
-        ` +
-        (disabled(item, pos, items)
-          ? " [&>div]:opacity-40 pointer-events-none select-none "
-          : " ") +
-        (transform(item, pos, items) === value ? " bg-base-100 hover:bg-primary " : " ")}
-      on:click={() => {
-        if (disabled(item, pos, items)) return;
+    <ChevronDownIcon size="1.2rem" class="ml-auto" />
+  </summary>
 
-        showOptions = false;
-        value = transform(item, pos, items);
-        onChange(item, pos, items);
-      }}
-    >
-      {@render icon([item])}
+  <ul
+    id={selectID}
+    bind:this={list}
+    class="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm
+      max-h-80 overflow-x-hidden overflow-y-auto grid"
+  >
+    {#each items as item, pos}
+      <li>
+        <button
+          class={`flex items-center gap-2 py-2 px-2 text-gray-300
+          ` +
+            (disabled(item, pos, items)
+              ? " text-gray-500 [&>div]:opacity-40 pointer-events-none select-none "
+              : " ") +
+            (isSameValue(getItemValue(item, pos), value)
+              ? " bg-primary-600 text-gray-100 hover:bg-primary-400 "
+              : " ")}
+          onclick={e => {
+            e.preventDefault();
+            if (disabled(item, pos, items)) return;
+            value = untrack(() => getItemValue(item, pos));
+            onChange(item, pos, items);
+            (dropdown?.children[0] as any).blur();
+            (e.target as any).blur();
+            dropdown?.removeAttribute("open");
+          }}
+        >
+          {#if hasIcon && IconComponent}
+            {@const iconProps = Object.assign(iconSize ? { size: iconSize } : {}, {
+              [iconKey]: hasIcon(item),
+            })}
+            <IconComponent {...iconProps} noFallback />
+          {/if}
 
-      {#if label(item, pos).trim()}
-        {#if type === "color"}
-          <div
-            class="color w-4 h-4"
-            style={"background-color: " + getColorByName(label(item, pos)) + ";"}
-          ></div>
-        {:else}
-          {label(item, pos)}
-        {/if}
-      {:else}
-        &nbsp;
-      {/if}
-    </DropdownItem>
-  {/each}
-</Dropdown>
+          {#if (label(item, pos) || "").toString().trim()}
+            {label(item, pos)}
+          {:else}
+            &nbsp;
+          {/if}
+        </button>
+      </li>
+    {/each}
+  </ul>
+</details>

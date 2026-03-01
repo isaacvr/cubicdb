@@ -55,7 +55,7 @@
         {@const best = player[1].times[6]}
         {@const worst = player[1].times[7]}
 
-        <TableBodyRow class="!bg-white !bg-opacity-5 !border-t-gray-600">
+        <TableBodyRow class="!bg-white/5 !border-t-gray-600">
           <TableBodyCell class={TABLE_CELL_CLASS}>
             {#if p === 0 && completed}
               <Award type="gold" />
@@ -100,6 +100,8 @@
 </Accordion>
 
 <style lang="postcss">
+  @reference "@src/themes/index.css";
+
   .best {
     @apply text-green-500;
   }

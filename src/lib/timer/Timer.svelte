@@ -146,7 +146,7 @@
   }
 
   function handleKeydown(e: KeyboardEvent) {
-    if (!keyboardEnabled) return;
+    if (!get(keyboardEnabled)) return;
 
     const timerState = get(timerController.timerState);
 

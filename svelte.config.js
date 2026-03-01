@@ -32,6 +32,14 @@ const config = {
       "@workers": "./src/lib/workers",
       "@lang": "./src/lib/lang",
       "@pages": "./src/lib/pages",
+      "@src": "./src",
+      "@lib": "./src/lib",
+      
+      // Clean Architecture
+      "@domain": "./src/lib/core/domain",
+      "@ports": "./src/lib/core/ports",
+      "@usecases": "./src/lib/core/usecases",
+      "@events": "./src/lib/events",
     },
   },
 };

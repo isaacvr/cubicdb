@@ -23,7 +23,8 @@
 
   let configMode = getContext("configMode") as Writable<boolean>;
 
-  const { scramble, mode, session } = context;
+  const { timerController } = context;
+  const { scramble, mode, session } = timerController;
 
   let cschema = SCHEMAS[0];
   let eschema = SCHEMAS[0];

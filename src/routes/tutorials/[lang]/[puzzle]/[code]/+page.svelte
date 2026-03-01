@@ -528,6 +528,8 @@
 </Modal>
 
 <style lang="postcss">
+  @reference "@src/themes/index.css";
+
   .tutorial {
     @apply grid gap-4 my-8 mx-2 h-full overflow-auto;
     grid-template-columns: 15rem auto;

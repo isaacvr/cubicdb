@@ -4,7 +4,7 @@
 
 <a
   href="/"
-  class="flex hover:bg-primary-900 hover:bg-opacity-10 transition-all duration-200 rounded-md pr-2"
+  class="flex hover:bg-primary-900/10 transition-all duration-200 rounded-md pr-2"
 >
   <img
     draggable="false"

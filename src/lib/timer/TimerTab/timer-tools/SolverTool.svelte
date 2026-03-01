@@ -4,9 +4,9 @@
   import { StepSolverStr, cubeOris, getSolver, type StepSolver } from "./solve-helper/allSolvers";
   import { onMount } from "svelte";
 
-  export let context: TimerContext;
+export let context: TimerContext;
 
-  const { scramble, mode } = context;
+  const { scramble, mode } = context.timerController;
 
   let oris = cubeOris;
   let orientation = oris[0];
@@ -53,7 +53,7 @@
   <div class="flex flex-wrap gap-2 mb-4">
     <Select
       placement="right-start"
-      class="!py-2 !bg-gray-800 !relative"
+      class="py-2! bg-gray-800! relative!"
       bind:value={solver}
       items={StepSolverStr}
       transform={e => e.solver}
@@ -65,7 +65,7 @@
     {#if ["222", "223", "pocket", "skewb", "sq1", "pyra"].every(t => t != solver)}
       <Select
         placement="right-start"
-        class="!py-2 !bg-gray-800 !relative"
+        class="py-2! bg-gray-800! relative!"
         bind:value={orientation}
         items={oris}
         transform={e => e}
@@ -77,7 +77,7 @@
     {#if solver === "223"}
       <Select
         placement="right-start"
-        class="!py-2 !bg-gray-800 !relative"
+        class="py-2! bg-gray-800! relative!"
         bind:value={petrus223}
         items={petrus223Oris}
         transform={(e, p) => p}

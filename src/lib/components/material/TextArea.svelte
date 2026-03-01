@@ -103,6 +103,8 @@
 </div>
 
 <style lang="postcss">
+  @reference "@src/themes/index.css";
+
   .lesp {
     letter-spacing: normal;
   }

@@ -68,6 +68,8 @@
 </div>
 
 <style lang="postcss">
+  @reference "@src/themes/index.css";
+
   .wrapper {
     @apply w-full shadow p-2;
   }

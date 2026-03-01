@@ -187,7 +187,7 @@
       {#each acknowledgements as ack}
         <li>
           <a
-            class="flex items-center gap-2 relative bg-black bg-opacity-30 p-4
+            class="flex items-center gap-2 relative bg-black/30 p-4
             rounded-md shadow-lg"
             href={ack.link}
             target="_blank"
@@ -228,6 +228,8 @@
 </Card>
 
 <style lang="postcss">
+  @reference "@src/themes/index.css";
+
   hr {
     @apply border border-gray-500 w-full;
   }
@@ -254,8 +256,7 @@
   }
 
   .donation {
-    @apply h-full grid place-items-center relative bg-black
-    bg-opacity-30 p-4 rounded-md shadow-lg;
+    @apply h-full grid place-items-center relative bg-black/30 p-4 rounded-md shadow-lg;
   }
 
   .donation-img {

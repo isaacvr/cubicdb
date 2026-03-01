@@ -7,9 +7,9 @@
   import { infinitePenalty, sTime, sTimer, timer } from "@helpers/timer";
   import { onMount } from "svelte";
 
-  export let context: TimerContext;
+export let context: TimerContext;
 
-  const { solves } = context;
+  const { solves } = context.timerController;
   const periods = ["Day", "Week", "Month"];
 
   let period = periods[0];

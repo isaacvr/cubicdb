@@ -209,6 +209,8 @@
 </Modal> -->
 
 <style lang="postcss">
+  @reference "@src/themes/index.css";
+
   .better {
     text-decoration: underline;
     font-weight: bold;
@@ -229,7 +231,7 @@
   }
 
   .stats-list > * {
-    @apply flex justify-between bg-base-content bg-opacity-5 p-1 rounded-md;
+    @apply flex justify-between bg-base-content/5 p-1 rounded-md;
   }
 
   .stats-list.spread > * {

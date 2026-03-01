@@ -84,14 +84,14 @@
   }
 
   function keyUp(event: KeyboardEvent) {
-    if ($tab || !enableKeyboard) return;
+    if ($tab || !$enableKeyboard) return;
     $device.keyUpHandler(event);
   }
 
   function keyDown(event: KeyboardEvent) {
     const { code } = event;
 
-    if (!enableKeyboard) return;
+    if (!$enableKeyboard) return;
 
     switch ($tab) {
       case 0: {
@@ -424,6 +424,8 @@
 {/if}
 
 <style lang="postcss">
+  @reference "@src/themes/index.css";
+
   section {
     grid-area: tabs;
     display: grid;

@@ -372,6 +372,8 @@
 </Modal>
 
 <style lang="postcss">
+  @reference "@src/themes/index.css";
+
   .tutorial-container {
     @apply grid gap-4;
     grid-template-columns: 3rem auto;

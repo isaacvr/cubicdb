@@ -336,6 +336,8 @@
 </Modal>
 
 <style lang="postcss">
+  @reference "@src/themes/index.css";
+
   .grid {
     max-height: 30rem;
   }
@@ -365,7 +367,7 @@
   }
 
   blockquote {
-    @apply border-l-4 p-2 bg-black bg-opacity-20;
+    @apply border-l-4 p-2 bg-black/20;
     border-left: var(--th-primary-600);
   }
 </style>

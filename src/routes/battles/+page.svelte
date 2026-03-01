@@ -545,6 +545,8 @@
 </Card>
 
 <style lang="postcss">
+  @reference "@src/themes/index.css";
+
   #actions li {
     @apply w-14 h-8 flex items-center justify-center rounded-md shadow-md;
   }

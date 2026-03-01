@@ -369,7 +369,7 @@
             <Select items={FONTS} bind:value={appFont} label={e => e.name} />
             <p
               style="font-family: {appFont};"
-              class="text-base bg-black bg-opacity-60 p-2 rounded-md text-gray-300"
+              class="text-base bg-black/60 p-2 rounded-md text-gray-300"
             >
               R U R F Dw2 L'
             </p>
@@ -385,7 +385,7 @@
             <Select items={FONTS} bind:value={timerFont} label={e => e.name} />
             <p
               style="font-family: {timerFont};"
-              class="bg-black bg-opacity-60 p-2 rounded-md text-gray-300 text-4xl"
+              class="bg-black/60 p-2 rounded-md text-gray-300 text-4xl"
             >
               {timer(dTime, true)}
             </p>
@@ -563,6 +563,8 @@
 </Modal>
 
 <style lang="postcss">
+  @reference "@src/themes/index.css";
+
   hr {
     @apply w-full h-px bg-gray-700 border-none mt-6;
   }

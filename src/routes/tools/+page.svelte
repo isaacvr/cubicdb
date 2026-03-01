@@ -453,7 +453,7 @@
   {:else if option === "scramble-batch"}
     {#if scrambleBatch.length}
       <div
-        class="container-mini bg-white bg-opacity-10 mx-auto max-w-[calc(min(100%-2rem,100ch))] mt-4
+        class="container-mini bg-white/10 mx-auto max-w-[calc(min(100%-2rem,100ch))] mt-4
           w-max mb-0 p-4 rounded-md shadow-md text-center"
       >
         <ul class="text-gray-400 flex flex-col gap-2 max-h-[calc(100vh-25rem)] overflow-auto">
@@ -488,10 +488,10 @@
     >
       {#each $solves as _, p}
         <button
-          class="shadow-md w-24 h-12 rounded-md p-1 bg-white bg-opacity-10 relative
+          class="shadow-md w-24 h-12 rounded-md p-1 bg-white/10 relative
           flex items-center justify-center transition-all duration-200 select-none cursor-pointer
   
-          hover:shadow-lg hover:bg-opacity-20
+          hover:shadow-lg hover:bg-white/20
         "
           onclick={() => ($solves = $solves.filter(s => s != $solves[$solves.length - p - 1]))}
         >
@@ -548,8 +548,6 @@
         cClass="h-[20vh]"
         getInnerText={parse}
       />
-
-      <!-- <TextArea bind:value={metricString}  class="bg-white bg-opacity-10 w-full" /> -->
     </div>
   {:else if option === "solver"}
     <div class="solver" bind:this={solverDiv} style={`--fcw: ${dim};`}>
@@ -596,6 +594,8 @@
 </div>
 
 <style lang="postcss">
+  @reference "@src/themes/index.css";
+
   #grid {
     grid-template-columns: repeat(auto-fill, minmax(6rem, 1fr));
   }

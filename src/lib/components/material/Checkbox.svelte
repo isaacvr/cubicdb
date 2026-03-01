@@ -60,6 +60,8 @@
 </div>
 
 <style lang="postcss">
+  @reference "@src/themes/index.css";
+
   .box {
     @apply flex items-center justify-center w-5 h-5
     shadow-sm border-2 border-blue-400 rounded-sm

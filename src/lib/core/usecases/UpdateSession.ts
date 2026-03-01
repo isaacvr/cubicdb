@@ -1,15 +1,24 @@
 import type { ISessionRepository } from "../ports/ISessionRepository";
+import type { IEventDispatcher } from "../ports/IEventDispatcher";
 import type { Session } from "@interfaces";
 import { SessionDefaultSettings } from "@constants";
+import { SessionUpdated } from "@events/domain";
 
+/**
+ * Use case: Update an existing session
+ * Normalizes input and emits SessionUpdated event
+ */
 export class UpdateSession {
-  constructor(private repo: ISessionRepository) {}
+  constructor(
+    private repo: ISessionRepository,
+    private dispatcher: IEventDispatcher
+  ) {}
 
   /**
    * Apply normalization rules before updating.
    */
-  async execute(session: Session): Promise<Session> {
-    const normalized: Session = { ...(session || ({} as any)) } as Session;
+  async execute(previousSession: Session, sessionData: Session): Promise<Session> {
+    const normalized: Session = { ...(sessionData || ({} as any)) } as Session;
 
     normalized.name = (normalized.name || "").trim();
     if (!normalized.name) {
@@ -23,6 +32,8 @@ export class UpdateSession {
       normalized.settings.stepNames = normalized.settings.stepNames || ["", ""];
     }
 
-    return this.repo.updateSession(normalized);
+    const updated = await this.repo.updateSession(normalized);
+    await this.dispatcher.dispatch(new SessionUpdated(previousSession, updated));
+    return updated;
   }
 }

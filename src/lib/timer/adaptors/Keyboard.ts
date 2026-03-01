@@ -36,7 +36,8 @@ const checkPrevention = fromCallback(
     sendBack: any;
   }) => {
     state.set(TimerState.PREVENTION);
-    get(session).settings.withoutPrevention && sendBack({ type: "READY" });
+    if (get(session).settings.withoutPrevention)
+      sendBack({ type: "READY" });
   }
 );
 
@@ -80,7 +81,7 @@ const setTimerInspection = fromCallback(
       }
 
       time.set(~~t);
-    });
+    }, 10);
 
     return () => {
       clearInterval(itv);
@@ -106,8 +107,7 @@ const setTimerRunner = fromCallback(
 
     const itv = setInterval(() => {
       time.set(performance.now() - ref);
-      console.log("TIME: ", performance.now() - ref);
-    });
+    }, 10);
 
     if (get(state) !== TimerState.PAUSE) {
       currentStep.set(1);
@@ -159,7 +159,9 @@ const saveSolve = fromCallback(
       ls.steps = steps;
     }
 
-    t > 0 && setTimeout(() => addSolve(t, ls?.penalty), 100);
+    if (t > 0) {
+      setTimeout(() => addSolve(t, ls?.penalty), 100);
+    }
 
     // Prevent keyboard to run after pressing some key + space to stop the timer
     const kbe = get(keyboardEnabled);
@@ -397,8 +399,8 @@ export class KeyboardInput implements ITimerKeyboardDevice {
     this.interpreter?.send({ type: "keydown", code: "Escape" });
   }
 
-  newRecord() {}
-  sendEvent() {}
+  newRecord() { }
+  sendEvent() { }
 
   toJSON() {
     return {

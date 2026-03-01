@@ -1,3 +1,5 @@
+@reference "./themes/index.css"
+
 /* DaisyUI overrides */
 .range::-webkit-slider-thumb {
   @apply rounded-md;

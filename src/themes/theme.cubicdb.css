@@ -1,0 +1,31 @@
+@plugin "daisyui/theme" {
+  name: "cubicdb";
+  default: true;
+  prefersdark: true;
+  color-scheme: dark;
+
+  /* === UI base === */
+  --color-base-100: oklch(12% 0.06 260);
+  --color-base-200: oklch(10% 0.05 260);
+  --color-base-300: oklch(8% 0.04 260);
+  --color-base-content: oklch(88% 0.01 260);
+
+  --color-primary: oklch(59% 0.21 260);
+  --color-primary-content: oklch(98% 0.01 260);
+
+  --color-secondary: oklch(54% 0.18 145);
+  --color-secondary-content: oklch(98% 0.01 145);
+
+  --color-accent: oklch(64% 0.22 35);
+  --color-accent-content: oklch(98% 0.01 35);
+
+  --color-success: oklch(65% 0.25 140);
+  --color-warning: oklch(80% 0.25 80);
+  --color-error: oklch(65% 0.3 30);
+
+  /* === layout === */
+  --radius-box: 0.5rem;
+  --radius-field: 0.25rem;
+  --border: 1px;
+  --depth: 1;
+}

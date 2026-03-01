@@ -351,6 +351,8 @@
 />
 
 <style lang="postcss">
+  @reference "@src/themes/index.css";
+
   .cubes-view {
     @apply grid gap-2 my-8;
   }
@@ -369,7 +371,7 @@
   }
 
   .cube-list.algMode .cube-item {
-    @apply w-full p-2 border-2 rounded-md bg-opacity-10;
+    @apply w-full p-2 border-2 rounded-md;
     color: var(--th-text);
     border-color: var(--th-backgroundLevel3);
     background-color: var(--th-backgroundLevel1);

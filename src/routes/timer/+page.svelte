@@ -270,7 +270,7 @@
 <div class="grid grid-rows-[2rem,1fr] gap-2 w-full h-full p-1 overflow-hidden">
   <div class="actions flex items-center gap-2">
     <Select
-      class="border-none bg-primary bg-opacity-10"
+      class="border-none bg-primary/10"
       bind:value={sortBy}
       items={[
         { value: "name", label: $localLang.global.name },
@@ -282,7 +282,7 @@
     />
 
     <Select
-      class="border-none bg-primary bg-opacity-10"
+      class="border-none bg-primary/10"
       bind:value={sortCmp}
       items={[
         { value: "asc", label: "Ascending" },
@@ -500,6 +500,8 @@
 </Modal>
 
 <style lang="postcss">
+  @reference "@src/themes/index.css";
+
   [data-type="single"] > a {
     @apply border-green-400/50 border;
   }

@@ -5,9 +5,9 @@
   import * as all from "@cstimer/scramble";
   import { arrayToOrder } from "@classes/puzzle/puzzle";
 
-  export let context: TimerContext;
+export let context: TimerContext;
 
-  const { scramble, mode } = context;
+  const { scramble, mode } = context.timerController;
 
   let crosses: string[][] = [];
   let crossName: string[] = [];

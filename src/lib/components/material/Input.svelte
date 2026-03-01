@@ -122,6 +122,8 @@
 </div>
 
 <style lang="postcss">
+  @reference "@src/themes/index.css";
+
   input {
     @apply h-full flex w-full bg-transparent border-none outline-none
       text-inherit pointer-events-auto ring-0;

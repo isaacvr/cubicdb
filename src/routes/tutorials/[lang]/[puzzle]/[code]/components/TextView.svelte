@@ -91,6 +91,8 @@
 </div>
 
 <style lang="postcss">
+  @reference "@src/themes/index.css";
+
   .text-view:not(.editMode) .actions {
     display: none;
   }

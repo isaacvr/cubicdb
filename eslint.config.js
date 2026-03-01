@@ -37,13 +37,11 @@ export default tseslint.config(
       "dist/",
       ".netlify/",
       "**/*.cjs",
-      "**/*.ts",
-      "**/*.js",
       "static/",
       "src/electron/",
-      "src/lib/",
     ],
-
+  },
+  {
     rules: {
       "@typescript-eslint/no-explicit-any": "off",
     },

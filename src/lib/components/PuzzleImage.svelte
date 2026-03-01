@@ -281,6 +281,8 @@
 </div>
 
 <style lang="postcss">
+  @reference "@src/themes/index.css";
+
   .puzzle-img {
     @apply transition-all duration-200;
     filter: drop-shadow(0 0 0rem #1d4ed8);

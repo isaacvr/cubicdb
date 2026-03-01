@@ -775,6 +775,8 @@
 </Modal>
 
 <style lang="postcss">
+  @reference "@src/themes/index.css";
+
   section {
     grid-area: tabs;
   }
@@ -826,7 +828,7 @@
 
   .context-menu li button {
     @apply pointer-events-auto pr-2 hover:pl-2 hover:pr-1 p-1 rounded-md transition-all duration-200
-    hover:bg-white hover:bg-opacity-10 w-full flex gap-2 justify-start items-center;
+    hover:bg-white/10 w-full flex gap-2 justify-start items-center;
   }
 
   .step-part {

@@ -114,6 +114,8 @@
 </ul>
 
 <style lang="postcss">
+  @reference "@src/themes/index.css";
+
   ul {
     grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
     row-gap: 2rem;
@@ -126,7 +128,7 @@
   }
 
   ul li {
-    @apply w-40 h-48 max-w-[12rem] shadow-md rounded-md select-none
+    @apply w-40 h-48 max-w-48 shadow-md rounded-md select-none
       transition-all duration-200 grid place-items-center justify-center py-3 px-2
       hover:shadow-2xl relative;
 

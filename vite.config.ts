@@ -1,5 +1,6 @@
 import { sveltekit } from "@sveltejs/kit/vite";
 import { defineConfig } from "vite";
+import tailwindcss from "@tailwindcss/vite";
 import pkg from "./package.json" with { type: "json" };
 // import basicSSL from "@vitejs/plugin-basic-ssl";
 
@@ -15,7 +16,7 @@ const headerPlugin = {
 };
 
 export default defineConfig(env => ({
-  plugins: [headerPlugin, /*basicSSL(),*/ sveltekit()],
+  plugins: [headerPlugin, tailwindcss(), /*basicSSL(),*/ sveltekit()],
   server: {
     host: true,
     port: 5432,

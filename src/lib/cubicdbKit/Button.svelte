@@ -26,7 +26,7 @@
     accept: "btn-secondary",
     cancel: "btn-neutral",
     urgent: "btn-accent",
-    error: "bg-error bg-opacity-60 hover:bg-error hover:!bg-opacity-100 !text-error-content",
+    error: "bg-error/60 hover:bg-error hover:bg-error! !text-error-content",
     neutral: "bg-base-100 hover:bg-base-200 hover:outline hover:outline-base-100 text-base-content",
     none: "bg-transparent text-base-content",
   };
@@ -43,7 +43,7 @@
   }: ButtonProps = $props();
 
   let buttonClass = $derived(
-    twMerge("btn h-auto min-h-[unset] font-normal", COLOR_CLASS[color], SIZE_CLASS[size], cl)
+    twMerge("btn h-auto min-h-[unset] font-normal rounded-lg p-2", COLOR_CLASS[color], SIZE_CLASS[size], cl)
   );
 
   function handleClick(ev: MouseEvent) {
@@ -59,7 +59,7 @@
   {...restProps}
 >
   <div class="loading loading-spinner loading-sm mx-auto"></div>
-  <div class={twMerge("content flex gap-2 items-center justify-center", contentClass)}>
+  <div class={twMerge("content flex gap-1 items-center justify-center", contentClass)}>
     {@render children?.()}
   </div>
 </button>

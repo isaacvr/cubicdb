@@ -6,11 +6,11 @@ import type {
 } from "$lib/interfaces/devices.types";
 import type { Actor } from "@helpers/stateMachine";
 import { randomUUID } from "@helpers/strings";
-import { TimerState, type InputContext } from "@interfaces";
+import { TimerState, type InputContext, type ITimerController } from "@interfaces";
 import { get, writable, type Writable } from "svelte/store";
 import { createActor, setup } from "xstate";
 
-interface StackmatContext extends InputContext {
+interface StackmatContext extends InputContext, ITimerController {
   stState: Writable<StackmatState>;
   lastState: Writable<StackmatState | null>;
 }
@@ -18,7 +18,7 @@ interface StackmatContext extends InputContext {
 type STActor = (data: Actor<StackmatContext>) => any;
 
 const enterDisconnect: STActor = ({ context: { timerState: state, device } }) => {
-  let _device = get(device);
+  const _device = get(device);
   if (_device.type === "stackmat") {
     _device.isConnected = false;
   }
@@ -44,7 +44,7 @@ const enterStopped: STActor = ({ context: { timerState: state, time, addSolve } 
 
 const isTurnedOn: STActor = ({ context: { device, lastState, stState } }) => {
   if (!get(lastState)?.on && get(stState).on) {
-    let _device = get(device);
+    const _device = get(device);
     if (_device.type === "stackmat") {
       _device.isConnected = true;
     }
@@ -55,7 +55,7 @@ const isTurnedOn: STActor = ({ context: { device, lastState, stState } }) => {
 };
 
 const isTurnedOff: STActor = ({ context: { device, stState } }) => {
-  let _device = get(device);
+  const _device = get(device);
 
   if (_device.type === "stackmat") {
     if (_device.isConnected && !get(stState).on) {
@@ -70,7 +70,7 @@ const isTurnedOff: STActor = ({ context: { device, stState } }) => {
 const isRunning: STActor = ({ context: { lastState, device, stState, createNewSolve } }) => {
   if (get(stState).on && get(stState).time_milli > (get(lastState)?.time_milli || 0)) {
     createNewSolve();
-    let _device = get(device);
+    const _device = get(device);
     if (_device.type === "stackmat") {
       _device.isConnected = true;
     }
@@ -175,7 +175,7 @@ export class StackmatInput implements IStackmatDevice {
 
   static async updateInputDevices(): Promise<string[][]> {
     const devices: string[][] = [];
-    const retobj: Promise<string[][]> = new Promise(function (resolve, reject) {
+    const retobj: Promise<string[][]> = new Promise(function (resolve) {
       resolve(devices);
     });
 
@@ -235,6 +235,7 @@ export class StackmatInput implements IStackmatDevice {
     this.interpreter = createActor(StackmatMachine, {
       input: {
         ...context,
+        ...context.timerController,
         stState: writable({}),
         lastState: writable(null),
       },

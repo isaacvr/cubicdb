@@ -821,9 +821,7 @@
       <div id="best-marks">
         {#each $localLang.TIMER.bestList as ao}
           {#if $stats[ao.key].id}
-            <span
-              class="flex items-center justify-between px-2 rounded-md bg-black bg-opacity-40 tx-text"
-            >
+            <span class="flex items-center justify-between px-2 rounded-md bg-black/40 tx-text">
               {ao.title}:
 
               <Button
@@ -856,6 +854,8 @@
 </section>
 
 <style lang="postcss">
+  @reference "@src/themes/index.css";
+
   @media not all and (min-width: 640px) {
     section {
       --rows: 7;

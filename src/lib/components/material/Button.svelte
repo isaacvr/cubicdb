@@ -41,7 +41,7 @@
   hover:shadow-lg
 ` +
     (flat ? " shadow-none px-2 py-1 " : "") +
-    (cl || " hover:bg-white hover:bg-opacity-10 border-none text-gray-400") +
+    (cl || " hover:bg-white/10 border-none text-gray-400") +
     (loading ? " isLoading pointer-events-none" : "")}
   on:click={handleClick}
   use:ripple={rp}

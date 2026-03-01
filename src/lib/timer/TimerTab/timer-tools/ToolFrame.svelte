@@ -71,6 +71,8 @@
 </li> -->
 
 <style lang="postcss">
+  @reference "@src/themes/index.css";
+
   .tool {
     @apply bg-gray-700 rounded-md grid overflow-auto w-fit shadow-sm border border-gray-600;
     max-height: min(30rem, 90vh);

@@ -1,9 +1,18 @@
 import type { ISessionRepository } from "../ports/ISessionRepository";
+import type { IEventDispatcher } from "../ports/IEventDispatcher";
 import type { Session } from "@interfaces";
 import { SessionDefaultSettings } from "@constants";
+import { SessionCreated } from "@events/domain";
 
+/**
+ * Use case: Create a new session
+ * Normalizes input and emits SessionCreated event
+ */
 export class AddSession {
-  constructor(private repo: ISessionRepository) {}
+  constructor(
+    private repo: ISessionRepository,
+    private dispatcher: IEventDispatcher
+  ) {}
 
   /**
    * Normalize and validate session before persisting.
@@ -28,6 +37,8 @@ export class AddSession {
 
     normalized.tName = normalized.name;
 
-    return this.repo.addSession(normalized);
+    const added = await this.repo.addSession(normalized);
+    await this.dispatcher.dispatch(new SessionCreated(added));
+    return added;
   }
 }

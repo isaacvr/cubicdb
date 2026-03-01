@@ -99,12 +99,14 @@
 </div>
 
 <style lang="postcss">
+  @reference "@src/themes/index.css";
+
   .metronome {
     @apply grid items-center gap-4 m-2;
     grid-template-columns: repeat(3, auto);
   }
 
   :global(.metronome [type="range"]) {
-    @apply !bg-gray-800;
+    @apply bg-gray-800!;
   }
 </style>

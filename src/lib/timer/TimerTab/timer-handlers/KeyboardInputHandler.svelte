@@ -38,18 +38,11 @@
     class: _cl = $bindable(""),
   }: KeyboardInputProps = $props();
 
-  const {
-    session,
-    ready,
-    decimals,
-    timerState,
-    solves,
-    editSolve,
-    handleUpdateSolve,
-    handleRemoveSolves,
-  } = context;
+  const { editSolve, handleUpdateSolve, handleRemoveSolves, timerController } = context;
 
-  const { time, lastSolve, currentStep, reset } = inputContext;
+  const { reset } = inputContext;
+  const { time, lastSolve, currentStep, session, ready, decimals, timerState, solves } =
+    timerController;
 
   let solveControl = $state([
     {
@@ -60,7 +53,10 @@
         ev.stopPropagation();
 
         if ($lastSolve) {
-          solveController.removeSolves([$lastSolve]).then(handleRemoveSolves).catch(() => {});
+          solveController
+            .removeSolves([$lastSolve])
+            .then(handleRemoveSolves)
+            .catch(() => {});
           $time = 0;
           reset();
         }
@@ -123,13 +119,23 @@
   function startTimer() {
     if ($device.type != "timer_keyboard") return;
 
-    $device.keyUpHandler({ type: "keydown", code: "Space" } as KeyboardEvent);
+    $device.keyDownHandler({ type: "keydown", code: "Space" } as KeyboardEvent);
     $device.keyUpHandler({ type: "keyup", code: "Space" } as KeyboardEvent);
   }
 
   function stopTimer() {
     if ($device.type != "timer_keyboard") return;
-    $device.stopTimer();
+
+    if ($timerState === TimerState.RUNNING) {
+      // In RUNNING, any non-escape keydown transitions to STOPPED and saves solve.
+      $device.keyDownHandler({ type: "keydown", code: "Enter" } as KeyboardEvent);
+      return;
+    }
+
+    if ($timerState === TimerState.PAUSE) {
+      // In PAUSE, escape returns to CLEAR.
+      $device.keyDownHandler({ type: "keydown", code: "Escape" } as KeyboardEvent);
+    }
   }
 
   function pauseOrResume() {
@@ -153,7 +159,7 @@
   <span class="select-none">{tm[0]}</span>
   {#if tm[1]}
     <span
-      class="text-base-content text-opacity-70 bg-primary bg-clip-text
+      class="text-base-content/70 bg-primary bg-clip-text
         opacity-70 text-8xl mt-auto select-none">.{tm[1]}</span
     >
   {/if}
@@ -162,7 +168,7 @@
 <div class={twMerge("flex flex-col items-center transition-all duration-200 mx-auto", _cl)}>
   {#if $timerState === TimerState.RUNNING || $timerState === TimerState.PAUSE}
     <span
-      class="timer flex tx-text max-sm:text-7xl max-sm:[line-height:8rem]"
+      class="timer flex tx-text max-sm:text-7xl max-sm:leading-32"
       in:scale
       class:ready={$ready}
     >
@@ -174,7 +180,7 @@
     </span>
   {:else if $device.type === "timer_keyboard"}
     <span
-      class="timer flex items-end tx-text max-sm:text-7xl max-sm:[line-height:8rem]"
+      class="timer flex items-end tx-text max-sm:text-7xl max-sm:leading-32"
       class:prevention={$timerState === TimerState.PREVENTION}
       class:ready={$ready}
     >

@@ -7,6 +7,7 @@ import { isEscape, type Actor } from "@helpers/stateMachine";
 import {
   TimerState,
   type InputContext,
+  type ITimerController,
   type Solve,
   Penalty,
   type BluetoothDeviceData,
@@ -23,7 +24,7 @@ import { Emitter } from "@classes/Emitter";
 let solvedState = SOLVED_FACELET;
 
 interface GANContext {
-  input: InputContext;
+  input: InputContext & ITimerController;
   sequencer: AlgorithmSequence;
   sequenceParts: Writable<string[]>;
   recoverySequence: Writable<string>;
@@ -544,8 +545,9 @@ export class GANInput implements IGANiCarryDevice {
   }
 
   init(context: InputContext) {
+    const fullContext = { ...context, ...context.timerController };
     this.context = {
-      input: context,
+      input: fullContext,
       moves: this.moves,
       sequencer: this.sequencer,
       recoverySequence: this.recoverySequence,

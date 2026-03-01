@@ -579,11 +579,11 @@
 
     <!-- External Timer -->
     <!-- {#if modalData.settings.input === "ExternalTimer"}
-      <section class="bg-white bg-opacity-10 p-2 shadow-md rounded-md">
+      <section class="bg-white/10 p-2 shadow-md rounded-md">
         <ul class="mt-4">
           {#each $externalTimers as { id, name } (id)}
             <li
-              class="flex items-center justify-between mt-2 pl-4 bg-white bg-opacity-10 rounded-md text-white"
+              class="flex items-center justify-between mt-2 pl-4 bg-white/10 rounded-md text-white"
             >
               {name}
               <Button
@@ -752,7 +752,7 @@
   <Button
     color="neutral"
     class={"shaded-card aspect-square " +
-      ($selectedCases[cs.pos] ? "border !border-primary !border-opacity-80" : "")}
+      ($selectedCases[cs.pos] ? "border !border-primary/80" : "")}
     contentClass="grid"
     onclick={() => {
       $selectedCases[cs.pos] = !$selectedCases[cs.pos];

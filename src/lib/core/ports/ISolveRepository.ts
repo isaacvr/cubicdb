@@ -1,4 +1,4 @@
-import type { Solve } from "@interfaces";
+import type { Solve } from "@domain/Solve";
 
 export interface ISolveRepository {
   addSolve(solve: Solve): Promise<Solve>;

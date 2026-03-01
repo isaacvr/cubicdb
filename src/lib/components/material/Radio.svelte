@@ -7,6 +7,8 @@
 <input type="radio" {name} {value} class="wrapper m-0 p-0" />
 
 <style lang="postcss">
+  @reference "@src/themes/index.css";
+
   .wrapper {
     @apply flex items-center justify-center h-4 w-4
     shadow-sm rounded-full

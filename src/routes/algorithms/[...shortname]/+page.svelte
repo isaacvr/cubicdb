@@ -568,6 +568,8 @@
 />
 
 <style lang="postcss">
+  @reference "@src/themes/index.css";
+
   ul:not(.no-grid) {
     display: flex;
     flex-wrap: wrap;

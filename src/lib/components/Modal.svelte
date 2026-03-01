@@ -119,6 +119,8 @@
 </dialog>
 
 <style lang="postcss">
+  @reference "@src/themes/index.css";
+
   @keyframes fadeIn {
     from {
       background-color: #0000;

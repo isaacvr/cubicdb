@@ -106,6 +106,8 @@
 </div>
 
 <style lang="postcss">
+  @reference "@src/themes/index.css";
+
   .selected {
     color: var(--th-text);
     background-color: var(--th-primary-800);

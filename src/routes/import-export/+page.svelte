@@ -233,8 +233,8 @@
             <Checkbox bind:checked={s.editing} />
             <Button
               on:click={() => (sSession = s)}
-              class="p-2 bg-blue-700 bg-opacity-40 text-gray-300 rounded-md font-bold shadow-md cursor-pointer
-              {s === sSession ? 'bg-opacity-100 underline' : ''} {s.icon ? ' pl-8' : ''}"
+              class="p-2 bg-blue-700/40 text-gray-300 rounded-md font-bold shadow-md cursor-pointer
+              {s === sSession ? 'bg-blue-700 underline' : ''} {s.icon ? ' pl-8' : ''}"
             >
               {#if s.icon}
                 <span
@@ -275,8 +275,8 @@
           <Checkbox bind:checked={s.editing} />
           <Button
             on:click={() => (oSession = s)}
-            class="p-2 bg-blue-700 bg-opacity-40 text-gray-300 rounded-md font-bold shadow-md cursor-pointer
-              {s === oSession ? 'bg-opacity-100 underline' : ''}
+            class="p-2 bg-blue-700/40 text-gray-300 rounded-md font-bold shadow-md cursor-pointer
+              {s === oSession ? 'bg-blue-700 underline' : ''}
               "
           >
             {s.name}

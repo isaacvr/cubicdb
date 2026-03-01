@@ -1,0 +1,278 @@
+// QUICK REFERENCE - Event-Driven Architecture
+// Copy-paste templates for Phase 2+ implementation
+
+=== TEMPLATE 1: Create New Use Case with Events ===
+
+// src/lib/core/usecases/AddAlgorithm.ts
+import type { IAlgorithmRepository } from "../ports/IAlgorithmRepository";
+import type { IEventDispatcher } from "../ports/IEventDispatcher";
+import type { Algorithm } from "@interfaces";
+import { AlgorithmAdded } from "@events/domain";
+
+export class AddAlgorithm {
+  constructor(
+    private repo: IAlgorithmRepository,
+    private dispatcher: IEventDispatcher
+  ) {}
+
+  async execute(algorithm: Algorithm): Promise<Algorithm> {
+    // Validate
+    if (!algorithm.shortName) throw new Error("Algorithm must have shortName");
+    
+    // Persist
+    const added = await this.repo.addAlgorithm(algorithm);
+    
+    // Notify
+    await this.dispatcher.dispatch(new AlgorithmAdded(added));
+    
+    return added;
+  }
+}
+
+=== TEMPLATE 2: Create New Domain Event ===
+
+// src/lib/events/domain/YourEvents.ts
+import type { DomainEvent } from '../types';
+import type { YourEntity } from '@interfaces';
+
+export class YourEntityCreated implements DomainEvent {
+  readonly type = 'YourEntityCreated';
+  readonly timestamp = Date.now();
+  readonly aggregate = 'YourEntity';
+
+  constructor(public readonly entity: YourEntity) {}
+}
+
+export class YourEntityUpdated implements DomainEvent {
+  readonly type = 'YourEntityUpdated';
+  readonly timestamp = Date.now();
+  readonly aggregate = 'YourEntity';
+
+  constructor(
+    public readonly previousEntity: YourEntity,
+    public readonly updatedEntity: YourEntity
+  ) {}
+}
+
+=== TEMPLATE 3: Create New Repository Port ===
+
+// src/lib/core/ports/IYourRepository.ts
+import type { YourEntity } from "@interfaces";
+
+export interface IYourRepository {
+  get(id: string): Promise<YourEntity | null>;
+  getAll(): Promise<YourEntity[]>;
+  add(entity: YourEntity): Promise<YourEntity>;
+  update(entity: YourEntity): Promise<YourEntity>;
+  remove(entity: YourEntity): Promise<YourEntity>;
+}
+
+=== TEMPLATE 4: Create Event Handler Setup ===
+
+// src/lib/events/handlers/yourHandlers.ts
+import { eventBus } from '../singleton';
+import { YourEntityCreated, YourEntityUpdated } from '../domain';
+import type { EventHandler } from '../types';
+
+export function setupYourHandlers() {
+  const onYourEntityCreated: EventHandler<YourEntityCreated> = async (event) => {
+    console.log('[YourEntityCreated]', event.entity);
+    // TODO: Handle event
+  };
+
+  const onYourEntityUpdated: EventHandler<YourEntityUpdated> = async (event) => {
+    console.log('[YourEntityUpdated]', event.updatedEntity);
+    // TODO: Handle event
+  };
+
+  eventBus.subscribe(YourEntityCreated, onYourEntityCreated);
+  eventBus.subscribe(YourEntityUpdated, onYourEntityUpdated);
+}
+
+=== TEMPLATE 5: Adapter Implementation ===
+
+// src/lib/core/adapters/YourRepositoryAdapter.ts
+import type { IYourRepository } from "../ports/IYourRepository";
+import type { YourEntity } from "@interfaces";
+
+export class YourRepositoryAdapter implements IYourRepository {
+  constructor(private ipc: any) {} // IPC or database connection
+
+  async get(id: string): Promise<YourEntity | null> {
+    return this.ipc.getYour(id);
+  }
+
+  async getAll(): Promise<YourEntity[]> {
+    return this.ipc.getAllYour();
+  }
+
+  async add(entity: YourEntity): Promise<YourEntity> {
+    return this.ipc.addYour(entity);
+  }
+
+  async update(entity: YourEntity): Promise<YourEntity> {
+    return this.ipc.updateYour(entity);
+  }
+
+  async remove(entity: YourEntity): Promise<YourEntity> {
+    return this.ipc.removeYour(entity);
+  }
+}
+
+=== TEMPLATE 6: Subscribe in Component ===
+
+// src/pages/Your/YourPage.svelte
+<script lang="ts">
+  import { onMount, onDestroy } from 'svelte';
+  import { eventBus } from '@events';
+  import { YourEntityCreated, YourEntityUpdated } from '@events/domain';
+  import type { EventSubscription } from '@events/types';
+
+  let entities = [];
+  let subscriptions: EventSubscription[] = [];
+
+  onMount(() => {
+    // Subscribe to events
+    subscriptions.push(
+      eventBus.subscribe(YourEntityCreated, (event) => {
+        entities = [...entities, event.entity];
+      })
+    );
+
+    subscriptions.push(
+      eventBus.subscribe(YourEntityUpdated, (event) => {
+        entities = entities.map(e => 
+          e.id === event.updatedEntity.id ? event.updatedEntity : e
+        );
+      })
+    );
+  });
+
+  onDestroy(() => {
+    subscriptions.forEach(sub => sub.unsubscribe());
+  });
+</script>
+
+=== TEMPLATE 7: Unit Test ===
+
+// src/lib/core/usecases/__tests__/YourUseCase.test.ts
+import { describe, it, expect, beforeEach } from 'vitest';
+import { YourUseCase } from '../YourUseCase';
+import { EventBus } from '@events/EventBus';
+import { EventDispatcher } from '@events/EventDispatcher';
+import { YourEntityCreated } from '@events/domain';
+
+describe('YourUseCase', () => {
+  let useCase: YourUseCase;
+  let mockRepo: any;
+  let dispatcher: EventDispatcher;
+  let eventBus: EventBus;
+
+  beforeEach(() => {
+    eventBus = new EventBus();
+    dispatcher = new EventDispatcher(eventBus);
+    mockRepo = {
+      add: vitest.fn().mockResolvedValue({ id: '1', name: 'test' })
+    };
+    useCase = new YourUseCase(mockRepo, dispatcher);
+  });
+
+  it('should emit YourEntityCreated event', async () => {
+    const events: YourEntityCreated[] = [];
+    eventBus.subscribe(YourEntityCreated, (e) => events.push(e));
+
+    await useCase.execute({ name: 'test' });
+
+    expect(events).toHaveLength(1);
+    expect(events[0].entity.name).toBe('test');
+  });
+});
+
+=== EVENT NAMING CONVENTIONS ===
+
+Pattern: [Entity][Action]
+- EntityCreated (Create operation)
+- EntityUpdated (Update operation)
+- EntityDeleted (Delete operation)
+- EntitySelected (Selection change)
+- EntityStatusChanged (Status-specific update)
+- EntitiesRemoved (Bulk delete)
+
+Examples:
+✅ SolveAdded, SessionUpdated, AlgorithmRemoved
+❌ OnSolveAdd, SolveAddedEvent, CreateSolve (too verbose)
+
+=== COMMON PATTERNS ===
+
+Pattern A: Optimistic Update
+const optimisticEntity = { ...entity, status: 'pending' };
+const result = await useCase.execute(entity);
+if (!result) revertOptimistic();
+
+Pattern B: Bulk Operations
+const removed = await useCase.removeMany([e1, e2, e3]);
+dispatch(new EntitiesRemoved(removed));
+
+Pattern C: Before/After Events
+dispatch(new EntityUpdated(previousState, newState));
+// Allows calculating deltas in handlers
+
+Pattern D: Sequential Processing
+eventBus.subscribe(EntityCreated, async (e) => {
+  await updateRelated(e);
+  dispatch(new EntityRelatedUpdated(related));
+});
+
+=== CIRCULAR REFERENCE PREVENTION ===
+
+❌ DON'T DO THIS:
+EventA → triggers handler → dispatch EventB
+EventB → triggers handler → dispatch EventA
+// EventBus will warn and prevent re-entry
+
+✅ DO THIS:
+EventA → handler updates state
+State change → separate observer triggers EventB
+// Use separate event for the cascade
+
+=== TESTING HANDLERS ===
+
+it('should update UI when solve added', async () => {
+  const ui = { solves: [] };
+  const handler = (e) => { ui.solves.push(e.solve); };
+  
+  eventBus.subscribe(SolveAdded, handler);
+  await eventBus.emit(new SolveAdded(mockSolve));
+  
+  expect(ui.solves).toHaveLength(1);
+  handler.unsubscribe(); // Clean up
+});
+
+=== DEBUGGING ===
+
+// Log all events
+eventBus.subscribe('*', (eventName, ...args) => {
+  console.log('Event:', eventName, args);
+});
+
+// Count subscribers
+console.log(eventBus.getSubscriberCount(SolveAdded)); // 3
+
+// Clear for testing
+eventBus.clear();
+
+=== MIGRATION CHECKLIST ===
+
+For each entity (Algorithm, Reconstruction, etc):
+
+[ ] Create domain event classes (Added, Updated, Deleted, etc)
+[ ] Create repository port (IAlgorithmRepository)
+[ ] Create use cases (AddAlgorithm, UpdateAlgorithm, etc)
+[ ] Update use cases to inject IEventDispatcher
+[ ] Create event handler setup function
+[ ] Register handlers in app initialization
+[ ] Create adapters implementing repository ports
+[ ] Replace UI dataService calls with events
+[ ] Add handler subscriptions in components
+[ ] Test event flow end-to-end
+

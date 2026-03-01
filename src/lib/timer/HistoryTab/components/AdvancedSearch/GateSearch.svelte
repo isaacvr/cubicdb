@@ -94,6 +94,8 @@
 </div>
 
 <style lang="postcss">
+  @reference "@src/themes/index.css";
+
   .gate {
     @apply border border-gray-600 rounded-md overflow-clip grid transition-all duration-200;
     grid-template-rows: auto 1fr;
