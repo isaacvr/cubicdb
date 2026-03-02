@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Tooltip } from "flowbite-svelte";
+  import { type Snippet } from "svelte";
   import { type Keycode } from "$lib/constants/keys";
   import {
     ChevronLeftIcon,
@@ -11,10 +11,11 @@
   import { twMerge } from "tailwind-merge";
 
   interface TooltipProps {
-    children?: any;
+    children?: Snippet;
     keyBindings?: Keycode[];
     placement?: Placement;
     class?: string;
+    tooltipText?: string;
   }
 
   type PartialRecord<K extends keyof any, T> = Partial<Record<K, T>>;
@@ -32,14 +33,24 @@
   let {
     children,
     keyBindings,
-    placement = undefined,
-    class: _cl = $bindable(""),
+    placement = "top",
+    class: _cl = "",
+    tooltipText = "",
   }: TooltipProps = $props();
+
+  const placementMap: Record<string, string> = {
+    top: "tooltip-top",
+    bottom: "tooltip-bottom",
+    left: "tooltip-left",
+    right: "tooltip-right",
+  };
 </script>
 
-<Tooltip class={twMerge("bg-neutral select-none w-max max-w-sm", _cl)} bind:placement>
+<div class="tooltip {placementMap[placement] || 'tooltip-top'} {_cl}" data-tip={tooltipText || ""}>
   <div class="flex gap-2 items-center">
-    {@render children?.()}
+    {#if children}
+      {@render children()}
+    {/if}
     {#if keyBindings}
       <div class="flex items-center gap-1">
         {#each keyBindings as k, p}
@@ -59,4 +70,4 @@
       </div>
     {/if}
   </div>
-</Tooltip>
+</div>

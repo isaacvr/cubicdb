@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { type Snippet } from "svelte";
   import type { ButtonColor } from "@interfaces";
   import { twMerge } from "tailwind-merge";
 
@@ -6,7 +7,7 @@
 
   interface ButtonProps {
     loading?: boolean;
-    children?: any;
+    children?: Snippet;
     onclick?: Function;
     class?: string;
     contentClass?: string;
@@ -60,7 +61,9 @@
 >
   <div class="loading loading-spinner loading-sm mx-auto"></div>
   <div class={twMerge("content flex gap-1 items-center justify-center", contentClass)}>
-    {@render children?.()}
+    {#if children}
+      {@render children()}
+    {/if}
   </div>
 </button>
 

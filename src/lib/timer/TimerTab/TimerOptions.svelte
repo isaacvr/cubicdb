@@ -4,7 +4,6 @@
   import { getSeed, setSeed } from "@cstimer/lib/mathlib";
   import { dataService } from "$lib/data-services/data.service";
   import { sessionController } from "$lib/controllers/SessionController";
-  import { Popover, Dropdown, DropdownItem, Input } from "flowbite-svelte";
   import { NotificationService } from "@stores/notification.service";
   import { localLang } from "@stores/language.service";
   import { type ActiveTool, type Solve, type TimerContext, type ToolItem } from "@interfaces";
@@ -21,6 +20,7 @@
   import SolverTool from "./timer-tools/SolverTool.svelte";
   import Tooltip from "$lib/cubicdbKit/Tooltip.svelte";
   import Button from "$lib/cubicdbKit/Button.svelte";
+  import Input from "$lib/cubicdbKit/Input.svelte";
 
   import CubeCategory from "@components/wca/CubeCategory.svelte";
 
@@ -405,20 +405,21 @@
     {$localLang.HOME.tools}
   </Tooltip>
 
-  <Dropdown
-    bind:open={showToolsMenu}
-    placement="bottom"
-    class="max-h-[20rem] w-max overflow-y-scroll bg-base-100 rounded-md text-base-content"
-    triggeredBy="#tools"
-  >
+  <div class="absolute mt-2 bg-base-100 rounded-md text-base-content z-50 shadow-lg max-h-[20rem] overflow-y-auto {showToolsMenu ? 'block' : 'hidden'}">
     {#each tools as tool}
       {@const Icon = tool.icon}
-      <DropdownItem defaultClass={DD_CLASS} onclick={() => addTool(tool)}>
+      <button
+        class={DD_CLASS}
+        onclick={() => {
+          addTool(tool);
+          showToolsMenu = false;
+        }}
+      >
         <Icon {...tool.iconParams} size={iconSize} />
         {tool.text}
-      </DropdownItem>
+      </button>
     {/each}
-  </Dropdown>
+  </div>
 {/if}
 
 {#if options.hints}
@@ -565,16 +566,14 @@
       >
         {$localLang.global.steps}: {$session.settings.steps}
       </section>
-      <Popover>
-        <div class="flex flex-wrap gap-2">
-          {#each $session.settings.stepNames || [] as st, p}
-            <Button
-              class="pointer-events-none text-black"
-              style={`background-color: ${STEP_COLORS[p]}`}>{st}</Button
-            >
-          {/each}
-        </div>
-      </Popover>
+      <div class="flex flex-wrap gap-2">
+        {#each $session.settings.stepNames || [] as st, p}
+          <Button
+            class="pointer-events-none text-black"
+            style={`background-color: ${STEP_COLORS[p]}`}>{st}</Button
+          >
+        {/each}
+      </div>
     {/if}
 
     <!-- External Timer -->
@@ -729,9 +728,9 @@
 <!-- Seed Modal -->
 <Modal bind:show={showSeedModal} onclose={recoverEnableKeyboard}>
   <Input bind:value={seedStr} />
-  <Input type="number" bind:value={seedCounter} min={1} max={5000} />
+  <Input type="number" bind:value={seedCounter} min={1} max={5000} class="mt-2" />
 
-  <div class="flex justify-center gap-2">
+  <div class="flex justify-center gap-2 mt-4">
     <Button onclick={() => (showSeedModal = false)}>
       {$localLang.global.cancel}
     </Button>

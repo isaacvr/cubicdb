@@ -3,7 +3,6 @@
   import { timer } from "@helpers/timer";
   import { type ITimerController, type TimerContext } from "@interfaces";
   import { localLang } from "@stores/language.service";
-  import { Popover } from "flowbite-svelte";
   import { solveSummary } from "@helpers/statistics";
   import { copyToClipboard } from "@helpers/strings";
   import { NotificationService } from "@stores/notification.service";
@@ -89,13 +88,13 @@
   <div class:better={$stats.avg.better && $stats.counter.value > 0}>
     <span>
       <span class="stat-info">{$localLang.TIMER.average}:</span>
-      <Popover class={POPOVER_CLASS}>
+      <div class={POPOVER_CLASS}>
         <p>{$localLang.TIMER.stats.average}</p>
 
         <span class="my-2 mx-auto w-fit flex text-xl">
           <Katex math={`\\mu = \\frac{\\sum_{i=1}^{N} x_i}{N}`} />
         </span>
-      </Popover>
+      </div>
     </span>
 
     {#if !$stats.avg.value}
@@ -110,13 +109,13 @@
   <div>
     <span>
       <span class="stat-info">{$localLang.TIMER.deviation}:</span>
-      <Popover class={POPOVER_CLASS}>
+      <div class={POPOVER_CLASS}>
         <p>{$localLang.TIMER.stats.deviation}</p>
 
         <span class="my-2 mx-auto w-fit flex text-xl">
           <Katex math={`\\sigma = \\sqrt{\\frac{1}{N} \\sum_{i=1}^{N} (x_i - \\mu)^2}`} />
         </span>
-      </Popover>
+      </div>
     </span>
     {#if !$stats.dev.value}
       <span>N/A</span>
@@ -130,13 +129,13 @@
   <div class:better={$stats.Mo3.better && $stats.counter.value > 0 && $stats.Mo3.value > -1}>
     <span>
       <span class="stat-info">Mo3:</span>
-      <Popover class={POPOVER_CLASS}>
+      <div class={POPOVER_CLASS}>
         <p>{$localLang.TIMER.stats.mo3}</p>
 
         <span class="my-2 mx-auto w-fit flex text-xl">
           <Katex math={`Mo3 = \\frac{x_1 + x_2 + x_3}{3}`} />
         </span>
-      </Popover>
+      </div>
     </span>
 
     <button class="cursor-pointer hover:text-primary" onclick={() => summary(3)}>
@@ -152,13 +151,13 @@
   <div class:better={$stats.Ao5.better && $stats.counter.value > 0 && $stats.Ao5.value > -1}>
     <span>
       <span class="stat-info">Ao5:</span>
-      <Popover class={POPOVER_CLASS}>
+      <div class={POPOVER_CLASS}>
         <p>{$localLang.TIMER.stats.ao5}</p>
 
         <span class="my-2 mx-auto w-fit flex text-xl">
           <Katex math={`Ao5 = \\frac{(\\sum_{i=1}^{5} x_i) - max - min}{3}`} />
         </span>
-      </Popover>
+      </div>
     </span>
 
     <button class="cursor-pointer hover:text-primary" onclick={() => summary(5)}>
