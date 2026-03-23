@@ -405,7 +405,7 @@
     {$localLang.HOME.tools}
   </Tooltip>
 
-  <div class="absolute mt-2 bg-base-100 rounded-md text-base-content z-50 shadow-lg max-h-[20rem] overflow-y-auto {showToolsMenu ? 'block' : 'hidden'}">
+  <div class="absolute mt-2 bg-base-100 rounded-md text-base-content z-50 shadow-lg max-h-80 overflow-y-auto {showToolsMenu ? 'block' : 'hidden'}">
     {#each tools as tool}
       {@const Icon = tool.icon}
       <button
@@ -751,7 +751,7 @@
   <Button
     color="neutral"
     class={"shaded-card aspect-square " +
-      ($selectedCases[cs.pos] ? "border !border-primary/80" : "")}
+      ($selectedCases[cs.pos] ? "border border-primary/80!" : "")}
     contentClass="grid"
     onclick={() => {
       $selectedCases[cs.pos] = !$selectedCases[cs.pos];
