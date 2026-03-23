@@ -84,4 +84,7 @@ Timer REACCIONA (via EventBus subscriptions):
 - [reactor.md](reactor.md) - Timer reactor pseudocode
 - [sessions.md](sessions.md) - Session switching
 - [solves.md](solves.md) - Solve CRUD
+- [scramble.md](scramble.md) - ScrambleService, fallback system, preview images
+- [settings.md](settings.md) - Session settings vs app config
+- [state.md](state.md) - State management: EventBus vs $state vs context
 - [migration.md](migration.md) - Migration order
