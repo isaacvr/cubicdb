@@ -11,7 +11,7 @@ import { SessionCreated } from "@events/domain";
 export class AddSession {
   constructor(
     private repo: ISessionRepository,
-    private dispatcher: IEventDispatcher
+    private dispatcher?: IEventDispatcher
   ) {}
 
   /**
@@ -38,7 +38,7 @@ export class AddSession {
     normalized.tName = normalized.name;
 
     const added = await this.repo.addSession(normalized);
-    await this.dispatcher.dispatch(new SessionCreated(added));
+    await this.dispatcher?.dispatch(new SessionCreated(added));
     return added;
   }
 }

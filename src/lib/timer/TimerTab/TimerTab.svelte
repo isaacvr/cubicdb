@@ -358,7 +358,7 @@
         <Simulator
           controlled
           useDevice={$device}
-          selectedPuzzle={"icarry"}
+          selectedPuzzle="icarry"
           enableDrag={false}
           enableKeyboard={false}
         />

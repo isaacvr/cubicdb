@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Copyright (C) 2023  Shuang Chen
 
@@ -97,7 +98,7 @@ export function setNPerm(arr: number[], idx: number, n: number, even: number = 0
       }
     }
     if (even < 0 && (prt & 1) != 0) {
-      let tmp = arr[n - 1];
+      const tmp = arr[n - 1];
       arr[n - 1] = arr[n - 2];
       arr[n - 2] = tmp;
     }
@@ -106,7 +107,7 @@ export function setNPerm(arr: number[], idx: number, n: number, even: number = 0
   let vall = 0x76543210;
   let valh = 0xfedcba98;
   for (let i = 0; i < n - 1; i++) {
-    let p = fact[n - 1 - i];
+    const p = fact[n - 1 - i];
     let v = idx / p;
     idx = idx % p;
     prt ^= v;
@@ -114,11 +115,11 @@ export function setNPerm(arr: number[], idx: number, n: number, even: number = 0
     if (v >= 32) {
       v = v - 32;
       arr[i] = (valh >> v) & 0xf;
-      let m = (1 << v) - 1;
+      const m = (1 << v) - 1;
       valh = (valh & m) + ((valh >> 4) & ~m);
     } else {
       arr[i] = (vall >> v) & 0xf;
-      let m = (1 << v) - 1;
+      const m = (1 << v) - 1;
       vall = (vall & m) + ((vall >>> 4) & ~m) + (valh << 28);
       valh = valh >> 4;
     }
@@ -147,7 +148,7 @@ export function getNPerm(arr: number[], n: number, even: number = 0) {
   let vall = 0x76543210;
   let valh = 0xfedcba98;
   for (let i = 0; i < n - 1; i++) {
-    let v = arr[i] << 2;
+    const v = arr[i] << 2;
     idx *= n - i;
     if (v >= 32) {
       idx += (valh >> (v - 32)) & 0xf;

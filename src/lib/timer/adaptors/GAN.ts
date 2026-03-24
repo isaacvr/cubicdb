@@ -61,7 +61,7 @@ const isScrambled: GANActor = ({ context, event }) => {
   const seq = context.sequencer;
   seq.feed(event.data.move.trim());
 
-  let { parts, recovery } = updateSequence(seq);
+  const { parts, recovery } = updateSequence(seq);
 
   context.sequenceParts.set(parts);
   context.recoverySequence.set(recovery);
@@ -88,7 +88,7 @@ const isCompleteCube: GANActor = ({ event }) => {
 };
 
 const isScrambleReady: GANActor = ({ context }) => {
-  if (!!context.sequencer.scramble.length) {
+  if (context.sequencer.scramble.length) {
     let {} = updateSequence(context.sequencer);
     return true;
   }
@@ -98,7 +98,7 @@ const isScrambleReady: GANActor = ({ context }) => {
 
 // Flow control
 const enterConnected: GANActor = ({ context, event }) => {
-  let {
+  const {
     input: { timerState: state, time, decimals, scramble },
     moves,
     sequencer,
@@ -114,7 +114,7 @@ const enterConnected: GANActor = ({ context, event }) => {
   cfop.setSequence(scr);
   roux.setSequence(scr);
 
-  let { parts, recovery } = updateSequence(sequencer);
+  const { parts, recovery } = updateSequence(sequencer);
 
   context.sequenceParts.set(parts);
   context.recoverySequence.set(recovery);
@@ -634,7 +634,7 @@ export class GANInput implements IGANiCarryDevice {
     ctx.sequencer.setScramble(s);
     ctx.cfop.setSequence(s);
     ctx.roux.setSequence(s);
-    let { parts, recovery } = updateSequence(ctx.sequencer);
+    const { parts, recovery } = updateSequence(ctx.sequencer);
     ctx.sequenceParts.set(parts);
     ctx.recoverySequence.set(recovery);
     logSequenceParts(get(ctx.sequenceParts));
@@ -1194,14 +1194,14 @@ export class GANInput implements IGANiCarryDevice {
 
 export async function reconnect(input: GANInput, deviceId: string): Promise<void> {
   return new Promise((resolve, reject) => {
-    let _dataService = get(dataService);
+    const _dataService = get(dataService);
     let resolved = false;
-    let debug = false;
+    const debug = false;
 
     _dataService.config.cancelBluetoothRequest();
 
     debug && console.log("setTimeout");
-    let tm = setTimeout(() => {
+    const tm = setTimeout(() => {
       if (!resolved) {
         debug && console.log("Cancel request");
         _dataService.config.cancelBluetoothRequest();
@@ -1209,7 +1209,7 @@ export async function reconnect(input: GANInput, deviceId: string): Promise<void
     }, 20000);
 
     function handleBluetoothEvent(...args: any[]) {
-      let list: BluetoothDeviceData[] = args[1];
+      const list: BluetoothDeviceData[] = args[1];
 
       if (args[0] === "device-list" && list.some(device => device.deviceId === deviceId)) {
         _dataService.off("bluetooth", handleBluetoothEvent);

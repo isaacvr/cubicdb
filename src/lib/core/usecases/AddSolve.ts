@@ -10,12 +10,12 @@ import { SolveAdded } from "@events/domain";
 export class AddSolve {
   constructor(
     private solveRepo: ISolveRepository,
-    private dispatcher: IEventDispatcher
+    private dispatcher?: IEventDispatcher
   ) {}
 
   async execute(solve: Partial<Solve>): Promise<Solve> {
     const added = await this.solveRepo.addSolve(new Solve(solve));
-    await this.dispatcher.dispatch(new SolveAdded(added));
+    await this.dispatcher?.dispatch(new SolveAdded(added));
     return added;
   }
 }

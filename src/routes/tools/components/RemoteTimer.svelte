@@ -179,7 +179,7 @@
   <div class="h-full w-full grid">
     <!-- <span class={"state flex mx-auto border-2 mt-auto py-3 px-6 rounded-full " + getColor($mState)}> -->
     <!-- { getStateName($mState) } -->
-    <span class={"state flex mx-auto border-2 mt-auto p-2 rounded-lg"}>
+    <span class="state flex mx-auto border-2 mt-auto p-2 rounded-lg">
       {$session?.name || `<${$localLang.global.session}>`}
     </span>
 

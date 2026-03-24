@@ -8,11 +8,11 @@ export function getOrtohedron(x: number, y: number, z: number) {
   const y2 = y / 2;
   const z2 = z / 2;
 
-  let f1 = new Sticker([cmd("LUB"), cmd("LUF"), cmd("RUF"), cmd("RUB")]);
-  let f2 = new Sticker([cmd("LUB"), cmd("LDB"), cmd("LDF"), cmd("LUF")]);
-  let f3 = new Sticker([cmd("LUF"), cmd("LDF"), cmd("RDF"), cmd("RUF")]);
+  const f1 = new Sticker([cmd("LUB"), cmd("LUF"), cmd("RUF"), cmd("RUB")]);
+  const f2 = new Sticker([cmd("LUB"), cmd("LDB"), cmd("LDF"), cmd("LUF")]);
+  const f3 = new Sticker([cmd("LUF"), cmd("LDF"), cmd("RDF"), cmd("RUF")]);
 
-  let pc = new Piece([
+  const pc = new Piece([
     f1,
     f2,
     f3,

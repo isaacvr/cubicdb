@@ -10,12 +10,12 @@ import { SessionDeleted } from "@events/domain";
 export class RemoveSession {
   constructor(
     private repo: ISessionRepository,
-    private dispatcher: IEventDispatcher
+    private dispatcher?: IEventDispatcher
   ) {}
 
   async execute(session: Session): Promise<Session> {
     const removed = await this.repo.removeSession(session);
-    await this.dispatcher.dispatch(new SessionDeleted(removed));
+    await this.dispatcher?.dispatch(new SessionDeleted(removed));
     return removed;
   }
 }

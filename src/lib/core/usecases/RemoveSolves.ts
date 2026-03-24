@@ -10,13 +10,13 @@ import { SolvesRemoved } from "@events/domain";
 export class RemoveSolves {
   constructor(
     private solveRepo: ISolveRepository,
-    private dispatcher: IEventDispatcher
+    private dispatcher?: IEventDispatcher
   ) {}
 
   async execute(solves: Solve[]): Promise<Solve[]> {
     if (!this.solveRepo.removeSolves) throw new Error("removeSolves not implemented by repository");
     const removed = await this.solveRepo.removeSolves(solves);
-    await this.dispatcher.dispatch(new SolvesRemoved(removed));
+    await this.dispatcher?.dispatch(new SolvesRemoved(removed));
     return removed;
   }
 }

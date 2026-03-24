@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Copyright (C) 2023  Shuang Chen
 
@@ -493,32 +494,32 @@ export function getF2LScramble(_type: any, _length: any, prob: any) {
 }
 
 function genZBLLMap() {
-  let isVisited: number[] = [];
-  let zbll_map = [];
-  let cc = new CubieCube();
+  const isVisited: number[] = [];
+  const zbll_map = [];
+  const cc = new CubieCube();
   for (let idx = 0; idx < 27 * 24 * 24; idx++) {
     if ((isVisited[idx >> 5] >> (idx & 0x1f)) & 1) {
       continue;
     }
-    let epi = idx % 24;
-    let cpi = ~~(idx / 24) % 24;
-    let coi = ~~(idx / 24 / 24);
+    const epi = idx % 24;
+    const cpi = ~~(idx / 24) % 24;
+    const coi = ~~(idx / 24 / 24);
     if (getNParity(cpi, 4) != getNParity(epi, 4)) {
       continue;
     }
-    let co = setNOri(cc.co, coi, 4, -3);
-    let cp = setNPerm(cc.cp, cpi, 4, 0);
-    let ep = setNPerm(cc.ep, epi, 4, 0);
-    let zbcase: any[] = [0, 0, 0, 0, null];
+    const co = setNOri(cc.co, coi, 4, -3);
+    const cp = setNPerm(cc.cp, cpi, 4, 0);
+    const ep = setNPerm(cc.ep, epi, 4, 0);
+    const zbcase: any[] = [0, 0, 0, 0, null];
     for (let i = 0; i < 4; i++) {
       zbcase[0] += cp[i] << (i * 4);
       zbcase[1] += co[i] << (i * 4);
       zbcase[2] += ep[i] << (i * 4);
     }
     for (let conj = 0; conj < 16; conj++) {
-      let c0 = conj >> 2;
-      let c1 = conj & 3;
-      let co2 = [],
+      const c0 = conj >> 2;
+      const c1 = conj & 3;
+      const co2 = [],
         cp2 = [],
         ep2 = [];
       for (let i = 0; i < 4; i++) {
@@ -526,10 +527,10 @@ function genZBLLMap() {
         cp2[(i + c0) & 3] = (cp[i] + c1) & 3;
         ep2[(i + c0) & 3] = (ep[i] + c1) & 3;
       }
-      let co2i = getNOri(co2, 4, -3);
-      let cp2i = getNPerm(cp2, 4, 0);
-      let ep2i = getNPerm(ep2, 4, 0);
-      let idx2 = (co2i * 24 + cp2i) * 24 + ep2i;
+      const co2i = getNOri(co2, 4, -3);
+      const cp2i = getNPerm(cp2, 4, 0);
+      const ep2i = getNPerm(ep2, 4, 0);
+      const idx2 = (co2i * 24 + cp2i) * 24 + ep2i;
       if ((isVisited[idx2 >> 5] >> (idx2 & 0x1f)) & 1) {
         continue;
       }
@@ -542,7 +543,7 @@ function genZBLLMap() {
     }
   }
 
-  let coNames: Record<number, string> = {};
+  const coNames: Record<number, string> = {};
   coNames[0x0000] = "O";
   coNames[0x0012] = "U";
   coNames[0x0021] = "T";
@@ -551,12 +552,12 @@ function genZBLLMap() {
   coNames[0x0222] = "S";
   coNames[0x1122] = "Pi";
   coNames[0x1212] = "H";
-  let coCnts: Record<string, any> = {};
+  const coCnts: Record<string, any> = {};
   for (let i = 0; i < zbll_map.length; i++) {
-    let zbcase = zbll_map[i];
-    let coName = coNames[zbcase[1]];
+    const zbcase = zbll_map[i];
+    const coName = coNames[zbcase[1]];
     coCnts[coName] = coCnts[coName] || [];
-    let coCnt = coCnts[coName];
+    const coCnt = coCnts[coName];
     let cpIdx = coCnt.indexOf(zbcase[0]);
     if (cpIdx == -1) {
       cpIdx = coCnt.length;
@@ -623,7 +624,7 @@ const coprobs = idxArray(coll_map, 3);
 const cofilter = idxArray(coll_map, 4);
 
 function getCOLLScramble(type: any, length: any, cases: any) {
-  let cocase = coll_map[fixCase(cases, coprobs)];
+  const cocase = coll_map[fixCase(cases, coprobs)];
   return getAnyScramble(0xba987654ffff, 0, cocase[0] + 0x76540000, cocase[1], aufsuff, aufsuff);
 }
 

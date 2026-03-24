@@ -385,7 +385,7 @@
 <svelte:window onkeydown={handleKeydown} />
 
 {#if options.seed}
-  <Button color="neutral" class="group" aria-label={"Seed"} onclick={prepareShowSeedModal}>
+  <Button color="neutral" class="group" aria-label="Seed" onclick={prepareShowSeedModal}>
     <BeanIcon class="group-hover:text-green-500" size={iconSize} />
   </Button>
   <Tooltip placement="bottom" class="z-10">Seed</Tooltip>

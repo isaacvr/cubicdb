@@ -120,7 +120,7 @@ export class TimerController implements ITimerController {
       // dispatch("solve", $lastSolve);
     } else {
       this.solveRepo.addSolve(solve).then(d => {
-        let s = get(allSolves).find(s => s.date === d.date);
+        const s = get(allSolves).find(s => s.date === d.date);
 
         if (s) {
           statsReplaceId(get(stats), s._id, d._id);
@@ -139,11 +139,11 @@ export class TimerController implements ITimerController {
     solves.set(get(allSolves).filter(s => s.session === (get(session) || {})._id));
 
     // Calc next Ao5
-    let arr = get(solves)
+    const arr = get(solves)
       .slice(0, 4)
       .filter(s => !infinitePenalty(s))
       .map(s => s.time);
-    let sum = arr.reduce((ac, e) => ac + e, 0);
+    const sum = arr.reduce((ac, e) => ac + e, 0);
     arr.sort();
 
     Ao5.set(arr.length === 4 ? [(sum - arr[3]) / 3, (sum - arr[0]) / 3].sort((a, b) => a - b) : []);
@@ -157,7 +157,7 @@ export class TimerController implements ITimerController {
   selectedSolveById(id: string, n: number): number {
     const { solves, tab } = this;
     let selected = 0;
-    let nSolves = get(solves);
+    const nSolves = get(solves);
 
     nSolves.forEach(s => (s.selected = false));
 
@@ -183,13 +183,13 @@ export class TimerController implements ITimerController {
   async updateStatistics(inc?: boolean) {
     const { stats, solves, session, STATS_WINDOW } = this;
     const lLang = get(localLang);
-    let st = getUpdatedStatistics(get(stats), get(solves), get(session), get(AON), inc);
+    const st = getUpdatedStatistics(get(stats), get(solves), get(session), get(AON), inc);
     stats.set(st.stats);
     STATS_WINDOW.set(st.window);
 
-    let bestList = [];
+    const bestList = [];
 
-    for (let e of Object.entries(get(stats))) {
+    for (const e of Object.entries(get(stats))) {
       if (e[1].better) {
         bestList.push({
           name: e[0] === "best" ? lLang.TIMER.best : e[0],
@@ -244,11 +244,11 @@ export class TimerController implements ITimerController {
       sMode = MENU[get(group) || 0][1][0];
     }
 
-    let md = useMode || _mode || get(mode)[1];
-    let len =
+    const md = useMode || _mode || get(mode)[1];
+    const len =
       useLen || (sMode[1] === "r3" || sMode[1] === "r3ni" ? (get(prob) as number) : sMode[2]);
-    let s = useScramble || scr;
-    let pb = useProb != -1 ? useProb : _prob != -1 && typeof _prob === "number" ? _prob : get(prob);
+    const s = useScramble || scr;
+    const pb = useProb != -1 ? useProb : _prob != -1 && typeof _prob === "number" ? _prob : get(prob);
     let _scramble = "";
 
     if (!genScramble) {
@@ -275,7 +275,7 @@ export class TimerController implements ITimerController {
 
     // console.log("MODE: ", md);
 
-    let opts = pScramble.options.get(md);
+    const opts = pScramble.options.get(md);
 
     if (opts) {
       if (!Array.isArray(opts)) {
@@ -298,8 +298,8 @@ export class TimerController implements ITimerController {
 
   async updateImage(md: string) {
     const { scramble, preview } = this;
-    let cb = scrambleToPuzzle(get(scramble), md);
-    let date = Date.now();
+    const cb = scrambleToPuzzle(get(scramble), md);
+    const date = Date.now();
 
     this.setPreview(await pGenerateCubeBundle(cb, 500));
   }

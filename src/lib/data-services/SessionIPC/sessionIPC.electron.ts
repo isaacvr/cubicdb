@@ -31,25 +31,25 @@ export class SessionElectronIPC implements SessionIPC {
   }
 
   async addSession(s: Session) {
-    let res = await this.ipc.addSession(clone(s));
+    const res = await this.ipc.addSession(clone(s));
     await this.updateSessionStore();
     return res;
   }
 
   async removeSession(s: Session) {
-    let res = await this.ipc.removeSession(clone(s));
+    const res = await this.ipc.removeSession(clone(s));
     await this.updateSessionStore();
     return res;
   }
 
   async renameSession(s: Session) {
-    let res = await this.ipc.renameSession(clone(s));
+    const res = await this.ipc.renameSession(clone(s));
     await this.updateSessionStore();
     return res;
   }
 
   async updateSession(s: Session) {
-    let res = await this.ipc.updateSession(clone(s));
+    const res = await this.ipc.updateSession(clone(s));
     await this.updateSessionStore();
     return res;
   }

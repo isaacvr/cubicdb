@@ -368,8 +368,8 @@ export function modeToName(mode: MODE, alt: string): string {
 const NUMBER_REG = /^[+-]?[\d]+(\.[\d]+)?$/;
 
 export function nameCmp(a: { name: string }, b: { name: string }): number {
-  let A = a.name.toLowerCase().split(/[\s-]/);
-  let B = b.name.toLowerCase().split(/[\s-]/);
+  const A = a.name.toLowerCase().split(/[\s-]/);
+  const B = b.name.toLowerCase().split(/[\s-]/);
 
   for (let i = 0, maxi = Math.min(A.length, B.length); i < maxi; i += 1) {
     if (A[i] != B[i]) {

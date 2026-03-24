@@ -208,7 +208,7 @@
   {/if}
 
   {#if stage === 0}
-    <div class={"grid items-center mx-auto sm:grid-cols-2"}>
+    <div class="grid items-center mx-auto sm:grid-cols-2">
       <span class="my-2">{$localLang.PLL.topFace}</span>
       <Select items={TOP_FACE} label={e => e.label} bind:value={topFace} />
 

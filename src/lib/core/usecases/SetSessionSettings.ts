@@ -10,14 +10,14 @@ import { SessionSettingsChanged } from "@events/domain";
 export class SetSessionSettings {
   constructor(
     private repo: ISessionRepository,
-    private dispatcher: IEventDispatcher
+    private dispatcher?: IEventDispatcher
   ) {}
 
   async execute(session: Session, partial: Partial<Session["settings"]>): Promise<Session> {
     const s = { ...(session || ({} as any)) } as Session;
     s.settings = Object.assign({}, s.settings || {}, partial || {});
     const updated = await this.repo.updateSession(s);
-    await this.dispatcher.dispatch(new SessionSettingsChanged(updated));
+    await this.dispatcher?.dispatch(new SessionSettingsChanged(updated));
     return updated;
   }
 }

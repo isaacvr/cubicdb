@@ -1,4 +1,6 @@
-export async function handle({ event, resolve }) {
+import type { Handle } from '@sveltejs/kit';
+
+export const handle: Handle = async ({ event, resolve }) => {
   // try {
   return await resolve(event);
   // } catch (error) {
@@ -12,7 +14,7 @@ export async function handle({ event, resolve }) {
   //     },
   //   };
   // }
-}
+};
 
 // export async function handleError({ event, error }) {
 //   return error.stack;

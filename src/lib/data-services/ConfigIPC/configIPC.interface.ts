@@ -1,4 +1,4 @@
-import type { Device } from "$lib/interfaces/devices.types";
+import type { Device } from "$lib/timer/adaptors/devices";
 import type { GANInput } from "$lib/timer/adaptors/GAN";
 import type { QiYiSmartTimerInput } from "$lib/timer/adaptors/QY-Timer";
 import type {

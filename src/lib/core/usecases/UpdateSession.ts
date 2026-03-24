@@ -11,7 +11,7 @@ import { SessionUpdated } from "@events/domain";
 export class UpdateSession {
   constructor(
     private repo: ISessionRepository,
-    private dispatcher: IEventDispatcher
+    private dispatcher?: IEventDispatcher
   ) {}
 
   /**
@@ -33,7 +33,7 @@ export class UpdateSession {
     }
 
     const updated = await this.repo.updateSession(normalized);
-    await this.dispatcher.dispatch(new SessionUpdated(previousSession, updated));
+    await this.dispatcher?.dispatch(new SessionUpdated(previousSession, updated));
     return updated;
   }
 }

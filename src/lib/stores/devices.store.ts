@@ -5,7 +5,7 @@ import { StackmatInput } from "$lib/timer/adaptors/Stackmat";
 import { VirtualInput } from "$lib/timer/adaptors/Virtual";
 import { writable, type Writable } from "svelte/store";
 
-let devices: Writable<Device[]> = writable([
+const devices: Writable<Device[]> = writable([
   new KeyboardInput(),
   new ManualInput(),
   new StackmatInput(),

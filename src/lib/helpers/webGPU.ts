@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Vector3D } from "@classes/vector3d";
 
 export async function rotateBundleGPU(points: Vector3D[], O: Vector3D, u: Vector3D, ang: number) {

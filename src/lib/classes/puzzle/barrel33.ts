@@ -30,27 +30,27 @@ export function BARREL33(): PuzzleInterface {
   const PI_2 = PI / 2;
 
   // Corner
-  let cornerSticker = new Sticker([
+  const cornerSticker = new Sticker([
     new Vector3D(1 / 3, 1, 1),
     new Vector3D(1, 1, 1 / 3),
     new Vector3D(1 / 3, 1, 1 / 3),
   ]);
 
-  let cornerSticker1 = new Sticker([
+  const cornerSticker1 = new Sticker([
     new Vector3D(1 / 3, 1, 1),
     new Vector3D(1 / 3, 1 / 3, 1),
     new Vector3D(1, 1 / 3, 1 / 3),
     new Vector3D(1, 1, 1 / 3),
   ]);
 
-  let cornerSticker2 = new Sticker([
+  const cornerSticker2 = new Sticker([
     new Vector3D(1 / 3, 1, 1 / 3),
     new Vector3D(1 / 3, 1 / 3, 1 / 3),
     new Vector3D(1 / 3, 1 / 3, 1),
     new Vector3D(1 / 3, 1, 1),
   ]);
 
-  let cornerPiece = new Piece([
+  const cornerPiece = new Piece([
     cornerSticker,
     cornerSticker.add(DOWN.mul(2 / 3)).reverse(true),
     cornerSticker1,
@@ -63,7 +63,7 @@ export function BARREL33(): PuzzleInterface {
   pieces.push(cornerPiece.add(DOWN.mul(4 / 3)));
 
   // Edge
-  let edgePiece = getOrtohedron(2 / 3, 2 / 3, 2 / 3).add(new Vector3D(0, 2 / 3, 2 / 3), true);
+  const edgePiece = getOrtohedron(2 / 3, 2 / 3, 2 / 3).add(new Vector3D(0, 2 / 3, 2 / 3), true);
 
   pieces.push(edgePiece);
   pieces.push(edgePiece.add(DOWN.mul(2 / 3)));

@@ -11,7 +11,7 @@ import type { GANInput } from "$lib/timer/adaptors/GAN";
 import type { QiYiSmartTimerInput } from "$lib/timer/adaptors/QY-Timer";
 import { DEFAULT_THEME } from "$lib/themes/default";
 import type { LanguageCode } from "$lib/interfaces/language.types";
-import type { Device } from "$lib/interfaces/devices.types";
+import type { Device } from "$lib/timer/adaptors/devices";
 
 export class ConfigNoopIPC implements ConfigIPC {
   global: {

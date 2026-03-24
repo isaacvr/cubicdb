@@ -10,13 +10,13 @@ import { SolveUpdated } from "@events/domain";
 export class UpdateSolve {
   constructor(
     private solveRepo: ISolveRepository,
-    private dispatcher: IEventDispatcher
+    private dispatcher?: IEventDispatcher
   ) {}
 
   async execute(previousSolve: Solve, updatedSolve: Solve): Promise<Solve> {
     if (!this.solveRepo.updateSolve) throw new Error("updateSolve not implemented by repository");
     const result = await this.solveRepo.updateSolve(updatedSolve);
-    await this.dispatcher.dispatch(new SolveUpdated(previousSolve, result));
+    await this.dispatcher?.dispatch(new SolveUpdated(previousSolve, result));
     return result;
   }
 }

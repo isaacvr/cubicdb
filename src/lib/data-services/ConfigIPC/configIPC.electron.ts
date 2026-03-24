@@ -18,7 +18,7 @@ import {
 import { DEFAULT_THEME } from "$lib/themes/default";
 import { applyThemeByID } from "$lib/themes/manageThemes";
 import type { LanguageCode } from "$lib/interfaces/language.types";
-import type { Device } from "$lib/interfaces/devices.types";
+import type { Device } from "$lib/timer/adaptors/devices";
 
 export class ConfigElectronIPC implements ConfigIPC {
   ipc: IPC;
@@ -220,7 +220,7 @@ export class ConfigElectronIPC implements ConfigIPC {
   }
 
   async saveDevices(devs: Device[]) {
-    let devices = devs.filter(dev => !dev.id.startsWith("cubicdb:device")).map(dev => dev.toJSON());
+    const devices = devs.filter(dev => !dev.id.startsWith("cubicdb:device")).map(dev => dev.toJSON());
     this.configMap.set("devices", devices);
     this.saveConfig();
     return true;
