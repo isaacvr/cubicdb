@@ -234,9 +234,9 @@ export class CFOP implements IReconstructor {
     return pairRes.length === 0
       ? null
       : {
-          total: pairRes.length,
-          pairs: pairRes,
-        };
+        total: pairRes.length,
+        pairs: pairRes,
+      };
   }
 
   private oll(f2l: F2LResult | null): OLLResult[] | null {
@@ -363,7 +363,6 @@ export class CFOP implements IReconstructor {
   }
 
   async detectOLL(status: CFOPStatus): Promise<Algorithm | null> {
-    return null;
     await this.getAlgs();
 
     if (!status.f2l) return null;
@@ -408,7 +407,6 @@ export class CFOP implements IReconstructor {
   }
 
   async detectPLL(status: CFOPStatus): Promise<Algorithm | null> {
-    return;
     await this.getAlgs();
 
     if (!status.f2l) return null;
@@ -493,7 +491,10 @@ export class CFOP implements IReconstructor {
           moves[s][j] = timeline[i].moves.map(mv => mv.move);
 
           i += 1;
-          i < timeline.length && (st = timeline[i].status);
+
+          if (i < timeline.length) {
+            st = timeline[i].status;
+          }
         }
 
         if (!cross && (st.oll || st.pll)) {
@@ -549,10 +550,21 @@ export class CFOP implements IReconstructor {
       })
     );
 
-    oll && (oll.scramble += " z2 " + crossTrans);
-    pll && (pll.scramble += " z2 " + crossTrans);
-    oll && crossTrans && (oll.baseColor = cross?.baseColor);
-    pll && crossTrans && (pll.baseColor = cross?.baseColor);
+    if (oll) {
+      oll.scramble += " z2 " + crossTrans;
+    }
+
+    if (pll) {
+      pll.scramble += " z2 " + crossTrans;
+    }
+
+    if (oll && crossTrans) {
+      oll.baseColor = cross?.baseColor;
+    }
+
+    if (pll && crossTrans) {
+      pll.baseColor = cross?.baseColor;
+    }
 
     return {
       name: "CFOP",
