@@ -2,6 +2,8 @@
 
 Index of architecture documents for CubicDB.
 
+See also: [Development Guide](../development/README.md) for code conventions, git workflow, testing, and error handling.
+
 ## Timer & Devices
 
 Event-driven architecture for the timer, devices, sessions, and solves.
