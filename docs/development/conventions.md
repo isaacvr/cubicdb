@@ -1,8 +1,12 @@
 # Code Conventions
 
+## Language
+
+All documentation must be written in English. This includes code comments, commit messages, PR descriptions, doc files, and inline documentation. The only exception is i18n translation files (`src/lib/lang/`), which contain localized UI strings by design.
+
 ## Naming
 
-| Elemento | Convención | Ejemplo |
+| Element | Convention | Example |
 |---|---|---|
 | Archivos de clase/componente | `PascalCase` | `TimerReactor.ts`, `KeyboardDevice.ts` |
 | Archivos de servicio | `PascalCase` | `ScrambleService.ts` |

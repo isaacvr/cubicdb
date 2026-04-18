@@ -1,24 +1,24 @@
 # State Management
 
-## Tres mecanismos, tres propósitos
+## Three Mechanisms, Three Purposes
 
-| Mecanismo | Propósito | Ejemplo |
+| Mechanism | Purpose | Example |
 |---|---|---|
-| **EventBus** | Eventos de dominio discretos. Fuente de verdad. | `DeviceStopped`, `SolveAdded`, `SessionSwitched` |
-| **Svelte 5 `$state`** | Capa reactiva para la UI. Subordinada a eventos. | `timerState`, `time`, `scramble`, `solves[]` |
-| **Svelte context** | Inyección de dependencias en árboles de componentes. | Pasar el timer controller a componentes hijos |
+| **EventBus** | Discrete domain events. Source of truth. | `DeviceStopped`, `SolveAdded`, `SessionSwitched` |
+| **Svelte 5 `$state`** | Reactive layer for the UI. Subordinate to events. | `timerState`, `time`, `scramble`, `solves[]` |
+| **Svelte context** | Dependency injection in component trees. | Passing the timer controller to child components |
 
-### Regla fundamental
+### Fundamental Rule
 
-**Los eventos mandan, `$state` obedece.** Cuando llega un evento, el reactor actualiza el `$state`. La UI reacciona al `$state`. Nunca al revés.
+**Events command, `$state` obeys.** When an event arrives, the reactor updates `$state`. The UI reacts to `$state`. Never the other way around.
 
 ```
-Evento llega → Reactor actualiza $state → UI se re-renderiza
+Event arrives → Reactor updates $state → UI re-renders
 ```
 
-## Svelte 5 Runes (reemplazo de stores)
+## Svelte 5 Runes (Store Replacement)
 
-### Antes (stores)
+### Before (stores)
 
 ```ts
 class TimerController {
@@ -27,12 +27,12 @@ class TimerController {
   ready = writable(false);
 }
 
-// Uso en componente
+// Usage in component
 const state = get(timerController.timerState);
 timerController.timerState.set(TimerState.RUNNING);
 ```
 
-### Después ($state)
+### After ($state)
 
 ```ts
 class TimerState {
@@ -45,26 +45,26 @@ class TimerState {
 }
 ```
 
-### Cuidados con $state en clases
+### Caveats with $state in Classes
 
-El problema principal con `$state` fuera de componentes es la reactividad al pasar referencias.
-Cuando se pasa una propiedad `$state` a otro contexto, se debe pasar como getter, no como valor directo:
+The main issue with `$state` outside components is reactivity when passing references.
+When a `$state` property is passed to another context, it must be passed as a getter, not as a direct value:
 
 ```ts
-// MAL: pierde reactividad
-const time = timerState.time; // copia del valor, no reactivo
+// BAD: loses reactivity
+const time = timerState.time; // value copy, not reactive
 
-// BIEN: mantener referencia al objeto
-const state = timerState; // acceder via state.time (reactivo)
+// GOOD: keep reference to the object
+const state = timerState; // access via state.time (reactive)
 
-// BIEN: getter explícito si se necesita pasar un valor individual
+// GOOD: explicit getter if you need to pass an individual value
 function getTime() { return timerState.time; }
 ```
 
-La regla: pasar el objeto contenedor, no propiedades individuales.
-Los componentes acceden a `state.time`, no a `time` directamente.
+The rule: pass the container object, not individual properties.
+Components access `state.time`, not `time` directly.
 
-## Reactor con $state
+## Reactor with $state
 
 ```ts
 class TimerReactor {
@@ -93,16 +93,16 @@ class TimerReactor {
 }
 ```
 
-## Estado global accesible
+## Accessible Global State
 
-Cada sección de la app tiene su propio estado. No se comparten entre secciones
-excepto en casos muy específicos (e.g., iCarry conectado disponible para tutoriales).
+Each app section has its own state. They are not shared between sections
+except in very specific cases (e.g., iCarry connected available for tutorials).
 
-Para esos casos cross-section, el EventBus es el canal de comunicación,
-nunca acceso directo al estado de otra sección.
+For those cross-section cases, the EventBus is the communication channel,
+never direct access to another section's state.
 
-## EventBus: orden de procesamiento
+## EventBus: Processing Order
 
-Los eventos se procesan en el orden en que llegan, secuencialmente.
-Cada handler debe completarse antes de que se ejecute el siguiente.
-Esto garantiza que el estado sea consistente (e.g., solve guardado antes de recalcular stats).
+Events are processed in the order they arrive, sequentially.
+Each handler must complete before the next one executes.
+This guarantees state consistency (e.g., solve saved before recalculating stats).

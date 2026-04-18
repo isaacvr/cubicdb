@@ -2,7 +2,7 @@
 
 ## Timer Input Events (Device → Timer)
 
-Notificaciones que los devices emiten. Son hechos consumados, no solicitudes.
+Notifications emitted by devices. These are accomplished facts, not requests.
 
 ```ts
 // src/lib/events/domain/TimerEvents.ts
@@ -11,8 +11,8 @@ import type { DomainEvent } from '../types';
 import type { Penalty } from '@interfaces';
 
 /**
- * Device notifica que entró en estado de prevención.
- * Timer reacciona: muestra estado PREVENTION en UI.
+ * Device notifies it entered prevention state.
+ * Timer reacts: shows PREVENTION state in UI.
  */
 export class DeviceEnteredPrevention implements DomainEvent {
   readonly type = 'DeviceEnteredPrevention';
@@ -23,8 +23,8 @@ export class DeviceEnteredPrevention implements DomainEvent {
 }
 
 /**
- * Device notifica que la inspección comenzó.
- * Timer reacciona: muestra countdown de inspección en UI.
+ * Device notifies that inspection started.
+ * Timer reacts: shows inspection countdown in UI.
  */
 export class DeviceStartedInspection implements DomainEvent {
   readonly type = 'DeviceStartedInspection';
@@ -35,10 +35,10 @@ export class DeviceStartedInspection implements DomainEvent {
 }
 
 /**
- * Device notifica que la prevención terminó.
- * Ocurre entre PREVENTION e INSPECTION.
- * Timer reacciona: prepara el solve (crea lastSolve).
- * NO activa el flag ready. El flag ready se activa por separado, justo antes de RUNNING.
+ * Device notifies that prevention finished.
+ * Occurs between PREVENTION and INSPECTION.
+ * Timer reacts: prepares the solve (creates lastSolve).
+ * Does NOT activate the ready flag. The ready flag is activated separately, just before RUNNING.
  */
 export class DeviceReady implements DomainEvent {
   readonly type = 'DeviceReady';
@@ -49,11 +49,11 @@ export class DeviceReady implements DomainEvent {
 }
 
 /**
- * Device notifica que el usuario está a punto de arrancar (green light).
- * Se emite justo antes de RUNNING:
- *   - Sin inspección: inmediatamente después de READY.
- *   - Con inspección: cuando el usuario presiona space durante INSPECTION.
- * Timer reacciona: activa flag ready=true.
+ * Device notifies the user is about to start (green light).
+ * Emitted just before RUNNING:
+ *   - Without inspection: immediately after READY.
+ *   - With inspection: when the user presses space during INSPECTION.
+ * Timer reacts: activates flag ready=true.
  */
 export class DeviceGreenLight implements DomainEvent {
   readonly type = 'DeviceGreenLight';
@@ -64,9 +64,9 @@ export class DeviceGreenLight implements DomainEvent {
 }
 
 /**
- * Device notifica que el cronómetro está corriendo.
- * Timer reacciona: muestra estado RUNNING.
- * El tiempo real se recibe por canal directo (onTimeUpdate), no por EventBus.
+ * Device notifies that the stopwatch is running.
+ * Timer reacts: shows RUNNING state.
+ * Actual time is received through a direct channel (onTimeUpdate), not through EventBus.
  */
 export class DeviceStartedRunning implements DomainEvent {
   readonly type = 'DeviceStartedRunning';
@@ -77,13 +77,13 @@ export class DeviceStartedRunning implements DomainEvent {
 }
 
 /**
- * Device notifica que el cronómetro se detuvo.
- * Timer reacciona: guarda solve, calcula stats, genera scramble.
+ * Device notifies that the stopwatch stopped.
+ * Timer reacts: saves solve, calculates stats, generates scramble.
  *
- * @param time - Tiempo final en milisegundos.
- *   - Keyboard/Virtual: tiempo medido por el device.
- *   - Stackmat/External: tiempo reportado por el hardware.
- * @param steps - Tiempos parciales para multi-step sessions.
+ * @param time - Final time in milliseconds.
+ *   - Keyboard/Virtual: time measured by the device.
+ *   - Stackmat/External: time reported by the hardware.
+ * @param steps - Partial times for multi-step sessions.
  */
 export class DeviceStopped implements DomainEvent {
   readonly type = 'DeviceStopped';
@@ -98,8 +98,8 @@ export class DeviceStopped implements DomainEvent {
 }
 
 /**
- * Device notifica que se pausó el cronómetro.
- * Timer reacciona: congela la UI.
+ * Device notifies that the stopwatch was paused.
+ * Timer reacts: freezes the UI.
  */
 export class DevicePaused implements DomainEvent {
   readonly type = 'DevicePaused';
@@ -110,8 +110,8 @@ export class DevicePaused implements DomainEvent {
 }
 
 /**
- * Device notifica que se reanudó el cronómetro.
- * Timer reacciona: retoma la UI.
+ * Device notifies that the stopwatch was resumed.
+ * Timer reacts: resumes the UI.
  */
 export class DeviceResumed implements DomainEvent {
   readonly type = 'DeviceResumed';
@@ -122,8 +122,8 @@ export class DeviceResumed implements DomainEvent {
 }
 
 /**
- * Device notifica que se canceló la resolución.
- * Timer reacciona: reset UI, no guarda nada.
+ * Device notifies that the solve was cancelled.
+ * Timer reacts: reset UI, saves nothing.
  */
 export class DeviceCancelled implements DomainEvent {
   readonly type = 'DeviceCancelled';
@@ -134,11 +134,11 @@ export class DeviceCancelled implements DomainEvent {
 }
 
 /**
- * Device notifica que la inspección expiró (+2s de gracia).
- * Timer reacciona: guarda solve con DNF.
+ * Device notifies that inspection expired (+2s grace period).
+ * Timer reacts: saves solve with DNF.
  *
- * @param fromInspection - Si el DNF fue causado por inspección expirada.
- *   Cuando fromInspection=true, el penalty NO es editable después.
+ * @param fromInspection - Whether the DNF was caused by expired inspection.
+ *   When fromInspection=true, the penalty is NOT editable afterwards.
  */
 export class DeviceDNF implements DomainEvent {
   readonly type = 'DeviceDNF';
@@ -152,10 +152,10 @@ export class DeviceDNF implements DomainEvent {
 }
 
 /**
- * Device notifica que se aplicó un penalty.
- * Timer reacciona: marca el penalty en el solve actual.
+ * Device notifies that a penalty was applied.
+ * Timer reacts: marks the penalty on the current solve.
  *
- * Ejemplo: inspección pasa de 15s → P2.
+ * Example: inspection passes 15s → P2.
  */
 export class DevicePenaltyApplied implements DomainEvent {
   readonly type = 'DevicePenaltyApplied';
@@ -169,8 +169,8 @@ export class DevicePenaltyApplied implements DomainEvent {
 }
 
 /**
- * Device notifica que se completó un paso intermedio (multi-step).
- * Timer reacciona: registra el step.
+ * Device notifies that an intermediate step was completed (multi-step).
+ * Timer reacts: records the step.
  */
 export class DeviceStepCompleted implements DomainEvent {
   readonly type = 'DeviceStepCompleted';
@@ -185,8 +185,8 @@ export class DeviceStepCompleted implements DomainEvent {
 }
 
 /**
- * Se solicita un nuevo scramble.
- * Puede venir de un device (stackmat reset), de la UI, o del Timer mismo (post-stop).
+ * A new scramble is requested.
+ * Can come from a device (stackmat reset), from the UI, or from the Timer itself (post-stop).
  */
 export class ScrambleRequested implements DomainEvent {
   readonly type = 'ScrambleRequested';
@@ -197,14 +197,14 @@ export class ScrambleRequested implements DomainEvent {
 }
 ```
 
-## Timer Output Events (Timer → UI/Sistema)
+## Timer Output Events (Timer → UI/System)
 
-Eventos que el Timer emite después de procesar. La UI y otros sistemas los consumen.
+Events emitted by the Timer after processing. The UI and other systems consume them.
 
 ```ts
 /**
- * El Timer cambió de estado visual.
- * UI reacciona: actualiza lo que se muestra.
+ * Timer changed its visual state.
+ * UI reacts: updates what is displayed.
  */
 export class TimerStateChanged implements DomainEvent {
   readonly type = 'TimerStateChanged';
@@ -218,8 +218,8 @@ export class TimerStateChanged implements DomainEvent {
 }
 
 /**
- * Se generó un nuevo scramble.
- * UI reacciona: muestra el nuevo scramble e imagen.
+ * A new scramble was generated.
+ * UI reacts: displays the new scramble and image.
  */
 export class ScrambleGenerated implements DomainEvent {
   readonly type = 'ScrambleGenerated';
@@ -230,8 +230,8 @@ export class ScrambleGenerated implements DomainEvent {
 }
 
 /**
- * Se alcanzó un nuevo récord.
- * UI reacciona: confetti, notificación.
+ * A new record was reached.
+ * UI reacts: confetti, notification.
  */
 export class NewRecord implements DomainEvent {
   readonly type = 'NewRecord';
@@ -248,7 +248,7 @@ export class NewRecord implements DomainEvent {
 }
 
 /**
- * Se debe mostrar una celebración.
+ * A celebration should be displayed.
  */
 export class CelebrationTriggered implements DomainEvent {
   readonly type = 'CelebrationTriggered';
@@ -264,19 +264,19 @@ export class CelebrationTriggered implements DomainEvent {
   ) {}
 }
 
-// SolveAdded, SolveUpdated, SolvesRemoved ya existen en SolveEvents.ts
+// SolveAdded, SolveUpdated, SolvesRemoved are already defined in SolveEvents.ts
 ```
 
-## Canal de tiempo (alta frecuencia)
+## Time Channel (High Frequency)
 
-El tiempo del cronómetro y el countdown de inspección NO pasan por el EventBus.
-Se usa un callback directo que el Timer provee al device al momento del binding.
+The stopwatch time and inspection countdown do NOT go through the EventBus.
+A direct callback is used, which the Timer provides to the device at binding time.
 
 ```ts
 /**
- * Canal de alta frecuencia para actualizaciones de tiempo.
- * El device llama a este callback ~100 veces/segundo.
- * El Timer lo conecta internamente al store reactivo de la UI.
+ * High-frequency channel for time updates.
+ * The device calls this callback ~100 times/second.
+ * The Timer connects it internally to the UI's reactive store.
  */
 type TimeUpdateCallback = (time: number) => void;
 ```
@@ -285,8 +285,8 @@ type TimeUpdateCallback = (time: number) => void;
 
 ```ts
 /**
- * Se seleccionó una nueva sesión.
- * Timer reacciona: carga solves, recalcula stats, ajusta scramble, cambia device si es necesario.
+ * A new session was selected.
+ * Timer reacts: loads solves, recalculates stats, adjusts scramble, changes device if needed.
  */
 export class SessionSwitched implements DomainEvent {
   readonly type = 'SessionSwitched';
@@ -300,8 +300,8 @@ export class SessionSwitched implements DomainEvent {
 }
 
 /**
- * Se aplicaron cambios a los settings de la sesión activa.
- * Timer reacciona: propaga a device si es necesario (e.g., inspection on/off).
+ * Settings of the active session were changed.
+ * Timer reacts: propagates to device if needed (e.g., inspection on/off).
  */
 export class ActiveSessionSettingsChanged implements DomainEvent {
   readonly type = 'ActiveSessionSettingsChanged';
@@ -318,14 +318,14 @@ export class ActiveSessionSettingsChanged implements DomainEvent {
 ## Solve Events
 
 ```ts
-// Ya definidos en SolveEvents.ts, se reutilizan:
-// - SolveAdded (post-timer, ya cubierto)
-// - SolveUpdated (edición de penalty/comments)
-// - SolvesRemoved (eliminación)
+// Already defined in SolveEvents.ts, reused:
+// - SolveAdded (post-timer, already covered)
+// - SolveUpdated (penalty/comments editing)
+// - SolvesRemoved (deletion)
 
 /**
- * Se solicita cambiar el penalty de un solve.
- * Timer valida las reglas de edición antes de aplicar.
+ * A request to change a solve's penalty.
+ * Timer validates editing rules before applying.
  */
 export class SolvePenaltyChangeRequested implements DomainEvent {
   readonly type = 'SolvePenaltyChangeRequested';
@@ -339,8 +339,8 @@ export class SolvePenaltyChangeRequested implements DomainEvent {
 }
 
 /**
- * Se solicita eliminar solves.
- * Requiere confirmación del usuario antes de procesar.
+ * A request to delete solves.
+ * Requires user confirmation before processing.
  */
 export class SolveRemovalRequested implements DomainEvent {
   readonly type = 'SolveRemovalRequested';
@@ -353,8 +353,8 @@ export class SolveRemovalRequested implements DomainEvent {
 }
 
 /**
- * Se confirmó la eliminación de solves.
- * Timer procesa: elimina de DB, recalcula stats.
+ * Solve deletion was confirmed.
+ * Timer processes: deletes from DB, recalculates stats.
  */
 export class SolveRemovalConfirmed implements DomainEvent {
   readonly type = 'SolveRemovalConfirmed';

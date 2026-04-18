@@ -76,6 +76,22 @@ There are not too much global [settings](https://cubicdb.netlify.app/settings) h
 
 In [this section](https://cubicdb.netlify.app/about-cubicdb) you will find some ways to reach the dev (me) via social networks and also some ways to donate if you like this project, which will be reused in order to improve the app itself (win-win).
 
-### Contributing
+## Architecture
 
-You can contribute by making a pull request for some of the issues.
+The timer and core systems are built with an **event-driven architecture**. Everything is defined but not yet implemented (currently in Definition Phase).
+
+**For developers**:
+- **[IMPLEMENTATION_READING_GUIDE.md](IMPLEMENTATION_READING_GUIDE.md)** - Where to start reading (8 phases, ~5-6 hours)
+- **[ARCHITECTURE_QUICK_REFERENCE.md](ARCHITECTURE_QUICK_REFERENCE.md)** - Quick lookup of patterns and event flows
+- **[docs/architecture/](docs/architecture/)** - Complete architectural documentation
+- **[CLARIFICATIONS_INCORPORATED.md](CLARIFICATIONS_INCORPORATED.md)** - 15 critical clarifications that were made
+- **[DEFINITION_PHASE_SUMMARY.md](DEFINITION_PHASE_SUMMARY.md)** - What's defined, what's not implemented, roadmap
+
+Key concepts:
+- **Event-driven**: Events are the single source of truth
+- **Handlers**: React to events sequentially (don't call each other)
+- **Services**: Coordinate operations (DeviceManager, ScrambleService, etc.)
+- **Progressive statistics**: Not recalculated from scratch
+- **Device compatibility**: Automatic fallback, UI filtering
+- **Immediate persistence**: Config saved instantly, section-specific
+

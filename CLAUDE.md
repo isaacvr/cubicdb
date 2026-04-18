@@ -40,6 +40,7 @@ Read `docs/development/conventions.md` for full details. Summary:
 - **Branches**: `feature/`, `fix/`, `refactor/`, `docs/`, `chore/`.
 - **Errors**: `Result<T, E>` for expected errors, exceptions for bugs.
 - **i18n**: All UI text via `$localLang.section.key`, never hardcoded.
+- **Language**: All documentation, comments, and commits must be in English.
 
 ## Key Paths
 
@@ -66,3 +67,4 @@ docs/development/      # Dev conventions, git, testing, error handling
 - Don't put business logic in Svelte components. Use use cases or the reactor.
 - Don't mock EventBus in integration tests.
 - Don't add global settings. Settings are per-session.
+- Don't write documentation, comments, or commits in any language other than English.

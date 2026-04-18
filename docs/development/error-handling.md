@@ -1,18 +1,18 @@
 # Error Handling
 
-## Principio
+## Principle
 
-Los errores se clasifican en dos categorías:
+Errors are classified into two categories:
 
-1. **Errores esperados**: condiciones que pueden ocurrir durante el uso normal.
-   Se manejan con el tipo `Result<T, E>` y se propagan de forma explícita.
+1. **Expected errors**: conditions that can occur during normal use.
+   Handled with the `Result<T, E>` type and propagated explicitly.
 
-2. **Errores inesperados**: bugs, fallos de infraestructura, estados imposibles.
-   Se dejan propagar como excepciones y se capturan en boundaries.
+2. **Unexpected errors**: bugs, infrastructure failures, impossible states.
+   Allowed to propagate as exceptions and caught at boundaries.
 
 ## Result Type
 
-Para errores esperados, usar un tipo Result en vez de lanzar excepciones:
+For expected errors, use a Result type instead of throwing exceptions:
 
 ```ts
 // src/lib/core/domain/Result.ts
@@ -30,7 +30,7 @@ function Err<E>(error: E): Result<never, E> {
 }
 ```
 
-### Uso en use cases
+### Usage in Use Cases
 
 ```ts
 class CreateSolveUseCase {
@@ -45,48 +45,48 @@ class CreateSolveUseCase {
 }
 ```
 
-### Uso en el caller
+### Usage in the Caller
 
 ```ts
 const result = await createSolveUseCase.execute(params);
 
 if (!result.ok) {
-  // manejar error explícitamente
+  // handle error explicitly
   eventBus.emit(new ErrorOccurred(result.error));
   return;
 }
 
-// usar result.value con seguridad de tipos
+// use result.value with type safety
 const solve = result.value;
 ```
 
-## Errores de dominio
+## Domain Errors
 
-Cada dominio define sus propios tipos de error:
+Each domain defines its own error types:
 
 ```ts
-// Errores del timer
+// Timer errors
 type TimerError =
   | { code: 'INVALID_STATE'; message: string }
   | { code: 'DEVICE_NOT_CONNECTED'; deviceId: string }
   | { code: 'SCRAMBLE_GENERATION_FAILED'; mode: string; errors: GeneratorError[] };
 
-// Errores de sesión
+// Session errors
 type SessionError =
   | { code: 'SESSION_NOT_FOUND'; sessionId: string }
   | { code: 'DUPLICATE_NAME'; name: string };
 
-// Errores de solve
+// Solve errors
 type SolveError =
   | { code: 'INVALID_TIME'; message: string }
   | { code: 'SOLVE_NOT_FOUND'; solveId: string }
   | { code: 'PENALTY_NOT_EDITABLE'; reason: string };
 ```
 
-## Errores en Event Handlers
+## Errors in Event Handlers
 
-Los handlers del EventBus **nunca deben lanzar excepciones sin capturar**.
-Si un handler falla, debe emitir un evento de error:
+EventBus handlers **must never throw uncaught exceptions**.
+If a handler fails, it must emit an error event:
 
 ```ts
 eventBus.subscribe(DeviceStopped, async (event) => {
@@ -105,7 +105,7 @@ eventBus.subscribe(DeviceStopped, async (event) => {
 });
 ```
 
-## Evento de error global
+## Global Error Event
 
 ```ts
 export class ErrorOccurred implements IDomainEvent {
@@ -119,20 +119,20 @@ export class ErrorOccurred implements IDomainEvent {
 }
 ```
 
-La UI se suscribe a `ErrorOccurred` para mostrar notificaciones al usuario
-cuando corresponda.
+The UI subscribes to `ErrorOccurred` to show notifications to the user
+when appropriate.
 
-## Boundaries (errores inesperados)
+## Boundaries (Unexpected Errors)
 
-Los errores inesperados se capturan en el nivel más alto posible:
+Unexpected errors are caught at the highest possible level:
 
-- **Componentes Svelte**: `onMount` con try/catch, o Svelte error boundaries.
-- **EventBus**: el `emit()` ya captura errores de handlers (ver EventBus.ts:91).
+- **Svelte components**: `onMount` with try/catch, or Svelte error boundaries.
+- **EventBus**: `emit()` already catches handler errors (see EventBus.ts:91).
 - **Workers**: `onerror` handler.
 
-## Qué NO hacer
+## What NOT to Do
 
-- No usar `try/catch` como flujo de control normal.
-- No silenciar errores con `catch () {}`.
-- No lanzar strings (`throw "error"`), siempre objetos tipados.
-- No mezclar Result y excepciones en la misma capa.
+- Don't use `try/catch` as normal control flow.
+- Don't silence errors with `catch () {}`.
+- Don't throw strings (`throw "error"`), always use typed objects.
+- Don't mix Result and exceptions in the same layer.

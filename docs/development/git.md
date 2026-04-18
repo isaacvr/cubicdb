@@ -2,14 +2,14 @@
 
 ## Branches
 
-- **`main`**: rama principal. Siempre debe estar en estado funcional.
-- **Feature branches**: `feature/descripcion-corta`
-- **Bug fixes**: `fix/descripcion-corta`
-- **Refactors**: `refactor/descripcion-corta`
-- **Docs**: `docs/descripcion-corta`
-- **Chores**: `chore/descripcion-corta`
+- **`main`**: main branch. Must always be in a working state.
+- **Feature branches**: `feature/short-description`
+- **Bug fixes**: `fix/short-description`
+- **Refactors**: `refactor/short-description`
+- **Docs**: `docs/short-description`
+- **Chores**: `chore/short-description`
 
-Ejemplos:
+Examples:
 ```
 feature/event-driven-timer
 fix/inspection-penalty-not-applied
@@ -31,22 +31,22 @@ Conventional Commits: https://www.conventionalcommits.org/
 
 ### Types
 
-| Type | Uso |
+| Type | Usage |
 |---|---|
-| `feat` | Nueva funcionalidad |
-| `fix` | Corrección de bug |
-| `refactor` | Cambio de código sin cambio de comportamiento |
-| `docs` | Documentación |
-| `test` | Agregar o modificar tests |
-| `chore` | Mantenimiento, dependencias, config |
-| `style` | Formateo, whitespace (no cambios de lógica) |
-| `perf` | Mejora de rendimiento |
+| `feat` | New feature |
+| `fix` | Bug fix |
+| `refactor` | Code change without behavior change |
+| `docs` | Documentation |
+| `test` | Add or modify tests |
+| `chore` | Maintenance, dependencies, config |
+| `style` | Formatting, whitespace (no logic changes) |
+| `perf` | Performance improvement |
 
-### Scope (opcional)
+### Scope (optional)
 
-Área del código afectada: `timer`, `devices`, `events`, `scramble`, `sessions`, `ui`, etc.
+Affected code area: `timer`, `devices`, `events`, `scramble`, `sessions`, `ui`, etc.
 
-### Ejemplos
+### Examples
 
 ```
 feat(timer): add reactor for device events
@@ -57,16 +57,16 @@ test(timer): add integration tests for solve flow
 chore: update svelte to 5.47
 ```
 
-## Versionado
+## Versioning
 
-- **SemVer estricto**: `MAJOR.MINOR.PATCH`
-- Los bumps los decide Isaac manualmente.
-- No hay changelog automático por ahora.
+- **Strict SemVer**: `MAJOR.MINOR.PATCH`
+- Version bumps are decided manually by Isaac.
+- No automatic changelog for now.
 
 ## Pull Requests
 
-Formato simple. Ver template en `.github/pull_request_template.md`.
-- Descripción clara de qué se hizo y por qué.
-- Screenshot si hay cambios de UI.
-- Labels opcionales: `feature`, `bug`, `refactor`, `docs`, `breaking`.
-- Mantener los PRs enfocados. No modificar demasiados archivos salvo remodelaciones grandes.
+Simple format. See template in `.github/pull_request_template.md`.
+- Clear description of what was done and why.
+- Screenshot if there are UI changes.
+- Optional labels: `feature`, `bug`, `refactor`, `docs`, `breaking`.
+- Keep PRs focused. Don't modify too many files unless it's a major rework.

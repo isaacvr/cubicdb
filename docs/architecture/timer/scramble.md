@@ -1,135 +1,135 @@
 # Scramble System
 
-## Principio
+## Principle
 
-El scramble es controlado por el Timer via eventos, no por los devices.
-La generación es asíncrona (puede ejecutarse en un worker/hilo separado para no bloquear la UI).
+The scramble is controlled by the Timer via events, not by devices.
+Generation is asynchronous (can run in a worker/separate thread to avoid blocking the UI).
 
 ## ScrambleService
 
-Servicio independiente que gestiona la generación de scrambles con un sistema de fallback
-entre múltiples generadores registrados.
+Independent service that manages scramble generation with a fallback system
+between multiple registered generators.
 
 ```ts
 interface ScrambleGenerator {
-  /** Identificador del generador (e.g., "cstimer", "cubing.js") */
+  /** Generator identifier (e.g., "cstimer", "cubing.js") */
   readonly id: string;
 
   /**
-   * Genera un scramble para el modo dado.
-   * @returns El scramble generado, o null si este generador no soporta el modo.
-   * @throws Si ocurre un error durante la generación.
+   * Generates a scramble for the given mode.
+   * @returns The generated scramble, or null if this generator doesn't support the mode.
+   * @throws If an error occurs during generation.
    */
   generate(mode: string, length: number, prob?: number | number[]): Promise<string | null>;
 
   /**
-   * Indica si este generador soporta un modo dado.
-   * Útil para skip rápido sin intentar generar.
+   * Indicates whether this generator supports a given mode.
+   * Useful for quick skip without attempting generation.
    */
   supports(mode: string): boolean;
 }
 
 class ScrambleService {
-  /** Generadores por modo, ordenados por prioridad (menor index = mayor prioridad) */
+  /** Generators per mode, ordered by priority (lower index = higher priority) */
   private generators: Map<string, ScrambleGenerator[]> = new Map();
 
-  /** Generadores globales (aplican a cualquier modo si lo soportan) */
+  /** Global generators (apply to any mode if supported) */
   private globalGenerators: ScrambleGenerator[] = [];
 
   /**
-   * Registra un generador para un modo específico.
-   * Se añade al final de la lista de prioridad para ese modo.
+   * Registers a generator for a specific mode.
+   * Added to the end of the priority list for that mode.
    */
   register(mode: string, generator: ScrambleGenerator): void;
 
   /**
-   * Registra un generador global (fallback para cualquier modo).
+   * Registers a global generator (fallback for any mode).
    */
   registerGlobal(generator: ScrambleGenerator): void;
 
   /**
-   * Genera un scramble. Recorre los generadores en orden de prioridad.
-   * Si todos fallan, emite un evento de error.
+   * Generates a scramble. Goes through generators in priority order.
+   * If all fail, emits an error event.
    *
-   * @returns El scramble generado.
-   * @throws ScrambleGenerationFailed si ningún generador pudo producir resultado.
+   * @returns The generated scramble.
+   * @throws ScrambleGenerationFailed if no generator could produce a result.
    */
   async generate(mode: string, length: number, prob?: number | number[]): Promise<string>;
 }
 ```
 
-### Flujo de generación (fallback)
+### Generation Flow (Fallback)
 
 ```mermaid
 flowchart TD
-    A[generate mode, length, prob] --> B{generators para mode?}
-    B -->|sí| C[intentar generator 1]
-    B -->|no| F[intentar global generators]
+    A[generate mode, length, prob] --> B{generators for mode?}
+    B -->|yes| C[try generator 1]
+    B -->|no| F[try global generators]
 
-    C -->|éxito| D[retornar scramble]
-    C -->|falla/null| E[intentar generator 2]
-    E -->|éxito| D
-    E -->|falla/null| F
+    C -->|success| D[return scramble]
+    C -->|fail/null| E[try generator 2]
+    E -->|success| D
+    E -->|fail/null| F
 
-    F -->|éxito| D
-    F -->|todos fallan| G[emit ScrambleGenerationFailed]
+    F -->|success| D
+    F -->|all fail| G[emit ScrambleGenerationFailed]
 ```
 
-### Ejemplo de registro
+### Registration Example
 
 ```ts
 const scrambleService = new ScrambleService();
 
-// cstimer como generador principal para la mayoría de modos
+// cstimer as the main generator for most modes
 scrambleService.registerGlobal(new CstimerGenerator());
 
-// Generador especializado para FTO (si cstimer no lo soporta bien)
+// Specialized generator for FTO (if cstimer doesn't support it well)
 scrambleService.register('fto', new FTOGenerator());
 ```
 
-## Relación con el Timer
+## Relationship with the Timer
 
-El Timer controla cuándo se genera un scramble. El ScrambleService solo genera.
+The Timer controls when a scramble is generated. The ScrambleService only generates.
 
 ```
-Timer recibe DeviceStopped
-  → Timer guarda solve
-  → Timer pide scramble al ScrambleService
-  → ScrambleService genera (async, puede ser en worker)
-  → Timer recibe scramble
-  → Timer emite ScrambleGenerated
-  → UI muestra scramble
-  → (side effect) genera imagen de preview si es soportado
+Timer receives DeviceStopped
+  → Timer saves solve
+  → Timer requests scramble from ScrambleService
+  → ScrambleService generates (async, can be in worker)
+  → Timer receives scramble
+  → Timer emits ScrambleGenerated
+  → UI shows scramble
+  → (side effect) generates preview image if supported
 ```
 
-## Preview de imagen (side effect)
+## Image Preview (Side Effect)
 
-La imagen de preview es independiente de la generación del scramble.
+The preview image is independent of scramble generation.
 
 ```ts
 interface ScrambleImageGenerator {
-  /** Indica si puede generar imagen para este modo */
+  /** Indicates if it can generate an image for this mode */
   supports(mode: string): boolean;
 
-  /** Genera las imágenes de preview del scramble */
+  /** Generates preview images for the scramble */
   generate(scramble: string, mode: string): Promise<string[]>;
 }
 ```
 
-- Se ejecuta después de que el scramble esté listo.
-- Si el generador de imágenes no soporta el modo, no se genera imagen.
-- No bloquea el flujo del timer.
+- Runs after the scramble is ready.
+- If the image generator doesn't support the mode, no image is generated.
+- Does not block the timer flow.
 
-## Persistencia
+## Persistence
 
-El scramble NO se persiste entre reinicios de la app.
-Cada vez que la app arranca, genera un scramble nuevo.
-El PRNG depende de la fecha/hora como seed.
+The scramble is NOT persisted between app restarts.
+Each time the app starts, a new scramble is generated.
+The PRNG depends on date/time as seed.
 
-## Eventos
+## Events
 
 ```ts
-/** Error al generar scramble: ningún generador pudo producir resultado */
+/** Error generating scramble: no generator could produce a result */
 export class ScrambleGenerationFailed implements DomainEvent {
   readonly type = 'ScrambleGenerationFailed';
   readonly timestamp = Date.now();

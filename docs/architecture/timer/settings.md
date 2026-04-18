@@ -1,23 +1,23 @@
 # Settings
 
-## Tipos de configuración
+## Configuration Types
 
-Hay dos sistemas completamente separados:
+There are two completely separate systems:
 
 ### 1. Session Settings
 
-Configuración específica de cada sesión. Cada sesión tiene su propia configuración.
-No existen settings globales que apliquen a todas las sesiones.
+Configuration specific to each session. Each session has its own configuration.
+There are no global settings that apply to all sessions.
 
 ```ts
 interface SessionSettings {
   hasInspection: boolean;
-  inspection: number;           // segundos de inspección
+  inspection: number;           // inspection seconds
   showElapsedTime: boolean;
   calcAoX: AverageSetting;
   genImage: boolean;
   scrambleAfterCancel: boolean;
-  input?: string;               // device ID preferido
+  input?: string;               // preferred device ID
   withoutPrevention: boolean;
   recordCelebration?: boolean;
   showBackFace?: boolean;
@@ -31,25 +31,25 @@ interface SessionSettings {
 
 ### 2. App Config
 
-Configuración de la aplicación (UI, dispositivos, preferencias generales).
-Key-value flexible. Completamente separado de session settings.
+Application configuration (UI, devices, general preferences).
+Flexible key-value. Completely separate from session settings.
 
-Incluye: tema, idioma, layout, datos de dispositivos bluetooth,
-última sesión activa, y configuraciones impredecibles que cada módulo
-necesite persistir.
+Includes: theme, language, layout, bluetooth device data,
+last active session, and unpredictable configurations that each module
+needs to persist.
 
-## Lectura de settings por devices
+## Settings Reading by Devices
 
-Los devices leen `session.settings` de forma lazy:
-- No necesitan reinicializarse cuando un setting cambia.
-- Leen el valor actual la próxima vez que lo necesitan.
-- Acceden via `TimerReadonlyView.session` (Readable).
+Devices read `session.settings` lazily:
+- They don't need to reinitialize when a setting changes.
+- They read the current value the next time they need it.
+- They access via `TimerReadonlyView.session` (Readable).
 
-Ejemplo: si el usuario activa `hasInspection` mientras el timer está en CLEAN,
-el Keyboard device leerá el nuevo valor cuando el usuario presione space
-y decida si ir a INSPECTION o no.
+Example: if the user activates `hasInspection` while the timer is in CLEAN,
+the Keyboard device will read the new value when the user presses space
+and decides whether to go to INSPECTION or not.
 
-## Propagación de cambios
+## Change Propagation
 
 ```mermaid
 sequenceDiagram
@@ -59,14 +59,14 @@ sequenceDiagram
     participant T as Timer
     participant DB
 
-    U->>UI: cambia setting (e.g., inspection = true)
+    U->>UI: changes setting (e.g., inspection = true)
     UI->>DB: SessionController.applySettings(session, { hasInspection: true })
-    DB-->>UI: session actualizada
+    DB-->>UI: updated session
     UI->>EB: ActiveSessionSettingsChanged(session, ['hasInspection'])
-    EB->>T: actualiza session en $state
-    Note over T: El device leerá el nuevo valor la próxima vez que lo necesite
+    EB->>T: updates session in $state
+    Note over T: The device will read the new value the next time it needs it
 ```
 
-No hay reinicialización de devices. No hay broadcast especial.
-El cambio se persiste en DB, se actualiza el `$state`, y el device
-lo lee cuando toca.
+No device reinitialization. No special broadcast.
+The change is persisted to DB, `$state` is updated, and the device
+reads it when needed.

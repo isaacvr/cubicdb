@@ -1,9 +1,9 @@
 # Timer Reactor
 
-Lo que el Timer hace cuando recibe cada evento.
+What the Timer does when it receives each event.
 
 ```ts
-// Pseudocódigo de las suscripciones del Timer
+// Pseudocode of the Timer's subscriptions
 
 class TimerReactor {
   constructor(private eventBus: IEventBus, private controller: TimerController) {
@@ -11,11 +11,11 @@ class TimerReactor {
   }
 
   private setupSubscriptions() {
-    // === Flujo del solve ===
+    // === Solve flow ===
 
     eventBus.subscribe(DeviceEnteredPrevention, (e) => {
       controller.timerState.set(TimerState.PREVENTION);
-      controller.time.set(0);       // reset tiempo en pantalla
+      controller.time.set(0);       // reset time on screen
       controller.decimals.set(true);
       controller.ready.set(false);
     });

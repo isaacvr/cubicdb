@@ -1,34 +1,34 @@
 # Session Switching
 
-## Reglas
+## Rules
 
-1. **No se puede cambiar de sesión mientras el timer no esté en CLEAN.**
-   La UI debe bloquear el selector de sesiones cuando `timerState !== CLEAN`.
-   Si por alguna razón se fuerza el cambio, el solve se cancela (`DeviceCancelled`).
+1. **Cannot switch sessions while the timer is not in CLEAN.**
+   The UI must block the session selector when `timerState !== CLEAN`.
+   If the switch is somehow forced, the solve is cancelled (`DeviceCancelled`).
 
-2. **El device activo depende de la sesión.**
-   Cada sesión tiene `settings.input` que indica el device preferido.
-   Por defecto es Keyboard. La lista de devices disponibles para una sesión
-   se filtra por compatibilidad (e.g., GAN iCarry no tiene sentido para 4x4).
-   Al cambiar de sesión:
-   - Si el device de la nueva sesión es **el mismo** que el actual → no se desconecta.
-   - Si es **diferente** → desconectar el actual, conectar el nuevo.
+2. **The active device depends on the session.**
+   Each session has `settings.input` indicating the preferred device.
+   Default is Keyboard. The list of available devices for a session
+   is filtered by compatibility (e.g., GAN iCarry doesn't make sense for 4x4).
+   When switching sessions:
+   - If the new session's device is **the same** as the current one → don't disconnect.
+   - If it's **different** → disconnect the current one, connect the new one.
 
-3. **En sesiones "mixed", la configuración se persiste automáticamente.**
-   Cuando el usuario cambia group/mode/filter en una sesión mixed,
-   se guarda inmediatamente en `session.settings`.
+3. **In "mixed" sessions, configuration is persisted automatically.**
+   When the user changes group/mode/filter in a mixed session,
+   it's saved immediately to `session.settings`.
 
-4. **Eliminar la sesión activa**: ir a la primera sesión de la lista.
-   Si no queda ninguna, crear una nueva vacía. (Preferiblemente, la eliminación
-   ocurre desde la lista de sesiones, no desde el timer activo.)
+4. **Deleting the active session**: go to the first session in the list.
+   If none remain, create a new empty one. (Preferably, deletion
+   happens from the session list, not from the active timer.)
 
-5. **El scramble se mantiene si las configuraciones coinciden.**
-   El scramble depende de: `mode`, `prob`, y potencialmente `group`.
-   Si al cambiar de sesión todas estas configuraciones son idénticas,
-   el scramble actual se conserva (no tiene sentido regenerar uno no usado).
-   Si alguna difiere, se genera uno nuevo.
+5. **The scramble is kept if configurations match.**
+   The scramble depends on: `mode`, `prob`, and potentially `group`.
+   If when switching sessions all these configurations are identical,
+   the current scramble is kept (no point regenerating an unused one).
+   If any differ, a new one is generated.
 
-## Flujo: cambiar de sesión
+## Flow: Switch Session
 
 ```mermaid
 sequenceDiagram
@@ -39,44 +39,44 @@ sequenceDiagram
     participant D as Device
     participant DB
 
-    U->>UI: selecciona sesión B
+    U->>UI: selects session B
 
     alt timerState !== CLEAN
-        UI->>UI: bloquea acción (botón deshabilitado)
+        UI->>UI: blocks action (button disabled)
     else timerState === CLEAN
         UI->>EB: SessionSwitched(prev=A, new=B)
 
-        EB->>T: procesa SessionSwitched
-        T->>T: guarda session A._id en config
+        EB->>T: processes SessionSwitched
+        T->>T: saves session A._id in config
 
-        T->>DB: carga solves de sesión B
+        T->>DB: loads solves for session B
         DB-->>T: solves[]
 
-        T->>T: allSolves = solves[], filtra por session B
-        T->>T: stats = recalcula desde cero
+        T->>T: allSolves = solves[], filters by session B
+        T->>T: stats = recalculates from scratch
 
-        T->>T: resuelve mode/group/prob desde B.settings
+        T->>T: resolves mode/group/prob from B.settings
 
-        alt scramble config cambió (mode, prob, group)
-            T->>T: genera nuevo scramble
+        alt scramble config changed (mode, prob, group)
+            T->>T: generates new scramble
             T->>EB: ScrambleGenerated
-        else scramble config igual
-            Note over T: mantiene scramble actual
+        else scramble config unchanged
+            Note over T: keeps current scramble
         end
 
-        alt device de sesión B !== device actual
-            T->>D: disconnect() device actual
-            T->>D: init(deviceContext) nuevo device
-        else device es el mismo
-            Note over T,D: mantiene device conectado
+        alt session B device !== current device
+            T->>D: disconnect() current device
+            T->>D: init(deviceContext) new device
+        else device is the same
+            Note over T,D: keeps device connected
         end
 
         T->>EB: TimerStateChanged(CLEAN)
-        T->>UI: actualiza todo
+        T->>UI: updates everything
     end
 ```
 
-## Flujo: crear nueva sesión
+## Flow: Create New Session
 
 ```mermaid
 sequenceDiagram
@@ -86,16 +86,16 @@ sequenceDiagram
     participant T as Timer
     participant DB
 
-    U->>UI: nombre, tipo, mode, steps
+    U->>UI: name, type, mode, steps
     UI->>DB: SessionController.addSession(...)
-    DB-->>UI: nueva sesión con _id
+    DB-->>UI: new session with _id
 
-    UI->>EB: SessionSwitched(prev=actual, new=nueva)
-    Note over T: mismo flujo que cambiar de sesión
-    Note over T: solves = [] (vacío), stats = inicial
+    UI->>EB: SessionSwitched(prev=current, new=newSession)
+    Note over T: same flow as switching sessions
+    Note over T: solves = [] (empty), stats = initial
 ```
 
-## Flujo: eliminar sesión activa
+## Flow: Delete Active Session
 
 ```mermaid
 sequenceDiagram
@@ -105,14 +105,14 @@ sequenceDiagram
     participant T as Timer
     participant DB
 
-    U->>UI: eliminar sesión activa
-    UI->>UI: confirmación (pendiente de implementar)
+    U->>UI: delete active session
+    UI->>UI: confirmation (pending implementation)
     UI->>DB: SessionController.removeSession(session)
 
-    alt quedan sesiones
-        UI->>EB: SessionSwitched(prev=eliminada, new=primera de la lista)
-    else no quedan sesiones
-        UI->>DB: SessionController.addSession(sesión vacía por defecto)
-        UI->>EB: SessionSwitched(prev=eliminada, new=sesión nueva)
+    alt sessions remain
+        UI->>EB: SessionSwitched(prev=deleted, new=first in list)
+    else no sessions remain
+        UI->>DB: SessionController.addSession(default empty session)
+        UI->>EB: SessionSwitched(prev=deleted, new=new session)
     end
 ```

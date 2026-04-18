@@ -1,136 +1,136 @@
 # Migration Plan
 
-## Principio
+## Principle
 
-Migración incremental. En cada fase, la app debe seguir funcionando.
-Las fases se pueden hacer en PRs separados.
-
----
-
-## Fase 0: Infraestructura base
-
-**Objetivo**: tener las piezas fundamentales sin romper nada existente.
-
-1. **Result type** - Crear `src/lib/core/domain/Result.ts` con `Ok`, `Err`, `Result<T, E>`.
-2. **Domain events** - Crear `src/lib/events/domain/TimerEvents.ts` con todos los eventos definidos en [events.md](events.md).
-3. **TimerState class** - Crear `src/lib/timer/TimerState.ts` con `$state` para todo el estado reactivo del timer (`timerState`, `time`, `ready`, `scramble`, `solves`, `lastSolve`, etc.).
-4. **TimerReactor** - Crear `src/lib/timer/TimerReactor.ts` que suscribe al EventBus y actualiza `TimerState`. Inicialmente sin side effects (no guarda solves, no genera scrambles).
-
-**Resultado**: EventBus + eventos + TimerState + TimerReactor existen pero no se usan todavía.
+Incremental migration. At each phase, the app must keep working.
+Phases can be done in separate PRs.
 
 ---
 
-## Fase 1: Keyboard device (migración del device principal)
+## Phase 0: Base Infrastructure
 
-**Objetivo**: el device más usado funciona con el nuevo sistema.
+**Goal**: have the fundamental pieces without breaking anything existing.
 
-1. **Crear KeyboardDevice nuevo** - `src/lib/devices/KeyboardDevice.ts`. XState interno, emite eventos al EventBus, recibe `onTimeUpdate` callback.
-2. **Conectar al TimerReactor** - El reactor actualiza `TimerState` cuando llegan eventos del Keyboard.
-3. **Conectar UI** - `Timer.svelte` lee de `TimerState` ($state) en vez de los stores del `TimerController`.
-4. **Side effects en reactor** - Agregar guardado de solves, generación de scramble (usando el `TimerController` existente como puente temporal).
-5. **Verificar flujos** - CLEAN→PREVENTION→READY→RUNNING→STOPPED, cancel, inspection, penalties, multi-step.
+1. **Result type** - Create `src/lib/core/domain/Result.ts` with `Ok`, `Err`, `Result<T, E>`.
+2. **Domain events** - Create `src/lib/events/domain/TimerEvents.ts` with all events defined in [events.md](events.md).
+3. **TimerState class** - Create `src/lib/timer/TimerState.ts` with `$state` for all timer reactive state (`timerState`, `time`, `ready`, `scramble`, `solves`, `lastSolve`, etc.).
+4. **TimerReactor** - Create `src/lib/timer/TimerReactor.ts` that subscribes to EventBus and updates `TimerState`. Initially without side effects (doesn't save solves, doesn't generate scrambles).
 
-**Resultado**: Keyboard funciona con event-driven. Los demás devices siguen con el sistema viejo.
-
----
-
-## Fase 2: Manual y Virtual devices
-
-**Objetivo**: migrar los devices simples.
-
-1. **ManualDevice** - Solo emite `DeviceStopped(time)` cuando el usuario ingresa un tiempo.
-2. **VirtualDevice** - Emite `DeviceStartedRunning` al primer movimiento, `DeviceStopped` al resolver.
-
-**Resultado**: 3 de los devices principales migrados.
+**Result**: EventBus + events + TimerState + TimerReactor exist but are not used yet.
 
 ---
 
-## Fase 3: ScrambleService
+## Phase 1: Keyboard Device (Main Device Migration)
 
-**Objetivo**: desacoplar la generación de scrambles del TimerController.
+**Goal**: the most used device works with the new system.
 
-1. **Crear ScrambleService** - Con sistema de fallback (ver [scramble.md](scramble.md)).
-2. **Registrar CstimerGenerator** como generador global.
-3. **Conectar al reactor** - Después de `DeviceStopped`, el reactor pide scramble al ScrambleService.
-4. **Mover imagen de preview** - Como side effect separado del scramble.
+1. **Create new KeyboardDevice** - `src/lib/devices/KeyboardDevice.ts`. Internal XState, emits events to EventBus, receives `onTimeUpdate` callback.
+2. **Connect to TimerReactor** - The reactor updates `TimerState` when Keyboard events arrive.
+3. **Connect UI** - `Timer.svelte` reads from `TimerState` ($state) instead of `TimerController` stores.
+4. **Side effects in reactor** - Add solve saving, scramble generation (using existing `TimerController` as a temporary bridge).
+5. **Verify flows** - CLEAN→PREVENTION→READY→RUNNING→STOPPED, cancel, inspection, penalties, multi-step.
 
-**Resultado**: scrambles desacoplados. TimerController ya no maneja scrambles.
-
----
-
-## Fase 4: Stackmat y Bluetooth devices
-
-**Objetivo**: migrar devices de hardware.
-
-1. **StackmatDevice** - Reescribir con XState + EventBus. El audio processing se mantiene igual internamente.
-2. **GANDevice** - Reescribir con XState + EventBus. La comunicación BLE se mantiene igual.
-3. **QYTimerDevice** - Similar a Stackmat.
-4. **IDeviceDiscovery** - Implementar `WebDeviceDiscovery` y `ElectronDeviceDiscovery`.
-
-**Resultado**: todos los devices migrados al nuevo sistema.
+**Result**: Keyboard works with event-driven. Other devices continue with the old system.
 
 ---
 
-## Fase 5: Session switching y Solve CRUD via eventos
+## Phase 2: Manual and Virtual Devices
 
-**Objetivo**: migrar las operaciones de sesión y solves al EventBus.
+**Goal**: migrate the simple devices.
 
-1. **Session events** - `SessionSwitched`, `SessionCreated`, etc. (ver [sessions.md](sessions.md)).
-2. **Solve events** - `SolveUpdated`, `SolvesRemoved`, `PenaltyChanged` (ver [solves.md](solves.md)).
-3. **Conectar handlers** - El reactor procesa estos eventos y ejecuta use cases.
+1. **ManualDevice** - Only emits `DeviceStopped(time)` when the user enters a time.
+2. **VirtualDevice** - Emits `DeviceStartedRunning` on the first move, `DeviceStopped` on solve.
 
-**Resultado**: todo el flujo es event-driven.
-
----
-
-## Fase 6: Limpieza
-
-**Objetivo**: eliminar código legacy.
-
-1. **Eliminar TimerController** - Reemplazado por TimerReactor + TimerState + servicios.
-2. **Eliminar InputContext** - Reemplazado por IDevice + EventBus.
-3. **Eliminar Emitter** - Reemplazado por EventBus.
-4. **Eliminar stores viejos** - Reemplazados por $state.
-5. **Eliminar adaptors/** - Reemplazados por devices/.
-
-**Resultado**: codebase limpio, sin código dual.
+**Result**: 3 of the main devices migrated.
 
 ---
 
-## Fase 7: Data layer via eventos
+## Phase 3: ScrambleService
 
-**Objetivo**: el backend de datos se selecciona por ambiente y se comunica via eventos.
+**Goal**: decouple scramble generation from TimerController.
 
-1. **EnvironmentDetector** - Detecta si estamos en Electron, web, o Capacitor.
-2. **Data events** - Los repositorios emiten/escuchan eventos para operaciones async.
-3. **Adapter selection** - El factory selecciona el adapter correcto según el ambiente detectado.
+1. **Create ScrambleService** - With fallback system (see [scramble.md](scramble.md)).
+2. **Register CstimerGenerator** as global generator.
+3. **Connect to reactor** - After `DeviceStopped`, the reactor requests a scramble from ScrambleService.
+4. **Move preview image** - As a separate side effect from the scramble.
+
+**Result**: scrambles decoupled. TimerController no longer handles scrambles.
 
 ---
 
-## Diagrama de dependencias entre fases
+## Phase 4: Stackmat and Bluetooth Devices
+
+**Goal**: migrate hardware devices.
+
+1. **StackmatDevice** - Rewrite with XState + EventBus. Internal audio processing stays the same.
+2. **GANDevice** - Rewrite with XState + EventBus. BLE communication stays the same.
+3. **QYTimerDevice** - Similar to Stackmat.
+4. **IDeviceDiscovery** - Implement `WebDeviceDiscovery` and `ElectronDeviceDiscovery`.
+
+**Result**: all devices migrated to the new system.
+
+---
+
+## Phase 5: Session Switching & Solve CRUD via Events
+
+**Goal**: migrate session and solve operations to EventBus.
+
+1. **Session events** - `SessionSwitched`, `SessionCreated`, etc. (see [sessions.md](sessions.md)).
+2. **Solve events** - `SolveUpdated`, `SolvesRemoved`, `PenaltyChanged` (see [solves.md](solves.md)).
+3. **Connect handlers** - The reactor processes these events and executes use cases.
+
+**Result**: the entire flow is event-driven.
+
+---
+
+## Phase 6: Cleanup
+
+**Goal**: remove legacy code.
+
+1. **Remove TimerController** - Replaced by TimerReactor + TimerState + services.
+2. **Remove InputContext** - Replaced by IDevice + EventBus.
+3. **Remove Emitter** - Replaced by EventBus.
+4. **Remove old stores** - Replaced by $state.
+5. **Remove adaptors/** - Replaced by devices/.
+
+**Result**: clean codebase, no dual code.
+
+---
+
+## Phase 7: Data Layer via Events
+
+**Goal**: the data backend is selected by environment and communicates via events.
+
+1. **EnvironmentDetector** - Detects whether we're in Electron, web, or Capacitor.
+2. **Data events** - Repositories emit/listen to events for async operations.
+3. **Adapter selection** - The factory selects the correct adapter based on the detected environment.
+
+---
+
+## Phase Dependency Diagram
 
 ```mermaid
 flowchart TD
-    F0[Fase 0: Infraestructura] --> F1[Fase 1: Keyboard]
-    F0 --> F2[Fase 2: Manual + Virtual]
-    F1 --> F3[Fase 3: ScrambleService]
-    F1 --> F4[Fase 4: Stackmat + BLE]
-    F3 --> F5[Fase 5: Sessions + Solves]
+    F0[Phase 0: Infrastructure] --> F1[Phase 1: Keyboard]
+    F0 --> F2[Phase 2: Manual + Virtual]
+    F1 --> F3[Phase 3: ScrambleService]
+    F1 --> F4[Phase 4: Stackmat + BLE]
+    F3 --> F5[Phase 5: Sessions + Solves]
     F4 --> F5
     F2 --> F5
-    F5 --> F6[Fase 6: Limpieza]
-    F6 --> F7[Fase 7: Data layer]
+    F5 --> F6[Phase 6: Cleanup]
+    F6 --> F7[Phase 7: Data layer]
 ```
 
-- Fases 1 y 2 pueden hacerse en paralelo.
-- Fases 3 y 4 pueden hacerse en paralelo después de Fase 1.
-- Fase 5 requiere que todos los devices estén migrados.
-- Fase 6 solo se hace cuando todo funciona.
-- Fase 7 es independiente pero se beneficia de la limpieza.
+- Phases 1 and 2 can be done in parallel.
+- Phases 3 and 4 can be done in parallel after Phase 1.
+- Phase 5 requires all devices to be migrated.
+- Phase 6 only happens when everything works.
+- Phase 7 is independent but benefits from the cleanup.
 
 ---
 
-## Regla de oro
+## Golden Rule
 
-En cualquier momento entre fases, la app debe funcionar.
-Si algo falla, se revierte la fase incompleta, no se fuerza el avance.
+At any point between phases, the app must work.
+If something fails, the incomplete phase is reverted, not forced forward.
