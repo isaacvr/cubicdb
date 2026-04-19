@@ -4,20 +4,17 @@
   import "../daisyuiOverrides.css";
 
   import moment from "moment";
-  import { onDestroy, onMount, tick, untrack } from "svelte";
-  import { LANGUAGES } from "@lang/index";
-  import { globalLang, localLang } from "@stores/language.service";
+  import { onDestroy, onMount, untrack } from "svelte";
+  import { localLang } from "@stores/language.service";
   import { NotificationService } from "@stores/notification.service";
   import { screen } from "@stores/screen.store";
-  import { DOMAIN } from "@constants";
-  import FlagIcon from "@components/FlagIcon.svelte";
+  // import { DOMAIN } from "@constants";
   import { ArrowUpRightDownLeftOutline } from "flowbite-svelte-icons";
-  import Select from "@material/Select.svelte";
   import { browser } from "$app/environment";
   import type { INotification } from "@interfaces";
   import Notification from "@components/Notification.svelte";
   import { goto } from "$app/navigation";
-  import { type Unsubscriber } from "svelte/store";
+  // import { type Unsubscriber } from "svelte/store";
   import type { LayoutServerData } from "./$types";
   import { getTitleMeta } from "$lib/meta/title";
   import { dataService } from "$lib/data-services/data.service";
@@ -39,25 +36,17 @@
     MinusIcon,
     XIcon,
     MonitorSmartphoneIcon,
-    CirclePowerIcon,
-    HexagonIcon,
   } from "lucide-svelte";
   import Button from "$lib/cubicdbKit/Button.svelte";
   import TimerSessionIcon from "$lib/timer/TimerSessionIcon.svelte";
   import { page } from "$app/state";
   import { twMerge } from "tailwind-merge";
   import type { IDevice } from "$lib/interfaces/devices.types";
-  import DeviceIcon from "$lib/cubicdbKit/DeviceIcon.svelte";
-  import { KeyboardInput } from "$lib/timer/adaptors/Keyboard";
-  import { ManualInput } from "$lib/timer/adaptors/Manual";
   import { StackmatInput } from "$lib/timer/adaptors/Stackmat";
-  import { VirtualInput } from "$lib/timer/adaptors/Virtual";
-  import { nameCmp } from "@helpers/strings";
-  import { GANInput, reconnect } from "$lib/timer/adaptors/GAN";
-  import type { Device } from "$lib/timer/adaptors/devices";
+  import { GANInput } from "$lib/timer/adaptors/GAN";
   import { devices } from "@stores/devices.store";
   import { sessionController } from "$lib/controllers/SessionController";
-  import CubeCategory from "@components/wca/CubeCategory.svelte";
+  import EventDebugPanel from "$lib/components/EventDebugPanel.svelte";
 
   let { data, children }: { data: LayoutServerData; children: any } = $props();
 
@@ -66,15 +55,12 @@
   let notifications: INotification[] = $state([]);
   const notService = NotificationService.getInstance();
 
-  let nSub: Unsubscriber;
-
   const sessions = sessionController.sessions;
   let date: string = $state("");
   let itv: any;
   let progress = $state(0);
   let parts: { link: string; name: string }[] = $state([]);
-  let jsonld = $state("");
-  let dropdownOpen = $state(false);
+  // let jsonld = $state("");
 
   function handleProgress(p: number) {
     progress = Math.round(p * 100) / 100;
@@ -96,16 +82,16 @@
     });
   }
 
-  function cancelUpdate() {
-    $dataService.config
-      .cancelUpdate()
-      .then(() => {
-        progress = 0;
-      })
-      .catch(err => {
-        console.log("ERROR: ", err);
-      });
-  }
+  // function cancelUpdate() {
+  //   $dataService.config
+  //     .cancelUpdate()
+  //     .then(() => {
+  //       progress = 0;
+  //     })
+  //     .catch(err => {
+  //       console.log("ERROR: ", err);
+  //     });
+  // }
 
   function minimize() {
     $dataService.config.minimize();
@@ -119,24 +105,24 @@
     document.documentElement.requestFullscreen();
   }
 
-  function updateJSONLD() {
-    jsonld = `<${"script"} type="application/ld+json">${JSON.stringify({
-      "@context": "https://schema.org",
-      "@type": "WebApplication",
-      name: data.title,
-      description: data.description,
-      applicationCategory: "Utility",
-      operatingSystem: "all",
-      url: `${DOMAIN}/timer`,
-      offers: {
-        "@type": "Offer",
-        price: "0",
-        priceCurrency: "USD",
-      },
-    })}</${"script"}>`;
-  }
+  // function updateJSONLD() {
+  //   jsonld = `<${"script"} type="application/ld+json">${JSON.stringify({
+  //     "@context": "https://schema.org",
+  //     "@type": "WebApplication",
+  //     name: data.title,
+  //     description: data.description,
+  //     applicationCategory: "Utility",
+  //     operatingSystem: "all",
+  //     url: `${DOMAIN}/timer`,
+  //     offers: {
+  //       "@type": "Offer",
+  //       price: "0",
+  //       priceCurrency: "USD",
+  //     },
+  //   })}</${"script"}>`;
+  // }
 
-  updateJSONLD();
+  // updateJSONLD();
 
   function handleResize() {
     $screen = {
@@ -153,9 +139,9 @@
       date = moment().format("hh:mm a");
     }, 1000);
 
-    nSub = notService.notificationSub.subscribe(v => {
-      notifications = v;
-    });
+    // nSub = notService.notificationSub.subscribe(v => {
+    //   notifications = v;
+    // });
 
     $dataService.on("download-progress", handleProgress);
     $dataService.on("update-downloaded", handleDone);
@@ -228,7 +214,7 @@
 <svelte:head>
   <title>{data.title}</title>
   <meta name="description" content={data.description} />
-  {@html jsonld || ""}
+  <!-- {@html jsonld || ""} -->
 </svelte:head>
 
 <svelte:window on:resize={handleResize} />
@@ -271,7 +257,7 @@
   <div class="topbar-content draggable custom-cursor">
     <div class="breadcrumbs text-sm mr-auto">
       <ul>
-        {#each parts as part, pos}
+        {#each parts as part, pos (pos)}
           {#if parts[0].link === "/timer" && pos === 1}
             {@const session = $sessions.find(s => s._id === part.name)}
 
@@ -473,6 +459,8 @@
     <Notification {...nt} fixed={nt.fixed}></Notification>
   {/each}
 </div>
+
+<EventDebugPanel />
 
 <style lang="postcss">
   @reference "@src/themes/index.css";

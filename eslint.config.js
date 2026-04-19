@@ -27,6 +27,16 @@ export default tseslint.config(
     },
   },
   {
+    files: ["**/*.svelte.ts"],
+    languageOptions: {
+      parser: tseslint.parser,
+      parserOptions: {
+        sourceType: "module",
+        ecmaVersion: 2020,
+      },
+    },
+  },
+  {
     ignores: [
       "build/",
       ".svelte-kit/",
@@ -50,6 +60,7 @@ export default tseslint.config(
         destructuredArrayIgnorePattern: "^_"
       }],
       "no-unused-vars": "off",
+      "svelte/no-navigation-without-resolve": "off",
     },
   }
 );
