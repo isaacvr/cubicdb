@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { TimerState as TimerStateValue } from '@interfaces';
 import { TIMER_EVENTS } from '$lib/events/timer/TimerEventRegistry';
 import { createTimerRuntime } from './TimerCompositionRoot.svelte';
@@ -10,6 +10,7 @@ describe('TimerCompositionRoot', () => {
     const runtime = createTimerRuntime({
       clock: { now: () => 10 },
       idProvider: { next: () => `event-${++id}` },
+      eventLogSink: null,
     });
 
     expect(runtime.flags).toEqual(DEFAULT_TIMER_MIGRATION_FLAGS);
@@ -28,6 +29,7 @@ describe('TimerCompositionRoot', () => {
       flags: { keyboard: true },
       clock: { now: () => 10 },
       idProvider: { next: () => 'event-1' },
+      eventLogSink: null,
     });
 
     expect(runtime.flags.keyboard).toBe(true);
@@ -36,10 +38,18 @@ describe('TimerCompositionRoot', () => {
   });
 
   it('destroys subscriptions idempotently', async () => {
+    const info = vi.fn();
     const runtime = createTimerRuntime({
       clock: { now: () => 10 },
       idProvider: { next: () => 'event-1' },
+      eventLogSink: { info },
     });
+
+    await runtime.bus.publish(runtime.events.create(TIMER_EVENTS.DEVICE_READY, {
+      deviceId: 'keyboard',
+    }));
+    expect(info).toHaveBeenCalledOnce();
+
     runtime.destroy();
     runtime.destroy();
 
@@ -48,5 +58,6 @@ describe('TimerCompositionRoot', () => {
     }));
 
     expect(runtime.state.timerState).toBe(TimerStateValue.CLEAN);
+    expect(info).toHaveBeenCalledOnce();
   });
 });

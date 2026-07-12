@@ -1,4 +1,6 @@
 import { TimerEventBus } from '$lib/events/timer/TimerEventBus';
+import { logger } from '$lib/logger/singleton';
+import { TimerEventLogger, type TimerEventLogSink } from '$lib/logger/TimerEventLogger';
 import {
   TimerEventFactory,
   type IEventIdProvider,
@@ -13,6 +15,7 @@ export interface TimerRuntimeOptions {
   clock?: IMonotonicClock;
   idProvider?: IEventIdProvider;
   flags?: Partial<TimerMigrationFlags>;
+  eventLogSink?: TimerEventLogSink | null;
 }
 
 export interface TimerRuntime {
@@ -40,6 +43,9 @@ export function createTimerRuntime(options: TimerRuntimeOptions = {}): TimerRunt
   );
   const bus = new TimerEventBus(events);
   const reactor = new TimerReactor(bus, state);
+  const eventLogger = options.eventLogSink === null
+    ? null
+    : new TimerEventLogger(bus, options.eventLogSink ?? logger);
   const readonlyView = createTimerReadonlyView(state);
   const flags = createTimerMigrationFlags(options.flags);
   let destroyed = false;
@@ -54,6 +60,7 @@ export function createTimerRuntime(options: TimerRuntimeOptions = {}): TimerRunt
       if (destroyed) return;
       destroyed = true;
       reactor.destroy();
+      eventLogger?.destroy();
     },
   };
 }

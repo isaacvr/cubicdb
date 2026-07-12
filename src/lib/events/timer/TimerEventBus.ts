@@ -6,6 +6,7 @@ import { TIMER_EVENTS, type TimerEventType } from './TimerEventRegistry';
 type TimerEventHandler<K extends TimerEventType> = (
   event: TimerEvent<K>,
 ) => void | Promise<void>;
+export type TimerEventObserver = (event: TimerEvent) => void;
 
 interface HandlerRegistration<K extends TimerEventType = TimerEventType> {
   id: string;
@@ -22,11 +23,13 @@ export interface ITimerEventBus {
     handler: TimerEventHandler<K>,
     options?: { priority?: number; once?: boolean },
   ): TimerEventSubscription;
+  observe(observer: TimerEventObserver): TimerEventSubscription;
 }
 
 export class TimerEventBus implements ITimerEventBus {
   private readonly handlers = new Map<TimerEventType, HandlerRegistration[]>();
   private readonly queue: TimerEvent[] = [];
+  private readonly observers = new Set<TimerEventObserver>();
   private processing = false;
   private insideHandler = false;
   private drainPromise: Promise<void> = Promise.resolve();
@@ -70,6 +73,11 @@ export class TimerEventBus implements ITimerEventBus {
     };
   }
 
+  observe(observer: TimerEventObserver): TimerEventSubscription {
+    this.observers.add(observer);
+    return { unsubscribe: () => this.observers.delete(observer) };
+  }
+
   private async drain(): Promise<void> {
     try {
       while (this.queue.length > 0) {
@@ -83,6 +91,14 @@ export class TimerEventBus implements ITimerEventBus {
   }
 
   private async deliver(event: TimerEvent): Promise<void> {
+    for (const observer of this.observers) {
+      try {
+        observer(event);
+      } catch {
+        // Diagnostics must never affect domain-event delivery.
+      }
+    }
+
     const registrations = [...(this.handlers.get(event.type) ?? [])];
 
     for (const registration of registrations) {

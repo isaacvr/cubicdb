@@ -101,4 +101,33 @@ describe('TimerEventBus', () => {
 
     expect(failureHandler).toHaveBeenCalledOnce();
   });
+
+  it('observes every envelope before handlers and supports unsubscribe', async () => {
+    const { bus, factory } = createHarness();
+    const order: string[] = [];
+    const observer = bus.observe(event => order.push(`observed:${event.id}`));
+    bus.subscribe(TIMER_EVENTS.DEVICE_READY, 'handler', event => {
+      order.push(`handled:${event.id}`);
+    });
+    const first = factory.create(TIMER_EVENTS.DEVICE_READY, { deviceId: 'keyboard' });
+
+    await bus.publish(first);
+    observer.unsubscribe();
+    await bus.publish(factory.create(TIMER_EVENTS.DEVICE_READY, { deviceId: 'keyboard' }));
+
+    expect(order).toEqual([`observed:${first.id}`, `handled:${first.id}`, 'handled:event-2']);
+  });
+
+  it('isolates observer failures from event delivery', async () => {
+    const { bus, factory } = createHarness();
+    const handler = vi.fn();
+    bus.observe(() => {
+      throw new Error('observer failed');
+    });
+    bus.subscribe(TIMER_EVENTS.DEVICE_READY, 'handler', handler);
+
+    await bus.publish(factory.create(TIMER_EVENTS.DEVICE_READY, { deviceId: 'keyboard' }));
+
+    expect(handler).toHaveBeenCalledOnce();
+  });
 });
