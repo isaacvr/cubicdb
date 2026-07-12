@@ -201,7 +201,7 @@
             class="flex mx-1 w-5 h-5 p-0 pointer-events-auto {control.highlight($solves[0] || {})
               ? 'text-red-500'
               : ''}"
-            on:click={control.handler}
+            onclick={control.handler}
           >
             <Icon size="1.2rem" />
           </Button>

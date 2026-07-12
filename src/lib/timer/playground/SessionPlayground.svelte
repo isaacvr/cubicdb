@@ -4,6 +4,7 @@
   import SessionManageTab from "./session/SessionManageTab.svelte";
   import SessionSettingsTab from "./session/SessionSettingsTab.svelte";
   import SessionStatsTab from "./session/SessionStatsTab.svelte";
+  import { SessionDefaultSettings } from "@constants";
 
   let activeTab = $state("manage");
   let sessions: SessionWithStats[] = $state([
@@ -13,14 +14,26 @@
       createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
       solveCount: 45,
       lastSolve: new Date(Date.now() - 1000 * 60),
-      settings: { hasInspection: true, inspectionTime: 15000, mode: "normal", timerDisplay: "time" },
+      settings: {
+        ...SessionDefaultSettings,
+        hasInspection: true,
+        inspectionTime: 15000,
+        mode: "normal",
+        timerDisplay: "time",
+      },
     },
     {
       _id: "session-2",
       name: "Relaxed Solving",
       createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
       solveCount: 12,
-      settings: { hasInspection: false, inspectionTime: 0, mode: "zen", timerDisplay: "hide" },
+      settings: {
+        ...SessionDefaultSettings,
+        hasInspection: false,
+        inspectionTime: 0,
+        mode: "zen",
+        timerDisplay: "hide",
+      },
     },
   ]);
   let activeSessionId: string | null = $state("session-1");

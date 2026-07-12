@@ -1,4 +1,4 @@
-import { writable, type Writable } from "svelte/store";
+import { get, writable, type Writable } from "svelte/store";
 import { SessionRepositoryAdapter } from "../adapters/SessionRepositoryAdapter";
 import { GetSessions } from "../core/usecases/GetSessions";
 import { AddSession } from "../core/usecases/AddSession";
@@ -40,7 +40,8 @@ export class SessionController {
   }
 
   async updateSession(session: Session) {
-    const updated = await this.updateSessionUsecase.execute(session);
+    const previous = get(this.sessions).find(item => item._id === session._id) ?? session;
+    const updated = await this.updateSessionUsecase.execute(previous, session);
     this.sessions.update(curr => curr.map(s => (s._id === updated._id ? updated : s)));
     return updated;
   }

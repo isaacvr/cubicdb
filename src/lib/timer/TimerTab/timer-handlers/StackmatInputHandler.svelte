@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { Device } from "$lib/interfaces/devices.types";
+  import type { Device } from "$lib/timer/adaptors/devices";
   import { type InputContext, type TimerContext } from "@interfaces";
   import { WifiIcon, WifiOffIcon } from "lucide-svelte";
   import { localLang } from "$lib/stores/language.service";

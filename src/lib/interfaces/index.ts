@@ -763,7 +763,16 @@ export type IColor =
   | "primary"
   | undefined;
 
-export type ButtonColor = "primary" | "accept" | "cancel" | "urgent" | "error" | "neutral" | "none";
+export type ButtonColor =
+  | "primary"
+  | "accept"
+  | "cancel"
+  | "urgent"
+  | "error"
+  | "neutral"
+  | "none"
+  | "alternative"
+  | "purple";
 
 export interface NotificationAction {
   text: string;

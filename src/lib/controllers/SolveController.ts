@@ -1,4 +1,4 @@
-import { writable, type Writable } from "svelte/store";
+import { get, writable, type Writable } from "svelte/store";
 import { SolveRepositoryAdapter } from "../adapters/SolveRepositoryAdapter";
 import { AddSolve } from "$lib/core/usecases/AddSolve";
 import { AddSolves } from "$lib/core/usecases/AddSolves";
@@ -41,7 +41,8 @@ export class SolveController {
   }
 
   async updateSolve(solve: Solve) {
-    const updated = await this.updateSolveUsecase.execute(solve);
+    const previous = get(this.solves).find(item => item._id === solve._id) ?? solve;
+    const updated = await this.updateSolveUsecase.execute(previous, solve);
     // update local store
     this.solves.update(curr => curr.map(s => (s._id === updated._id ? updated : s)));
     return updated;

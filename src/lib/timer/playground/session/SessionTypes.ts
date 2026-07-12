@@ -1,9 +1,13 @@
-import type { Session } from "@lib/interfaces";
+import type { Session, SessionSettings } from "@lib/interfaces";
 
-export interface SessionWithStats extends Session {
+export interface SessionWithStats extends Omit<Session, "settings"> {
   solveCount: number;
   lastSolve?: Date;
   createdAt: Date;
+  settings: SessionSettings & {
+    inspectionTime?: number;
+    timerDisplay?: string;
+  };
 }
 
 export function createSession(name: string): SessionWithStats {

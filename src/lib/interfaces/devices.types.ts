@@ -139,3 +139,5 @@ export type IDevice =
   | IExternalTimerDevice
   | IUSBTimerDevice
   | IQiYiSmartTimerDevice;
+
+export type Device = IDevice;

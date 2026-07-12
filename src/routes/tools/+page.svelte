@@ -72,7 +72,7 @@
   let modes: { 0: string; 1: string; 2: number }[] = [];
   let filters: string[] = [];
   let option: ToolOption = "timer-only";
-  let timer: Timer;
+  let timer: any;
 
   // Batch
   let batch = 5;
@@ -433,7 +433,7 @@
 
   <!-- Refresh scramble -->
   {#if option === "scramble-only"}
-    <Button color="purple" on:click={() => timer?.initScrambler()}>
+    <Button color="purple" onclick={() => timer?.initScrambler()}>
       {$localLang.global.refresh}
     </Button>
   {/if}
@@ -477,7 +477,7 @@
     </div>
   {:else if option === "statistics"}
     <div class="mt-4">
-      <StatsTab {context} headless />
+      <StatsTab {context} timerController={context.timerController} headless />
     </div>
 
     <hr class="border-gray-200 w-full mt-2" />

@@ -399,7 +399,7 @@
     class="group"
     id="tools"
     aria-label={$localLang.HOME.tools}
-    on:keydown={e => (e.code === "Space" ? e.preventDefault() : null)}
+    on:keydown={e => (e.detail.code === "Space" ? e.detail.preventDefault() : null)}
   >
     <HammerIcon class="group-hover:text-warning" size={iconSize} />
   </Button>

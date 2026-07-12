@@ -38,6 +38,7 @@
     enableKeyboard?: any;
     timerOnly?: boolean;
     scrambleOnly?: boolean;
+    cleanOnScramble?: boolean;
   }
 
   let {
@@ -50,6 +51,7 @@
     enableKeyboard: keyboardEnabled = writable(true),
     timerOnly = false,
     scrambleOnly = false,
+    cleanOnScramble: _cleanOnScramble = false,
   }: TimerProps = $props();
 
   // MENU from language

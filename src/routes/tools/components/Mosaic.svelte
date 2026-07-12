@@ -191,7 +191,7 @@
         image={imgStr}
         zoom={1}
         aspect={imgW / imgH}
-        on:cropcomplete={e => (cropData = e.detail.pixels)}
+        oncropcomplete={event => (cropData = event.pixels)}
       />
     </div>
   {/if}

@@ -350,12 +350,13 @@
     });
   });
 
-  let lastPage = "";
+  let lastPage: URL | null = null;
 
   $effect(() => updateMeta($localLang));
   $effect(() => {
-    if (lastPage === page.url) return;
-    updateCases((lastPage = page.url));
+    if (lastPage?.href === page.url.href) return;
+    lastPage = page.url;
+    updateCases(lastPage);
   });
 
   $effect(() => {

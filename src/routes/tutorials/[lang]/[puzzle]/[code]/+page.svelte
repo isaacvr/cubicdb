@@ -222,9 +222,9 @@
   }
 
   function getTutorial() {
-    let puzzle = page.params.puzzle;
-    let code = page.params.code;
-    let lang = page.params.lang;
+    let puzzle = page.params.puzzle ?? "";
+    let code = page.params.code ?? "";
+    let lang = page.params.lang ?? "";
     let map = page.url.searchParams;
     let step = parseInt(map.get("step") || "0");
 
@@ -261,7 +261,7 @@
     meta.title = [
       meta.title,
       page.params.puzzle,
-      capitalize(page.params.code),
+      capitalize(page.params.code ?? ""),
       currentStep.title || $localLang.global.summary,
     ].join(" - ");
   }

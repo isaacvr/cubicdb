@@ -1,5 +1,6 @@
 <script lang="ts">
   import { createEventDispatcher } from "svelte";
+  import type { HTMLInputAttributes } from "svelte/elements";
 
   interface InputProps {
     value?: string | number;
@@ -14,7 +15,7 @@
     readonly?: boolean;
     readOnly?: boolean;
     name?: string;
-    autocomplete?: string;
+    autocomplete?: HTMLInputAttributes["autocomplete"];
     [key: string]: any;
   }
 

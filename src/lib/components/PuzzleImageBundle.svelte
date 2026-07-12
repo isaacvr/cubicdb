@@ -55,7 +55,7 @@
 
 <Button
   color="none"
-  on:click={ev => step(ev, -1)}
+  onclick={ev => step(ev, -1)}
   disabled={selectedImg === 0}
   class={preview.length < 2 ? "hidden" : "rounded-full p-2 mt-2"}
 >
@@ -76,7 +76,7 @@
 
 <Button
   color="none"
-  on:click={ev => step(ev, 1)}
+  onclick={ev => step(ev, 1)}
   disabled={selectedImg + 1 === preview.length}
   class={preview.length < 2 ? "hidden" : "rounded-full p-2 mt-2"}
 >

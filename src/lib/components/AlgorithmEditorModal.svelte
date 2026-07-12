@@ -11,6 +11,7 @@
   type AlgProp = { tutorial: false; alg: Algorithm } | { tutorial: true; alg: ITutorialAlg };
 
   export let show: boolean;
+  export let isAdding: boolean = false;
   export let tipTemp: string[];
   export let solTemp: Solution[];
   export let img;

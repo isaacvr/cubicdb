@@ -234,10 +234,8 @@
 
   <a href={url} target="_blank" class="flex bg-gray-900 w-max mx-auto p-2 rounded-md">{url}</a>
 
-  <svelte:fragment slot="footer">
-    <div class="flex items-center justify-center gap-2 w-full">
-      <Button color="alternative">{$localLang.global.cancel}</Button>
-      <Button color="primary">{$localLang.global.accept}</Button>
-    </div>
-  </svelte:fragment>
+  <div class="flex items-center justify-center gap-2 w-full">
+    <Button color="alternative">{$localLang.global.cancel}</Button>
+    <Button color="primary">{$localLang.global.accept}</Button>
+  </div>
 </Modal>

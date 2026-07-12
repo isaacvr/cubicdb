@@ -100,7 +100,8 @@ export class FFmpegService {
 
       const data = await this.ffmpeg.readFile(fileName);
 
-      const blob = new Blob([data], { type: "video/mp4" });
+      const blobData = typeof data === "string" ? data : new Uint8Array(data).slice().buffer;
+      const blob = new Blob([blobData], { type: "video/mp4" });
 
       const res = URL.createObjectURL(blob);
 

@@ -22,6 +22,7 @@
     useDevice?: GANInput | null;
     zoom?: number;
     controlled?: boolean;
+    contained?: boolean;
     class?: string;
     movestart?: (...args: any[]) => void;
     moveend?: (...args: any[]) => void;
@@ -44,6 +45,7 @@
     useDevice = $bindable(null),
     zoom = $bindable(12),
     controlled = $bindable(false),
+    contained: _contained = false,
     class: _cl = $bindable(""),
     movestart = $bindable(noop),
     moveend = $bindable(noop),
