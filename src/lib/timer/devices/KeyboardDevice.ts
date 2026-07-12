@@ -1,5 +1,6 @@
 import { assign, createActor, setup, type ActorRefFrom } from 'xstate';
 import type { ITimerEventBus } from '$lib/events/timer/TimerEventBus';
+import type { TimerEvent } from '$lib/events/timer/TimerEvent';
 import type { TimerEventFactory } from '$lib/events/timer/TimerEventFactory';
 import type { IMonotonicClock } from '$lib/events/timer/TimerEventFactory';
 import { TIMER_EVENTS } from '$lib/events/timer/TimerEventRegistry';
@@ -18,6 +19,7 @@ interface KeyboardMachineContext {
   startedAt: number;
   onRunStarted(timestamp: number): void;
   onRunEnded(): void;
+  publish(event: TimerEvent): void;
 }
 
 export interface KeyboardDeviceOptions {
@@ -46,27 +48,27 @@ const keyboardMachine = setup({
   },
   actions: {
     publishPrevention: ({ context, event }) => {
-      void context.bus.publish(context.events.fromNative(
+      context.publish(context.events.fromNative(
         TIMER_EVENTS.DEVICE_PREVENTION_ENTERED,
         { deviceId: 'keyboard' },
         nativeTimestamp(event.timestamp),
       ));
     },
     publishReady: ({ context }) => {
-      void context.bus.publish(context.events.create(
+      context.publish(context.events.create(
         TIMER_EVENTS.DEVICE_READY,
         { deviceId: 'keyboard' },
       ));
     },
     publishInspection: ({ context, event }) => {
-      void context.bus.publish(context.events.fromNative(
+      context.publish(context.events.fromNative(
         TIMER_EVENTS.DEVICE_INSPECTION_STARTED,
         { deviceId: 'keyboard' },
         nativeTimestamp(event.timestamp),
       ));
     },
     publishGreenLight: ({ context, event }) => {
-      void context.bus.publish(context.events.fromNative(
+      context.publish(context.events.fromNative(
         TIMER_EVENTS.DEVICE_GREEN_LIGHT_CHANGED,
         { deviceId: 'keyboard', ready: true },
         nativeTimestamp(event.timestamp),
@@ -77,7 +79,7 @@ const keyboardMachine = setup({
     }),
     publishStarted: ({ context, event }) => {
       context.onRunStarted(event.timestamp);
-      void context.bus.publish(context.events.fromNative(
+      context.publish(context.events.fromNative(
         TIMER_EVENTS.DEVICE_RUN_STARTED,
         { deviceId: 'keyboard' },
         nativeTimestamp(event.timestamp),
@@ -85,7 +87,7 @@ const keyboardMachine = setup({
     },
     publishStopped: ({ context, event }) => {
       context.onRunEnded();
-      void context.bus.publish(context.events.fromNative(
+      context.publish(context.events.fromNative(
         TIMER_EVENTS.DEVICE_RUN_STOPPED,
         {
           deviceId: 'keyboard',
@@ -97,7 +99,7 @@ const keyboardMachine = setup({
     },
     publishCancelled: ({ context, event }) => {
       context.onRunEnded();
-      void context.bus.publish(context.events.fromNative(
+      context.publish(context.events.fromNative(
         TIMER_EVENTS.DEVICE_RUN_CANCELLED,
         { deviceId: 'keyboard' },
         nativeTimestamp(event.timestamp),
@@ -182,6 +184,10 @@ export class KeyboardDevice implements ITimerDevice {
         startedAt: 0,
         onRunStarted: (timestamp: number) => this.startReadings(timestamp),
         onRunEnded: () => this.stopReadings(),
+        publish: (event: TimerEvent) => {
+          // XState actions are synchronous; EventBus owns the queued async delivery.
+          void bus.publish(event);
+        },
       },
     });
     this.subscriptions = [

@@ -57,8 +57,8 @@
   }
 </script>
 
-<!-- Debug Panel Toggle Button (in nav bar area) -->
-<div class="fixed bottom-4 right-4 z-50">
+<!-- Non-modal debug inspector: only the button and panel capture pointer input. -->
+<div class="fixed bottom-4 right-4 z-50 pointer-events-auto">
   <button
     onclick={togglePanel}
     class="btn btn-sm btn-circle btn-outline"
@@ -72,14 +72,11 @@
   </button>
 </div>
 
-<!-- Debug Panel Modal -->
 {#if isOpen}
-  <div class="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm" onclick={() => (isOpen = false)}>
-    <!-- Prevent click-through -->
-  </div>
-
   <div
-    class="fixed bottom-16 right-4 z-50 w-96 max-h-96 bg-base-300 rounded-lg shadow-xl border border-base-200 flex flex-col"
+    class="fixed top-12 right-4 bottom-16 z-40 w-[min(32rem,calc(100vw-2rem))]
+      bg-base-300/95 rounded-lg shadow-xl border border-base-200 flex flex-col
+      pointer-events-auto backdrop-blur-sm"
   >
     <!-- Header -->
     <div class="flex items-center justify-between p-3 border-b border-base-200">
@@ -144,17 +141,25 @@
       {#if logs.length === 0}
         <div class="text-xs text-base-content/50 text-center py-4">No events logged</div>
       {:else}
-        {#each logs as log (log.timestamp + Math.random())}
-          <div class="text-xs font-mono text-base-content/70 hover:text-base-content/90 transition">
+        {#each logs as log, index (`${log.timestamp}-${index}`)}
+          <div class="text-xs font-mono text-base-content/70 hover:text-base-content/90 transition border-b border-base-300 pb-2">
             <span class="text-base-content/50"
               >[{new Date(log.timestamp).toLocaleTimeString()}]</span
             >
             <span class="text-info ml-2">{log.message}</span>
             {#if log.data}
-              <span class="text-base-content/40 ml-1">
-                {JSON.stringify(log.data).substring(0, 50)}
-                {#if JSON.stringify(log.data).length > 50}...{/if}
-              </span>
+              {#if log.category === "event" && log.data.id && typeof log.data.timestamp === "number"}
+                <dl class="grid grid-cols-[auto,1fr] gap-x-2 mt-1 text-base-content/60">
+                  <dt>ID</dt><dd class="break-all">{log.data.id}</dd>
+                  <dt>Timestamp</dt><dd>{log.data.timestamp.toFixed(3)} ms</dd>
+                  <dt>Type</dt><dd class="break-all">{log.data.type}</dd>
+                  <dt>Payload</dt><dd class="break-all whitespace-pre-wrap">{JSON.stringify(log.data.payload, null, 2)}</dd>
+                </dl>
+              {:else}
+                <span class="text-base-content/40 ml-1 break-all">
+                  {JSON.stringify(log.data)}
+                </span>
+              {/if}
             {/if}
           </div>
         {/each}
