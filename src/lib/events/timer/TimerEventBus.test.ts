@@ -37,8 +37,12 @@ describe('TimerEventBus', () => {
       order.push('ready:first');
       await bus.publish(factory.create(TIMER_EVENTS.DEVICE_RUN_STARTED, { deviceId: 'keyboard' }));
     });
-    bus.subscribe(TIMER_EVENTS.DEVICE_READY, 'second', () => order.push('ready:second'));
-    bus.subscribe(TIMER_EVENTS.DEVICE_RUN_STARTED, 'started', () => order.push('started'));
+    bus.subscribe(TIMER_EVENTS.DEVICE_READY, 'second', () => {
+      order.push('ready:second');
+    });
+    bus.subscribe(TIMER_EVENTS.DEVICE_RUN_STARTED, 'started', () => {
+      order.push('started');
+    });
 
     await bus.publish(factory.create(TIMER_EVENTS.DEVICE_READY, { deviceId: 'keyboard' }));
 

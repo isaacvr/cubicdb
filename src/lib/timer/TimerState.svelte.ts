@@ -1,4 +1,10 @@
-import { TimerState as TimerStateEnum, type Solve, type Session } from '@interfaces';
+import {
+  Penalty,
+  TimerState as TimerStateEnum,
+  type Solve,
+  type Session,
+  type Statistics,
+} from '@interfaces';
 
 /**
  * Estado reactivo del Timer.
@@ -19,6 +25,9 @@ export class TimerState {
   solves: Solve[] = $state([]);
   allSolves: Solve[] = $state([]);
   steps: number[] = $state([]);
+  statistics: Statistics | null = $state(null);
+  activeDeviceId: string | null = $state(null);
+  penalty: Penalty = $state(Penalty.NONE);
 
   /** Indica si el DNF del último solve fue por inspección (no editable) */
   dnfFromInspection: boolean = $state(false);
@@ -33,6 +42,7 @@ export class TimerState {
     this.decimals = true;
     this.lastSolve = null;
     this.steps = [];
+    this.penalty = Penalty.NONE;
     this.dnfFromInspection = false;
   }
 }
