@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onDestroy, onMount, untrack } from "svelte";
-  import { derived, get, writable } from "svelte/store";
+  import { derived, get, writable, type Writable } from "svelte/store";
   import { setTimerContext } from "./context/timerContext";
   import { useSessionManager } from "./utilities/useSessionManager";
   import { useFilterManager } from "./utilities/useFilterManager";
@@ -36,7 +36,7 @@
     useLen?: number;
     useProb?: number;
     genScramble?: boolean;
-    enableKeyboard?: any;
+    enableKeyboard?: Writable<boolean>;
     timerOnly?: boolean;
     scrambleOnly?: boolean;
     cleanOnScramble?: boolean;
@@ -134,7 +134,7 @@
   const timerContext = setTimerContext({
     timerController,
     selected,
-    enableKeyboard: $keyboardEnabled,
+    enableKeyboard: keyboardEnabled,
     selectedSession: sessionMgr.selectedSession,
     newSession: sessionMgr.newSession,
     handleUpdateSession: sessionMgr.handleUpdateSession,
@@ -172,7 +172,7 @@
   });
 
   // Setup keyboard handling
-  timerController.enableKeyboard = $keyboardEnabled;
+  timerController.enableKeyboard = keyboardEnabled;
 
   // Event handlers for input
   function addSolve(t?: number, p?: Penalty) {
@@ -263,7 +263,7 @@
   // Input context for TimerTab
   let inputContext: InputContext = $state({
     timerController,
-    keyboardEnabled: $keyboardEnabled,
+    keyboardEnabled,
     addSolve,
     initScrambler: timerContext.initScrambler,
     reset,
