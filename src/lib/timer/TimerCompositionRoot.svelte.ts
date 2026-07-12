@@ -10,12 +10,16 @@ import { createTimerMigrationFlags, type TimerMigrationFlags } from './TimerMigr
 import { TimerReactor } from './TimerReactor';
 import { createTimerReadonlyView, type TimerReadonlyView } from './TimerReadonlyView';
 import { TimerState } from './TimerState.svelte';
+import { KeyboardDevice } from './devices/KeyboardDevice';
+import type { TimerReadingCallback } from './devices/ITimerDevice';
+import { KeyboardInputBoundary } from './handlers/KeyboardInputBoundary';
 
 export interface TimerRuntimeOptions {
   clock?: IMonotonicClock;
   idProvider?: IEventIdProvider;
   flags?: Partial<TimerMigrationFlags>;
   eventLogSink?: TimerEventLogSink | null;
+  onTimerReading?: TimerReadingCallback;
 }
 
 export interface TimerRuntime {
@@ -24,6 +28,10 @@ export interface TimerRuntime {
   bus: TimerEventBus;
   events: TimerEventFactory;
   flags: TimerMigrationFlags;
+  keyboard: {
+    device: KeyboardDevice;
+    boundary: KeyboardInputBoundary;
+  } | null;
   destroy(): void;
 }
 
@@ -48,6 +56,21 @@ export function createTimerRuntime(options: TimerRuntimeOptions = {}): TimerRunt
     : new TimerEventLogger(bus, options.eventLogSink ?? logger);
   const readonlyView = createTimerReadonlyView(state);
   const flags = createTimerMigrationFlags(options.flags);
+  const keyboard = flags.keyboard
+    ? {
+        device: new KeyboardDevice(
+          bus,
+          events,
+          readonlyView,
+          options.onTimerReading ?? (reading => {
+            state.time = reading.elapsedMs;
+          }),
+          { clock: options.clock },
+        ),
+        boundary: new KeyboardInputBoundary(bus, events),
+      }
+    : null;
+  keyboard?.device.start();
   let destroyed = false;
 
   return {
@@ -56,11 +79,13 @@ export function createTimerRuntime(options: TimerRuntimeOptions = {}): TimerRunt
     bus,
     events,
     flags,
+    keyboard,
     destroy() {
       if (destroyed) return;
       destroyed = true;
       reactor.destroy();
       eventLogger?.destroy();
+      keyboard?.device.destroy();
     },
   };
 }

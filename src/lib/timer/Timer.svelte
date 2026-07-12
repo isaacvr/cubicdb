@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, untrack } from "svelte";
+  import { onDestroy, onMount, untrack } from "svelte";
   import { derived, get, writable } from "svelte/store";
   import { setTimerContext } from "./context/timerContext";
   import { useSessionManager } from "./utilities/useSessionManager";
@@ -27,6 +27,7 @@
   import { TimerController } from "$lib/controllers/TimerController";
   import { pScramble } from "@cstimer/scramble";
   import { page } from "$app/state";
+  import { createTimerRuntime } from "./TimerCompositionRoot.svelte";
 
   interface TimerProps {
     battle?: boolean;
@@ -39,6 +40,7 @@
     timerOnly?: boolean;
     scrambleOnly?: boolean;
     cleanOnScramble?: boolean;
+    eventDrivenKeyboard?: boolean;
   }
 
   let {
@@ -52,6 +54,7 @@
     timerOnly = false,
     scrambleOnly = false,
     cleanOnScramble: _cleanOnScramble = false,
+    eventDrivenKeyboard = false,
   }: TimerProps = $props();
 
   // MENU from language
@@ -64,6 +67,9 @@
 
   // Core initialization
   const timerController = new TimerController();
+  const eventTimerRuntime = eventDrivenKeyboard
+    ? createTimerRuntime({ flags: { keyboard: true } })
+    : null;
   const iconSize = "1.2rem";
   let historyTabComponent: any = $state(null);
 
@@ -88,6 +94,31 @@
     const handler = useKeyboardHandler(timerController, keyboardEnabled);
     keyboardMgr = handler;
   });
+
+  $effect(() => {
+    if (!eventTimerRuntime) return;
+    eventTimerRuntime.state.session = get(timerController.session);
+    timerController.timerState.set(eventTimerRuntime.state.timerState);
+    timerController.time.set(eventTimerRuntime.state.time);
+    timerController.ready.set(eventTimerRuntime.state.ready);
+    timerController.decimals.set(eventTimerRuntime.state.decimals);
+  });
+
+  function keyboardKeyDownHandler(event: KeyboardEvent) {
+    if (eventTimerRuntime?.keyboard) {
+      void eventTimerRuntime.keyboard.boundary.keyDown(event);
+      return;
+    }
+    keyboardMgr.handleKeydown(event);
+  }
+
+  function keyboardKeyUpHandler(event: KeyboardEvent) {
+    if (eventTimerRuntime?.keyboard) {
+      void eventTimerRuntime.keyboard.boundary.keyUp(event);
+    }
+  }
+
+  onDestroy(() => eventTimerRuntime?.destroy());
 
   // Modal state
   // let newSessionName = $state("");
@@ -243,7 +274,7 @@
   });
 </script>
 
-<svelte:window onkeydown={keyboardMgr.handleKeydown} />
+<svelte:window onkeydown={keyboardKeyDownHandler} onkeyup={keyboardKeyUpHandler} />
 
 <div class="grid grid-rows-[2rem,1fr] gap-2 w-full h-full p-1 overflow-hidden">
   <div class="actions flex items-center justify-between gap-2">
