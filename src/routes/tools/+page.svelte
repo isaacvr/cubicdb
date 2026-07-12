@@ -25,7 +25,7 @@
   import { solvFacelet } from "@cstimer/scramble/scramble_333";
   import Mosaic from "./components/Mosaic.svelte";
   import { isBetween } from "@helpers/math";
-  import { Button } from "flowbite-svelte";
+  import { Button } from "$lib/cubicdbKit";
   import Input from "@material/Input.svelte";
   import Tooltip from "$lib/cubicdbKit/Tooltip.svelte";
   import type { Language } from "$lib/interfaces/language.types";
@@ -323,7 +323,7 @@
       case "mosaic":
         return $localLang.TOOLS.mosaic;
       case "remote-timer":
-        $localLang.TOOLS.remoteTimer;
+        return $localLang.TOOLS.remoteTimer;
       case "scramble-batch":
         return $localLang.TOOLS.batchScramble;
       case "scramble-only":

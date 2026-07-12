@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { AlgorithmTree } from "@interfaces";
+  import type { Algorithm, AlgorithmTree } from "@interfaces";
   import { ChevronRightIcon, TrashIcon, PencilIcon, PlusIcon } from "lucide-svelte";
   import { createEventDispatcher } from "svelte";
 

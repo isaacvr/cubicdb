@@ -37,7 +37,7 @@ The repository contains a partial Phase 0 implementation:
 - DeviceManager, event-integrated ScrambleService, discovery adapters, and complete timer integration tests are missing.
 - Existing migration documents disagree about phase numbering and whether the timer or whole application is in scope.
 
-At design approval time, `pnpm exec eslint .` completes successfully and `pnpm test:unit --run` reports 46 passing tests across five test files.
+After lint stabilization, `pnpm exec eslint .` completes successfully and `pnpm test:unit --run` reports 46 passing tests across five test files. Legacy-heavy style rules use compatibility settings, while new event-driven timer TypeScript directories use strict overrides.
 
 ## Architectural Boundaries
 
@@ -286,4 +286,3 @@ The timer migration is complete when:
 - TimerController, InputContext, legacy timer adaptors, old timer stores, migration flags, and timer-specific duplicate emitters are removed;
 - lint, type checking, and unit/integration tests pass without requiring a build;
 - each migration PR contains tests and remains independently revertible.
-

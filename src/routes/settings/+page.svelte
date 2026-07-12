@@ -19,7 +19,7 @@
     TableBodyRow,
     Tabs,
     Tooltip,
-  } from "flowbite-svelte";
+  } from "$lib/cubicdbKit";
   import { localLang } from "@stores/language.service";
   import { FONTS, type FONT_NAME, type ICacheDB, type IStorageInfo } from "@interfaces";
   import { byteToString } from "@helpers/math";
@@ -46,7 +46,7 @@
   let canCheckTuts = true;
   let canCheckRecs = true;
   let dTime = 10587;
-  let itv: NodeJS.Timeout;
+  let itv: ReturnType<typeof setInterval>;
   let displays: Display[] = [];
   let storage: IStorageInfo = {
     algorithms: 0,
@@ -353,12 +353,7 @@
   <Heading tag="h2" class="text-center text-3xl">{$localLang.SETTINGS.title}</Heading>
 
   <Tabs divider>
-    <TabItem open activeClasses={tabActiveClass}>
-      <div slot="title" class="flex items-center gap-2">
-        <CaseSensitiveIcon size="1.2rem" />
-        {$localLang.SETTINGS.appFont}
-      </div>
-
+    <TabItem open activeClasses={tabActiveClass} title={$localLang.SETTINGS.appFont}>
       <div class="flex flex-wrap justify-around">
         <!-- App font -->
         <div class="grid">
@@ -411,12 +406,7 @@
 
     {#if $dataService.isElectron}
       <!-- Displays -->
-      <TabItem activeClasses={tabActiveClass}>
-        <div slot="title" class="flex items-center gap-2">
-          <AirplayIcon size="1.2rem" />
-          {$localLang.SETTINGS.screen}
-        </div>
-
+      <TabItem activeClasses={tabActiveClass} title={$localLang.SETTINGS.screen}>
         <div class="flex flex-col items-center justify-center gap-4">
           <div class="flex justify-center gap-2">
             {#each displays as display}
@@ -434,12 +424,7 @@
       </TabItem>
 
       <!-- Updates -->
-      <TabItem activeClasses={tabActiveClass}>
-        <div slot="title" class="flex items-center gap-2">
-          <MonitorDownIcon size="1.2rem" />
-          {$localLang.SETTINGS.update}
-        </div>
-
+      <TabItem activeClasses={tabActiveClass} title={$localLang.SETTINGS.update}>
         <div class="grid gap-4 place-items-center w-max mx-auto">
           <!-- CubicDB -->
           <div class="flex w-full gap-4 items-center">
@@ -500,12 +485,7 @@
       </TabItem>
     {/if}
 
-    <TabItem activeClasses={tabActiveClass}>
-      <div slot="title" class="flex items-center gap-2">
-        <DatabaseIcon size="1.2rem" />
-        {$localLang.global.storage}
-      </div>
-
+    <TabItem activeClasses={tabActiveClass} title={$localLang.global.storage}>
       <Span class="flex justify-center text-lg">
         {$localLang.global.storage}: {byteToString(
           Object.entries(storage).reduce((acc, e) => acc + e[1], 0)

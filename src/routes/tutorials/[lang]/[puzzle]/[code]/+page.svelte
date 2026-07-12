@@ -4,7 +4,7 @@
   import { ICONS } from "@constants";
   import WCACategory from "@components/wca/CubeCategory.svelte";
   import CubesView from "./components/CubesView.svelte";
-  import { Button, Dropdown, DropdownItem, Modal, Input } from "flowbite-svelte";
+  import { Button, Dropdown, DropdownItem, Modal, Input } from "$lib/cubicdbKit";
   import TextView from "./components/TextView.svelte";
   import ListView from "./components/ListView.svelte";
   import Select from "@material/Select.svelte";

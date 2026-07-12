@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Button, Range } from "flowbite-svelte";
+  import { Button, Range } from "$lib/cubicdbKit";
   import { onDestroy, onMount } from "svelte";
 
   let bpm = 60;

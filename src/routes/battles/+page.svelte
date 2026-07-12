@@ -15,7 +15,7 @@
   import { NotificationService } from "@stores/notification.service";
   import { AblyHandler } from "./adaptors/AblyHandler";
   import { setSeed } from "@cstimer/lib/mathlib";
-  import { Button, Card, Input } from "flowbite-svelte";
+  import { Button, Card, Input } from "$lib/cubicdbKit";
   import ResultView from "./components/ResultView.svelte";
   import Tooltip from "$lib/cubicdbKit/Tooltip.svelte";
   import { CopyIcon, EyeIcon, XIcon } from "lucide-svelte";

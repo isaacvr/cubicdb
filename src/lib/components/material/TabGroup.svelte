@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Tab } from "@interfaces";
-  import { Button } from "flowbite-svelte";
+  import { Button } from "$lib/cubicdbKit";
 
   import { setContext } from "svelte";
   import { writable } from "svelte/store";

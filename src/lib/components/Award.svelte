@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Tooltip } from "flowbite-svelte";
+  import { Tooltip } from "$lib/cubicdbKit";
   import { MedalIcon, TrophyIcon } from "lucide-svelte";
   
   type AwardType = "neutral" | "gold" | "silver" | "bronze" | "NR" | "ANR" | "PR" | "APR";

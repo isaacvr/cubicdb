@@ -1,6 +1,6 @@
 <script lang="ts">
   import PuzzleImage from "$lib/components/PuzzleImage.svelte";
-  import { Button } from "flowbite-svelte";
+  import { Button } from "$lib/cubicdbKit";
   import { minmax } from "@helpers/math";
   import { blur } from "svelte/transition";
   import { localLang } from "$lib/stores/language.service";

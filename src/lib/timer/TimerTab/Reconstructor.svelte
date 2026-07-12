@@ -16,7 +16,7 @@
     TableHead,
     TableHeadCell,
     Tabs,
-  } from "flowbite-svelte";
+  } from "$lib/cubicdbKit";
   import { localLang } from "@stores/language.service";
   import { Puzzle } from "@classes/puzzle/puzzle";
   import type { ReconstructorStep } from "@classes/reconstructors/interfaces";

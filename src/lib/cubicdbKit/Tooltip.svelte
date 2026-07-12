@@ -8,7 +8,6 @@
     ChevronUpIcon,
   } from "lucide-svelte";
   import type { Placement } from "@interfaces";
-  import { twMerge } from "tailwind-merge";
 
   interface TooltipProps {
     children?: Snippet;
@@ -53,7 +52,7 @@
     {/if}
     {#if keyBindings}
       <div class="flex items-center gap-1">
-        {#each keyBindings as k, p}
+        {#each keyBindings as k, p (p)}
           {#if p > 0}
             <div class="pb-1">+</div>
           {/if}

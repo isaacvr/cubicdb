@@ -1,40 +1,62 @@
 <script lang="ts">
-  import { type Snippet } from "svelte";
+  import { createEventDispatcher, type Snippet } from "svelte";
 
   interface ModalProps {
     open?: boolean;
+    show?: boolean;
     class?: string;
     children?: Snippet;
     title?: string;
+    autoclose?: boolean;
+    outsideclose?: boolean;
   }
 
-  let { open = $bindable(false), class: customClass = "", children, title }: ModalProps = $props();
+  const dispatch = createEventDispatcher();
 
-  function handleBackdropClick() {
+  let {
+    open = $bindable(false),
+    show = $bindable(undefined),
+    class: customClass = "",
+    children,
+    title,
+    autoclose = true,
+    outsideclose = false,
+  }: ModalProps = $props();
+
+  function isVisible() {
+    return typeof show === "boolean" ? show : open;
+  }
+
+  function close() {
     open = false;
+    if (typeof show === "boolean") {
+      show = false;
+    }
+    dispatch("close");
+  }
+
+  function handleBackdropClick(event: MouseEvent) {
+    if (!outsideclose) return;
+    if (event.target === event.currentTarget) {
+      close();
+    }
   }
 </script>
 
-{#if open}
-  <div class="modal modal-open {customClass}">
-    <div class="modal-box max-w-md">
+{#if isVisible()}
+  <div class="modal modal-open {customClass}" onclick={handleBackdropClick} onkeydown={() => {}}>
+    <div class="modal-box max-w-2xl">
       {#if title}
-        <h3 class="font-bold text-lg mb-4">{title}</h3>
+        <h3 class="mb-4 text-lg font-bold">{title}</h3>
       {/if}
       {#if children}
         {@render children()}
       {/if}
-      <div class="modal-action">
-        <button
-          class="btn"
-          onclick={handleBackdropClick}
-        >
-          Close
-        </button>
-      </div>
+      {#if autoclose}
+        <div class="modal-action">
+          <button class="btn" onclick={close}>Close</button>
+        </div>
+      {/if}
     </div>
-    <form method="dialog" class="modal-backdrop" onsubmit={handleBackdropClick}>
-      <button type="button" />
-    </form>
   </div>
 {/if}

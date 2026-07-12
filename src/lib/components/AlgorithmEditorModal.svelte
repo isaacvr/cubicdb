@@ -2,7 +2,7 @@
   import { CubeViewMap, type Algorithm, type ITutorialAlg, type Solution } from "@interfaces";
   import Modal from "@components/Modal.svelte";
   import Select from "@material/Select.svelte";
-  import { Button, Input, Range } from "flowbite-svelte";
+  import { Button, Input, Range } from "$lib/cubicdbKit";
   import { CubeModeMap } from "@constants";
   import PuzzleImage from "@components/PuzzleImage.svelte";
   import { createEventDispatcher } from "svelte";

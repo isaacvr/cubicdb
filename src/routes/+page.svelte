@@ -3,6 +3,15 @@
   import { screen } from "@stores/screen.store";
   import { CubicDBICON } from "@constants";
   import { dataService } from "$lib/data-services/data.service";
+  import { Puzzle } from "@classes/puzzle/puzzle";
+  import { solvFacelet } from "@cstimer/scramble/scramble_333";
+
+  let cube = new Puzzle({ type: 'rubik', order: [3] });
+
+  cube.move("U' L2 B D B' L U L2 F2 U' R' U F' L' F' B' U2 R2 B2 R' D2 R2 B2 L D2 L F2 U' F2 L' U R B D2 L");
+
+  console.log(Puzzle.inverse('rubik', "L' D2 B' R' U' L F2 U F2 L' D2 L' B2 R2 D2 R B2 R2 U2 B"));
+  console.log(solvFacelet(cube.toFacelet()));
 </script>
 
 <ul class="w-full grid place-items-center" class:isMobile={$screen.isMobile}>

@@ -1,7 +1,6 @@
 <script lang="ts">
   import { onDestroy, onMount, untrack } from "svelte";
   import {
-    Penalty,
     TimerState,
     type InputContext,
     type ITimerController,
@@ -178,7 +177,7 @@
   }
 
   function handleScrambleChange() {
-    cleanOnScramble && clean();
+    if (cleanOnScramble) clean();
 
     if ($device.type === "virtual_cube_keyboard" && simulator) {
       simulator.resetPuzzle($puzzleType, $puzzleOrder, $scramble);
@@ -266,7 +265,7 @@
 <!-- Component -->
 <section
   role="tabpanel"
-  class={"timer-tab w-full h-full " + ($tab != 0 ? "!hidden" : "")}
+  class={"timer-tab w-full h-full " + ($tab != 0 ? "hidden!" : "")}
   class:timerOnly
   class:scrambleOnly
   class:battle
@@ -286,7 +285,6 @@
         <TimerOptions
           battle={false}
           {context}
-          {enableKeyboard}
           initInputHandler={() => {}}
           {timerOnly}
           options={{
@@ -302,7 +300,7 @@
 
     <div
       id="scramble"
-      class="transition-all h-full min-h-[4rem] overflow-y-auto my-auto duration-300 max-md:text-xs max-md:leading-5 tx-text"
+      class="transition-all h-full min-h-16 overflow-y-auto my-auto duration-300 max-md:text-xs max-md:leading-5 tx-text"
     >
       {#if $device.type === "gan_icarry"}
         <div>
@@ -322,13 +320,13 @@
           <!-- {@render textSkeleton()} -->
         {:else}
           <pre class="scramble-content text-accent" class:hide={$isRunning} class:battle>
-            {#each $sequenceParts[0].split(" ") as mv}
+            {#each $sequenceParts[0].split(" ") as mv (mv)}
               <span>{mv}</span>
             {/each}
             
             <mark>{$sequenceParts[1]}</mark>
             
-            {#each $sequenceParts[2].split(" ") as mv}
+            {#each $sequenceParts[2].split(" ") as mv (mv)}
               <span>{mv}</span>
             {/each}
           </pre>
@@ -393,7 +391,7 @@
     )}
   >
     <div
-      class="image shaded-card max-h-[15rem] flex place-items-center w-full transition-all duration-200"
+      class="image shaded-card max-h-60 flex place-items-center w-full transition-all duration-200"
     >
       <PuzzleImageBundle
         src={$preview.map(s => s.src || "")}
@@ -402,7 +400,7 @@
       />
     </div>
 
-    <div class="shaded-card w-full h-full gap-2 justify-between text-sm !px-0">
+    <div class="shaded-card w-full h-full gap-2 justify-between text-sm px-0!">
       <StatsInfo bind:context {timerController} />
     </div>
   </div>
@@ -472,7 +470,7 @@
   }
 
   #scramble .scramble-content {
-    @apply break-words whitespace-pre-wrap
+    @apply wrap-break-word whitespace-pre-wrap
       flex flex-wrap gap-2 text-left justify-center items-baseline;
     line-height: 1.3;
     overflow: hidden auto;

@@ -2,68 +2,92 @@
   import { onMount, type Snippet } from "svelte";
 
   interface DropdownProps {
-    trigger?: HTMLElement | null;
-    placement?: "top" | "bottom" | "left" | "right";
+    trigger?: HTMLElement | "hover" | "click" | null;
+    placement?: string;
     class?: string;
+    open?: boolean;
     children?: Snippet;
   }
 
   let {
-    trigger = $bindable(),
+    trigger: triggerProp = $bindable(null),
     placement = "bottom",
     class: customClass = "",
+    open = $bindable(false),
     children,
   }: DropdownProps = $props();
 
-  let isOpen = $state(false);
   let dropdownElement: HTMLDivElement | undefined;
-  let triggerElement: HTMLElement | null = trigger ?? null;
+  let triggerElement: HTMLElement | null = null;
+
+  const placementMap: Record<string, string> = {
+    top: "bottom-full left-0 mb-2",
+    bottom: "top-full left-0 mt-2",
+    left: "right-full top-0 mr-2",
+    right: "left-full top-0 ml-2",
+    "right-start": "left-full top-0 ml-2",
+    "left-start": "right-full top-0 mr-2",
+  };
+
+  function show() {
+    open = true;
+  }
+
+  function hide() {
+    open = false;
+  }
+
+  function toggle() {
+    open = !open;
+  }
 
   onMount(() => {
-    if (triggerElement) {
-      const handleClick = () => {
-        isOpen = !isOpen;
-      };
+    triggerElement =
+      (typeof triggerProp === "string" ? null : triggerProp) ??
+      ((dropdownElement?.previousElementSibling as HTMLElement | null) || null);
 
-      triggerElement.addEventListener("click", handleClick);
+    if (!triggerElement) return;
 
-      const handleClickOutside = (e: MouseEvent) => {
-        if (
-          dropdownElement &&
-          !dropdownElement.contains(e.target as Node) &&
-          !triggerElement?.contains(e.target as Node)
-        ) {
-          isOpen = false;
-        }
-      };
+    const mode = triggerProp === "hover" ? "hover" : "click";
 
-      document.addEventListener("click", handleClickOutside);
+    const onClick = () => toggle();
+    const onEnter = () => show();
+    const onLeave = () => hide();
+    const onDocClick = (e: MouseEvent) => {
+      if (
+        open &&
+        dropdownElement &&
+        !dropdownElement.contains(e.target as Node) &&
+        !triggerElement?.contains(e.target as Node)
+      ) {
+        hide();
+      }
+    };
 
-      return () => {
-        triggerElement?.removeEventListener("click", handleClick);
-        document.removeEventListener("click", handleClickOutside);
-      };
+    if (mode === "hover") {
+      triggerElement.addEventListener("mouseenter", onEnter);
+      triggerElement.addEventListener("mouseleave", onLeave);
+      dropdownElement?.addEventListener("mouseenter", onEnter);
+      dropdownElement?.addEventListener("mouseleave", onLeave);
+    } else {
+      triggerElement.addEventListener("click", onClick);
+      document.addEventListener("click", onDocClick);
     }
+
+    return () => {
+      triggerElement?.removeEventListener("click", onClick);
+      triggerElement?.removeEventListener("mouseenter", onEnter);
+      triggerElement?.removeEventListener("mouseleave", onLeave);
+      dropdownElement?.removeEventListener("mouseenter", onEnter);
+      dropdownElement?.removeEventListener("mouseleave", onLeave);
+      document.removeEventListener("click", onDocClick);
+    };
   });
-
-  const getPositionClasses = () => {
-    const baseClasses = "absolute z-50 mt-2 bg-base-100 rounded-lg shadow-lg";
-    switch (placement) {
-      case "top":
-        return `${baseClasses} bottom-full mb-2`;
-      case "left":
-        return `${baseClasses} right-full mr-2`;
-      case "right":
-        return `${baseClasses} left-full ml-2`;
-      default:
-        return `${baseClasses} top-full`;
-    }
-  };
 </script>
 
 <div
   bind:this={dropdownElement}
-  class="{getPositionClasses()} {isOpen ? 'block' : 'hidden'} {customClass}"
+  class="absolute z-50 min-w-40 rounded-box border border-base-300 bg-base-100 p-1 shadow-xl {placementMap[placement] || placementMap.bottom} {open ? 'block' : 'hidden'} {customClass}"
   role="menu"
 >
   {#if children}

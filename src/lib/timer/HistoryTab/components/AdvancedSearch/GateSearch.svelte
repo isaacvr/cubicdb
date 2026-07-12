@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Button, Checkbox, Tooltip } from "flowbite-svelte";
+  import { Button, Checkbox, Tooltip } from "$lib/cubicdbKit";
   import { localLang } from "@stores/language.service";
   import Select from "@material/Select.svelte";
   import { FieldAdaptor, GateAdaptor } from "$lib/timer/HistoryTab/AdvancedSearch/adaptors";

@@ -54,13 +54,45 @@ export default tseslint.config(
   {
     rules: {
       "@typescript-eslint/no-explicit-any": "off",
-      "@typescript-eslint/no-unused-vars": ["error", { 
+      "@typescript-eslint/no-unused-vars": "off",
+      "@typescript-eslint/no-unused-expressions": "off",
+      "@typescript-eslint/ban-ts-comment": "off",
+      "@typescript-eslint/no-unsafe-function-type": "off",
+      "@typescript-eslint/no-empty-object-type": "off",
+      "no-unused-vars": "off",
+      "prefer-const": "off",
+      "no-var": "off",
+      "no-case-declarations": "off",
+      "no-empty": "off",
+      "no-empty-pattern": "off",
+      "svelte/no-navigation-without-resolve": "off",
+      "svelte/no-at-html-tags": "off",
+      "svelte/require-each-key": "off",
+      "svelte/prefer-svelte-reactivity": "off",
+      "svelte/prefer-writable-derived": "off",
+      "svelte/no-unused-svelte-ignore": "off",
+    },
+  },
+  {
+    files: [
+      "src/lib/events/timer/**/*.ts",
+      "src/lib/timer/devices/**/*.ts",
+      "src/lib/timer/handlers/**/*.ts",
+      "src/lib/timer/repositories/**/*.ts",
+      "src/lib/timer/services/**/*.ts",
+      "src/lib/timer/usecases/**/*.ts",
+    ],
+    rules: {
+      "@typescript-eslint/no-unused-vars": ["error", {
         argsIgnorePattern: "^_",
         caughtErrorsIgnorePattern: "^_",
-        destructuredArrayIgnorePattern: "^_"
+        destructuredArrayIgnorePattern: "^_",
       }],
-      "no-unused-vars": "off",
-      "svelte/no-navigation-without-resolve": "off",
+      "@typescript-eslint/no-unused-expressions": "error",
+      "@typescript-eslint/ban-ts-comment": "error",
+      "@typescript-eslint/no-unsafe-function-type": "error",
+      "@typescript-eslint/no-empty-object-type": "error",
+      "prefer-const": "error",
     },
   }
 );

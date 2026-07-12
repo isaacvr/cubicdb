@@ -2,7 +2,7 @@
   import { onMount } from "svelte";
   import type { NotificationAction } from "@interfaces";
   import { NotificationService } from "@stores/notification.service";
-  import { Avatar } from "flowbite-svelte";
+  import { Avatar } from "$lib/cubicdbKit";
   import { CubicDBICON } from "@constants";
   import { fly } from "svelte/transition";
   import Button from "$lib/cubicdbKit/Button.svelte";

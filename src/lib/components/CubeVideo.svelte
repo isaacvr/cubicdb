@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { ITutorialAlg } from "@interfaces";
-  import { Button, Spinner } from "flowbite-svelte";
+  import { Button, Spinner } from "$lib/cubicdbKit";
   import { genVideo } from "@helpers/genVideo";
   import { PauseIcon, PlayIcon } from "lucide-svelte";
 

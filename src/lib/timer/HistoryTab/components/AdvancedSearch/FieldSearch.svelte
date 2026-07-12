@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Button, Input } from "flowbite-svelte";
+  import { Button, Input } from "$lib/cubicdbKit";
   import Select from "@material/Select.svelte";
   import type {
     InternalFilter,

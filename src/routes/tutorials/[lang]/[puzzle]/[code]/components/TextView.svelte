@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { ITutorialSubtitle } from "@interfaces";
-  import { Button, Dropdown, DropdownItem } from "flowbite-svelte";
+  import { Button, Dropdown, DropdownItem } from "$lib/cubicdbKit";
   import { EllipsisVerticalIcon, PencilIcon, TrashIcon } from "lucide-svelte";
   import { createEventDispatcher, tick } from "svelte";
 

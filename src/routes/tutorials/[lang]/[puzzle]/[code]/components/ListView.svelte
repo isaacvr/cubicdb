@@ -1,7 +1,7 @@
 <script lang="ts">
   import Button from "$lib/cubicdbKit/Button.svelte";
   import type { ITutorialList } from "@interfaces";
-  import { Dropdown, DropdownItem, Input } from "flowbite-svelte";
+  import { Dropdown, DropdownItem, Input } from "$lib/cubicdbKit";
   import { EllipsisVerticalIcon, PencilIcon, TrashIcon } from "lucide-svelte";
   import { createEventDispatcher } from "svelte";
 

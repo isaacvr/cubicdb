@@ -63,8 +63,8 @@
     context: TimerContext;
     timerOnly?: boolean;
     battle?: boolean;
-    enableKeyboard: Writable<boolean>;
-    initInputHandler: Function;
+    // enableKeyboard: Writable<boolean>;
+    initInputHandler: (...args: any[]) => any;
     options: OptionSelector;
   }
 
@@ -72,7 +72,7 @@
     context = $bindable(),
     timerOnly = $bindable(),
     battle = $bindable(),
-    enableKeyboard = $bindable(),
+    // enableKeyboard = $bindable(),
     initInputHandler,
     options,
   }: TimerOptionsProps = $props();
@@ -100,7 +100,7 @@
   let show = $state(false);
   let type: TModal = $state("");
   let modalData: any = $state(null);
-  let closeHandler: Function = () => {};
+  let closeHandler: (...args: any[]) => any = () => {};
 
   let showSeedModal = $state(false);
   let seedStr = $state("");
@@ -227,7 +227,9 @@
         initInputHandler($session.settings.input);
 
         // Settings already persisted via applySettings above
-        initialCalc != $session.settings.calcAoX && timerController.updateStatistics(false);
+        if (initialCalc != $session.settings.calcAoX) {
+          timerController.updateStatistics(false);
+        }
       }
     });
   }
@@ -250,27 +252,27 @@
     return true;
   }
 
-  function saveEnableKeyboard() {
-    localStorage.setItem("--timer-options-enableKeyboard", enableKeyboard.toString());
-    enableKeyboard.set(false);
-  }
+  // function saveEnableKeyboard() {
+  //   localStorage.setItem("--timer-options-enableKeyboard", enableKeyboard.toString());
+  //   enableKeyboard.set(false);
+  // }
 
-  function recoverEnableKeyboard() {
-    enableKeyboard.set(localStorage.getItem("--timer-options-enableKeyboard") === "true");
-  }
+  // function recoverEnableKeyboard() {
+  //   enableKeyboard.set(localStorage.getItem("--timer-options-enableKeyboard") === "true");
+  // }
 
-  function openDialog(ev: TModal, dt: any, fn: Function) {
+  function openDialog(ev: TModal, dt: any, fn: (...args: any[]) => any) {
     if (!canOpenDialog(ev)) return;
 
     type = ev;
     modalData = { ...dt };
     closeHandler = fn;
     show = true;
-    saveEnableKeyboard();
+    // saveEnableKeyboard();
   }
 
   function handleKeydown(event: KeyboardEvent) {
-    if (!$enableKeyboard) return;
+    // if (!$enableKeyboard) return;
 
     const { code } = event;
 
@@ -330,7 +332,7 @@
     seedCounter = seed[0];
     seedStr = seed[1];
     showSeedModal = true;
-    saveEnableKeyboard();
+    // saveEnableKeyboard();
   }
 
   function saveFilters() {
@@ -405,8 +407,12 @@
     {$localLang.HOME.tools}
   </Tooltip>
 
-  <div class="absolute mt-2 bg-base-100 rounded-md text-base-content z-50 shadow-lg max-h-80 overflow-y-auto {showToolsMenu ? 'block' : 'hidden'}">
-    {#each tools as tool}
+  <div
+    class="absolute mt-2 bg-base-100 rounded-md text-base-content z-50 shadow-lg max-h-80 overflow-y-auto {showToolsMenu
+      ? 'block'
+      : 'hidden'}"
+  >
+    {#each tools as tool (tool.id)}
       {@const Icon = tool.icon}
       <button
         class={DD_CLASS}
@@ -511,8 +517,8 @@
 
 <!-- title={$localLang.TIMER.modal[type || "settings"]} -->
 
-<!-- Timer tab modal -->
-<Modal bind:show class="space-y-2" onclose={recoverEnableKeyboard}>
+<!-- Timer tab modal onclose={recoverEnableKeyboard} -->
+<Modal bind:show class="space-y-2">
   {#if type === "edit-scramble"}
     <TextArea
       onkeyup={modalKeyupHandler}
@@ -525,7 +531,7 @@
     <div class="grid grid-cols-4 w-full text-center max-h-[calc(100vh-16rem)]">
       <h2 class="col-span-3">{$localLang.TIMER.scramble}</h2>
       <h2 class="col-span-1">{$localLang.TIMER.time}</h2>
-      {#each $solves.slice(0, 500) as s}
+      {#each $solves.slice(0, 500) as s (s._id)}
         <Button
           aria-label={$localLang.TIMER.scramble}
           class="
@@ -567,7 +573,7 @@
         {$localLang.global.steps}: {$session.settings.steps}
       </section>
       <div class="flex flex-wrap gap-2">
-        {#each $session.settings.stepNames || [] as st, p}
+        {#each $session.settings.stepNames || [] as st, p (p)}
           <Button
             class="pointer-events-none text-black"
             style={`background-color: ${STEP_COLORS[p]}`}>{st}</Button
@@ -656,7 +662,7 @@
       <section>
         <Checkbox
           bind:checked={modalData.settings.showBackFace}
-          on:change={e => ($session = $session)}
+          on:change={() => ($session = $session)}
           class="w-5 h-5"
           label={$localLang.global.showBackFace}
         />
@@ -725,8 +731,8 @@
   </div>
 </Modal>
 
-<!-- Seed Modal -->
-<Modal bind:show={showSeedModal} onclose={recoverEnableKeyboard}>
+<!-- Seed Modal onclose={recoverEnableKeyboard} -->
+<Modal bind:show={showSeedModal}>
   <Input bind:value={seedStr} />
   <Input type="number" bind:value={seedCounter} min={1} max={5000} class="mt-2" />
 
@@ -767,8 +773,8 @@
   </Button>
 {/snippet}
 
-<!-- Trainer Modal -->
-<Modal bind:show={showMixedSettingsDialog} class="w-full max-w-2xl" onclose={recoverEnableKeyboard}>
+<!-- Trainer Modal onclose={recoverEnableKeyboard} -->
+<Modal bind:show={showMixedSettingsDialog} class="w-full max-w-2xl">
   <h2 class="text-xl text-center">{$localLang.global.settings}</h2>
 
   <div class="flex flex-wrap gap-2 justify-center w-fit mx-auto mt-2">
@@ -818,7 +824,7 @@
 
     {#if groupCases && cases.groups.length}
       <div class="overflow-x-clip overflow-y-auto max-h-[50vh] grid gap-4">
-        {#each cases.groups as group}
+        {#each cases.groups as group (group)}
           <div>
             <h3 class="text-lg flex items-center">
               {$localLang.TIMER.caseName(group.name)}
@@ -844,7 +850,7 @@
               </Button>
             </h3>
             <div class="grid grid-cols-[repeat(auto-fill,minmax(5rem,1fr))] gap-2">
-              {#each group.cases as cs}
+              {#each group.cases as cs (cs)}
                 {@render renderCase(cs)}
               {/each}
             </div>
@@ -856,7 +862,7 @@
         class="overflow-x-clip overflow-y-auto grid max-h-[50vh]
         grid-cols-[repeat(auto-fill,minmax(5rem,1fr))] gap-2"
       >
-        {#each cases.cases as cs}
+        {#each cases.cases as cs (cs)}
           {@render renderCase(cs)}
         {/each}
       </div>

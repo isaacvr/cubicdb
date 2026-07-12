@@ -2,7 +2,7 @@
   import type { TimerContext } from "@interfaces";
   import * as all from "@cstimer/scramble";
   import Select from "@material/Select.svelte";
-  import { Button, Toggle, Tooltip } from "flowbite-svelte";
+  import { Button, Toggle, Tooltip } from "$lib/cubicdbKit";
   import {
     ORIS,
     SCHEMAS,

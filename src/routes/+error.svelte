@@ -1,14 +1,3 @@
-<script context="module">
-  export async function load({ error, status }: any) {
-    return {
-      props: {
-        error,
-        status,
-      },
-    };
-  }
-</script>
-
 <script lang="ts">
   import { page } from "$app/stores";
 </script>

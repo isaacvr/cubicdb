@@ -1,19 +1,23 @@
 <script lang="ts">
   interface SpinnerProps {
-    size?: "xs" | "sm" | "md" | "lg";
+    size?: string;
     color?: string;
+    class?: string;
   }
 
-  let { size = "md", color = "primary" }: SpinnerProps = $props();
+  let { size = "md", color = "primary", class: customClass = "" }: SpinnerProps = $props();
 
-  const sizeMap = {
-    xs: "w-4 h-4",
-    sm: "w-6 h-6",
-    md: "w-8 h-8",
-    lg: "w-12 h-12",
+  const sizeMap: Record<string, string> = {
+    xs: "loading-xs",
+    sm: "loading-sm",
+    md: "loading-md",
+    lg: "loading-lg",
+    "4": "loading-sm",
+    "6": "loading-md",
+    "8": "loading-lg",
+    "10": "loading-lg",
+    "20": "loading-lg",
   };
 </script>
 
-<div class="flex justify-center items-center">
-  <div class="loading loading-spinner loading-{size} text-{color}"></div>
-</div>
+<span class="loading loading-spinner {sizeMap[size] || 'loading-md'} text-{color} {customClass}"></span>

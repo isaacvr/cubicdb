@@ -1,7 +1,7 @@
 <script lang="ts">
   import { faceStr, rotIdx, solve_cross, solve_xcross, solve_xxcross } from "@cstimer/tools/cross";
   import { type TimerContext } from "@interfaces";
-  import { TabItem, Tabs } from "flowbite-svelte";
+  import { TabItem, Tabs } from "$lib/cubicdbKit";
   import * as all from "@cstimer/scramble";
   import { arrayToOrder } from "@classes/puzzle/puzzle";
 

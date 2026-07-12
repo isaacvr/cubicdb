@@ -17,7 +17,7 @@
     TableBodyRow,
     TableHead,
     TableHeadCell,
-  } from "flowbite-svelte";
+  } from "$lib/cubicdbKit";
   import { localLang } from "@stores/language.service";
   import PuzzleImage from "@components/PuzzleImage.svelte";
   import { CheckIcon } from "lucide-svelte";

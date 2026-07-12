@@ -36,7 +36,7 @@
 | Event-driven devices | Not implemented | No `src/lib/devices/` directory |
 | UI migration | Not started | `Timer.svelte` constructs TimerController |
 | Legacy removal | Not started | TimerController, InputContext, stores, adaptors remain |
-| ESLint | Clean on approved baseline | `pnpm exec eslint .` exited 0 |
+| ESLint | Clean after legacy compatibility configuration and concrete correctness fixes | `pnpm exec eslint .` exits 0; new event-driven TypeScript directories have strict overrides |
 | Unit tests | 46 passing across 5 files | `pnpm test:unit --run` |
 
 ## Planned File Structure
@@ -534,4 +534,3 @@ For each PR:
 - **Reversibility:** PRs 1–10 preserve an explicit fallback; PR 11 requires acceptance and is reverted atomically.
 - **Scope:** The plan covers only the timer architecture. Whole-application event migration remains a later plan.
 - **Build constraint:** No step invokes a build command.
-

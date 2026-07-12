@@ -93,7 +93,7 @@ export function setNPerm(arr: number[], idx: number, n: number, even: number = 0
       arr[i] = idx % (n - i);
       prt ^= arr[i];
       idx = ~~(idx / (n - i));
-      for (let j = i + 1; j < n; j--) {
+      for (let j = i + 1; j < n; j++) {
         arr[j] >= arr[i] && arr[j]++;
       }
     }

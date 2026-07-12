@@ -1,20 +1,30 @@
 <script lang="ts">
-  import { type Snippet } from "svelte";
+  import { getContext, onDestroy, type Snippet } from "svelte";
 
   interface TabItemProps {
     title: string;
-    active?: boolean;
-    class?: string;
+    open?: boolean;
+    activeClasses?: string;
     children?: Snippet;
   }
 
-  let { title, active = false, class: customClass = "", children }: TabItemProps = $props();
+  const tabs = getContext<{
+    register: (item: { id: string; title: string; content: Snippet; activeClasses?: string; open?: boolean }) => void;
+    unregister: (id: string) => void;
+  }>("cubicdb-tabs");
+
+  let { title, open = false, activeClasses = "", children }: TabItemProps = $props();
+  const id = `tab-${Math.random().toString(36).slice(2)}`;
+
+  tabs?.register({
+    id,
+    title,
+    content: children as Snippet,
+    activeClasses,
+    open,
+  });
+
+  onDestroy(() => {
+    tabs?.unregister(id);
+  });
 </script>
-
-<button class="tab px-4 py-2 border-b-2 border-transparent hover:border-primary transition-colors cursor-pointer {active ? 'border-primary active' : ''} {customClass}">
-  {title}
-</button>
-
-{#if children}
-  {@render children()}
-{/if}

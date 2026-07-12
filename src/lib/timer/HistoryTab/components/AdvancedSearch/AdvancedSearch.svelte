@@ -1,7 +1,7 @@
 <script lang="ts">
   import { createEventDispatcher, onMount, setContext } from "svelte";
   import { writable, type Writable } from "svelte/store";
-  import { Button } from "flowbite-svelte";
+  import { Button } from "$lib/cubicdbKit";
   import { localLang } from "@stores/language.service";
   import { GateAdaptor } from "$lib/timer/HistoryTab/AdvancedSearch/adaptors";
   import type { SearchFilter } from "$lib/timer/HistoryTab/AdvancedSearch/adaptors/types";

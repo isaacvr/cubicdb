@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onDestroy } from "svelte";
   import { Penalty } from "@interfaces";
-  import { Button, Card, Input, Modal } from "flowbite-svelte";
+  import { Button, Card, Input, Modal } from "$lib/cubicdbKit";
   import { localLang } from "@stores/language.service";
   import { RemoteMachine } from "./RemoteMachine";
   import {

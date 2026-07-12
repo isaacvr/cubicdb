@@ -9,7 +9,7 @@
   import { globalLang } from "@stores/language.service";
   import { getLanguage } from "@lang/index";
   import { ICONS, getModeMap } from "@constants";
-  import { Card, Heading } from "flowbite-svelte";
+  import { Card, Heading } from "$lib/cubicdbKit";
   import Button from "@material/Button.svelte";
   import CubeCategory from "@components/wca/CubeCategory.svelte";
   import { dataService } from "$lib/data-services/data.service";

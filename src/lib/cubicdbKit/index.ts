@@ -1,16 +1,27 @@
 // DaisyUI-based components exported from cubicdbKit
 export { default as Button } from "./Button.svelte";
+export { default as Accordion } from "./Accordion.svelte";
+export { default as Avatar } from "./Avatar.svelte";
+export { default as Badge } from "./Badge.svelte";
 export { default as Card } from "./Card.svelte";
 export { default as Checkbox } from "./Checkbox.svelte";
 export { default as Dropdown } from "./Dropdown.svelte";
 export { default as DropdownItem } from "./DropdownItem.svelte";
 export { default as Heading } from "./Heading.svelte";
+export { default as Indicator } from "./Indicator.svelte";
 export { default as Input } from "./Input.svelte";
 export { default as Modal } from "./Modal.svelte";
 export { default as Progressbar } from "./Progressbar.svelte";
 export { default as Range } from "./Range.svelte";
 export { default as Spinner } from "./Spinner.svelte";
+export { default as Span } from "./Span.svelte";
 export { default as TabItem } from "./TabItem.svelte";
+export { default as Table } from "./Table.svelte";
+export { default as TableBody } from "./TableBody.svelte";
+export { default as TableBodyCell } from "./TableBodyCell.svelte";
+export { default as TableBodyRow } from "./TableBodyRow.svelte";
+export { default as TableHead } from "./TableHead.svelte";
+export { default as TableHeadCell } from "./TableHeadCell.svelte";
 export { default as Tabs } from "./Tabs.svelte";
 export { default as Toggle } from "./Toggle.svelte";
 export { default as Tooltip } from "./Tooltip.svelte";

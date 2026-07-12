@@ -11,7 +11,7 @@
   import { getLanguage } from "@lang/index";
   import { globalLang } from "@stores/language.service";
   import type { SCRAMBLE_MENU } from "@constants";
-  import type { Solve, SessionType, InputContext, Penalty } from "@interfaces";
+  import type { Solve, InputContext, Penalty } from "@interfaces";
   import { TimerState } from "@interfaces";
 
   import TimerTab from "$lib/timer/TimerTab/TimerTab.svelte";
@@ -54,7 +54,7 @@
 
   // MENU from language
   let MENU: SCRAMBLE_MENU[] = [];
-  let localLang = derived(globalLang, ($lang) => {
+  let localLang = derived(globalLang, $lang => {
     let l = getLanguage($lang);
     MENU = l.MENU;
     return l;
@@ -69,7 +69,7 @@
   const sessionMgr = useSessionManager(timerController, sessionController, dataService, MENU);
   const filterMgr = useFilterManager(timerController, sessionController, MENU, pScramble);
   const solveMgr = useSolveManager(timerController);
-  
+
   const initMgr = useInitialization(
     timerController,
     sessionController,
@@ -80,22 +80,20 @@
   );
 
   // Create keyboard handler inside effect to capture reactive values
-  let keyboardMgr = $state({ handleKeydown: (e: KeyboardEvent) => {} });
-  
+  let keyboardMgr = $state({ handleKeydown: (_: KeyboardEvent) => {} });
+
   $effect(() => {
     const handler = useKeyboardHandler(timerController, keyboardEnabled);
     keyboardMgr = handler;
   });
 
   // Modal state
-  let openEdit = $state(false);
-  let creatingSession = $state(false);
-  let newSessionName = $state("");
-  let newSessionType: SessionType = $state("mixed");
-  let newSessionSteps = $state(2);
-  let newSessionGroup = $state(0);
-  let newSessionMode = $state(0);
-  let stepNames: string[] = $state(["", ""]);
+  // let newSessionName = $state("");
+  // let newSessionType: SessionType = $state("mixed");
+  // let newSessionSteps = $state(2);
+  // let newSessionGroup = $state(0);
+  // let newSessionMode = $state(0);
+  // let stepNames: string[] = $state(["", ""]);
 
   // Create context and set it for children
   let selected = writable(0);
@@ -124,9 +122,7 @@
     setSolves: solveMgr.setSolves,
     handleUpdateSolve: solveMgr.handleUpdateSolve,
     handleRemoveSolves: solveMgr.handleRemoveSolves,
-    editSessions: () => {
-      openEdit = true;
-    },
+    editSessions: () => {},
     editSolve: (s: Solve) => {
       timerController.tab.set(1);
       historyTabComponent?.editSolve(s);
@@ -158,38 +154,38 @@
     solveController.createSolve();
   }
 
-  async function newSession() {
-    let ns = await sessionMgr.newSession(
-      newSessionName,
-      newSessionType,
-      newSessionGroup,
-      newSessionMode,
-      newSessionSteps,
-      stepNames
-    );
+  // async function newSession() {
+  //   let ns = await sessionMgr.newSession(
+  //     newSessionName,
+  //     newSessionType,
+  //     newSessionGroup,
+  //     newSessionMode,
+  //     newSessionSteps,
+  //     stepNames
+  //   );
 
-    if (ns) {
-      ns.tName = ns.name;
-      timerController.session.set(ns);
-      initMgr.updateSessionsIcons();
-      initMgr.initInputHandler(ns.settings.input || "");
+  //   if (ns) {
+  //     ns.tName = ns.name;
+  //     timerController.session.set(ns);
+  //     initMgr.updateSessionsIcons();
+  //     initMgr.initInputHandler(ns.settings.input || "");
 
-      if (!ns.settings.sessionType) {
-        ns.settings.sessionType = ns.settings.sessionType || "mixed";
-        await sessionController
-          .applySettings(ns, { sessionType: ns.settings.sessionType } as any)
-          .catch(() => {});
-      }
+  //     if (!ns.settings.sessionType) {
+  //       ns.settings.sessionType = ns.settings.sessionType || "mixed";
+  //       await sessionController
+  //         .applySettings(ns, { sessionType: ns.settings.sessionType } as any)
+  //         .catch(() => {});
+  //     }
 
-      await sessionMgr.selectedSession();
-      newSessionName = "";
-      creatingSession = false;
-    }
-  }
+  //     await sessionMgr.selectedSession();
+  //     newSessionName = "";
+  //     creatingSession = false;
+  //   }
+  // }
 
-  function closeAddSession() {
-    creatingSession = false;
-  }
+  // function closeAddSession() {
+  //   creatingSession = false;
+  // }
 
   onMount(() => {
     if (timerOnly && scrambleOnly) {
@@ -201,14 +197,9 @@
     }
   });
 
-  // Language change handling
-  $effect(() => {
-    $localLang;
-  });
-
   // Scramble initialization
   $effect(() => {
-    (useScramble || useMode || useProb != -1) &&
+    if (useScramble || useMode || useProb != -1)
       timerContext.initScrambler(useScramble, useMode, useProb);
   });
 
@@ -260,9 +251,7 @@
         size="sm"
         role="tab"
         class={"tab px-4 text-sm py-1.5 " +
-          (get(timerController.tab) === 0
-            ? "bg-primary"
-            : "shadow-transparent border-transparent")}
+          (get(timerController.tab) === 0 ? "bg-primary" : "shadow-transparent border-transparent")}
       >
         <TimerIcon size={iconSize} />
         {$localLang.TIMER.timerTab}
@@ -273,9 +262,7 @@
         size="sm"
         role="tab"
         class={"tab px-4 text-sm py-1.5 " +
-          (get(timerController.tab) === 1
-            ? "bg-primary"
-            : "shadow-transparent border-transparent")}
+          (get(timerController.tab) === 1 ? "bg-primary" : "shadow-transparent border-transparent")}
       >
         <LogsIcon size={iconSize} />
         {$localLang.TIMER.historyTab}
@@ -286,9 +273,7 @@
         size="sm"
         role="tab"
         class={"tab px-4 text-sm py-1.5 " +
-          (get(timerController.tab) === 2
-            ? "bg-primary"
-            : "shadow-transparent border-transparent")}
+          (get(timerController.tab) === 2 ? "bg-primary" : "shadow-transparent border-transparent")}
       >
         <ChartLineIcon size={iconSize} />
         {$localLang.TIMER.statsTab}
@@ -297,7 +282,6 @@
 
     <TimerOptions
       context={timerContext}
-      enableKeyboard={$keyboardEnabled}
       {timerOnly}
       initInputHandler={initMgr.initInputHandler}
       options={{

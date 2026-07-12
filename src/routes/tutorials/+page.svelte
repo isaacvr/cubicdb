@@ -10,7 +10,7 @@
     Input,
     Modal,
     Tooltip,
-  } from "flowbite-svelte";
+  } from "$lib/cubicdbKit";
   import WCACategory from "@components/wca/CubeCategory.svelte";
   import { globalLang, localLang } from "@stores/language.service";
   import Select from "@material/Select.svelte";

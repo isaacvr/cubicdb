@@ -8,7 +8,7 @@
     TableBodyRow,
     TableHead,
     TableHeadCell,
-  } from "flowbite-svelte";
+  } from "$lib/cubicdbKit";
   import { isMo3, timer } from "@helpers/timer";
   import Award from "@components/Award.svelte";
 

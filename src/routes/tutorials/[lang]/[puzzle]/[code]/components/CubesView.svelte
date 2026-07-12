@@ -4,7 +4,7 @@
   import { pGenerateCubeBundle } from "@helpers/cube-draw";
   import { algorithmToPuzzle, clone } from "@helpers/object";
   import type { ITutorialAlg, ITutorialCubes } from "@interfaces";
-  import { Button, Dropdown, DropdownItem, Input, Tooltip } from "flowbite-svelte";
+  import { Button, Dropdown, DropdownItem, Input, Tooltip } from "$lib/cubicdbKit";
   import AlgorithmEditorModal from "@components/AlgorithmEditorModal.svelte";
   import { CubeMode } from "@constants";
 

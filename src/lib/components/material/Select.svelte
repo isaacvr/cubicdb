@@ -4,7 +4,7 @@
   import { mod } from "@helpers/math";
   import { weakRandomUUID } from "@helpers/strings";
   import type { Placement, Side } from "@interfaces";
-  import { Dropdown, DropdownItem } from "flowbite-svelte";
+  import { Dropdown, DropdownItem } from "$lib/cubicdbKit";
   import { createEventDispatcher, onMount, tick, untrack } from "svelte";
   import Button from "$lib/cubicdbKit/Button.svelte";
   import { twMerge } from "tailwind-merge";

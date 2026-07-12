@@ -76,7 +76,6 @@ export class BezierSticker extends Sticker {
     res.parts = this.parts.map(e => e.rotate(ref, dir, ang));
     res._cached_mass_center = this._cached_mass_center.rotate(ref, dir, ang);
     res.color = col || res.color;
-    res.oColor = res.oColor;
     res.vecs.map(v => v.rotate(CENTER, dir, ang, true));
     return res;
   }

@@ -3,7 +3,7 @@
   import { version } from "@stores/version.store";
   import { copyToClipboard } from "@helpers/strings";
   import { NotificationService } from "@stores/notification.service";
-  import { Card } from "flowbite-svelte";
+  import { Card } from "$lib/cubicdbKit";
   import { localLang } from "@stores/language.service";
   import { CubicDBICON } from "@constants";
   import { CopyIcon, GithubIcon, InstagramIcon, MailIcon } from "lucide-svelte";

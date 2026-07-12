@@ -1,12 +1,14 @@
 <script lang="ts">
-  import { Tooltip, Dropdown, DropdownItem } from "flowbite-svelte";
   import { localLang } from "$lib/stores/language.service";
   import { copyToClipboard, randomCSSId, replaceParams } from "@helpers/strings";
   import { NotificationService } from "@stores/notification.service";
   import type { Placement } from "@interfaces";
   import { toInt } from "@helpers/math";
   import Button from "$lib/cubicdbKit/Button.svelte";
+  import Dropdown from "$lib/cubicdbKit/Dropdown.svelte";
+  import DropdownItem from "$lib/cubicdbKit/DropdownItem.svelte";
   import { CodeIcon, CopyIcon, DownloadIcon } from "lucide-svelte";
+  import Tooltip from "../cubicdbKit/Tooltip.svelte";
 
   const notification = NotificationService.getInstance();
 
@@ -250,7 +252,7 @@
         placement="right-start"
         class="bg-base-100 text-base-content rounded-md"
       >
-        {#each downloadFactors as f}
+        {#each downloadFactors as f (f)}
           <DropdownItem class="hover:bg-primary" onclick={() => handleDownload(f)}>
             {toInt(imgWidth * f, 0)}x{toInt(imgHeight * f, 0)}
           </DropdownItem>
@@ -263,7 +265,7 @@
         placement="right-start"
         class="bg-base-100 text-base-content rounded-md"
       >
-        {#each downloadFactors as f}
+        {#each downloadFactors as f (f)}
           <DropdownItem class="hover:bg-primary" onclick={() => handleCopy(f)}>
             {toInt(imgWidth * f, 0)}x{toInt(imgHeight * f, 0)}
           </DropdownItem>
@@ -272,9 +274,11 @@
 
       {#if type === "svg"}
         <Button class="bg-base-200" onclick={handleCopyCode}><CodeIcon size="1.2rem" /></Button>
-        <Tooltip class="bg-base-100 text-base-content z-10" {placement}
-          >{replaceParams($localLang.global.copyCode, ["SVG"])}</Tooltip
-        >
+        <Tooltip
+          class="bg-base-100 text-base-content z-10"
+          {placement}
+          tooltipText={replaceParams($localLang.global.copyCode, ["SVG"])}
+        ></Tooltip>
       {/if}
     </div>
   {/if}

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { createEventDispatcher } from "svelte";
   import { twMerge } from "tailwind-merge";
 
   type RangeVariants = "default" | "progress";
@@ -7,13 +8,18 @@
     min?: number;
     max?: number;
     value?: number;
-    step?: number;
+    step?: number | string;
     class?: string;
+    size?: string;
     "aria-label"?: string;
     variant?: RangeVariants;
     onclick?: (ev: MouseEvent) => any;
     onmousedown?: (ev: MouseEvent) => any;
   }
+
+  const dispatch = createEventDispatcher<{
+    change: { value: number };
+  }>();
 
   let {
     min = $bindable(0),
@@ -21,25 +27,27 @@
     value = $bindable(50),
     step = $bindable(-1),
     class: cl = $bindable(""),
+    size = $bindable(""),
     "aria-label": ariaLabel = "",
     variant = $bindable("default"),
-    onclick = (ev: MouseEvent) => {},
-    onmousedown = (ev: MouseEvent) => {},
+    onclick = () => {},
+    onmousedown = () => {},
   }: RangeProps = $props();
 
   const RANGE_VARIANTS: Record<RangeVariants, string> = {
-    default: "[--range-shdw:transparent] focus-visible:[--tf:var(--bc)] [&]:[--tb:var(--p)]",
-    progress: "[--range-shdw:oklch(var(--p))] focus-visible:[--tf:var(--b1)] [&]:[--tb:var(--bc)]",
+    default: "range-primary",
+    progress: "range-secondary",
   };
 
   let rangeClass = $derived(
-    twMerge(
-      "range bg-base-100 rounded-md outline-transparent ",
-      "range-" + variant,
-      RANGE_VARIANTS[variant],
-      cl
-    )
+    twMerge("range bg-base-100 rounded-md", RANGE_VARIANTS[variant], size, cl)
   );
+
+  function handleInput(e: Event) {
+    const target = e.currentTarget as HTMLInputElement;
+    value = target.valueAsNumber;
+    dispatch("change", { value });
+  }
 </script>
 
 <input
@@ -52,4 +60,5 @@
   bind:value
   class={rangeClass}
   aria-label={ariaLabel}
+  oninput={handleInput}
 />

@@ -71,7 +71,7 @@ export function useInitialization(
 
     device.set(devicesVal.find(d => d.id === id) || devicesVal[0]);
     devicesVal.forEach(d => (d.enabled = false));
-    get(device).init(null as any); // InputContext will be passed separately
+    get(device).init({ timerController } as any); // InputContext will be passed separately
   }
 
   function setupOnMount() {

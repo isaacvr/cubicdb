@@ -25,7 +25,7 @@
   import { calcPercents } from "@helpers/math";
   import { startViewTransition } from "@helpers/DOM";
   import { navigate } from "svelte-routing";
-  import { Dropdown, DropdownItem, Spinner } from "flowbite-svelte";
+  import { Dropdown, DropdownItem, Spinner } from "$lib/cubicdbKit";
   import AdvancedSearch from "./components/AdvancedSearch/AdvancedSearch.svelte";
   import PaginatorComponent from "@components/PaginatorComponent.svelte";
   import { GateAdaptor } from "$lib/timer/HistoryTab/AdvancedSearch/adaptors";

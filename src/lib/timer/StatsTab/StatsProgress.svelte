@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Progressbar } from "flowbite-svelte";
+  import { Progressbar } from "$lib/cubicdbKit";
   import { type IColor } from "@interfaces";
 
   export let title = "Title";

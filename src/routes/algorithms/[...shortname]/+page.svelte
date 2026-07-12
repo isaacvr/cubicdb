@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { Button, Spinner, Tooltip } from "flowbite-svelte";
+  import { Button, Spinner, Tooltip } from "$lib/cubicdbKit";
   import { CubeMode } from "@constants";
   import { type Algorithm, type ICard, type Solution } from "@interfaces";
   import { Puzzle } from "@classes/puzzle/puzzle";
@@ -71,12 +71,12 @@
 
     if (list.length > 0) {
       let hasSolutions = list.find(
-        l => l.hasOwnProperty("solutions") && Array.isArray(l.solutions)
+        l => Object.prototype.hasOwnProperty.call(l, "solutions") && Array.isArray(l.solutions)
       );
 
       if (hasSolutions) {
         for (let i = 0, maxi = list.length; i < maxi; i += 1) {
-          if (!list[i].hasOwnProperty("solutions")) {
+          if (!Object.prototype.hasOwnProperty.call(list[i], "solutions")) {
             list[i].solutions = [
               {
                 moves: list[i].scramble,
