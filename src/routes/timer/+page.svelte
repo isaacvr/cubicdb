@@ -267,7 +267,7 @@
   });
 </script>
 
-<div class="grid grid-rows-[2rem,1fr] gap-2 w-full h-full p-1 overflow-hidden">
+<div class="timer-sessions-layout grid gap-2 w-full h-full p-1 overflow-hidden">
   <div class="actions flex items-center gap-2">
     <Select
       class="border-none bg-primary/10"
@@ -501,6 +501,10 @@
 
 <style lang="postcss">
   @reference "@src/themes/index.css";
+
+  .timer-sessions-layout {
+    grid-template-rows: 2rem minmax(0, 1fr);
+  }
 
   [data-type="single"] > a {
     @apply border-green-400/50 border;

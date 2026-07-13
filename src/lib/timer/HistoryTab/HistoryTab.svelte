@@ -471,31 +471,33 @@
   <!-- Options -->
   <div class="absolute top-3 right-2 my-3 mx-1 flex flex-col gap-2">
     {#if $solves.length > 0}
-      <button onclick={deleteAll} class="cursor-pointer grid place-items-center">
-        <TrashIcon size="1.2rem" />
-      </button>
-      <Tooltip placement="left" keyBindings={["d"]}>
-        {$localLang.TIMER.deleteAll}
+      <Tooltip tooltipText={$localLang.TIMER.deleteAll} placement="left" keyBindings={["d"]}>
+        <button onclick={deleteAll} class="cursor-pointer grid place-items-center">
+          <TrashIcon size="1.2rem" />
+        </button>
       </Tooltip>
     {/if}
 
-    <button onclick={() => shareAoX(5)} class="cursor-pointer grid place-items-center">
-      <Share2Icon size="1.2rem" />
-    </button>
-    <Tooltip placement="left">{$localLang.TIMER.shareAo5}</Tooltip>
+    <Tooltip tooltipText={$localLang.TIMER.shareAo5} placement="left">
+      <button onclick={() => shareAoX(5)} class="cursor-pointer grid place-items-center">
+        <Share2Icon size="1.2rem" />
+      </button>
+    </Tooltip>
 
-    <button onclick={() => shareAoX(12)} class="cursor-pointer grid place-items-center">
-      <Share2Icon size="1.2rem" />
-    </button>
-    <Tooltip placement="left">{$localLang.TIMER.shareAo12}</Tooltip>
+    <Tooltip tooltipText={$localLang.TIMER.shareAo12} placement="left">
+      <button onclick={() => shareAoX(12)} class="cursor-pointer grid place-items-center">
+        <Share2Icon size="1.2rem" />
+      </button>
+    </Tooltip>
 
-    <button
-      onclick={() => (searchModal = true)}
-      class="cursor-pointer grid place-items-center relative"
-    >
-      <FilterIcon size="1.2rem" />
-    </button>
-    <Tooltip placement="left">{$localLang.global.filter}</Tooltip>
+    <Tooltip tooltipText={$localLang.global.filter} placement="left">
+      <button
+        onclick={() => (searchModal = true)}
+        class="cursor-pointer grid place-items-center relative"
+      >
+        <FilterIcon size="1.2rem" />
+      </button>
+    </Tooltip>
   </div>
 
   <!-- Solve Actions -->

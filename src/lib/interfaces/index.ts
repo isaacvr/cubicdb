@@ -973,7 +973,7 @@ export interface Theme {
 }
 
 export type Side = "top" | "right" | "bottom" | "left";
-export type Alignment = "start" | "end";
+export type Alignment = "start" | "center" | "end";
 export type Placement = `${Side}-${Alignment}` | Side;
 
 export type Callback = Function | ((...args: any[]) => any);

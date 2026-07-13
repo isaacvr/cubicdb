@@ -276,7 +276,7 @@
 
 <svelte:window onkeydown={keyboardKeyDownHandler} onkeyup={keyboardKeyUpHandler} />
 
-<div class="grid grid-rows-[2rem,1fr] gap-2 w-full h-full p-1 overflow-hidden">
+<div class="timer-layout grid gap-2 w-full h-full p-1 overflow-hidden">
   <div class="actions flex items-center justify-between gap-2">
     <div role="tablist" class="join gap-1 bg-base-100 p-1 mr-auto">
       <Button
@@ -334,6 +334,10 @@
 </div>
 
 <style>
+  .timer-layout {
+    grid-template-rows: 2rem minmax(0, 1fr);
+  }
+
   .content {
     display: grid;
     grid-template-areas: "tabs";

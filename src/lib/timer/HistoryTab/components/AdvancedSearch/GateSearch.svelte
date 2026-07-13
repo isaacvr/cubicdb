@@ -43,10 +43,11 @@
 <div class="gate" class:expanded>
   <div class="header">
     {#if canDelete}
-      <Button class="p-1" color="red" on:click={deleteGate}>
-        <TrashIcon size="1rem" />
-      </Button>
-      <Tooltip>{$localLang.global.delete}</Tooltip>
+      <Tooltip tooltipText={$localLang.global.delete}>
+        <Button class="p-1" color="red" on:click={deleteGate}>
+          <TrashIcon size="1rem" />
+        </Button>
+      </Tooltip>
     {/if}
 
     <Select
@@ -58,8 +59,9 @@
       placement="right"
     />
 
-    <Checkbox bind:checked={gate.invert} class="cursor-pointer" />
-    <Tooltip>{$localLang.global.invert}</Tooltip>
+    <Tooltip tooltipText={$localLang.global.invert}>
+      <Checkbox bind:checked={gate.invert} class="cursor-pointer" />
+    </Tooltip>
 
     <span class="text-xs">
       {$localLang.TIMER.gateResultIndicator[0]}

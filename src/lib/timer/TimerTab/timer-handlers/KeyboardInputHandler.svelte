@@ -196,16 +196,17 @@
         <!-- {#each solveControl.slice(Number(battle), solveControl.length) as control} -->
         {#each solveControl as control}
           {@const Icon = control.icon}
-          <Button
-            color="none"
-            class="flex mx-1 w-5 h-5 p-0 pointer-events-auto {control.highlight($solves[0] || {})
-              ? 'text-red-500'
-              : ''}"
-            onclick={control.handler}
-          >
-            <Icon size="1.2rem" />
-          </Button>
-          <Tooltip>{control.text}</Tooltip>
+          <Tooltip tooltipText={control.text}>
+            <Button
+              color="none"
+              class="flex mx-1 w-5 h-5 p-0 pointer-events-auto {control.highlight($solves[0] || {})
+                ? 'text-red-500'
+                : ''}"
+              onclick={control.handler}
+            >
+              <Icon size="1.2rem" />
+            </Button>
+          </Tooltip>
         {/each}
       </div>
     {/if}

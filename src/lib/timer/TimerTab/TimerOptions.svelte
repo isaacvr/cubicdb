@@ -387,24 +387,24 @@
 <svelte:window onkeydown={handleKeydown} />
 
 {#if options.seed}
-  <Button color="neutral" class="group" aria-label="Seed" onclick={prepareShowSeedModal}>
-    <BeanIcon class="group-hover:text-green-500" size={iconSize} />
-  </Button>
-  <Tooltip placement="bottom" class="z-10">Seed</Tooltip>
+  <Tooltip tooltipText="Seed" placement="bottom-end" class="z-10">
+    <Button color="neutral" class="group" aria-label="Seed" onclick={prepareShowSeedModal}>
+      <BeanIcon class="group-hover:text-green-500" size={iconSize} />
+    </Button>
+  </Tooltip>
 {/if}
 
 {#if options.tools}
-  <Button
-    color="neutral"
-    class="group"
-    id="tools"
-    aria-label={$localLang.HOME.tools}
-    on:keydown={e => (e.detail.code === "Space" ? e.detail.preventDefault() : null)}
-  >
-    <HammerIcon class="group-hover:text-warning" size={iconSize} />
-  </Button>
-  <Tooltip placement="bottom" class="z-10">
-    {$localLang.HOME.tools}
+  <Tooltip tooltipText={$localLang.HOME.tools} placement="bottom-end" class="z-10">
+    <Button
+      color="neutral"
+      class="group"
+      id="tools"
+      aria-label={$localLang.HOME.tools}
+      on:keydown={e => (e.detail.code === "Space" ? e.detail.preventDefault() : null)}
+    >
+      <HammerIcon class="group-hover:text-warning" size={iconSize} />
+    </Button>
   </Tooltip>
 
   <div
@@ -429,75 +429,104 @@
 {/if}
 
 {#if options.hints}
-  <Button color="neutral" class="group">
-    <LightbulbIcon class="group-hover:text-warning" size={iconSize} />
-  </Button>
-  <Tooltip placement="bottom" class="z-10">Hints</Tooltip>
+  <Tooltip tooltipText="Hints" placement="bottom-end" class="z-10">
+    <Button color="neutral" class="group">
+      <LightbulbIcon class="group-hover:text-warning" size={iconSize} />
+    </Button>
+  </Tooltip>
 {/if}
 
 {#if options.sessionSettings}
-  <Button color="neutral" class="group" onclick={handleSettingsDialog}>
-    <Settings2Icon class="group-hover:text-warning" size={iconSize} />
-  </Button>
-  <Tooltip placement="bottom" class="z-10" keyBindings={["control", "comma"]}>
-    {$localLang.global.settings}
+  <Tooltip
+    tooltipText={$localLang.global.settings}
+    placement="bottom-end"
+    class="z-30"
+    keyBindings={["control", "comma"]}
+  >
+    <Button color="neutral" class="group" onclick={handleSettingsDialog}>
+      <Settings2Icon class="group-hover:text-warning" size={iconSize} />
+    </Button>
   </Tooltip>
 {/if}
 
 {#if options.modeSettings && $session.settings.sessionType === "mixed"}
-  <Button
-    style="--dash: 18;"
-    onclick={() => {
-      showMixedSettingsDialog = true;
-    }}
-  >
-    <BoltIcon size={iconSize} />
-  </Button>
-
-  <Tooltip>{$localLang.global.settings}</Tooltip>
+  <Tooltip tooltipText={$localLang.global.settings} placement="bottom-end" class="z-30">
+    <Button
+      style="--dash: 18;"
+      onclick={() => {
+        showMixedSettingsDialog = true;
+      }}
+    >
+      <BoltIcon size={iconSize} />
+    </Button>
+  </Tooltip>
 {/if}
 
 {#if options.refreshScramble}
-  <Button style="--dash: 18;" onclick={() => initScrambler()}>
-    <RefreshCwIcon size={iconSize} />
-  </Button>
-  <Tooltip keyBindings={["control", "s"]}>{$localLang.global.toScramble}</Tooltip>
+  <Tooltip
+    tooltipText={$localLang.global.toScramble}
+    placement="bottom-end"
+    class="z-30"
+    keyBindings={["control", "s"]}
+  >
+    <Button style="--dash: 18;" onclick={() => initScrambler()}>
+      <RefreshCwIcon size={iconSize} />
+    </Button>
+  </Tooltip>
 {/if}
 
 {#if options.copyScramble}
-  <Button
-    style="--dash: 18;"
-    onclick={() => {
-      copyToClipboard($scramble).then(() => {
-        notification.addNotification({
-          header: $localLang.global.done,
-          text: $localLang.global.scrambleCopied,
-          timeout: 1000,
-        });
-      });
-    }}
+  <Tooltip
+    tooltipText={$localLang.TIMER.copyScramble}
+    placement="bottom-end"
+    class="z-30"
+    keyBindings={["control", "c"]}
   >
-    <CopyIcon size={iconSize} />
-  </Button>
-  <Tooltip keyBindings={["control", "c"]}>{$localLang.TIMER.copyScramble}</Tooltip>
+    <Button
+      style="--dash: 18;"
+      onclick={() => {
+        copyToClipboard($scramble).then(() => {
+          notification.addNotification({
+            header: $localLang.global.done,
+            text: $localLang.global.scrambleCopied,
+            timeout: 1000,
+          });
+        });
+      }}
+    >
+      <CopyIcon size={iconSize} />
+    </Button>
+  </Tooltip>
 {/if}
 
 {#if options.editScramble}
-  <Button
-    style="--dash: 18;"
-    onclick={() =>
-      openDialog("edit-scramble", $scramble, (scr: string) => scr && initScrambler(scr))}
+  <Tooltip
+    tooltipText={$localLang.TIMER.edit}
+    placement="bottom-end"
+    class="z-30"
+    keyBindings={["control", "e"]}
   >
-    <SquarePenIcon size={iconSize} />
-  </Button>
-  <Tooltip keyBindings={["control", "e"]}>{$localLang.TIMER.edit}</Tooltip>
+    <Button
+      style="--dash: 18;"
+      onclick={() =>
+        openDialog("edit-scramble", $scramble, (scr: string) => scr && initScrambler(scr))}
+    >
+      <SquarePenIcon size={iconSize} />
+    </Button>
+  </Tooltip>
 {/if}
 
 {#if options.oldScramble}
-  <Button style="--dash: 23;">
-    <HistoryIcon size={iconSize} />
-  </Button>
-  <Tooltip keyBindings={["control", "o"]}>{$localLang.TIMER.useOldScramble}</Tooltip>
+  <Tooltip
+    tooltipText={$localLang.TIMER.useOldScramble}
+    placement="bottom-end"
+    class="z-30"
+    keyBindings={["control", "o"]}
+  >
+    <Button style="--dash: 23;">
+      <HistoryIcon size={iconSize} />
+    </Button>
+  </Tooltip>
 {/if}
 
 <!-- Tools list -->

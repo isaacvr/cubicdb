@@ -6,6 +6,7 @@
   import { solveSummary } from "@helpers/statistics";
   import { copyToClipboard } from "@helpers/strings";
   import { NotificationService } from "@stores/notification.service";
+  import Popover from "$lib/cubicdbKit/Popover.svelte";
 
   interface StatsInfoProps {
     context: TimerContext;
@@ -25,8 +26,6 @@
 
   let textSummary = "";
   let showModal = false;
-
-  const POPOVER_CLASS = "my-2 mx-auto bg-base-200 text-base-content";
 
   function saveEnableKeyboard() {
     localStorage.setItem("--stats-info-enableKeyboard", enableKeyboard.toString());
@@ -86,16 +85,23 @@
 
   <!-- Average -->
   <div class:better={$stats.avg.better && $stats.counter.value > 0}>
-    <span>
-      <span class="stat-info">{$localLang.TIMER.average}:</span>
-      <div class={POPOVER_CLASS}>
-        <p>{$localLang.TIMER.stats.average}</p>
+    <Popover
+      id="average-stat-info"
+      placement="left"
+      triggerClass="stat-info cursor-help underline decoration-dotted underline-offset-2"
+      ariaLabel={$localLang.TIMER.average}
+    >
+      {#snippet content()}
+        <div class="w-72 max-w-[80vw] text-left">
+          <p>{$localLang.TIMER.stats.average}</p>
 
-        <span class="my-2 mx-auto w-fit flex text-xl">
-          <Katex math={`\\mu = \\frac{\\sum_{i=1}^{N} x_i}{N}`} />
-        </span>
-      </div>
-    </span>
+          <span class="my-2 mx-auto w-fit flex text-xl">
+            <Katex math={`\\mu = \\frac{\\sum_{i=1}^{N} x_i}{N}`} />
+          </span>
+        </div>
+      {/snippet}
+      {$localLang.TIMER.average}:
+    </Popover>
 
     {#if !$stats.avg.value}
       <span>N/A</span>
@@ -107,16 +113,23 @@
 
   <!-- stdDev -->
   <div>
-    <span>
-      <span class="stat-info">{$localLang.TIMER.deviation}:</span>
-      <div class={POPOVER_CLASS}>
-        <p>{$localLang.TIMER.stats.deviation}</p>
+    <Popover
+      id="deviation-stat-info"
+      placement="left"
+      triggerClass="stat-info cursor-help underline decoration-dotted underline-offset-2"
+      ariaLabel={$localLang.TIMER.deviation}
+    >
+      {#snippet content()}
+        <div class="w-72 max-w-[80vw] text-left">
+          <p>{$localLang.TIMER.stats.deviation}</p>
 
-        <span class="my-2 mx-auto w-fit flex text-xl">
-          <Katex math={`\\sigma = \\sqrt{\\frac{1}{N} \\sum_{i=1}^{N} (x_i - \\mu)^2}`} />
-        </span>
-      </div>
-    </span>
+          <span class="my-2 mx-auto w-fit flex text-xl">
+            <Katex math={`\\sigma = \\sqrt{\\frac{1}{N} \\sum_{i=1}^{N} (x_i - \\mu)^2}`} />
+          </span>
+        </div>
+      {/snippet}
+      {$localLang.TIMER.deviation}:
+    </Popover>
     {#if !$stats.dev.value}
       <span>N/A</span>
     {/if}
@@ -127,16 +140,23 @@
 
   <!-- Mo3 -->
   <div class:better={$stats.Mo3.better && $stats.counter.value > 0 && $stats.Mo3.value > -1}>
-    <span>
-      <span class="stat-info">Mo3:</span>
-      <div class={POPOVER_CLASS}>
-        <p>{$localLang.TIMER.stats.mo3}</p>
+    <Popover
+      id="mo3-stat-info"
+      placement="left"
+      triggerClass="stat-info cursor-help underline decoration-dotted underline-offset-2"
+      ariaLabel="Mo3"
+    >
+      {#snippet content()}
+        <div class="w-72 max-w-[80vw] text-left">
+          <p>{$localLang.TIMER.stats.mo3}</p>
 
-        <span class="my-2 mx-auto w-fit flex text-xl">
-          <Katex math={`Mo3 = \\frac{x_1 + x_2 + x_3}{3}`} />
-        </span>
-      </div>
-    </span>
+          <span class="my-2 mx-auto w-fit flex text-xl">
+            <Katex math={`Mo3 = \\frac{x_1 + x_2 + x_3}{3}`} />
+          </span>
+        </div>
+      {/snippet}
+      Mo3:
+    </Popover>
 
     <button class="cursor-pointer hover:text-primary" onclick={() => summary(3)}>
       {#if $stats.Mo3.value > -1}
@@ -149,16 +169,23 @@
 
   <!-- Ao5 -->
   <div class:better={$stats.Ao5.better && $stats.counter.value > 0 && $stats.Ao5.value > -1}>
-    <span>
-      <span class="stat-info">Ao5:</span>
-      <div class={POPOVER_CLASS}>
-        <p>{$localLang.TIMER.stats.ao5}</p>
+    <Popover
+      id="ao5-stat-info"
+      placement="left"
+      triggerClass="stat-info cursor-help underline decoration-dotted underline-offset-2"
+      ariaLabel="Ao5"
+    >
+      {#snippet content()}
+        <div class="w-72 max-w-[80vw] text-left">
+          <p>{$localLang.TIMER.stats.ao5}</p>
 
-        <span class="my-2 mx-auto w-fit flex text-xl">
-          <Katex math={`Ao5 = \\frac{(\\sum_{i=1}^{5} x_i) - max - min}{3}`} />
-        </span>
-      </div>
-    </span>
+          <span class="my-2 mx-auto w-fit flex text-xl">
+            <Katex math={`Ao5 = \\frac{(\\sum_{i=1}^{5} x_i) - max - min}{3}`} />
+          </span>
+        </div>
+      {/snippet}
+      Ao5:
+    </Popover>
 
     <button class="cursor-pointer hover:text-primary" onclick={() => summary(5)}>
       {#if $stats.Ao5.value > -1}

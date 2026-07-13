@@ -274,7 +274,7 @@
 >
   <div
     class={twMerge(
-      "scramble grid grid-rows-[auto_1fr] z-10 shaded-card relative transition-all duration-500",
+      "scramble grid z-10 shaded-card relative transition-all duration-500",
       $isRunning ? "opacity-5" : ""
     )}
   >
@@ -439,6 +439,7 @@
 
   section > .scramble {
     grid-area: scramble;
+    grid-template-rows: auto minmax(0, 1fr);
   }
 
   section > .timer {

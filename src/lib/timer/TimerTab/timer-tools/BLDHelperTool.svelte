@@ -467,15 +467,21 @@
             <tr>
               <td class="text-green-300 flex items-center">
                 {#if cicle.twistedCornerBuffer === -1}
-                  Corners <RotateCwIcon size="1rem" class="cursor-help ml-1" />:
-                  <Tooltip class="!bg-green-700"
-                    >The buffer should be rotated clockwise at the end</Tooltip
+                  Corners
+                  <Tooltip
+                    tooltipText="The buffer should be rotated clockwise at the end"
+                    class="[--tt-bg:var(--color-success)]"
                   >
+                    <RotateCwIcon size="1rem" class="cursor-help ml-1" />
+                  </Tooltip>:
                 {:else if cicle.twistedCornerBuffer === 1}
-                  Corners <RotateCcwIcon size="1rem" class="cursor-help ml-1" />:
-                  <Tooltip class="!bg-green-700">
-                    The buffer should be rotated counterclockwise at the end
-                  </Tooltip>
+                  Corners
+                  <Tooltip
+                    tooltipText="The buffer should be rotated counterclockwise at the end"
+                    class="[--tt-bg:var(--color-success)]"
+                  >
+                    <RotateCcwIcon size="1rem" class="cursor-help ml-1" />
+                  </Tooltip>:
                 {:else}
                   Corners:
                 {/if}
@@ -493,15 +499,19 @@
                         {cn.letter}
 
                         {#if cn.dir === -1}
-                          <RotateCwIcon size="1rem" class="cursor-help" />
-                          <Tooltip class="!bg-green-700"
-                            >This piece should be rotated clockwise at the end</Tooltip
+                          <Tooltip
+                            tooltipText="This piece should be rotated clockwise at the end"
+                            class="[--tt-bg:var(--color-success)]"
                           >
+                            <RotateCwIcon size="1rem" class="cursor-help" />
+                          </Tooltip>
                         {:else}
-                          <RotateCcwIcon size="1rem" class="cursor-help" />
-                          <Tooltip class="!bg-green-700"
-                            >This piece should be rotated counterclockwise at the end</Tooltip
+                          <Tooltip
+                            tooltipText="This piece should be rotated counterclockwise at the end"
+                            class="[--tt-bg:var(--color-success)]"
                           >
+                            <RotateCcwIcon size="1rem" class="cursor-help" />
+                          </Tooltip>
                         {/if}
                       </li>
                     {/each}
@@ -531,8 +541,12 @@
                   {getName("edge", pos, order)}:
 
                   {#if cicle.edgeBufferState[pos] != "normal"}
-                    <ArrowDownUpIcon size="1rem" class="outline-none cursor-help" />
-                    <Tooltip class="!bg-green-700">The buffer will be flipped at the end</Tooltip>
+                    <Tooltip
+                      tooltipText="The buffer will be flipped at the end"
+                      class="[--tt-bg:var(--color-success)]"
+                    >
+                      <ArrowDownUpIcon size="1rem" class="outline-none cursor-help" />
+                    </Tooltip>
                   {/if}
                 </td>
                 <td>{getPairs(edge)}</td>
