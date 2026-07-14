@@ -73,6 +73,10 @@ export class DeviceManager {
     this.owners.set(ownerId, binding);
   }
 
+  initialize(): Promise<void> {
+    return this.publishCatalog();
+  }
+
   async destroy(): Promise<void> {
     if (this.destroyed) return;
     this.destroyed = true;
