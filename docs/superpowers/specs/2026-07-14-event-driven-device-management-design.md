@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-14
 
-**Status:** Approved design pending written-spec review
+**Status:** Approved
 
 **Related documents:**
 
@@ -69,6 +69,7 @@ Each descriptor contains only serializable data:
 - `connectionStatus`: `connected`, `disconnected`, or `error`;
 - `activationStatus`: `stopped`, `starting`, `active`, `stopping`, or `error`;
 - `availability`: `available`, `in-use`, or `unavailable`;
+- `managementMode`: `managed` or `legacy`;
 - `leaseOwnerId` or `null`;
 - a readonly list of capability identifiers, empty when the device declares none.
 
@@ -76,7 +77,7 @@ DeviceCatalog never contains device instances or lifecycle methods. Consumers ca
 
 ### Device Owners
 
-Each mounted timer runtime receives a unique owner ID. The composition root calls `DeviceManager.registerReadingSink(ownerId, callback)` when it creates the timer runtime. This direct registration exists only to establish the approved high-frequency callback path; it cannot select, start, stop, or disconnect a device. All lifecycle requests still use events. An owner may hold no more than one active-device lease.
+Each mounted timer runtime receives a unique owner ID. The composition root calls `DeviceManager.registerOwner(ownerId, { readonlyView, onReading })` when it creates the timer runtime. The readonly view is the reactive read API already approved for devices, and the callback establishes the approved high-frequency reading path. This direct composition wiring cannot select, start, stop, or disconnect a device. All lifecycle requests still use events. An owner may hold no more than one active-device lease.
 
 Destroying an owner releases its lease after stopping the device. A stale owner must not continue receiving readings or native input.
 
@@ -95,8 +96,11 @@ The contract retains the existing active-device event names and adds the missing
 | `ACTIVE_DEVICE_CHANGE_REJECTED` | `{ ownerId: string; deviceId: string; reason: DeviceLeaseRejectionReason }` |
 | `ACTIVE_DEVICE_RELEASE_REQUESTED` | `{ ownerId: string; deviceId: string }` |
 | `ACTIVE_DEVICE_RELEASED` | `{ ownerId: string; deviceId: string }` |
+| `ACTIVE_DEVICE_RELEASE_REJECTED` | `{ ownerId: string; deviceId: string; reason: 'stop-failed' }` |
 | `DEVICE_DISCONNECT_REQUESTED` | `{ deviceId: string }` |
+| `DEVICE_DISCONNECT_FAILED` | `{ deviceId: string; reason: 'disconnect-failed' }` |
 | `DEVICE_CATALOG_UPDATED` | `{ devices: readonly TimerDeviceDescriptor[] }` |
+| `LEGACY_DEVICE_CATALOG_SYNC_REQUESTED` | `{ devices: readonly LegacyTimerDeviceDescriptor[] }` |
 | `DEVICE_OWNER_DESTROY_REQUESTED` | `{ ownerId: string }` |
 
 Existing `DEVICE_CONNECTED` and `DEVICE_DISCONNECTED` facts continue to represent connection state.
@@ -149,6 +153,19 @@ The result fact receives a programmatic monotonic timestamp representing when th
 - Space and Escape events retain browser timestamps at the input boundary.
 - The keyboard high-frequency reading callback is routed only to its lease owner.
 - The production timer route stays behind the migration flag until the infrastructure and UI integration have passed automated and user acceptance.
+
+## Vertical Migration Boundary
+
+TimerOptions must continue to offer all current devices while the keyboard is the only fully migrated device. A temporary legacy catalog bridge subscribes to the existing legacy device store, converts instances to serializable `LegacyTimerDeviceDescriptor` values, and publishes `LEGACY_DEVICE_CATALOG_SYNC_REQUESTED`. DeviceManager merges those descriptors into each complete catalog snapshot, with managed registrations taking precedence when IDs collide.
+
+The UI reads only DeviceCatalog after this bridge is installed. A descriptor's `managementMode` determines its transitional activation path:
+
+- `managed` devices use EventBus lease commands and DeviceManager lifecycle ownership;
+- `legacy` devices retain their existing activation code until their own vertical migration.
+
+The bridge carries metadata only. It never publishes device instances or exposes them through DeviceCatalog. Exclusive leasing is guaranteed for managed devices; the implementation must not falsely represent legacy devices as lease-managed. Each later device migration registers the canonical ID with DeviceManager, which replaces the matching legacy descriptor. The bridge and legacy activation path are deleted after the final device migration.
+
+A narrow `LegacyDeviceActivationBridge` owns the temporary activation reference for one timer. It deactivates a legacy actor/interpreter without invoking physical `disconnect()`, then calls the existing `init(InputContext)` only when a legacy descriptor is selected. This bridge does not grant leases and is removed as each legacy implementation becomes managed.
 
 ## UI Behavior
 
@@ -221,7 +238,7 @@ Rollback disables or removes the keyboard migration wiring while retaining the l
 
 ### Group 3: Timer Selection and Conflict UI
 
-Render the reactive catalog, publish selection requests on session load/settings changes, display conflicts, and release leases on timer teardown.
+Render the reactive catalog, add the temporary legacy metadata bridge, publish managed-device selection requests on session load/settings changes, display conflicts, preserve the explicit legacy activation bridge, and release managed leases on timer teardown.
 
 Rollback restores the legacy settings/device adapter while leaving the new manager unused.
 
@@ -240,6 +257,7 @@ Rollback is a single migration flag/property change.
 - Migrating Manual, Virtual, Stackmat, QiYi, GAN, or discovery implementations in these groups.
 - Solve persistence, statistics, or scramble migration.
 - Removing legacy device adapters before production acceptance.
+- Reimplementing or lease-managing non-keyboard legacy devices in these groups.
 - Sending high-frequency readings through EventBus.
 - Automatically transferring a device lease between owners.
 - Silently selecting a fallback device.
