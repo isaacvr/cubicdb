@@ -1,0 +1,236 @@
+# Event-Driven Device Management Design
+
+**Date:** 2026-07-14
+
+**Status:** Approved design pending written-spec review
+
+**Related documents:**
+
+- `docs/superpowers/specs/2026-07-12-timer-event-driven-migration-design.md`
+- `docs/superpowers/plans/2026-07-12-timer-event-driven-migration.md`
+
+## Purpose
+
+Complete the keyboard vertical slice on top of an application-scoped device-management boundary. Device discovery, availability, selection, ownership, and lifecycle changes communicate through the typed timer EventBus. Consumers read device data from a reactive projection populated only by bus events.
+
+This design moves the minimum DeviceManager foundation originally scheduled for migration PR 7 into the keyboard slice. Session compatibility for all remaining devices stays in its later PR.
+
+## Decisions
+
+- The application may have multiple active devices.
+- Each timer or other device consumer may own at most one active-device lease.
+- A device may be leased by only one owner.
+- A request for a device leased by another owner is rejected; ownership never transfers automatically.
+- A conflict is visible to the user and does not silently select a fallback or change persisted session settings.
+- Selecting another device stops and releases the previous device. It does not disconnect it.
+- `disconnect()` is reserved for explicit disconnection, physical/device loss, or application shutdown.
+- Device metadata is reactive and globally available, but device instances remain private to DeviceManager.
+- High-frequency readings use the already-approved direct callback exception. Lifecycle and business communication uses events.
+- Existing persisted canonical IDs remain unchanged. The keyboard ID is `cubicdb:device:timer_keyboard`.
+- Every event uses the existing `{ id, type, timestamp, payload }` envelope.
+- Native UI input events use the browser-provided timestamp. Programmatic results use the monotonic clock at the time the result occurs.
+
+## Architecture
+
+### DeviceManager
+
+DeviceManager is application-scoped and is the sole owner of actual device instances. It:
+
+- registers canonical devices and their serializable descriptors;
+- owns lease and reservation state;
+- serializes lifecycle commands;
+- validates existence, compatibility, availability, and idempotency;
+- invokes `start()`, `stop()`, `disconnect()`, and `destroy()`;
+- routes high-frequency readings to the current lease owner;
+- publishes lifecycle facts and catalog snapshots;
+- catches expected device-operation failures and publishes typed rejection facts.
+
+No UI component, timer runtime, store, or session utility may call a migrated device instance directly.
+
+### DeviceCatalog
+
+DeviceCatalog is a read-only reactive projection. It subscribes to catalog events and exposes the latest immutable snapshot to application and timer contexts.
+
+The application composition root constructs DeviceCatalog before DeviceManager registers devices, so the initial `DEVICE_CATALOG_UPDATED` snapshot cannot be missed.
+
+Each descriptor contains only serializable data:
+
+- canonical `id`;
+- display `name`;
+- device `type`;
+- `connectionStatus`: `connected`, `disconnected`, or `error`;
+- `activationStatus`: `stopped`, `starting`, `active`, `stopping`, or `error`;
+- `availability`: `available`, `in-use`, or `unavailable`;
+- `leaseOwnerId` or `null`;
+- a readonly list of capability identifiers, empty when the device declares none.
+
+DeviceCatalog never contains device instances or lifecycle methods. Consumers cannot mutate its internal state.
+
+### Device Owners
+
+Each mounted timer runtime receives a unique owner ID. The composition root calls `DeviceManager.registerReadingSink(ownerId, callback)` when it creates the timer runtime. This direct registration exists only to establish the approved high-frequency callback path; it cannot select, start, stop, or disconnect a device. All lifecycle requests still use events. An owner may hold no more than one active-device lease.
+
+Destroying an owner releases its lease after stopping the device. A stale owner must not continue receiving readings or native input.
+
+## Bus as the Application API
+
+The bus is the write and communication API. Reactive projections are the read API.
+
+Consumers publish commands and observe facts rather than requesting device instances. This avoids request/response ambiguity, correlation timeouts, duplicate responders, and a global mutable service locator while retaining event-driven communication.
+
+The contract retains the existing active-device event names and adds the missing outcomes:
+
+| Event constant | Payload |
+|---|---|
+| `ACTIVE_DEVICE_CHANGE_REQUESTED` | `{ ownerId: string; deviceId: string }` |
+| `ACTIVE_DEVICE_CHANGED` | `{ ownerId: string; previousDeviceId: string \| null; deviceId: string }` |
+| `ACTIVE_DEVICE_CHANGE_REJECTED` | `{ ownerId: string; deviceId: string; reason: DeviceLeaseRejectionReason }` |
+| `ACTIVE_DEVICE_RELEASE_REQUESTED` | `{ ownerId: string; deviceId: string }` |
+| `ACTIVE_DEVICE_RELEASED` | `{ ownerId: string; deviceId: string }` |
+| `DEVICE_DISCONNECT_REQUESTED` | `{ deviceId: string }` |
+| `DEVICE_CATALOG_UPDATED` | `{ devices: readonly TimerDeviceDescriptor[] }` |
+| `DEVICE_OWNER_DESTROY_REQUESTED` | `{ ownerId: string }` |
+
+Existing `DEVICE_CONNECTED` and `DEVICE_DISCONNECTED` facts continue to represent connection state.
+
+`DeviceLeaseRejectionReason` is the closed union:
+
+- `device-not-found`;
+- `already-in-use`;
+- `incompatible-device`;
+- `start-failed`;
+- `stop-failed`;
+- `owner-not-registered`.
+
+## Selection Flow
+
+1. A native UI action publishes an active-device change request using the browser timestamp.
+2. DeviceManager serializes the request with other lifecycle operations.
+3. It verifies the owner and requested device.
+4. It rejects a lease held by another owner without changing either owner.
+5. It treats selection of the owner's current device as an idempotent success.
+6. For a real switch, it reserves the requested device so another owner cannot acquire it mid-transition.
+7. It stops the old device while temporarily retaining the old lease.
+8. It starts the requested device.
+9. After successful start, it releases the old lease, confirms the new lease, and publishes the active-device-changed fact.
+10. It publishes a complete immutable catalog snapshot.
+
+The result fact receives a programmatic monotonic timestamp representing when the result occurs. It does not reuse the native request timestamp.
+
+## Failure Recovery
+
+- If validation fails, DeviceManager publishes a typed rejection and leaves current state unchanged.
+- If stopping the previous device fails, the switch is aborted, the new reservation is released, and the old device remains unavailable to other owners until its state is resolved.
+- If starting the new device fails, DeviceManager releases the new reservation and attempts to restart the previous device while retaining its lease.
+- If recovery of the previous device also fails, the owner has no operational active device and the affected device is marked unavailable/error.
+- A device with an unresolved stop or disconnect failure is never advertised as available.
+- An explicit disconnect or physical loss stops the device, releases its lease, removes its reading route, and publishes the existing disconnected fact before the new catalog snapshot.
+- Expected lifecycle failures do not escape as exceptions. Unexpected EventBus handler failures continue to use `HANDLER_FAILED`.
+- Persisted session input settings are not rewritten after a lease or lifecycle failure.
+
+## Keyboard Integration
+
+- KeyboardDevice uses canonical ID `cubicdb:device:timer_keyboard`.
+- DeviceManager owns the KeyboardDevice instance.
+- `start()` makes keyboard input processing active.
+- `stop()` makes keyboard input processing inactive and cancels its transient timers/readings without disconnect semantics.
+- Only the leased, started keyboard processes browser keyboard events.
+- Timer.svelte and TimerTab.svelte do not both deliver the same native event when the migration flag is active.
+- Space and Escape events retain browser timestamps at the input boundary.
+- The keyboard high-frequency reading callback is routed only to its lease owner.
+- The production timer route stays behind the migration flag until the infrastructure and UI integration have passed automated and user acceptance.
+
+## UI Behavior
+
+Timer settings render device choices from DeviceCatalog rather than the legacy device-instance store after the UI slice is enabled.
+
+- Devices leased by another owner are visibly unavailable.
+- Attempting to select one shows the typed conflict.
+- The current session setting is preserved after rejection.
+- No keyboard fallback is selected silently.
+- Successful selection updates the active-device projection.
+- The UI does not invoke device methods.
+
+## Testing Strategy
+
+### Unit Tests
+
+- initial immutable catalog snapshot;
+- serializable descriptors without device instances;
+- canonical IDs;
+- successful lease and release;
+- one lease per owner;
+- one owner per device;
+- different owners leasing different devices concurrently;
+- idempotent repeated selection;
+- switch ordering and reservation behavior;
+- switch uses `stop()` rather than `disconnect()`;
+- explicit disconnection uses `disconnect()`;
+- already-in-use rejection leaves state unchanged;
+- start and stop failure recovery;
+- unresolved failures mark devices unavailable;
+- rapid requests are serialized deterministically;
+- owner destruction stops and releases its device;
+- catalog replacement after every accepted lifecycle change.
+
+### Integration Tests
+
+- only the leased keyboard processes native input;
+- a browser event is processed exactly once;
+- native keyboard timestamps reach the corresponding lifecycle flow unchanged where required;
+- high-frequency readings reach only the lease owner;
+- switching away from keyboard stops input and readings;
+- two timer runtimes contend safely for the keyboard;
+- timer destruction releases the keyboard for another owner;
+- disabled migration flags preserve the legacy behavior;
+- session load and settings changes publish selection intent;
+- conflicts are displayed without changing persisted settings;
+- the `/timer/[sessionId]` route processes Space through only the event-driven path after activation.
+
+### Verification Commands
+
+Each implementation group runs focused Vitest tests, ESLint, and the full unit suite with one worker. No build is run. `svelte-check` is excluded until the user explicitly requests it.
+
+## Reversible Commit Groups and Acceptance Gates
+
+### Group 1: Device Bus API and Reactive Catalog
+
+Add typed events, device lifecycle contracts, DeviceManager, DeviceCatalog, and their tests. Do not connect them to the production timer UI.
+
+Rollback removes isolated infrastructure without changing runtime behavior.
+
+**Acceptance gate:** Report exact changes and automated results. Provide focused inspection or test instructions and wait for user approval before Group 2.
+
+### Group 2: Keyboard Ownership and Routing
+
+Register KeyboardDevice with DeviceManager, enforce canonical identity and lease ownership, route readings to the owner, and eliminate duplicate browser input under the feature flag. Keep the production route flag disabled.
+
+Rollback disables or removes the keyboard migration wiring while retaining the legacy keyboard path.
+
+**Acceptance gate:** Report exact changes and automated results. Let the user exercise keyboard lifecycle behavior in a controlled flagged path and wait for approval before Group 3.
+
+### Group 3: Timer Selection and Conflict UI
+
+Render the reactive catalog, publish selection requests on session load/settings changes, display conflicts, and release leases on timer teardown.
+
+Rollback restores the legacy settings/device adapter while leaving the new manager unused.
+
+**Acceptance gate:** Report exact changes and automated results. Let the user test selection, contention, persistence, and teardown before Group 4.
+
+### Group 4: Production Route Activation
+
+Enable event-driven keyboard handling for `/timer/[sessionId]`, add route-level integration coverage, and run the agreed quality gates.
+
+Rollback is a single migration flag/property change.
+
+**Acceptance gate:** The user tests the actual timer route and confirms that behavior aligns with the migration goals before any later device slice begins.
+
+## Out of Scope
+
+- Migrating Manual, Virtual, Stackmat, QiYi, GAN, or discovery implementations in these groups.
+- Solve persistence, statistics, or scramble migration.
+- Removing legacy device adapters before production acceptance.
+- Sending high-frequency readings through EventBus.
+- Automatically transferring a device lease between owners.
+- Silently selecting a fallback device.
+- Building the application or running `svelte-check`.
