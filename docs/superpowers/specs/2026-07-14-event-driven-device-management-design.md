@@ -32,6 +32,14 @@ This design moves the minimum DeviceManager foundation originally scheduled for 
 
 ## Architecture
 
+### Application-Scoped EventBus
+
+The application owns one TimerEventBus, TimerEventFactory, DeviceManager, DeviceCatalog, and event logger. Every mounted timer runtime receives these shared services from application context instead of constructing another bus.
+
+Events that mutate a timer-local projection include `ownerId`. Each TimerReactor is constructed with its own owner ID and ignores lifecycle facts for other owners. Application-wide device facts such as catalog and physical connection changes remain unscoped. Future event slices must carry either `ownerId` or another explicit domain key whenever multiple consumers could otherwise project the same fact.
+
+This produces one diagnostic event stream, one serialized lease authority, and no bridge between application and timer buses. Tests may construct an isolated application runtime, but multiple timer runtimes in the same test share that application's bus.
+
 ### DeviceManager
 
 DeviceManager is application-scoped and is the sole owner of actual device instances. It:
@@ -92,6 +100,8 @@ The contract retains the existing active-device event names and adds the missing
 | `DEVICE_OWNER_DESTROY_REQUESTED` | `{ ownerId: string }` |
 
 Existing `DEVICE_CONNECTED` and `DEVICE_DISCONNECTED` facts continue to represent connection state.
+
+The timer lifecycle events `DEVICE_PREVENTION_ENTERED`, `DEVICE_READY`, `DEVICE_INSPECTION_STARTED`, `DEVICE_GREEN_LIGHT_CHANGED`, `DEVICE_RUN_STARTED`, `DEVICE_RUN_STOPPED`, `DEVICE_RUN_CANCELLED`, `DEVICE_PAUSED`, `DEVICE_RESUMED`, `DEVICE_STEP_COMPLETED`, and `DEVICE_PENALTY_APPLIED` add `ownerId` beside `deviceId`. TimerReactor filters all of them by its configured owner ID.
 
 `DeviceLeaseRejectionReason` is the closed union:
 
