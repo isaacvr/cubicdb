@@ -11,10 +11,11 @@ export class TimerDeviceTestHarness implements ITimerDevice {
 
   constructor(
     readonly descriptor: ITimerDevice['descriptor'],
+    private readonly timeline?: string[],
   ) {}
 
   async start(context: TimerDeviceActivationContext): Promise<void> {
-    this.calls.push(`start:${context.ownerId}`);
+    this.record(`start:${context.ownerId}`);
     this.lastContext = context;
     if (this.startError) {
       const error = this.startError;
@@ -24,7 +25,7 @@ export class TimerDeviceTestHarness implements ITimerDevice {
   }
 
   async stop(): Promise<void> {
-    this.calls.push('stop');
+    this.record('stop');
     if (this.stopError) {
       const error = this.stopError;
       this.stopError = null;
@@ -33,7 +34,7 @@ export class TimerDeviceTestHarness implements ITimerDevice {
   }
 
   async disconnect(): Promise<void> {
-    this.calls.push('disconnect');
+    this.record('disconnect');
     if (this.disconnectError) {
       const error = this.disconnectError;
       this.disconnectError = null;
@@ -42,10 +43,15 @@ export class TimerDeviceTestHarness implements ITimerDevice {
   }
 
   async destroy(): Promise<void> {
-    this.calls.push('destroy');
+    this.record('destroy');
   }
 
   emitReading(reading: TimerReading): void {
     this.lastContext?.onReading(reading);
+  }
+
+  private record(call: string): void {
+    this.calls.push(call);
+    this.timeline?.push(`${this.descriptor.id}:${call}`);
   }
 }
