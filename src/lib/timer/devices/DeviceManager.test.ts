@@ -62,6 +62,23 @@ describe('DeviceManager leases', () => {
     }]);
   });
 
+  it('publishes an immutable catalog event snapshot', async () => {
+    const keyboard = fakeDevice(TIMER_DEVICE_IDS.KEYBOARD, 'Keyboard');
+    const snapshots: ReadonlyArray<unknown>[] = [];
+    bus.subscribe(TIMER_EVENTS.DEVICE_CATALOG_UPDATED, 'test:immutable-catalog', event => {
+      snapshots.push(event.payload.devices);
+    });
+
+    await manager.registerDevice(keyboard);
+
+    const snapshot = snapshots.at(-1) as ReadonlyArray<{
+      capabilities: readonly string[];
+    }>;
+    expect(Object.isFrozen(snapshot)).toBe(true);
+    expect(Object.isFrozen(snapshot[0])).toBe(true);
+    expect(Object.isFrozen(snapshot[0].capabilities)).toBe(true);
+  });
+
   it('leases a device to a registered owner', async () => {
     const keyboard = fakeDevice(TIMER_DEVICE_IDS.KEYBOARD, 'Keyboard');
     const changed = vi.fn();

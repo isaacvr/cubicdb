@@ -309,19 +309,21 @@ export class DeviceManager {
   }
 
   private descriptor(record: ManagedDeviceRecord): TimerDeviceDescriptor {
-    return {
+    return Object.freeze({
       ...record.device.descriptor,
       connectionStatus: record.connectionStatus,
-      capabilities: [...record.device.descriptor.capabilities],
+      capabilities: Object.freeze([...record.device.descriptor.capabilities]),
       activationStatus: record.activationStatus,
       availability: record.availability,
       managementMode: 'managed',
       leaseOwnerId: record.leaseOwnerId,
-    };
+    });
   }
 
   private async publishCatalog(): Promise<void> {
-    const devices = [...this.devices.values()].map(record => this.descriptor(record));
+    const devices = Object.freeze(
+      [...this.devices.values()].map(record => this.descriptor(record)),
+    );
     await this.bus.publish(this.events.create(TIMER_EVENTS.DEVICE_CATALOG_UPDATED, { devices }));
   }
 }
