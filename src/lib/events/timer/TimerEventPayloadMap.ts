@@ -1,8 +1,14 @@
 import type { Penalty, Session, SessionSettings, Solve, Statistics } from '@interfaces';
+import type {
+  DeviceLeaseRejectionReason,
+  LegacyTimerDeviceDescriptor,
+  TimerDeviceDescriptor,
+} from '$lib/timer/devices/TimerDeviceDescriptor';
 import { TIMER_EVENTS, type TimerEventType } from './TimerEventRegistry';
 
 type EmptyPayload = Record<string, never>;
 type DevicePayload = { deviceId: string };
+type OwnerDevicePayload = { ownerId: string; deviceId: string };
 
 export interface TimerEventPayloadMap extends Record<TimerEventType, object> {
   [TIMER_EVENTS.KEYBOARD_KEY_DOWN]: { code: string; repeat: boolean };
@@ -24,8 +30,21 @@ export interface TimerEventPayloadMap extends Record<TimerEventType, object> {
   [TIMER_EVENTS.DEVICE_DISCOVERED]: DevicePayload & { name: string; kind: string };
   [TIMER_EVENTS.DEVICE_CONNECTED]: DevicePayload;
   [TIMER_EVENTS.DEVICE_DISCONNECTED]: DevicePayload & { reason?: string };
-  [TIMER_EVENTS.ACTIVE_DEVICE_CHANGE_REQUESTED]: DevicePayload;
-  [TIMER_EVENTS.ACTIVE_DEVICE_CHANGED]: DevicePayload;
+  [TIMER_EVENTS.ACTIVE_DEVICE_CHANGE_REQUESTED]: OwnerDevicePayload;
+  [TIMER_EVENTS.ACTIVE_DEVICE_CHANGED]: OwnerDevicePayload & { previousDeviceId: string | null };
+  [TIMER_EVENTS.ACTIVE_DEVICE_CHANGE_REJECTED]: OwnerDevicePayload & {
+    reason: DeviceLeaseRejectionReason;
+  };
+  [TIMER_EVENTS.ACTIVE_DEVICE_RELEASE_REQUESTED]: OwnerDevicePayload;
+  [TIMER_EVENTS.ACTIVE_DEVICE_RELEASED]: OwnerDevicePayload;
+  [TIMER_EVENTS.ACTIVE_DEVICE_RELEASE_REJECTED]: OwnerDevicePayload & { reason: 'stop-failed' };
+  [TIMER_EVENTS.DEVICE_DISCONNECT_REQUESTED]: DevicePayload;
+  [TIMER_EVENTS.DEVICE_DISCONNECT_FAILED]: DevicePayload & { reason: 'disconnect-failed' };
+  [TIMER_EVENTS.DEVICE_CATALOG_UPDATED]: { devices: readonly TimerDeviceDescriptor[] };
+  [TIMER_EVENTS.LEGACY_DEVICE_CATALOG_SYNC_REQUESTED]: {
+    devices: readonly LegacyTimerDeviceDescriptor[];
+  };
+  [TIMER_EVENTS.DEVICE_OWNER_DESTROY_REQUESTED]: { ownerId: string };
   [TIMER_EVENTS.SESSION_SWITCH_REQUESTED]: { sessionId: string };
   [TIMER_EVENTS.SESSION_SWITCHED]: { previousSession: Session | null; session: Session };
   [TIMER_EVENTS.SESSION_SETTINGS_CHANGE_REQUESTED]: { sessionId: string; settings: Partial<SessionSettings> };

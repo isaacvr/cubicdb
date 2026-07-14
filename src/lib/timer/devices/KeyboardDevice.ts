@@ -6,6 +6,10 @@ import type { IMonotonicClock } from '$lib/events/timer/TimerEventFactory';
 import { TIMER_EVENTS } from '$lib/events/timer/TimerEventRegistry';
 import type { TimerReadonlyView } from '../TimerReadonlyView';
 import type { ITimerDevice, TimerReadingCallback } from './ITimerDevice';
+import {
+  TIMER_DEVICE_IDS,
+  type TimerDeviceActivationContext,
+} from './TimerDeviceDescriptor';
 
 type KeyboardMachineEvent =
   | { type: 'KEY_DOWN'; code: string; timestamp: number }
@@ -158,7 +162,13 @@ const keyboardMachine = setup({
 });
 
 export class KeyboardDevice implements ITimerDevice {
-  readonly id = 'keyboard';
+  readonly descriptor = {
+    id: TIMER_DEVICE_IDS.KEYBOARD,
+    name: 'Keyboard',
+    type: 'timer_keyboard',
+    connectionStatus: 'connected',
+    capabilities: ['keyboard'],
+  } as const;
   private readonly actor: ActorRefFrom<typeof keyboardMachine>;
   private readonly subscriptions;
   private readingTimer: ReturnType<typeof setInterval> | null = null;
@@ -208,13 +218,17 @@ export class KeyboardDevice implements ITimerDevice {
     ];
   }
 
-  start(): void {
+  start(_context?: TimerDeviceActivationContext): void {
     this.actor.start();
   }
 
   stop(): void {
     this.stopReadings();
     this.actor.stop();
+  }
+
+  disconnect(): void {
+    this.stop();
   }
 
   destroy(): void {

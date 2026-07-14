@@ -10,6 +10,11 @@ export {
   type NativeTimestampSource,
 } from './timer/TimerEventFactory';
 export { TimerEventBus, type ITimerEventBus } from './timer/TimerEventBus';
+export type {
+  DeviceLeaseRejectionReason,
+  LegacyTimerDeviceDescriptor,
+  TimerDeviceDescriptor,
+} from '$lib/timer/devices/TimerDeviceDescriptor';
 export { EventDispatcher } from './EventDispatcher';
 export type { DomainEvent, EventHandler, EventSubscription } from './types';
 export { eventBus } from './singleton';
