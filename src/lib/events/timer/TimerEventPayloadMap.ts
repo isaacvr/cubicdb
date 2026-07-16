@@ -4,6 +4,10 @@ import type {
   LegacyTimerDeviceDescriptor,
   TimerDeviceDescriptor,
 } from '$lib/timer/devices/TimerDeviceDescriptor';
+import type {
+  DEVICE_LEASE_REJECTION_REASONS,
+  DeviceDisconnectFailureReason,
+} from '$lib/timer/devices/TimerDeviceConstants';
 import { TIMER_EVENTS, type TimerEventType } from './TimerEventRegistry';
 
 type EmptyPayload = Record<string, never>;
@@ -37,9 +41,13 @@ export interface TimerEventPayloadMap extends Record<TimerEventType, object> {
   };
   [TIMER_EVENTS.ACTIVE_DEVICE_RELEASE_REQUESTED]: OwnerDevicePayload;
   [TIMER_EVENTS.ACTIVE_DEVICE_RELEASED]: OwnerDevicePayload;
-  [TIMER_EVENTS.ACTIVE_DEVICE_RELEASE_REJECTED]: OwnerDevicePayload & { reason: 'stop-failed' };
+  [TIMER_EVENTS.ACTIVE_DEVICE_RELEASE_REJECTED]: OwnerDevicePayload & {
+    reason: typeof DEVICE_LEASE_REJECTION_REASONS.STOP_FAILED;
+  };
   [TIMER_EVENTS.DEVICE_DISCONNECT_REQUESTED]: DevicePayload;
-  [TIMER_EVENTS.DEVICE_DISCONNECT_FAILED]: DevicePayload & { reason: 'disconnect-failed' };
+  [TIMER_EVENTS.DEVICE_DISCONNECT_FAILED]: DevicePayload & {
+    reason: DeviceDisconnectFailureReason;
+  };
   [TIMER_EVENTS.DEVICE_CATALOG_UPDATED]: { devices: readonly TimerDeviceDescriptor[] };
   [TIMER_EVENTS.LEGACY_DEVICE_CATALOG_SYNC_REQUESTED]: {
     devices: readonly LegacyTimerDeviceDescriptor[];

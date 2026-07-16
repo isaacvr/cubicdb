@@ -5,7 +5,13 @@ import type { TimerEvent } from '$lib/events/timer/TimerEvent';
 import { TIMER_EVENTS } from '$lib/events/timer/TimerEventRegistry';
 import { DeviceCatalog } from './DeviceCatalog.svelte';
 import {
+  TIMER_DEVICE_ACTIVATION_STATUS,
+  TIMER_DEVICE_AVAILABILITY,
+  TIMER_DEVICE_CAPABILITIES,
+  TIMER_DEVICE_CONNECTION_STATUS,
   TIMER_DEVICE_IDS,
+  TIMER_DEVICE_MANAGEMENT_MODE,
+  TIMER_DEVICE_TYPES,
   type TimerDeviceDescriptor,
 } from './TimerDeviceDescriptor';
 
@@ -15,13 +21,13 @@ function keyboardDescriptor(
   return {
     id: TIMER_DEVICE_IDS.KEYBOARD,
     name: 'Keyboard',
-    type: 'timer_keyboard',
-    connectionStatus: 'connected',
-    activationStatus: 'stopped',
-    availability: 'available',
-    managementMode: 'managed',
+    type: TIMER_DEVICE_TYPES.KEYBOARD,
+    connectionStatus: TIMER_DEVICE_CONNECTION_STATUS.CONNECTED,
+    activationStatus: TIMER_DEVICE_ACTIVATION_STATUS.STOPPED,
+    availability: TIMER_DEVICE_AVAILABILITY.AVAILABLE,
+    managementMode: TIMER_DEVICE_MANAGEMENT_MODE.MANAGED,
     leaseOwnerId: null,
-    capabilities: ['keyboard'],
+    capabilities: [TIMER_DEVICE_CAPABILITIES.KEYBOARD],
     ...overrides,
   };
 }
@@ -50,7 +56,7 @@ describe('DeviceCatalog', () => {
     const source = [descriptor];
 
     await bus.publish(events.create(TIMER_EVENTS.DEVICE_CATALOG_UPDATED, { devices: source }));
-    source[0] = keyboardDescriptor({ availability: 'unavailable' });
+    source[0] = keyboardDescriptor({ availability: TIMER_DEVICE_AVAILABILITY.UNAVAILABLE });
     (descriptor.capabilities as string[]).push('mutated');
 
     expect(catalog.devices).toEqual([keyboardDescriptor()]);

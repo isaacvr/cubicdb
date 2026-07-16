@@ -8,9 +8,27 @@ import { TIMER_EVENTS } from '$lib/events/timer/TimerEventRegistry';
 import type { TimerReadonlyView } from '../TimerReadonlyView';
 import type { ITimerDevice, TimerReadingCallback } from './ITimerDevice';
 import {
+  TIMER_DEVICE_CAPABILITIES,
+  TIMER_DEVICE_CONNECTION_STATUS,
   TIMER_DEVICE_IDS,
+  TIMER_DEVICE_NAMES,
+  TIMER_DEVICE_TYPES,
   type TimerDeviceActivationContext,
 } from './TimerDeviceDescriptor';
+
+export const KEYBOARD_DEVICE_TIMING = {
+  DEFAULT_PREVENTION_MS: 200,
+  DEFAULT_RESTART_GAP_MS: 1000,
+  INSPECTION_PENALTY_GRACE_MS: 2000,
+  DEFAULT_READING_INTERVAL_MS: 10,
+  DEFAULT_INSPECTION_SECONDS: 15,
+  MILLISECONDS_PER_SECOND: 1000,
+} as const;
+
+export const KEYBOARD_CODES = {
+  SPACE: 'Space',
+  ESCAPE: 'Escape',
+} as const;
 
 type KeyboardMachineEvent =
   | { type: 'KEY_DOWN'; code: string; timestamp: number }
@@ -43,7 +61,9 @@ function nativeTimestamp(timestamp: number): { timeStamp: number } {
 }
 
 function inspectionDurationMs(context: KeyboardMachineContext): number {
-  return (context.view.session?.settings.inspection || 15) * 1000;
+  return (context.view.session?.settings.inspection
+    || KEYBOARD_DEVICE_TIMING.DEFAULT_INSPECTION_SECONDS)
+    * KEYBOARD_DEVICE_TIMING.MILLISECONDS_PER_SECOND;
 }
 
 const keyboardMachine = setup({
@@ -59,17 +79,20 @@ const keyboardMachine = setup({
     ),
     inspectionDnf: ({ context }) => Math.max(
       0,
-      context.inspectionStartedAt + inspectionDurationMs(context) + 2000 - context.now(),
+      context.inspectionStartedAt
+        + inspectionDurationMs(context)
+        + KEYBOARD_DEVICE_TIMING.INSPECTION_PENALTY_GRACE_MS
+        - context.now(),
     ),
     restartGap: ({ context }) => context.restartGapMs,
   },
   guards: {
-    isSpace: ({ event }) => event.code === 'Space',
-    isEscape: ({ event }) => event.code === 'Escape',
-    isStopKey: ({ event }) => event.code === 'Space' || /^Key[A-Z]$/.test(event.code),
+    isSpace: ({ event }) => event.code === KEYBOARD_CODES.SPACE,
+    isEscape: ({ event }) => event.code === KEYBOARD_CODES.ESCAPE,
+    isStopKey: ({ event }) => event.code === KEYBOARD_CODES.SPACE || /^Key[A-Z]$/.test(event.code),
     withoutPrevention: ({ context }) => context.view.session?.settings.withoutPrevention ?? false,
     hasInspectionAndSpace: ({ context, event }) =>
-      event.code === 'Space' && (context.view.session?.settings.hasInspection ?? false),
+      event.code === KEYBOARD_CODES.SPACE && (context.view.session?.settings.hasInspection ?? false),
   },
   actions: {
     publishPrevention: ({ context, event }) => {
@@ -233,10 +256,10 @@ const keyboardMachine = setup({
 export class KeyboardDevice implements ITimerDevice {
   readonly descriptor = {
     id: TIMER_DEVICE_IDS.KEYBOARD,
-    name: 'Keyboard',
-    type: 'timer_keyboard',
-    connectionStatus: 'connected',
-    capabilities: ['keyboard'],
+    name: TIMER_DEVICE_NAMES.KEYBOARD,
+    type: TIMER_DEVICE_TYPES.KEYBOARD,
+    connectionStatus: TIMER_DEVICE_CONNECTION_STATUS.CONNECTED,
+    capabilities: [TIMER_DEVICE_CAPABILITIES.KEYBOARD],
   } as const;
   private actor: ActorRefFrom<typeof keyboardMachine> | null = null;
   private subscriptions: EventSubscription[] = [];
@@ -250,7 +273,8 @@ export class KeyboardDevice implements ITimerDevice {
     private readonly events: TimerEventFactory,
     private readonly options: KeyboardDeviceOptions = {},
   ) {
-    this.readingIntervalMs = options.readingIntervalMs ?? 10;
+    this.readingIntervalMs = options.readingIntervalMs
+      ?? KEYBOARD_DEVICE_TIMING.DEFAULT_READING_INTERVAL_MS;
     this.clock = options.clock ?? { now: () => performance.now() };
   }
 
@@ -261,8 +285,10 @@ export class KeyboardDevice implements ITimerDevice {
         events: this.events,
         view: context.readonlyView,
         ownerId: context.ownerId,
-        preventionMs: this.options.preventionMs ?? 200,
-        restartGapMs: this.options.restartGapMs ?? 1000,
+        preventionMs: this.options.preventionMs
+          ?? KEYBOARD_DEVICE_TIMING.DEFAULT_PREVENTION_MS,
+        restartGapMs: this.options.restartGapMs
+          ?? KEYBOARD_DEVICE_TIMING.DEFAULT_RESTART_GAP_MS,
         startedAt: 0,
         inspectionStartedAt: 0,
         now: () => this.clock.now(),
@@ -334,13 +360,18 @@ export class KeyboardDevice implements ITimerDevice {
     onReading: TimerReadingCallback,
   ): void {
     this.stopReadings();
-    const inspectionMs = (view.session?.settings.inspection ?? 15) * 1000;
+    const inspectionMs = (view.session?.settings.inspection
+      ?? KEYBOARD_DEVICE_TIMING.DEFAULT_INSPECTION_SECONDS)
+      * KEYBOARD_DEVICE_TIMING.MILLISECONDS_PER_SECOND;
     const inspectionEndsAt = timestamp + inspectionMs;
     const update = () => {
       const currentTimestamp = this.clock.now();
       onReading({
         timestamp: currentTimestamp,
-        timeMs: Math.round((inspectionEndsAt - currentTimestamp) / 1000) * 1000,
+        timeMs: Math.round(
+          (inspectionEndsAt - currentTimestamp)
+            / KEYBOARD_DEVICE_TIMING.MILLISECONDS_PER_SECOND,
+        ) * KEYBOARD_DEVICE_TIMING.MILLISECONDS_PER_SECOND,
         phase: 'inspection',
       });
     };

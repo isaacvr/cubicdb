@@ -29,7 +29,10 @@
   import { page } from "$app/state";
   import { createTimerRuntime } from "./TimerCompositionRoot.svelte";
   import { getTimerApplicationContext } from "./context/timerApplicationContext";
-  import { TIMER_DEVICE_IDS } from "./devices/TimerDeviceDescriptor";
+  import {
+    LEGACY_TIMER_DEVICE_SELECTIONS,
+    TIMER_DEVICE_IDS,
+  } from "./devices/TimerDeviceDescriptor";
 
   interface TimerProps {
     battle?: boolean;
@@ -113,7 +116,8 @@
     timerController.decimals.set(eventTimerRuntime.state.decimals);
 
     const input = currentSession?.settings.input;
-    const wantsManagedKeyboard = input === "Keyboard" || input === TIMER_DEVICE_IDS.KEYBOARD;
+    const wantsManagedKeyboard = input === LEGACY_TIMER_DEVICE_SELECTIONS.KEYBOARD
+      || input === TIMER_DEVICE_IDS.KEYBOARD;
     if (wantsManagedKeyboard && requestedDeviceId !== TIMER_DEVICE_IDS.KEYBOARD) {
       requestedDeviceId = TIMER_DEVICE_IDS.KEYBOARD;
       void eventTimerRuntime.requestActiveDevice(TIMER_DEVICE_IDS.KEYBOARD);

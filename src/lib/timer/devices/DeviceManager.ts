@@ -12,6 +12,14 @@ import type {
   TimerDeviceDescriptor,
   TimerDeviceOwnerBinding,
 } from './TimerDeviceDescriptor';
+import {
+  DEVICE_DISCONNECT_FAILURE_REASONS,
+  DEVICE_LEASE_REJECTION_REASONS,
+  TIMER_DEVICE_ACTIVATION_STATUS,
+  TIMER_DEVICE_AVAILABILITY,
+  TIMER_DEVICE_CONNECTION_STATUS,
+  TIMER_DEVICE_MANAGEMENT_MODE,
+} from './TimerDeviceConstants';
 
 interface ManagedDeviceRecord {
   readonly device: ITimerDevice;
@@ -62,8 +70,8 @@ export class DeviceManager {
     this.devices.set(device.descriptor.id, {
       device,
       connectionStatus: device.descriptor.connectionStatus,
-      activationStatus: 'stopped',
-      availability: 'available',
+      activationStatus: TIMER_DEVICE_ACTIVATION_STATUS.STOPPED,
+      availability: TIMER_DEVICE_AVAILABILITY.AVAILABLE,
       leaseOwnerId: null,
     });
     await this.publishCatalog();
@@ -92,13 +100,17 @@ export class DeviceManager {
   private async changeActiveDevice(ownerId: string, deviceId: string): Promise<void> {
     const binding = this.owners.get(ownerId);
     if (!binding) {
-      await this.rejectChange(ownerId, deviceId, 'owner-not-registered');
+      await this.rejectChange(
+        ownerId,
+        deviceId,
+        DEVICE_LEASE_REJECTION_REASONS.OWNER_NOT_REGISTERED,
+      );
       return;
     }
 
     const target = this.devices.get(deviceId);
     if (!target) {
-      await this.rejectChange(ownerId, deviceId, 'device-not-found');
+      await this.rejectChange(ownerId, deviceId, DEVICE_LEASE_REJECTION_REASONS.DEVICE_NOT_FOUND);
       return;
     }
 
@@ -110,27 +122,27 @@ export class DeviceManager {
 
     const currentOwner = this.ownersByDevice.get(deviceId) ?? this.reservations.get(deviceId);
     if (currentOwner && currentOwner !== ownerId) {
-      await this.rejectChange(ownerId, deviceId, 'already-in-use');
+      await this.rejectChange(ownerId, deviceId, DEVICE_LEASE_REJECTION_REASONS.ALREADY_IN_USE);
       return;
     }
 
     this.reservations.set(deviceId, ownerId);
-    target.activationStatus = 'starting';
-    target.availability = 'unavailable';
+    target.activationStatus = TIMER_DEVICE_ACTIVATION_STATUS.STARTING;
+    target.availability = TIMER_DEVICE_AVAILABILITY.UNAVAILABLE;
 
     if (previousDeviceId) {
       const previous = this.devices.get(previousDeviceId);
       if (previous) {
-        previous.activationStatus = 'stopping';
+        previous.activationStatus = TIMER_DEVICE_ACTIVATION_STATUS.STOPPING;
         try {
           await previous.device.stop();
         } catch {
-          previous.activationStatus = 'error';
-          previous.availability = 'unavailable';
-          target.activationStatus = 'stopped';
-          target.availability = 'available';
+          previous.activationStatus = TIMER_DEVICE_ACTIVATION_STATUS.ERROR;
+          previous.availability = TIMER_DEVICE_AVAILABILITY.UNAVAILABLE;
+          target.activationStatus = TIMER_DEVICE_ACTIVATION_STATUS.STOPPED;
+          target.availability = TIMER_DEVICE_AVAILABILITY.AVAILABLE;
           this.reservations.delete(deviceId);
-          await this.rejectChange(ownerId, deviceId, 'stop-failed');
+          await this.rejectChange(ownerId, deviceId, DEVICE_LEASE_REJECTION_REASONS.STOP_FAILED);
           await this.publishCatalog();
           return;
         }
@@ -141,8 +153,8 @@ export class DeviceManager {
     try {
       await target.device.start(activation);
     } catch {
-      target.activationStatus = 'error';
-      target.availability = 'unavailable';
+      target.activationStatus = TIMER_DEVICE_ACTIVATION_STATUS.ERROR;
+      target.availability = TIMER_DEVICE_AVAILABILITY.UNAVAILABLE;
       this.reservations.delete(deviceId);
 
       if (previousDeviceId) {
@@ -150,16 +162,16 @@ export class DeviceManager {
         if (previous) {
           try {
             await previous.device.start(activation);
-            previous.activationStatus = 'active';
-            previous.availability = 'in-use';
+            previous.activationStatus = TIMER_DEVICE_ACTIVATION_STATUS.ACTIVE;
+            previous.availability = TIMER_DEVICE_AVAILABILITY.IN_USE;
           } catch {
-            previous.activationStatus = 'error';
-            previous.availability = 'unavailable';
+            previous.activationStatus = TIMER_DEVICE_ACTIVATION_STATUS.ERROR;
+            previous.availability = TIMER_DEVICE_AVAILABILITY.UNAVAILABLE;
           }
         }
       }
 
-      await this.rejectChange(ownerId, deviceId, 'start-failed');
+      await this.rejectChange(ownerId, deviceId, DEVICE_LEASE_REJECTION_REASONS.START_FAILED);
       await this.publishCatalog();
       return;
     }
@@ -167,8 +179,8 @@ export class DeviceManager {
     if (previousDeviceId) {
       const previous = this.devices.get(previousDeviceId);
       if (previous) {
-        previous.activationStatus = 'stopped';
-        previous.availability = 'available';
+        previous.activationStatus = TIMER_DEVICE_ACTIVATION_STATUS.STOPPED;
+        previous.availability = TIMER_DEVICE_AVAILABILITY.AVAILABLE;
         previous.leaseOwnerId = null;
       }
       this.ownersByDevice.delete(previousDeviceId);
@@ -177,8 +189,8 @@ export class DeviceManager {
     this.leasesByOwner.set(ownerId, deviceId);
     this.ownersByDevice.set(deviceId, ownerId);
     this.reservations.delete(deviceId);
-    target.activationStatus = 'active';
-    target.availability = 'in-use';
+    target.activationStatus = TIMER_DEVICE_ACTIVATION_STATUS.ACTIVE;
+    target.availability = TIMER_DEVICE_AVAILABILITY.IN_USE;
     target.leaseOwnerId = ownerId;
 
     await this.publishChanged(ownerId, deviceId, previousDeviceId);
@@ -190,24 +202,26 @@ export class DeviceManager {
     const record = this.devices.get(deviceId);
     if (!record) return;
 
-    record.activationStatus = 'stopping';
+    record.activationStatus = TIMER_DEVICE_ACTIVATION_STATUS.STOPPING;
     try {
       await record.device.stop();
     } catch {
-      record.activationStatus = 'error';
-      record.availability = 'unavailable';
+      record.activationStatus = TIMER_DEVICE_ACTIVATION_STATUS.ERROR;
+      record.availability = TIMER_DEVICE_AVAILABILITY.UNAVAILABLE;
       await this.bus.publish(this.events.create(TIMER_EVENTS.ACTIVE_DEVICE_RELEASE_REJECTED, {
         ownerId,
         deviceId,
-        reason: 'stop-failed',
+        reason: DEVICE_LEASE_REJECTION_REASONS.STOP_FAILED,
       }));
       await this.publishCatalog();
       return;
     }
 
     this.clearLease(ownerId, deviceId);
-    record.activationStatus = 'stopped';
-    record.availability = record.connectionStatus === 'connected' ? 'available' : 'unavailable';
+    record.activationStatus = TIMER_DEVICE_ACTIVATION_STATUS.STOPPED;
+    record.availability = record.connectionStatus === TIMER_DEVICE_CONNECTION_STATUS.CONNECTED
+      ? TIMER_DEVICE_AVAILABILITY.AVAILABLE
+      : TIMER_DEVICE_AVAILABILITY.UNAVAILABLE;
     await this.bus.publish(this.events.create(TIMER_EVENTS.ACTIVE_DEVICE_RELEASED, {
       ownerId,
       deviceId,
@@ -221,12 +235,12 @@ export class DeviceManager {
     const ownerId = this.ownersByDevice.get(deviceId) ?? null;
 
     if (ownerId) {
-      record.activationStatus = 'stopping';
+      record.activationStatus = TIMER_DEVICE_ACTIVATION_STATUS.STOPPING;
       try {
         await record.device.stop();
       } catch {
-        record.activationStatus = 'error';
-        record.availability = 'unavailable';
+        record.activationStatus = TIMER_DEVICE_ACTIVATION_STATUS.ERROR;
+        record.availability = TIMER_DEVICE_AVAILABILITY.UNAVAILABLE;
         await this.publishDisconnectFailed(deviceId);
         await this.publishCatalog();
         return;
@@ -237,17 +251,17 @@ export class DeviceManager {
     try {
       await record.device.disconnect();
     } catch {
-      record.connectionStatus = 'error';
-      record.activationStatus = 'error';
-      record.availability = 'unavailable';
+      record.connectionStatus = TIMER_DEVICE_CONNECTION_STATUS.ERROR;
+      record.activationStatus = TIMER_DEVICE_ACTIVATION_STATUS.ERROR;
+      record.availability = TIMER_DEVICE_AVAILABILITY.UNAVAILABLE;
       await this.publishDisconnectFailed(deviceId);
       await this.publishCatalog();
       return;
     }
 
-    record.connectionStatus = 'disconnected';
-    record.activationStatus = 'stopped';
-    record.availability = 'unavailable';
+    record.connectionStatus = TIMER_DEVICE_CONNECTION_STATUS.DISCONNECTED;
+    record.activationStatus = TIMER_DEVICE_ACTIVATION_STATUS.STOPPED;
+    record.availability = TIMER_DEVICE_AVAILABILITY.UNAVAILABLE;
     record.leaseOwnerId = null;
     await this.bus.publish(this.events.create(TIMER_EVENTS.DEVICE_DISCONNECTED, { deviceId }));
     await this.publishCatalog();
@@ -304,7 +318,7 @@ export class DeviceManager {
   private async publishDisconnectFailed(deviceId: string): Promise<void> {
     await this.bus.publish(this.events.create(TIMER_EVENTS.DEVICE_DISCONNECT_FAILED, {
       deviceId,
-      reason: 'disconnect-failed',
+      reason: DEVICE_DISCONNECT_FAILURE_REASONS.DISCONNECT_FAILED,
     }));
   }
 
@@ -315,7 +329,7 @@ export class DeviceManager {
       capabilities: Object.freeze([...record.device.descriptor.capabilities]),
       activationStatus: record.activationStatus,
       availability: record.availability,
-      managementMode: 'managed',
+      managementMode: TIMER_DEVICE_MANAGEMENT_MODE.MANAGED,
       leaseOwnerId: record.leaseOwnerId,
     });
   }

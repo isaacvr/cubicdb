@@ -30,6 +30,7 @@
   import KeyboardInputHandler from "./timer-handlers/KeyboardInputHandler.svelte";
   import StackmatInputHandler from "./timer-handlers/StackmatInputHandler.svelte";
   import VirtualInputHandler from "./timer-handlers/VirtualInputHandler.svelte";
+  import { TIMER_DEVICE_TYPES } from "../devices/TimerDeviceConstants";
 
   interface TimerTabContext {
     inputContext: InputContext;
@@ -355,7 +356,7 @@
     >
       {#if $device.type === "manual_entry"}
         <ManualInputHandler {battle} {context} {inputContext} />
-      {:else if $device.type === "timer_keyboard"}
+      {:else if $device.type === TIMER_DEVICE_TYPES.KEYBOARD}
         <KeyboardInputHandler {device} {context} {inputContext} />
       {:else if $device.type === "gan_icarry"}
         <Simulator

@@ -1,5 +1,16 @@
 import { TIMER_EVENTS } from './TimerEventRegistry';
 import { TimerEventFactory } from './TimerEventFactory';
+import {
+  DEVICE_LEASE_REJECTION_REASONS,
+  TIMER_DEVICE_ACTIVATION_STATUS,
+  TIMER_DEVICE_AVAILABILITY,
+  TIMER_DEVICE_CAPABILITIES,
+  TIMER_DEVICE_CONNECTION_STATUS,
+  TIMER_DEVICE_IDS,
+  TIMER_DEVICE_MANAGEMENT_MODE,
+  TIMER_DEVICE_NAMES,
+  TIMER_DEVICE_TYPES,
+} from '$lib/timer/devices/TimerDeviceConstants';
 
 const factory = new TimerEventFactory(
   { now: () => 1 },
@@ -16,31 +27,31 @@ factory.create(TIMER_EVENTS.DEVICE_RUN_STOPPED, {
 
 factory.create(TIMER_EVENTS.ACTIVE_DEVICE_CHANGE_REQUESTED, {
   ownerId: 'timer:one',
-  deviceId: 'cubicdb:device:timer_keyboard',
+  deviceId: TIMER_DEVICE_IDS.KEYBOARD,
 });
 
 factory.create(TIMER_EVENTS.ACTIVE_DEVICE_CHANGE_REJECTED, {
   ownerId: 'timer:one',
-  deviceId: 'cubicdb:device:timer_keyboard',
-  reason: 'already-in-use',
+  deviceId: TIMER_DEVICE_IDS.KEYBOARD,
+  reason: DEVICE_LEASE_REJECTION_REASONS.ALREADY_IN_USE,
 });
 
 factory.create(TIMER_EVENTS.ACTIVE_DEVICE_RELEASE_REQUESTED, {
   ownerId: 'timer:one',
-  deviceId: 'cubicdb:device:timer_keyboard',
+  deviceId: TIMER_DEVICE_IDS.KEYBOARD,
 });
 
 factory.create(TIMER_EVENTS.DEVICE_CATALOG_UPDATED, {
   devices: [{
-    id: 'cubicdb:device:timer_keyboard',
-    name: 'Keyboard',
-    type: 'timer_keyboard',
-    connectionStatus: 'connected',
-    activationStatus: 'stopped',
-    availability: 'available',
-    managementMode: 'managed',
+    id: TIMER_DEVICE_IDS.KEYBOARD,
+    name: TIMER_DEVICE_NAMES.KEYBOARD,
+    type: TIMER_DEVICE_TYPES.KEYBOARD,
+    connectionStatus: TIMER_DEVICE_CONNECTION_STATUS.CONNECTED,
+    activationStatus: TIMER_DEVICE_ACTIVATION_STATUS.STOPPED,
+    availability: TIMER_DEVICE_AVAILABILITY.AVAILABLE,
+    managementMode: TIMER_DEVICE_MANAGEMENT_MODE.MANAGED,
     leaseOwnerId: null,
-    capabilities: ['keyboard'],
+    capabilities: [TIMER_DEVICE_CAPABILITIES.KEYBOARD],
   }],
 });
 
@@ -56,25 +67,25 @@ factory.create(TIMER_EVENTS.LEGACY_DEVICE_CATALOG_SYNC_REQUESTED, {
 
 // @ts-expect-error ACTIVE_DEVICE_CHANGE_REQUESTED requires ownerId.
 factory.create(TIMER_EVENTS.ACTIVE_DEVICE_CHANGE_REQUESTED, {
-  deviceId: 'cubicdb:device:timer_keyboard',
+  deviceId: TIMER_DEVICE_IDS.KEYBOARD,
 });
 
 factory.create(TIMER_EVENTS.ACTIVE_DEVICE_CHANGE_REJECTED, {
   ownerId: 'timer:one',
-  deviceId: 'cubicdb:device:timer_keyboard',
+  deviceId: TIMER_DEVICE_IDS.KEYBOARD,
   // @ts-expect-error rejection reason is a closed union.
   reason: 'busy',
 });
 
 factory.create(TIMER_EVENTS.DEVICE_CATALOG_UPDATED, {
   devices: [{
-    id: 'cubicdb:device:timer_keyboard',
-    name: 'Keyboard',
-    type: 'timer_keyboard',
-    connectionStatus: 'connected',
-    activationStatus: 'stopped',
-    availability: 'available',
-    managementMode: 'managed',
+    id: TIMER_DEVICE_IDS.KEYBOARD,
+    name: TIMER_DEVICE_NAMES.KEYBOARD,
+    type: TIMER_DEVICE_TYPES.KEYBOARD,
+    connectionStatus: TIMER_DEVICE_CONNECTION_STATUS.CONNECTED,
+    activationStatus: TIMER_DEVICE_ACTIVATION_STATUS.STOPPED,
+    availability: TIMER_DEVICE_AVAILABILITY.AVAILABLE,
+    managementMode: TIMER_DEVICE_MANAGEMENT_MODE.MANAGED,
     leaseOwnerId: null,
     capabilities: [],
     // @ts-expect-error catalog descriptors cannot expose lifecycle methods.

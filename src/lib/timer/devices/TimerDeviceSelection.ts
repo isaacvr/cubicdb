@@ -1,10 +1,12 @@
+import {
+  LEGACY_TIMER_DEVICE_SELECTIONS,
+  TIMER_DEVICE_TYPES,
+} from './TimerDeviceConstants';
+
 export interface TimerDeviceSelectionOption {
   readonly id: string;
   readonly type: string;
 }
-
-const LEGACY_KEYBOARD_SELECTION = 'Keyboard';
-const KEYBOARD_DEVICE_TYPE = 'timer_keyboard';
 
 export function resolveTimerDeviceSelection(
   input: string | undefined,
@@ -13,8 +15,8 @@ export function resolveTimerDeviceSelection(
   const exactMatch = devices.find(device => device.id === input);
   if (exactMatch) return exactMatch.id;
 
-  if (input === LEGACY_KEYBOARD_SELECTION) {
-    const keyboard = devices.find(device => device.type === KEYBOARD_DEVICE_TYPE);
+  if (input === LEGACY_TIMER_DEVICE_SELECTIONS.KEYBOARD) {
+    const keyboard = devices.find(device => device.type === TIMER_DEVICE_TYPES.KEYBOARD);
     if (keyboard) return keyboard.id;
   }
 

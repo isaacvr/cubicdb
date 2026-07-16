@@ -1,7 +1,14 @@
 import { describe, expect, it, vi } from 'vitest';
 import { TIMER_EVENTS } from '$lib/events/timer/TimerEventRegistry';
 import { createTimerApplicationRuntime } from './TimerApplicationRuntime';
-import { TIMER_DEVICE_IDS } from './devices/TimerDeviceDescriptor';
+import {
+  TIMER_DEVICE_AVAILABILITY,
+  TIMER_DEVICE_CAPABILITIES,
+  TIMER_DEVICE_CONNECTION_STATUS,
+  TIMER_DEVICE_IDS,
+  TIMER_DEVICE_MANAGEMENT_MODE,
+  TIMER_DEVICE_TYPES,
+} from './devices/TimerDeviceDescriptor';
 import { TimerDeviceTestHarness } from './devices/TimerDeviceTestHarness';
 import { KeyboardInputBoundary } from './handlers/KeyboardInputBoundary';
 
@@ -9,9 +16,9 @@ function keyboard(): TimerDeviceTestHarness {
   return new TimerDeviceTestHarness({
     id: TIMER_DEVICE_IDS.KEYBOARD,
     name: 'Keyboard',
-    type: 'timer_keyboard',
-    connectionStatus: 'connected',
-    capabilities: ['keyboard'],
+    type: TIMER_DEVICE_TYPES.KEYBOARD,
+    connectionStatus: TIMER_DEVICE_CONNECTION_STATUS.CONNECTED,
+    capabilities: [TIMER_DEVICE_CAPABILITIES.KEYBOARD],
   });
 }
 
@@ -29,7 +36,8 @@ describe('TimerApplicationRuntime', () => {
 
     await runtime.ready;
 
-    expect(runtime.catalog.find(TIMER_DEVICE_IDS.KEYBOARD)?.managementMode).toBe('managed');
+    expect(runtime.catalog.find(TIMER_DEVICE_IDS.KEYBOARD)?.managementMode)
+      .toBe(TIMER_DEVICE_MANAGEMENT_MODE.MANAGED);
     await runtime.bus.publish(runtime.events.create(TIMER_EVENTS.DEVICE_DISCOVERED, {
       deviceId: 'device:other',
       name: 'Other',
@@ -95,8 +103,8 @@ describe('TimerApplicationRuntime', () => {
     expect(runtime.keyboardDevice?.descriptor.id).toBe(TIMER_DEVICE_IDS.KEYBOARD);
     expect(runtime.keyboardBoundary).toBeInstanceOf(KeyboardInputBoundary);
     expect(runtime.catalog.find(TIMER_DEVICE_IDS.KEYBOARD)).toMatchObject({
-      managementMode: 'managed',
-      availability: 'available',
+      managementMode: TIMER_DEVICE_MANAGEMENT_MODE.MANAGED,
+      availability: TIMER_DEVICE_AVAILABILITY.AVAILABLE,
     });
     await runtime.destroy();
   });

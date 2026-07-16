@@ -1,14 +1,14 @@
 import type { TimerReadonlyView } from '../TimerReadonlyView';
 import type { TimerReadingCallback } from './ITimerDevice';
+import type {
+  DeviceLeaseRejectionReason,
+  TimerDeviceActivationStatus,
+  TimerDeviceAvailability,
+  TimerDeviceConnectionStatus,
+  TimerDeviceManagementMode,
+} from './TimerDeviceConstants';
 
-export const TIMER_DEVICE_IDS = {
-  KEYBOARD: 'cubicdb:device:timer_keyboard',
-} as const;
-
-export type TimerDeviceConnectionStatus = 'connected' | 'disconnected' | 'error';
-export type TimerDeviceActivationStatus = 'stopped' | 'starting' | 'active' | 'stopping' | 'error';
-export type TimerDeviceAvailability = 'available' | 'in-use' | 'unavailable';
-export type TimerDeviceManagementMode = 'managed' | 'legacy';
+export * from './TimerDeviceConstants';
 
 export interface TimerDeviceDescriptor {
   readonly id: string;
@@ -36,10 +36,4 @@ export interface TimerDeviceActivationContext extends TimerDeviceOwnerBinding {
   readonly ownerId: string;
 }
 
-export type DeviceLeaseRejectionReason =
-  | 'device-not-found'
-  | 'already-in-use'
-  | 'incompatible-device'
-  | 'start-failed'
-  | 'stop-failed'
-  | 'owner-not-registered';
+export type { DeviceLeaseRejectionReason };

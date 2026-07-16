@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { TIMER_DEVICE_IDS } from './TimerDeviceDescriptor';
+import { TIMER_DEVICE_IDS, TIMER_DEVICE_TYPES } from './TimerDeviceDescriptor';
 import { resolveTimerDeviceSelection } from './TimerDeviceSelection';
 
 const devices = [
-  { id: TIMER_DEVICE_IDS.KEYBOARD, type: 'timer_keyboard' },
+  { id: TIMER_DEVICE_IDS.KEYBOARD, type: TIMER_DEVICE_TYPES.KEYBOARD },
   { id: 'cubicdb:device:manual', type: 'manual_entry' },
 ];
 

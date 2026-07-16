@@ -19,6 +19,7 @@
   import type { Writable } from "svelte/store";
   import { blur, scale } from "svelte/transition";
   import { twMerge } from "tailwind-merge";
+  import { TIMER_DEVICE_TYPES } from "$lib/timer/devices/TimerDeviceConstants";
 
   interface KeyboardInputProps {
     inputContext: InputContext;
@@ -117,14 +118,14 @@
   ]);
 
   function startTimer() {
-    if ($device.type != "timer_keyboard") return;
+    if ($device.type !== TIMER_DEVICE_TYPES.KEYBOARD) return;
 
     $device.keyDownHandler({ type: "keydown", code: "Space" } as KeyboardEvent);
     $device.keyUpHandler({ type: "keyup", code: "Space" } as KeyboardEvent);
   }
 
   function stopTimer() {
-    if ($device.type != "timer_keyboard") return;
+    if ($device.type !== TIMER_DEVICE_TYPES.KEYBOARD) return;
 
     if ($timerState === TimerState.RUNNING) {
       // In RUNNING, any non-escape keydown transitions to STOPPED and saves solve.
@@ -139,7 +140,7 @@
   }
 
   function pauseOrResume() {
-    if ($device.type != "timer_keyboard") return;
+    if ($device.type !== TIMER_DEVICE_TYPES.KEYBOARD) return;
     if ($timerState === TimerState.RUNNING) {
       $device.keyDownHandler({ type: "keydown", code: "KeyP" } as KeyboardEvent);
     } else if ($timerState === TimerState.PAUSE) {
@@ -178,7 +179,7 @@
         ---
       {/if}
     </span>
-  {:else if $device.type === "timer_keyboard"}
+  {:else if $device.type === TIMER_DEVICE_TYPES.KEYBOARD}
     <span
       class="timer flex items-end tx-text max-sm:text-7xl max-sm:leading-32"
       class:prevention={$timerState === TimerState.PREVENTION}

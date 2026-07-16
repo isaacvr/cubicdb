@@ -9,6 +9,11 @@ import {
 } from "@interfaces";
 import { createActor, fromCallback, setup } from "xstate";
 import type { ITimerKeyboardDevice } from "$lib/interfaces/devices.types";
+import {
+  TIMER_DEVICE_IDS,
+  TIMER_DEVICE_NAMES,
+  TIMER_DEVICE_TYPES,
+} from "$lib/timer/devices/TimerDeviceConstants";
 
 type KBActor = (data: Actor<KeyboardContext>) => any;
 
@@ -334,10 +339,10 @@ const KeyboardMachine = setup({
 });
 
 export class KeyboardInput implements ITimerKeyboardDevice {
-  readonly type = "timer_keyboard";
+  readonly type = TIMER_DEVICE_TYPES.KEYBOARD;
   private _enabled = true;
-  id = "cubicdb:device:timer_keyboard";
-  name = "Keyboard";
+  id = TIMER_DEVICE_IDS.KEYBOARD;
+  name = TIMER_DEVICE_NAMES.KEYBOARD;
   interpreter: ReturnType<typeof createActor> | null;
 
   constructor() {

@@ -1,5 +1,6 @@
 import type { CubieCube } from "@cstimer/lib/mathlib";
 import type { InputContext } from "@interfaces";
+import type { TIMER_DEVICE_TYPES } from "$lib/timer/devices/TimerDeviceConstants";
 
 // Base interface for all devices
 interface BaseDevice {
@@ -20,7 +21,7 @@ interface BaseDevice {
 
 // Keyboard for controlling the timer
 export interface ITimerKeyboardDevice extends BaseDevice {
-  type: "timer_keyboard";
+  type: typeof TIMER_DEVICE_TYPES.KEYBOARD;
 }
 
 // Manual time entry

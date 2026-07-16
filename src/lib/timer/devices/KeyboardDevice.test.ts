@@ -6,8 +6,13 @@ import { TIMER_EVENTS } from '$lib/events/timer/TimerEventRegistry';
 import type { TimerEvent } from '$lib/events/timer/TimerEvent';
 import type { TimerReadonlyView } from '../TimerReadonlyView';
 import { KeyboardInputBoundary } from '../handlers/KeyboardInputBoundary';
-import { KeyboardDevice } from './KeyboardDevice';
-import { TIMER_DEVICE_IDS } from './TimerDeviceDescriptor';
+import { KEYBOARD_DEVICE_TIMING, KeyboardDevice } from './KeyboardDevice';
+import {
+  TIMER_DEVICE_CAPABILITIES,
+  TIMER_DEVICE_CONNECTION_STATUS,
+  TIMER_DEVICE_IDS,
+  TIMER_DEVICE_TYPES,
+} from './TimerDeviceDescriptor';
 
 describe('KeyboardDevice', () => {
   let now: number;
@@ -64,6 +69,18 @@ describe('KeyboardDevice', () => {
     await boundary.keyDown({ code: 'Space', repeat: false, timeStamp: 100 });
 
     expect(emitted).toEqual([]);
+  });
+
+  it('uses centralized descriptor and timing constants', () => {
+    expect(device.descriptor).toMatchObject({
+      id: TIMER_DEVICE_IDS.KEYBOARD,
+      type: TIMER_DEVICE_TYPES.KEYBOARD,
+      connectionStatus: TIMER_DEVICE_CONNECTION_STATUS.CONNECTED,
+      capabilities: [TIMER_DEVICE_CAPABILITIES.KEYBOARD],
+    });
+    expect(KEYBOARD_DEVICE_TIMING.DEFAULT_PREVENTION_MS).toBeGreaterThan(0);
+    expect(KEYBOARD_DEVICE_TIMING.DEFAULT_RESTART_GAP_MS).toBeGreaterThan(0);
+    expect(KEYBOARD_DEVICE_TIMING.INSPECTION_PENALTY_GRACE_MS).toBeGreaterThan(0);
   });
 
   it('runs prevention, ready, start, and stop for its owner using exact timestamps', async () => {

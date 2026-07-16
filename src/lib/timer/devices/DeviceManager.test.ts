@@ -7,7 +7,14 @@ import { TIMER_EVENTS } from '$lib/events/timer/TimerEventRegistry';
 import type { TimerReadonlyView } from '../TimerReadonlyView';
 import { DeviceCatalog } from './DeviceCatalog.svelte';
 import { DeviceManager } from './DeviceManager';
-import { TIMER_DEVICE_IDS } from './TimerDeviceDescriptor';
+import {
+  DEVICE_LEASE_REJECTION_REASONS,
+  TIMER_DEVICE_ACTIVATION_STATUS,
+  TIMER_DEVICE_AVAILABILITY,
+  TIMER_DEVICE_CONNECTION_STATUS,
+  TIMER_DEVICE_IDS,
+  TIMER_DEVICE_MANAGEMENT_MODE,
+} from './TimerDeviceDescriptor';
 import { TimerDeviceTestHarness } from './TimerDeviceTestHarness';
 
 const readonlyView: TimerReadonlyView = {
@@ -21,7 +28,7 @@ function fakeDevice(id: string, name: string, timeline?: string[]): TimerDeviceT
     id,
     name,
     type: id,
-    connectionStatus: 'connected',
+    connectionStatus: TIMER_DEVICE_CONNECTION_STATUS.CONNECTED,
     capabilities: [],
   }, timeline);
 }
@@ -56,9 +63,9 @@ describe('DeviceManager leases', () => {
 
     expect(catalog.devices).toEqual([{
       ...keyboard.descriptor,
-      activationStatus: 'stopped',
-      availability: 'available',
-      managementMode: 'managed',
+      activationStatus: TIMER_DEVICE_ACTIVATION_STATUS.STOPPED,
+      availability: TIMER_DEVICE_AVAILABILITY.AVAILABLE,
+      managementMode: TIMER_DEVICE_MANAGEMENT_MODE.MANAGED,
       leaseOwnerId: null,
     }]);
   });
@@ -94,8 +101,8 @@ describe('DeviceManager leases', () => {
 
     expect(keyboard.calls).toEqual(['start:timer:one']);
     expect(catalog.find(keyboard.descriptor.id)).toMatchObject({
-      activationStatus: 'active',
-      availability: 'in-use',
+      activationStatus: TIMER_DEVICE_ACTIVATION_STATUS.ACTIVE,
+      availability: TIMER_DEVICE_AVAILABILITY.IN_USE,
       leaseOwnerId: 'timer:one',
     });
     expect(changed).toHaveBeenCalledOnce();
@@ -141,7 +148,8 @@ describe('DeviceManager leases', () => {
     expect(keyboard.calls).toEqual(['start:timer:one']);
     expect(catalog.find(keyboard.descriptor.id)?.leaseOwnerId).toBe('timer:one');
     expect(rejected).toHaveBeenCalledOnce();
-    expect(rejected.mock.calls[0][0].payload.reason).toBe('already-in-use');
+    expect(rejected.mock.calls[0][0].payload.reason)
+      .toBe(DEVICE_LEASE_REJECTION_REASONS.ALREADY_IN_USE);
   });
 
   it('rejects an unregistered owner without starting the device', async () => {
@@ -156,7 +164,8 @@ describe('DeviceManager leases', () => {
     }));
 
     expect(keyboard.calls).toEqual([]);
-    expect(rejected.mock.calls[0][0].payload.reason).toBe('owner-not-registered');
+    expect(rejected.mock.calls[0][0].payload.reason)
+      .toBe(DEVICE_LEASE_REJECTION_REASONS.OWNER_NOT_REGISTERED);
   });
 
   it('rejects an unknown managed device', async () => {
@@ -169,7 +178,8 @@ describe('DeviceManager leases', () => {
       deviceId: 'device:missing',
     }));
 
-    expect(rejected.mock.calls[0][0].payload.reason).toBe('device-not-found');
+    expect(rejected.mock.calls[0][0].payload.reason)
+      .toBe(DEVICE_LEASE_REJECTION_REASONS.DEVICE_NOT_FOUND);
   });
 
   it('allows different owners to lease different devices', async () => {
@@ -217,8 +227,8 @@ describe('DeviceManager leases', () => {
     ]);
     expect(first.calls).not.toContain('disconnect');
     expect(catalog.find(first.descriptor.id)).toMatchObject({
-      activationStatus: 'stopped',
-      availability: 'available',
+      activationStatus: TIMER_DEVICE_ACTIVATION_STATUS.STOPPED,
+      availability: TIMER_DEVICE_AVAILABILITY.AVAILABLE,
       leaseOwnerId: null,
     });
   });
@@ -243,13 +253,15 @@ describe('DeviceManager leases', () => {
     }));
 
     expect(second.calls).not.toContain('start:timer:one');
-    expect(rejected.mock.calls.at(-1)?.[0].payload.reason).toBe('stop-failed');
+    expect(rejected.mock.calls.at(-1)?.[0].payload.reason)
+      .toBe(DEVICE_LEASE_REJECTION_REASONS.STOP_FAILED);
     expect(catalog.find(first.descriptor.id)).toMatchObject({
       activationStatus: 'error',
-      availability: 'unavailable',
+      availability: TIMER_DEVICE_AVAILABILITY.UNAVAILABLE,
       leaseOwnerId: 'timer:one',
     });
-    expect(catalog.find(second.descriptor.id)?.availability).toBe('available');
+    expect(catalog.find(second.descriptor.id)?.availability)
+      .toBe(TIMER_DEVICE_AVAILABILITY.AVAILABLE);
   });
 
   it('restarts the previous device when the requested device fails to start', async () => {
@@ -272,15 +284,16 @@ describe('DeviceManager leases', () => {
     }));
 
     expect(first.calls).toEqual(['start:timer:one', 'stop', 'start:timer:one']);
-    expect(rejected.mock.calls.at(-1)?.[0].payload.reason).toBe('start-failed');
+    expect(rejected.mock.calls.at(-1)?.[0].payload.reason)
+      .toBe(DEVICE_LEASE_REJECTION_REASONS.START_FAILED);
     expect(catalog.find(first.descriptor.id)).toMatchObject({
-      activationStatus: 'active',
-      availability: 'in-use',
+      activationStatus: TIMER_DEVICE_ACTIVATION_STATUS.ACTIVE,
+      availability: TIMER_DEVICE_AVAILABILITY.IN_USE,
       leaseOwnerId: 'timer:one',
     });
     expect(catalog.find(second.descriptor.id)).toMatchObject({
       activationStatus: 'error',
-      availability: 'unavailable',
+      availability: TIMER_DEVICE_AVAILABILITY.UNAVAILABLE,
       leaseOwnerId: null,
     });
   });
@@ -305,7 +318,7 @@ describe('DeviceManager leases', () => {
 
     expect(catalog.find(first.descriptor.id)).toMatchObject({
       activationStatus: 'error',
-      availability: 'unavailable',
+      availability: TIMER_DEVICE_AVAILABILITY.UNAVAILABLE,
       leaseOwnerId: 'timer:one',
     });
   });
@@ -329,8 +342,8 @@ describe('DeviceManager leases', () => {
     expect(keyboard.calls).toEqual(['start:timer:one', 'stop']);
     expect(released).toHaveBeenCalledOnce();
     expect(catalog.find(keyboard.descriptor.id)).toMatchObject({
-      activationStatus: 'stopped',
-      availability: 'available',
+      activationStatus: TIMER_DEVICE_ACTIVATION_STATUS.STOPPED,
+      availability: TIMER_DEVICE_AVAILABILITY.AVAILABLE,
       leaseOwnerId: null,
     });
   });
@@ -355,7 +368,7 @@ describe('DeviceManager leases', () => {
     expect(rejected).toHaveBeenCalledOnce();
     expect(catalog.find(keyboard.descriptor.id)).toMatchObject({
       activationStatus: 'error',
-      availability: 'unavailable',
+      availability: TIMER_DEVICE_AVAILABILITY.UNAVAILABLE,
       leaseOwnerId: 'timer:one',
     });
   });
@@ -375,9 +388,9 @@ describe('DeviceManager leases', () => {
 
     expect(keyboard.calls).toEqual(['start:timer:one', 'stop', 'disconnect']);
     expect(catalog.find(keyboard.descriptor.id)).toMatchObject({
-      connectionStatus: 'disconnected',
-      activationStatus: 'stopped',
-      availability: 'unavailable',
+      connectionStatus: TIMER_DEVICE_CONNECTION_STATUS.DISCONNECTED,
+      activationStatus: TIMER_DEVICE_ACTIVATION_STATUS.STOPPED,
+      availability: TIMER_DEVICE_AVAILABILITY.UNAVAILABLE,
       leaseOwnerId: null,
     });
   });
@@ -396,7 +409,7 @@ describe('DeviceManager leases', () => {
     expect(failed).toHaveBeenCalledOnce();
     expect(catalog.find(keyboard.descriptor.id)).toMatchObject({
       connectionStatus: 'error',
-      availability: 'unavailable',
+      availability: TIMER_DEVICE_AVAILABILITY.UNAVAILABLE,
     });
   });
 

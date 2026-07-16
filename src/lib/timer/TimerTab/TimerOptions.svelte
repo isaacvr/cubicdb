@@ -45,6 +45,7 @@
   import PuzzleImage from "@components/PuzzleImage.svelte";
   import { devices } from "@stores/devices.store";
   import { resolveTimerDeviceSelection } from "../devices/TimerDeviceSelection";
+  import { TIMER_DEVICE_TYPES } from "../devices/TimerDeviceConstants";
 
   type TModal = "" | "edit-scramble" | "old-scrambles" | "settings";
 
@@ -668,7 +669,7 @@
     </section>
 
     <!-- Inspections, Prevention, Elapsed time -->
-    {#if selectedDevice && selectedDevice.type === "timer_keyboard"}
+    {#if selectedDevice && selectedDevice.type === TIMER_DEVICE_TYPES.KEYBOARD}
       <section>
         <Checkbox
           bind:checked={modalData.settings.withoutPrevention}
