@@ -44,6 +44,7 @@
   import { getModeCases, type Case, type IModeCase } from "./getModeCases";
   import PuzzleImage from "@components/PuzzleImage.svelte";
   import { devices } from "@stores/devices.store";
+  import { resolveTimerDeviceSelection } from "../devices/TimerDeviceSelection";
 
   type TModal = "" | "edit-scramble" | "old-scrambles" | "settings";
 
@@ -187,10 +188,11 @@
 
   async function handleSettingsDialog() {
     let initialCalc = $session?.settings?.calcAoX;
+    const normalizedInput = resolveTimerDeviceSelection($session.settings.input, $devices);
 
-    if (!$session.settings.input) {
+    if (normalizedInput && normalizedInput !== $session.settings.input) {
       const updated = await sessionController
-        .applySettings($session, { input: "Keyboard" } as any)
+        .applySettings($session, { input: normalizedInput } as any)
         .catch(() => null);
       if (updated) $session = updated;
     }

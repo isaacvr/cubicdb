@@ -18,6 +18,9 @@ describe('managed keyboard UI wiring', () => {
     const timer = source('./Timer.svelte');
 
     expect(timer).toContain('getTimerApplicationContext');
+    expect(timer).toContain('const sessionStore = timerController.session');
+    expect(timer).toContain('const currentSession = $sessionStore');
+    expect(timer).not.toContain('const currentSession = get(timerController.session)');
     expect(timer).toContain('requestActiveDevice(TIMER_DEVICE_IDS.KEYBOARD)');
     expect(timer).toContain('managedKeyboardActive');
   });

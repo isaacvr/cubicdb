@@ -67,6 +67,7 @@
 
   // Core initialization
   const timerController = new TimerController();
+  const sessionStore = timerController.session;
   const timerApplication = getTimerApplicationContext();
   const eventTimerRuntime = createTimerRuntime({
     application: timerApplication,
@@ -104,7 +105,7 @@
   });
 
   $effect(() => {
-    const currentSession = get(timerController.session);
+    const currentSession = $sessionStore;
     eventTimerRuntime.state.session = currentSession;
     timerController.timerState.set(eventTimerRuntime.state.timerState);
     timerController.time.set(eventTimerRuntime.state.time);
