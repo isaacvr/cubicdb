@@ -1,4 +1,5 @@
 import type { EventBus, EventSubscription } from '$lib/events/EventBus';
+import type { Penalty } from '@interfaces';
 import type { TimerEvent } from '$lib/events/timer/TimerEvent';
 import { TIMER_EVENTS } from '$lib/events/timer/TimerEventRegistry';
 import type { EventLogSink } from '$lib/logger/EventLogger';
@@ -27,7 +28,7 @@ export interface TimerRuntimeOptions {
   eventLogSink?: EventLogSink | null;
   flags?: Partial<TimerMigrationFlags>;
   onTimerReading?: TimerReadingCallback;
-  onRunStopped?: (elapsedMs: number) => void;
+  onRunStopped?: (elapsedMs: number, penalty: Penalty) => void;
 }
 
 export interface TimerRuntime {
@@ -66,14 +67,14 @@ export function createTimerRuntime(options: TimerRuntimeOptions = {}): TimerRunt
         `${ownerId}:timer-runtime:run-stopped`,
         event => {
           if (event.payload.ownerId !== ownerId) return;
-          options.onRunStopped?.(event.payload.elapsedMs);
+          options.onRunStopped?.(event.payload.elapsedMs, state.penalty);
         },
       )
     : null;
   application.deviceManager.registerOwner(ownerId, {
     readonlyView,
     onReading: options.onTimerReading ?? (reading => {
-      state.time = reading.elapsedMs;
+      state.time = reading.timeMs;
     }),
   });
 

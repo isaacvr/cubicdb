@@ -183,8 +183,14 @@
       class="timer flex items-end tx-text max-sm:text-7xl max-sm:leading-32"
       class:prevention={$timerState === TimerState.PREVENTION}
       class:ready={$ready}
+      class:text-error={$timerState === TimerState.PREVENTION && !$ready}
+      class:text-success={$ready}
     >
-      {@render displayTimer(timer($time, $decimals, false).split("."))}
+      {#if $timerState === TimerState.INSPECTION && $time <= 0 && $time > -2000}
+        <span class="select-none text-warning">+2</span>
+      {:else}
+        {@render displayTimer(timer($time, $decimals, false).split("."))}
+      {/if}
     </span>
 
     {#if !timerOnly && $timerState === TimerState.STOPPED}

@@ -29,6 +29,12 @@ describe('TimerReactor', () => {
     await bus.publish(factory.create(TIMER_EVENTS.DEVICE_PREVENTION_ENTERED, { ownerId: 'timer:one', deviceId: 'keyboard' }));
     expect(state.timerState).toBe(TimerStateValue.PREVENTION);
 
+    await bus.publish(factory.create(TIMER_EVENTS.DEVICE_READY, {
+      ownerId: 'timer:one',
+      deviceId: 'keyboard',
+    }));
+    expect(state.ready).toBe(true);
+
     await bus.publish(factory.create(TIMER_EVENTS.DEVICE_GREEN_LIGHT_CHANGED, {
       ownerId: 'timer:one',
       deviceId: 'keyboard',
@@ -39,6 +45,7 @@ describe('TimerReactor', () => {
     await bus.publish(factory.create(TIMER_EVENTS.DEVICE_INSPECTION_STARTED, { ownerId: 'timer:one', deviceId: 'keyboard' }));
     expect(state.timerState).toBe(TimerStateValue.INSPECTION);
     expect(state.decimals).toBe(false);
+    expect(state.ready).toBe(false);
 
     await bus.publish(factory.create(TIMER_EVENTS.DEVICE_RUN_STARTED, { ownerId: 'timer:one', deviceId: 'keyboard' }));
     expect(state.timerState).toBe(TimerStateValue.RUNNING);

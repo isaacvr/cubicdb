@@ -73,7 +73,7 @@
     application: timerApplication,
     ownerId: `timer:${page.params.sessionId ?? "primary"}`,
     flags: { keyboard: true },
-    onRunStopped: elapsedMs => timerController.addSolve(elapsedMs),
+    onRunStopped: (elapsedMs, penalty) => timerController.addSolve(elapsedMs, penalty),
   });
   let requestedDeviceId: string | null = null;
   let managedKeyboardActive = $derived(

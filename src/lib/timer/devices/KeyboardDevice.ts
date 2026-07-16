@@ -1,4 +1,5 @@
 import { assign, createActor, setup, type ActorRefFrom } from 'xstate';
+import { Penalty } from '@interfaces';
 import type { EventSubscription, IEventBus } from '$lib/events/EventBus';
 import type { TimerEvent } from '$lib/events/timer/TimerEvent';
 import type { TimerEventFactory } from '$lib/events/timer/TimerEventFactory';
@@ -20,7 +21,11 @@ interface KeyboardMachineContext {
   view: TimerReadonlyView;
   ownerId: string;
   preventionMs: number;
+  restartGapMs: number;
   startedAt: number;
+  inspectionStartedAt: number;
+  now(): number;
+  onInspectionStarted(timestamp: number): void;
   onRunStarted(timestamp: number): void;
   onRunEnded(): void;
   publish(event: TimerEvent): void;
@@ -28,12 +33,17 @@ interface KeyboardMachineContext {
 
 export interface KeyboardDeviceOptions {
   preventionMs?: number;
+  restartGapMs?: number;
   readingIntervalMs?: number;
   clock?: IMonotonicClock;
 }
 
 function nativeTimestamp(timestamp: number): { timeStamp: number } {
   return { timeStamp: timestamp };
+}
+
+function inspectionDurationMs(context: KeyboardMachineContext): number {
+  return (context.view.session?.settings.inspection || 15) * 1000;
 }
 
 const keyboardMachine = setup({
@@ -43,10 +53,21 @@ const keyboardMachine = setup({
   },
   delays: {
     prevention: ({ context }) => context.preventionMs,
+    inspectionP2: ({ context }) => Math.max(
+      0,
+      context.inspectionStartedAt + inspectionDurationMs(context) - context.now(),
+    ),
+    inspectionDnf: ({ context }) => Math.max(
+      0,
+      context.inspectionStartedAt + inspectionDurationMs(context) + 2000 - context.now(),
+    ),
+    restartGap: ({ context }) => context.restartGapMs,
   },
   guards: {
     isSpace: ({ event }) => event.code === 'Space',
     isEscape: ({ event }) => event.code === 'Escape',
+    isStopKey: ({ event }) => event.code === 'Space' || /^Key[A-Z]$/.test(event.code),
+    withoutPrevention: ({ context }) => context.view.session?.settings.withoutPrevention ?? false,
     hasInspectionAndSpace: ({ context, event }) =>
       event.code === 'Space' && (context.view.session?.settings.hasInspection ?? false),
   },
@@ -65,10 +86,46 @@ const keyboardMachine = setup({
       ));
     },
     publishInspection: ({ context, event }) => {
+      context.onInspectionStarted(event.timestamp);
       context.publish(context.events.fromNative(
         TIMER_EVENTS.DEVICE_INSPECTION_STARTED,
         { ownerId: context.ownerId, deviceId: TIMER_DEVICE_IDS.KEYBOARD },
         nativeTimestamp(event.timestamp),
+      ));
+    },
+    rememberInspectionStart: assign({
+      inspectionStartedAt: ({ event }) => event.timestamp,
+    }),
+    publishInspectionP2: ({ context }) => {
+      context.publish(context.events.create(
+        TIMER_EVENTS.DEVICE_PENALTY_APPLIED,
+        {
+          ownerId: context.ownerId,
+          deviceId: TIMER_DEVICE_IDS.KEYBOARD,
+          penalty: Penalty.P2,
+          fromInspection: true,
+        },
+      ));
+    },
+    publishInspectionDnf: ({ context }) => {
+      context.onRunEnded();
+      context.publish(context.events.create(
+        TIMER_EVENTS.DEVICE_PENALTY_APPLIED,
+        {
+          ownerId: context.ownerId,
+          deviceId: TIMER_DEVICE_IDS.KEYBOARD,
+          penalty: Penalty.DNF,
+          fromInspection: true,
+        },
+      ));
+      context.publish(context.events.create(
+        TIMER_EVENTS.DEVICE_RUN_STOPPED,
+        {
+          ownerId: context.ownerId,
+          deviceId: TIMER_DEVICE_IDS.KEYBOARD,
+          elapsedMs: Infinity,
+          steps: [],
+        },
       ));
     },
     publishGreenLight: ({ context, event }) => {
@@ -125,6 +182,11 @@ const keyboardMachine = setup({
       },
     },
     prevention: {
+      always: {
+        guard: 'withoutPrevention',
+        target: 'ready',
+        actions: 'publishReady',
+      },
       after: { prevention: { target: 'ready', actions: 'publishReady' } },
       on: {
         KEY_UP: { guard: 'isSpace', target: 'idle', actions: 'publishCancelled' },
@@ -133,12 +195,20 @@ const keyboardMachine = setup({
     ready: {
       on: {
         KEY_UP: [
-          { guard: 'hasInspectionAndSpace', target: 'inspection', actions: 'publishInspection' },
+          {
+            guard: 'hasInspectionAndSpace',
+            target: 'inspection',
+            actions: ['rememberInspectionStart', 'publishInspection'],
+          },
           { guard: 'isSpace', target: 'running', actions: ['rememberStart', 'publishStarted'] },
         ],
       },
     },
     inspection: {
+      after: {
+        inspectionP2: { actions: 'publishInspectionP2' },
+        inspectionDnf: { target: 'cooldown', actions: 'publishInspectionDnf' },
+      },
       on: {
         KEY_DOWN: { guard: 'isSpace', actions: 'publishGreenLight' },
         KEY_UP: { guard: 'isSpace', target: 'running', actions: ['rememberStart', 'publishStarted'] },
@@ -146,13 +216,11 @@ const keyboardMachine = setup({
     },
     running: {
       on: {
-        KEY_DOWN: { guard: 'isSpace', target: 'stopping' },
+        KEY_DOWN: { guard: 'isStopKey', target: 'cooldown', actions: 'publishStopped' },
       },
     },
-    stopping: {
-      on: {
-        KEY_UP: { guard: 'isSpace', target: 'stopped', actions: 'publishStopped' },
-      },
+    cooldown: {
+      after: { restartGap: { target: 'stopped' } },
     },
     stopped: {
       on: {
@@ -193,8 +261,16 @@ export class KeyboardDevice implements ITimerDevice {
         events: this.events,
         view: context.readonlyView,
         ownerId: context.ownerId,
-        preventionMs: this.options.preventionMs ?? 300,
+        preventionMs: this.options.preventionMs ?? 200,
+        restartGapMs: this.options.restartGapMs ?? 1000,
         startedAt: 0,
+        inspectionStartedAt: 0,
+        now: () => this.clock.now(),
+        onInspectionStarted: (timestamp: number) => this.startInspectionReadings(
+          timestamp,
+          context.readonlyView,
+          context.onReading,
+        ),
         onRunStarted: (timestamp: number) => this.startReadings(timestamp, context.onReading),
         onRunEnded: () => this.stopReadings(),
         publish: (event: TimerEvent) => {
@@ -246,9 +322,30 @@ export class KeyboardDevice implements ITimerDevice {
       const currentTimestamp = this.clock.now();
       onReading({
         timestamp: currentTimestamp,
-        elapsedMs: Math.max(0, currentTimestamp - this.readingStartedAt),
+        timeMs: Math.max(0, currentTimestamp - this.readingStartedAt),
+        phase: 'running',
       });
     }, this.readingIntervalMs);
+  }
+
+  private startInspectionReadings(
+    timestamp: number,
+    view: TimerReadonlyView,
+    onReading: TimerReadingCallback,
+  ): void {
+    this.stopReadings();
+    const inspectionMs = (view.session?.settings.inspection ?? 15) * 1000;
+    const inspectionEndsAt = timestamp + inspectionMs;
+    const update = () => {
+      const currentTimestamp = this.clock.now();
+      onReading({
+        timestamp: currentTimestamp,
+        timeMs: Math.round((inspectionEndsAt - currentTimestamp) / 1000) * 1000,
+        phase: 'inspection',
+      });
+    };
+    update();
+    this.readingTimer = setInterval(update, this.readingIntervalMs);
   }
 
   private stopReadings(): void {

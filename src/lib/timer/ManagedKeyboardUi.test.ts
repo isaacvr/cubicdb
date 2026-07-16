@@ -31,4 +31,12 @@ describe('managed keyboard UI wiring', () => {
     expect(timerTab).toContain('managedKeyboardActive');
     expect(timerTab).toContain('if (managedKeyboardActive) return;');
   });
+
+  it('renders semantic prevention and ready feedback', () => {
+    const keyboardDisplay = source('./TimerTab/timer-handlers/KeyboardInputHandler.svelte');
+
+    expect(keyboardDisplay).toContain('class:text-error={$timerState === TimerState.PREVENTION && !$ready}');
+    expect(keyboardDisplay).toContain('class:text-success={$ready}');
+    expect(keyboardDisplay).toContain('<span class="select-none text-warning">+2</span>');
+  });
 });

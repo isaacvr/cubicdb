@@ -7,6 +7,10 @@ export interface NativeKeyDown {
   readonly code: string;
   readonly repeat: boolean;
   readonly timeStamp: number;
+  readonly ctrlKey?: boolean;
+  readonly altKey?: boolean;
+  readonly shiftKey?: boolean;
+  readonly metaKey?: boolean;
 }
 
 export interface NativeKeyUp {
@@ -14,7 +18,12 @@ export interface NativeKeyUp {
   readonly timeStamp: number;
 }
 
-const RELEVANT_KEYS = new Set(['Space', 'Escape']);
+const KEY_UP_KEYS = new Set(['Space']);
+
+function isRelevantKeyDown(event: NativeKeyDown): boolean {
+  if (event.repeat || event.ctrlKey || event.altKey || event.shiftKey || event.metaKey) return false;
+  return event.code === 'Space' || event.code === 'Escape' || /^Key[A-Z]$/.test(event.code);
+}
 
 export class KeyboardInputBoundary {
   constructor(
@@ -23,7 +32,7 @@ export class KeyboardInputBoundary {
   ) {}
 
   keyDown(event: NativeKeyDown): Promise<void> {
-    if (event.repeat || !RELEVANT_KEYS.has(event.code)) return Promise.resolve();
+    if (!isRelevantKeyDown(event)) return Promise.resolve();
     return this.bus.publish(this.events.fromNative(
       TIMER_EVENTS.KEYBOARD_KEY_DOWN,
       { code: event.code, repeat: event.repeat },
@@ -32,7 +41,7 @@ export class KeyboardInputBoundary {
   }
 
   keyUp(event: NativeKeyUp): Promise<void> {
-    if (!RELEVANT_KEYS.has(event.code)) return Promise.resolve();
+    if (!KEY_UP_KEYS.has(event.code)) return Promise.resolve();
     return this.bus.publish(this.events.fromNative(
       TIMER_EVENTS.KEYBOARD_KEY_UP,
       { code: event.code },

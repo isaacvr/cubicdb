@@ -33,6 +33,10 @@ export class TimerReactor {
         this.state.penalty = Penalty.NONE;
         this.state.dnfFromInspection = false;
       }),
+      this.eventBus.subscribe(TIMER_EVENTS.DEVICE_READY, `${this.ownerId}:timer-reactor:ready`, event => {
+        if (event.payload.ownerId !== this.ownerId) return;
+        this.state.ready = true;
+      }),
       this.eventBus.subscribe(TIMER_EVENTS.DEVICE_GREEN_LIGHT_CHANGED, `${this.ownerId}:timer-reactor:green-light`, event => {
         if (event.payload.ownerId !== this.ownerId) return;
         this.state.ready = event.payload.ready;
@@ -42,11 +46,13 @@ export class TimerReactor {
         this.state.timerState = TimerStateValue.INSPECTION;
         this.state.activeDeviceId = event.payload.deviceId;
         this.state.decimals = false;
+        this.state.ready = false;
       }),
       this.eventBus.subscribe(TIMER_EVENTS.DEVICE_RUN_STARTED, `${this.ownerId}:timer-reactor:run-started`, event => {
         if (event.payload.ownerId !== this.ownerId) return;
         this.state.timerState = TimerStateValue.RUNNING;
         this.state.activeDeviceId = event.payload.deviceId;
+        this.state.time = 0;
         this.state.decimals = true;
         this.state.ready = false;
       }),

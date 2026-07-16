@@ -413,7 +413,7 @@ describe('DeviceManager leases', () => {
     await bus.publish(events.create(TIMER_EVENTS.DEVICE_OWNER_DESTROY_REQUESTED, {
       ownerId: 'timer:one',
     }));
-    keyboard.emitReading({ timestamp: 200, elapsedMs: 100 });
+    keyboard.emitReading({ timestamp: 200, timeMs: 100, phase: 'running' });
 
     expect(keyboard.calls).toEqual(['start:timer:one', 'stop']);
     expect(onReading).not.toHaveBeenCalled();

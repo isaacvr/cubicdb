@@ -228,6 +228,10 @@ As of 2026-07-16, the production timer route uses the application-scoped runtime
 - `TimerReactor` filters device facts by owner, including active-device release and run completion.
 - The legacy keyboard listeners are suppressed only while the managed keyboard lease is active, preventing duplicate input processing without removing fallback behavior.
 - A managed `DEVICE_RUN_STOPPED` fact saves the solve through the existing `TimerController` persistence path.
+- Browser input timestamps determine run start and stop. Space or an unmodified letter stops on keydown; Tab and Ctrl/Alt/Shift/Meta shortcuts are ignored.
+- Keyboard prevention follows the session's `withoutPrevention` setting; the enabled hold uses the legacy 200 ms threshold.
+- A one-second device-local cooldown ignores input after stopping so an accidental second press cannot begin another attempt.
+- Inspection display readings use the owner callback, while typed penalty facts apply +2 at the configured limit and DNF two seconds later. Automatic DNF completes and persists the attempt with its penalty.
 - The shared event logger receives the keyboard, ownership, and lifecycle facts, so the existing non-blocking debugger can inspect the live flow.
 - Timer teardown publishes an owner-destroy request, which stops the device and releases the lease rather than disconnecting it.
 

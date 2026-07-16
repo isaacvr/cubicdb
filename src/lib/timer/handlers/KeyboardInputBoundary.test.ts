@@ -26,7 +26,7 @@ describe('KeyboardInputBoundary', () => {
     ]);
   });
 
-  it('ignores repeated and unrelated keydown events', async () => {
+  it('publishes letters but ignores repeated, unrelated, and modified keydown events', async () => {
     const events = new TimerEventFactory(
       { now: () => 1 },
       { next: () => 'event-1' },
@@ -39,8 +39,17 @@ describe('KeyboardInputBoundary', () => {
     const boundary = new KeyboardInputBoundary(bus, events);
 
     await boundary.keyDown({ code: 'Space', repeat: true, timeStamp: 1 });
-    await boundary.keyDown({ code: 'KeyA', repeat: false, timeStamp: 2 });
+    await boundary.keyDown({ code: 'Digit1', repeat: false, timeStamp: 2 });
+    await boundary.keyDown({ code: 'Tab', repeat: false, timeStamp: 3 });
+    await boundary.keyDown({ code: 'KeyT', repeat: false, ctrlKey: true, timeStamp: 4 });
+    await boundary.keyDown({ code: 'KeyA', repeat: false, altKey: true, timeStamp: 5 });
+    await boundary.keyDown({ code: 'KeyB', repeat: false, shiftKey: true, timeStamp: 6 });
+    await boundary.keyDown({ code: 'KeyC', repeat: false, metaKey: true, timeStamp: 7 });
 
     expect(observed).toEqual([]);
+
+    await boundary.keyDown({ code: 'KeyA', repeat: false, timeStamp: 8 });
+
+    expect(observed).toEqual([TIMER_EVENTS.KEYBOARD_KEY_DOWN]);
   });
 });

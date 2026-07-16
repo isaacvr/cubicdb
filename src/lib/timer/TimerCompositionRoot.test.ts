@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { TimerState as TimerStateValue } from '@interfaces';
+import { Penalty, TimerState as TimerStateValue } from '@interfaces';
 import { TIMER_EVENTS } from '$lib/events/timer/TimerEventRegistry';
 import { createTimerRuntime } from './TimerCompositionRoot.svelte';
 import { DEFAULT_TIMER_MIGRATION_FLAGS } from './TimerMigrationFlags';
@@ -110,6 +110,12 @@ describe('TimerCompositionRoot', () => {
       elapsedMs: 500,
       steps: [],
     }));
+    await runtime.bus.publish(runtime.events.create(TIMER_EVENTS.DEVICE_PENALTY_APPLIED, {
+      ownerId: 'timer:one',
+      deviceId: TIMER_DEVICE_IDS.KEYBOARD,
+      penalty: Penalty.P2,
+      fromInspection: true,
+    }));
     await runtime.bus.publish(runtime.events.create(TIMER_EVENTS.DEVICE_RUN_STOPPED, {
       ownerId: 'timer:one',
       deviceId: TIMER_DEVICE_IDS.KEYBOARD,
@@ -118,7 +124,7 @@ describe('TimerCompositionRoot', () => {
     }));
 
     expect(onRunStopped).toHaveBeenCalledOnce();
-    expect(onRunStopped).toHaveBeenCalledWith(1234);
+    expect(onRunStopped).toHaveBeenCalledWith(1234, Penalty.P2);
     await runtime.destroy();
   });
 });

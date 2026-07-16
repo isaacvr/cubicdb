@@ -5,7 +5,8 @@ import type {
 
 export interface TimerReading {
   timestamp: number;
-  elapsedMs: number;
+  timeMs: number;
+  phase: 'inspection' | 'running';
 }
 
 export type TimerReadingCallback = (reading: TimerReading) => void;
