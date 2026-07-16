@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { TimerEventBus } from '$lib/events/timer/TimerEventBus';
-import { TimerEventFactory } from '$lib/events/timer/TimerEventFactory';
+import { createApplicationEventBus, TimerEventFactory } from '$lib/events/timer/TimerEventFactory';
+import type { EventBus } from '$lib/events/EventBus';
+import type { TimerEvent } from '$lib/events/timer/TimerEvent';
 import { TIMER_EVENTS } from '$lib/events/timer/TimerEventRegistry';
 import { DeviceCatalog } from './DeviceCatalog.svelte';
 import {
@@ -26,7 +27,7 @@ function keyboardDescriptor(
 }
 
 describe('DeviceCatalog', () => {
-  let bus: TimerEventBus;
+  let bus: EventBus<TimerEvent>;
   let events: TimerEventFactory;
 
   beforeEach(() => {
@@ -34,7 +35,7 @@ describe('DeviceCatalog', () => {
       { now: () => 10 },
       { next: () => 'event-id' },
     );
-    bus = new TimerEventBus(events);
+    bus = createApplicationEventBus(events);
   });
 
   it('starts with an empty snapshot', () => {

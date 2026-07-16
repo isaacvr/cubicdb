@@ -6,7 +6,7 @@ import { EventBus } from './EventBus';
  * Useful for injecting into use cases
  */
 export class EventDispatcher implements IEventDispatcher {
-  constructor(private eventBus: EventBus) {}
+  constructor(private eventBus: EventBus<DomainEvent>) {}
 
   /**
    * Dispatch a domain event

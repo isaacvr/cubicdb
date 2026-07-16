@@ -1,11 +1,13 @@
-import { TimerEventBus } from '$lib/events/timer/TimerEventBus';
+import { EventBus } from '$lib/events/EventBus';
+import type { TimerEvent } from '$lib/events/timer/TimerEvent';
 import {
   TimerEventFactory,
+  createApplicationEventBus,
   type IEventIdProvider,
   type IMonotonicClock,
 } from '$lib/events/timer/TimerEventFactory';
 import { logger } from '$lib/logger/singleton';
-import { TimerEventLogger, type TimerEventLogSink } from '$lib/logger/TimerEventLogger';
+import { EventLogger, type EventLogSink } from '$lib/logger/EventLogger';
 import { DeviceCatalog } from './devices/DeviceCatalog.svelte';
 import { DeviceManager } from './devices/DeviceManager';
 import type { ITimerDevice } from './devices/ITimerDevice';
@@ -13,13 +15,13 @@ import type { ITimerDevice } from './devices/ITimerDevice';
 export interface TimerApplicationRuntimeOptions {
   clock?: IMonotonicClock;
   idProvider?: IEventIdProvider;
-  eventLogSink?: TimerEventLogSink | null;
+  eventLogSink?: EventLogSink | null;
   devices?: readonly ITimerDevice[];
 }
 
 export interface TimerApplicationRuntime {
   readonly events: TimerEventFactory;
-  readonly bus: TimerEventBus;
+  readonly bus: EventBus<TimerEvent>;
   readonly catalog: DeviceCatalog;
   readonly deviceManager: DeviceManager;
   readonly ready: Promise<void>;
@@ -41,10 +43,10 @@ export function createTimerApplicationRuntime(
     options.clock ?? defaultClock,
     options.idProvider ?? defaultIdProvider,
   );
-  const bus = new TimerEventBus(events);
+  const bus = createApplicationEventBus(events);
   const eventLogger = options.eventLogSink === null
     ? null
-    : new TimerEventLogger(bus, options.eventLogSink ?? logger);
+    : new EventLogger(bus, options.eventLogSink ?? logger);
   const catalog = new DeviceCatalog(bus);
   const deviceManager = new DeviceManager(bus, events);
   const devices = options.devices ?? [];

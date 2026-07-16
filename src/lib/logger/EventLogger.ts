@@ -1,14 +1,14 @@
-import type { ITimerEventBus } from '$lib/events/timer/TimerEventBus';
-import type { TimerEventSubscription } from '$lib/events/timer/TimerEvent';
+import type { EventSubscription, IEventBus } from '$lib/events/EventBus';
+import type { TimerEvent } from '$lib/events/timer/TimerEvent';
 
-export interface TimerEventLogSink {
+export interface EventLogSink {
   info(category: string, message: string, data?: unknown): void;
 }
 
-export class TimerEventLogger {
-  private readonly subscription: TimerEventSubscription;
+export class EventLogger {
+  private readonly subscription: EventSubscription;
 
-  constructor(bus: ITimerEventBus, logger: TimerEventLogSink) {
+  constructor(bus: IEventBus<TimerEvent>, logger: EventLogSink) {
     this.subscription = bus.observe(event => {
       logger.info('event', event.type, {
         id: event.id,

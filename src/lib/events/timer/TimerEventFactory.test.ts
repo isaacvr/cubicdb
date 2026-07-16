@@ -35,7 +35,7 @@ describe('TimerEventFactory', () => {
       { next: () => 'event-2' },
     );
 
-    const event = factory.create(TIMER_EVENTS.DEVICE_READY, { deviceId: 'keyboard' });
+    const event = factory.create(TIMER_EVENTS.DEVICE_READY, { ownerId: 'timer:one', deviceId: 'keyboard' });
 
     expect(event.timestamp).toBe(42.5);
     expect(event.id).toBe('event-2');
@@ -48,8 +48,8 @@ describe('TimerEventFactory', () => {
       { next: () => `event-${++nextId}` },
     );
 
-    const first = factory.create(TIMER_EVENTS.DEVICE_READY, { deviceId: 'keyboard' });
-    const second = factory.create(TIMER_EVENTS.DEVICE_READY, { deviceId: 'keyboard' });
+    const first = factory.create(TIMER_EVENTS.DEVICE_READY, { ownerId: 'timer:one', deviceId: 'keyboard' });
+    const second = factory.create(TIMER_EVENTS.DEVICE_READY, { ownerId: 'timer:one', deviceId: 'keyboard' });
 
     expect(first.id).not.toBe(second.id);
   });

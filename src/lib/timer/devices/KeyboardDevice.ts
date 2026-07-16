@@ -1,5 +1,5 @@
 import { assign, createActor, setup, type ActorRefFrom } from 'xstate';
-import type { ITimerEventBus } from '$lib/events/timer/TimerEventBus';
+import type { EventSubscription, IEventBus } from '$lib/events/EventBus';
 import type { TimerEvent } from '$lib/events/timer/TimerEvent';
 import type { TimerEventFactory } from '$lib/events/timer/TimerEventFactory';
 import type { IMonotonicClock } from '$lib/events/timer/TimerEventFactory';
@@ -16,9 +16,9 @@ type KeyboardMachineEvent =
   | { type: 'KEY_UP'; code: string; timestamp: number };
 
 interface KeyboardMachineContext {
-  bus: ITimerEventBus;
   events: TimerEventFactory;
   view: TimerReadonlyView;
+  ownerId: string;
   preventionMs: number;
   startedAt: number;
   onRunStarted(timestamp: number): void;
@@ -54,27 +54,27 @@ const keyboardMachine = setup({
     publishPrevention: ({ context, event }) => {
       context.publish(context.events.fromNative(
         TIMER_EVENTS.DEVICE_PREVENTION_ENTERED,
-        { deviceId: 'keyboard' },
+        { ownerId: context.ownerId, deviceId: TIMER_DEVICE_IDS.KEYBOARD },
         nativeTimestamp(event.timestamp),
       ));
     },
     publishReady: ({ context }) => {
       context.publish(context.events.create(
         TIMER_EVENTS.DEVICE_READY,
-        { deviceId: 'keyboard' },
+        { ownerId: context.ownerId, deviceId: TIMER_DEVICE_IDS.KEYBOARD },
       ));
     },
     publishInspection: ({ context, event }) => {
       context.publish(context.events.fromNative(
         TIMER_EVENTS.DEVICE_INSPECTION_STARTED,
-        { deviceId: 'keyboard' },
+        { ownerId: context.ownerId, deviceId: TIMER_DEVICE_IDS.KEYBOARD },
         nativeTimestamp(event.timestamp),
       ));
     },
     publishGreenLight: ({ context, event }) => {
       context.publish(context.events.fromNative(
         TIMER_EVENTS.DEVICE_GREEN_LIGHT_CHANGED,
-        { deviceId: 'keyboard', ready: true },
+        { ownerId: context.ownerId, deviceId: TIMER_DEVICE_IDS.KEYBOARD, ready: true },
         nativeTimestamp(event.timestamp),
       ));
     },
@@ -85,7 +85,7 @@ const keyboardMachine = setup({
       context.onRunStarted(event.timestamp);
       context.publish(context.events.fromNative(
         TIMER_EVENTS.DEVICE_RUN_STARTED,
-        { deviceId: 'keyboard' },
+        { ownerId: context.ownerId, deviceId: TIMER_DEVICE_IDS.KEYBOARD },
         nativeTimestamp(event.timestamp),
       ));
     },
@@ -94,7 +94,8 @@ const keyboardMachine = setup({
       context.publish(context.events.fromNative(
         TIMER_EVENTS.DEVICE_RUN_STOPPED,
         {
-          deviceId: 'keyboard',
+          ownerId: context.ownerId,
+          deviceId: TIMER_DEVICE_IDS.KEYBOARD,
           elapsedMs: Math.max(0, event.timestamp - context.startedAt),
           steps: [],
         },
@@ -105,7 +106,7 @@ const keyboardMachine = setup({
       context.onRunEnded();
       context.publish(context.events.fromNative(
         TIMER_EVENTS.DEVICE_RUN_CANCELLED,
-        { deviceId: 'keyboard' },
+        { ownerId: context.ownerId, deviceId: TIMER_DEVICE_IDS.KEYBOARD },
         nativeTimestamp(event.timestamp),
       ));
     },
@@ -169,62 +170,65 @@ export class KeyboardDevice implements ITimerDevice {
     connectionStatus: 'connected',
     capabilities: ['keyboard'],
   } as const;
-  private readonly actor: ActorRefFrom<typeof keyboardMachine>;
-  private readonly subscriptions;
+  private actor: ActorRefFrom<typeof keyboardMachine> | null = null;
+  private subscriptions: EventSubscription[] = [];
   private readingTimer: ReturnType<typeof setInterval> | null = null;
   private readingStartedAt = 0;
   private readonly readingIntervalMs: number;
   private readonly clock: IMonotonicClock;
 
   constructor(
-    bus: ITimerEventBus,
-    events: TimerEventFactory,
-    view: TimerReadonlyView,
-    private readonly onReading: TimerReadingCallback,
-    options: KeyboardDeviceOptions = {},
+    private readonly bus: IEventBus<TimerEvent>,
+    private readonly events: TimerEventFactory,
+    private readonly options: KeyboardDeviceOptions = {},
   ) {
     this.readingIntervalMs = options.readingIntervalMs ?? 10;
     this.clock = options.clock ?? { now: () => performance.now() };
-    this.actor = createActor(keyboardMachine, {
+  }
+
+  start(context: TimerDeviceActivationContext): void {
+    this.stop();
+    const actor = createActor(keyboardMachine, {
       input: {
-        bus,
-        events,
-        view,
-        preventionMs: options.preventionMs ?? 300,
+        events: this.events,
+        view: context.readonlyView,
+        ownerId: context.ownerId,
+        preventionMs: this.options.preventionMs ?? 300,
         startedAt: 0,
-        onRunStarted: (timestamp: number) => this.startReadings(timestamp),
+        onRunStarted: (timestamp: number) => this.startReadings(timestamp, context.onReading),
         onRunEnded: () => this.stopReadings(),
         publish: (event: TimerEvent) => {
           // XState actions are synchronous; EventBus owns the queued async delivery.
-          void bus.publish(event);
+          void this.bus.publish(event);
         },
       },
     });
+    this.actor = actor;
     this.subscriptions = [
-      bus.subscribe(TIMER_EVENTS.KEYBOARD_KEY_DOWN, 'keyboard-device:keydown', event => {
-        this.actor.send({
+      this.bus.subscribe(TIMER_EVENTS.KEYBOARD_KEY_DOWN, 'keyboard-device:keydown', event => {
+        actor.send({
           type: 'KEY_DOWN',
           code: event.payload.code,
           timestamp: event.timestamp,
         });
       }),
-      bus.subscribe(TIMER_EVENTS.KEYBOARD_KEY_UP, 'keyboard-device:keyup', event => {
-        this.actor.send({
+      this.bus.subscribe(TIMER_EVENTS.KEYBOARD_KEY_UP, 'keyboard-device:keyup', event => {
+        actor.send({
           type: 'KEY_UP',
           code: event.payload.code,
           timestamp: event.timestamp,
         });
       }),
     ];
-  }
-
-  start(_context?: TimerDeviceActivationContext): void {
-    this.actor.start();
+    actor.start();
   }
 
   stop(): void {
     this.stopReadings();
-    this.actor.stop();
+    for (const subscription of this.subscriptions) subscription.unsubscribe();
+    this.subscriptions = [];
+    this.actor?.stop();
+    this.actor = null;
   }
 
   disconnect(): void {
@@ -233,15 +237,14 @@ export class KeyboardDevice implements ITimerDevice {
 
   destroy(): void {
     this.stop();
-    for (const subscription of this.subscriptions) subscription.unsubscribe();
   }
 
-  private startReadings(timestamp: number): void {
+  private startReadings(timestamp: number, onReading: TimerReadingCallback): void {
     this.stopReadings();
     this.readingStartedAt = timestamp;
     this.readingTimer = setInterval(() => {
       const currentTimestamp = this.clock.now();
-      this.onReading({
+      onReading({
         timestamp: currentTimestamp,
         elapsedMs: Math.max(0, currentTimestamp - this.readingStartedAt),
       });

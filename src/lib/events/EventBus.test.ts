@@ -1,7 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
-import { TimerEventBus } from './TimerEventBus';
-import { TimerEventFactory } from './TimerEventFactory';
-import { TIMER_EVENTS } from './TimerEventRegistry';
+import { createApplicationEventBus, TimerEventFactory } from './timer/TimerEventFactory';
+import { TIMER_EVENTS } from './timer/TimerEventRegistry';
+import { EventBus } from './EventBus';
+
+type ApplicationTestEvent =
+  | { type: 'application.started'; timestamp: number; payload: { version: string } }
+  | { type: 'application.stopped'; timestamp: number; payload: Record<string, never> };
 
 function createHarness() {
   let id = 0;
@@ -10,10 +14,26 @@ function createHarness() {
     { now: () => now++ },
     { next: () => `event-${++id}` },
   );
-  return { bus: new TimerEventBus(factory), factory };
+  return { bus: createApplicationEventBus(factory), factory };
 }
 
-describe('TimerEventBus', () => {
+describe('EventBus', () => {
+  it('supports typed application events without timer-specific infrastructure', async () => {
+    const bus = new EventBus<ApplicationTestEvent>();
+    const versions: string[] = [];
+    bus.subscribe('application.started', 'test:started', event => {
+      versions.push(event.payload.version);
+    });
+
+    await bus.publish({
+      type: 'application.started',
+      timestamp: 10,
+      payload: { version: '2.1.3' },
+    });
+
+    expect(versions).toEqual(['2.1.3']);
+  });
+
   it('delivers handlers sequentially by priority', async () => {
     const { bus, factory } = createHarness();
     const order: string[] = [];
@@ -25,7 +45,7 @@ describe('TimerEventBus', () => {
       order.push('high');
     }, { priority: 10 });
 
-    await bus.publish(factory.create(TIMER_EVENTS.DEVICE_READY, { deviceId: 'keyboard' }));
+    await bus.publish(factory.create(TIMER_EVENTS.DEVICE_READY, { ownerId: 'timer:one', deviceId: 'keyboard' }));
 
     expect(order).toEqual(['high', 'low']);
   });
@@ -35,7 +55,7 @@ describe('TimerEventBus', () => {
     const order: string[] = [];
     bus.subscribe(TIMER_EVENTS.DEVICE_READY, 'publisher', async () => {
       order.push('ready:first');
-      await bus.publish(factory.create(TIMER_EVENTS.DEVICE_RUN_STARTED, { deviceId: 'keyboard' }));
+      await bus.publish(factory.create(TIMER_EVENTS.DEVICE_RUN_STARTED, { ownerId: 'timer:one', deviceId: 'keyboard' }));
     });
     bus.subscribe(TIMER_EVENTS.DEVICE_READY, 'second', () => {
       order.push('ready:second');
@@ -44,7 +64,7 @@ describe('TimerEventBus', () => {
       order.push('started');
     });
 
-    await bus.publish(factory.create(TIMER_EVENTS.DEVICE_READY, { deviceId: 'keyboard' }));
+    await bus.publish(factory.create(TIMER_EVENTS.DEVICE_READY, { ownerId: 'timer:one', deviceId: 'keyboard' }));
 
     expect(order).toEqual(['ready:first', 'ready:second', 'started']);
   });
@@ -57,8 +77,8 @@ describe('TimerEventBus', () => {
     const subscription = bus.subscribe(TIMER_EVENTS.DEVICE_READY, 'removed', removed);
     subscription.unsubscribe();
 
-    await bus.publish(factory.create(TIMER_EVENTS.DEVICE_READY, { deviceId: 'keyboard' }));
-    await bus.publish(factory.create(TIMER_EVENTS.DEVICE_READY, { deviceId: 'keyboard' }));
+    await bus.publish(factory.create(TIMER_EVENTS.DEVICE_READY, { ownerId: 'timer:one', deviceId: 'keyboard' }));
+    await bus.publish(factory.create(TIMER_EVENTS.DEVICE_READY, { ownerId: 'timer:one', deviceId: 'keyboard' }));
 
     expect(once).toHaveBeenCalledOnce();
     expect(removed).not.toHaveBeenCalled();
@@ -79,7 +99,7 @@ describe('TimerEventBus', () => {
         message: event.payload.error.message,
       });
     });
-    const source = factory.create(TIMER_EVENTS.DEVICE_READY, { deviceId: 'keyboard' });
+    const source = factory.create(TIMER_EVENTS.DEVICE_READY, { ownerId: 'timer:one', deviceId: 'keyboard' });
 
     await bus.publish(source);
 
@@ -97,7 +117,7 @@ describe('TimerEventBus', () => {
     });
     bus.subscribe(TIMER_EVENTS.HANDLER_FAILED, 'broken-failure-handler', failureHandler);
 
-    await bus.publish(factory.create(TIMER_EVENTS.DEVICE_READY, { deviceId: 'keyboard' }));
+    await bus.publish(factory.create(TIMER_EVENTS.DEVICE_READY, { ownerId: 'timer:one', deviceId: 'keyboard' }));
 
     expect(failureHandler).toHaveBeenCalledOnce();
   });
@@ -109,11 +129,11 @@ describe('TimerEventBus', () => {
     bus.subscribe(TIMER_EVENTS.DEVICE_READY, 'handler', event => {
       order.push(`handled:${event.id}`);
     });
-    const first = factory.create(TIMER_EVENTS.DEVICE_READY, { deviceId: 'keyboard' });
+    const first = factory.create(TIMER_EVENTS.DEVICE_READY, { ownerId: 'timer:one', deviceId: 'keyboard' });
 
     await bus.publish(first);
     observer.unsubscribe();
-    await bus.publish(factory.create(TIMER_EVENTS.DEVICE_READY, { deviceId: 'keyboard' }));
+    await bus.publish(factory.create(TIMER_EVENTS.DEVICE_READY, { ownerId: 'timer:one', deviceId: 'keyboard' }));
 
     expect(order).toEqual([`observed:${first.id}`, `handled:${first.id}`, 'handled:event-2']);
   });
@@ -126,7 +146,7 @@ describe('TimerEventBus', () => {
     });
     bus.subscribe(TIMER_EVENTS.DEVICE_READY, 'handler', handler);
 
-    await bus.publish(factory.create(TIMER_EVENTS.DEVICE_READY, { deviceId: 'keyboard' }));
+    await bus.publish(factory.create(TIMER_EVENTS.DEVICE_READY, { ownerId: 'timer:one', deviceId: 'keyboard' }));
 
     expect(handler).toHaveBeenCalledOnce();
   });

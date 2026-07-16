@@ -1,115 +1,183 @@
-import type { DomainEvent, EventHandler, EventSubscription, IEventBus } from './types';
+export interface EventEnvelope {
+  readonly type: string;
+  readonly timestamp: number;
+}
 
-interface Subscription<T extends DomainEvent> {
-  handler: EventHandler<T>;
+export interface EventSubscription {
+  unsubscribe(): void;
+}
+
+type EventType<TEvent extends EventEnvelope> = TEvent['type'];
+type EventForType<TEvent extends EventEnvelope, K extends EventType<TEvent>> =
+  TEvent extends { type: K } ? TEvent : never;
+type EventHandler<TEvent extends EventEnvelope> = (event: TEvent) => void | Promise<void>;
+type EventObserver<TEvent extends EventEnvelope> = (event: TEvent) => void;
+
+interface HandlerRegistration<TEvent extends EventEnvelope> {
+  id: string;
+  handler: EventHandler<TEvent>;
   priority: number;
   once: boolean;
 }
 
+export type HandlerFailureFactory<TEvent extends EventEnvelope> = (
+  event: TEvent,
+  handlerId: string,
+  error: unknown,
+) => TEvent | null;
+
+export interface IEventBus<TEvent extends EventEnvelope> {
+  publish(event: TEvent): Promise<void>;
+  subscribe<K extends EventType<TEvent>>(
+    type: K,
+    handlerId: string,
+    handler: EventHandler<EventForType<TEvent, K>>,
+    options?: { priority?: number; once?: boolean },
+  ): EventSubscription;
+  observe(observer: EventObserver<TEvent>): EventSubscription;
+}
+
 /**
- * Centralized event bus for domain events
- * Provides type-safe pub/sub with priority handling
+ * Application event bus with deterministic queued delivery.
+ *
+ * The constructor-based subscribe/emit overloads are a temporary compatibility
+ * boundary for the previous, unused domain-event API. New code must publish
+ * typed event envelopes and subscribe by event type.
  */
-export class EventBus implements IEventBus {
-  private subscriptions: Map<string, Subscription<any>[]> = new Map();
-  private inProgress: Map<string, boolean> = new Map();
+export class EventBus<TEvent extends EventEnvelope> implements IEventBus<TEvent> {
+  private readonly handlers = new Map<string, HandlerRegistration<TEvent>[]>();
+  private readonly queue: TEvent[] = [];
+  private readonly observers = new Set<EventObserver<TEvent>>();
+  private processing = false;
+  private insideHandler = false;
+  private drainPromise: Promise<void> = Promise.resolve();
+  private legacyHandlerSequence = 0;
 
-  /**
-   * Subscribe to a domain event
-   * @param eventType Constructor of the event type
-   * @param handler Function to call when event is emitted
-   * @param options Priority (higher = executed first) and once flag
-   * @returns Subscription handle to unsubscribe
-   */
-  subscribe<T extends DomainEvent>(
-    eventType: new (...args: any[]) => T,
-    handler: EventHandler<T>,
-    options: { priority?: number; once?: boolean } = {}
+  constructor(private readonly createHandlerFailure?: HandlerFailureFactory<TEvent>) {}
+
+  publish(event: TEvent): Promise<void> {
+    this.queue.push(event);
+
+    if (this.processing) {
+      return this.insideHandler ? Promise.resolve() : this.drainPromise;
+    }
+
+    this.processing = true;
+    this.drainPromise = this.drain();
+    return this.drainPromise;
+  }
+
+  /** @deprecated Publish typed event envelopes with publish(). */
+  emit(event: TEvent): Promise<void> {
+    return this.publish(event);
+  }
+
+  subscribe<K extends EventType<TEvent>>(
+    type: K,
+    handlerId: string,
+    handler: EventHandler<EventForType<TEvent, K>>,
+    options?: { priority?: number; once?: boolean },
+  ): EventSubscription;
+  /** @deprecated Subscribe by the event type string. */
+  subscribe<TLegacyEvent extends TEvent>(
+    eventType: new (...args: any[]) => TLegacyEvent,
+    handler: EventHandler<TLegacyEvent>,
+    options?: { priority?: number; once?: boolean },
+  ): EventSubscription;
+  subscribe(
+    typeOrConstructor: string | (new (...args: any[]) => any),
+    handlerIdOrHandler: string | EventHandler<any>,
+    handlerOrOptions?: EventHandler<any> | { priority?: number; once?: boolean },
+    explicitOptions: { priority?: number; once?: boolean } = {},
   ): EventSubscription {
-    const eventName = eventType.name;
-    const priority = options.priority ?? 0;
-    const once = options.once ?? false;
+    const legacy = typeof typeOrConstructor !== 'string';
+    const type = legacy ? typeOrConstructor.name : typeOrConstructor;
+    const handlerId = legacy
+      ? `${type}:legacy:${++this.legacyHandlerSequence}`
+      : handlerIdOrHandler as string;
+    const handler = (legacy ? handlerIdOrHandler : handlerOrOptions) as EventHandler<TEvent>;
+    const options = (legacy ? handlerOrOptions : explicitOptions) as {
+      priority?: number;
+      once?: boolean;
+    } | undefined;
+    const registration: HandlerRegistration<TEvent> = {
+      id: handlerId,
+      handler,
+      priority: options?.priority ?? 0,
+      once: options?.once ?? false,
+    };
+    const registrations = this.handlers.get(type) ?? [];
+    registrations.push(registration);
+    registrations.sort((left, right) => right.priority - left.priority);
+    this.handlers.set(type, registrations);
 
-    if (!this.subscriptions.has(eventName)) {
-      this.subscriptions.set(eventName, []);
-    }
-
-    const subscription: Subscription<T> = { handler, priority, once };
-    const handlers = this.subscriptions.get(eventName)!;
-    
-    // Insert in priority order (higher priority first)
-    const insertIndex = handlers.findIndex(h => h.priority < priority);
-    if (insertIndex === -1) {
-      handlers.push(subscription);
-    } else {
-      handlers.splice(insertIndex, 0, subscription);
-    }
-
-    // Return unsubscribe function
     return {
       unsubscribe: () => {
-        const idx = handlers.indexOf(subscription);
-        if (idx > -1) {
-          handlers.splice(idx, 1);
-        }
-      }
+        const index = registrations.indexOf(registration);
+        if (index >= 0) registrations.splice(index, 1);
+      },
     };
   }
 
-  /**
-   * Emit a domain event to all subscribers
-   * @param event The event to emit
-   */
-  async emit<T extends DomainEvent>(event: T): Promise<void> {
-    const eventName = event.constructor.name;
-    const handlers = this.subscriptions.get(eventName);
+  observe(observer: EventObserver<TEvent>): EventSubscription {
+    this.observers.add(observer);
+    return { unsubscribe: () => this.observers.delete(observer) };
+  }
 
-    if (!handlers || handlers.length === 0) {
-      return;
-    }
+  getSubscriberCount(typeOrConstructor: string | (new (...args: any[]) => TEvent)): number {
+    const type = typeof typeOrConstructor === 'string'
+      ? typeOrConstructor
+      : typeOrConstructor.name;
+    return this.handlers.get(type)?.length ?? 0;
+  }
 
-    // Prevent infinite loops
-    if (this.inProgress.get(eventName)) {
-      console.warn(`Event "${eventName}" is already being processed`);
-      return;
-    }
+  clear(): void {
+    this.handlers.clear();
+    this.observers.clear();
+    this.queue.length = 0;
+  }
 
-    this.inProgress.set(eventName, true);
-
+  private async drain(): Promise<void> {
     try {
-      // Process handlers in order, awaiting each one
-      for (const subscription of handlers) {
-        try {
-          await subscription.handler(event);
-          
-          if (subscription.once) {
-            const idx = handlers.indexOf(subscription);
-            if (idx > -1) {
-              handlers.splice(idx, 1);
-            }
-          }
-        } catch (error) {
-          console.error(`Error in event handler for ${eventName}:`, error);
-        }
+      while (this.queue.length > 0) {
+        const event = this.queue.shift();
+        if (event) await this.deliver(event);
       }
     } finally {
-      this.inProgress.delete(eventName);
+      this.processing = false;
+      this.insideHandler = false;
     }
   }
 
-  /**
-   * Get number of subscribers for an event type (useful for debugging)
-   */
-  getSubscriberCount(eventType: new (...args: any[]) => DomainEvent): number {
-    const eventName = eventType.name;
-    return this.subscriptions.get(eventName)?.length ?? 0;
-  }
+  private async deliver(event: TEvent): Promise<void> {
+    for (const observer of this.observers) {
+      try {
+        observer(event);
+      } catch {
+        // Diagnostics must never affect domain-event delivery.
+      }
+    }
 
-  /**
-   * Clear all subscriptions (useful for testing)
-   */
-  clear(): void {
-    this.subscriptions.clear();
-    this.inProgress.clear();
+    const registrations = [...(this.handlers.get(event.type) ?? [])];
+
+    for (const registration of registrations) {
+      if (!(this.handlers.get(event.type) ?? []).includes(registration)) continue;
+
+      try {
+        this.insideHandler = true;
+        await registration.handler(event);
+      } catch (error) {
+        const failure = this.createHandlerFailure?.(event, registration.id, error);
+        if (failure) this.queue.push(failure);
+      } finally {
+        this.insideHandler = false;
+      }
+
+      if (registration.once) {
+        const active = this.handlers.get(event.type) ?? [];
+        const index = active.indexOf(registration);
+        if (index >= 0) active.splice(index, 1);
+      }
+    }
   }
 }

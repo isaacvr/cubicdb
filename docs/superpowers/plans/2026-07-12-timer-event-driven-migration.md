@@ -6,6 +6,8 @@
 
 **Architecture:** Migrate complete vertical slices behind temporary per-slice flags. A canonical `TIMER_EVENTS` object and `TimerEventPayloadMap` define the contract; a queued EventBus delivers typed envelopes; TimerState is the UI read model; devices own lifecycle state; handlers invoke use cases and services. Each PR keeps legacy fallback paths until the final cleanup PR.
 
+> **Architecture amendment (2026-07-16):** `TimerEventBus` was an interim vertical-slice implementation. Its behavior now lives in the generic application-wide `src/lib/events/EventBus.ts`; `src/lib/events/timer/TimerEventBus.ts` and its timer-specific test were removed. Timer registries and payload maps specialize the shared bus. Historical task paths below document the original sequence and are superseded by this amendment where they name `TimerEventBus`.
+
 **Tech Stack:** TypeScript 5.9, Svelte 5 runes, SvelteKit 2, XState 5, Vitest 4, Playwright, ESLint 9.
 
 ## Global Constraints

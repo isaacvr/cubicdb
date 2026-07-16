@@ -6,8 +6,9 @@ const factory = new TimerEventFactory(
   { next: () => 'event-id' },
 );
 
-factory.create(TIMER_EVENTS.DEVICE_READY, { deviceId: 'keyboard' });
+factory.create(TIMER_EVENTS.DEVICE_READY, { ownerId: 'timer:one', deviceId: 'keyboard' });
 factory.create(TIMER_EVENTS.DEVICE_RUN_STOPPED, {
+  ownerId: 'timer:one',
   deviceId: 'keyboard',
   elapsedMs: 1234,
   steps: [500, 734],
@@ -81,10 +82,11 @@ factory.create(TIMER_EVENTS.DEVICE_CATALOG_UPDATED, {
   }],
 });
 
-// @ts-expect-error DEVICE_READY requires deviceId.
-factory.create(TIMER_EVENTS.DEVICE_READY, {});
+// @ts-expect-error DEVICE_READY requires ownerId and deviceId.
+factory.create(TIMER_EVENTS.DEVICE_READY, { deviceId: 'keyboard' });
 
 factory.create(TIMER_EVENTS.DEVICE_RUN_STOPPED, {
+  ownerId: 'timer:one',
   deviceId: 'keyboard',
   // @ts-expect-error elapsedMs must be a number.
   elapsedMs: '1234',

@@ -1,19 +1,18 @@
 import { describe, expect, it, vi } from 'vitest';
-import { TimerEventBus } from '$lib/events/timer/TimerEventBus';
-import { TimerEventFactory } from '$lib/events/timer/TimerEventFactory';
+import { createApplicationEventBus, TimerEventFactory } from '$lib/events/timer/TimerEventFactory';
 import { TIMER_EVENTS } from '$lib/events/timer/TimerEventRegistry';
-import { TimerEventLogger } from './TimerEventLogger';
+import { EventLogger } from './EventLogger';
 
-describe('TimerEventLogger', () => {
+describe('EventLogger', () => {
   it('logs the complete typed event envelope to the visual event category', async () => {
     const factory = new TimerEventFactory(
       { now: () => 42.5 },
       { next: () => 'event-1' },
     );
-    const bus = new TimerEventBus(factory);
+    const bus = createApplicationEventBus(factory);
     const info = vi.fn();
-    const eventLogger = new TimerEventLogger(bus, { info });
-    const event = factory.create(TIMER_EVENTS.DEVICE_READY, { deviceId: 'keyboard' });
+    const eventLogger = new EventLogger(bus, { info });
+    const event = factory.create(TIMER_EVENTS.DEVICE_READY, { ownerId: 'timer:one', deviceId: 'keyboard' });
 
     await bus.publish(event);
 
@@ -31,12 +30,12 @@ describe('TimerEventLogger', () => {
       { now: () => 1 },
       { next: () => 'event-1' },
     );
-    const bus = new TimerEventBus(factory);
+    const bus = createApplicationEventBus(factory);
     const info = vi.fn();
-    const eventLogger = new TimerEventLogger(bus, { info });
+    const eventLogger = new EventLogger(bus, { info });
     eventLogger.destroy();
 
-    await bus.publish(factory.create(TIMER_EVENTS.DEVICE_READY, { deviceId: 'keyboard' }));
+    await bus.publish(factory.create(TIMER_EVENTS.DEVICE_READY, { ownerId: 'timer:one', deviceId: 'keyboard' }));
 
     expect(info).not.toHaveBeenCalled();
   });

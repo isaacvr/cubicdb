@@ -1,15 +1,15 @@
 // Event system entry point - centralized event bus
-export { EventBus } from './EventBus';
 export { TIMER_EVENTS, type TimerEventType } from './timer/TimerEventRegistry';
 export type { TimerEventPayloadMap } from './timer/TimerEventPayloadMap';
-export type { TimerEvent, TimerEventSubscription } from './timer/TimerEvent';
+export type { TimerEvent } from './timer/TimerEvent';
 export {
   TimerEventFactory,
+  createApplicationEventBus,
   type IEventIdProvider,
   type IMonotonicClock,
   type NativeTimestampSource,
 } from './timer/TimerEventFactory';
-export { TimerEventBus, type ITimerEventBus } from './timer/TimerEventBus';
+export { EventBus, type IEventBus } from './EventBus';
 export type {
   DeviceLeaseRejectionReason,
   LegacyTimerDeviceDescriptor,

@@ -17,6 +17,7 @@ describe('TimerCompositionRoot', () => {
     expect(runtime.readonlyView.state).toBe(TimerStateValue.CLEAN);
 
     await runtime.bus.publish(runtime.events.create(TIMER_EVENTS.DEVICE_RUN_STARTED, {
+      ownerId: 'timer:local-runtime',
       deviceId: 'keyboard',
     }));
 
@@ -46,6 +47,7 @@ describe('TimerCompositionRoot', () => {
     });
 
     await runtime.bus.publish(runtime.events.create(TIMER_EVENTS.DEVICE_READY, {
+      ownerId: 'timer:local-runtime',
       deviceId: 'keyboard',
     }));
     expect(info).toHaveBeenCalledOnce();
@@ -54,6 +56,7 @@ describe('TimerCompositionRoot', () => {
     runtime.destroy();
 
     await runtime.bus.publish(runtime.events.create(TIMER_EVENTS.DEVICE_RUN_STARTED, {
+      ownerId: 'timer:local-runtime',
       deviceId: 'keyboard',
     }));
 

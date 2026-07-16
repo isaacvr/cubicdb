@@ -1,14 +1,14 @@
 import { Penalty, TimerState as TimerStateValue } from '@interfaces';
-import type { ITimerEventBus } from '$lib/events/timer/TimerEventBus';
-import type { TimerEventSubscription } from '$lib/events/timer/TimerEvent';
+import type { EventSubscription, IEventBus } from '$lib/events/EventBus';
+import type { TimerEvent } from '$lib/events/timer/TimerEvent';
 import { TIMER_EVENTS } from '$lib/events/timer/TimerEventRegistry';
 import type { TimerState } from './TimerState.svelte';
 
 export class TimerReactor {
-  private subscriptions: TimerEventSubscription[] = [];
+  private subscriptions: EventSubscription[] = [];
 
   constructor(
-    private readonly eventBus: ITimerEventBus,
+    private readonly eventBus: IEventBus<TimerEvent>,
     private readonly state: TimerState,
   ) {
     this.registerLifecycleProjections();

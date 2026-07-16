@@ -1,4 +1,5 @@
-import type { ITimerEventBus } from '$lib/events/timer/TimerEventBus';
+import type { IEventBus } from '$lib/events/EventBus';
+import type { TimerEvent } from '$lib/events/timer/TimerEvent';
 import type { TimerEventFactory } from '$lib/events/timer/TimerEventFactory';
 import { TIMER_EVENTS } from '$lib/events/timer/TimerEventRegistry';
 
@@ -17,7 +18,7 @@ const RELEVANT_KEYS = new Set(['Space', 'Escape']);
 
 export class KeyboardInputBoundary {
   constructor(
-    private readonly bus: ITimerEventBus,
+    private readonly bus: IEventBus<TimerEvent>,
     private readonly events: TimerEventFactory,
   ) {}
 

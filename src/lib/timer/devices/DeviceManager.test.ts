@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TimerState as TimerStateValue } from '@interfaces';
-import { TimerEventBus } from '$lib/events/timer/TimerEventBus';
-import { TimerEventFactory } from '$lib/events/timer/TimerEventFactory';
+import { createApplicationEventBus, TimerEventFactory } from '$lib/events/timer/TimerEventFactory';
+import type { EventBus } from '$lib/events/EventBus';
+import type { TimerEvent } from '$lib/events/timer/TimerEvent';
 import { TIMER_EVENTS } from '$lib/events/timer/TimerEventRegistry';
 import type { TimerReadonlyView } from '../TimerReadonlyView';
 import { DeviceCatalog } from './DeviceCatalog.svelte';
@@ -26,7 +27,7 @@ function fakeDevice(id: string, name: string, timeline?: string[]): TimerDeviceT
 }
 
 describe('DeviceManager leases', () => {
-  let bus: TimerEventBus;
+  let bus: EventBus<TimerEvent>;
   let events: TimerEventFactory;
   let catalog: DeviceCatalog;
   let manager: DeviceManager;
@@ -38,7 +39,7 @@ describe('DeviceManager leases', () => {
       { now: () => 100 },
       { next: () => `event-${++nextId}` },
     );
-    bus = new TimerEventBus(events);
+    bus = createApplicationEventBus(events);
     catalog = new DeviceCatalog(bus);
     manager = new DeviceManager(bus, events);
   });

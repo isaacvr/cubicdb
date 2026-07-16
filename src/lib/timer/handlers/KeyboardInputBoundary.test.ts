@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { TimerEventBus } from '$lib/events/timer/TimerEventBus';
-import { TimerEventFactory } from '$lib/events/timer/TimerEventFactory';
+import { createApplicationEventBus, TimerEventFactory } from '$lib/events/timer/TimerEventFactory';
 import { TIMER_EVENTS } from '$lib/events/timer/TimerEventRegistry';
 import { KeyboardInputBoundary } from './KeyboardInputBoundary';
 
@@ -11,7 +10,7 @@ describe('KeyboardInputBoundary', () => {
       { now: () => 999 },
       { next: () => `event-${++id}` },
     );
-    const bus = new TimerEventBus(events);
+    const bus = createApplicationEventBus(events);
     const observed: Array<{ type: string; timestamp: number }> = [];
     bus.observe(event => {
       observed.push({ type: event.type, timestamp: event.timestamp });
@@ -32,7 +31,7 @@ describe('KeyboardInputBoundary', () => {
       { now: () => 1 },
       { next: () => 'event-1' },
     );
-    const bus = new TimerEventBus(events);
+    const bus = createApplicationEventBus(events);
     const observed: string[] = [];
     bus.observe(event => {
       observed.push(event.type);

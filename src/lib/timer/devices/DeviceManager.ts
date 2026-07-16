@@ -1,5 +1,5 @@
-import type { ITimerEventBus } from '$lib/events/timer/TimerEventBus';
-import type { TimerEventSubscription } from '$lib/events/timer/TimerEvent';
+import type { EventSubscription, IEventBus } from '$lib/events/EventBus';
+import type { TimerEvent } from '$lib/events/timer/TimerEvent';
 import type { TimerEventFactory } from '$lib/events/timer/TimerEventFactory';
 import { TIMER_EVENTS } from '$lib/events/timer/TimerEventRegistry';
 import type { ITimerDevice } from './ITimerDevice';
@@ -27,11 +27,11 @@ export class DeviceManager {
   private readonly leasesByOwner = new Map<string, string>();
   private readonly ownersByDevice = new Map<string, string>();
   private readonly reservations = new Map<string, string>();
-  private readonly subscriptions: TimerEventSubscription[];
+  private readonly subscriptions: EventSubscription[];
   private destroyed = false;
 
   constructor(
-    private readonly bus: ITimerEventBus,
+    private readonly bus: IEventBus<TimerEvent>,
     private readonly events: TimerEventFactory,
   ) {
     this.subscriptions = [

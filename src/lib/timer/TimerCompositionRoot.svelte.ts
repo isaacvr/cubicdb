@@ -1,8 +1,10 @@
-import { TimerEventBus } from '$lib/events/timer/TimerEventBus';
+import { EventBus } from '$lib/events/EventBus';
+import type { TimerEvent } from '$lib/events/timer/TimerEvent';
 import { logger } from '$lib/logger/singleton';
-import { TimerEventLogger, type TimerEventLogSink } from '$lib/logger/TimerEventLogger';
+import { EventLogger, type EventLogSink } from '$lib/logger/EventLogger';
 import {
   TimerEventFactory,
+  createApplicationEventBus,
   type IEventIdProvider,
   type IMonotonicClock,
 } from '$lib/events/timer/TimerEventFactory';
@@ -18,14 +20,14 @@ export interface TimerRuntimeOptions {
   clock?: IMonotonicClock;
   idProvider?: IEventIdProvider;
   flags?: Partial<TimerMigrationFlags>;
-  eventLogSink?: TimerEventLogSink | null;
+  eventLogSink?: EventLogSink | null;
   onTimerReading?: TimerReadingCallback;
 }
 
 export interface TimerRuntime {
   state: TimerState;
   readonlyView: TimerReadonlyView;
-  bus: TimerEventBus;
+  bus: EventBus<TimerEvent>;
   events: TimerEventFactory;
   flags: TimerMigrationFlags;
   keyboard: {
@@ -49,11 +51,11 @@ export function createTimerRuntime(options: TimerRuntimeOptions = {}): TimerRunt
     options.clock ?? defaultClock,
     options.idProvider ?? defaultIdProvider,
   );
-  const bus = new TimerEventBus(events);
+  const bus = createApplicationEventBus(events);
   const reactor = new TimerReactor(bus, state);
   const eventLogger = options.eventLogSink === null
     ? null
-    : new TimerEventLogger(bus, options.eventLogSink ?? logger);
+    : new EventLogger(bus, options.eventLogSink ?? logger);
   const readonlyView = createTimerReadonlyView(state);
   const flags = createTimerMigrationFlags(options.flags);
   const keyboard = flags.keyboard
@@ -61,16 +63,18 @@ export function createTimerRuntime(options: TimerRuntimeOptions = {}): TimerRunt
         device: new KeyboardDevice(
           bus,
           events,
-          readonlyView,
-          options.onTimerReading ?? (reading => {
-            state.time = reading.elapsedMs;
-          }),
           { clock: options.clock },
         ),
         boundary: new KeyboardInputBoundary(bus, events),
       }
     : null;
-  keyboard?.device.start();
+  keyboard?.device.start({
+    ownerId: 'timer:local-runtime',
+    readonlyView,
+    onReading: options.onTimerReading ?? (reading => {
+      state.time = reading.elapsedMs;
+    }),
+  });
   let destroyed = false;
 
   return {

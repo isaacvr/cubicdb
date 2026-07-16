@@ -6,7 +6,9 @@
 
 **Architecture:** The root layout owns one `TimerApplicationRuntime` containing the bus, factory, event logger, `DeviceManager`, `DeviceCatalog`, keyboard device, and native keyboard boundary. Each timer runtime registers an owner-scoped read-only view and high-frequency callback, while its reactor ignores events for other owners. A temporary metadata-only bridge publishes unmigrated legacy devices into the catalog without claiming that their lifecycle is manager-controlled.
 
-**Tech Stack:** TypeScript 5.9, Svelte 5 runes/context, XState 5, Vitest 4, ESLint 9, existing typed `TimerEventBus`.
+**Tech Stack:** TypeScript 5.9, Svelte 5 runes/context, XState 5, Vitest 4, ESLint 9, application-wide typed `EventBus`.
+
+> **Architecture amendment (2026-07-16):** The previously planned `TimerEventBus` class has been removed. Its queued delivery, typed subscription, observation, and handler isolation now live in the generic `src/lib/events/EventBus.ts`. Timer events remain a typed registry/payload namespace and specialize the application bus through `TimerEvent`; future application namespaces extend the same bus. `BroadcastChannel` is explicitly deferred as an optional future transport adapter, not used for in-process delivery.
 
 ## Global Constraints
 
@@ -43,7 +45,7 @@
 **Interfaces:**
 
 - Produces: `TIMER_DEVICE_IDS`, `TimerDeviceDescriptor`, `LegacyTimerDeviceDescriptor`, `TimerDeviceOwnerBinding`, `TimerDeviceActivationContext`, `DeviceLeaseRejectionReason`, and the asynchronous-capable `ITimerDevice` lifecycle.
-- Consumes: existing `TimerReadonlyView`, `TimerReadingCallback`, `TimerEventFactory`, and `TimerEventBus`.
+- Consumes: existing `TimerReadonlyView`, `TimerReadingCallback`, `TimerEventFactory`, and application `EventBus`.
 
 - [ ] **Step 1: Write compile-time contract assertions**
 
@@ -212,7 +214,7 @@ git -c commit.gpgsign=false commit -m "feat: define managed timer device contrac
 
 **Interfaces:**
 
-- Consumes: `ITimerEventBus`, `DEVICE_CATALOG_UPDATED`, `TimerDeviceDescriptor`.
+- Consumes: `IEventBus<TimerEvent>`, `DEVICE_CATALOG_UPDATED`, `TimerDeviceDescriptor`.
 - Produces: `DeviceCatalog.devices`, `find(deviceId)`, and `destroy()`.
 
 - [ ] **Step 1: Write failing projection tests**
@@ -249,7 +251,7 @@ export class DeviceCatalog {
   devices: readonly TimerDeviceDescriptor[] = $state([]);
   private subscription: TimerEventSubscription | null;
 
-  constructor(bus: ITimerEventBus) {
+  constructor(bus: IEventBus<TimerEvent>) {
     this.subscription = bus.subscribe(
       TIMER_EVENTS.DEVICE_CATALOG_UPDATED,
       'device-catalog:replace',
@@ -469,7 +471,7 @@ Expose:
 ```ts
 export interface TimerApplicationRuntime {
   readonly events: TimerEventFactory;
-  readonly bus: TimerEventBus;
+  readonly bus: EventBus<TimerEvent>;
   readonly catalog: DeviceCatalog;
   readonly deviceManager: DeviceManager;
   readonly ready: Promise<void>;
@@ -525,8 +527,8 @@ Stop. Report all commits, file changes, and exact verification output. Explain t
 - Modify: `src/lib/timer/devices/KeyboardDevice.test.ts`
 - Modify: `src/lib/timer/devices/KeyboardTimerFlow.integration.test.ts`
 - Modify: `src/lib/timer/TimerCompositionRoot.test.ts`
-- Modify: `src/lib/logger/TimerEventLogger.test.ts`
-- Modify: `src/lib/events/timer/TimerEventBus.test.ts`
+- Modify: `src/lib/logger/EventLogger.test.ts`
+- Modify: `src/lib/events/EventBus.test.ts`
 - Modify: `src/lib/events/timer/TimerEventFactory.test.ts`
 
 **Interfaces:**
@@ -586,7 +588,7 @@ Expected: all focused tests pass and ESLint exits 0.
 - [ ] **Step 7: Commit owner-scoped keyboard lifecycle**
 
 ```powershell
-git add -- src/lib/events/timer src/lib/timer/TimerReactor.ts src/lib/timer/TimerReactor.test.ts src/lib/timer/TimerState.svelte.ts src/lib/timer/TimerState.test.ts src/lib/timer/devices/KeyboardDevice.ts src/lib/timer/devices/KeyboardDevice.test.ts src/lib/timer/devices/KeyboardTimerFlow.integration.test.ts src/lib/timer/TimerCompositionRoot.test.ts src/lib/logger/TimerEventLogger.test.ts
+git add -- src/lib/events src/lib/timer/TimerReactor.ts src/lib/timer/TimerReactor.test.ts src/lib/timer/TimerState.svelte.ts src/lib/timer/TimerState.test.ts src/lib/timer/devices/KeyboardDevice.ts src/lib/timer/devices/KeyboardDevice.test.ts src/lib/timer/devices/KeyboardTimerFlow.integration.test.ts src/lib/timer/TimerCompositionRoot.test.ts src/lib/logger/EventLogger.test.ts
 git -c commit.gpgsign=false commit -m "feat: scope keyboard lifecycle by timer owner"
 ```
 

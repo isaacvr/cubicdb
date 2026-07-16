@@ -1,5 +1,5 @@
-import type { ITimerEventBus } from '$lib/events/timer/TimerEventBus';
-import type { TimerEventSubscription } from '$lib/events/timer/TimerEvent';
+import type { EventSubscription, IEventBus } from '$lib/events/EventBus';
+import type { TimerEvent } from '$lib/events/timer/TimerEvent';
 import { TIMER_EVENTS } from '$lib/events/timer/TimerEventRegistry';
 import type { TimerDeviceDescriptor } from './TimerDeviceDescriptor';
 
@@ -12,9 +12,9 @@ function immutableDescriptor(device: TimerDeviceDescriptor): TimerDeviceDescript
 
 export class DeviceCatalog {
   devices: readonly TimerDeviceDescriptor[] = $state([]);
-  private subscription: TimerEventSubscription | null;
+  private subscription: EventSubscription | null;
 
-  constructor(bus: ITimerEventBus) {
+  constructor(bus: IEventBus<TimerEvent>) {
     this.subscription = bus.subscribe(
       TIMER_EVENTS.DEVICE_CATALOG_UPDATED,
       'device-catalog:replace',

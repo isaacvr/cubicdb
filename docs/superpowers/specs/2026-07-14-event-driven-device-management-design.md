@@ -34,7 +34,7 @@ This design moves the minimum DeviceManager foundation originally scheduled for 
 
 ### Application-Scoped EventBus
 
-The application owns one TimerEventBus, TimerEventFactory, DeviceManager, DeviceCatalog, and event logger. Every mounted timer runtime receives these shared services from application context instead of constructing another bus.
+The application owns one generic `EventBus`, plus the timer event factory, DeviceManager, DeviceCatalog, and event logger. Timer events are a typed namespace on the application bus; they do not use a separate bus implementation. Every mounted timer runtime receives these shared services from application context instead of constructing another bus.
 
 Events that mutate a timer-local projection include `ownerId`. Each TimerReactor is constructed with its own owner ID and ignores lifecycle facts for other owners. Application-wide device facts such as catalog and physical connection changes remain unscoped. Future event slices must carry either `ownerId` or another explicit domain key whenever multiple consumers could otherwise project the same fact.
 
