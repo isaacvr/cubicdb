@@ -37,6 +37,7 @@
     context: TimerContext;
     battle?: boolean;
     cleanOnScramble?: boolean;
+    managedKeyboardActive?: boolean;
   }
 
   let {
@@ -45,6 +46,7 @@
     context = $bindable(),
     battle = $bindable(false),
     cleanOnScramble = $bindable(false),
+    managedKeyboardActive = false,
   }: TimerTabContext = $props();
 
   const { reset } = inputContext;
@@ -83,11 +85,13 @@
   }
 
   function keyUp(event: KeyboardEvent) {
+    if (managedKeyboardActive) return;
     if ($tab || !$enableKeyboard) return;
     $device.keyUpHandler(event);
   }
 
   function keyDown(event: KeyboardEvent) {
+    if (managedKeyboardActive) return;
     const { code } = event;
 
     if (!$enableKeyboard) return;
@@ -160,6 +164,7 @@
   }
 
   function handlePointerUp(ev: any) {
+    if (managedKeyboardActive) return;
     if ($dataService.isElectron) return;
 
     ev.preventDefault();

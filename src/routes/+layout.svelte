@@ -47,8 +47,13 @@
   import { sessionController } from "$lib/controllers/SessionController";
   import EventDebugPanel from "$lib/components/EventDebugPanel.svelte";
   import NavigationDrawer from "@components/NavigationDrawer.svelte";
+  import { createTimerApplicationRuntime } from "$lib/timer/TimerApplicationRuntime";
+  import { setTimerApplicationContext } from "$lib/timer/context/timerApplicationContext";
+  import TimerKeyboardEventBoundary from "$lib/timer/handlers/TimerKeyboardEventBoundary.svelte";
 
   let { data, children }: { data: LayoutServerData; children: any } = $props();
+  const timerApplication = createTimerApplicationRuntime();
+  setTimerApplicationContext(timerApplication);
 
   $dataService.theme.applyTheme($dataService.theme.currentTheme, false);
 
@@ -182,6 +187,7 @@
     clearInterval(itv);
     $dataService.off("download-progress", handleProgress);
     $dataService.off("update-downloaded", handleDone);
+    void timerApplication.destroy();
   });
 
   $effect(() => {
@@ -386,6 +392,7 @@
 </div>
 
 <EventDebugPanel />
+<TimerKeyboardEventBoundary />
 
 <style lang="postcss">
   @reference "@src/themes/index.css";

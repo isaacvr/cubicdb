@@ -11,12 +11,15 @@ import { EventLogger, type EventLogSink } from '$lib/logger/EventLogger';
 import { DeviceCatalog } from './devices/DeviceCatalog.svelte';
 import { DeviceManager } from './devices/DeviceManager';
 import type { ITimerDevice } from './devices/ITimerDevice';
+import { KeyboardDevice, type KeyboardDeviceOptions } from './devices/KeyboardDevice';
+import { KeyboardInputBoundary } from './handlers/KeyboardInputBoundary';
 
 export interface TimerApplicationRuntimeOptions {
   clock?: IMonotonicClock;
   idProvider?: IEventIdProvider;
   eventLogSink?: EventLogSink | null;
   devices?: readonly ITimerDevice[];
+  keyboardOptions?: KeyboardDeviceOptions;
 }
 
 export interface TimerApplicationRuntime {
@@ -24,6 +27,8 @@ export interface TimerApplicationRuntime {
   readonly bus: EventBus<TimerEvent>;
   readonly catalog: DeviceCatalog;
   readonly deviceManager: DeviceManager;
+  readonly keyboardDevice: KeyboardDevice | null;
+  readonly keyboardBoundary: KeyboardInputBoundary;
   readonly ready: Promise<void>;
   destroy(): Promise<void>;
 }
@@ -49,7 +54,14 @@ export function createTimerApplicationRuntime(
     : new EventLogger(bus, options.eventLogSink ?? logger);
   const catalog = new DeviceCatalog(bus);
   const deviceManager = new DeviceManager(bus, events);
-  const devices = options.devices ?? [];
+  const keyboardDevice = options.devices === undefined
+    ? new KeyboardDevice(bus, events, {
+        ...options.keyboardOptions,
+        clock: options.keyboardOptions?.clock ?? options.clock,
+      })
+    : null;
+  const keyboardBoundary = new KeyboardInputBoundary(bus, events);
+  const devices: readonly ITimerDevice[] = options.devices ?? (keyboardDevice ? [keyboardDevice] : []);
   const ready = devices.reduce<Promise<void>>(
     (registration, device) => registration.then(() => deviceManager.registerDevice(device)),
     devices.length === 0 ? deviceManager.initialize() : Promise.resolve(),
@@ -61,6 +73,8 @@ export function createTimerApplicationRuntime(
     bus,
     catalog,
     deviceManager,
+    keyboardDevice,
+    keyboardBoundary,
     ready,
     async destroy() {
       if (destroyed) return;

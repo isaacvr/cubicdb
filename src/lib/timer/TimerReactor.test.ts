@@ -22,7 +22,7 @@ describe('TimerReactor', () => {
     );
     bus = createApplicationEventBus(factory);
     state = new TimerState();
-    reactor = new TimerReactor(bus, state);
+    reactor = new TimerReactor(bus, state, 'timer:one');
   });
 
   it('projects the standard device lifecycle', async () => {
@@ -101,5 +101,20 @@ describe('TimerReactor', () => {
     await bus.publish(factory.create(TIMER_EVENTS.DEVICE_RUN_STARTED, { ownerId: 'timer:one', deviceId: 'keyboard' }));
 
     expect(state.timerState).toBe(TimerStateValue.CLEAN);
+  });
+
+  it('ignores lifecycle events and active-device facts for other owners', async () => {
+    await bus.publish(factory.create(TIMER_EVENTS.DEVICE_RUN_STARTED, {
+      ownerId: 'timer:two',
+      deviceId: 'other-device',
+    }));
+    await bus.publish(factory.create(TIMER_EVENTS.ACTIVE_DEVICE_CHANGED, {
+      ownerId: 'timer:two',
+      deviceId: 'other-device',
+      previousDeviceId: null,
+    }));
+
+    expect(state.timerState).toBe(TimerStateValue.CLEAN);
+    expect(state.activeDeviceId).toBeNull();
   });
 });

@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { AverageSetting, TimerState as TimerStateValue } from '@interfaces';
 import { createTimerRuntime } from '../TimerCompositionRoot.svelte';
+import { TIMER_DEVICE_IDS } from './TimerDeviceDescriptor';
 
 describe('keyboard timer flow', () => {
   afterEach(() => vi.useRealTimers());
@@ -27,6 +28,8 @@ describe('keyboard timer flow', () => {
         withoutPrevention: false,
       },
     };
+    await runtime.ready;
+    expect(await runtime.requestActiveDevice(TIMER_DEVICE_IDS.KEYBOARD)).toBe(true);
 
     await runtime.keyboard?.boundary.keyDown({ code: 'Space', repeat: false, timeStamp: 100 });
     expect(runtime.state.timerState).toBe(TimerStateValue.PREVENTION);
@@ -39,14 +42,14 @@ describe('keyboard timer flow', () => {
 
     expect(runtime.state.timerState).toBe(TimerStateValue.STOPPED);
     expect(runtime.state.time).toBe(1100);
-    runtime.destroy();
+    await runtime.destroy();
   });
 
-  it('retains the legacy boundary when the keyboard flag is disabled', () => {
+  it('retains the legacy boundary when the keyboard flag is disabled', async () => {
     const runtime = createTimerRuntime({ eventLogSink: null });
 
     expect(runtime.keyboard).toBeNull();
 
-    runtime.destroy();
+    await runtime.destroy();
   });
 });

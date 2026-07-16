@@ -28,6 +28,8 @@
   import { pScramble } from "@cstimer/scramble";
   import { page } from "$app/state";
   import { createTimerRuntime } from "./TimerCompositionRoot.svelte";
+  import { getTimerApplicationContext } from "./context/timerApplicationContext";
+  import { TIMER_DEVICE_IDS } from "./devices/TimerDeviceDescriptor";
 
   interface TimerProps {
     battle?: boolean;
@@ -40,7 +42,6 @@
     timerOnly?: boolean;
     scrambleOnly?: boolean;
     cleanOnScramble?: boolean;
-    eventDrivenKeyboard?: boolean;
   }
 
   let {
@@ -54,7 +55,6 @@
     timerOnly = false,
     scrambleOnly = false,
     cleanOnScramble: _cleanOnScramble = false,
-    eventDrivenKeyboard = false,
   }: TimerProps = $props();
 
   // MENU from language
@@ -67,9 +67,17 @@
 
   // Core initialization
   const timerController = new TimerController();
-  const eventTimerRuntime = eventDrivenKeyboard
-    ? createTimerRuntime({ flags: { keyboard: true } })
-    : null;
+  const timerApplication = getTimerApplicationContext();
+  const eventTimerRuntime = createTimerRuntime({
+    application: timerApplication,
+    ownerId: `timer:${page.params.sessionId ?? "primary"}`,
+    flags: { keyboard: true },
+    onRunStopped: elapsedMs => timerController.addSolve(elapsedMs),
+  });
+  let requestedDeviceId: string | null = null;
+  let managedKeyboardActive = $derived(
+    eventTimerRuntime.state.activeDeviceId === TIMER_DEVICE_IDS.KEYBOARD
+  );
   const iconSize = "1.2rem";
   let historyTabComponent: any = $state(null);
 
@@ -96,29 +104,34 @@
   });
 
   $effect(() => {
-    if (!eventTimerRuntime) return;
-    eventTimerRuntime.state.session = get(timerController.session);
+    const currentSession = get(timerController.session);
+    eventTimerRuntime.state.session = currentSession;
     timerController.timerState.set(eventTimerRuntime.state.timerState);
     timerController.time.set(eventTimerRuntime.state.time);
     timerController.ready.set(eventTimerRuntime.state.ready);
     timerController.decimals.set(eventTimerRuntime.state.decimals);
+
+    const input = currentSession?.settings.input;
+    const wantsManagedKeyboard = input === "Keyboard" || input === TIMER_DEVICE_IDS.KEYBOARD;
+    if (wantsManagedKeyboard && requestedDeviceId !== TIMER_DEVICE_IDS.KEYBOARD) {
+      requestedDeviceId = TIMER_DEVICE_IDS.KEYBOARD;
+      void eventTimerRuntime.requestActiveDevice(TIMER_DEVICE_IDS.KEYBOARD);
+    } else if (!wantsManagedKeyboard && requestedDeviceId === TIMER_DEVICE_IDS.KEYBOARD) {
+      requestedDeviceId = null;
+      void eventTimerRuntime.releaseActiveDevice(TIMER_DEVICE_IDS.KEYBOARD);
+    }
   });
 
   function keyboardKeyDownHandler(event: KeyboardEvent) {
-    if (eventTimerRuntime?.keyboard) {
-      void eventTimerRuntime.keyboard.boundary.keyDown(event);
-      return;
-    }
+    if (managedKeyboardActive) return;
     keyboardMgr.handleKeydown(event);
   }
 
   function keyboardKeyUpHandler(event: KeyboardEvent) {
-    if (eventTimerRuntime?.keyboard) {
-      void eventTimerRuntime.keyboard.boundary.keyUp(event);
-    }
+    if (managedKeyboardActive) return;
   }
 
-  onDestroy(() => eventTimerRuntime?.destroy());
+  onDestroy(() => void eventTimerRuntime.destroy());
 
   // Modal state
   // let newSessionName = $state("");
@@ -327,7 +340,7 @@
   </div>
 
   <div class="content overflow-hidden relative">
-    <TimerTab {inputContext} {timerController} context={timerContext} />
+    <TimerTab {inputContext} {timerController} context={timerContext} {managedKeyboardActive} />
     <HistoryTab {timerController} context={timerContext} bind:this={historyTabComponent} />
     <StatsTab {timerController} context={timerContext} />
   </div>

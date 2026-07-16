@@ -218,6 +218,21 @@ Timer settings render device choices from DeviceCatalog rather than the legacy d
 
 Each implementation group runs focused Vitest tests, ESLint, and the full unit suite with one worker. No build is run. `svelte-check` is excluded until the user explicitly requests it.
 
+## Implementation Checkpoint: Managed Keyboard Activation
+
+As of 2026-07-16, the production timer route uses the application-scoped runtime for the canonical keyboard while the other device implementations remain on their legacy paths.
+
+- The root layout creates one `TimerApplicationRuntime`, exposes it through Svelte context, and owns the single browser keyboard boundary.
+- The application runtime registers `cubicdb:device:timer_keyboard` with `DeviceManager` by default.
+- Each timer registers an owner binding using `timer:<sessionId>` and requests the keyboard lease when its persisted input is Keyboard.
+- `TimerReactor` filters device facts by owner, including active-device release and run completion.
+- The legacy keyboard listeners are suppressed only while the managed keyboard lease is active, preventing duplicate input processing without removing fallback behavior.
+- A managed `DEVICE_RUN_STOPPED` fact saves the solve through the existing `TimerController` persistence path.
+- The shared event logger receives the keyboard, ownership, and lifecycle facts, so the existing non-blocking debugger can inspect the live flow.
+- Timer teardown publishes an owner-destroy request, which stops the device and releases the lease rather than disconnecting it.
+
+This checkpoint does not yet render `DeviceCatalog` in TimerOptions or show lease conflicts in the UI. Those remain the next acceptance-gated group. No route query or temporary route flag is required.
+
 ## Reversible Commit Groups and Acceptance Gates
 
 ### Group 1: Device Bus API and Reactive Catalog
@@ -230,27 +245,27 @@ Rollback removes isolated infrastructure without changing runtime behavior.
 
 ### Group 2: Keyboard Ownership and Routing
 
-Register KeyboardDevice with DeviceManager, enforce canonical identity and lease ownership, route readings to the owner, and eliminate duplicate browser input under the feature flag. Keep the production route flag disabled.
+Register KeyboardDevice with DeviceManager, enforce canonical identity and lease ownership, and route readings to the owner without connecting the production timer UI.
 
 Rollback disables or removes the keyboard migration wiring while retaining the legacy keyboard path.
 
-**Acceptance gate:** Report exact changes and automated results. Let the user exercise keyboard lifecycle behavior in a controlled flagged path and wait for approval before Group 3.
+**Acceptance gate:** Report exact changes and automated results before activating the production timer path.
 
-### Group 3: Timer Selection and Conflict UI
+### Group 3: Production Keyboard Activation
 
-Render the reactive catalog, add the temporary legacy metadata bridge, publish managed-device selection requests on session load/settings changes, display conflicts, preserve the explicit legacy activation bridge, and release managed leases on timer teardown.
+Create the application runtime in the root layout, attach one native keyboard boundary, request the managed keyboard from persisted timer input, suppress duplicate legacy keyboard delivery, save managed run completion through the existing controller, expose all events to the debugger, and release the lease on teardown.
 
-Rollback restores the legacy settings/device adapter while leaving the new manager unused.
+Rollback removes the layout/timer composition wiring while leaving DeviceManager and KeyboardDevice available and restoring the legacy keyboard path.
 
-**Acceptance gate:** Report exact changes and automated results. Let the user test selection, contention, persistence, and teardown before Group 4.
+**Acceptance gate:** Report exact changes and automated results. Let the user test the actual timer route, event visibility, lifecycle behavior, solve persistence, and teardown before Group 4.
 
-### Group 4: Production Route Activation
+### Group 4: Reactive Selection and Conflict UI
 
-Enable event-driven keyboard handling for `/timer/[sessionId]`, add route-level integration coverage, and run the agreed quality gates.
+Render the reactive catalog in TimerOptions, add the temporary legacy metadata bridge, publish managed-device selection requests from settings changes, display lease conflicts, and preserve the explicit legacy activation path for devices that have not migrated.
 
-Rollback is a single migration flag/property change.
+Rollback restores the legacy settings/device adapter while retaining the accepted managed keyboard runtime.
 
-**Acceptance gate:** The user tests the actual timer route and confirms that behavior aligns with the migration goals before any later device slice begins.
+**Acceptance gate:** The user tests selection, contention, persistence, and conflict recovery before any later device slice begins.
 
 ## Out of Scope
 

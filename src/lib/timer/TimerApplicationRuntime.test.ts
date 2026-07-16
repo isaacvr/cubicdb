@@ -3,6 +3,7 @@ import { TIMER_EVENTS } from '$lib/events/timer/TimerEventRegistry';
 import { createTimerApplicationRuntime } from './TimerApplicationRuntime';
 import { TIMER_DEVICE_IDS } from './devices/TimerDeviceDescriptor';
 import { TimerDeviceTestHarness } from './devices/TimerDeviceTestHarness';
+import { KeyboardInputBoundary } from './handlers/KeyboardInputBoundary';
 
 function keyboard(): TimerDeviceTestHarness {
   return new TimerDeviceTestHarness({
@@ -72,6 +73,7 @@ describe('TimerApplicationRuntime', () => {
       clock: { now: () => 25 },
       idProvider: { next: () => 'event-id' },
       eventLogSink: { info },
+      devices: [],
     });
 
     await runtime.ready;
@@ -82,6 +84,20 @@ describe('TimerApplicationRuntime', () => {
       TIMER_EVENTS.DEVICE_CATALOG_UPDATED,
       expect.objectContaining({ payload: { devices: [] } }),
     );
+    await runtime.destroy();
+  });
+
+  it('owns and registers the managed keyboard by default', async () => {
+    const runtime = createTimerApplicationRuntime({ eventLogSink: null });
+
+    await runtime.ready;
+
+    expect(runtime.keyboardDevice?.descriptor.id).toBe(TIMER_DEVICE_IDS.KEYBOARD);
+    expect(runtime.keyboardBoundary).toBeInstanceOf(KeyboardInputBoundary);
+    expect(runtime.catalog.find(TIMER_DEVICE_IDS.KEYBOARD)).toMatchObject({
+      managementMode: 'managed',
+      availability: 'available',
+    });
     await runtime.destroy();
   });
 });

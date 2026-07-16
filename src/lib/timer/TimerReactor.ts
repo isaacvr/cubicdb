@@ -10,6 +10,7 @@ export class TimerReactor {
   constructor(
     private readonly eventBus: IEventBus<TimerEvent>,
     private readonly state: TimerState,
+    private readonly ownerId: string,
   ) {
     this.registerLifecycleProjections();
   }
@@ -21,7 +22,8 @@ export class TimerReactor {
 
   private registerLifecycleProjections(): void {
     this.subscriptions.push(
-      this.eventBus.subscribe(TIMER_EVENTS.DEVICE_PREVENTION_ENTERED, 'timer-reactor:prevention', event => {
+      this.eventBus.subscribe(TIMER_EVENTS.DEVICE_PREVENTION_ENTERED, `${this.ownerId}:timer-reactor:prevention`, event => {
+        if (event.payload.ownerId !== this.ownerId) return;
         this.state.timerState = TimerStateValue.PREVENTION;
         this.state.activeDeviceId = event.payload.deviceId;
         this.state.time = 0;
@@ -31,51 +33,65 @@ export class TimerReactor {
         this.state.penalty = Penalty.NONE;
         this.state.dnfFromInspection = false;
       }),
-      this.eventBus.subscribe(TIMER_EVENTS.DEVICE_GREEN_LIGHT_CHANGED, 'timer-reactor:green-light', event => {
+      this.eventBus.subscribe(TIMER_EVENTS.DEVICE_GREEN_LIGHT_CHANGED, `${this.ownerId}:timer-reactor:green-light`, event => {
+        if (event.payload.ownerId !== this.ownerId) return;
         this.state.ready = event.payload.ready;
       }),
-      this.eventBus.subscribe(TIMER_EVENTS.DEVICE_INSPECTION_STARTED, 'timer-reactor:inspection', event => {
+      this.eventBus.subscribe(TIMER_EVENTS.DEVICE_INSPECTION_STARTED, `${this.ownerId}:timer-reactor:inspection`, event => {
+        if (event.payload.ownerId !== this.ownerId) return;
         this.state.timerState = TimerStateValue.INSPECTION;
         this.state.activeDeviceId = event.payload.deviceId;
         this.state.decimals = false;
       }),
-      this.eventBus.subscribe(TIMER_EVENTS.DEVICE_RUN_STARTED, 'timer-reactor:run-started', event => {
+      this.eventBus.subscribe(TIMER_EVENTS.DEVICE_RUN_STARTED, `${this.ownerId}:timer-reactor:run-started`, event => {
+        if (event.payload.ownerId !== this.ownerId) return;
         this.state.timerState = TimerStateValue.RUNNING;
         this.state.activeDeviceId = event.payload.deviceId;
         this.state.decimals = true;
         this.state.ready = false;
       }),
-      this.eventBus.subscribe(TIMER_EVENTS.DEVICE_RUN_STOPPED, 'timer-reactor:run-stopped', event => {
+      this.eventBus.subscribe(TIMER_EVENTS.DEVICE_RUN_STOPPED, `${this.ownerId}:timer-reactor:run-stopped`, event => {
+        if (event.payload.ownerId !== this.ownerId) return;
         this.state.timerState = TimerStateValue.STOPPED;
         this.state.activeDeviceId = event.payload.deviceId;
         this.state.time = event.payload.elapsedMs;
         this.state.steps = [...event.payload.steps];
       }),
-      this.eventBus.subscribe(TIMER_EVENTS.DEVICE_PAUSED, 'timer-reactor:paused', () => {
+      this.eventBus.subscribe(TIMER_EVENTS.DEVICE_PAUSED, `${this.ownerId}:timer-reactor:paused`, event => {
+        if (event.payload.ownerId !== this.ownerId) return;
         this.state.timerState = TimerStateValue.PAUSE;
       }),
-      this.eventBus.subscribe(TIMER_EVENTS.DEVICE_RESUMED, 'timer-reactor:resumed', () => {
+      this.eventBus.subscribe(TIMER_EVENTS.DEVICE_RESUMED, `${this.ownerId}:timer-reactor:resumed`, event => {
+        if (event.payload.ownerId !== this.ownerId) return;
         this.state.timerState = TimerStateValue.RUNNING;
       }),
-      this.eventBus.subscribe(TIMER_EVENTS.DEVICE_RUN_CANCELLED, 'timer-reactor:cancelled', () => {
+      this.eventBus.subscribe(TIMER_EVENTS.DEVICE_RUN_CANCELLED, `${this.ownerId}:timer-reactor:cancelled`, event => {
+        if (event.payload.ownerId !== this.ownerId) return;
         this.state.reset();
       }),
-      this.eventBus.subscribe(TIMER_EVENTS.DEVICE_PENALTY_APPLIED, 'timer-reactor:penalty', event => {
+      this.eventBus.subscribe(TIMER_EVENTS.DEVICE_PENALTY_APPLIED, `${this.ownerId}:timer-reactor:penalty`, event => {
+        if (event.payload.ownerId !== this.ownerId) return;
         this.state.penalty = event.payload.penalty;
         this.state.dnfFromInspection = event.payload.penalty === Penalty.DNF
           && event.payload.fromInspection;
       }),
-      this.eventBus.subscribe(TIMER_EVENTS.DEVICE_STEP_COMPLETED, 'timer-reactor:step', event => {
+      this.eventBus.subscribe(TIMER_EVENTS.DEVICE_STEP_COMPLETED, `${this.ownerId}:timer-reactor:step`, event => {
+        if (event.payload.ownerId !== this.ownerId) return;
         this.state.steps = [...this.state.steps, event.payload.elapsedMs];
       }),
-      this.eventBus.subscribe(TIMER_EVENTS.SCRAMBLE_GENERATED, 'timer-reactor:scramble', event => {
+      this.eventBus.subscribe(TIMER_EVENTS.SCRAMBLE_GENERATED, `${this.ownerId}:timer-reactor:scramble`, event => {
         this.state.scramble = event.payload.scramble;
       }),
-      this.eventBus.subscribe(TIMER_EVENTS.STATISTICS_UPDATED, 'timer-reactor:statistics', event => {
+      this.eventBus.subscribe(TIMER_EVENTS.STATISTICS_UPDATED, `${this.ownerId}:timer-reactor:statistics`, event => {
         this.state.statistics = event.payload.statistics;
       }),
-      this.eventBus.subscribe(TIMER_EVENTS.ACTIVE_DEVICE_CHANGED, 'timer-reactor:active-device', event => {
+      this.eventBus.subscribe(TIMER_EVENTS.ACTIVE_DEVICE_CHANGED, `${this.ownerId}:timer-reactor:active-device`, event => {
+        if (event.payload.ownerId !== this.ownerId) return;
         this.state.activeDeviceId = event.payload.deviceId;
+      }),
+      this.eventBus.subscribe(TIMER_EVENTS.ACTIVE_DEVICE_RELEASED, `${this.ownerId}:timer-reactor:active-device-released`, event => {
+        if (event.payload.ownerId !== this.ownerId) return;
+        this.state.activeDeviceId = null;
       }),
     );
   }
