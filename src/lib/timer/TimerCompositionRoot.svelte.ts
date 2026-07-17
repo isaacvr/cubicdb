@@ -1,6 +1,11 @@
 import type { EventBus, EventSubscription } from '$lib/events/EventBus';
-import type { GenerationClient, ScrambleGenerationConfig } from '$lib/events/generation';
+import {
+  GENERATION_EVENTS,
+  type GenerationClient,
+  type ScrambleGenerationConfig,
+} from '$lib/events/generation';
 import { TimerState as TimerStateValue, type Penalty } from '@interfaces';
+import { CubeMode } from '@constants';
 import type { TimerEvent } from '$lib/events/timer/TimerEvent';
 import { TIMER_EVENTS } from '$lib/events/timer/TimerEventRegistry';
 import type { EventLogSink } from '$lib/logger/EventLogger';
@@ -77,6 +82,59 @@ export function createTimerRuntime(options: TimerRuntimeOptions = {}): TimerRunt
   const reactor = new TimerReactor(application.bus, state, ownerId);
   const generation = application.createGenerationClient(ownerId);
   const scrambleSubscription = registerScrambleHandlers(application.bus, state, ownerId);
+  const previewSubscriptions: EventSubscription[] = [
+    application.bus.subscribe(
+      GENERATION_EVENTS.SCRAMBLE_GENERATED,
+      `${ownerId}:timer-runtime:image-after-scramble`,
+      async event => {
+        if (event.payload.scopeId !== ownerId) return;
+        if (event.payload.requestId !== state.scrambleRequestId) return;
+        const scramble = event.payload.scrambles[0] ?? '';
+        if (!scramble || state.session?.settings.genImage !== true) {
+          state.scramblePreview = [];
+          state.scramblePreviewRequestId = null;
+          state.scramblePreviewEnabled = false;
+          return;
+        }
+        state.scramblePreview = [];
+        state.scramblePreviewEnabled = true;
+        await generation.images.request({
+          scramble,
+          puzzle: 'rubik',
+          mode: CubeMode.NORMAL,
+          view: 'trans',
+          order: [3, 3, 3],
+        });
+      },
+    ),
+    application.bus.subscribe(
+      GENERATION_EVENTS.IMAGE_REQUESTED,
+      `${ownerId}:timer-runtime:image-requested`,
+      event => {
+        if (event.payload.scopeId !== ownerId) return;
+        state.scramblePreviewRequestId = event.id;
+      },
+      { priority: 100 },
+    ),
+    application.bus.subscribe(
+      GENERATION_EVENTS.IMAGE_GENERATED,
+      `${ownerId}:timer-runtime:image-generated`,
+      event => {
+        if (event.payload.scopeId !== ownerId) return;
+        if (event.payload.requestId !== state.scramblePreviewRequestId) return;
+        state.scramblePreview = [...event.payload.images];
+      },
+    ),
+    application.bus.subscribe(
+      GENERATION_EVENTS.IMAGE_FAILED,
+      `${ownerId}:timer-runtime:image-failed`,
+      event => {
+        if (event.payload.scopeId !== ownerId) return;
+        if (event.payload.requestId !== state.scramblePreviewRequestId) return;
+        state.scramblePreview = [];
+      },
+    ),
+  ];
   const runStoppedSubscription: EventSubscription | null = options.onRunStopped
     ? application.bus.subscribe(
         TIMER_EVENTS.DEVICE_RUN_STOPPED,
@@ -189,6 +247,7 @@ export function createTimerRuntime(options: TimerRuntimeOptions = {}): TimerRunt
       ));
       reactor.destroy();
       scrambleSubscription.unsubscribe();
+      for (const subscription of previewSubscriptions) subscription.unsubscribe();
       runStoppedSubscription?.unsubscribe();
       for (const subscription of lifecycleSubscriptions) subscription.unsubscribe();
       generation.destroy();

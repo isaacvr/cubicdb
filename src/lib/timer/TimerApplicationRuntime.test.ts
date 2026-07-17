@@ -12,6 +12,8 @@ import {
 import { TimerDeviceTestHarness } from './devices/TimerDeviceTestHarness';
 import { KeyboardInputBoundary } from './handlers/KeyboardInputBoundary';
 import type { IScrambleGenerator } from './scramble/IScrambleGenerator';
+import type { IImageGenerator } from './scramble/IImageGenerator';
+import { ImageGenerationService } from './scramble/ImageGenerationService';
 import { ScrambleService } from './scramble/ScrambleService';
 
 function keyboard(): TimerDeviceTestHarness {
@@ -51,6 +53,21 @@ describe('TimerApplicationRuntime', () => {
     expect(client.scopeId).toBe('timer:1');
 
     client.destroy();
+    await runtime.destroy();
+  });
+
+  it('owns one injectable application-scoped image generation service', async () => {
+    const imageGenerator: IImageGenerator = {
+      supports: () => true,
+      generate: vi.fn(async () => ['svg']),
+    };
+    const runtime = createTimerApplicationRuntime({
+      eventLogSink: null,
+      devices: [],
+      imageGenerator,
+    });
+
+    expect(runtime.imageGenerationService).toBeInstanceOf(ImageGenerationService);
     await runtime.destroy();
   });
 

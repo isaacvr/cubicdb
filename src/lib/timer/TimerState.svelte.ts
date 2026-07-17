@@ -25,6 +25,9 @@ export class TimerState {
   scrambleMode: string = $state('');
   scrambleLength: number = $state(0);
   scrambleProbability: ScrambleProbability = $state(-1);
+  scramblePreview: string[] = $state([]);
+  scramblePreviewRequestId: string | null = $state(null);
+  scramblePreviewEnabled: boolean = $state(false);
   lastSolve: Solve | null = $state(null);
   session: Session | null = $state(null);
   solves: Solve[] = $state([]);

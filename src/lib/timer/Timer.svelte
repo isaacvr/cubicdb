@@ -265,6 +265,13 @@
     timerController.scramble.set(eventTimerRuntime.state.scramble);
   });
 
+  $effect(() => {
+    if (!eventTimerRuntime.flags.scramble) return;
+    timerController.preview.set(
+      eventTimerRuntime.state.scramblePreview.map(src => ({ src, alt: "", title: "" }))
+    );
+  });
+
   // Setup keyboard handling
   timerController.enableKeyboard = keyboardEnabled;
 

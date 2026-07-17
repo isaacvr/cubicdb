@@ -20,7 +20,7 @@ describe('event-driven scramble UI bridge', () => {
     expect(timer).toContain('eventTimerRuntime.requestScramble(input, nativeEvent)');
     expect(timer).toContain('getScrambleRequest: source => createScrambleRequestInput');
     expect(timer).toContain('timerController.scramble.set(eventTimerRuntime.state.scramble)');
-    expect(timer).not.toContain('eventTimerRuntime.state.scramblePreview');
+    expect(timer).toContain('eventTimerRuntime.state.scramblePreview.map');
   });
 
   it('passes native refresh and edit events into the context boundary', () => {

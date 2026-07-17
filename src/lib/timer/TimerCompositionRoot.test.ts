@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import { Penalty, TimerState as TimerStateValue } from '@interfaces';
+import { AverageSetting, Penalty, TimerState as TimerStateValue } from '@interfaces';
+import { CubeMode } from '@constants';
 import { GENERATION_EVENTS } from '$lib/events/generation';
 import { TIMER_EVENTS } from '$lib/events/timer/TimerEventRegistry';
 import { createTimerRuntime } from './TimerCompositionRoot.svelte';
@@ -9,6 +10,23 @@ import { TIMER_DEVICE_IDS } from './devices/TimerDeviceDescriptor';
 import { SCRAMBLE_REQUEST_SOURCES } from '$lib/events/timer/ScrambleEventTypes';
 import type { TimerEvent } from '$lib/events/timer/TimerEvent';
 import type { IScrambleGenerator } from './scramble/IScrambleGenerator';
+import type { IImageGenerator } from './scramble/IImageGenerator';
+
+function session(genImage: boolean) {
+  return {
+    _id: 'session',
+    name: 'Session',
+    settings: {
+      hasInspection: true,
+      inspection: 15,
+      showElapsedTime: true,
+      calcAoX: AverageSetting.SEQUENTIAL,
+      genImage,
+      scrambleAfterCancel: false,
+      withoutPrevention: false,
+    },
+  };
+}
 
 describe('TimerCompositionRoot', () => {
   it('generates a 333 scramble through the default application service', async () => {
@@ -69,6 +87,94 @@ describe('TimerCompositionRoot', () => {
 
     await first.destroy();
     await second.destroy();
+    await application.destroy();
+  });
+
+  it('requests and projects preview images after accepting the latest scramble when enabled', async () => {
+    const scrambleGenerator: IScrambleGenerator = {
+      id: 'scramble',
+      supports: () => true,
+      generate: () => 'R U',
+    };
+    const imageGenerator: IImageGenerator = {
+      supports: () => true,
+      generate: vi.fn(async () => ['svg']),
+    };
+    const application = createTimerApplicationRuntime({
+      eventLogSink: null,
+      devices: [],
+      scrambleGenerators: [scrambleGenerator],
+      imageGenerator,
+    });
+    const runtime = createTimerRuntime({ application, ownerId: 'timer:one' });
+    const observed: TimerEvent[] = [];
+    runtime.state.session = session(true);
+    application.bus.observe(event => observed.push(event));
+
+    await runtime.requestScramble({
+      mode: '333',
+      length: 20,
+      probability: -1,
+      source: SCRAMBLE_REQUEST_SOURCES.USER_REQUESTED,
+    });
+
+    await vi.waitFor(() => expect(runtime.state.scramblePreview).toEqual(['svg']));
+    const imageRequest = observed.find(event => event.type === GENERATION_EVENTS.IMAGE_REQUESTED);
+    expect(imageRequest).toMatchObject({
+      payload: {
+        scopeId: 'timer:one',
+        config: {
+          scramble: 'R U',
+          puzzle: 'rubik',
+          mode: CubeMode.NORMAL,
+          view: 'trans',
+          order: [3, 3, 3],
+        },
+      },
+    });
+    expect(runtime.state.scramblePreviewRequestId).toBe(imageRequest?.id);
+    expect(imageGenerator.generate).toHaveBeenCalledWith({
+      scramble: 'R U',
+      puzzle: 'rubik',
+      mode: CubeMode.NORMAL,
+      view: 'trans',
+      order: [3, 3, 3],
+    });
+
+    await runtime.destroy();
+    await application.destroy();
+  });
+
+  it('does not request preview images when the session disables image generation', async () => {
+    const imageGenerator: IImageGenerator = {
+      supports: () => true,
+      generate: vi.fn(async () => ['svg']),
+    };
+    const application = createTimerApplicationRuntime({
+      eventLogSink: null,
+      devices: [],
+      scrambleGenerators: [{
+        id: 'scramble',
+        supports: () => true,
+        generate: () => 'R U',
+      }],
+      imageGenerator,
+    });
+    const runtime = createTimerRuntime({ application, ownerId: 'timer:one' });
+    runtime.state.session = session(false);
+
+    await runtime.requestScramble({
+      mode: '333',
+      length: 20,
+      probability: -1,
+      source: SCRAMBLE_REQUEST_SOURCES.USER_REQUESTED,
+    });
+
+    await vi.waitFor(() => expect(runtime.state.scramble).toBe('R U'));
+    expect(imageGenerator.generate).not.toHaveBeenCalled();
+    expect(runtime.state.scramblePreview).toEqual([]);
+
+    await runtime.destroy();
     await application.destroy();
   });
 

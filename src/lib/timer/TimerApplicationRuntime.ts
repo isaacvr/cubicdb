@@ -14,8 +14,11 @@ import { DeviceManager } from './devices/DeviceManager';
 import type { ITimerDevice } from './devices/ITimerDevice';
 import { KeyboardDevice, type KeyboardDeviceOptions } from './devices/KeyboardDevice';
 import { KeyboardInputBoundary } from './handlers/KeyboardInputBoundary';
+import { CubeBundleScramblePreviewGenerator } from './scramble/CubeBundleScramblePreviewGenerator';
 import { CSTimerScrambleGenerator } from './scramble/CSTimerScrambleGenerator';
+import type { IImageGenerator } from './scramble/IImageGenerator';
 import type { IScrambleGenerator } from './scramble/IScrambleGenerator';
+import { ImageGenerationService } from './scramble/ImageGenerationService';
 import { ScrambleService } from './scramble/ScrambleService';
 
 export interface TimerApplicationRuntimeOptions {
@@ -25,6 +28,7 @@ export interface TimerApplicationRuntimeOptions {
   devices?: readonly ITimerDevice[];
   keyboardOptions?: KeyboardDeviceOptions;
   scrambleGenerators?: IScrambleGenerator[];
+  imageGenerator?: IImageGenerator;
 }
 
 export interface TimerApplicationRuntime {
@@ -35,6 +39,7 @@ export interface TimerApplicationRuntime {
   readonly keyboardDevice: KeyboardDevice | null;
   readonly keyboardBoundary: KeyboardInputBoundary;
   readonly scrambleService: ScrambleService;
+  readonly imageGenerationService: ImageGenerationService;
   readonly ready: Promise<void>;
   createGenerationClient(scopeId: string): GenerationClient;
   destroy(): Promise<void>;
@@ -73,6 +78,11 @@ export function createTimerApplicationRuntime(
     events,
     options.scrambleGenerators ?? [new CSTimerScrambleGenerator()],
   );
+  const imageGenerationService = new ImageGenerationService(
+    bus,
+    events,
+    options.imageGenerator ?? new CubeBundleScramblePreviewGenerator(),
+  );
   const devices: readonly ITimerDevice[] = options.devices ?? (keyboardDevice ? [keyboardDevice] : []);
   const ready = devices.reduce<Promise<void>>(
     (registration, device) => registration.then(() => deviceManager.registerDevice(device)),
@@ -88,6 +98,7 @@ export function createTimerApplicationRuntime(
     keyboardDevice,
     keyboardBoundary,
     scrambleService,
+    imageGenerationService,
     ready,
     createGenerationClient(scopeId: string) {
       return createGenerationClient(bus, events, scopeId);
@@ -97,6 +108,7 @@ export function createTimerApplicationRuntime(
       destroyed = true;
       await ready;
       await deviceManager.destroy();
+      imageGenerationService.destroy();
       scrambleService.destroy();
       catalog.destroy();
       eventLogger?.destroy();

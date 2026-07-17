@@ -13,10 +13,12 @@
     Copy,
     Expand,
     Hourglass,
+    Image,
     ListTree,
     Minimize2,
     Play,
     Radio,
+    Shuffle,
     Square,
     Timer,
     Trash2,
@@ -125,6 +127,12 @@
   }
 
   function eventVisual(type: string) {
+    if (type.startsWith("generation.scramble.")) {
+      return { icon: Shuffle, color: "text-primary", label: "Scramble generation" };
+    }
+    if (type.startsWith("generation.image.")) {
+      return { icon: Image, color: "text-secondary", label: "Image generation" };
+    }
     if (type.endsWith("keyboard-key-down")) {
       return { icon: ArrowDownToLine, color: "text-sky-400", label: "Key down" };
     }
