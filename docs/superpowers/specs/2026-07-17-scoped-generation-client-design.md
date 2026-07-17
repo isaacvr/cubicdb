@@ -120,12 +120,18 @@ Image configuration receives existing scramble data and describes only rendering
 interface ImageGenerationConfig {
   scramble: string;
   puzzle: PuzzleType;
-  view: CubeMode;
+  mode: CubeMode;
+  view: CubeView;
   order?: number | number[];
 }
 ```
 
-The independent `CubeMode` view allows, for example, a normal 3x3 scramble to be rendered as an OLL or PLL view without changing scramble generation.
+`CubeMode` and `CubeView` control separate parts of rendering:
+
+- `mode` selects the puzzle-state presentation, such as normal, OLL, or PLL;
+- `view` selects the visual projection, such as `plan`, `trans`, `2d`, or `bird`.
+
+Both are explicit in the image request so a normal 3x3 scramble can be rendered with any supported mode and viewpoint without changing scramble generation. Temporary compatibility adapters may use the existing `trans` default when translating a legacy caller, but new callers provide the view explicitly.
 
 Additional renderer options may be added to this contract when required. They must not be folded into the scramble contract.
 
@@ -302,6 +308,7 @@ Every commit group includes tests for each changed part.
 
 - Scramble single/batch generation, defaults, normalization, and final failure.
 - Image rendering for independent `CubeMode` values.
+- Image rendering for independent `CubeView` projections.
 - Image success on attempts one, two, and three.
 - Image final failure after exactly three attempts.
 - Service teardown prevents later publication.
@@ -314,6 +321,7 @@ Using the real application EventBus and deterministic adapters and clocks:
 - one scope can complete concurrent requests independently;
 - a timer accepts only its latest display request while a batch tool accepts all results;
 - a normal scramble can produce an OLL or PLL image request;
+- the same scramble and mode can produce different supported `CubeView` projections;
 - scramble display does not wait for image generation;
 - an image failure does not replace or clear the valid scramble;
 - debugger logging observes the complete flow without changing it.
@@ -332,6 +340,7 @@ After timer image integration, the user validates:
 
 - normal preview generation;
 - independent OLL/PLL-style render selection where available;
+- independent `plan`, `trans`, `2d`, and `bird` view selection where supported;
 - image enable/disable behavior;
 - non-blocking scramble display;
 - visible retry/failure diagnostics.
