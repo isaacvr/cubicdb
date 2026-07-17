@@ -18,6 +18,7 @@ describe('event-driven scramble UI bridge', () => {
 
     expect(timer).toContain('flags: { keyboard: true, scramble: true }');
     expect(timer).toContain('eventTimerRuntime.requestScramble(input, nativeEvent)');
+    expect(timer).toContain('getScrambleRequest: source => createScrambleRequestInput');
     expect(timer).toContain('timerController.scramble.set(eventTimerRuntime.state.scramble)');
     expect(timer).not.toContain('eventTimerRuntime.state.scramblePreview');
   });

@@ -84,6 +84,15 @@
     application: timerApplication,
     ownerId: `timer:${page.params.sessionId ?? "primary"}`,
     flags: { keyboard: true, scramble: true },
+    getScrambleRequest: source => createScrambleRequestInput({
+      selectedMode: get(modeStore),
+      selectedProbability: get(probabilityStore),
+      modeOverride: useMode || undefined,
+      lengthOverride: useLen || undefined,
+      probabilityOverride: useProb !== -1 ? useProb : undefined,
+      providedScramble: useScramble || undefined,
+      source,
+    }),
     onRunStopped: (elapsedMs, penalty) => timerController.addSolve(elapsedMs, penalty),
   });
   let requestedDeviceId: string | null = null;
