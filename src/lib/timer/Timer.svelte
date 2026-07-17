@@ -29,10 +29,8 @@
   import { page } from "$app/state";
   import { createTimerRuntime } from "./TimerCompositionRoot.svelte";
   import { getTimerApplicationContext } from "./context/timerApplicationContext";
-  import {
-    LEGACY_TIMER_DEVICE_SELECTIONS,
-    TIMER_DEVICE_IDS,
-  } from "./devices/TimerDeviceDescriptor";
+  import { TIMER_DEVICE_IDS } from "./devices/TimerDeviceDescriptor";
+  import { resolveTimerDeviceSelection } from "./devices/TimerDeviceSelection";
   import {
     SCRAMBLE_REQUEST_SOURCES,
     type ScrambleRequestSource,
@@ -143,8 +141,8 @@
     timerController.decimals.set(eventTimerRuntime.state.decimals);
 
     const input = currentSession?.settings.input;
-    const wantsManagedKeyboard = input === LEGACY_TIMER_DEVICE_SELECTIONS.KEYBOARD
-      || input === TIMER_DEVICE_IDS.KEYBOARD;
+    const normalizedInput = resolveTimerDeviceSelection(input, timerApplication.catalog.devices);
+    const wantsManagedKeyboard = normalizedInput === TIMER_DEVICE_IDS.KEYBOARD;
     if (wantsManagedKeyboard && requestedDeviceId !== TIMER_DEVICE_IDS.KEYBOARD) {
       requestedDeviceId = TIMER_DEVICE_IDS.KEYBOARD;
       void eventTimerRuntime.requestActiveDevice(TIMER_DEVICE_IDS.KEYBOARD);
