@@ -41,6 +41,19 @@ describe('TimerApplicationRuntime', () => {
     await runtime.destroy();
   });
 
+  it('creates scope-bound generation clients', async () => {
+    const runtime = createTimerApplicationRuntime({
+      eventLogSink: null,
+      devices: [],
+    });
+    const client = runtime.createGenerationClient('timer:1');
+
+    expect(client.scopeId).toBe('timer:1');
+
+    client.destroy();
+    await runtime.destroy();
+  });
+
   it('composes one bus, factory, catalog, manager, and logger', async () => {
     const info = vi.fn();
     const device = keyboard();

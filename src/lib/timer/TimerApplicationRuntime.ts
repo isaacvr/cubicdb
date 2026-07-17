@@ -1,4 +1,5 @@
 import { EventBus } from '$lib/events/EventBus';
+import { createGenerationClient, type GenerationClient } from '$lib/events/generation';
 import type { TimerEvent } from '$lib/events/timer/TimerEvent';
 import {
   TimerEventFactory,
@@ -35,6 +36,7 @@ export interface TimerApplicationRuntime {
   readonly keyboardBoundary: KeyboardInputBoundary;
   readonly scrambleService: ScrambleService;
   readonly ready: Promise<void>;
+  createGenerationClient(scopeId: string): GenerationClient;
   destroy(): Promise<void>;
 }
 
@@ -87,6 +89,9 @@ export function createTimerApplicationRuntime(
     keyboardBoundary,
     scrambleService,
     ready,
+    createGenerationClient(scopeId: string) {
+      return createGenerationClient(bus, events, scopeId);
+    },
     async destroy() {
       if (destroyed) return;
       destroyed = true;
