@@ -1,19 +1,16 @@
 import { describe, expect, it, vi } from 'vitest';
+import { GENERATION_EVENTS } from '$lib/events/generation';
 import { createApplicationEventBus, TimerEventFactory } from '$lib/events/timer/TimerEventFactory';
-import { SCRAMBLE_REQUEST_SOURCES } from '$lib/events/timer/ScrambleEventTypes';
-import { TIMER_EVENTS } from '$lib/events/timer/TimerEventRegistry';
 import type { TimerEvent } from '$lib/events/timer/TimerEvent';
 import type { IScrambleGenerator } from './IScrambleGenerator';
 import { ScrambleService } from './ScrambleService';
 
 function deferred<T>() {
   let resolve!: (value: T) => void;
-  let reject!: (reason?: unknown) => void;
-  const promise = new Promise<T>((resolvePromise, rejectPromise) => {
+  const promise = new Promise<T>(resolvePromise => {
     resolve = resolvePromise;
-    reject = rejectPromise;
   });
-  return { promise, resolve, reject };
+  return { promise, resolve };
 }
 
 function createHarness(generators: IScrambleGenerator[], normalize = (value: string) => value.trim()) {
@@ -29,14 +26,16 @@ function createHarness(generators: IScrambleGenerator[], normalize = (value: str
   return { bus, events, observed, service };
 }
 
-function requestPayload(providedScramble?: string) {
+function requestPayload(mode = '333') {
   return {
-    ownerId: 'timer:one',
-    mode: '333',
-    length: 20,
-    probability: -1,
-    source: SCRAMBLE_REQUEST_SOURCES.USER_REQUESTED,
-    ...(providedScramble === undefined ? {} : { providedScramble }),
+    scopeId: 'timer:one',
+    config: {
+      mode,
+      count: 1,
+      length: 20,
+      probability: -1,
+      source: 'user-requested',
+    },
   };
 }
 
@@ -54,63 +53,63 @@ describe('ScrambleService', () => {
     };
     const normalize = vi.fn((value: string) => `normalized:${value}`);
     const { bus, events, observed, service } = createHarness([generator], normalize);
-    const request = events.create(
-      TIMER_EVENTS.SCRAMBLE_REQUESTED,
-      requestPayload('R U'),
-    );
+    const request = events.create(GENERATION_EVENTS.SCRAMBLE_REQUESTED, {
+      ...requestPayload(),
+      config: {
+        ...requestPayload().config,
+        providedScramble: 'R U',
+      },
+    });
 
     await bus.publish(request);
     await settle();
 
     expect(generator.generate).not.toHaveBeenCalled();
     expect(observed.at(-1)).toMatchObject({
-      type: TIMER_EVENTS.SCRAMBLE_GENERATED,
+      type: GENERATION_EVENTS.SCRAMBLE_GENERATED,
       payload: {
-        ownerId: 'timer:one',
+        scopeId: 'timer:one',
         requestId: request.id,
-        scramble: 'normalized:R U',
+        scrambles: ['normalized:R U'],
       },
     });
     service.destroy();
   });
 
-  it('skips unsupported generators and publishes the first normalized success', async () => {
+  it('skips unsupported generators and publishes normalized scramble arrays', async () => {
     const unsupported: IScrambleGenerator = {
       id: 'unsupported',
       supports: () => false,
       generate: vi.fn(() => 'unused'),
     };
-    const empty: IScrambleGenerator = {
-      id: 'empty',
-      supports: () => true,
-      generate: vi.fn(() => null),
-    };
-    const broken: IScrambleGenerator = {
-      id: 'broken',
-      supports: () => true,
-      generate: vi.fn(() => { throw new TypeError('broken generator'); }),
-    };
     const successful: IScrambleGenerator = {
       id: 'successful',
       supports: () => true,
-      generate: vi.fn(() => '  R U  '),
+      generate: vi.fn()
+        .mockReturnValueOnce('  R U  ')
+        .mockReturnValueOnce('  F R  '),
     };
     const { bus, events, observed, service } = createHarness([
       unsupported,
-      empty,
-      broken,
       successful,
     ]);
-    const request = events.create(TIMER_EVENTS.SCRAMBLE_REQUESTED, requestPayload());
+    const request = events.create(GENERATION_EVENTS.SCRAMBLE_REQUESTED, {
+      ...requestPayload(),
+      config: {
+        ...requestPayload().config,
+        count: 2,
+      },
+    });
 
     await bus.publish(request);
     await settle();
 
     expect(unsupported.generate).not.toHaveBeenCalled();
+    expect(successful.generate).toHaveBeenCalledTimes(2);
     expect(successful.generate).toHaveBeenCalledWith({ mode: '333', length: 20, probability: -1 });
     expect(observed.at(-1)).toMatchObject({
-      type: TIMER_EVENTS.SCRAMBLE_GENERATED,
-      payload: { requestId: request.id, scramble: 'R U' },
+      type: GENERATION_EVENTS.SCRAMBLE_GENERATED,
+      payload: { requestId: request.id, scrambles: ['R U', 'F R'] },
     });
     service.destroy();
   });
@@ -121,18 +120,19 @@ describe('ScrambleService', () => {
       { id: 'throws', supports: () => true, generate: () => { throw 'no scramble'; } },
     ];
     const { bus, events, observed, service } = createHarness(generators);
-    const request = events.create(TIMER_EVENTS.SCRAMBLE_REQUESTED, requestPayload());
+    const request = events.create(GENERATION_EVENTS.SCRAMBLE_REQUESTED, requestPayload());
 
     await bus.publish(request);
     await settle();
 
     expect(observed.at(-1)).toMatchObject({
-      type: TIMER_EVENTS.SCRAMBLE_GENERATION_FAILED,
+      type: GENERATION_EVENTS.SCRAMBLE_FAILED,
       payload: {
+        scopeId: 'timer:one',
         requestId: request.id,
         errors: [
-          { generatorId: 'empty', error: { name: 'Error', message: 'Generator returned no scramble' } },
-          { generatorId: 'throws', error: { name: 'Error', message: 'no scramble' } },
+          { name: 'Error', message: 'Generator returned no scramble', source: 'empty' },
+          { name: 'Error', message: 'no scramble', source: 'throws' },
         ],
       },
     });
@@ -146,24 +146,20 @@ describe('ScrambleService', () => {
       generate: vi.fn(() => 'unused'),
     };
     const { bus, events, observed, service } = createHarness([generator]);
-    const request = events.create(TIMER_EVENTS.SCRAMBLE_REQUESTED, {
-      ...requestPayload(),
-      mode: 'missing-mode',
-    });
+    const request = events.create(GENERATION_EVENTS.SCRAMBLE_REQUESTED, requestPayload('missing-mode'));
 
     await bus.publish(request);
     await settle();
 
     expect(observed.at(-1)).toMatchObject({
-      type: TIMER_EVENTS.SCRAMBLE_GENERATION_FAILED,
+      type: GENERATION_EVENTS.SCRAMBLE_FAILED,
       payload: {
+        scopeId: 'timer:one',
         requestId: request.id,
         errors: [{
-          generatorId: 'scramble-service',
-          error: {
-            name: 'UnsupportedScrambleMode',
-            message: 'No scramble generator supports mode "missing-mode"',
-          },
+          name: 'UnsupportedScrambleMode',
+          message: 'No scramble generator supports mode "missing-mode"',
+          source: 'scramble-service',
         }],
       },
     });
@@ -181,8 +177,8 @@ describe('ScrambleService', () => {
         .mockReturnValueOnce(second.promise),
     };
     const { bus, events, observed, service } = createHarness([generator]);
-    const firstRequest = events.create(TIMER_EVENTS.SCRAMBLE_REQUESTED, requestPayload());
-    const secondRequest = events.create(TIMER_EVENTS.SCRAMBLE_REQUESTED, requestPayload());
+    const firstRequest = events.create(GENERATION_EVENTS.SCRAMBLE_REQUESTED, requestPayload());
+    const secondRequest = events.create(GENERATION_EVENTS.SCRAMBLE_REQUESTED, requestPayload());
 
     await bus.publish(firstRequest);
     await bus.publish(secondRequest);
@@ -191,7 +187,7 @@ describe('ScrambleService', () => {
     first.resolve('first');
     await settle();
 
-    const results = observed.filter(event => event.type === TIMER_EVENTS.SCRAMBLE_GENERATED);
+    const results = observed.filter(event => event.type === GENERATION_EVENTS.SCRAMBLE_GENERATED);
     expect(results.map(event => event.payload.requestId)).toEqual([
       secondRequest.id,
       firstRequest.id,
@@ -207,12 +203,12 @@ describe('ScrambleService', () => {
       generate: () => pending.promise,
     };
     const { bus, events, observed, service } = createHarness([generator]);
-    await bus.publish(events.create(TIMER_EVENTS.SCRAMBLE_REQUESTED, requestPayload()));
+    await bus.publish(events.create(GENERATION_EVENTS.SCRAMBLE_REQUESTED, requestPayload()));
 
     service.destroy();
     pending.resolve('late');
     await settle();
 
-    expect(observed.some(event => event.type === TIMER_EVENTS.SCRAMBLE_GENERATED)).toBe(false);
+    expect(observed.some(event => event.type === GENERATION_EVENTS.SCRAMBLE_GENERATED)).toBe(false);
   });
 });

@@ -1,4 +1,5 @@
 import type { EventBus, EventSubscription } from '$lib/events/EventBus';
+import type { GenerationClient, ScrambleGenerationConfig } from '$lib/events/generation';
 import { TimerState as TimerStateValue, type Penalty } from '@interfaces';
 import type { TimerEvent } from '$lib/events/timer/TimerEvent';
 import { TIMER_EVENTS } from '$lib/events/timer/TimerEventRegistry';
@@ -46,6 +47,7 @@ export interface TimerRuntime {
   readonly readonlyView: TimerReadonlyView;
   readonly bus: EventBus<TimerEvent>;
   readonly events: TimerEventFactory;
+  readonly generation: GenerationClient;
   readonly flags: TimerMigrationFlags;
   readonly keyboard: {
     device: KeyboardDevice;
@@ -73,6 +75,7 @@ export function createTimerRuntime(options: TimerRuntimeOptions = {}): TimerRunt
   const readonlyView = createTimerReadonlyView(state);
   const flags = createTimerMigrationFlags(options.flags);
   const reactor = new TimerReactor(application.bus, state, ownerId);
+  const generation = application.createGenerationClient(ownerId);
   const scrambleSubscription = registerScrambleHandlers(application.bus, state, ownerId);
   const runStoppedSubscription: EventSubscription | null = options.onRunStopped
     ? application.bus.subscribe(
@@ -91,21 +94,21 @@ export function createTimerRuntime(options: TimerRuntimeOptions = {}): TimerRunt
       application.bus.subscribe(
         TIMER_EVENTS.DEVICE_RUN_STOPPED,
         `${ownerId}:timer-runtime:scramble-after-stop`,
-        event => {
+        async event => {
           if (event.payload.ownerId !== ownerId) return;
           const input = options.getScrambleRequest?.(SCRAMBLE_REQUEST_SOURCES.SOLVE_COMPLETED);
-          if (input) void publishScrambleRequest(input);
+          if (input) await publishScrambleRequest(input);
         },
       ),
       application.bus.subscribe(
         TIMER_EVENTS.DEVICE_RUN_CANCELLED,
         `${ownerId}:timer-runtime:scramble-after-cancel`,
-        event => {
+        async event => {
           if (event.payload.ownerId !== ownerId) return;
           if (event.payload.cancelledFrom !== TimerStateValue.RUNNING) return;
           if (state.session?.settings.scrambleAfterCancel !== true) return;
           const input = options.getScrambleRequest?.(SCRAMBLE_REQUEST_SOURCES.RUNNING_CANCELLED);
-          if (input) void publishScrambleRequest(input);
+          if (input) await publishScrambleRequest(input);
         },
       ),
     );
@@ -130,12 +133,18 @@ export function createTimerRuntime(options: TimerRuntimeOptions = {}): TimerRunt
     input: ScrambleRequestInput,
     nativeEvent?: NativeTimestampSource,
   ): Promise<string> {
-    const payload = { ownerId, ...input };
-    const event = nativeEvent
-      ? application.events.fromNative(TIMER_EVENTS.SCRAMBLE_REQUESTED, payload, nativeEvent)
-      : application.events.create(TIMER_EVENTS.SCRAMBLE_REQUESTED, payload);
-    await application.bus.publish(event);
-    return event.id;
+    const config: ScrambleGenerationConfig = {
+      mode: input.mode,
+      count: 1,
+      length: input.length,
+      probability: input.probability,
+      source: input.source,
+    };
+    if (input.providedScramble !== undefined) config.providedScramble = input.providedScramble;
+    return generation.scrambles.request(
+      config,
+      nativeEvent ? { sourceEvent: nativeEvent } : undefined,
+    );
   }
 
   return {
@@ -145,6 +154,7 @@ export function createTimerRuntime(options: TimerRuntimeOptions = {}): TimerRunt
     readonlyView,
     bus: application.bus,
     events: application.events,
+    generation,
     flags,
     keyboard,
     ready,
@@ -181,6 +191,7 @@ export function createTimerRuntime(options: TimerRuntimeOptions = {}): TimerRunt
       scrambleSubscription.unsubscribe();
       runStoppedSubscription?.unsubscribe();
       for (const subscription of lifecycleSubscriptions) subscription.unsubscribe();
+      generation.destroy();
       if (ownsApplication) await application.destroy();
     },
   };

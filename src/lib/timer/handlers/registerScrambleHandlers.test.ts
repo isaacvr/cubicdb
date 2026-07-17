@@ -1,9 +1,8 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { EventBus } from '$lib/events/EventBus';
+import { GENERATION_EVENTS } from '$lib/events/generation';
 import { createApplicationEventBus, TimerEventFactory } from '$lib/events/timer/TimerEventFactory';
-import { SCRAMBLE_REQUEST_SOURCES } from '$lib/events/timer/ScrambleEventTypes';
 import type { TimerEvent } from '$lib/events/timer/TimerEvent';
-import { TIMER_EVENTS } from '$lib/events/timer/TimerEventRegistry';
 import { TimerState } from '../TimerState.svelte';
 import { registerScrambleHandlers } from './registerScrambleHandlers';
 
@@ -22,22 +21,33 @@ describe('registerScrambleHandlers', () => {
     state = new TimerState();
   });
 
-  function request(ownerId = 'timer:one') {
-    return events.create(TIMER_EVENTS.SCRAMBLE_REQUESTED, {
-      ownerId,
-      mode: '333',
-      length: 20,
-      probability: [1, 2],
-      source: SCRAMBLE_REQUEST_SOURCES.USER_REQUESTED,
+  function requested(scopeId: string) {
+    return events.create(GENERATION_EVENTS.SCRAMBLE_REQUESTED, {
+      scopeId,
+      config: {
+        mode: '333',
+        count: 1,
+        length: 20,
+        probability: [1, 2],
+        source: 'user-requested',
+      },
     });
   }
 
-  it('projects only the latest correlated result for its owner', async () => {
-    const subscription = registerScrambleHandlers(bus, state, 'timer:one');
-    const stale = request();
-    const current = request();
+  function generated(scopeId: string, requestId: string, scramble: string) {
+    return events.create(GENERATION_EVENTS.SCRAMBLE_GENERATED, {
+      scopeId,
+      requestId,
+      scrambles: [scramble],
+    });
+  }
 
-    await bus.publish(request('timer:two'));
+  it('projects only the latest correlated result for its scope', async () => {
+    const subscription = registerScrambleHandlers(bus, state, 'timer:one');
+    const stale = requested('timer:one');
+    const current = requested('timer:one');
+
+    await bus.publish(requested('timer:two'));
     expect(state.scrambleRequestId).toBeNull();
 
     await bus.publish(stale);
@@ -49,22 +59,9 @@ describe('registerScrambleHandlers', () => {
       scrambleProbability: [1, 2],
     });
 
-    await bus.publish(events.create(TIMER_EVENTS.SCRAMBLE_GENERATED, {
-      ...stale.payload,
-      requestId: stale.id,
-      scramble: 'stale',
-    }));
-    await bus.publish(events.create(TIMER_EVENTS.SCRAMBLE_GENERATED, {
-      ...current.payload,
-      requestId: current.id,
-      scramble: 'current',
-    }));
-    await bus.publish(events.create(TIMER_EVENTS.SCRAMBLE_GENERATED, {
-      ...current.payload,
-      ownerId: 'timer:two',
-      requestId: current.id,
-      scramble: 'other owner',
-    }));
+    await bus.publish(generated('timer:one', stale.id, 'stale'));
+    await bus.publish(generated('timer:two', current.id, 'other scope'));
+    await bus.publish(generated('timer:one', current.id, 'current'));
 
     expect(state.scramble).toBe('current');
     subscription.unsubscribe();
@@ -74,7 +71,7 @@ describe('registerScrambleHandlers', () => {
     const subscription = registerScrambleHandlers(bus, state, 'timer:one');
     subscription.unsubscribe();
 
-    await bus.publish(request());
+    await bus.publish(requested('timer:one'));
 
     expect(state.scrambleRequestId).toBeNull();
   });

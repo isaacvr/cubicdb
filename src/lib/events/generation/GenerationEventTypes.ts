@@ -7,6 +7,7 @@ export type GenerationProbability = number | number[];
 export interface GenerationError {
   name: string;
   message: string;
+  source?: string;
 }
 
 export interface ScrambleGenerationConfig {

@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { AverageSetting, TimerState } from '@interfaces';
+import { GENERATION_EVENTS } from '$lib/events/generation';
 import { SCRAMBLE_REQUEST_SOURCES, type ScrambleRequestSource } from '$lib/events/timer/ScrambleEventTypes';
 import { TIMER_EVENTS } from '$lib/events/timer/TimerEventRegistry';
 import { createTimerApplicationRuntime } from './TimerApplicationRuntime';
@@ -37,8 +38,8 @@ describe('scramble lifecycle triggers', () => {
       onRunStopped: () => order.push('legacy-save'),
       getScrambleRequest: source => input(source),
     });
-    application.bus.subscribe(TIMER_EVENTS.SCRAMBLE_REQUESTED, 'test:request', event => {
-      if (event.payload.ownerId === 'timer:one') order.push(event.payload.source);
+    application.bus.subscribe(GENERATION_EVENTS.SCRAMBLE_REQUESTED, 'test:request', event => {
+      if (event.payload.scopeId === 'timer:one') order.push(event.payload.config.source ?? '');
     });
     await application.ready;
 

@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { Penalty, TimerState as TimerStateValue } from '@interfaces';
+import { GENERATION_EVENTS } from '$lib/events/generation';
 import { TIMER_EVENTS } from '$lib/events/timer/TimerEventRegistry';
 import { createTimerRuntime } from './TimerCompositionRoot.svelte';
 import { DEFAULT_TIMER_MIGRATION_FLAGS } from './TimerMigrationFlags';
@@ -50,9 +51,17 @@ describe('TimerCompositionRoot', () => {
     }, { timeStamp: 75.5 });
 
     expect(observed.find(event => event.id === requestId)).toMatchObject({
-      type: TIMER_EVENTS.SCRAMBLE_REQUESTED,
+      type: GENERATION_EVENTS.SCRAMBLE_REQUESTED,
       timestamp: 75.5,
-      payload: { ownerId: 'timer:one' },
+      payload: {
+        scopeId: 'timer:one',
+        config: {
+          mode: '333',
+          length: 20,
+          probability: -1,
+          source: SCRAMBLE_REQUEST_SOURCES.USER_REQUESTED,
+        },
+      },
     });
     expect(first.state.scrambleRequestId).toBe(requestId);
     await vi.waitFor(() => expect(first.state.scramble).toBe('R U'));

@@ -1,4 +1,4 @@
-import { GENERATION_EVENTS } from '$lib/events/generation/GenerationEventRegistry';
+import type { GenerationEventType } from '$lib/events/generation/GenerationEventRegistry';
 
 export const TIMER_EVENTS = {
   KEYBOARD_KEY_DOWN: 'timer.input.keyboard-key-down',
@@ -52,7 +52,8 @@ export const TIMER_EVENTS = {
   STATISTICS_UPDATED: 'timer.statistics.updated',
   NEW_RECORD: 'timer.statistics.new-record',
   HANDLER_FAILED: 'timer.system.handler-failed',
-  ...GENERATION_EVENTS,
 } as const;
 
-export type TimerEventType = (typeof TIMER_EVENTS)[keyof typeof TIMER_EVENTS];
+export type TimerEventType =
+  | (typeof TIMER_EVENTS)[keyof typeof TIMER_EVENTS]
+  | GenerationEventType;

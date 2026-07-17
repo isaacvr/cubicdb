@@ -1,6 +1,6 @@
 import type { EventSubscription, IEventBus } from '$lib/events/EventBus';
+import { GENERATION_EVENTS } from '$lib/events/generation';
 import type { TimerEvent } from '$lib/events/timer/TimerEvent';
-import { TIMER_EVENTS } from '$lib/events/timer/TimerEventRegistry';
 import type { TimerState } from '../TimerState.svelte';
 
 export function registerScrambleHandlers(
@@ -10,26 +10,26 @@ export function registerScrambleHandlers(
 ): EventSubscription {
   const subscriptions = [
     bus.subscribe(
-      TIMER_EVENTS.SCRAMBLE_REQUESTED,
+      GENERATION_EVENTS.SCRAMBLE_REQUESTED,
       `${ownerId}:scramble:requested`,
       event => {
-        if (event.payload.ownerId !== ownerId) return;
+        if (event.payload.scopeId !== ownerId) return;
         state.scrambleRequestId = event.id;
-        state.scrambleMode = event.payload.mode;
-        state.scrambleLength = event.payload.length;
-        state.scrambleProbability = Array.isArray(event.payload.probability)
-          ? [...event.payload.probability]
-          : event.payload.probability;
+        state.scrambleMode = event.payload.config.mode;
+        state.scrambleLength = event.payload.config.length ?? 0;
+        state.scrambleProbability = Array.isArray(event.payload.config.probability)
+          ? [...event.payload.config.probability]
+          : event.payload.config.probability ?? -1;
       },
       { priority: 100 },
     ),
     bus.subscribe(
-      TIMER_EVENTS.SCRAMBLE_GENERATED,
+      GENERATION_EVENTS.SCRAMBLE_GENERATED,
       `${ownerId}:scramble:generated`,
       event => {
-        if (event.payload.ownerId !== ownerId) return;
+        if (event.payload.scopeId !== ownerId) return;
         if (event.payload.requestId !== state.scrambleRequestId) return;
-        state.scramble = event.payload.scramble;
+        state.scramble = event.payload.scrambles[0] ?? '';
       },
     ),
   ];
