@@ -84,15 +84,19 @@
     application: timerApplication,
     ownerId: `timer:${page.params.sessionId ?? "primary"}`,
     flags: { keyboard: true, scramble: true },
-    getScrambleRequest: source => createScrambleRequestInput({
-      selectedMode: get(modeStore),
-      selectedProbability: get(probabilityStore),
-      modeOverride: useMode || undefined,
-      lengthOverride: useLen || undefined,
-      probabilityOverride: useProb !== -1 ? useProb : undefined,
-      providedScramble: useScramble || undefined,
-      source,
-    }),
+    getScrambleRequest: source => {
+      const selectedMode = get(modeStore);
+      if (!selectedMode?.[1]) return null;
+      return createScrambleRequestInput({
+        selectedMode,
+        selectedProbability: get(probabilityStore),
+        modeOverride: useMode || undefined,
+        lengthOverride: useLen || undefined,
+        probabilityOverride: useProb !== -1 ? useProb : undefined,
+        providedScramble: useScramble || undefined,
+        source,
+      });
+    },
     onRunStopped: (elapsedMs, penalty) => timerController.addSolve(elapsedMs, penalty),
   });
   let requestedDeviceId: string | null = null;
@@ -204,7 +208,7 @@
     ) => {
       if (eventTimerRuntime.flags.scramble) {
         const selectedMode = get(modeStore);
-        if (!selectedMode) return;
+        if (!selectedMode?.[1]) return;
         const input = createScrambleRequestInput({
           selectedMode,
           selectedProbability: get(probabilityStore),
@@ -237,7 +241,7 @@
     const currentSession = $sessionStore;
     const selectedMode = $modeStore;
     const selectedProbability = $probabilityStore;
-    if (!eventTimerRuntime.flags.scramble || !currentSession || !selectedMode) return;
+    if (!eventTimerRuntime.flags.scramble || !currentSession || !selectedMode?.[1]) return;
 
     const configuration = JSON.stringify([
       currentSession._id,

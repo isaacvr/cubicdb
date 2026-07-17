@@ -110,4 +110,30 @@ describe('scramble lifecycle triggers', () => {
     await runtime.destroy();
     await application.destroy();
   });
+
+  it('skips lifecycle scramble publishing when no request can be resolved yet', async () => {
+    const application = createTimerApplicationRuntime({ devices: [], eventLogSink: null });
+    const runtime = createTimerRuntime({
+      application,
+      ownerId: 'timer:one',
+      flags: { scramble: true },
+      getScrambleRequest: () => null,
+    });
+    const requests: string[] = [];
+    application.bus.subscribe(GENERATION_EVENTS.SCRAMBLE_REQUESTED, 'test:null-request', event => {
+      if (event.payload.scopeId === 'timer:one') requests.push(event.id);
+    });
+    await application.ready;
+
+    await application.bus.publish(application.events.create(TIMER_EVENTS.DEVICE_RUN_STOPPED, {
+      ownerId: 'timer:one',
+      deviceId: TIMER_DEVICE_IDS.KEYBOARD,
+      elapsedMs: 500,
+      steps: [],
+    }));
+
+    expect(requests).toEqual([]);
+    await runtime.destroy();
+    await application.destroy();
+  });
 });

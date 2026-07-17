@@ -41,4 +41,19 @@ describe('createScrambleRequestInput', () => {
       source: SCRAMBLE_REQUEST_SOURCES.USER_REQUESTED,
     });
   });
+
+  it('rejects empty selected and override modes before publishing a request', () => {
+    expect(() => createScrambleRequestInput({
+      selectedMode: { 0: 'Pending', 1: '', 2: 20 },
+      selectedProbability: -1,
+      source: SCRAMBLE_REQUEST_SOURCES.USER_REQUESTED,
+    })).toThrow('Scramble mode is required');
+
+    expect(() => createScrambleRequestInput({
+      selectedMode: { 0: '3x3', 1: '333', 2: 20 },
+      selectedProbability: -1,
+      modeOverride: '',
+      source: SCRAMBLE_REQUEST_SOURCES.USER_REQUESTED,
+    })).toThrow('Scramble mode is required');
+  });
 });

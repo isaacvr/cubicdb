@@ -298,8 +298,6 @@
           } else if (code === "KeyO" && options.oldScramble) {
             event.preventDefault();
             openDialog("old-scrambles", null, () => {});
-          } else if (code === "KeyC" && options.copyScramble) {
-            toClipboard();
           } else if (code === "Comma" && options.sessionSettings) {
             handleSettingsDialog();
           }
@@ -489,7 +487,6 @@
     tooltipText={$localLang.TIMER.copyScramble}
     placement="bottom-end"
     class="z-30"
-    keyBindings={["control", "c"]}
   >
     <Button
       style="--dash: 18;"

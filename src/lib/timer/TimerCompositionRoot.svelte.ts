@@ -42,7 +42,7 @@ export interface TimerRuntimeOptions {
   flags?: Partial<TimerMigrationFlags>;
   onTimerReading?: TimerReadingCallback;
   onRunStopped?: (elapsedMs: number, penalty: Penalty) => void;
-  getScrambleRequest?: (source: ScrambleRequestSource) => ScrambleRequestInput;
+  getScrambleRequest?: (source: ScrambleRequestSource) => ScrambleRequestInput | null;
 }
 
 export interface TimerRuntime {

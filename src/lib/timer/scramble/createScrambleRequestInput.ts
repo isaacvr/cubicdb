@@ -17,7 +17,8 @@ export interface ScrambleRequestResolutionInput {
 export function createScrambleRequestInput(
   input: ScrambleRequestResolutionInput,
 ): ScrambleRequestInput {
-  const mode = input.modeOverride ?? input.selectedMode[1];
+  const mode = (input.modeOverride ?? input.selectedMode[1]).trim();
+  if (!mode) throw new Error('Scramble mode is required');
   const randomStateLength = (mode === 'r3' || mode === 'r3ni')
     && typeof input.selectedProbability === 'number'
     ? input.selectedProbability

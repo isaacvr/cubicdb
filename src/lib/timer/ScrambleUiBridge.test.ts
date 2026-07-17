@@ -18,7 +18,8 @@ describe('event-driven scramble UI bridge', () => {
 
     expect(timer).toContain('flags: { keyboard: true, scramble: true }');
     expect(timer).toContain('eventTimerRuntime.requestScramble(input, nativeEvent)');
-    expect(timer).toContain('getScrambleRequest: source => createScrambleRequestInput');
+    expect(timer).toContain('getScrambleRequest: source => {');
+    expect(timer).toContain('return createScrambleRequestInput');
     expect(timer).toContain('timerController.scramble.set(eventTimerRuntime.state.scramble)');
     expect(timer).toContain('eventTimerRuntime.state.scramblePreview.map');
   });
@@ -28,6 +29,21 @@ describe('event-driven scramble UI bridge', () => {
 
     expect(options).toContain('initScrambler(undefined, undefined, undefined, event)');
     expect(options).toContain('initScrambler(scr, undefined, undefined, nativeEvent)');
+  });
+
+  it('leaves Ctrl+C available for native browser copy', () => {
+    const options = source('./TimerTab/TimerOptions.svelte');
+
+    expect(options).not.toContain('code === "KeyC" && options.copyScramble');
+    expect(options).not.toContain('keyBindings={["control", "c"]}');
+  });
+
+  it('does not publish scramble requests before a concrete mode code exists', () => {
+    const timer = source('./Timer.svelte');
+
+    expect(timer).toContain('if (!selectedMode?.[1]) return null;');
+    expect(timer).toContain('if (!selectedMode?.[1]) return;');
+    expect(timer).toContain('!selectedMode?.[1]');
   });
 
   it('lets the configuration effect own mode and probability changes', () => {
