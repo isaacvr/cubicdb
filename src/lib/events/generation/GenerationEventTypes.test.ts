@@ -40,6 +40,7 @@ describe('generation event contracts', () => {
 
     expectTypeOf<ImageGenerationConfig>().toEqualTypeOf<{
       scramble: string;
+      scrambleMode?: string;
       puzzle: PuzzleType;
       mode: CubeMode;
       view: CubeView;

@@ -31,6 +31,7 @@ function orderToNumber(order: number | number[] | undefined): number {
 }
 
 function resolveScrambleMode(config: ImageGenerationConfig): string {
+  if (config.scrambleMode) return config.scrambleMode;
   if (config.puzzle === 'rubik' || config.puzzle === 'icarry') {
     const order = orderToNumber(config.order);
     return `${order}${order}${order}`;

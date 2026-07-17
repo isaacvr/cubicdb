@@ -5,7 +5,6 @@ import {
   type ScrambleGenerationConfig,
 } from '$lib/events/generation';
 import { TimerState as TimerStateValue, type Penalty } from '@interfaces';
-import { CubeMode } from '@constants';
 import type { TimerEvent } from '$lib/events/timer/TimerEvent';
 import { TIMER_EVENTS } from '$lib/events/timer/TimerEventRegistry';
 import type { EventLogSink } from '$lib/logger/EventLogger';
@@ -20,6 +19,7 @@ import {
   type ScrambleRequestInput,
   type ScrambleRequestSource,
 } from '$lib/events/timer/ScrambleEventTypes';
+import { createImageGenerationConfig } from './scramble/createImageGenerationConfig';
 import { createTimerMigrationFlags, type TimerMigrationFlags } from './TimerMigrationFlags';
 import { TimerReactor } from './TimerReactor';
 import { createTimerReadonlyView, type TimerReadonlyView } from './TimerReadonlyView';
@@ -81,6 +81,7 @@ export function createTimerRuntime(options: TimerRuntimeOptions = {}): TimerRunt
   const flags = createTimerMigrationFlags(options.flags);
   const reactor = new TimerReactor(application.bus, state, ownerId);
   const generation = application.createGenerationClient(ownerId);
+  const scrambleModesByRequestId = new Map<string, string>();
   const scrambleSubscription = registerScrambleHandlers(application.bus, state, ownerId);
   const previewSubscriptions: EventSubscription[] = [
     application.bus.subscribe(
@@ -89,6 +90,8 @@ export function createTimerRuntime(options: TimerRuntimeOptions = {}): TimerRunt
       async event => {
         if (event.payload.scopeId !== ownerId) return;
         if (event.payload.requestId !== state.scrambleRequestId) return;
+        const scrambleMode = scrambleModesByRequestId.get(event.payload.requestId) ?? '333';
+        scrambleModesByRequestId.delete(event.payload.requestId);
         const scramble = event.payload.scrambles[0] ?? '';
         if (!scramble || state.session?.settings.genImage !== true) {
           state.scramblePreview = [];
@@ -98,13 +101,18 @@ export function createTimerRuntime(options: TimerRuntimeOptions = {}): TimerRunt
         }
         state.scramblePreview = [];
         state.scramblePreviewEnabled = true;
-        await generation.images.request({
+        await generation.images.request(createImageGenerationConfig({
           scramble,
-          puzzle: 'rubik',
-          mode: CubeMode.NORMAL,
-          view: 'trans',
-          order: [3, 3, 3],
-        });
+          scrambleMode,
+        }));
+      },
+    ),
+    application.bus.subscribe(
+      GENERATION_EVENTS.SCRAMBLE_FAILED,
+      `${ownerId}:timer-runtime:forget-failed-scramble-request`,
+      event => {
+        if (event.payload.scopeId !== ownerId) return;
+        scrambleModesByRequestId.delete(event.payload.requestId);
       },
     ),
     application.bus.subscribe(
@@ -199,10 +207,12 @@ export function createTimerRuntime(options: TimerRuntimeOptions = {}): TimerRunt
       source: input.source,
     };
     if (input.providedScramble !== undefined) config.providedScramble = input.providedScramble;
-    return generation.scrambles.request(
+    const requestId = await generation.scrambles.request(
       config,
       nativeEvent ? { sourceEvent: nativeEvent } : undefined,
     );
+    scrambleModesByRequestId.set(requestId, input.mode);
+    return requestId;
   }
 
   return {

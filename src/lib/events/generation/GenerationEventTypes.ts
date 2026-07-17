@@ -21,6 +21,7 @@ export interface ScrambleGenerationConfig {
 
 export interface ImageGenerationConfig {
   scramble: string;
+  scrambleMode?: string;
   puzzle: PuzzleType;
   mode: CubeMode;
   view: CubeView;

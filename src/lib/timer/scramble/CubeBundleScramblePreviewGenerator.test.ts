@@ -28,4 +28,29 @@ describe('CubeBundleScramblePreviewGenerator', () => {
     expect(cubes[0].view).toBe('bird');
     expect(draw).toHaveBeenCalledWith(cubes, 500, false, false, false);
   });
+
+  it('uses the source scramble mode when the image request carries one', async () => {
+    const cubes = [{ view: 'trans' }] as unknown as Puzzle[];
+    const toPuzzle = vi.fn(() => cubes);
+    const draw = vi.fn(async () => ['image']);
+    const generator = new CubeBundleScramblePreviewGenerator({
+      supports: mode => mode === '333cross',
+      toPuzzle,
+      draw,
+    });
+    const config = {
+      scramble: 'R U',
+      scrambleMode: '333cross',
+      puzzle: 'rubik' as const,
+      mode: CubeMode.CROSS,
+      view: 'plan' as const,
+      order: [3, 3, 3],
+    };
+
+    expect(generator.supports(config)).toBe(true);
+    await generator.generate(config);
+
+    expect(toPuzzle).toHaveBeenCalledWith('R U', '333cross');
+    expect(cubes[0].view).toBe('plan');
+  });
 });

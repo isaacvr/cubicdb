@@ -125,20 +125,22 @@ describe('TimerCompositionRoot', () => {
         scopeId: 'timer:one',
         config: {
           scramble: 'R U',
+          scrambleMode: '333',
           puzzle: 'rubik',
           mode: CubeMode.NORMAL,
-          view: 'trans',
-          order: [3, 3, 3],
+          view: '2d',
+          order: [3],
         },
       },
     });
     expect(runtime.state.scramblePreviewRequestId).toBe(imageRequest?.id);
     expect(imageGenerator.generate).toHaveBeenCalledWith({
       scramble: 'R U',
+      scrambleMode: '333',
       puzzle: 'rubik',
       mode: CubeMode.NORMAL,
-      view: 'trans',
-      order: [3, 3, 3],
+      view: '2d',
+      order: [3],
     });
 
     await runtime.destroy();
