@@ -85,9 +85,6 @@ export class TimerReactor {
         if (event.payload.ownerId !== this.ownerId) return;
         this.state.steps = [...this.state.steps, event.payload.elapsedMs];
       }),
-      this.eventBus.subscribe(TIMER_EVENTS.SCRAMBLE_GENERATED, `${this.ownerId}:timer-reactor:scramble`, event => {
-        this.state.scramble = event.payload.scramble;
-      }),
       this.eventBus.subscribe(TIMER_EVENTS.STATISTICS_UPDATED, `${this.ownerId}:timer-reactor:statistics`, event => {
         this.state.statistics = event.payload.statistics;
       }),

@@ -5,6 +5,7 @@ import {
   type Session,
   type Statistics,
 } from '@interfaces';
+import type { ScrambleProbability } from '$lib/events/timer/ScrambleEventTypes';
 
 /**
  * Estado reactivo del Timer.
@@ -20,6 +21,10 @@ export class TimerState {
   ready: boolean = $state(false);
   decimals: boolean = $state(true);
   scramble: string = $state('');
+  scrambleRequestId: string | null = $state(null);
+  scrambleMode: string = $state('');
+  scrambleLength: number = $state(0);
+  scrambleProbability: ScrambleProbability = $state(-1);
   lastSolve: Solve | null = $state(null);
   session: Session | null = $state(null);
   solves: Solve[] = $state([]);
