@@ -38,12 +38,14 @@ describe('event-driven scramble UI bridge', () => {
     expect(options).not.toContain('keyBindings={["control", "c"]}');
   });
 
-  it('does not publish scramble requests before a concrete mode code exists', () => {
+  it('resolves a fallback mode before publishing scramble requests', () => {
     const timer = source('./Timer.svelte');
 
-    expect(timer).toContain('if (!selectedMode?.[1]) return null;');
-    expect(timer).toContain('if (!selectedMode?.[1]) return;');
-    expect(timer).toContain('!selectedMode?.[1]');
+    expect(timer).toContain('resolveScrambleModeSelection');
+    expect(timer).toContain('selectedGroup: get(timerController.group)');
+    expect(timer).toContain('selectedGroup: $groupStore');
+    expect(timer).toContain('if (!selectedMode) return null;');
+    expect(timer).toContain('if (!selectedMode) return;');
   });
 
   it('lets the configuration effect own mode and probability changes', () => {

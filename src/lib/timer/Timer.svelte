@@ -39,6 +39,7 @@
   } from "$lib/events/timer/ScrambleEventTypes";
   import type { NativeTimestampSource } from "$lib/events/timer/TimerEventFactory";
   import { createScrambleRequestInput } from "./scramble/createScrambleRequestInput";
+  import { resolveScrambleModeSelection } from "./scramble/resolveScrambleModeSelection";
 
   interface TimerProps {
     battle?: boolean;
@@ -77,6 +78,7 @@
   // Core initialization
   const timerController = new TimerController();
   const sessionStore = timerController.session;
+  const groupStore = timerController.group;
   const modeStore = timerController.mode;
   const probabilityStore = timerController.prob;
   const timerApplication = getTimerApplicationContext();
@@ -85,8 +87,12 @@
     ownerId: `timer:${page.params.sessionId ?? "primary"}`,
     flags: { keyboard: true, scramble: true },
     getScrambleRequest: source => {
-      const selectedMode = get(modeStore);
-      if (!selectedMode?.[1]) return null;
+      const selectedMode = resolveScrambleModeSelection({
+        selectedMode: get(modeStore),
+        selectedGroup: get(timerController.group),
+        menu: MENU,
+      });
+      if (!selectedMode) return null;
       return createScrambleRequestInput({
         selectedMode,
         selectedProbability: get(probabilityStore),
@@ -207,8 +213,12 @@
       source: ScrambleRequestSource = SCRAMBLE_REQUEST_SOURCES.USER_REQUESTED
     ) => {
       if (eventTimerRuntime.flags.scramble) {
-        const selectedMode = get(modeStore);
-        if (!selectedMode?.[1]) return;
+        const selectedMode = resolveScrambleModeSelection({
+          selectedMode: get(modeStore),
+          selectedGroup: get(timerController.group),
+          menu: MENU,
+        });
+        if (!selectedMode) return;
         const input = createScrambleRequestInput({
           selectedMode,
           selectedProbability: get(probabilityStore),
@@ -239,9 +249,13 @@
 
   $effect(() => {
     const currentSession = $sessionStore;
-    const selectedMode = $modeStore;
+    const selectedMode = resolveScrambleModeSelection({
+      selectedMode: $modeStore,
+      selectedGroup: $groupStore,
+      menu: MENU,
+    });
     const selectedProbability = $probabilityStore;
-    if (!eventTimerRuntime.flags.scramble || !currentSession || !selectedMode?.[1]) return;
+    if (!eventTimerRuntime.flags.scramble || !currentSession || !selectedMode) return;
 
     const configuration = JSON.stringify([
       currentSession._id,
