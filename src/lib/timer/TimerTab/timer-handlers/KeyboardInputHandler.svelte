@@ -187,7 +187,7 @@
       class:text-error={$timerState === TimerState.PREVENTION && !$ready}
       class:text-success={$ready}
     >
-      {#if $timerState === TimerState.INSPECTION && $time <= 0 && $time > -2000}
+      {#if $timerState === TimerState.INSPECTION && $time <= 0}
         <span class="select-none text-warning">+2</span>
       {:else}
         {@render displayTimer(timer($time, $decimals, false).split("."))}

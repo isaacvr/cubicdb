@@ -38,5 +38,7 @@ describe('managed keyboard UI wiring', () => {
     expect(keyboardDisplay).toContain('class:text-error={$timerState === TimerState.PREVENTION && !$ready}');
     expect(keyboardDisplay).toContain('class:text-success={$ready}');
     expect(keyboardDisplay).toContain('<span class="select-none text-warning">+2</span>');
+    expect(keyboardDisplay).toContain('$timerState === TimerState.INSPECTION && $time <= 0');
+    expect(keyboardDisplay).not.toContain('$time > -2000');
   });
 });
