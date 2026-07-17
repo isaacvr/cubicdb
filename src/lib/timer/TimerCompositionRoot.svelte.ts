@@ -6,8 +6,10 @@ import type { EventLogSink } from '$lib/logger/EventLogger';
 import type {
   IEventIdProvider,
   IMonotonicClock,
+  NativeTimestampSource,
   TimerEventFactory,
 } from '$lib/events/timer/TimerEventFactory';
+import type { ScrambleRequestInput } from '$lib/events/timer/ScrambleEventTypes';
 import { createTimerMigrationFlags, type TimerMigrationFlags } from './TimerMigrationFlags';
 import { TimerReactor } from './TimerReactor';
 import { createTimerReadonlyView, type TimerReadonlyView } from './TimerReadonlyView';
@@ -19,6 +21,7 @@ import {
 import type { TimerReadingCallback } from './devices/ITimerDevice';
 import type { KeyboardDevice } from './devices/KeyboardDevice';
 import type { KeyboardInputBoundary } from './handlers/KeyboardInputBoundary';
+import { registerScrambleHandlers } from './handlers/registerScrambleHandlers';
 
 export interface TimerRuntimeOptions {
   application?: TimerApplicationRuntime;
@@ -46,6 +49,10 @@ export interface TimerRuntime {
   readonly ready: Promise<void>;
   requestActiveDevice(deviceId: string): Promise<boolean>;
   releaseActiveDevice(deviceId: string): Promise<void>;
+  requestScramble(
+    input: ScrambleRequestInput,
+    nativeEvent?: NativeTimestampSource,
+  ): Promise<string>;
   destroy(): Promise<void>;
 }
 
@@ -61,6 +68,7 @@ export function createTimerRuntime(options: TimerRuntimeOptions = {}): TimerRunt
   const readonlyView = createTimerReadonlyView(state);
   const flags = createTimerMigrationFlags(options.flags);
   const reactor = new TimerReactor(application.bus, state, ownerId);
+  const scrambleSubscription = registerScrambleHandlers(application.bus, state, ownerId);
   const runStoppedSubscription: EventSubscription | null = options.onRunStopped
     ? application.bus.subscribe(
         TIMER_EVENTS.DEVICE_RUN_STOPPED,
@@ -112,6 +120,17 @@ export function createTimerRuntime(options: TimerRuntimeOptions = {}): TimerRunt
         { ownerId, deviceId },
       ));
     },
+    async requestScramble(
+      input: ScrambleRequestInput,
+      nativeEvent?: NativeTimestampSource,
+    ): Promise<string> {
+      const payload = { ownerId, ...input };
+      const event = nativeEvent
+        ? application.events.fromNative(TIMER_EVENTS.SCRAMBLE_REQUESTED, payload, nativeEvent)
+        : application.events.create(TIMER_EVENTS.SCRAMBLE_REQUESTED, payload);
+      await application.bus.publish(event);
+      return event.id;
+    },
     async destroy(): Promise<void> {
       if (destroyed) return;
       destroyed = true;
@@ -121,6 +140,7 @@ export function createTimerRuntime(options: TimerRuntimeOptions = {}): TimerRunt
         { ownerId },
       ));
       reactor.destroy();
+      scrambleSubscription.unsubscribe();
       runStoppedSubscription?.unsubscribe();
       if (ownsApplication) await application.destroy();
     },

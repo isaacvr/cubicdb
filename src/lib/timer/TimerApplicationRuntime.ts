@@ -13,6 +13,9 @@ import { DeviceManager } from './devices/DeviceManager';
 import type { ITimerDevice } from './devices/ITimerDevice';
 import { KeyboardDevice, type KeyboardDeviceOptions } from './devices/KeyboardDevice';
 import { KeyboardInputBoundary } from './handlers/KeyboardInputBoundary';
+import { CSTimerScrambleGenerator } from './scramble/CSTimerScrambleGenerator';
+import type { IScrambleGenerator } from './scramble/IScrambleGenerator';
+import { ScrambleService } from './scramble/ScrambleService';
 
 export interface TimerApplicationRuntimeOptions {
   clock?: IMonotonicClock;
@@ -20,6 +23,7 @@ export interface TimerApplicationRuntimeOptions {
   eventLogSink?: EventLogSink | null;
   devices?: readonly ITimerDevice[];
   keyboardOptions?: KeyboardDeviceOptions;
+  scrambleGenerators?: IScrambleGenerator[];
 }
 
 export interface TimerApplicationRuntime {
@@ -29,6 +33,7 @@ export interface TimerApplicationRuntime {
   readonly deviceManager: DeviceManager;
   readonly keyboardDevice: KeyboardDevice | null;
   readonly keyboardBoundary: KeyboardInputBoundary;
+  readonly scrambleService: ScrambleService;
   readonly ready: Promise<void>;
   destroy(): Promise<void>;
 }
@@ -61,6 +66,11 @@ export function createTimerApplicationRuntime(
       })
     : null;
   const keyboardBoundary = new KeyboardInputBoundary(bus, events);
+  const scrambleService = new ScrambleService(
+    bus,
+    events,
+    options.scrambleGenerators ?? [new CSTimerScrambleGenerator()],
+  );
   const devices: readonly ITimerDevice[] = options.devices ?? (keyboardDevice ? [keyboardDevice] : []);
   const ready = devices.reduce<Promise<void>>(
     (registration, device) => registration.then(() => deviceManager.registerDevice(device)),
@@ -75,12 +85,14 @@ export function createTimerApplicationRuntime(
     deviceManager,
     keyboardDevice,
     keyboardBoundary,
+    scrambleService,
     ready,
     async destroy() {
       if (destroyed) return;
       destroyed = true;
       await ready;
       await deviceManager.destroy();
+      scrambleService.destroy();
       catalog.destroy();
       eventLogger?.destroy();
     },

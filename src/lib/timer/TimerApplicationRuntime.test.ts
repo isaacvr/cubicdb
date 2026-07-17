@@ -11,6 +11,8 @@ import {
 } from './devices/TimerDeviceDescriptor';
 import { TimerDeviceTestHarness } from './devices/TimerDeviceTestHarness';
 import { KeyboardInputBoundary } from './handlers/KeyboardInputBoundary';
+import type { IScrambleGenerator } from './scramble/IScrambleGenerator';
+import { ScrambleService } from './scramble/ScrambleService';
 
 function keyboard(): TimerDeviceTestHarness {
   return new TimerDeviceTestHarness({
@@ -23,6 +25,22 @@ function keyboard(): TimerDeviceTestHarness {
 }
 
 describe('TimerApplicationRuntime', () => {
+  it('owns one injectable application-scoped scramble service', async () => {
+    const generator: IScrambleGenerator = {
+      id: 'test',
+      supports: () => true,
+      generate: vi.fn(() => 'R U'),
+    };
+    const runtime = createTimerApplicationRuntime({
+      eventLogSink: null,
+      devices: [],
+      scrambleGenerators: [generator],
+    });
+
+    expect(runtime.scrambleService).toBeInstanceOf(ScrambleService);
+    await runtime.destroy();
+  });
+
   it('composes one bus, factory, catalog, manager, and logger', async () => {
     const info = vi.fn();
     const device = keyboard();

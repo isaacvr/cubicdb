@@ -5,8 +5,48 @@ import { createTimerRuntime } from './TimerCompositionRoot.svelte';
 import { DEFAULT_TIMER_MIGRATION_FLAGS } from './TimerMigrationFlags';
 import { createTimerApplicationRuntime } from './TimerApplicationRuntime';
 import { TIMER_DEVICE_IDS } from './devices/TimerDeviceDescriptor';
+import { SCRAMBLE_REQUEST_SOURCES } from '$lib/events/timer/ScrambleEventTypes';
+import type { TimerEvent } from '$lib/events/timer/TimerEvent';
+import type { IScrambleGenerator } from './scramble/IScrambleGenerator';
 
 describe('TimerCompositionRoot', () => {
+  it('requests and projects a correlated scramble for only its owner', async () => {
+    const generator: IScrambleGenerator = {
+      id: 'test',
+      supports: () => true,
+      generate: () => 'R U',
+    };
+    const application = createTimerApplicationRuntime({
+      eventLogSink: null,
+      devices: [],
+      scrambleGenerators: [generator],
+    });
+    const first = createTimerRuntime({ application, ownerId: 'timer:one' });
+    const second = createTimerRuntime({ application, ownerId: 'timer:two' });
+    const observed: TimerEvent[] = [];
+    application.bus.observe(event => observed.push(event));
+
+    const requestId = await first.requestScramble({
+      mode: '333',
+      length: 20,
+      probability: -1,
+      source: SCRAMBLE_REQUEST_SOURCES.USER_REQUESTED,
+    }, { timeStamp: 75.5 });
+
+    expect(observed.find(event => event.id === requestId)).toMatchObject({
+      type: TIMER_EVENTS.SCRAMBLE_REQUESTED,
+      timestamp: 75.5,
+      payload: { ownerId: 'timer:one' },
+    });
+    expect(first.state.scrambleRequestId).toBe(requestId);
+    await vi.waitFor(() => expect(first.state.scramble).toBe('R U'));
+    expect(second.state.scramble).toBe('');
+
+    await first.destroy();
+    await second.destroy();
+    await application.destroy();
+  });
+
   it('wires one bus, state, reactor, and readonly view with legacy flags by default', async () => {
     let id = 0;
     const runtime = createTimerRuntime({
