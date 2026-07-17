@@ -218,7 +218,7 @@ export function createEmptySession(): Session {
       calcAoX: AverageSetting.SEQUENTIAL,
       genImage: true,
       hasInspection: true,
-      inspection: 15000,
+      inspection: 15,
       scrambleAfterCancel: true,
       showElapsedTime: true,
       withoutPrevention: false,
