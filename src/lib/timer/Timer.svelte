@@ -33,6 +33,12 @@
     LEGACY_TIMER_DEVICE_SELECTIONS,
     TIMER_DEVICE_IDS,
   } from "./devices/TimerDeviceDescriptor";
+  import {
+    SCRAMBLE_REQUEST_SOURCES,
+    type ScrambleRequestSource,
+  } from "$lib/events/timer/ScrambleEventTypes";
+  import type { NativeTimestampSource } from "$lib/events/timer/TimerEventFactory";
+  import { createScrambleRequestInput } from "./scramble/createScrambleRequestInput";
 
   interface TimerProps {
     battle?: boolean;
@@ -71,11 +77,13 @@
   // Core initialization
   const timerController = new TimerController();
   const sessionStore = timerController.session;
+  const modeStore = timerController.mode;
+  const probabilityStore = timerController.prob;
   const timerApplication = getTimerApplicationContext();
   const eventTimerRuntime = createTimerRuntime({
     application: timerApplication,
     ownerId: `timer:${page.params.sessionId ?? "primary"}`,
-    flags: { keyboard: true },
+    flags: { keyboard: true, scramble: true },
     onRunStopped: (elapsedMs, penalty) => timerController.addSolve(elapsedMs, penalty),
   });
   let requestedDeviceId: string | null = null;
@@ -178,7 +186,32 @@
       timerController.tab.set(1);
       historyTabComponent?.editSolve(s);
     },
-    initScrambler: (scr?: string, _mode?: string, _prob?: number | number[]) => {
+    initScrambler: (
+      scr?: string,
+      _mode?: string,
+      _prob?: number | number[],
+      nativeEvent?: NativeTimestampSource,
+      source: ScrambleRequestSource = SCRAMBLE_REQUEST_SOURCES.USER_REQUESTED
+    ) => {
+      if (eventTimerRuntime.flags.scramble) {
+        const selectedMode = get(modeStore);
+        if (!selectedMode) return;
+        const input = createScrambleRequestInput({
+          selectedMode,
+          selectedProbability: get(probabilityStore),
+          modeOverride: useMode || _mode || undefined,
+          lengthOverride: useLen || undefined,
+          probabilityOverride: useProb !== -1
+            ? useProb
+            : _prob !== undefined && _prob !== -1
+              ? _prob
+              : undefined,
+          providedScramble: useScramble || scr || undefined,
+          source,
+        });
+        void eventTimerRuntime.requestScramble(input, nativeEvent);
+        return;
+      }
       timerController.initScrambler(
         MENU,
         { useLen, useMode, useScramble, useProb, genScramble },
@@ -187,6 +220,40 @@
         _prob
       );
     },
+  });
+
+  let lastScrambleConfiguration = "";
+
+  $effect(() => {
+    const currentSession = $sessionStore;
+    const selectedMode = $modeStore;
+    const selectedProbability = $probabilityStore;
+    if (!eventTimerRuntime.flags.scramble || !currentSession || !selectedMode) return;
+
+    const configuration = JSON.stringify([
+      currentSession._id,
+      selectedMode[1],
+      selectedMode[2],
+      selectedProbability,
+      useMode,
+      useLen,
+      useProb,
+      useScramble,
+    ]);
+    if (configuration === lastScrambleConfiguration) return;
+    lastScrambleConfiguration = configuration;
+    untrack(() => timerContext.initScrambler(
+      useScramble || undefined,
+      useMode || undefined,
+      useProb !== -1 ? useProb : undefined,
+      undefined,
+      SCRAMBLE_REQUEST_SOURCES.SESSION_SCRAMBLE_SETTINGS_CHANGED
+    ));
+  });
+
+  $effect(() => {
+    if (!eventTimerRuntime.flags.scramble) return;
+    timerController.scramble.set(eventTimerRuntime.state.scramble);
   });
 
   // Setup keyboard handling
@@ -246,12 +313,6 @@
     if (!(battle || timerOnly || scrambleOnly)) {
       initMgr.setupOnMount();
     }
-  });
-
-  // Scramble initialization
-  $effect(() => {
-    if (useScramble || useMode || useProb != -1)
-      timerContext.initScrambler(useScramble, useMode, useProb);
   });
 
   // Keyboard enablement

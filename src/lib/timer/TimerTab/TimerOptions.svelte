@@ -284,11 +284,16 @@
         if (code != "Space" && !$isRunning && !battle && event.ctrlKey) {
           if (code === "KeyS" && options.refreshScramble) {
             event.preventDefault();
-            initScrambler();
+            initScrambler(undefined, undefined, undefined, event);
           } else if (code === "KeyE" && options.editScramble) {
             event.preventDefault();
             if (!show || (show && type != "edit-scramble")) {
-              openDialog("edit-scramble", $scramble, (scr: string) => scr && initScrambler(scr));
+              openDialog(
+                "edit-scramble",
+                $scramble,
+                (scr: string, nativeEvent?: KeyboardEvent | MouseEvent) =>
+                  scr && initScrambler(scr, undefined, undefined, nativeEvent)
+              );
             }
           } else if (code === "KeyO" && options.oldScramble) {
             event.preventDefault();
@@ -309,13 +314,13 @@
     show = e.code === "Escape" ? closeHandler() : show;
 
     if (e.code === "Enter" && e.ctrlKey) {
-      closeHandler(modalData.trim());
+      closeHandler(modalData.trim(), e);
       show = false;
     }
   }
 
-  function select(s: Solve) {
-    initScrambler(s.scramble);
+  function select(s: Solve, nativeEvent: MouseEvent) {
+    initScrambler(s.scramble, undefined, undefined, nativeEvent);
     closeHandler();
     show = false;
   }
@@ -347,7 +352,6 @@
 
     $dataService.config.saveConfig();
     $prob = $selectedCases.reduce((acc, e, p) => (e ? [...acc, p] : acc), [] as number[]);
-    initScrambler();
   }
 
   $effect(() => {
@@ -377,7 +381,6 @@
 
     untrack(() => {
       $prob = $selectedCases.reduce((acc, e, p) => (e ? [...acc, p] : acc), [] as number[]);
-      initScrambler();
     });
   });
 
@@ -472,7 +475,10 @@
     class="z-30"
     keyBindings={["control", "s"]}
   >
-    <Button style="--dash: 18;" onclick={() => initScrambler()}>
+    <Button
+      style="--dash: 18;"
+      onclick={(event: MouseEvent) => initScrambler(undefined, undefined, undefined, event)}
+    >
       <RefreshCwIcon size={iconSize} />
     </Button>
   </Tooltip>
@@ -511,8 +517,12 @@
   >
     <Button
       style="--dash: 18;"
-      onclick={() =>
-        openDialog("edit-scramble", $scramble, (scr: string) => scr && initScrambler(scr))}
+      onclick={() => openDialog(
+        "edit-scramble",
+        $scramble,
+        (scr: string, nativeEvent?: KeyboardEvent | MouseEvent) =>
+          scr && initScrambler(scr, undefined, undefined, nativeEvent)
+      )}
     >
       <SquarePenIcon size={iconSize} />
     </Button>
@@ -570,7 +580,7 @@
           col-span-3 cursor-pointer hover:text-blue-400 my-2 justify-start p-0 rounded-none
           text-ellipsis overflow-hidden whitespace-nowrap
         "
-          onclick={() => select(s)}>{s.scramble}</Button
+           onclick={(event: MouseEvent) => select(s, event)}>{s.scramble}</Button
         >
         <span class="col-span-1 flex items-center justify-center">{timer(s.time, true, true)}</span>
       {/each}
@@ -752,8 +762,8 @@
     {#if type === "edit-scramble" || type === "settings"}
       <Button
         aria-label={$localLang.global.save}
-        onclick={() => {
-          closeHandler(type === "settings" ? true : modalData.trim());
+        onclick={(event: MouseEvent) => {
+          closeHandler(type === "settings" ? true : modalData.trim(), event);
           show = false;
         }}
       >
@@ -774,9 +784,9 @@
     </Button>
     <Button onclick={prepareShowSeedModal}>{$localLang.global.reset}</Button>
     <Button
-      onclick={() => {
+      onclick={(event: MouseEvent) => {
         setSeed(seedCounter, seedStr);
-        initScrambler();
+        initScrambler(undefined, undefined, undefined, event);
         showSeedModal = false;
       }}
     >

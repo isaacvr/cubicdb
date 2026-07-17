@@ -2,6 +2,8 @@ import { createContext } from 'svelte';
 import type { TimerController } from '$lib/controllers/TimerController';
 import type { Solve, Session } from '@interfaces';
 import type { Writable } from 'svelte/store';
+import type { ScrambleRequestSource } from '$lib/events/timer/ScrambleEventTypes';
+import type { NativeTimestampSource } from '$lib/events/timer/TimerEventFactory';
 
 export interface TimerContextType {
   timerController: TimerController;
@@ -29,7 +31,13 @@ export interface TimerContextType {
   // Other
   editSessions: () => void;
   editSolve: (s: Solve) => void;
-  initScrambler: (scr?: string, mode?: string, prob?: number | number[]) => void;
+  initScrambler: (
+    scr?: string,
+    mode?: string,
+    prob?: number | number[],
+    nativeEvent?: NativeTimestampSource,
+    source?: ScrambleRequestSource,
+  ) => void;
 }
 
 export const [getTimerContext, setTimerContext] = createContext<TimerContextType>();

@@ -1,5 +1,6 @@
 export * from './CSTimerScrambleGenerator';
 export * from './CubeBundleScramblePreviewGenerator';
+export * from './createScrambleRequestInput';
 export * from './IScrambleGenerator';
 export * from './IScramblePreviewGenerator';
 export * from './normalizeScramble';

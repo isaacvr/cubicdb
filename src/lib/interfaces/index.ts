@@ -501,7 +501,13 @@ export interface TimerContext {
   // sortSolves: () => any;
   // updateSolves: () => any;
   // updateStatistics: (inc?: boolean) => any;
-  initScrambler: (scr?: string, _mode?: string) => any;
+  initScrambler: (
+    scr?: string,
+    _mode?: string,
+    probability?: number | number[],
+    nativeEvent?: Pick<Event, "timeStamp">,
+    source?: string,
+  ) => any;
   selectedGroup: (rescramble?: boolean, saveGroup?: boolean) => any;
   selectedMode: (rescramble?: boolean, saveMode?: boolean, updateProb?: boolean) => any;
   selectedFilter: (rescramble?: boolean, saveMode?: boolean) => any;
@@ -795,7 +801,13 @@ export interface InputContext {
   timerController: ITimerController;
   keyboardEnabled: Writable<boolean>;
   reset: () => void;
-  initScrambler: (scr?: string, _mode?: string) => void;
+  initScrambler: (
+    scr?: string,
+    _mode?: string,
+    probability?: number | number[],
+    nativeEvent?: Pick<Event, "timeStamp">,
+    source?: string,
+  ) => void;
   addSolve: (time?: number, penalty?: Penalty) => void;
   createNewSolve: () => void;
   handleRemoveSolves: (sv: Solve[]) => any;
