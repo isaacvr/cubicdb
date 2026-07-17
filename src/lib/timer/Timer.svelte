@@ -67,7 +67,7 @@
   }: TimerProps = $props();
 
   // MENU from language
-  let MENU: SCRAMBLE_MENU[] = [];
+  let MENU: SCRAMBLE_MENU[] = getLanguage(get(globalLang)).MENU;
   let localLang = derived(globalLang, $lang => {
     let l = getLanguage($lang);
     MENU = l.MENU;

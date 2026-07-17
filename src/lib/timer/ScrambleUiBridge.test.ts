@@ -6,6 +6,13 @@ function source(relativePath: string): string {
 }
 
 describe('event-driven scramble UI bridge', () => {
+  it('initializes the scramble menu before asynchronous session selection', () => {
+    const timer = source('./Timer.svelte');
+
+    expect(timer).toContain('let MENU: SCRAMBLE_MENU[] = getLanguage(get(globalLang)).MENU;');
+    expect(timer).not.toContain('let MENU: SCRAMBLE_MENU[] = [];');
+  });
+
   it('enables the scramble flag, publishes through the runtime, and mirrors accepted state', () => {
     const timer = source('./Timer.svelte');
 

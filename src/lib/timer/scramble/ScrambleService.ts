@@ -71,6 +71,16 @@ export class ScrambleService {
       }
     }
 
+    if (errors.length === 0) {
+      errors.push({
+        generatorId: 'scramble-service',
+        error: {
+          name: 'UnsupportedScrambleMode',
+          message: `No scramble generator supports mode "${mode}"`,
+        },
+      });
+    }
+
     if (this.destroyed) return;
     await this.bus.publish(this.events.create(TIMER_EVENTS.SCRAMBLE_GENERATION_FAILED, {
       ...event.payload,

@@ -3,6 +3,10 @@ import { CSTimerScrambleGenerator } from './CSTimerScrambleGenerator';
 import { normalizeScramble } from './normalizeScramble';
 
 describe('CSTimerScrambleGenerator', () => {
+  it('recognizes a registered default CSTimer mode', () => {
+    expect(new CSTimerScrambleGenerator().supports('333')).toBe(true);
+  });
+
   it('reports support from the CSTimer registry and forwards a selected probability', () => {
     const generate = vi.fn(() => 'R U');
     const adapter = new CSTimerScrambleGenerator({

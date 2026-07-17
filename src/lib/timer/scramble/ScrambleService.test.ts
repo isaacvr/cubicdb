@@ -139,6 +139,37 @@ describe('ScrambleService', () => {
     service.destroy();
   });
 
+  it('explains when no generator supports the requested mode', async () => {
+    const generator: IScrambleGenerator = {
+      id: 'unsupported',
+      supports: () => false,
+      generate: vi.fn(() => 'unused'),
+    };
+    const { bus, events, observed, service } = createHarness([generator]);
+    const request = events.create(TIMER_EVENTS.SCRAMBLE_REQUESTED, {
+      ...requestPayload(),
+      mode: 'missing-mode',
+    });
+
+    await bus.publish(request);
+    await settle();
+
+    expect(observed.at(-1)).toMatchObject({
+      type: TIMER_EVENTS.SCRAMBLE_GENERATION_FAILED,
+      payload: {
+        requestId: request.id,
+        errors: [{
+          generatorId: 'scramble-service',
+          error: {
+            name: 'UnsupportedScrambleMode',
+            message: 'No scramble generator supports mode "missing-mode"',
+          },
+        }],
+      },
+    });
+    service.destroy();
+  });
+
   it('allows overlapping requests to finish out of order', async () => {
     const first = deferred<string | null>();
     const second = deferred<string | null>();

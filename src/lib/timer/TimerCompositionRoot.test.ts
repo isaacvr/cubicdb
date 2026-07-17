@@ -10,6 +10,22 @@ import type { TimerEvent } from '$lib/events/timer/TimerEvent';
 import type { IScrambleGenerator } from './scramble/IScrambleGenerator';
 
 describe('TimerCompositionRoot', () => {
+  it('generates a 333 scramble through the default application service', async () => {
+    const application = createTimerApplicationRuntime({ eventLogSink: null, devices: [] });
+    const runtime = createTimerRuntime({ application, ownerId: 'timer:one' });
+
+    await runtime.requestScramble({
+      mode: '333',
+      length: 20,
+      probability: -1,
+      source: SCRAMBLE_REQUEST_SOURCES.USER_REQUESTED,
+    });
+
+    await vi.waitFor(() => expect(runtime.state.scramble.length).toBeGreaterThan(0));
+    await runtime.destroy();
+    await application.destroy();
+  });
+
   it('requests and projects a correlated scramble for only its owner', async () => {
     const generator: IScrambleGenerator = {
       id: 'test',
