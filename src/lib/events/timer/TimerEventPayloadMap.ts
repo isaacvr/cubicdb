@@ -6,6 +6,7 @@ import type {
   Statistics,
   TimerState,
 } from '@interfaces';
+import type { GenerationEventPayloadMap } from '$lib/events/generation/GenerationEventPayloadMap';
 import type {
   DeviceLeaseRejectionReason,
   LegacyTimerDeviceDescriptor,
@@ -26,7 +27,9 @@ type EmptyPayload = Record<string, never>;
 type DevicePayload = { deviceId: string };
 type OwnerDevicePayload = { ownerId: string; deviceId: string };
 
-export interface TimerEventPayloadMap extends Record<TimerEventType, object> {
+export interface TimerEventPayloadMap
+  extends Record<TimerEventType, object>,
+    GenerationEventPayloadMap {
   [TIMER_EVENTS.KEYBOARD_KEY_DOWN]: { code: string; repeat: boolean };
   [TIMER_EVENTS.KEYBOARD_KEY_UP]: { code: string };
   [TIMER_EVENTS.MANUAL_TIME_SUBMITTED]: { elapsedMs: number };
