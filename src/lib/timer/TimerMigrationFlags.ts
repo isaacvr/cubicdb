@@ -1,5 +1,6 @@
 export interface TimerMigrationFlags {
   keyboard: boolean;
+  scramble: boolean;
   manual: boolean;
   virtual: boolean;
   stackmat: boolean;
@@ -9,6 +10,7 @@ export interface TimerMigrationFlags {
 
 export const DEFAULT_TIMER_MIGRATION_FLAGS: Readonly<TimerMigrationFlags> = Object.freeze({
   keyboard: false,
+  scramble: false,
   manual: false,
   virtual: false,
   stackmat: false,

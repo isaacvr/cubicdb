@@ -80,7 +80,11 @@ describe('TimerReactor', () => {
     expect(state.penalty).toBe(Penalty.DNF);
     expect(state.dnfFromInspection).toBe(true);
 
-    await bus.publish(factory.create(TIMER_EVENTS.DEVICE_RUN_CANCELLED, { ownerId: 'timer:one', deviceId: 'keyboard' }));
+    await bus.publish(factory.create(TIMER_EVENTS.DEVICE_RUN_CANCELLED, {
+      ownerId: 'timer:one',
+      deviceId: 'keyboard',
+      cancelledFrom: TimerStateValue.RUNNING,
+    }));
     expect(state.timerState).toBe(TimerStateValue.CLEAN);
     expect(state.penalty).toBe(Penalty.NONE);
   });

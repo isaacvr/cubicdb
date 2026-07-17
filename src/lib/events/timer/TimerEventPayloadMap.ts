@@ -1,4 +1,11 @@
-import type { Penalty, Session, SessionSettings, Solve, Statistics } from '@interfaces';
+import type {
+  Penalty,
+  Session,
+  SessionSettings,
+  Solve,
+  Statistics,
+  TimerState,
+} from '@interfaces';
 import type {
   DeviceLeaseRejectionReason,
   LegacyTimerDeviceDescriptor,
@@ -9,6 +16,11 @@ import type {
   DeviceDisconnectFailureReason,
 } from '$lib/timer/devices/TimerDeviceConstants';
 import { TIMER_EVENTS, type TimerEventType } from './TimerEventRegistry';
+import type {
+  NormalizedScrambleError,
+  ScramblePreviewClearReason,
+  ScrambleRequestInput,
+} from './ScrambleEventTypes';
 
 type EmptyPayload = Record<string, never>;
 type DevicePayload = { deviceId: string };
@@ -25,7 +37,7 @@ export interface TimerEventPayloadMap extends Record<TimerEventType, object> {
   [TIMER_EVENTS.DEVICE_GREEN_LIGHT_CHANGED]: OwnerDevicePayload & { ready: boolean };
   [TIMER_EVENTS.DEVICE_RUN_STARTED]: OwnerDevicePayload;
   [TIMER_EVENTS.DEVICE_RUN_STOPPED]: OwnerDevicePayload & { elapsedMs: number; steps: number[] };
-  [TIMER_EVENTS.DEVICE_RUN_CANCELLED]: OwnerDevicePayload;
+  [TIMER_EVENTS.DEVICE_RUN_CANCELLED]: OwnerDevicePayload & { cancelledFrom: TimerState };
   [TIMER_EVENTS.DEVICE_PAUSED]: OwnerDevicePayload;
   [TIMER_EVENTS.DEVICE_RESUMED]: OwnerDevicePayload;
   [TIMER_EVENTS.DEVICE_STEP_COMPLETED]: OwnerDevicePayload & { stepNumber: number; elapsedMs: number };
@@ -63,9 +75,42 @@ export interface TimerEventPayloadMap extends Record<TimerEventType, object> {
   [TIMER_EVENTS.SOLVE_UPDATED]: { previousSolve: Solve; solve: Solve };
   [TIMER_EVENTS.SOLVES_REMOVE_REQUESTED]: { solves: Solve[] };
   [TIMER_EVENTS.SOLVES_REMOVED]: { solves: Solve[] };
-  [TIMER_EVENTS.SCRAMBLE_REQUESTED]: { mode: string; probability: number; source: string };
-  [TIMER_EVENTS.SCRAMBLE_GENERATED]: { scramble: string; mode: string };
-  [TIMER_EVENTS.SCRAMBLE_GENERATION_FAILED]: { mode: string; message: string };
+  [TIMER_EVENTS.SCRAMBLE_REQUESTED]: ScrambleRequestInput & { ownerId: string };
+  [TIMER_EVENTS.SCRAMBLE_GENERATED]: ScrambleRequestInput & {
+    ownerId: string;
+    requestId: string;
+    scramble: string;
+  };
+  [TIMER_EVENTS.SCRAMBLE_GENERATION_FAILED]: ScrambleRequestInput & {
+    ownerId: string;
+    requestId: string;
+    errors: Array<{ generatorId: string; error: NormalizedScrambleError }>;
+  };
+  [TIMER_EVENTS.SCRAMBLE_PREVIEW_REQUESTED]: {
+    ownerId: string;
+    scrambleRequestId: string;
+    scramble: string;
+    mode: string;
+  };
+  [TIMER_EVENTS.SCRAMBLE_PREVIEW_GENERATED]: {
+    ownerId: string;
+    scrambleRequestId: string;
+    requestId: string;
+    images: string[];
+    attemptsUsed: number;
+  };
+  [TIMER_EVENTS.SCRAMBLE_PREVIEW_GENERATION_FAILED]: {
+    ownerId: string;
+    scrambleRequestId: string;
+    requestId: string;
+    attemptsUsed: number;
+    error: NormalizedScrambleError;
+  };
+  [TIMER_EVENTS.SCRAMBLE_PREVIEW_CLEARED]: {
+    ownerId: string;
+    scrambleRequestId?: string;
+    reason: ScramblePreviewClearReason;
+  };
   [TIMER_EVENTS.STATISTICS_REQUESTED]: { sessionId: string };
   [TIMER_EVENTS.STATISTICS_UPDATED]: { statistics: Statistics };
   [TIMER_EVENTS.NEW_RECORD]: { records: Array<{ name: string; previous: number; current: number }> };

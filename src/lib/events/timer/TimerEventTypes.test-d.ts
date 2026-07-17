@@ -1,5 +1,6 @@
 import { TIMER_EVENTS } from './TimerEventRegistry';
 import { TimerEventFactory } from './TimerEventFactory';
+import { SCRAMBLE_REQUEST_SOURCES } from './ScrambleEventTypes';
 import {
   DEVICE_LEASE_REJECTION_REASONS,
   TIMER_DEVICE_ACTIVATION_STATUS,
@@ -63,6 +64,40 @@ factory.create(TIMER_EVENTS.LEGACY_DEVICE_CATALOG_SYNC_REQUESTED, {
     connectionStatus: 'connected',
     capabilities: [],
   }],
+});
+
+factory.create(TIMER_EVENTS.SCRAMBLE_REQUESTED, {
+  ownerId: 'timer:one',
+  mode: '333',
+  length: 0,
+  probability: [1, 2],
+  source: SCRAMBLE_REQUEST_SOURCES.USER_REQUESTED,
+});
+
+factory.create(TIMER_EVENTS.SCRAMBLE_PREVIEW_GENERATED, {
+  ownerId: 'timer:one',
+  scrambleRequestId: 'scramble-1',
+  requestId: 'preview-1',
+  images: ['data:image/svg+xml,test'],
+  attemptsUsed: 2,
+});
+
+// @ts-expect-error scramble results must identify their owner and request.
+factory.create(TIMER_EVENTS.SCRAMBLE_GENERATED, {
+  scramble: 'R U',
+  mode: '333',
+  length: 0,
+  probability: -1,
+  source: SCRAMBLE_REQUEST_SOURCES.USER_REQUESTED,
+});
+
+factory.create(TIMER_EVENTS.SCRAMBLE_REQUESTED, {
+  ownerId: 'timer:one',
+  mode: '333',
+  length: 0,
+  // @ts-expect-error probability is numeric or a numeric list.
+  probability: 'OLL',
+  source: SCRAMBLE_REQUEST_SOURCES.USER_REQUESTED,
 });
 
 // @ts-expect-error ACTIVE_DEVICE_CHANGE_REQUESTED requires ownerId.

@@ -139,7 +139,73 @@ describe('KeyboardDevice', () => {
     expect(emitted.at(-1)).toMatchObject({
       type: TIMER_EVENTS.DEVICE_RUN_CANCELLED,
       timestamp: 150,
-      payload: { ownerId: 'timer:one', deviceId: TIMER_DEVICE_IDS.KEYBOARD },
+      payload: {
+        ownerId: 'timer:one',
+        deviceId: TIMER_DEVICE_IDS.KEYBOARD,
+        cancelledFrom: TimerStateValue.PREVENTION,
+      },
+    });
+  });
+
+  it('reports running as the cancellation phase', async () => {
+    device.start({ ownerId: 'timer:one', readonlyView: view, onReading: () => {} });
+    await boundary.keyDown({ code: 'Space', repeat: false, timeStamp: 100 });
+    now = 400;
+    await vi.advanceTimersByTimeAsync(300);
+    await boundary.keyUp({ code: 'Space', timeStamp: 450 });
+
+    await boundary.keyDown({ code: 'Escape', repeat: false, timeStamp: 500 });
+
+    expect(emitted.at(-1)).toMatchObject({
+      type: TIMER_EVENTS.DEVICE_RUN_CANCELLED,
+      timestamp: 500,
+      payload: {
+        ownerId: 'timer:one',
+        deviceId: TIMER_DEVICE_IDS.KEYBOARD,
+        cancelledFrom: TimerStateValue.RUNNING,
+      },
+    });
+  });
+
+  it('reports ready as a pre-run cancellation phase', async () => {
+    device.start({ ownerId: 'timer:one', readonlyView: view, onReading: () => {} });
+    await boundary.keyDown({ code: 'Space', repeat: false, timeStamp: 100 });
+    now = 400;
+    await vi.advanceTimersByTimeAsync(300);
+
+    await boundary.keyDown({ code: 'Escape', repeat: false, timeStamp: 425 });
+
+    expect(emitted.at(-1)).toMatchObject({
+      type: TIMER_EVENTS.DEVICE_RUN_CANCELLED,
+      timestamp: 425,
+      payload: { cancelledFrom: TimerStateValue.PREVENTION },
+    });
+  });
+
+  it('reports inspection as the cancellation phase', async () => {
+    view = {
+      ...view,
+      session: view.session ? {
+        ...view.session,
+        settings: { ...view.session.settings, hasInspection: true },
+      } : null,
+    };
+    device.start({ ownerId: 'timer:one', readonlyView: view, onReading: () => {} });
+    await boundary.keyDown({ code: 'Space', repeat: false, timeStamp: 100 });
+    now = 400;
+    await vi.advanceTimersByTimeAsync(300);
+    await boundary.keyUp({ code: 'Space', timeStamp: 450 });
+
+    await boundary.keyDown({ code: 'Escape', repeat: false, timeStamp: 500 });
+
+    expect(emitted.at(-1)).toMatchObject({
+      type: TIMER_EVENTS.DEVICE_RUN_CANCELLED,
+      timestamp: 500,
+      payload: {
+        ownerId: 'timer:one',
+        deviceId: TIMER_DEVICE_IDS.KEYBOARD,
+        cancelledFrom: TimerStateValue.INSPECTION,
+      },
     });
   });
 

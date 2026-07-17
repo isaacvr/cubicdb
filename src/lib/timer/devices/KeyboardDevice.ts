@@ -1,5 +1,5 @@
 import { assign, createActor, setup, type ActorRefFrom } from 'xstate';
-import { Penalty } from '@interfaces';
+import { Penalty, TimerState } from '@interfaces';
 import type { EventSubscription, IEventBus } from '$lib/events/EventBus';
 import type { TimerEvent } from '$lib/events/timer/TimerEvent';
 import type { TimerEventFactory } from '$lib/events/timer/TimerEventFactory';
@@ -64,6 +64,20 @@ function inspectionDurationMs(context: KeyboardMachineContext): number {
   return (context.view.session?.settings.inspection
     || KEYBOARD_DEVICE_TIMING.DEFAULT_INSPECTION_SECONDS)
     * KEYBOARD_DEVICE_TIMING.MILLISECONDS_PER_SECOND;
+}
+
+function cancellationPhase(machineState: unknown): TimerState {
+  switch (machineState) {
+    case 'prevention':
+    case 'ready':
+      return TimerState.PREVENTION;
+    case 'inspection':
+      return TimerState.INSPECTION;
+    case 'running':
+      return TimerState.RUNNING;
+    default:
+      return TimerState.CLEAN;
+  }
 }
 
 const keyboardMachine = setup({
@@ -182,11 +196,15 @@ const keyboardMachine = setup({
         nativeTimestamp(event.timestamp),
       ));
     },
-    publishCancelled: ({ context, event }) => {
+    publishCancelled: ({ context, event, self }) => {
       context.onRunEnded();
       context.publish(context.events.fromNative(
         TIMER_EVENTS.DEVICE_RUN_CANCELLED,
-        { ownerId: context.ownerId, deviceId: TIMER_DEVICE_IDS.KEYBOARD },
+        {
+          ownerId: context.ownerId,
+          deviceId: TIMER_DEVICE_IDS.KEYBOARD,
+          cancelledFrom: cancellationPhase(self.getSnapshot().value),
+        },
         nativeTimestamp(event.timestamp),
       ));
     },

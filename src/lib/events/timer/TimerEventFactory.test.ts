@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { TIMER_EVENTS } from './TimerEventRegistry';
 import { TimerEventFactory } from './TimerEventFactory';
+import { SCRAMBLE_REQUEST_SOURCES } from './ScrambleEventTypes';
 
 describe('TimerEventFactory', () => {
   it('defines unique event names', () => {
@@ -27,6 +28,28 @@ describe('TimerEventFactory', () => {
       timestamp: 12.75,
       payload: { code: 'Space', repeat: false },
     });
+  });
+
+  it('preserves the native timestamp of a direct scramble request', () => {
+    const factory = new TimerEventFactory(
+      { now: () => 999 },
+      { next: () => 'scramble-request-1' },
+    );
+
+    const event = factory.fromNative(
+      TIMER_EVENTS.SCRAMBLE_REQUESTED,
+      {
+        ownerId: 'timer:one',
+        mode: '333',
+        length: 0,
+        probability: [1, 2],
+        source: SCRAMBLE_REQUEST_SOURCES.USER_REQUESTED,
+      },
+      { timeStamp: 77.25 },
+    );
+
+    expect(event.timestamp).toBe(77.25);
+    expect(event.id).toBe('scramble-request-1');
   });
 
   it('uses the monotonic clock for a programmatic event', () => {
