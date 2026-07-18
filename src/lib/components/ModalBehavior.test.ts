@@ -13,6 +13,8 @@ describe('modal behavior contracts', () => {
     expect(modal).toContain('size?: "sm" | "md" | "lg" | "xl" | "2xl"');
     expect(modal).toContain('title?: string');
     expect(modal).toContain('showCloseButton?: boolean');
+    expect(modal).toContain('modal-surface');
+    expect(modal).toContain('backdrop-filter: blur(1rem)');
     expect(modal).toContain('z-[1000]');
     expect(modal).toContain('max-w-[calc(100vw-1rem)]');
     expect(modal).toContain('max-h-[calc(100svh-1rem)]');
