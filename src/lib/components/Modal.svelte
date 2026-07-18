@@ -50,7 +50,7 @@
 
   function modalBoxClass(variant: ModalVariant, size: ModalSize, customClass: string) {
     return twMerge(
-      "modal-box modal-surface relative p-0 overflow-hidden flex flex-col max-w-[calc(100vw-1rem)] max-h-[calc(100svh-1rem)]",
+      "modal-box bg-base-200 relative p-0 overflow-hidden flex flex-col max-w-[calc(100vw-1rem)] max-h-[calc(100svh-1rem)]",
       variant === "fullscreen"
         ? "w-[calc(100vw-1rem)] h-[calc(100svh-1rem)] max-w-none max-h-none"
         : `w-full ${LIMITED_SIZE_CLASSES[size]}`,
@@ -188,14 +188,6 @@
     animation: fadeIn 200ms linear 0ms forwards;
     background-color: #0003;
     backdrop-filter: blur(0.5rem);
-  }
-
-  .modal-surface {
-    @apply rounded-lg border-primary/15;
-    border-width: max(0.1rem, 1px);
-    border-style: solid;
-    background: linear-gradient(to top, oklch(var(--p) / 0.07), oklch(var(--p) / 0.03));
-    backdrop-filter: blur(1rem);
   }
 
   .show {
