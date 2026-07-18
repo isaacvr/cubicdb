@@ -24,6 +24,7 @@ export function useInitialization(
   options?: InitializationOptions
 ) {
   const { session, group, mode, prob, allSolves } = timerController;
+  let sessionsReadyUnsubscribe: (() => void) | null = null;
 
   async function updateSessionsIcons() {
     const { ICONS } = await import('@constants');
@@ -90,19 +91,27 @@ export function useInitialization(
       const loadSolves = options?.loadSolves ?? (() => solveController.loadSolves());
       loadSolves().then(sv => {
         allSolves.set(sv);
-
-        const sessions = get(sessionController.sessions);
-        sessions.forEach(s => (s.tName = s.name));
-
-        if (sessions.length === 0) {
-          // New session flow - handled by caller
-          return;
-        }
-
-        updateCurrentSession();
-        timerController.updateSolves();
+        projectLoadedSolvesWhenSessionsAreReady();
       });
     }
+  }
+
+  function projectLoadedSolvesWhenSessionsAreReady() {
+    sessionsReadyUnsubscribe?.();
+    let unsubscribe: (() => void) | null = null;
+    unsubscribe = sessionController.sessions.subscribe(sessions => {
+      sessions.forEach(s => (s.tName = s.name));
+
+      if (sessions.length === 0) return;
+
+      updateCurrentSession();
+      timerController.updateSolves();
+      queueMicrotask(() => {
+        unsubscribe?.();
+        if (sessionsReadyUnsubscribe === unsubscribe) sessionsReadyUnsubscribe = null;
+      });
+    });
+    sessionsReadyUnsubscribe = unsubscribe;
   }
 
   return {

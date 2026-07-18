@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { get } from 'svelte/store';
+import { get, writable } from 'svelte/store';
 import { AverageSetting, Penalty, type Session, type Solve } from '@interfaces';
 import { TimerController } from '$lib/controllers/TimerController';
 import { useInitialization } from './useInitialization';
@@ -80,5 +80,37 @@ describe('useInitialization', () => {
     expect(solveController.loadSolves).not.toHaveBeenCalled();
     expect(get(timerController.allSolves).map(solve => solve._id)).toEqual(['current', 'other']);
     expect(get(timerController.solves).map(solve => solve._id)).toEqual(['current']);
+  });
+
+  it('projects loaded solves when sessions arrive after the solve list', async () => {
+    const timerController = new TimerController();
+    const session = createSession();
+    const currentSolve = createSolve({ _id: 'current', session: session._id });
+    const sessions = writable<Session[]>([]);
+    const sessionController = { sessions } as any;
+    const solveController = {
+      loadSolves: vi.fn(async () => []),
+    };
+    const loadSolves = vi.fn(async () => [currentSolve]);
+    const initialization = useInitialization(
+      timerController,
+      sessionController,
+      solveController as any,
+      {},
+      [
+        ['3x3', [['3x3', '333', 20]]],
+      ] as any,
+      { params: { sessionId: session._id } },
+      { initInputHandler: false, loadSolves },
+    );
+
+    initialization.setupOnMount();
+    await vi.waitFor(() => expect(get(timerController.allSolves)).toEqual([currentSolve]));
+    expect(get(timerController.solves)).toEqual([]);
+
+    sessions.set([session]);
+
+    await vi.waitFor(() => expect(get(timerController.solves).map(solve => solve._id))
+      .toEqual(['current']));
   });
 });
