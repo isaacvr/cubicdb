@@ -414,7 +414,7 @@
 
 <Modal
   bind:show={prevExpanded}
-  class="w-[min(100vw-1rem,60rem)] h-[min(100svh-1rem,42rem)] shaded-card"
+  class="w-[calc(100vw-1rem)] h-[calc(100svh-1rem)] max-w-none max-h-none shaded-card"
 >
   <div class="flex items-center justify-center w-full h-full overflow-hidden px-2">
     <PuzzleImageBundle

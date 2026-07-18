@@ -102,21 +102,21 @@
   class="modal z-[1000] mx-auto text-sm rounded-md show p-2 overflow-visible"
   style="view-transition-name: {transitionName};"
 >
+  {#if cancel}
+    <Button
+      color="neutral"
+      tabindex="0"
+      class="rounded-full fixed right-3 top-3 hover:border-primary z-[1001]"
+      onclick={closeFromButton}
+    >
+      <XIcon size="1rem" />
+    </Button>
+  {/if}
+
   <div
     class="modal-box bg-base-200 relative overflow-visible max-w-[calc(100vw-1rem)] max-h-[calc(100svh-1rem)] {_cl ||
       ''}"
   >
-    {#if cancel}
-      <Button
-        color="neutral"
-        tabindex="0"
-        class="rounded-full absolute right-2 top-2 hover:border-primary z-10"
-        onclick={closeFromButton}
-      >
-        <XIcon size="1rem" />
-      </Button>
-    {/if}
-
     {#if show}
       {@render children?.()}
     {/if}

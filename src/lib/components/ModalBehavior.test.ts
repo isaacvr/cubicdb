@@ -12,6 +12,7 @@ describe('modal behavior contracts', () => {
     expect(modal).toContain('z-[1000]');
     expect(modal).toContain('max-w-[calc(100vw-1rem)]');
     expect(modal).toContain('max-h-[calc(100svh-1rem)]');
+    expect(modal).toContain('fixed right-3 top-3');
     expect(modal).not.toContain('z-index: -1');
   });
 
@@ -20,6 +21,7 @@ describe('modal behavior contracts', () => {
 
     expect(timerTab).toContain('import Modal from "@components/Modal.svelte"');
     expect(timerTab).toContain('<Modal');
+    expect(timerTab).toContain('w-[calc(100vw-1rem)] h-[calc(100svh-1rem)] max-w-none max-h-none');
     expect(timerTab).not.toContain('<dialog');
   });
 
