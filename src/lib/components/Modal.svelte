@@ -190,6 +190,12 @@
     backdrop-filter: blur(0.5rem);
   }
 
+  dialog[data-type="modal"][open] {
+    animation: fadeIn 200ms linear 0ms forwards;
+    background-color: #0003;
+    backdrop-filter: blur(0.5rem);
+  }
+
   .show {
     animation: enter 400ms ease-in 1;
   }

@@ -22,7 +22,7 @@ describe('modal behavior contracts', () => {
     expect(modal).toContain('variant === "fullscreen" ? "p-0" : "p-6"');
     expect(modal).not.toContain('fixed right-3 top-3');
     expect(modal).not.toContain('modal-surface');
-    expect(modal).toContain('dialog::backdrop');
+    expect(modal).toContain('dialog[data-type="modal"][open]');
     expect(modal).toContain('backdrop-filter: blur(0.5rem)');
     expect(modal).not.toContain('z-index: -1');
   });
