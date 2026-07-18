@@ -74,6 +74,7 @@ describe('TimerApplicationRuntime', () => {
 
   it('owns one injectable application-scoped solve persistence service', async () => {
     const solvePersistence: SolvePersistencePort = {
+      loadSolves: vi.fn(),
       addSolve: vi.fn(),
       updateSolve: vi.fn(),
       removeSolves: vi.fn(),
@@ -137,7 +138,7 @@ describe('TimerApplicationRuntime', () => {
     }));
 
     expect(device.calls).toEqual(['destroy']);
-    expect(info).toHaveBeenCalledTimes(1);
+    expect(info.mock.calls.filter(call => call[0] === 'event')).toHaveLength(1);
   });
 
   it('supports an application with no registered devices', async () => {

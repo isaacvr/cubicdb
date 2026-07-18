@@ -6,6 +6,10 @@ import type { SolvePersistencePort } from './SolvePersistenceService';
 export class SolveControllerPersistencePort implements SolvePersistencePort {
   constructor(private readonly controller: SolveController = solveController) {}
 
+  async loadSolves(): Promise<Solve[]> {
+    return this.controller.loadSolves();
+  }
+
   async addSolve(solve: Partial<Solve>): Promise<Solve> {
     return this.controller.addSolve(this.controller.createSolve(solve));
   }

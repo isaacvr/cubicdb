@@ -133,6 +133,9 @@
     if (type.startsWith("generation.image.")) {
       return { icon: Image, color: "text-secondary", label: "Image generation" };
     }
+    if (type.startsWith("timer.solve.")) {
+      return { icon: ListTree, color: "text-accent", label: "Solve service" };
+    }
     if (type.endsWith("keyboard-key-down")) {
       return { icon: ArrowDownToLine, color: "text-sky-400", label: "Key down" };
     }

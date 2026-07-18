@@ -72,6 +72,8 @@ export interface TimerEventPayloadMap
   [TIMER_EVENTS.SESSION_SWITCHED]: { previousSession: Session | null; session: Session };
   [TIMER_EVENTS.SESSION_SETTINGS_CHANGE_REQUESTED]: { sessionId: string; settings: Partial<SessionSettings> };
   [TIMER_EVENTS.SESSION_SETTINGS_CHANGED]: { session: Session; changedKeys: string[] };
+  [TIMER_EVENTS.SOLVES_LIST_REQUESTED]: { ownerId: string };
+  [TIMER_EVENTS.SOLVES_LIST_LOADED]: { ownerId: string; solves: Solve[] };
   [TIMER_EVENTS.SOLVE_ADD_REQUESTED]: { ownerId: string; solve: Partial<Solve> };
   [TIMER_EVENTS.SOLVE_ADDED]: { ownerId: string; solve: Solve };
   [TIMER_EVENTS.SOLVE_UPDATE_REQUESTED]: { ownerId: string; solve: Solve };

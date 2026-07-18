@@ -4,6 +4,15 @@ import type { SessionController } from '$lib/controllers/SessionController';
 import type { SolveController } from '$lib/controllers/SolveController';
 import type { SCRAMBLE_MENU } from '@constants';
 import { SelectSession } from '$lib/core/usecases/SelectSession';
+import type { Solve } from '@interfaces';
+
+interface InitializationOptions {
+  battle?: boolean;
+  timerOnly?: boolean;
+  scrambleOnly?: boolean;
+  initInputHandler?: boolean;
+  loadSolves?: () => Promise<Solve[]>;
+}
 
 export function useInitialization(
   timerController: TimerController,
@@ -12,7 +21,7 @@ export function useInitialization(
   dataService: any,
   MENU_DATA: SCRAMBLE_MENU[],
   page: any,
-  options?: { battle?: boolean; timerOnly?: boolean; scrambleOnly?: boolean }
+  options?: InitializationOptions
 ) {
   const { session, group, mode, prob, allSolves } = timerController;
 
@@ -58,7 +67,9 @@ export function useInitialization(
     mode.set(res.mode as any);
     if (typeof res.prob !== 'undefined') prob.set(res.prob);
 
-    initInputHandler(get(session).settings.input || '');
+    if (options?.initInputHandler !== false) {
+      initInputHandler(get(session).settings.input || '');
+    }
 
     updateSessionsIcons();
     // No call selectedSession here - let caller handle
@@ -76,8 +87,8 @@ export function useInitialization(
 
   function setupOnMount() {
     if (!(options?.battle || options?.timerOnly || options?.scrambleOnly)) {
-      // Use controller to load solves; controller uses the GetSolves use-case + adapter
-      solveController.loadSolves().then(sv => {
+      const loadSolves = options?.loadSolves ?? (() => solveController.loadSolves());
+      loadSolves().then(sv => {
         allSolves.set(sv);
 
         const sessions = get(sessionController.sessions);
@@ -89,6 +100,7 @@ export function useInitialization(
         }
 
         updateCurrentSession();
+        timerController.updateSolves();
       });
     }
   }

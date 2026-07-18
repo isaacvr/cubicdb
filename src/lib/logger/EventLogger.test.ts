@@ -25,6 +25,51 @@ describe('EventLogger', () => {
     eventLogger.destroy();
   });
 
+  it('also logs solve and generation events to the service category', async () => {
+    const factory = new TimerEventFactory(
+      { now: () => 42.5 },
+      { next: () => 'event-1' },
+    );
+    const bus = createApplicationEventBus(factory);
+    const info = vi.fn();
+    const eventLogger = new EventLogger(bus, { info });
+    const event = factory.create(TIMER_EVENTS.SOLVES_LIST_REQUESTED, { ownerId: 'timer:one' });
+
+    await bus.publish(event);
+
+    expect(info).toHaveBeenCalledWith('service', event.type, {
+      id: event.id,
+      type: event.type,
+      timestamp: event.timestamp,
+      payload: event.payload,
+    });
+    eventLogger.destroy();
+  });
+
+  it('also logs device projection events to the reactor category', async () => {
+    const factory = new TimerEventFactory(
+      { now: () => 42.5 },
+      { next: () => 'event-1' },
+    );
+    const bus = createApplicationEventBus(factory);
+    const info = vi.fn();
+    const eventLogger = new EventLogger(bus, { info });
+    const event = factory.create(TIMER_EVENTS.DEVICE_READY, {
+      ownerId: 'timer:one',
+      deviceId: 'keyboard',
+    });
+
+    await bus.publish(event);
+
+    expect(info).toHaveBeenCalledWith('reactor', event.type, {
+      id: event.id,
+      type: event.type,
+      timestamp: event.timestamp,
+      payload: event.payload,
+    });
+    eventLogger.destroy();
+  });
+
   it('stops logging after destroy', async () => {
     const factory = new TimerEventFactory(
       { now: () => 1 },

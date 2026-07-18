@@ -229,7 +229,7 @@ describe('TimerCompositionRoot', () => {
       ownerId: 'timer:local-runtime',
       deviceId: 'keyboard',
     }));
-    expect(info).toHaveBeenCalledOnce();
+    expect(info.mock.calls.filter(call => call[0] === 'event')).toHaveLength(1);
 
     await runtime.destroy();
     await runtime.destroy();
@@ -274,6 +274,7 @@ describe('TimerCompositionRoot', () => {
       eventLogSink: null,
       devices: [],
       solvePersistence: {
+        loadSolves: vi.fn(),
         addSolve: vi.fn(async solve => solve as Solve),
         updateSolve: vi.fn(),
         removeSolves: vi.fn(),
@@ -330,6 +331,44 @@ describe('TimerCompositionRoot', () => {
         },
       },
     });
+    await runtime.destroy();
+    await application.destroy();
+  });
+
+  it('requests and resolves scoped solve lists through the bus', async () => {
+    const solves: Solve[] = [{
+      _id: 'solve:one',
+      time: 1000,
+      date: 1000,
+      scramble: 'R U',
+      penalty: Penalty.NONE,
+      selected: false,
+      session: 'session',
+    }];
+    const application = createTimerApplicationRuntime({
+      eventLogSink: null,
+      devices: [],
+      solvePersistence: {
+        loadSolves: vi.fn(async () => solves),
+        addSolve: vi.fn(),
+        updateSolve: vi.fn(),
+        removeSolves: vi.fn(),
+      },
+    });
+    const observed: TimerEvent[] = [];
+    application.bus.observe(event => observed.push(event));
+    const runtime = createTimerRuntime({ application, ownerId: 'timer:one' });
+
+    await expect(runtime.requestSolvesList()).resolves.toBe(solves);
+
+    expect(observed).toContainEqual(expect.objectContaining({
+      type: TIMER_EVENTS.SOLVES_LIST_REQUESTED,
+      payload: { ownerId: 'timer:one' },
+    }));
+    expect(observed).toContainEqual(expect.objectContaining({
+      type: TIMER_EVENTS.SOLVES_LIST_LOADED,
+      payload: { ownerId: 'timer:one', solves },
+    }));
     await runtime.destroy();
     await application.destroy();
   });

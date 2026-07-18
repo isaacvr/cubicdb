@@ -35,6 +35,7 @@ describe('SolvePersistenceService', () => {
   it('persists scoped solve add requests and publishes scoped added events', async () => {
     const saved = createSolve({ _id: 'saved' });
     const port: SolvePersistencePort = {
+      loadSolves: vi.fn(),
       addSolve: vi.fn(async () => saved),
       updateSolve: vi.fn(),
       removeSolves: vi.fn(),
@@ -62,6 +63,7 @@ describe('SolvePersistenceService', () => {
     const previousSolve = createSolve({ comments: 'before' });
     const updatedSolve = createSolve({ comments: 'after' });
     const port: SolvePersistencePort = {
+      loadSolves: vi.fn(),
       addSolve: vi.fn(),
       updateSolve: vi.fn(async () => ({ previousSolve, solve: updatedSolve })),
       removeSolves: vi.fn(),
@@ -88,6 +90,7 @@ describe('SolvePersistenceService', () => {
   it('persists scoped solve removals and publishes scoped removed events', async () => {
     const removedSolve = createSolve({ _id: 'removed' });
     const port: SolvePersistencePort = {
+      loadSolves: vi.fn(),
       addSolve: vi.fn(),
       updateSolve: vi.fn(),
       removeSolves: vi.fn(async () => [removedSolve]),
@@ -105,6 +108,34 @@ describe('SolvePersistenceService', () => {
       payload: {
         ownerId: 'timer:one',
         solves: [removedSolve],
+      },
+    });
+    service.destroy();
+  });
+
+  it('loads solves from scoped list requests and publishes scoped list-loaded events', async () => {
+    const loadedSolves = [
+      createSolve({ _id: 'first', session: 'session:one' }),
+      createSolve({ _id: 'second', session: 'session:two' }),
+    ];
+    const port: SolvePersistencePort = {
+      loadSolves: vi.fn(async () => loadedSolves),
+      addSolve: vi.fn(),
+      updateSolve: vi.fn(),
+      removeSolves: vi.fn(),
+    };
+    const { bus, events, observed, service } = createHarness(port);
+
+    await bus.publish(events.create(TIMER_EVENTS.SOLVES_LIST_REQUESTED, {
+      ownerId: 'timer:one',
+    }));
+
+    expect(port.loadSolves).toHaveBeenCalledOnce();
+    expect(observed.at(-1)).toMatchObject({
+      type: TIMER_EVENTS.SOLVES_LIST_LOADED,
+      payload: {
+        ownerId: 'timer:one',
+        solves: loadedSolves,
       },
     });
     service.destroy();

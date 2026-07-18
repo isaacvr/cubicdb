@@ -35,6 +35,8 @@ export const TIMER_EVENTS = {
   SESSION_SWITCHED: 'timer.session.switched',
   SESSION_SETTINGS_CHANGE_REQUESTED: 'timer.session.settings-change-requested',
   SESSION_SETTINGS_CHANGED: 'timer.session.settings-changed',
+  SOLVES_LIST_REQUESTED: 'timer.solve.list-requested',
+  SOLVES_LIST_LOADED: 'timer.solve.list-loaded',
   SOLVE_ADD_REQUESTED: 'timer.solve.add-requested',
   SOLVE_ADDED: 'timer.solve.added',
   SOLVE_UPDATE_REQUESTED: 'timer.solve.update-requested',

@@ -73,6 +73,7 @@ describe('keyboard timer flow', () => {
       clock: { now: () => now },
       eventLogSink: null,
       solvePersistence: {
+        loadSolves: vi.fn(),
         addSolve: vi.fn(async solve => solve as Solve),
         updateSolve: vi.fn(),
         removeSolves: vi.fn(),

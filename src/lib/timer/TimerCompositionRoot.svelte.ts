@@ -72,6 +72,7 @@ export interface TimerRuntime {
   requestSolveAdd(solve: Partial<Solve>, nativeEvent?: NativeTimestampSource): Promise<void>;
   requestSolveUpdate(solve: Solve, nativeEvent?: NativeTimestampSource): Promise<void>;
   requestSolvesRemove(solves: Solve[], nativeEvent?: NativeTimestampSource): Promise<void>;
+  requestSolvesList(nativeEvent?: NativeTimestampSource): Promise<Solve[]>;
   destroy(): Promise<void>;
 }
 
@@ -206,6 +207,7 @@ export function createTimerRuntime(options: TimerRuntimeOptions = {}): TimerRunt
     : null;
   const ready = application.ready;
   let destroyed = false;
+  let solveListRequestSequence = 0;
 
   async function publishScrambleRequest(
     input: ScrambleRequestInput,
@@ -275,6 +277,27 @@ export function createTimerRuntime(options: TimerRuntimeOptions = {}): TimerRunt
     await application.bus.publish(event);
   }
 
+  async function publishSolvesListRequest(
+    nativeEvent?: NativeTimestampSource,
+  ): Promise<Solve[]> {
+    const loaded = new Promise<Solve[]>(resolve => {
+      const subscription = application.bus.subscribe(
+        TIMER_EVENTS.SOLVES_LIST_LOADED,
+        `${ownerId}:timer-runtime:solves-list-loaded:${++solveListRequestSequence}`,
+        event => {
+          if (event.payload.ownerId !== ownerId) return;
+          subscription.unsubscribe();
+          resolve(event.payload.solves);
+        },
+      );
+    });
+    const event = nativeEvent
+      ? application.events.fromNative(TIMER_EVENTS.SOLVES_LIST_REQUESTED, { ownerId }, nativeEvent)
+      : application.events.create(TIMER_EVENTS.SOLVES_LIST_REQUESTED, { ownerId });
+    await application.bus.publish(event);
+    return loaded;
+  }
+
   return {
     ownerId,
     application,
@@ -324,6 +347,9 @@ export function createTimerRuntime(options: TimerRuntimeOptions = {}): TimerRunt
       nativeEvent?: NativeTimestampSource,
     ): Promise<void> {
       await publishSolvesRemoveRequest(solves, nativeEvent);
+    },
+    async requestSolvesList(nativeEvent?: NativeTimestampSource): Promise<Solve[]> {
+      return publishSolvesListRequest(nativeEvent);
     },
     async destroy(): Promise<void> {
       if (destroyed) return;

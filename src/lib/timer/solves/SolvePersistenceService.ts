@@ -5,6 +5,7 @@ import { TIMER_EVENTS } from '$lib/events/timer/TimerEventRegistry';
 import type { Solve } from '@interfaces';
 
 export interface SolvePersistencePort {
+  loadSolves(): Promise<Solve[]>;
   addSolve(solve: Partial<Solve>): Promise<Solve>;
   updateSolve(solve: Solve): Promise<{ previousSolve: Solve; solve: Solve }>;
   removeSolves(solves: Solve[]): Promise<Solve[]>;
@@ -20,6 +21,18 @@ export class SolvePersistenceService {
     private readonly port: SolvePersistencePort,
   ) {
     this.subscriptions = [
+      this.bus.subscribe(
+        TIMER_EVENTS.SOLVES_LIST_REQUESTED,
+        'solve-persistence:list',
+        async event => {
+          const solves = await this.port.loadSolves();
+          if (this.destroyed) return;
+          await this.bus.publish(this.events.create(TIMER_EVENTS.SOLVES_LIST_LOADED, {
+            ownerId: event.payload.ownerId,
+            solves,
+          }));
+        },
+      ),
       this.bus.subscribe(
         TIMER_EVENTS.SOLVE_ADD_REQUESTED,
         'solve-persistence:add',

@@ -188,7 +188,10 @@
     solveController,
     dataService,
     MENU,
-    page
+    page,
+    {
+      loadSolves: () => eventTimerRuntime.requestSolvesList(),
+    }
   );
 
   // Create keyboard handler inside effect to capture reactive values
