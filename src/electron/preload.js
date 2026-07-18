@@ -16,7 +16,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
 
   addSolve: async s => ipc.invoke("add-solve", s),
   addSolves: async s => ipc.invoke("add-solves", s),
-  getSolves: async () => ipc.invoke("get-solves"),
+  getSolves: async query => ipc.invoke("get-solves", query),
   updateSolve: async s => ipc.invoke("update-solve", s),
   removeSolves: async s => ipc.invoke("remove-solves", s),
 

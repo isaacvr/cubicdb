@@ -190,7 +190,9 @@
     MENU,
     page,
     {
-      loadSolves: () => eventTimerRuntime.requestSolvesList(),
+      loadSolves: () => eventTimerRuntime.requestSolvesList({
+        sessionId: page.params.sessionId,
+      }),
     }
   );
 

@@ -2,6 +2,7 @@ import type { Solve } from "@interfaces";
 import type { SolveIPC } from "./solveIPC.interface";
 import { openDB, type IDBPDatabase } from "idb";
 import { clone } from "@helpers/object";
+import type { SolveListQuery } from "$lib/timer/solves/SolveListQuery";
 
 const DBName = "CubicDB-data";
 const SolveStore = "Solves";
@@ -9,6 +10,11 @@ const dbVersion = 1;
 const debug = false;
 
 interface DATABASE {}
+
+export function filterSolvesByQuery(solves: Solve[], query?: SolveListQuery): Solve[] {
+  if (!query?.sessionId) return solves;
+  return solves.filter(solve => solve.session === query.sessionId);
+}
 
 export class SolveBrowserIPC implements SolveIPC {
   DB: IDBPDatabase<DATABASE> | null;
@@ -62,10 +68,11 @@ export class SolveBrowserIPC implements SolveIPC {
     this.isInit = false;
   }
 
-  async getSolves() {
+  async getSolves(query?: SolveListQuery) {
     await this.init();
     if (!this.DB) return [];
-    return this.DB.getAll(SolveStore) as Promise<Solve[]>;
+    const solves = await this.DB.getAll(SolveStore) as Solve[];
+    return filterSolvesByQuery(solves, query);
   }
 
   async addSolve(s: Solve) {

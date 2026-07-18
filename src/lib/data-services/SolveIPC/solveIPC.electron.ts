@@ -1,6 +1,7 @@
 import type { IPC, Solve } from "@interfaces";
 import type { SolveIPC } from "./solveIPC.interface";
 import { clone } from "@helpers/object";
+import type { SolveListQuery } from "$lib/timer/solves/SolveListQuery";
 
 export class SolveElectronIPC implements SolveIPC {
   ipc: IPC;
@@ -19,8 +20,8 @@ export class SolveElectronIPC implements SolveIPC {
     return SolveElectronIPC._instance;
   }
 
-  getSolves() {
-    return this.ipc.getSolves();
+  getSolves(query?: SolveListQuery) {
+    return this.ipc.getSolves(query);
   }
 
   addSolve(s: Solve) {

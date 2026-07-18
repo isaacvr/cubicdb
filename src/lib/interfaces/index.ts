@@ -664,7 +664,7 @@ export interface IPC {
   reconstructionsVersion: () => Promise<{ version: string; minVersion: string }>;
   checkReconstructions: () => Promise<{ version: string; minVersion: string }>;
 
-  getSolves: () => Promise<Solve[]>;
+  getSolves: (query?: { sessionId?: string }) => Promise<Solve[]>;
   addSolve: (s: Solve) => Promise<Solve>;
   addSolves: (s: Solve[]) => Promise<Solve[]>;
   updateSolve: (s: Solve) => Promise<Solve>;

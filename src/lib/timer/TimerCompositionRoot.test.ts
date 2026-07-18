@@ -358,16 +358,17 @@ describe('TimerCompositionRoot', () => {
     const observed: TimerEvent[] = [];
     application.bus.observe(event => observed.push(event));
     const runtime = createTimerRuntime({ application, ownerId: 'timer:one' });
+    const query = { sessionId: 'session' };
 
-    await expect(runtime.requestSolvesList()).resolves.toBe(solves);
+    await expect(runtime.requestSolvesList(query)).resolves.toBe(solves);
 
     expect(observed).toContainEqual(expect.objectContaining({
       type: TIMER_EVENTS.SOLVES_LIST_REQUESTED,
-      payload: { ownerId: 'timer:one' },
+      payload: { ownerId: 'timer:one', query },
     }));
     expect(observed).toContainEqual(expect.objectContaining({
       type: TIMER_EVENTS.SOLVES_LIST_LOADED,
-      payload: { ownerId: 'timer:one', solves },
+      payload: { ownerId: 'timer:one', query, solves },
     }));
     await runtime.destroy();
     await application.destroy();

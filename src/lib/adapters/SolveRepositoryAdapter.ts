@@ -2,6 +2,7 @@ import { get } from "svelte/store";
 import { dataService } from "$lib/data-services/data.service";
 import type { ISolveRepository } from "../core/ports/ISolveRepository";
 import { Penalty, type Solve } from "@interfaces";
+import type { SolveListQuery } from "$lib/timer/solves/SolveListQuery";
 
 export class SolveRepositoryAdapter implements ISolveRepository {
   async addSolve(solve: Solve): Promise<Solve> {
@@ -9,9 +10,9 @@ export class SolveRepositoryAdapter implements ISolveRepository {
     return ds.solve.addSolve(solve);
   }
 
-  async getSolves(): Promise<Solve[]> {
+  async getSolves(query?: SolveListQuery): Promise<Solve[]> {
     const ds = get(dataService);
-    return ds.solve.getSolves();
+    return ds.solve.getSolves(query);
   }
 
   async updateSolve(solve: Solve): Promise<Solve> {

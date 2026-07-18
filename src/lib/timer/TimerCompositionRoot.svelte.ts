@@ -19,6 +19,7 @@ import {
   type ScrambleRequestInput,
   type ScrambleRequestSource,
 } from '$lib/events/timer/ScrambleEventTypes';
+import type { SolveListQuery } from './solves/SolveListQuery';
 import { createImageGenerationConfig } from './scramble/createImageGenerationConfig';
 import { createTimerMigrationFlags, type TimerMigrationFlags } from './TimerMigrationFlags';
 import { TimerReactor } from './TimerReactor';
@@ -72,7 +73,7 @@ export interface TimerRuntime {
   requestSolveAdd(solve: Partial<Solve>, nativeEvent?: NativeTimestampSource): Promise<void>;
   requestSolveUpdate(solve: Solve, nativeEvent?: NativeTimestampSource): Promise<void>;
   requestSolvesRemove(solves: Solve[], nativeEvent?: NativeTimestampSource): Promise<void>;
-  requestSolvesList(nativeEvent?: NativeTimestampSource): Promise<Solve[]>;
+  requestSolvesList(query?: SolveListQuery, nativeEvent?: NativeTimestampSource): Promise<Solve[]>;
   destroy(): Promise<void>;
 }
 
@@ -278,6 +279,7 @@ export function createTimerRuntime(options: TimerRuntimeOptions = {}): TimerRunt
   }
 
   async function publishSolvesListRequest(
+    query?: SolveListQuery,
     nativeEvent?: NativeTimestampSource,
   ): Promise<Solve[]> {
     const loaded = new Promise<Solve[]>(resolve => {
@@ -292,8 +294,8 @@ export function createTimerRuntime(options: TimerRuntimeOptions = {}): TimerRunt
       );
     });
     const event = nativeEvent
-      ? application.events.fromNative(TIMER_EVENTS.SOLVES_LIST_REQUESTED, { ownerId }, nativeEvent)
-      : application.events.create(TIMER_EVENTS.SOLVES_LIST_REQUESTED, { ownerId });
+      ? application.events.fromNative(TIMER_EVENTS.SOLVES_LIST_REQUESTED, { ownerId, query }, nativeEvent)
+      : application.events.create(TIMER_EVENTS.SOLVES_LIST_REQUESTED, { ownerId, query });
     await application.bus.publish(event);
     return loaded;
   }
@@ -348,8 +350,11 @@ export function createTimerRuntime(options: TimerRuntimeOptions = {}): TimerRunt
     ): Promise<void> {
       await publishSolvesRemoveRequest(solves, nativeEvent);
     },
-    async requestSolvesList(nativeEvent?: NativeTimestampSource): Promise<Solve[]> {
-      return publishSolvesListRequest(nativeEvent);
+    async requestSolvesList(
+      query?: SolveListQuery,
+      nativeEvent?: NativeTimestampSource,
+    ): Promise<Solve[]> {
+      return publishSolvesListRequest(query, nativeEvent);
     },
     async destroy(): Promise<void> {
       if (destroyed) return;

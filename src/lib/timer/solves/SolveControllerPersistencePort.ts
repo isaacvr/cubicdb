@@ -2,12 +2,13 @@ import { get } from 'svelte/store';
 import { SolveController, solveController } from '$lib/controllers/SolveController';
 import type { Solve } from '@interfaces';
 import type { SolvePersistencePort } from './SolvePersistenceService';
+import type { SolveListQuery } from './SolveListQuery';
 
 export class SolveControllerPersistencePort implements SolvePersistencePort {
   constructor(private readonly controller: SolveController = solveController) {}
 
-  async loadSolves(): Promise<Solve[]> {
-    return this.controller.loadSolves();
+  async loadSolves(query?: SolveListQuery): Promise<Solve[]> {
+    return this.controller.loadSolves(query);
   }
 
   async addSolve(solve: Partial<Solve>): Promise<Solve> {

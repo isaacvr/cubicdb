@@ -7,6 +7,7 @@ import { RemoveSolves } from "$lib/core/usecases/RemoveSolves";
 import { GetSolves } from "$lib/core/usecases/GetSolves";
 import { CreateSolve } from "$lib/core/usecases/CreateSolve";
 import type { Solve } from "@interfaces";
+import type { SolveListQuery } from "$lib/timer/solves/SolveListQuery";
 
 export class SolveController {
   public solves: Writable<Solve[]> = writable([]);
@@ -26,10 +27,10 @@ export class SolveController {
     this.createSolveUsecase = new CreateSolve(repo);
   }
 
-  async loadSolves() {
+  async loadSolves(query?: SolveListQuery) {
     const repo = new SolveRepositoryAdapter();
     const getSolves = new GetSolves(repo);
-    const s = await getSolves.execute();
+    const s = await getSolves.execute(query);
     this.solves.set(s);
     return s;
   }

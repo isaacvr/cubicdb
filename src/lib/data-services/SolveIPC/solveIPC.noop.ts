@@ -1,5 +1,6 @@
 import type { Solve } from "@interfaces";
 import type { SolveIPC } from "./solveIPC.interface";
+import type { SolveListQuery } from "$lib/timer/solves/SolveListQuery";
 
 export class SolveNoopIPC implements SolveIPC {
   private constructor() {}
@@ -14,7 +15,7 @@ export class SolveNoopIPC implements SolveIPC {
     return SolveNoopIPC._instance;
   }
 
-  async getSolves() {
+  async getSolves(_query?: SolveListQuery) {
     return [];
   }
 

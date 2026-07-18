@@ -125,16 +125,19 @@ describe('SolvePersistenceService', () => {
       removeSolves: vi.fn(),
     };
     const { bus, events, observed, service } = createHarness(port);
+    const query = { sessionId: 'session:one' };
 
     await bus.publish(events.create(TIMER_EVENTS.SOLVES_LIST_REQUESTED, {
       ownerId: 'timer:one',
+      query,
     }));
 
-    expect(port.loadSolves).toHaveBeenCalledOnce();
+    expect(port.loadSolves).toHaveBeenCalledWith(query);
     expect(observed.at(-1)).toMatchObject({
       type: TIMER_EVENTS.SOLVES_LIST_LOADED,
       payload: {
         ownerId: 'timer:one',
+        query,
         solves: loadedSolves,
       },
     });

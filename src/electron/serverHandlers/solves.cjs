@@ -10,10 +10,11 @@ const path = require("node:path");
  * @param {string} dbPath
  */
 module.exports = (ipcMain, Solves, dbPath) => {
-  ipcMain.handle("get-solves", async event => {
+  ipcMain.handle("get-solves", async (_event, query) => {
     return new Promise((res, rej) => {
+      const filter = query?.sessionId ? { session: query.sessionId } : {};
       // @ts-ignore
-      Solves.find({}, (err, solves) => {
+      Solves.find(filter, (err, solves) => {
         if (err) return rej(err);
         res(solves);
       });

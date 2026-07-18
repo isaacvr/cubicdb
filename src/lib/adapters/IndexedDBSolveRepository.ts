@@ -1,6 +1,8 @@
 import { openDB, type IDBPDatabase } from "idb";
 import type { Solve } from "@domain/Solve";
 import type { ISolveRepository } from "@ports/ISolveRepository";
+import type { SolveListQuery } from "$lib/timer/solves/SolveListQuery";
+import { filterSolvesByQuery } from "$lib/data-services/SolveIPC/solveIPC.browser";
 
 const DB_NAME = "CubicDB-data";
 const SOLVE_STORE = "Solves";
@@ -31,9 +33,10 @@ export class IndexedDBSolveRepository implements ISolveRepository {
     return this.dbPromise;
   }
 
-  async getSolves(): Promise<Solve[]> {
+  async getSolves(query?: SolveListQuery): Promise<Solve[]> {
     const db = await this.getDB();
-    return db.getAll(SOLVE_STORE) as Promise<Solve[]>;
+    const solves = await db.getAll(SOLVE_STORE) as Solve[];
+    return filterSolvesByQuery(solves as any, query) as Solve[];
   }
 
   async addSolve(s: Solve): Promise<Solve> {

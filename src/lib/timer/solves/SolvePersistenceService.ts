@@ -3,9 +3,10 @@ import type { TimerEvent } from '$lib/events/timer/TimerEvent';
 import type { TimerEventFactory } from '$lib/events/timer/TimerEventFactory';
 import { TIMER_EVENTS } from '$lib/events/timer/TimerEventRegistry';
 import type { Solve } from '@interfaces';
+import type { SolveListQuery } from './SolveListQuery';
 
 export interface SolvePersistencePort {
-  loadSolves(): Promise<Solve[]>;
+  loadSolves(query?: SolveListQuery): Promise<Solve[]>;
   addSolve(solve: Partial<Solve>): Promise<Solve>;
   updateSolve(solve: Solve): Promise<{ previousSolve: Solve; solve: Solve }>;
   removeSolves(solves: Solve[]): Promise<Solve[]>;
@@ -25,10 +26,11 @@ export class SolvePersistenceService {
         TIMER_EVENTS.SOLVES_LIST_REQUESTED,
         'solve-persistence:list',
         async event => {
-          const solves = await this.port.loadSolves();
+          const solves = await this.port.loadSolves(event.payload.query);
           if (this.destroyed) return;
           await this.bus.publish(this.events.create(TIMER_EVENTS.SOLVES_LIST_LOADED, {
             ownerId: event.payload.ownerId,
+            query: event.payload.query,
             solves,
           }));
         },
