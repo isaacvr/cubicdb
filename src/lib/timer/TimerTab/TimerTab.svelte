@@ -20,10 +20,10 @@
 
   // Others
   import type { ReconstructorMethod } from "@classes/reconstructors/interfaces";
+  import Modal from "@components/Modal.svelte";
   import StatsInfo from "./StatsInfo.svelte";
   import PuzzleImageBundle from "@components/PuzzleImageBundle.svelte";
 
-  import { blur } from "svelte/transition";
   import { twMerge } from "tailwind-merge";
   import TimerOptions from "./TimerOptions.svelte";
   import ManualInputHandler from "./timer-handlers/ManualInputHandler.svelte";
@@ -412,20 +412,18 @@
   </div>
 </section>
 
-{#if prevExpanded}
-  <dialog
-    open={prevExpanded}
-    class="flex items-center px-2 w-full h-full shaded-card inset-0 rounded-md overflow-hidden"
-    in:blur={{ duration: 300 }}
-    out:blur={{ duration: 200 }}
-  >
+<Modal
+  bind:show={prevExpanded}
+  class="w-[min(100vw-1rem,60rem)] h-[min(100svh-1rem,42rem)] shaded-card"
+>
+  <div class="flex items-center justify-center w-full h-full overflow-hidden px-2">
     <PuzzleImageBundle
       src={$preview.map(s => s.src || "")}
       onclick={() => (prevExpanded = !prevExpanded)}
       allowDownload={prevExpanded}
     />
-  </dialog>
-{/if}
+  </div>
+</Modal>
 
 <style lang="postcss">
   @reference "@src/themes/index.css";

@@ -104,16 +104,25 @@
     preview = [""];
 
     if (s) {
-      gSolve.comments = (s.comments || "").trim();
+      const comments = (s.comments ?? "").trim();
+      s.comments = comments;
+      gSolve.comments = comments;
       gSolve.penalty = s.penalty;
       requestUpdateSolve(s);
     }
     show = false;
   }
 
+  function createEditableSolve(solve: Solve): Solve {
+    return {
+      ...solve,
+      comments: solve.comments ?? "",
+    };
+  }
+
   export function editSolve(s: Solve) {
     gSolve = s;
-    sSolve = { ...s };
+    sSolve = createEditableSolve(s);
 
     if (sSolve.steps) {
       solveSteps = calcPercents(sSolve.steps, sSolve.time);

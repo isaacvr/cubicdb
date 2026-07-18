@@ -1,8 +1,6 @@
 <script lang="ts">
   import Button from "$lib/cubicdbKit/Button.svelte";
   import { XIcon } from "lucide-svelte";
-  import { fly } from "svelte/transition";
-
   interface ModalProps {
     show?: boolean;
     cancel?: boolean;
@@ -68,10 +66,14 @@
 
   let isCallbackCalled = false;
 
-  function close(data: any) {
+  function close(data: any = null) {
     onclose && onclose(data || null);
     show = false;
     isCallbackCalled = true;
+  }
+
+  function closeFromButton() {
+    close(null);
   }
 
   $effect(() => {
@@ -97,16 +99,19 @@
   onkeyup={keyUpHandler}
   onkeydown={keyDownHandler}
   oncancel={e => !cancel && e.preventDefault()}
-  class="modal mx-auto text-sm rounded-md show p-4 pt-3 overflow-visible {_cl || ''}"
+  class="modal z-[1000] mx-auto text-sm rounded-md show p-2 overflow-visible"
   style="view-transition-name: {transitionName};"
 >
-  <div class="modal-box bg-base-200">
+  <div
+    class="modal-box bg-base-200 relative overflow-visible max-w-[calc(100vw-1rem)] max-h-[calc(100svh-1rem)] {_cl ||
+      ''}"
+  >
     {#if cancel}
       <Button
         color="neutral"
         tabindex="0"
-        class="rounded-full absolute right-2 top-2 hover:border-primary"
-        onclick={close}
+        class="rounded-full absolute right-2 top-2 hover:border-primary z-10"
+        onclick={closeFromButton}
       >
         <XIcon size="1rem" />
       </Button>
@@ -134,7 +139,6 @@
   }
 
   dialog::backdrop {
-    z-index: -1;
     animation: fadeIn 200ms linear 0ms forwards;
     background-color: #0003;
     backdrop-filter: blur(0.5rem);
