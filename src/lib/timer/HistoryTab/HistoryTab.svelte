@@ -53,7 +53,6 @@
     TrashIcon,
     XIcon,
   } from "lucide-svelte";
-  import { solveController } from "$lib/controllers/SolveController";
 
   const notification = NotificationService.getInstance();
 
@@ -64,7 +63,7 @@
 
   let { context = $bindable(), timerController = $bindable() }: HistoryTabProps = $props();
 
-  const { selected, handleUpdateSolve, handleRemoveSolves } = context;
+  const { selected, requestUpdateSolve, requestRemoveSolves } = context;
   const { tab, solves, session } = timerController;
 
   let pg = $state(new Paginator([], 100));
@@ -107,9 +106,7 @@
     if (s) {
       gSolve.comments = (s.comments || "").trim();
       gSolve.penalty = s.penalty;
-      solveController.updateSolve(s).then(res => {
-        handleUpdateSolve(res);
-      });
+      requestUpdateSolve(s);
     }
     show = false;
   }
@@ -171,10 +168,7 @@
     sSolve.penalty = p;
 
     if (update) {
-      solveController
-        .updateSolve(sSolve)
-        .then(handleUpdateSolve)
-        .catch(() => {});
+      requestUpdateSolve(sSolve);
     }
 
     showDropdown = false;
@@ -224,10 +218,7 @@
   }
 
   function _delete(s: Solve[]) {
-    solveController
-      .removeSolves(s)
-      .then(handleRemoveSolves)
-      .catch(() => {});
+    requestRemoveSolves(s);
   }
 
   function deleteSelected() {

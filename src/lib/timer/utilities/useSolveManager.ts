@@ -45,6 +45,13 @@ export function useSolveManager(timerController: TimerController) {
     return rescramble;
   }
 
+  function handleAddSolve(solve: Solve) {
+    timerController.lastSolve.set(solve);
+    allSolves.update(curr => [...curr, solve]);
+    solves.update(curr => [...curr, solve]);
+    setSolves();
+  }
+
   function handleUpdateSolve(updatedSolve: Solve) {
     const allSolvesVal = get(allSolves);
     for (let i = 0, maxi = allSolvesVal.length; i < maxi; i += 1) {
@@ -83,6 +90,7 @@ export function useSolveManager(timerController: TimerController) {
     selectSolveById,
     updateStatistics,
     setSolves,
+    handleAddSolve,
     handleUpdateSolve,
     handleRemoveSolves,
   };

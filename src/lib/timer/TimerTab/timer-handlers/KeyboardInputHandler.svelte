@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { solveController } from "$lib/controllers/SolveController";
   import Button from "$lib/cubicdbKit/Button.svelte";
   import Tooltip from "$lib/cubicdbKit/Tooltip.svelte";
   // dataService was used before migration; controller now handles persistence
@@ -39,7 +38,7 @@
     class: _cl = $bindable(""),
   }: KeyboardInputProps = $props();
 
-  const { editSolve, handleUpdateSolve, handleRemoveSolves, timerController } = context;
+  const { editSolve, requestUpdateSolve, requestRemoveSolves, timerController } = context;
 
   const { reset } = inputContext;
   const { time, lastSolve, currentStep, session, ready, decimals, timerState, solves } =
@@ -54,10 +53,7 @@
         ev.stopPropagation();
 
         if ($lastSolve) {
-          solveController
-            .removeSolves([$lastSolve])
-            .then(handleRemoveSolves)
-            .catch(() => {});
+          requestRemoveSolves([$lastSolve]);
           $time = 0;
           reset();
         }
@@ -96,10 +92,7 @@
           // if (battle) {
           //   // dispatch("update", $lastSolve);
           // } else {
-          solveController
-            .updateSolve($lastSolve)
-            .then(handleUpdateSolve)
-            .catch(() => {});
+          requestUpdateSolve($lastSolve);
           // }
         }
       },

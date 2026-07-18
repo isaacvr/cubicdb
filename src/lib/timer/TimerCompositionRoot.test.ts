@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { AverageSetting, Penalty, TimerState as TimerStateValue } from '@interfaces';
+import { AverageSetting, Penalty, TimerState as TimerStateValue, type Solve } from '@interfaces';
 import { CubeMode } from '@constants';
 import { GENERATION_EVENTS } from '$lib/events/generation';
 import { TIMER_EVENTS } from '$lib/events/timer/TimerEventRegistry';
@@ -269,12 +269,31 @@ describe('TimerCompositionRoot', () => {
     await application.destroy();
   });
 
-  it('routes run completion to the matching owner exactly once', async () => {
-    const onRunStopped = vi.fn();
-    const runtime = createTimerRuntime({
-      ownerId: 'timer:one',
+  it('routes run completion to a scoped solve add request exactly once', async () => {
+    const application = createTimerApplicationRuntime({
       eventLogSink: null,
-      onRunStopped,
+      devices: [],
+      solvePersistence: {
+        addSolve: vi.fn(async solve => solve as Solve),
+        updateSolve: vi.fn(),
+        removeSolves: vi.fn(),
+      },
+    });
+    const observed: TimerEvent[] = [];
+    application.bus.observe(event => observed.push(event));
+    const getSolveRequest = vi.fn((elapsedMs: number, penalty: Penalty, steps: number[]) => ({
+      time: elapsedMs,
+      penalty,
+      steps,
+      date: 1000,
+      scramble: 'R U',
+      selected: false,
+      session: 'session',
+    }));
+    const runtime = createTimerRuntime({
+      application,
+      ownerId: 'timer:one',
+      getSolveRequest,
     });
 
     await runtime.bus.publish(runtime.events.create(TIMER_EVENTS.DEVICE_RUN_STOPPED, {
@@ -293,11 +312,25 @@ describe('TimerCompositionRoot', () => {
       ownerId: 'timer:one',
       deviceId: TIMER_DEVICE_IDS.KEYBOARD,
       elapsedMs: 1234,
-      steps: [],
+      steps: [1, 2],
     }));
 
-    expect(onRunStopped).toHaveBeenCalledOnce();
-    expect(onRunStopped).toHaveBeenCalledWith(1234, Penalty.P2);
+    expect(getSolveRequest).toHaveBeenCalledOnce();
+    expect(getSolveRequest).toHaveBeenCalledWith(1234, Penalty.P2, [1, 2]);
+    expect(observed.filter(event => event.type === TIMER_EVENTS.SOLVE_ADD_REQUESTED))
+      .toHaveLength(1);
+    expect(observed.at(-2)).toMatchObject({
+      type: TIMER_EVENTS.SOLVE_ADD_REQUESTED,
+      payload: {
+        ownerId: 'timer:one',
+        solve: {
+          time: 1234,
+          penalty: Penalty.P2,
+          steps: [1, 2],
+        },
+      },
+    });
     await runtime.destroy();
+    await application.destroy();
   });
 });

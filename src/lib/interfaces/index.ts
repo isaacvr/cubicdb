@@ -517,6 +517,8 @@ export interface TimerContext {
   handleUpdateSession: (s: Session) => any;
   handleUpdateSolve: (s: Solve) => any;
   handleRemoveSolves: (sv: Solve[]) => any;
+  requestUpdateSolve: (s: Solve, nativeEvent?: Pick<Event, "timeStamp">) => any;
+  requestRemoveSolves: (sv: Solve[], nativeEvent?: Pick<Event, "timeStamp">) => any;
   editSessions: () => any;
 
   timerController: ITimerController;

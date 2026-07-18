@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { AverageSetting, TimerState } from '@interfaces';
+import { AverageSetting, TimerState, type Solve } from '@interfaces';
 import { GENERATION_EVENTS } from '$lib/events/generation';
 import { SCRAMBLE_REQUEST_SOURCES, type ScrambleRequestSource } from '$lib/events/timer/ScrambleEventTypes';
 import { TIMER_EVENTS } from '$lib/events/timer/TimerEventRegistry';
@@ -28,15 +28,26 @@ function session(scrambleAfterCancel: boolean) {
 }
 
 describe('scramble lifecycle triggers', () => {
-  it('requests the next scramble after the matching completed solve callback', async () => {
+  it('requests the next scramble after the matching completed solve request', async () => {
     const order: string[] = [];
-    const application = createTimerApplicationRuntime({ devices: [], eventLogSink: null });
+    const application = createTimerApplicationRuntime({
+      devices: [],
+      eventLogSink: null,
+      solvePersistence: {
+        addSolve: vi.fn(async solve => solve as Solve),
+        updateSolve: vi.fn(),
+        removeSolves: vi.fn(),
+      },
+    });
     const runtime = createTimerRuntime({
       application,
       ownerId: 'timer:one',
       flags: { scramble: true },
-      onRunStopped: () => order.push('legacy-save'),
+      getSolveRequest: () => ({ session: 'session', time: 500, scramble: 'R U' }),
       getScrambleRequest: source => input(source),
+    });
+    application.bus.subscribe(TIMER_EVENTS.SOLVE_ADD_REQUESTED, 'test:solve-request', event => {
+      if (event.payload.ownerId === 'timer:one') order.push('solve-request');
     });
     application.bus.subscribe(GENERATION_EVENTS.SCRAMBLE_REQUESTED, 'test:request', event => {
       if (event.payload.scopeId === 'timer:one') order.push(event.payload.config.source ?? '');
@@ -56,7 +67,7 @@ describe('scramble lifecycle triggers', () => {
       steps: [],
     }));
 
-    expect(order).toEqual(['legacy-save', SCRAMBLE_REQUEST_SOURCES.SOLVE_COMPLETED]);
+    expect(order).toEqual(['solve-request', SCRAMBLE_REQUEST_SOURCES.SOLVE_COMPLETED]);
     await runtime.destroy();
     await application.destroy();
   });

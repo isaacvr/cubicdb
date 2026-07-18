@@ -1,6 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { AverageSetting, Penalty, TimerState as TimerStateValue } from '@interfaces';
+import { AverageSetting, Penalty, TimerState as TimerStateValue, type Solve } from '@interfaces';
 import { createTimerRuntime } from '../TimerCompositionRoot.svelte';
+import { createTimerApplicationRuntime } from '../TimerApplicationRuntime';
+import { TIMER_EVENTS } from '$lib/events/timer/TimerEventRegistry';
+import type { TimerEvent } from '$lib/events/timer/TimerEvent';
 import { TIMER_DEVICE_IDS } from './TimerDeviceDescriptor';
 
 describe('keyboard timer flow', () => {
@@ -60,12 +63,27 @@ describe('keyboard timer flow', () => {
   it('projects inspection +2 and automatic DNF through the real runtime', async () => {
     vi.useFakeTimers();
     let now = 0;
-    const onRunStopped = vi.fn();
-    const runtime = createTimerRuntime({
-      flags: { keyboard: true },
+    const getSolveRequest = vi.fn((elapsedMs: number, penalty: Penalty) => ({
+      time: elapsedMs,
+      penalty,
+      session: 'session',
+      scramble: 'R U',
+    }));
+    const application = createTimerApplicationRuntime({
       clock: { now: () => now },
       eventLogSink: null,
-      onRunStopped,
+      solvePersistence: {
+        addSolve: vi.fn(async solve => solve as Solve),
+        updateSolve: vi.fn(),
+        removeSolves: vi.fn(),
+      },
+    });
+    const observed: TimerEvent[] = [];
+    application.bus.observe(event => observed.push(event));
+    const runtime = createTimerRuntime({
+      application,
+      flags: { keyboard: true },
+      getSolveRequest,
     });
     runtime.state.session = {
       _id: 'session',
@@ -98,8 +116,19 @@ describe('keyboard timer flow', () => {
     expect(runtime.state.timerState).toBe(TimerStateValue.STOPPED);
     expect(runtime.state.penalty).toBe(Penalty.DNF);
     expect(runtime.state.time).toBe(Infinity);
-    expect(onRunStopped).toHaveBeenCalledWith(Infinity, Penalty.DNF);
+    expect(getSolveRequest).toHaveBeenCalledWith(Infinity, Penalty.DNF, []);
+    expect(observed).toContainEqual(expect.objectContaining({
+      type: TIMER_EVENTS.SOLVE_ADD_REQUESTED,
+      payload: expect.objectContaining({
+        ownerId: 'timer:local-runtime',
+        solve: expect.objectContaining({
+          time: Infinity,
+          penalty: Penalty.DNF,
+        }),
+      }),
+    }));
 
     await runtime.destroy();
+    await application.destroy();
   });
 });

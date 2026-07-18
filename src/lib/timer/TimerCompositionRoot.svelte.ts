@@ -4,7 +4,7 @@ import {
   type GenerationClient,
   type ScrambleGenerationConfig,
 } from '$lib/events/generation';
-import { TimerState as TimerStateValue, type Penalty } from '@interfaces';
+import { TimerState as TimerStateValue, type Penalty, type Solve } from '@interfaces';
 import type { TimerEvent } from '$lib/events/timer/TimerEvent';
 import { TIMER_EVENTS } from '$lib/events/timer/TimerEventRegistry';
 import type { EventLogSink } from '$lib/logger/EventLogger';
@@ -41,7 +41,11 @@ export interface TimerRuntimeOptions {
   eventLogSink?: EventLogSink | null;
   flags?: Partial<TimerMigrationFlags>;
   onTimerReading?: TimerReadingCallback;
-  onRunStopped?: (elapsedMs: number, penalty: Penalty) => void;
+  getSolveRequest?: (
+    elapsedMs: number,
+    penalty: Penalty,
+    steps: number[],
+  ) => Partial<Solve> | null;
   getScrambleRequest?: (source: ScrambleRequestSource) => ScrambleRequestInput | null;
 }
 
@@ -65,6 +69,9 @@ export interface TimerRuntime {
     input: ScrambleRequestInput,
     nativeEvent?: NativeTimestampSource,
   ): Promise<string>;
+  requestSolveAdd(solve: Partial<Solve>, nativeEvent?: NativeTimestampSource): Promise<void>;
+  requestSolveUpdate(solve: Solve, nativeEvent?: NativeTimestampSource): Promise<void>;
+  requestSolvesRemove(solves: Solve[], nativeEvent?: NativeTimestampSource): Promise<void>;
   destroy(): Promise<void>;
 }
 
@@ -143,13 +150,18 @@ export function createTimerRuntime(options: TimerRuntimeOptions = {}): TimerRunt
       },
     ),
   ];
-  const runStoppedSubscription: EventSubscription | null = options.onRunStopped
+  const runStoppedSubscription: EventSubscription | null = options.getSolveRequest
     ? application.bus.subscribe(
         TIMER_EVENTS.DEVICE_RUN_STOPPED,
-        `${ownerId}:timer-runtime:run-stopped`,
-        event => {
+        `${ownerId}:timer-runtime:solve-after-run-stopped`,
+        async event => {
           if (event.payload.ownerId !== ownerId) return;
-          options.onRunStopped?.(event.payload.elapsedMs, state.penalty);
+          const solve = options.getSolveRequest?.(
+            event.payload.elapsedMs,
+            state.penalty,
+            event.payload.steps,
+          );
+          if (solve) await publishSolveAddRequest(solve);
         },
         { priority: 100 },
       )
@@ -215,6 +227,54 @@ export function createTimerRuntime(options: TimerRuntimeOptions = {}): TimerRunt
     return requestId;
   }
 
+  async function publishSolveAddRequest(
+    solve: Partial<Solve>,
+    nativeEvent?: NativeTimestampSource,
+  ): Promise<void> {
+    const event = nativeEvent
+      ? application.events.fromNative(TIMER_EVENTS.SOLVE_ADD_REQUESTED, {
+          ownerId,
+          solve,
+        }, nativeEvent)
+      : application.events.create(TIMER_EVENTS.SOLVE_ADD_REQUESTED, {
+          ownerId,
+          solve,
+        });
+    await application.bus.publish(event);
+  }
+
+  async function publishSolveUpdateRequest(
+    solve: Solve,
+    nativeEvent?: NativeTimestampSource,
+  ): Promise<void> {
+    const event = nativeEvent
+      ? application.events.fromNative(TIMER_EVENTS.SOLVE_UPDATE_REQUESTED, {
+          ownerId,
+          solve,
+        }, nativeEvent)
+      : application.events.create(TIMER_EVENTS.SOLVE_UPDATE_REQUESTED, {
+          ownerId,
+          solve,
+        });
+    await application.bus.publish(event);
+  }
+
+  async function publishSolvesRemoveRequest(
+    solves: Solve[],
+    nativeEvent?: NativeTimestampSource,
+  ): Promise<void> {
+    const event = nativeEvent
+      ? application.events.fromNative(TIMER_EVENTS.SOLVES_REMOVE_REQUESTED, {
+          ownerId,
+          solves,
+        }, nativeEvent)
+      : application.events.create(TIMER_EVENTS.SOLVES_REMOVE_REQUESTED, {
+          ownerId,
+          solves,
+        });
+    await application.bus.publish(event);
+  }
+
   return {
     ownerId,
     application,
@@ -246,6 +306,24 @@ export function createTimerRuntime(options: TimerRuntimeOptions = {}): TimerRunt
       nativeEvent?: NativeTimestampSource,
     ): Promise<string> {
       return publishScrambleRequest(input, nativeEvent);
+    },
+    async requestSolveAdd(
+      solve: Partial<Solve>,
+      nativeEvent?: NativeTimestampSource,
+    ): Promise<void> {
+      await publishSolveAddRequest(solve, nativeEvent);
+    },
+    async requestSolveUpdate(
+      solve: Solve,
+      nativeEvent?: NativeTimestampSource,
+    ): Promise<void> {
+      await publishSolveUpdateRequest(solve, nativeEvent);
+    },
+    async requestSolvesRemove(
+      solves: Solve[],
+      nativeEvent?: NativeTimestampSource,
+    ): Promise<void> {
+      await publishSolvesRemoveRequest(solves, nativeEvent);
     },
     async destroy(): Promise<void> {
       if (destroyed) return;

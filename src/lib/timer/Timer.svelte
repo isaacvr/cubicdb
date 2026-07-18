@@ -11,8 +11,8 @@
   import { getLanguage } from "@lang/index";
   import { globalLang } from "@stores/language.service";
   import type { SCRAMBLE_MENU } from "@constants";
-  import type { Solve, InputContext, Penalty } from "@interfaces";
-  import { TimerState } from "@interfaces";
+  import type { Solve, InputContext } from "@interfaces";
+  import { Penalty, TimerState } from "@interfaces";
 
   import TimerTab from "$lib/timer/TimerTab/TimerTab.svelte";
   import HistoryTab from "$lib/timer/HistoryTab/HistoryTab.svelte";
@@ -38,6 +38,9 @@
   import type { NativeTimestampSource } from "$lib/events/timer/TimerEventFactory";
   import { createScrambleRequestInput } from "./scramble/createScrambleRequestInput";
   import { resolveScrambleModeSelection } from "./scramble/resolveScrambleModeSelection";
+  import { adjustMillis } from "@helpers/timer";
+  import { randomUUID } from "@helpers/strings";
+  import { TIMER_EVENTS } from "$lib/events/timer/TimerEventRegistry";
 
   interface TimerProps {
     battle?: boolean;
@@ -80,6 +83,37 @@
   const modeStore = timerController.mode;
   const probabilityStore = timerController.prob;
   const timerApplication = getTimerApplicationContext();
+
+  function createSolveDraft(
+    elapsedMs?: number,
+    penalty: Penalty = Penalty.NONE,
+    steps: number[] = []
+  ): Partial<Solve> {
+    const selectedMode = resolveScrambleModeSelection({
+      selectedMode: get(modeStore),
+      selectedGroup: get(groupStore),
+      menu: MENU,
+    });
+    const fallbackMode = get(modeStore);
+
+    return {
+      group: get(groupStore),
+      mode: selectedMode?.[1] ?? fallbackMode?.[1],
+      len: selectedMode?.[2] ?? fallbackMode?.[2],
+      prob: get(probabilityStore),
+      session: get(sessionStore)._id,
+      penalty,
+      time: adjustMillis(elapsedMs ?? get(timerController.time), false),
+      scramble: get(timerController.scramble),
+      steps,
+      _id: randomUUID(),
+    };
+  }
+
+  function shouldPersistSolves() {
+    return !(battle || timerOnly || scrambleOnly);
+  }
+
   const eventTimerRuntime = createTimerRuntime({
     application: timerApplication,
     ownerId: `timer:${page.params.sessionId ?? "primary"}`,
@@ -101,7 +135,13 @@
         source,
       });
     },
-    onRunStopped: (elapsedMs, penalty) => timerController.addSolve(elapsedMs, penalty),
+    getSolveRequest: (elapsedMs, penalty, steps) => {
+      if (!shouldPersistSolves()) {
+        timerController.addSolve(elapsedMs, penalty);
+        return null;
+      }
+      return createSolveDraft(elapsedMs, penalty, steps);
+    },
   });
   let requestedDeviceId: string | null = null;
   let managedKeyboardActive = $derived(
@@ -114,6 +154,33 @@
   const sessionMgr = useSessionManager(timerController, sessionController, dataService, MENU);
   const filterMgr = useFilterManager(timerController, sessionController, MENU, pScramble);
   const solveMgr = useSolveManager(timerController);
+
+  const solveProjectionSubscriptions = [
+    eventTimerRuntime.bus.subscribe(
+      TIMER_EVENTS.SOLVE_ADDED,
+      `${eventTimerRuntime.ownerId}:timer:solve-added-projection`,
+      event => {
+        if (event.payload.ownerId !== eventTimerRuntime.ownerId) return;
+        solveMgr.handleAddSolve(event.payload.solve);
+      }
+    ),
+    eventTimerRuntime.bus.subscribe(
+      TIMER_EVENTS.SOLVE_UPDATED,
+      `${eventTimerRuntime.ownerId}:timer:solve-updated-projection`,
+      event => {
+        if (event.payload.ownerId !== eventTimerRuntime.ownerId) return;
+        solveMgr.handleUpdateSolve(event.payload.solve);
+      }
+    ),
+    eventTimerRuntime.bus.subscribe(
+      TIMER_EVENTS.SOLVES_REMOVED,
+      `${eventTimerRuntime.ownerId}:timer:solves-removed-projection`,
+      event => {
+        if (event.payload.ownerId !== eventTimerRuntime.ownerId) return;
+        solveMgr.handleRemoveSolves(event.payload.solves);
+      }
+    ),
+  ];
 
   const initMgr = useInitialization(
     timerController,
@@ -161,7 +228,10 @@
     if (managedKeyboardActive) return;
   }
 
-  onDestroy(() => void eventTimerRuntime.destroy());
+  onDestroy(() => {
+    for (const subscription of solveProjectionSubscriptions) subscription.unsubscribe();
+    void eventTimerRuntime.destroy();
+  });
 
   // Modal state
   // let newSessionName = $state("");
@@ -198,6 +268,20 @@
     setSolves: solveMgr.setSolves,
     handleUpdateSolve: solveMgr.handleUpdateSolve,
     handleRemoveSolves: solveMgr.handleRemoveSolves,
+    requestUpdateSolve: (solve: Solve, nativeEvent?: NativeTimestampSource) => {
+      if (!shouldPersistSolves()) {
+        solveMgr.handleUpdateSolve(solve);
+        return;
+      }
+      void eventTimerRuntime.requestSolveUpdate(solve, nativeEvent);
+    },
+    requestRemoveSolves: (solves: Solve[], nativeEvent?: NativeTimestampSource) => {
+      if (!shouldPersistSolves()) {
+        solveMgr.handleRemoveSolves(solves);
+        return;
+      }
+      void eventTimerRuntime.requestSolvesRemove(solves, nativeEvent);
+    },
     editSessions: () => {},
     editSolve: (s: Solve) => {
       timerController.tab.set(1);
@@ -293,7 +377,11 @@
 
   // Event handlers for input
   function addSolve(t?: number, p?: Penalty) {
-    timerController.addSolve(t, p);
+    if (!shouldPersistSolves()) {
+      timerController.addSolve(t, p);
+      return;
+    }
+    void eventTimerRuntime.requestSolveAdd(createSolveDraft(t, p ?? Penalty.NONE));
   }
 
   function reset() {

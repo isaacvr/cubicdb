@@ -72,12 +72,12 @@ export interface TimerEventPayloadMap
   [TIMER_EVENTS.SESSION_SWITCHED]: { previousSession: Session | null; session: Session };
   [TIMER_EVENTS.SESSION_SETTINGS_CHANGE_REQUESTED]: { sessionId: string; settings: Partial<SessionSettings> };
   [TIMER_EVENTS.SESSION_SETTINGS_CHANGED]: { session: Session; changedKeys: string[] };
-  [TIMER_EVENTS.SOLVE_ADD_REQUESTED]: { solve: Partial<Solve> };
-  [TIMER_EVENTS.SOLVE_ADDED]: { solve: Solve };
-  [TIMER_EVENTS.SOLVE_UPDATE_REQUESTED]: { solve: Solve };
-  [TIMER_EVENTS.SOLVE_UPDATED]: { previousSolve: Solve; solve: Solve };
-  [TIMER_EVENTS.SOLVES_REMOVE_REQUESTED]: { solves: Solve[] };
-  [TIMER_EVENTS.SOLVES_REMOVED]: { solves: Solve[] };
+  [TIMER_EVENTS.SOLVE_ADD_REQUESTED]: { ownerId: string; solve: Partial<Solve> };
+  [TIMER_EVENTS.SOLVE_ADDED]: { ownerId: string; solve: Solve };
+  [TIMER_EVENTS.SOLVE_UPDATE_REQUESTED]: { ownerId: string; solve: Solve };
+  [TIMER_EVENTS.SOLVE_UPDATED]: { ownerId: string; previousSolve: Solve; solve: Solve };
+  [TIMER_EVENTS.SOLVES_REMOVE_REQUESTED]: { ownerId: string; solves: Solve[] };
+  [TIMER_EVENTS.SOLVES_REMOVED]: { ownerId: string; solves: Solve[] };
   [TIMER_EVENTS.SCRAMBLE_REQUESTED]: ScrambleRequestInput & { ownerId: string };
   [TIMER_EVENTS.SCRAMBLE_GENERATED]: ScrambleRequestInput & {
     ownerId: string;

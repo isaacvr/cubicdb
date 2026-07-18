@@ -15,6 +15,7 @@ import type { IScrambleGenerator } from './scramble/IScrambleGenerator';
 import type { IImageGenerator } from './scramble/IImageGenerator';
 import { ImageGenerationService } from './scramble/ImageGenerationService';
 import { ScrambleService } from './scramble/ScrambleService';
+import { SolvePersistenceService, type SolvePersistencePort } from './solves/SolvePersistenceService';
 
 function keyboard(): TimerDeviceTestHarness {
   return new TimerDeviceTestHarness({
@@ -68,6 +69,22 @@ describe('TimerApplicationRuntime', () => {
     });
 
     expect(runtime.imageGenerationService).toBeInstanceOf(ImageGenerationService);
+    await runtime.destroy();
+  });
+
+  it('owns one injectable application-scoped solve persistence service', async () => {
+    const solvePersistence: SolvePersistencePort = {
+      addSolve: vi.fn(),
+      updateSolve: vi.fn(),
+      removeSolves: vi.fn(),
+    };
+    const runtime = createTimerApplicationRuntime({
+      eventLogSink: null,
+      devices: [],
+      solvePersistence,
+    });
+
+    expect(runtime.solvePersistenceService).toBeInstanceOf(SolvePersistenceService);
     await runtime.destroy();
   });
 

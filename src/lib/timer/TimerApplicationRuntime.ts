@@ -20,6 +20,11 @@ import type { IImageGenerator } from './scramble/IImageGenerator';
 import type { IScrambleGenerator } from './scramble/IScrambleGenerator';
 import { ImageGenerationService } from './scramble/ImageGenerationService';
 import { ScrambleService } from './scramble/ScrambleService';
+import { SolveControllerPersistencePort } from './solves/SolveControllerPersistencePort';
+import {
+  SolvePersistenceService,
+  type SolvePersistencePort,
+} from './solves/SolvePersistenceService';
 
 export interface TimerApplicationRuntimeOptions {
   clock?: IMonotonicClock;
@@ -29,6 +34,7 @@ export interface TimerApplicationRuntimeOptions {
   keyboardOptions?: KeyboardDeviceOptions;
   scrambleGenerators?: IScrambleGenerator[];
   imageGenerator?: IImageGenerator;
+  solvePersistence?: SolvePersistencePort;
 }
 
 export interface TimerApplicationRuntime {
@@ -40,6 +46,7 @@ export interface TimerApplicationRuntime {
   readonly keyboardBoundary: KeyboardInputBoundary;
   readonly scrambleService: ScrambleService;
   readonly imageGenerationService: ImageGenerationService;
+  readonly solvePersistenceService: SolvePersistenceService;
   readonly ready: Promise<void>;
   createGenerationClient(scopeId: string): GenerationClient;
   destroy(): Promise<void>;
@@ -83,6 +90,11 @@ export function createTimerApplicationRuntime(
     events,
     options.imageGenerator ?? new CubeBundleScramblePreviewGenerator(),
   );
+  const solvePersistenceService = new SolvePersistenceService(
+    bus,
+    events,
+    options.solvePersistence ?? new SolveControllerPersistencePort(),
+  );
   const devices: readonly ITimerDevice[] = options.devices ?? (keyboardDevice ? [keyboardDevice] : []);
   const ready = devices.reduce<Promise<void>>(
     (registration, device) => registration.then(() => deviceManager.registerDevice(device)),
@@ -99,6 +111,7 @@ export function createTimerApplicationRuntime(
     keyboardBoundary,
     scrambleService,
     imageGenerationService,
+    solvePersistenceService,
     ready,
     createGenerationClient(scopeId: string) {
       return createGenerationClient(bus, events, scopeId);
@@ -108,6 +121,7 @@ export function createTimerApplicationRuntime(
       destroyed = true;
       await ready;
       await deviceManager.destroy();
+      solvePersistenceService.destroy();
       imageGenerationService.destroy();
       scrambleService.destroy();
       catalog.destroy();

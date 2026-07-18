@@ -27,6 +27,8 @@ export interface TimerContextType {
   setSolves: (rescramble?: boolean) => boolean;
   handleUpdateSolve: (solve: Solve) => void;
   handleRemoveSolves: (solves: Solve[]) => void;
+  requestUpdateSolve: (solve: Solve, nativeEvent?: NativeTimestampSource) => void;
+  requestRemoveSolves: (solves: Solve[], nativeEvent?: NativeTimestampSource) => void;
   
   // Other
   editSessions: () => void;
