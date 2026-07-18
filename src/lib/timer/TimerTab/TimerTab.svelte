@@ -412,10 +412,7 @@
   </div>
 </section>
 
-<Modal
-  bind:show={prevExpanded}
-  class="w-[calc(100vw-1rem)] h-[calc(100svh-1rem)] max-w-none max-h-none shaded-card"
->
+<Modal bind:show={prevExpanded} variant="fullscreen" showCloseButton class="shaded-card">
   <div class="flex items-center justify-center w-full h-full overflow-hidden px-2">
     <PuzzleImageBundle
       src={$preview.map(s => s.src || "")}

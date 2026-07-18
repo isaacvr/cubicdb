@@ -1,22 +1,43 @@
 <script lang="ts">
   import Button from "$lib/cubicdbKit/Button.svelte";
   import { XIcon } from "lucide-svelte";
+  import { twMerge } from "tailwind-merge";
+
+  type ModalVariant = "limited" | "fullscreen";
+  type ModalSize = "sm" | "md" | "lg" | "xl" | "2xl";
+
   interface ModalProps {
     show?: boolean;
     cancel?: boolean;
     closeOnClickOutside?: boolean;
     closeOnEscape?: boolean;
     transitionName?: string;
+    variant?: "limited" | "fullscreen";
+    size?: "sm" | "md" | "lg" | "xl" | "2xl";
+    title?: string;
+    showCloseButton?: boolean;
     class?: string;
     onclose?: (...data: any[]) => any;
     children?: () => any;
   }
+
+  const LIMITED_SIZE_CLASSES: Record<ModalSize, string> = {
+    sm: "max-w-sm",
+    md: "max-w-md",
+    lg: "max-w-lg",
+    xl: "max-w-xl",
+    "2xl": "max-w-2xl",
+  };
 
   let {
     show = $bindable(false),
     cancel = $bindable(true),
     closeOnClickOutside = $bindable(true),
     closeOnEscape = $bindable(true),
+    variant = "limited",
+    size = "lg",
+    title = "",
+    showCloseButton,
     class: _cl = $bindable(""),
     transitionName = $bindable("none"),
     onclose = () => {},
@@ -24,6 +45,22 @@
   }: ModalProps = $props();
 
   let modal: HTMLDialogElement;
+  let shouldShowCloseButton = $derived(showCloseButton ?? cancel);
+  let hasHeader = $derived(Boolean(title) || shouldShowCloseButton);
+
+  function modalBoxClass(variant: ModalVariant, size: ModalSize, customClass: string) {
+    return twMerge(
+      "modal-box bg-base-200 relative p-0 overflow-hidden flex flex-col max-w-[calc(100vw-1rem)] max-h-[calc(100svh-1rem)]",
+      variant === "fullscreen"
+        ? "w-[calc(100vw-1rem)] h-[calc(100svh-1rem)] max-w-none max-h-none"
+        : `w-full ${LIMITED_SIZE_CLASSES[size]}`,
+      customClass || ""
+    );
+  }
+
+  function modalBodyClass(variant: ModalVariant) {
+    return twMerge("min-h-0 flex-1 overflow-auto", variant === "fullscreen" ? "p-0" : "p-6");
+  }
 
   function keyUpHandler(e: KeyboardEvent) {
     if (!show) return;
@@ -102,23 +139,32 @@
   class="modal z-[1000] mx-auto text-sm rounded-md show p-2 overflow-visible"
   style="view-transition-name: {transitionName};"
 >
-  {#if cancel}
-    <Button
-      color="neutral"
-      tabindex="0"
-      class="rounded-full fixed right-3 top-3 hover:border-primary z-[1001]"
-      onclick={closeFromButton}
-    >
-      <XIcon size="1rem" />
-    </Button>
-  {/if}
+  <div class={modalBoxClass(variant, size, _cl)}>
+    {#if hasHeader}
+      <header class="flex shrink-0 items-center gap-4 border-b border-base-content/10 px-6 py-3">
+        {#if title}
+          <h2 class="min-w-0 flex-1 truncate text-base font-bold">{title}</h2>
+        {:else}
+          <div class="flex-1"></div>
+        {/if}
 
-  <div
-    class="modal-box bg-base-200 relative overflow-visible max-w-[calc(100vw-1rem)] max-h-[calc(100svh-1rem)] {_cl ||
-      ''}"
-  >
+        {#if shouldShowCloseButton}
+          <Button
+            color="neutral"
+            tabindex="0"
+            class="rounded-full hover:border-primary"
+            onclick={closeFromButton}
+          >
+            <XIcon size="1rem" />
+          </Button>
+        {/if}
+      </header>
+    {/if}
+
     {#if show}
-      {@render children?.()}
+      <div class={modalBodyClass(variant)}>
+        {@render children?.()}
+      </div>
     {/if}
   </div>
 </dialog>
