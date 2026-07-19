@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add a portable semantic CubeDB theme layer and apply the first reusable design-system slice to the timer view.
+**Goal:** Add a portable semantic CubicDB theme layer and apply the first reusable design-system slice to the timer view.
 
 **Architecture:** Theme data is JSON-serializable TypeScript and is applied through a CSS-variable bridge. Reusable Svelte components consume semantic CSS variables while preserving DaisyUI compatibility. Timer view adopts the Figma layout as a vertical slice.
 

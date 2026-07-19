@@ -2,7 +2,7 @@
 
 ## Goal
 
-Implement the first CubeDB design-system vertical slice from the Figma UI kit: a portable semantic theme layer, reusable base UI styles/components, and the timer view layout/colors/styles based on the desktop timer design.
+Implement the first CubicDB design-system vertical slice from the Figma UI kit: a portable semantic theme layer, reusable base UI styles/components, and the timer view layout/colors/styles based on the desktop timer design.
 
 ## Figma references
 
@@ -17,7 +17,7 @@ Implement the first CubeDB design-system vertical slice from the Figma UI kit: a
 - Icons in app code use `lucide-svelte`.
 - Theme customization must use semantic role names, not editable color scale names like `green-500`.
 - Theme data must be JSON-serializable or trivially portable to JSON.
-- Runtime styling should continue to work with DaisyUI, while exposing CubeDB-specific semantic CSS variables for richer component styling.
+- Runtime styling should continue to work with DaisyUI, while exposing CubicDB-specific semantic CSS variables for richer component styling.
 - The first implementation slice should be reversible and focused on the timer view.
 - Do not run full builds.
 - Avoid `svelte-check`.
@@ -29,7 +29,7 @@ The theme layer has two parts:
 1. A portable TypeScript theme definition that can be serialized to JSON.
 2. A CSS-variable bridge that applies that definition to the DOM and maps semantic roles into DaisyUI variables.
 
-Components consume semantic CSS variables first, and DaisyUI variables second where existing classes already depend on them. This allows the app to keep using DaisyUI-compatible controls while gradually moving toward CubeDB-owned design tokens.
+Components consume semantic CSS variables first, and DaisyUI variables second where existing classes already depend on them. This allows the app to keep using DaisyUI-compatible controls while gradually moving toward CubicDB-owned design tokens.
 
 ## Semantic theme contract
 
@@ -90,7 +90,7 @@ Mobile/narrow layouts may collapse the right rail below the main column.
 Use focused tests:
 
 - theme definition is JSON-serializable;
-- CSS variable bridge emits DaisyUI-compatible and CubeDB semantic variables;
+- CSS variable bridge emits DaisyUI-compatible and CubicDB semantic variables;
 - base component source contracts expose required variants/classes;
 - timer view source uses the new design primitives.
 

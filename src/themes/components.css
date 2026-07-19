@@ -222,6 +222,134 @@ pre .operator {
   backdrop-filter: blur(1rem);
 }
 
+.cdb-app-background {
+  background:
+    radial-gradient(
+      ellipse at 70% 105%,
+      var(--cdb-background-glow-a, rgba(58, 189, 248, 0.12)),
+      transparent 42%
+    ),
+    radial-gradient(
+      ellipse at 8% -12%,
+      var(--cdb-background-glow-b, rgba(58, 189, 248, 0.08)),
+      transparent 38%
+    ),
+    radial-gradient(
+      ellipse at 100% 18%,
+      var(--cdb-background-glow-c, rgba(58, 189, 248, 0.04)),
+      transparent 32%
+    ),
+    var(--cdb-background-base, var(--cdb-color-base, #061319));
+}
+
+.cdb-panel {
+  border: 1px solid var(--cdb-color-border-subtle, rgba(58, 189, 248, 0.05));
+  border-radius: var(--cdb-radius-panel, 12px);
+  background: var(--cdb-surface-panel, rgba(58, 189, 248, 0.05));
+  color: var(--cdb-color-base-content, #e9eaeb);
+  box-shadow: var(--cdb-shadow-panel, 0 16px 44px rgba(0, 0, 0, 0.18));
+}
+
+.cdb-panel-header {
+  display: flex;
+  align-items: center;
+  gap: var(--cdb-space-sm, 8px);
+  min-height: 2rem;
+  padding: 0 var(--cdb-space-xs, 4px);
+  color: var(--cdb-color-base-content, #e9eaeb);
+  font-family: var(--cdb-font-app, Ubuntu, sans-serif);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.cdb-panel-title {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cdb-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--cdb-icon-button-size, 2rem);
+  height: var(--cdb-icon-button-size, 2rem);
+  min-height: unset;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--cdb-radius-control, 8px);
+  background: transparent;
+  color: var(--cdb-color-base-content, #e9eaeb);
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.cdb-icon-button:hover {
+  border-color: var(--cdb-color-border-visible, rgba(58, 189, 248, 0.2));
+  background: var(--cdb-surface-raised, rgba(58, 189, 248, 0.1));
+  color: var(--cdb-color-primary, #3abdf8);
+}
+
+.cdb-icon-button[data-variant="primary"] {
+  background: var(--cdb-color-primary, #3abdf8);
+  color: var(--cdb-color-primary-content, #030406);
+}
+
+.cdb-icon-button[data-size="md"] {
+  --cdb-icon-button-size: 2.5rem;
+}
+
+.cdb-segmented-tabs {
+  display: inline-flex;
+  overflow: hidden;
+  border-radius: var(--cdb-radius-control, 8px);
+  background: var(--cdb-color-primary-soft, rgba(58, 189, 248, 0.05));
+}
+
+.cdb-segmented-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--cdb-space-xs, 4px);
+  min-height: 2.5rem;
+  padding: 0 var(--cdb-space-sm, 8px);
+  color: var(--cdb-color-base-content, #e9eaeb);
+  font-family: var(--cdb-font-app, Ubuntu, sans-serif);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.cdb-segmented-tab[aria-selected="true"] {
+  background: var(--cdb-color-primary, #3abdf8);
+  color: var(--cdb-color-primary-content, #030406);
+}
+
+.cdb-timer-display {
+  display: inline-flex;
+  align-items: end;
+  justify-content: center;
+  gap: var(--cdb-space-xs, 4px);
+  font-family: var(--cdb-font-timer, Ubuntu, sans-serif);
+  font-variant-numeric: lining-nums tabular-nums;
+  line-height: 1;
+  color: var(--cdb-color-base-content, #e9eaeb);
+}
+
+.cdb-timer-display-main {
+  font-size: clamp(4rem, 11vw, 6rem);
+}
+
+.cdb-timer-display-fraction {
+  font-size: clamp(2.75rem, 7vw, 4rem);
+  color: var(--cdb-color-base-content-muted, rgba(233, 234, 235, 0.6));
+  opacity: 0.55;
+}
+
 .svg-container:hover svg * {
   --animation-time: 400ms;
   stroke-dasharray: var(--dash);

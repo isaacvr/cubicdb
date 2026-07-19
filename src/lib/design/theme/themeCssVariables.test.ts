@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { CUBICDB_THEME } from "./cubicdbTheme";
 import { createThemeCssText, createThemeCssVariables } from "./themeCssVariables";
 
-describe("CubeDB semantic theme", () => {
+describe("CubicDB semantic theme", () => {
   it("is JSON serializable without losing role names", () => {
     const serialized = JSON.stringify(CUBICDB_THEME);
     const parsed = JSON.parse(serialized);
@@ -14,7 +14,7 @@ describe("CubeDB semantic theme", () => {
     expect(parsed.colors).not.toHaveProperty("primary-500");
   });
 
-  it("emits semantic CubeDB variables and DaisyUI compatibility variables", () => {
+  it("emits semantic CubicDB variables and DaisyUI compatibility variables", () => {
     const variables = createThemeCssVariables(CUBICDB_THEME);
 
     expect(variables["--cdb-color-primary"]).toBe("#3abdf8");

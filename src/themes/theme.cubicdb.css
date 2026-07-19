@@ -32,3 +32,43 @@
   --border: 1px;
   --depth: 1;
 }
+
+:root,
+[data-theme="cubicdb"] {
+  --cdb-font-app: Ubuntu;
+  --cdb-font-timer: Ubuntu;
+  --cdb-font-mono: "Ubuntu Mono";
+
+  --cdb-color-base: #061319;
+  --cdb-color-base-soft: rgba(58, 189, 248, 0.05);
+  --cdb-color-base-raised: rgba(58, 189, 248, 0.1);
+  --cdb-color-base-content: #e9eaeb;
+  --cdb-color-base-content-muted: rgba(233, 234, 235, 0.6);
+  --cdb-color-base-content-subtle: rgba(233, 234, 235, 0.4);
+  --cdb-color-primary: #3abdf8;
+  --cdb-color-primary-content: #030406;
+  --cdb-color-primary-soft: rgba(58, 189, 248, 0.05);
+  --cdb-color-primary-disabled: #174c63;
+  --cdb-color-border-subtle: rgba(58, 189, 248, 0.05);
+  --cdb-color-border-visible: rgba(58, 189, 248, 0.2);
+  --cdb-color-border-focus: #3abdf8;
+  --cdb-color-overlay: rgba(3, 4, 6, 0.75);
+
+  --cdb-surface-panel: var(--cdb-color-base-soft);
+  --cdb-surface-raised: var(--cdb-color-base-raised);
+  --cdb-radius-control: 8px;
+  --cdb-radius-panel: 12px;
+  --cdb-radius-modal: 12px;
+  --cdb-radius-pill: 444px;
+  --cdb-space-xs: 4px;
+  --cdb-space-sm: 8px;
+  --cdb-space-md: 12px;
+  --cdb-space-lg: 16px;
+  --cdb-shadow-panel: 0 16px 44px rgba(0, 0, 0, 0.18);
+  --cdb-shadow-modal: 0 24px 80px rgba(0, 0, 0, 0.38);
+  --cdb-shadow-control: 0 6px 18px rgba(58, 189, 248, 0.14);
+  --cdb-background-base: #061319;
+  --cdb-background-glow-a: rgba(58, 189, 248, 0.12);
+  --cdb-background-glow-b: rgba(58, 189, 248, 0.08);
+  --cdb-background-glow-c: rgba(58, 189, 248, 0.04);
+}

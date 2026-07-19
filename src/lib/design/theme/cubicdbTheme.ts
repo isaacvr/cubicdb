@@ -3,7 +3,7 @@ import type { AppThemeDefinition } from "./AppTheme";
 export const CUBICDB_THEME: AppThemeDefinition = {
   meta: {
     id: "cubicdb.theme.default",
-    name: "CubeDB",
+    name: "CubicDB",
     version: 1,
     appFont: "Ubuntu",
     timerFont: "Ubuntu",
