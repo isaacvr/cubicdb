@@ -23,7 +23,6 @@
 
   const dispatch = createEventDispatcher<{
     click: MouseEvent;
-    keydown: KeyboardEvent;
   }>();
 
   let {
@@ -53,6 +52,16 @@
     )
   );
 
+  let sharedAttributes = $derived({
+    ...restProps,
+    class: buttonClass,
+    "data-type": type,
+    "data-size": size,
+    "data-icon": icon,
+    "data-loading": loading,
+    onclick: handleClick,
+  });
+
   function handleClick(ev: MouseEvent) {
     if (disabled || loading) {
       ev.preventDefault();
@@ -61,10 +70,6 @@
 
     onclick(ev);
     dispatch("click", ev);
-  }
-
-  function handleKeydown(ev: KeyboardEvent) {
-    dispatch("keydown", ev);
   }
 </script>
 
@@ -80,33 +85,11 @@
 {/snippet}
 
 {#if href}
-  <a
-    class={buttonClass}
-    {href}
-    aria-disabled={disabled}
-    data-type={type}
-    data-size={size}
-    data-icon={icon}
-    data-loading={loading}
-    onclick={handleClick}
-    onkeydown={handleKeydown}
-    {...restProps}
-  >
+  <a {href} aria-disabled={disabled} {...sharedAttributes}>
     {@render content()}
   </a>
 {:else}
-  <button
-    class={buttonClass}
-    type={buttonType}
-    {disabled}
-    data-type={type}
-    data-size={size}
-    data-icon={icon}
-    data-loading={loading}
-    onclick={handleClick}
-    onkeydown={handleKeydown}
-    {...restProps}
-  >
+  <button type={buttonType} {disabled} {...sharedAttributes}>
     {@render content()}
   </button>
 {/if}

@@ -24,8 +24,11 @@ describe("Button design-system contract", () => {
     expect(source).not.toContain("color?:");
     expect(source).not.toContain("file?:");
     expect(source).not.toContain("COLOR_TYPE_ALIAS");
-    expect(source).toContain("data-type={type}");
-    expect(source).toContain("data-size={size}");
-    expect(source).toContain("data-icon={icon}");
+    expect(source).toContain("let sharedAttributes = $derived({");
+    expect(source).toContain('"data-type": type');
+    expect(source).toContain('"data-size": size');
+    expect(source).toContain('"data-icon": icon');
+    expect(source).not.toContain("keydown: KeyboardEvent");
+    expect(source).not.toContain("handleKeydown");
   });
 });
