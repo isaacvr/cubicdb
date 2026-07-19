@@ -14,13 +14,21 @@
     LibraryIcon,
     BrainCogIcon,
     MonitorSmartphoneIcon,
+    PanelLeftCloseIcon,
+    PanelLeftOpenIcon,
   } from "lucide-svelte";
+  import IconButton from "$lib/cubicdbKit/IconButton.svelte";
 
   interface INavigationDrawerProps {
     parts: { link: string; name: string }[];
+    collapsed?: boolean;
   }
 
-  let { parts }: INavigationDrawerProps = $props();
+  let { parts, collapsed = $bindable(false) }: INavigationDrawerProps = $props();
+
+  function isActive(href: string) {
+    return parts.length > 0 && parts[0].link === href;
+  }
 </script>
 
 <!-- list item snippet -->
@@ -31,31 +39,29 @@
   Icon: any,
   key: keyof typeof $localLang.HOME
 )}
-  {@const colorType = [
-    "hover:text-success",
-    "hover:text-warning",
-    "hover:text-info",
-    "hover:text-error",
-  ]}
+  {@const colorType = ["", "", "", ""]}
   <li>
     <a
-      class={twMerge(
-        "svg-container",
-        colorType[type],
-        parts.length && parts[0].link === href ? "bg-primary/20!" : ""
-      )}
+      class={twMerge("svg-container cdb-side-nav-item", colorType[type])}
       style={`--dash: ${dash};`}
       {href}
+      aria-current={isActive(href) ? "page" : undefined}
+      data-active={isActive(href)}
+      title={collapsed ? $localLang.HOME[key] : undefined}
     >
-      <Icon size="1.2rem" />
-      {$localLang.HOME[key]}
+      <Icon size="1.25rem" />
+      <span class="cdb-side-nav-label">{$localLang.HOME[key]}</span>
     </a>
   </li>
 {/snippet}
 
-<div class="navigation outline outline-primary flex flex-col justify-between overflow-auto">
+<div
+  class="navigation cdb-side-nav"
+  data-collapsed={collapsed}
+  style="--cdb-side-nav-width-expanded: var(--cdb-side-nav-width-expanded); --cdb-side-nav-width-collapsed: var(--cdb-side-nav-width-collapsed);"
+>
   <!-- Normal Pages -->
-  <ul class="menu w-full">
+  <ul class="cdb-side-nav-section">
     {@render listItem(0, 50, "/timer", TimerIcon, "timer")}
     {@render listItem(0, 70, "/algorithms", BrainCogIcon, "algorithms")}
     {@render listItem(0, 16, "/tutorials", LibraryIcon, "tutorials")}
@@ -67,7 +73,7 @@
   <div class="divider h-0 my-0"></div>
 
   <!-- Tool-like stuff -->
-  <ul class="menu w-full">
+  <ul class="cdb-side-nav-section">
     {@render listItem(1, 30, "/tools", HammerIcon, "tools")}
     {@render listItem(1, 16, "/import-export", ArrowDownUpIcon, "importExport")}
     {@render listItem(1, 67, "/devices", MonitorSmartphoneIcon, "devices")}
@@ -77,10 +83,17 @@
   <div class="divider h-0 my-0"></div>
 
   <!-- Other -->
-  <ul class="menu w-full mt-auto pb-0">
+  <ul class="cdb-side-nav-section" data-placement="bottom">
     {@render listItem(3, 60, "/support", HeartIcon, "support")}
     {@render listItem(2, 62, "/about-cubicdb", InfoIcon, "about")}
   </ul>
+
+  <IconButton
+    class="cdb-side-nav-toggle"
+    icon={collapsed ? PanelLeftOpenIcon : PanelLeftCloseIcon}
+    label={collapsed ? "Expand navigation" : "Collapse navigation"}
+    onclick={() => (collapsed = !collapsed)}
+  />
 
   <!-- <Select
       class="h-4! py-0! mb-3 mx-2 mt-1"
@@ -99,10 +112,3 @@
       aria-label={$localLang.global.selectLanguage}
     /> -->
 </div>
-
-<style>
-  .navigation {
-    grid-area: navigation;
-    width: 15rem;
-  }
-</style>

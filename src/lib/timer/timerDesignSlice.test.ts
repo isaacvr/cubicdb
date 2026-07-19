@@ -38,6 +38,8 @@ describe("timer design-system vertical slice", () => {
     expect(source).toContain("cdb-timer-display");
     expect(source).toContain("cdb-timer-display-main");
     expect(source).toContain("cdb-timer-display-fraction");
+    expect(source).toContain("class:ready={$ready}");
+    expect(source).toContain("class:prevention={$timerState === TimerState.PREVENTION}");
     expect(source).not.toContain("text-8xl");
   });
 });

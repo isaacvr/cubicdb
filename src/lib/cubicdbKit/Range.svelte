@@ -13,6 +13,8 @@
     size?: string;
     "aria-label"?: string;
     variant?: RangeVariants;
+    showValue?: boolean;
+    formatValue?: (value: number) => string;
     onclick?: (ev: MouseEvent) => any;
     onmousedown?: (ev: MouseEvent) => any;
   }
@@ -30,18 +32,19 @@
     size = $bindable(""),
     "aria-label": ariaLabel = "",
     variant = $bindable("default"),
+    showValue = false,
+    formatValue = value => String(value),
     onclick = () => {},
     onmousedown = () => {},
   }: RangeProps = $props();
 
   const RANGE_VARIANTS: Record<RangeVariants, string> = {
-    default: "range-primary",
-    progress: "range-secondary",
+    default: "default",
+    progress: "progress",
   };
 
-  let rangeClass = $derived(
-    twMerge("range bg-base-100 rounded-md", RANGE_VARIANTS[variant], size, cl)
-  );
+  let formattedValue = $derived(formatValue(value));
+  let rangeClass = $derived(twMerge("cdb-range-input", size, cl));
 
   function handleInput(e: Event) {
     const target = e.currentTarget as HTMLInputElement;
@@ -50,15 +53,22 @@
   }
 </script>
 
-<input
-  {onclick}
-  {onmousedown}
-  type="range"
-  {min}
-  {max}
-  {step}
-  bind:value
-  class={rangeClass}
-  aria-label={ariaLabel}
-  oninput={handleInput}
-/>
+<div class="cdb-range-field" data-variant={RANGE_VARIANTS[variant]}>
+  <input
+    {onclick}
+    {onmousedown}
+    type="range"
+    {min}
+    {max}
+    {step}
+    bind:value
+    class={rangeClass}
+    aria-label={ariaLabel}
+    aria-valuetext={formattedValue}
+    oninput={handleInput}
+  />
+
+  {#if showValue}
+    <span class="cdb-range-value">{formattedValue}</span>
+  {/if}
+</div>

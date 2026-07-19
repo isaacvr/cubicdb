@@ -36,4 +36,14 @@ describe("CubicDB design primitives", () => {
     expect(source).toContain("aria-selected");
     expect(source).toContain("cdb-segmented-tabs");
   });
+
+  it("Range exposes the CubicDB slider contract and optional value display", () => {
+    const source = readComponent("Range");
+
+    expect(source).toContain("cdb-range-field");
+    expect(source).toContain("cdb-range-input");
+    expect(source).toContain("showValue?");
+    expect(source).toContain("formattedValue");
+    expect(source).toContain("aria-valuetext={formattedValue}");
+  });
 });

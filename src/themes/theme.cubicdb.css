@@ -29,7 +29,7 @@
   /* === layout === */
   --radius-box: 0.5rem;
   --radius-field: 0.25rem;
-  --border: 1px;
+  --border: 0.0625rem;
   --depth: 1;
 }
 
@@ -49,6 +49,8 @@
   --cdb-color-primary-content: #030406;
   --cdb-color-primary-soft: rgba(58, 189, 248, 0.05);
   --cdb-color-primary-disabled: #174c63;
+  --cdb-color-ready: #2ed4bf;
+  --cdb-color-prevention: #fb7085;
   --cdb-color-border-subtle: rgba(58, 189, 248, 0.05);
   --cdb-color-border-visible: rgba(58, 189, 248, 0.2);
   --cdb-color-border-focus: #3abdf8;
@@ -56,17 +58,24 @@
 
   --cdb-surface-panel: var(--cdb-color-base-soft);
   --cdb-surface-raised: var(--cdb-color-base-raised);
-  --cdb-radius-control: 8px;
-  --cdb-radius-panel: 12px;
-  --cdb-radius-modal: 12px;
-  --cdb-radius-pill: 444px;
-  --cdb-space-xs: 4px;
-  --cdb-space-sm: 8px;
-  --cdb-space-md: 12px;
-  --cdb-space-lg: 16px;
-  --cdb-shadow-panel: 0 16px 44px rgba(0, 0, 0, 0.18);
-  --cdb-shadow-modal: 0 24px 80px rgba(0, 0, 0, 0.38);
-  --cdb-shadow-control: 0 6px 18px rgba(58, 189, 248, 0.14);
+  --cdb-radius-control: 0.5rem;
+  --cdb-radius-panel: 0.75rem;
+  --cdb-radius-modal: 0.75rem;
+  --cdb-radius-pill: 27.75rem;
+  --cdb-space-2xs: 0.125rem;
+  --cdb-space-xs: 0.25rem;
+  --cdb-space-sm: 0.5rem;
+  --cdb-space-md: 0.75rem;
+  --cdb-space-lg: 1rem;
+  --cdb-control-height-sm: 2.25rem;
+  --cdb-control-height-md: 2.5rem;
+  --cdb-side-nav-width-collapsed: 2.5rem;
+  --cdb-side-nav-width-expanded: 16.5rem;
+  --cdb-timer-ready-glow: 0 0 1.5rem rgba(46, 212, 191, 0.5);
+  --cdb-timer-prevention-glow: 0 0 1.5rem rgba(251, 112, 133, 0.35);
+  --cdb-shadow-panel: 0 1rem 2.75rem rgba(0, 0, 0, 0.18);
+  --cdb-shadow-modal: 0 1.5rem 5rem rgba(0, 0, 0, 0.38);
+  --cdb-shadow-control: 0 0.375rem 1.125rem rgba(58, 189, 248, 0.14);
   --cdb-background-base: #061319;
   --cdb-background-glow-a: rgba(58, 189, 248, 0.12);
   --cdb-background-glow-b: rgba(58, 189, 248, 0.08);
