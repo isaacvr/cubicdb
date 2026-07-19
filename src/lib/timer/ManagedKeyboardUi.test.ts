@@ -6,15 +6,15 @@ function source(relativePath: string): string {
 }
 
 describe('managed keyboard UI wiring', () => {
-  it('owns one application runtime and native keyboard boundary in the root layout', () => {
+  it('owns one application runtime in the root layout without global timer keyboard capture', () => {
     const layout = source('../../routes/+layout.svelte');
 
     expect(layout).toContain('createTimerApplicationRuntime');
     expect(layout).toContain('setTimerApplicationContext');
-    expect(layout).toContain('<TimerKeyboardEventBoundary');
+    expect(layout).not.toContain('<TimerKeyboardEventBoundary');
   });
 
-  it('creates an owner runtime from application context and requests the keyboard lease', () => {
+  it('creates an owner runtime from application context and scopes the keyboard lease to the timer tab', () => {
     const timer = source('./Timer.svelte');
 
     expect(timer).toContain('getTimerApplicationContext');
@@ -25,6 +25,9 @@ describe('managed keyboard UI wiring', () => {
     expect(timer).not.toContain('const currentSession = get(timerController.session)');
     expect(timer).toContain('requestActiveDevice(TIMER_DEVICE_IDS.KEYBOARD)');
     expect(timer).toContain('managedKeyboardActive');
+    expect(timer).toContain('<TimerKeyboardEventBoundary enabled={timerKeyboardInputActive} />');
+    expect(timer).toContain('shouldProcessTimerKeyboardInput');
+    expect(timer).toContain('shouldCancelTimerInputOnTabChange');
   });
 
   it('suppresses legacy key and pointer delivery while the managed keyboard is active', () => {
@@ -39,7 +42,9 @@ describe('managed keyboard UI wiring', () => {
 
     expect(keyboardDisplay).toContain('class:text-error={$timerState === TimerState.PREVENTION && !$ready}');
     expect(keyboardDisplay).toContain('class:text-success={$ready}');
-    expect(keyboardDisplay).toContain('<span class="select-none text-warning">+2</span>');
+    expect(keyboardDisplay).toContain(
+      '<span class="cdb-timer-display-main select-none text-warning">+2</span>',
+    );
     expect(keyboardDisplay).toContain('$timerState === TimerState.INSPECTION && $time <= 0');
     expect(keyboardDisplay).not.toContain('$time > -2000');
   });

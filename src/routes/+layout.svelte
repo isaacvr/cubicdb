@@ -49,7 +49,6 @@
   import NavigationDrawer from "@components/NavigationDrawer.svelte";
   import { createTimerApplicationRuntime } from "$lib/timer/TimerApplicationRuntime";
   import { setTimerApplicationContext } from "$lib/timer/context/timerApplicationContext";
-  import TimerKeyboardEventBoundary from "$lib/timer/handlers/TimerKeyboardEventBoundary.svelte";
 
   let { data, children }: { data: LayoutServerData; children: any } = $props();
   const timerApplication = createTimerApplicationRuntime();
@@ -393,7 +392,6 @@
 </div>
 
 <EventDebugPanel />
-<TimerKeyboardEventBoundary />
 
 <style lang="postcss">
   @reference "@src/themes/index.css";

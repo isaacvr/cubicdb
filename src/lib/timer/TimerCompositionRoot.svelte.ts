@@ -1,38 +1,38 @@
-import type { EventBus, EventSubscription } from '$lib/events/EventBus';
+import type { EventBus, EventSubscription } from "$lib/events/EventBus";
 import {
   GENERATION_EVENTS,
   type GenerationClient,
   type ScrambleGenerationConfig,
-} from '$lib/events/generation';
-import { TimerState as TimerStateValue, type Penalty, type Solve } from '@interfaces';
-import type { TimerEvent } from '$lib/events/timer/TimerEvent';
-import { TIMER_EVENTS } from '$lib/events/timer/TimerEventRegistry';
-import type { EventLogSink } from '$lib/logger/EventLogger';
+} from "$lib/events/generation";
+import { TimerState as TimerStateValue, type Penalty, type Solve } from "@interfaces";
+import type { TimerEvent } from "$lib/events/timer/TimerEvent";
+import { TIMER_EVENTS } from "$lib/events/timer/TimerEventRegistry";
+import type { EventLogSink } from "$lib/logger/EventLogger";
 import type {
   IEventIdProvider,
   IMonotonicClock,
   NativeTimestampSource,
   TimerEventFactory,
-} from '$lib/events/timer/TimerEventFactory';
+} from "$lib/events/timer/TimerEventFactory";
 import {
   SCRAMBLE_REQUEST_SOURCES,
   type ScrambleRequestInput,
   type ScrambleRequestSource,
-} from '$lib/events/timer/ScrambleEventTypes';
-import type { SolveListQuery } from './solves/SolveListQuery';
-import { createImageGenerationConfig } from './scramble/createImageGenerationConfig';
-import { createTimerMigrationFlags, type TimerMigrationFlags } from './TimerMigrationFlags';
-import { TimerReactor } from './TimerReactor';
-import { createTimerReadonlyView, type TimerReadonlyView } from './TimerReadonlyView';
-import { TimerState } from './TimerState.svelte';
+} from "$lib/events/timer/ScrambleEventTypes";
+import type { SolveListQuery } from "./solves/SolveListQuery";
+import { createImageGenerationConfig } from "./scramble/createImageGenerationConfig";
+import { createTimerMigrationFlags, type TimerMigrationFlags } from "./TimerMigrationFlags";
+import { TimerReactor } from "./TimerReactor";
+import { createTimerReadonlyView, type TimerReadonlyView } from "./TimerReadonlyView";
+import { TimerState } from "./TimerState.svelte";
 import {
   createTimerApplicationRuntime,
   type TimerApplicationRuntime,
-} from './TimerApplicationRuntime';
-import type { TimerReadingCallback } from './devices/ITimerDevice';
-import type { KeyboardDevice } from './devices/KeyboardDevice';
-import type { KeyboardInputBoundary } from './handlers/KeyboardInputBoundary';
-import { registerScrambleHandlers } from './handlers/registerScrambleHandlers';
+} from "./TimerApplicationRuntime";
+import type { TimerReadingCallback } from "./devices/ITimerDevice";
+import type { KeyboardDevice } from "./devices/KeyboardDevice";
+import type { KeyboardInputBoundary } from "./handlers/KeyboardInputBoundary";
+import { registerScrambleHandlers } from "./handlers/registerScrambleHandlers";
 
 export interface TimerRuntimeOptions {
   application?: TimerApplicationRuntime;
@@ -42,11 +42,7 @@ export interface TimerRuntimeOptions {
   eventLogSink?: EventLogSink | null;
   flags?: Partial<TimerMigrationFlags>;
   onTimerReading?: TimerReadingCallback;
-  getSolveRequest?: (
-    elapsedMs: number,
-    penalty: Penalty,
-    steps: number[],
-  ) => Partial<Solve> | null;
+  getSolveRequest?: (elapsedMs: number, penalty: Penalty, steps: number[]) => Partial<Solve> | null;
   getScrambleRequest?: (source: ScrambleRequestSource) => ScrambleRequestInput | null;
 }
 
@@ -68,23 +64,26 @@ export interface TimerRuntime {
   releaseActiveDevice(deviceId: string): Promise<void>;
   requestScramble(
     input: ScrambleRequestInput,
-    nativeEvent?: NativeTimestampSource,
+    nativeEvent?: NativeTimestampSource
   ): Promise<string>;
   requestSolveAdd(solve: Partial<Solve>, nativeEvent?: NativeTimestampSource): Promise<void>;
   requestSolveUpdate(solve: Solve, nativeEvent?: NativeTimestampSource): Promise<void>;
   requestSolvesRemove(solves: Solve[], nativeEvent?: NativeTimestampSource): Promise<void>;
   requestSolvesList(query?: SolveListQuery, nativeEvent?: NativeTimestampSource): Promise<Solve[]>;
+  cancelActiveInput(timestamp?: number): void;
   destroy(): Promise<void>;
 }
 
 export function createTimerRuntime(options: TimerRuntimeOptions = {}): TimerRuntime {
   const ownsApplication = options.application === undefined;
-  const application = options.application ?? createTimerApplicationRuntime({
-    clock: options.clock,
-    idProvider: options.idProvider,
-    eventLogSink: options.eventLogSink,
-  });
-  const ownerId = options.ownerId ?? 'timer:local-runtime';
+  const application =
+    options.application ??
+    createTimerApplicationRuntime({
+      clock: options.clock,
+      idProvider: options.idProvider,
+      eventLogSink: options.eventLogSink,
+    });
+  const ownerId = options.ownerId ?? "timer:local-runtime";
   const state = new TimerState();
   const readonlyView = createTimerReadonlyView(state);
   const flags = createTimerMigrationFlags(options.flags);
@@ -99,9 +98,9 @@ export function createTimerRuntime(options: TimerRuntimeOptions = {}): TimerRunt
       async event => {
         if (event.payload.scopeId !== ownerId) return;
         if (event.payload.requestId !== state.scrambleRequestId) return;
-        const scrambleMode = scrambleModesByRequestId.get(event.payload.requestId) ?? '333';
+        const scrambleMode = scrambleModesByRequestId.get(event.payload.requestId) ?? "333";
         scrambleModesByRequestId.delete(event.payload.requestId);
-        const scramble = event.payload.scrambles[0] ?? '';
+        const scramble = event.payload.scrambles[0] ?? "";
         if (!scramble || state.session?.settings.genImage !== true) {
           state.scramblePreview = [];
           state.scramblePreviewRequestId = null;
@@ -110,11 +109,13 @@ export function createTimerRuntime(options: TimerRuntimeOptions = {}): TimerRunt
         }
         state.scramblePreview = [];
         state.scramblePreviewEnabled = true;
-        await generation.images.request(createImageGenerationConfig({
-          scramble,
-          scrambleMode,
-        }));
-      },
+        await generation.images.request(
+          createImageGenerationConfig({
+            scramble,
+            scrambleMode,
+          })
+        );
+      }
     ),
     application.bus.subscribe(
       GENERATION_EVENTS.SCRAMBLE_FAILED,
@@ -122,7 +123,7 @@ export function createTimerRuntime(options: TimerRuntimeOptions = {}): TimerRunt
       event => {
         if (event.payload.scopeId !== ownerId) return;
         scrambleModesByRequestId.delete(event.payload.requestId);
-      },
+      }
     ),
     application.bus.subscribe(
       GENERATION_EVENTS.IMAGE_REQUESTED,
@@ -131,7 +132,7 @@ export function createTimerRuntime(options: TimerRuntimeOptions = {}): TimerRunt
         if (event.payload.scopeId !== ownerId) return;
         state.scramblePreviewRequestId = event.id;
       },
-      { priority: 100 },
+      { priority: 100 }
     ),
     application.bus.subscribe(
       GENERATION_EVENTS.IMAGE_GENERATED,
@@ -140,7 +141,7 @@ export function createTimerRuntime(options: TimerRuntimeOptions = {}): TimerRunt
         if (event.payload.scopeId !== ownerId) return;
         if (event.payload.requestId !== state.scramblePreviewRequestId) return;
         state.scramblePreview = [...event.payload.images];
-      },
+      }
     ),
     application.bus.subscribe(
       GENERATION_EVENTS.IMAGE_FAILED,
@@ -149,7 +150,7 @@ export function createTimerRuntime(options: TimerRuntimeOptions = {}): TimerRunt
         if (event.payload.scopeId !== ownerId) return;
         if (event.payload.requestId !== state.scramblePreviewRequestId) return;
         state.scramblePreview = [];
-      },
+      }
     ),
   ];
   const runStoppedSubscription: EventSubscription | null = options.getSolveRequest
@@ -161,11 +162,11 @@ export function createTimerRuntime(options: TimerRuntimeOptions = {}): TimerRunt
           const solve = options.getSolveRequest?.(
             event.payload.elapsedMs,
             state.penalty,
-            event.payload.steps,
+            event.payload.steps
           );
           if (solve) await publishSolveAddRequest(solve);
         },
-        { priority: 100 },
+        { priority: 100 }
       )
     : null;
   const lifecycleSubscriptions: EventSubscription[] = [];
@@ -178,7 +179,7 @@ export function createTimerRuntime(options: TimerRuntimeOptions = {}): TimerRunt
           if (event.payload.ownerId !== ownerId) return;
           const input = options.getScrambleRequest?.(SCRAMBLE_REQUEST_SOURCES.SOLVE_COMPLETED);
           if (input) await publishScrambleRequest(input);
-        },
+        }
       ),
       application.bus.subscribe(
         TIMER_EVENTS.DEVICE_RUN_CANCELLED,
@@ -189,30 +190,33 @@ export function createTimerRuntime(options: TimerRuntimeOptions = {}): TimerRunt
           if (state.session?.settings.scrambleAfterCancel !== true) return;
           const input = options.getScrambleRequest?.(SCRAMBLE_REQUEST_SOURCES.RUNNING_CANCELLED);
           if (input) await publishScrambleRequest(input);
-        },
-      ),
+        }
+      )
     );
   }
   application.deviceManager.registerOwner(ownerId, {
     readonlyView,
-    onReading: options.onTimerReading ?? (reading => {
-      state.time = reading.timeMs;
-    }),
+    onReading:
+      options.onTimerReading ??
+      (reading => {
+        state.time = reading.timeMs;
+      }),
   });
 
-  const keyboard = flags.keyboard && application.keyboardDevice
-    ? {
-        device: application.keyboardDevice,
-        boundary: application.keyboardBoundary,
-      }
-    : null;
+  const keyboard =
+    flags.keyboard && application.keyboardDevice
+      ? {
+          device: application.keyboardDevice,
+          boundary: application.keyboardBoundary,
+        }
+      : null;
   const ready = application.ready;
   let destroyed = false;
   let solveListRequestSequence = 0;
 
   async function publishScrambleRequest(
     input: ScrambleRequestInput,
-    nativeEvent?: NativeTimestampSource,
+    nativeEvent?: NativeTimestampSource
   ): Promise<string> {
     const config: ScrambleGenerationConfig = {
       mode: input.mode,
@@ -224,7 +228,7 @@ export function createTimerRuntime(options: TimerRuntimeOptions = {}): TimerRunt
     if (input.providedScramble !== undefined) config.providedScramble = input.providedScramble;
     const requestId = await generation.scrambles.request(
       config,
-      nativeEvent ? { sourceEvent: nativeEvent } : undefined,
+      nativeEvent ? { sourceEvent: nativeEvent } : undefined
     );
     scrambleModesByRequestId.set(requestId, input.mode);
     return requestId;
@@ -232,13 +236,17 @@ export function createTimerRuntime(options: TimerRuntimeOptions = {}): TimerRunt
 
   async function publishSolveAddRequest(
     solve: Partial<Solve>,
-    nativeEvent?: NativeTimestampSource,
+    nativeEvent?: NativeTimestampSource
   ): Promise<void> {
     const event = nativeEvent
-      ? application.events.fromNative(TIMER_EVENTS.SOLVE_ADD_REQUESTED, {
-          ownerId,
-          solve,
-        }, nativeEvent)
+      ? application.events.fromNative(
+          TIMER_EVENTS.SOLVE_ADD_REQUESTED,
+          {
+            ownerId,
+            solve,
+          },
+          nativeEvent
+        )
       : application.events.create(TIMER_EVENTS.SOLVE_ADD_REQUESTED, {
           ownerId,
           solve,
@@ -248,13 +256,17 @@ export function createTimerRuntime(options: TimerRuntimeOptions = {}): TimerRunt
 
   async function publishSolveUpdateRequest(
     solve: Solve,
-    nativeEvent?: NativeTimestampSource,
+    nativeEvent?: NativeTimestampSource
   ): Promise<void> {
     const event = nativeEvent
-      ? application.events.fromNative(TIMER_EVENTS.SOLVE_UPDATE_REQUESTED, {
-          ownerId,
-          solve,
-        }, nativeEvent)
+      ? application.events.fromNative(
+          TIMER_EVENTS.SOLVE_UPDATE_REQUESTED,
+          {
+            ownerId,
+            solve,
+          },
+          nativeEvent
+        )
       : application.events.create(TIMER_EVENTS.SOLVE_UPDATE_REQUESTED, {
           ownerId,
           solve,
@@ -264,13 +276,17 @@ export function createTimerRuntime(options: TimerRuntimeOptions = {}): TimerRunt
 
   async function publishSolvesRemoveRequest(
     solves: Solve[],
-    nativeEvent?: NativeTimestampSource,
+    nativeEvent?: NativeTimestampSource
   ): Promise<void> {
     const event = nativeEvent
-      ? application.events.fromNative(TIMER_EVENTS.SOLVES_REMOVE_REQUESTED, {
-          ownerId,
-          solves,
-        }, nativeEvent)
+      ? application.events.fromNative(
+          TIMER_EVENTS.SOLVES_REMOVE_REQUESTED,
+          {
+            ownerId,
+            solves,
+          },
+          nativeEvent
+        )
       : application.events.create(TIMER_EVENTS.SOLVES_REMOVE_REQUESTED, {
           ownerId,
           solves,
@@ -280,7 +296,7 @@ export function createTimerRuntime(options: TimerRuntimeOptions = {}): TimerRunt
 
   async function publishSolvesListRequest(
     query?: SolveListQuery,
-    nativeEvent?: NativeTimestampSource,
+    nativeEvent?: NativeTimestampSource
   ): Promise<Solve[]> {
     const loaded = new Promise<Solve[]>(resolve => {
       const subscription = application.bus.subscribe(
@@ -290,11 +306,15 @@ export function createTimerRuntime(options: TimerRuntimeOptions = {}): TimerRunt
           if (event.payload.ownerId !== ownerId) return;
           subscription.unsubscribe();
           resolve(event.payload.solves);
-        },
+        }
       );
     });
     const event = nativeEvent
-      ? application.events.fromNative(TIMER_EVENTS.SOLVES_LIST_REQUESTED, { ownerId, query }, nativeEvent)
+      ? application.events.fromNative(
+          TIMER_EVENTS.SOLVES_LIST_REQUESTED,
+          { ownerId, query },
+          nativeEvent
+        )
       : application.events.create(TIMER_EVENTS.SOLVES_LIST_REQUESTED, { ownerId, query });
     await application.bus.publish(event);
     return loaded;
@@ -313,57 +333,57 @@ export function createTimerRuntime(options: TimerRuntimeOptions = {}): TimerRunt
     ready,
     async requestActiveDevice(deviceId: string): Promise<boolean> {
       await application.ready;
-      await application.bus.publish(application.events.create(
-        TIMER_EVENTS.ACTIVE_DEVICE_CHANGE_REQUESTED,
-        { ownerId, deviceId },
-      ));
+      await application.bus.publish(
+        application.events.create(TIMER_EVENTS.ACTIVE_DEVICE_CHANGE_REQUESTED, {
+          ownerId,
+          deviceId,
+        })
+      );
       return state.activeDeviceId === deviceId;
     },
     async releaseActiveDevice(deviceId: string): Promise<void> {
       await application.ready;
-      await application.bus.publish(application.events.create(
-        TIMER_EVENTS.ACTIVE_DEVICE_RELEASE_REQUESTED,
-        { ownerId, deviceId },
-      ));
+      await application.bus.publish(
+        application.events.create(TIMER_EVENTS.ACTIVE_DEVICE_RELEASE_REQUESTED, {
+          ownerId,
+          deviceId,
+        })
+      );
     },
     async requestScramble(
       input: ScrambleRequestInput,
-      nativeEvent?: NativeTimestampSource,
+      nativeEvent?: NativeTimestampSource
     ): Promise<string> {
       return publishScrambleRequest(input, nativeEvent);
     },
     async requestSolveAdd(
       solve: Partial<Solve>,
-      nativeEvent?: NativeTimestampSource,
+      nativeEvent?: NativeTimestampSource
     ): Promise<void> {
       await publishSolveAddRequest(solve, nativeEvent);
     },
-    async requestSolveUpdate(
-      solve: Solve,
-      nativeEvent?: NativeTimestampSource,
-    ): Promise<void> {
+    async requestSolveUpdate(solve: Solve, nativeEvent?: NativeTimestampSource): Promise<void> {
       await publishSolveUpdateRequest(solve, nativeEvent);
     },
-    async requestSolvesRemove(
-      solves: Solve[],
-      nativeEvent?: NativeTimestampSource,
-    ): Promise<void> {
+    async requestSolvesRemove(solves: Solve[], nativeEvent?: NativeTimestampSource): Promise<void> {
       await publishSolvesRemoveRequest(solves, nativeEvent);
     },
     async requestSolvesList(
       query?: SolveListQuery,
-      nativeEvent?: NativeTimestampSource,
+      nativeEvent?: NativeTimestampSource
     ): Promise<Solve[]> {
       return publishSolvesListRequest(query, nativeEvent);
+    },
+    cancelActiveInput(timestamp?: number): void {
+      application.keyboardDevice?.cancel(timestamp);
     },
     async destroy(): Promise<void> {
       if (destroyed) return;
       destroyed = true;
       await ready;
-      await application.bus.publish(application.events.create(
-        TIMER_EVENTS.DEVICE_OWNER_DESTROY_REQUESTED,
-        { ownerId },
-      ));
+      await application.bus.publish(
+        application.events.create(TIMER_EVENTS.DEVICE_OWNER_DESTROY_REQUESTED, { ownerId })
+      );
       reactor.destroy();
       scrambleSubscription.unsubscribe();
       for (const subscription of previewSubscriptions) subscription.unsubscribe();

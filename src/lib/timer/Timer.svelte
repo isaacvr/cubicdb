@@ -41,6 +41,11 @@
   import { adjustMillis } from "@helpers/timer";
   import { randomUUID } from "@helpers/strings";
   import { TIMER_EVENTS } from "$lib/events/timer/TimerEventRegistry";
+  import TimerKeyboardEventBoundary from "./handlers/TimerKeyboardEventBoundary.svelte";
+  import {
+    shouldCancelTimerInputOnTabChange,
+    shouldProcessTimerKeyboardInput,
+  } from "./TimerInputScope";
 
   interface TimerProps {
     battle?: boolean;
@@ -148,7 +153,9 @@
   let managedKeyboardActive = $derived(
     eventTimerRuntime.state.activeDeviceId === TIMER_DEVICE_IDS.KEYBOARD
   );
+  let timerKeyboardInputActive = $derived(shouldProcessTimerKeyboardInput($tabStore));
   let historyTabComponent: any = $state(null);
+  let previousInputTab = get(tabStore);
 
   // Utilities (Interface Adapters)
   const sessionMgr = useSessionManager(timerController, sessionController, dataService, MENU);
@@ -226,11 +233,13 @@
   });
 
   function keyboardKeyDownHandler(event: KeyboardEvent) {
+    if (!timerKeyboardInputActive) return;
     if (managedKeyboardActive) return;
     keyboardMgr.handleKeydown(event);
   }
 
   function keyboardKeyUpHandler(event: KeyboardEvent) {
+    if (!timerKeyboardInputActive) return;
     if (managedKeyboardActive) return;
   }
 
@@ -431,6 +440,15 @@
     );
   });
 
+  $effect(() => {
+    const nextTab = $tabStore;
+    const timerState = eventTimerRuntime.state.timerState;
+    if (shouldCancelTimerInputOnTabChange(previousInputTab, nextTab, timerState)) {
+      eventTimerRuntime.cancelActiveInput(performance.now());
+    }
+    previousInputTab = nextTab;
+  });
+
   // Input context for TimerTab
   let inputContext: InputContext = $state({
     timerController,
@@ -446,6 +464,7 @@
 </script>
 
 <svelte:window onkeydown={keyboardKeyDownHandler} onkeyup={keyboardKeyUpHandler} />
+<TimerKeyboardEventBoundary enabled={timerKeyboardInputActive} />
 
 <div class="timer-layout cdb-app-background grid gap-2 w-full h-full overflow-hidden">
   <div class="actions flex items-center justify-between gap-2">

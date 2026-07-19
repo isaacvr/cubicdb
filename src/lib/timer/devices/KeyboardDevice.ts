@@ -411,6 +411,14 @@ export class KeyboardDevice implements ITimerDevice {
     this.actor = null;
   }
 
+  cancel(timestamp: number = this.clock.now()): void {
+    this.actor?.send({
+      type: "KEY_DOWN",
+      code: KEYBOARD_CODES.ESCAPE,
+      timestamp,
+    });
+  }
+
   disconnect(): void {
     this.stop();
   }
