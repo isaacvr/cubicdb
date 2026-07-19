@@ -23,9 +23,12 @@
   import Modal from "@components/Modal.svelte";
   import StatsInfo from "./StatsInfo.svelte";
   import PuzzleImageBundle from "@components/PuzzleImageBundle.svelte";
+  import IconButton from "$lib/cubicdbKit/IconButton.svelte";
+  import Panel from "$lib/cubicdbKit/Panel.svelte";
 
   import { twMerge } from "tailwind-merge";
   import TimerOptions from "./TimerOptions.svelte";
+  import { Maximize2Icon } from "lucide-svelte";
   import ManualInputHandler from "./timer-handlers/ManualInputHandler.svelte";
   import KeyboardInputHandler from "./timer-handlers/KeyboardInputHandler.svelte";
   import StackmatInputHandler from "./timer-handlers/StackmatInputHandler.svelte";
@@ -278,16 +281,16 @@
   class:simulator={showSimulator($session)}
   data-timerstate={getTimerState($timerState)}
 >
-  <div
+  <Panel
+    title={$localLang.global.scramble}
+    contentClass="grid min-h-0"
     class={twMerge(
-      "scramble grid z-10 shaded-card relative transition-all duration-500",
+      "scramble z-10 relative transition-all duration-500",
       $isRunning ? "opacity-5" : ""
     )}
   >
-    <div class="config flex items-center justify-between relative z-20">
-      <h2 class="name font-bold">{$localLang.global.scramble}</h2>
-
-      <div class="flex items-center gap-2 ml-auto w-fit">
+    {#snippet actions()}
+      <div class="flex items-center gap-2">
         <TimerOptions
           battle={false}
           {context}
@@ -302,7 +305,7 @@
           }}
         />
       </div>
-    </div>
+    {/snippet}
 
     <div
       id="scramble"
@@ -343,15 +346,15 @@
         <pre class="scramble-content" class:hide={$isRunning} class:battle>{$scramble}</pre>
       {/if}
     </div>
-  </div>
+  </Panel>
 
-  <div class="timer shaded-card relative overflow-hidden">
-    <div class="config flex items-center justify-between relative z-20">
-      <h2 class="name font-bold">{$localLang.HOME.timer}</h2>
-    </div>
-
+  <Panel
+    title={$localLang.HOME.timer}
+    class="timer relative overflow-hidden"
+    contentClass="grid min-h-0"
+  >
     <div
-      class="text-9xl flex flex-col justify-center gap-2 items-center w-full h-full active:bg-transparent"
+      class="cdb-timer-display flex flex-col justify-center gap-2 items-center w-full h-full active:bg-transparent"
       role="timer"
     >
       {#if $device.type === "manual_entry"}
@@ -388,7 +391,7 @@
 
       <!-- <StatsInfo bind:context /> -->
     </div>
-  </div>
+  </Panel>
 
   <div
     class={twMerge(
@@ -396,19 +399,29 @@
       $isRunning ? "opacity-5" : ""
     )}
   >
-    <div
-      class="image shaded-card max-h-60 flex place-items-center w-full transition-all duration-200"
+    <Panel
+      title="Preview"
+      class="image max-h-60 transition-all duration-200"
+      contentClass="flex place-items-center w-full h-full"
     >
+      {#snippet actions()}
+        <IconButton
+          icon={Maximize2Icon}
+          label="Expand preview"
+          onclick={() => (prevExpanded = true)}
+        />
+      {/snippet}
+
       <PuzzleImageBundle
         src={$preview.map(s => s.src || "")}
         onclick={() => (prevExpanded = !prevExpanded)}
         class="cursor-pointer"
       />
-    </div>
+    </Panel>
 
-    <div class="shaded-card w-full h-full gap-2 justify-between text-sm px-0!">
+    <Panel title={$localLang.TIMER.statsTab} class="w-full h-full text-sm" contentClass="px-0">
       <StatsInfo bind:context {timerController} />
-    </div>
+    </Panel>
   </div>
 </section>
 
@@ -431,8 +444,8 @@
     grid-template-areas:
       "scramble info"
       "timer info";
-    gap: 0.25rem;
-    grid-template-columns: 1fr 16rem;
+    gap: 0.5rem;
+    grid-template-columns: minmax(0, 1fr) 16.5rem;
     grid-template-rows: auto 1fr;
     overflow: hidden;
     height: 100%;
@@ -440,15 +453,28 @@
 
   section > .scramble {
     grid-area: scramble;
-    grid-template-rows: auto minmax(0, 1fr);
+    min-height: 0;
   }
 
   section > .timer {
     grid-area: timer;
+    min-height: 0;
   }
 
   section > .info {
     grid-area: info;
+    gap: 0.5rem;
+  }
+
+  @media (max-width: 900px) {
+    section {
+      grid-template-areas:
+        "scramble"
+        "timer"
+        "info";
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: auto minmax(18rem, 1fr) auto;
+    }
   }
 
   /* TESTING */

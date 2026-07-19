@@ -17,7 +17,7 @@
   import TimerTab from "$lib/timer/TimerTab/TimerTab.svelte";
   import HistoryTab from "$lib/timer/HistoryTab/HistoryTab.svelte";
   import StatsTab from "$lib/timer/StatsTab/StatsTab.svelte";
-  import Button from "$lib/cubicdbKit/Button.svelte";
+  import SegmentedTabs from "$lib/cubicdbKit/SegmentedTabs.svelte";
   import TimerOptions from "./TimerTab/TimerOptions.svelte";
   import { ChartLineIcon, LogsIcon, TimerIcon } from "lucide-svelte";
 
@@ -147,7 +147,6 @@
   let managedKeyboardActive = $derived(
     eventTimerRuntime.state.activeDeviceId === TIMER_DEVICE_IDS.KEYBOARD
   );
-  const iconSize = "1.2rem";
   let historyTabComponent: any = $state(null);
 
   // Utilities (Interface Adapters)
@@ -397,39 +396,6 @@
     solveController.createSolve();
   }
 
-  // async function newSession() {
-  //   let ns = await sessionMgr.newSession(
-  //     newSessionName,
-  //     newSessionType,
-  //     newSessionGroup,
-  //     newSessionMode,
-  //     newSessionSteps,
-  //     stepNames
-  //   );
-
-  //   if (ns) {
-  //     ns.tName = ns.name;
-  //     timerController.session.set(ns);
-  //     initMgr.updateSessionsIcons();
-  //     initMgr.initInputHandler(ns.settings.input || "");
-
-  //     if (!ns.settings.sessionType) {
-  //       ns.settings.sessionType = ns.settings.sessionType || "mixed";
-  //       await sessionController
-  //         .applySettings(ns, { sessionType: ns.settings.sessionType } as any)
-  //         .catch(() => {});
-  //     }
-
-  //     await sessionMgr.selectedSession();
-  //     newSessionName = "";
-  //     creatingSession = false;
-  //   }
-  // }
-
-  // function closeAddSession() {
-  //   creatingSession = false;
-  // }
-
   onMount(() => {
     if (timerOnly && scrambleOnly) {
       timerOnly = scrambleOnly = false;
@@ -480,42 +446,18 @@
 
 <svelte:window onkeydown={keyboardKeyDownHandler} onkeyup={keyboardKeyUpHandler} />
 
-<div class="timer-layout grid gap-2 w-full h-full p-1 overflow-hidden">
+<div class="timer-layout cdb-app-background grid gap-2 w-full h-full overflow-hidden">
   <div class="actions flex items-center justify-between gap-2">
-    <div role="tablist" class="join gap-1 bg-base-100 p-1 mr-auto">
-      <Button
-        onclick={() => timerController.tab.set(0)}
-        size="sm"
-        role="tab"
-        class={"tab px-4 text-sm py-1.5 " +
-          (get(timerController.tab) === 0 ? "bg-primary" : "shadow-transparent border-transparent")}
-      >
-        <TimerIcon size={iconSize} />
-        {$localLang.TIMER.timerTab}
-      </Button>
-
-      <Button
-        onclick={() => timerController.tab.set(1)}
-        size="sm"
-        role="tab"
-        class={"tab px-4 text-sm py-1.5 " +
-          (get(timerController.tab) === 1 ? "bg-primary" : "shadow-transparent border-transparent")}
-      >
-        <LogsIcon size={iconSize} />
-        {$localLang.TIMER.historyTab}
-      </Button>
-
-      <Button
-        onclick={() => timerController.tab.set(2)}
-        size="sm"
-        role="tab"
-        class={"tab px-4 text-sm py-1.5 " +
-          (get(timerController.tab) === 2 ? "bg-primary" : "shadow-transparent border-transparent")}
-      >
-        <ChartLineIcon size={iconSize} />
-        {$localLang.TIMER.statsTab}
-      </Button>
-    </div>
+    <SegmentedTabs
+      class="mr-auto"
+      selected={String(get(timerController.tab))}
+      items={[
+        { id: "0", label: $localLang.TIMER.timerTab, icon: TimerIcon },
+        { id: "1", label: $localLang.TIMER.historyTab, icon: LogsIcon },
+        { id: "2", label: $localLang.TIMER.statsTab, icon: ChartLineIcon },
+      ]}
+      onSelect={item => timerController.tab.set(Number(item.id))}
+    />
 
     <TimerOptions
       context={timerContext}
@@ -539,7 +481,8 @@
 
 <style>
   .timer-layout {
-    grid-template-rows: 2rem minmax(0, 1fr);
+    grid-template-rows: 2.5rem minmax(0, 1fr);
+    padding: 7px;
   }
 
   .content {
