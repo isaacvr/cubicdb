@@ -218,16 +218,16 @@
   title={$localLang.global.summary}
   on:close={recoverEnableKeyboard}
   class="max-w-2xl grid bg-backgroundLevel2 "
-  color="none"
+  type="tertiary"
 >
   <pre class="w-full text-xs whitespace-pre-wrap max-h-[60vh] overflow-auto">{textSummary}</pre>
 
   <svelte:fragment slot="footer">
     <div class="flex justify-center gap-4 w-full">
-      <Button color="alternative" class="bg-cancelButton " on:click={() => toClipboard(textSummary)}
+      <Button type="secondary" on:click={() => toClipboard(textSummary)}
         >{$localLang.global.clickToCopy}</Button
       >
-      <Button color="none" class="bg-urgentButton " on:click={() => (showModal = false)}
+      <Button type="warning" on:click={() => (showModal = false)}
         >{$localLang.global.accept}</Button
       >
     </div>

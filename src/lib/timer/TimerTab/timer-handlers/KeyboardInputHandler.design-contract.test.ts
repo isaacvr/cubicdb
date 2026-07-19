@@ -5,29 +5,15 @@ import { describe, expect, it } from "vitest";
 const handlerPath = fileURLToPath(new URL("./KeyboardInputHandler.svelte", import.meta.url));
 
 describe("KeyboardInputHandler design contract", () => {
-  it("uses primary play/pause/resume and red cancel controls with matching timer-control dimensions", () => {
+  it("uses Button props for primary play/pause/resume and danger cancel icon controls", () => {
     const source = readFileSync(handlerPath, "utf8");
 
-    expect(source).toContain('const TIMER_PRIMARY_CONTROL_BUTTON_COLOR = "primary";');
-    expect(source).toContain(
-      'const TIMER_PRIMARY_CONTROL_BUTTON_CLASS = "cdb-primary-icon-button size-10 min-h-10 p-0";'
-    );
-    expect(source).toContain('const TIMER_CANCEL_CONTROL_BUTTON_COLOR = "error";');
-    expect(source).toContain(
-      'const TIMER_CANCEL_CONTROL_BUTTON_CLASS = "cdb-danger-icon-button size-10 min-h-10 p-0";'
-    );
-    expect(source).toContain("color={TIMER_PRIMARY_CONTROL_BUTTON_COLOR}");
-    expect(source).toContain("class={TIMER_PRIMARY_CONTROL_BUTTON_CLASS}");
-    expect(source).toContain("color={TIMER_CANCEL_CONTROL_BUTTON_COLOR}");
-    expect(source).toContain("class={TIMER_CANCEL_CONTROL_BUTTON_CLASS}");
-    expect(source).toContain(
-      "{#if $timerState === TimerState.RUNNING}\n      <Button\n        color={TIMER_PRIMARY_CONTROL_BUTTON_COLOR}"
-    );
-    expect(source).not.toContain("TIMER_SECONDARY_CONTROL_BUTTON_COLOR");
-    expect(source).not.toContain("TIMER_SECONDARY_CONTROL_BUTTON_CLASS");
-    expect(source).toContain(
-      "{:else if $timerState === TimerState.PAUSE}\n      <Button\n        color={TIMER_PRIMARY_CONTROL_BUTTON_COLOR}"
-    );
+    expect(source).not.toContain("TIMER_PRIMARY_CONTROL_BUTTON_CLASS");
+    expect(source).not.toContain("TIMER_CANCEL_CONTROL_BUTTON_CLASS");
+    expect(source).not.toContain("cdb-primary-icon-button");
+    expect(source).not.toContain("cdb-danger-icon-button");
+    expect(source).toContain('<Button type="primary" size="md" icon');
+    expect(source).toContain('<Button type="danger" size="md" icon');
   });
 
   it("uses the normal Space start gesture when resuming from pause", () => {

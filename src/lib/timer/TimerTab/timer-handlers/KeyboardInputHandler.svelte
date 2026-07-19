@@ -43,11 +43,6 @@
   const { reset } = inputContext;
   const { time, lastSolve, currentStep, session, ready, decimals, timerState, solves } =
     timerController;
-  const TIMER_PRIMARY_CONTROL_BUTTON_COLOR = "primary";
-  const TIMER_PRIMARY_CONTROL_BUTTON_CLASS = "cdb-primary-icon-button size-10 min-h-10 p-0";
-  const TIMER_PRIMARY_CONTROL_ICON_SIZE = "1.25rem";
-  const TIMER_CANCEL_CONTROL_BUTTON_COLOR = "error";
-  const TIMER_CANCEL_CONTROL_BUTTON_CLASS = "cdb-danger-icon-button size-10 min-h-10 p-0";
 
   let solveControl = $state([
     {
@@ -196,10 +191,10 @@
           {@const Icon = control.icon}
           <Tooltip tooltipText={control.text}>
             <Button
-              color="none"
-              class="flex mx-1 w-5 h-5 p-0 pointer-events-auto {control.highlight($solves[0] || {})
-                ? 'text-red-500'
-                : ''}"
+              type={control.highlight($solves[0] || {}) ? "danger" : "tertiary"}
+              size="xs"
+              icon
+              class="mx-1 pointer-events-auto"
               onclick={control.handler}
             >
               <Icon size="1.2rem" />
@@ -230,44 +225,24 @@
 {#if showActions}
   <div class="action flex items-center gap-2">
     {#if $timerState === TimerState.RUNNING}
-      <Button
-        color={TIMER_PRIMARY_CONTROL_BUTTON_COLOR}
-        class={TIMER_PRIMARY_CONTROL_BUTTON_CLASS}
-        onclick={pauseOrResume}
-      >
-        <PauseIcon size={TIMER_PRIMARY_CONTROL_ICON_SIZE} />
+      <Button type="primary" size="md" icon onclick={pauseOrResume}>
+        <PauseIcon />
       </Button>
 
-      <Button
-        color={TIMER_CANCEL_CONTROL_BUTTON_COLOR}
-        class={TIMER_CANCEL_CONTROL_BUTTON_CLASS}
-        onclick={stopTimer}
-      >
-        <XIcon size={TIMER_PRIMARY_CONTROL_ICON_SIZE} />
+      <Button type="danger" size="md" icon onclick={stopTimer}>
+        <XIcon />
       </Button>
     {:else if $timerState === TimerState.PAUSE}
-      <Button
-        color={TIMER_PRIMARY_CONTROL_BUTTON_COLOR}
-        class={TIMER_PRIMARY_CONTROL_BUTTON_CLASS}
-        onclick={pauseOrResume}
-      >
-        <PlayIcon size={TIMER_PRIMARY_CONTROL_ICON_SIZE} />
+      <Button type="primary" size="md" icon onclick={pauseOrResume}>
+        <PlayIcon />
       </Button>
 
-      <Button
-        color={TIMER_CANCEL_CONTROL_BUTTON_COLOR}
-        class={TIMER_CANCEL_CONTROL_BUTTON_CLASS}
-        onclick={stopTimer}
-      >
-        <XIcon size={TIMER_PRIMARY_CONTROL_ICON_SIZE} />
+      <Button type="danger" size="md" icon onclick={stopTimer}>
+        <XIcon />
       </Button>
     {:else}
-      <Button
-        color={TIMER_PRIMARY_CONTROL_BUTTON_COLOR}
-        class={TIMER_PRIMARY_CONTROL_BUTTON_CLASS}
-        onclick={startTimer}
-      >
-        <PlayIcon size={TIMER_PRIMARY_CONTROL_ICON_SIZE} />
+      <Button type="primary" size="md" icon onclick={startTimer}>
+        <PlayIcon />
       </Button>
     {/if}
   </div>

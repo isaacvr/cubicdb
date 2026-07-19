@@ -91,8 +91,8 @@
 
   <Button
     on:click={() => (running ? stop() : start())}
-    color="none"
-    class={"shadow-md col-span-full text-black " + (running ? "bg-red-300" : "bg-purple-300")}
+    type={running ? "danger" : "accent"}
+    class="shadow-md col-span-full"
   >
     {!running ? "Start" : "Stop"}
   </Button>

@@ -264,12 +264,7 @@
           {#if editMode && editing}
             <div class="actions absolute flex flex-col top-1 -left-3 z-10">
               {#each CubeActions as action}
-                <Button
-                  pill
-                  color="alternative"
-                  class="w-6 h-6 !p-1 border-none"
-                  on:click={() => action[0](pos)}
-                >
+                <Button type="secondary" size="xs" icon on:click={() => action[0](pos)}>
                   <svelte:component this={action[1]} size="1.2rem" />
                 </Button>
               {/each}
@@ -311,18 +306,14 @@
         rounded-md p-2 w-min shadow-sm hover:shadow-lg hover:shadow-primary-800 shadow-primary-800 mx-auto"
     >
       <Button class="mx-auto" on:click={addAlg}><PlusIcon size="1.2rem" /></Button>
-      <Button color="alternative" on:click={() => (editing = false)}>Cancel</Button>
-      <Button color="purple" on:click={save}>Save</Button>
+      <Button type="secondary" on:click={() => (editing = false)}>Cancel</Button>
+      <Button type="accent" on:click={save}>Save</Button>
     </div>
   {/if}
 
   {#if editMode}
     <div class="actions absolute top-3 left-1 -translate-x-full z-10">
-      <Button
-        pill
-        color="alternative"
-        class="w-8 h-8 !p-2 border-none absolute right-0 top-1/2 translate-y-[-50%]"
-      >
+      <Button type="secondary" size="sm" icon class="absolute right-0 top-1/2 translate-y-[-50%]">
         <EllipsisVerticalIcon size="1.2rem" class="text-green-400" />
       </Button>
 

@@ -36,8 +36,8 @@
   <GateSearch canDelete={false} {gate} />
 
   <div class="actions flex gap-2 justify-center mt-4">
-    <Button class="py-2" color="alternative" on:click={close}>{$localLang.global.cancel}</Button>
-    <Button class="py-2" color="green" on:click={apply}>{$localLang.global.filter}</Button>
-    <Button class="py-2" color="yellow" on:click={clear}>{$localLang.global.clear}</Button>
+    <Button class="py-2" type="secondary" on:click={close}>{$localLang.global.cancel}</Button>
+    <Button class="py-2" type="success" on:click={apply}>{$localLang.global.filter}</Button>
+    <Button class="py-2" type="warning" on:click={clear}>{$localLang.global.clear}</Button>
   </div>
 </section>

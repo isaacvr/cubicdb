@@ -31,6 +31,7 @@
   } from "lucide-svelte";
 
   type IndicatorColor = "green" | "blue" | "yellow";
+  type TutorialButtonType = "success" | "info" | "warning";
 
   const dropdownDefaultClass =
     "font-medium py-2 px-4 text-sm hover:bg-gray-600 flex items-center gap-2 justify-start";
@@ -107,6 +108,18 @@
     }
 
     return "green";
+  }
+
+  function getButtonType(lv: number): TutorialButtonType {
+    switch (getColor(lv)) {
+      case "blue":
+        return "info";
+      case "yellow":
+        return "warning";
+      case "green":
+      default:
+        return "success";
+    }
   }
 
   function viewTutorial(t: ITutorial, edit: boolean) {
@@ -229,7 +242,7 @@
     {/each}
 
     {#if allowAdmin}
-      <Button class="w-8 h-8 !p-1 mt-auto" on:click={preAddTutorial}>
+      <Button size="sm" icon class="mt-auto" on:click={preAddTutorial}>
         <PlusIcon size="1.2rem" />
       </Button>
     {/if}
@@ -250,7 +263,7 @@
         </p>
 
         <Button
-          color={getColor(tut.level)}
+          type={getButtonType(tut.level)}
           shadow
           class="mt-auto w-min !border-current gap-2"
           href={`/tutorials/${tut.lang}/${tut.puzzle}/${tut.shortName}`}
@@ -262,9 +275,10 @@
         {#if allowAdmin}
           <div class="actions absolute right-2">
             <Button
-              pill
-              color="alternative"
-              class="w-8 h-8 !p-2 border-none absolute right-0 top-1/2 translate-y-[-50%]"
+              type="secondary"
+              icon
+              size="sm"
+              class="absolute right-0 top-1/2 translate-y-[-50%]"
             >
               <EllipsisVerticalIcon size="1.2rem" />
             </Button>
@@ -303,8 +317,8 @@
   </h2>
 
   <div class="flex flex-wrap gap-2 justify-center">
-    <Button color="alternative" on:click={() => (sTut = null)}>Cancel</Button>
-    <Button color="red" on:click={removeTutorial} class="flex items-center gap-2">
+    <Button type="secondary" on:click={() => (sTut = null)}>Cancel</Button>
+    <Button type="danger" on:click={removeTutorial} class="flex items-center gap-2">
       <TrashIcon size="1.2rem" /> Delete
     </Button>
   </div>
@@ -366,8 +380,8 @@
   </div>
 
   <div class="flex flex-wrap gap-2 justify-center">
-    <Button color="alternative" on:click={() => (showModal = false)}>Cancel</Button>
-    <Button color="purple" on:click={addTutorial}>Save</Button>
+    <Button type="secondary" on:click={() => (showModal = false)}>Cancel</Button>
+    <Button type="accent" on:click={addTutorial}>Save</Button>
   </div>
 </Modal>
 

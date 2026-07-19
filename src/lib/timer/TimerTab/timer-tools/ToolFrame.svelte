@@ -39,7 +39,7 @@
   <header class="header"> -->
 {#if tool.tool.icon}
   {@const Icon = tool.tool.icon}
-  <Button onclick={toggle} class="p-1 border border-current">
+  <Button onclick={toggle} type="secondary" size="sm" icon>
     <Icon {...tool.tool.iconParams} size="1.2rem" />
   </Button>
 {/if}
@@ -49,16 +49,16 @@
     {#if open}
       <div class="ml-auto">
         {#if tool.tool.hasSettings}
-          <Button color="none" class="p-1" onclick={toggleConfig}>
+          <Button type="tertiary" size="xs" icon onclick={toggleConfig}>
             <SettingsIcon size="1rem" />
           </Button>
         {/if}
 
-        <Button color="none" class="p-1" onclick={toggle}>
+        <Button type="tertiary" size="xs" icon onclick={toggle}>
           <ChevronLeftIcon size="1.2rem" />
         </Button>
 
-        <Button color="none" class="p-1" onclick={closeTool}>
+        <Button type="tertiary" size="xs" icon onclick={closeTool}>
           <XIcon size="1.2rem" />
         </Button>
       </div>

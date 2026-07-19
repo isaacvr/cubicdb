@@ -442,11 +442,10 @@
     >
       {#if type === 2 || type >= 4}
         <Button
-          color="purple"
-          class={`grid place-items-center !p-0 cursor-pointer ` +
-            ($screen.isMobile
-              ? "w-12 h-12 !rounded-full shadow-xl border border-black"
-              : "w-8 h-8")}
+          type="accent"
+          size={$screen.isMobile ? "lg" : "sm"}
+          icon
+          class="grid place-items-center cursor-pointer {$screen.isMobile ? 'shadow-xl' : ''}"
           on:click={toggleListView}
           aria-label={$localLang.ALGORITHMS.toggleView}
         >
@@ -460,8 +459,10 @@
 
       {#if allowAlgAdmin}
         <Button
-          color="purple"
-          class="grid place-items-center !p-0 cursor-pointer w-8 h-8"
+          type="accent"
+          size="sm"
+          icon
+          class="grid place-items-center cursor-pointer"
           on:click={addAlgorithm}
         >
           <PlusIcon size="1.2rem" />
@@ -484,7 +485,7 @@
                 {#if images[pos]}
                   <PuzzleImage src={images[pos]} />
                 {:else}
-                  <Spinner size="10" color="yellow" class="m-auto" />
+                  <Spinner size="10" type="warning" class="m-auto" />
                 {/if}
               </div>
 
@@ -492,15 +493,17 @@
 
               {#if allowAlgAdmin}
                 <div class="absolute no-grid flex flex-col gap-2 justify-start top-0 left-0">
-                  <button
+                  <Button
+                    type="secondary"
+                    size="sm"
+                    icon
                     onclick={e => {
                       e.preventDefault();
                       selectAlg(currentList[pos]);
                     }}
-                    class="p-1 bg-primary-600 rounded-md"
                     ><PencilIcon size="1.2rem" />
-                  </button>
-                  <Button color="red" on:click={() => removeAlg(currentList[pos])} class="p-1"
+                  </Button>
+                  <Button type="danger" size="sm" icon on:click={() => removeAlg(currentList[pos])}
                     ><TrashIcon size="1.2rem" />
                   </Button>
                 </div>
@@ -543,10 +546,10 @@
 
             {#if allowAlgAdmin}
               <ul class="absolute no-grid flex flex-col gap-2 justify-start top-0 left-0">
-                <Button on:click={() => selectAlg(c)} class="p-1"
+                <Button type="secondary" size="sm" icon on:click={() => selectAlg(c)}
                   ><PencilIcon size="1.2rem" />
                 </Button>
-                <Button color="red" on:click={() => removeAlg(c)} class="p-1"
+                <Button type="danger" size="sm" icon on:click={() => removeAlg(c)}
                   ><TrashIcon size="1.2rem" />
                 </Button>
               </ul>

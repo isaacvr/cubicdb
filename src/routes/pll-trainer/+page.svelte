@@ -188,7 +188,7 @@
     ];
   }
 
-  $: $localLang, updateTexts();
+  $: ($localLang, updateTexts());
 </script>
 
 <svelte:window on:keyup={handleKeyUp} />
@@ -201,8 +201,10 @@
 
   {#if !$screen.isMobile}
     <Button
-      color="dark"
-      class="absolute right-4 top-4 w-6 h-6 rounded-full p-3.5 border border-gray-500"
+      type="secondary"
+      size="sm"
+      icon
+      class="absolute right-4 top-4"
       on:click={() => (showModal = true)}>?</Button
     >
   {/if}
@@ -216,7 +218,7 @@
       <Select items={CASES} transform={e => e} bind:value={cases} />
     </div>
 
-    <Button on:click={next} color="green" class="mt-2">{$localLang.PLL.next}</Button>
+    <Button on:click={next} type="success" class="mt-2">{$localLang.PLL.next}</Button>
   {/if}
 
   {#if stage === 1}
@@ -245,7 +247,7 @@
       {#if correct === cases}
         <CheckIcon width="1.2rem" height="1.2rem" class="text-green-500" />
       {/if}
-      <Button on:click={next} color="green" class="ml-12">{$localLang.PLL.tryAgain}</Button>
+      <Button on:click={next} type="success" class="ml-12">{$localLang.PLL.tryAgain}</Button>
     </div>
 
     <Table shadow divClass="w-full relative overflow-x-auto">

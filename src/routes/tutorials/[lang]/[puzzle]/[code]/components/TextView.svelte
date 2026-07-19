@@ -55,8 +55,8 @@
       class="flex justify-center items-center gap-4 border border-gray-600 transition-all duration-200
       rounded-md p-2 w-min shadow-sm hover:shadow-lg hover:shadow-primary-800 shadow-primary-800 mx-auto"
     >
-      <Button color="alternative" on:click={() => (editing = false)}>Cancel</Button>
-      <Button color="purple" on:click={save}>Save</Button>
+      <Button type="secondary" on:click={() => (editing = false)}>Cancel</Button>
+      <Button type="accent" on:click={save}>Save</Button>
     </div>
   {:else if block.type === "text"}
     <p class="tx-text">{@html block.content.replaceAll("\n", "<br>")}</p>
@@ -66,11 +66,7 @@
 
   {#if editMode}
     <div class="actions absolute top-3 left-1 -translate-x-full z-10">
-      <Button
-        pill
-        color="alternative"
-        class="w-8 h-8 !p-2 border-none absolute right-0 top-1/2 translate-y-[-50%]"
-      >
+      <Button type="secondary" size="sm" icon class="absolute right-0 top-1/2 translate-y-[-50%]">
         <EllipsisVerticalIcon
           size="1.2rem"
           class={block.type === "text" ? "text-white" : "text-purple-400"}

@@ -148,12 +148,7 @@
         {/if}
 
         {#if shouldShowCloseButton}
-          <Button
-            color="neutral"
-            tabindex="0"
-            class="rounded-full hover:border-primary"
-            onclick={closeFromButton}
-          >
+          <Button type="tertiary" size="sm" icon tabindex="0" onclick={closeFromButton}>
             <XIcon size="1rem" />
           </Button>
         {/if}

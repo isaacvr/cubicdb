@@ -433,7 +433,7 @@
 
   <!-- Refresh scramble -->
   {#if option === "scramble-only"}
-    <Button color="purple" onclick={() => timer?.initScrambler()}>
+    <Button type="accent" onclick={() => timer?.initScrambler()}>
       {$localLang.global.refresh}
     </Button>
   {/if}
@@ -463,7 +463,7 @@
         </ul>
 
         <div class="flex gap-2 items-center justify-center pt-4">
-          <Button color="alternative" class="h-8 w-8 p-0 me-3 rounded-full" on:click={toClipboard}
+          <Button type="secondary" size="sm" icon class="me-3" on:click={toClipboard}
             ><CopyIcon size="1.2rem" /></Button
           >
           <Tooltip placement="bottom">{$localLang.global.clickToCopy}</Tooltip>
@@ -473,7 +473,7 @@
 
     <div class="flex items-center justify-center gap-2 mt-8">
       <Input type="number" class="!w-20" bind:value={batch} min={1} on:UENTER={generateBatch} />
-      <Button color="purple" on:click={generateBatch}>{$localLang.global.generate}</Button>
+      <Button type="accent" on:click={generateBatch}>{$localLang.global.generate}</Button>
     </div>
   {:else if option === "statistics"}
     <div class="mt-4">
@@ -520,10 +520,9 @@
             focus-within:shadow-black"
           inpClass="text-center"
         />
-        <Button color="purple" class="h-min" on:click={addTimeString}
-          >{$localLang.global.add}</Button
+        <Button type="accent" class="h-min" on:click={addTimeString}>{$localLang.global.add}</Button
         >
-        <Button color="red" class="h-min" on:click={clear}>{$localLang.global.clear}</Button>
+        <Button type="danger" class="h-min" on:click={clear}>{$localLang.global.clear}</Button>
       </div>
     </div>
   {:else if option === "metrics"}
@@ -582,8 +581,8 @@
       </div>
 
       <div class="actions">
-        <Button color="purple" on:click={solve} class="ml-4">{$localLang.TOOLS.solve}</Button>
-        <Button color="red" on:click={clearCube}>{$localLang.global.clear}</Button>
+        <Button type="accent" on:click={solve} class="ml-4">{$localLang.TOOLS.solve}</Button>
+        <Button type="danger" on:click={clearCube}>{$localLang.global.clear}</Button>
       </div>
     </div>
   {:else if option === "mosaic"}

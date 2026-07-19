@@ -150,21 +150,23 @@
           {#each tipTemp as tip, pos}
             <li class="flex gap-2 items-center">
               <Input bind:value={tip} class="py-1 bg-base-100 text-base-content" />
-              <button
+              <Button
                 tabindex="0"
-                class="text-gray-400 w-8 h-8 cursor-pointer hover:text-red-500"
+                type="danger"
+                size="sm"
+                icon
                 on:click|stopPropagation={() => {
                   tipTemp = tipTemp.filter((_, p) => p != pos);
                 }}
               >
                 <TrashIcon size="1.2rem" />
-              </button>
+              </Button>
             </li>
           {/each}
         </ul>
       {/if}
 
-      <Button class="!bg-blue-700 text-gray-300 mt-4" on:click={addTip}>Añadir flecha</Button>
+      <Button type="info" class="mt-4" on:click={addTip}>Añadir flecha</Button>
     </section>
 
     <section class="place-items-center max-h-52 w-full h-full">
@@ -180,29 +182,29 @@
             {#each solTemp as solution, pos}
               <li class="flex gap-2 items-center">
                 <Input class="bg-base-100 text-base-content" bind:value={solution.moves} />
-                <button
+                <Button
                   tabindex="0"
-                  class="text-gray-400 w-8 h-8 cursor-pointer hover:text-red-500"
+                  type="danger"
+                  size="sm"
+                  icon
                   on:click|stopPropagation={() => {
                     solTemp = solTemp.filter((_, p) => p != pos);
                   }}
                 >
                   <TrashIcon size="1.2rem" />
-                </button>
+                </Button>
               </li>
             {/each}
           </ul>
         {/if}
 
-        <Button class="!bg-blue-700 text-gray-300 mt-4" on:click={addSolution}
-          >Añadir solución</Button
-        >
+        <Button type="info" class="mt-4" on:click={addSolution}>Añadir solución</Button>
       </section>
     {/if}
 
     <section class="actions col-span-full">
-      <Button class="text-gray-300 !bg-purple-700" on:click={renderSAlg}>Actualizar Imagen</Button>
-      <Button class="text-gray-300 !bg-green-700" on:click={saveAlgorithm}>Guardar</Button>
+      <Button type="accent" on:click={renderSAlg}>Actualizar Imagen</Button>
+      <Button type="success" on:click={saveAlgorithm}>Guardar</Button>
     </section>
   </div>
 </Modal>

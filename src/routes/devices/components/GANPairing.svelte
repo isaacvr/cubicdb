@@ -80,7 +80,7 @@
 <div class="flex gap-2 justify-center w-fit mx-auto">
   <Button
     class="grow"
-    color="urgent"
+    type="warning"
     bind:loading={searching}
     onclick={search}
     disabled={searching}
@@ -90,7 +90,7 @@
   {#if searching}
     <Button
       class="grow"
-      color="cancel"
+      type="secondary"
       onclick={() => $dataService.config.cancelBluetoothRequest()}
     >
       {$localLang.global.cancel}
@@ -161,7 +161,7 @@
 
     <Button
       class="capitalize"
-      color="accept"
+      type="secondary"
       onclick={() => {
         input.name = selectedDevice!.deviceName;
         input.macAddress = selectedDevice!.deviceId;

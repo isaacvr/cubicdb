@@ -351,7 +351,7 @@
       {tut.name}
 
       {#if editMode}
-        <Button color="none" pill class="!p-2" on:click={editTutorial}>
+        <Button type="tertiary" size="sm" icon on:click={editTutorial}>
           <SettingsIcon />
         </Button>
       {/if}
@@ -380,9 +380,10 @@
 
           {#if editMode}
             <Button
-              pill
-              color="alternative"
-              class="w-8 h-8 !p-2 border-none absolute right-0 top-1/2 translate-y-[-50%]"
+              type="secondary"
+              size="sm"
+              icon
+              class="absolute right-0 top-1/2 translate-y-[-50%]"
             >
               <EllipsisVerticalIcon size="1.2rem" />
             </Button>
@@ -411,7 +412,7 @@
             <PlusIcon size="1.2rem" /> Add step
           </Button>
 
-          <Button color="purple" class="gap-2" on:click={saveTutorial}>Save</Button>
+          <Button type="accent" class="gap-2" on:click={saveTutorial}>Save</Button>
         </li>
       {/if}
     </ul>
@@ -423,17 +424,16 @@
   max-w-2xl border-t border-t-gray-600 py-2"
 >
   <Button
-    color="alternative"
-    class={"transition-all bg-cancelButton duration-200 " +
-      (index === 0 ? "opacity-0 pointer-events-none" : "")}
+    type="secondary"
+    class={"transition-all duration-200 " + (index === 0 ? "opacity-0 pointer-events-none" : "")}
     on:click={() => (index -= 1)}
   >
     {$localLang.global.back}
   </Button>
 
   <Button
-    color="purple"
-    class={"bg-urgentButton transition-all duration-200 " +
+    type="accent"
+    class={"transition-all duration-200 " +
       (index === tut.steps.length ? "opacity-0 pointer-events-none" : "")}
     on:click={() => (index += 1)}
   >
@@ -448,10 +448,10 @@
     </h2>
 
     <div class="flex flex-wrap gap-2 justify-center">
-      <Button color="alternative" on:click={() => (showModal = false)}
+      <Button type="secondary" on:click={() => (showModal = false)}
         >{$localLang.global.cancel}</Button
       >
-      <Button color="red" on:click={remove} class="flex items-center gap-2">
+      <Button type="danger" on:click={remove} class="flex items-center gap-2">
         <TrashIcon size="1.2rem" />
         {$localLang.global.delete}
       </Button>
@@ -470,10 +470,10 @@
     </div>
 
     <div class="flex flex-wrap gap-2 justify-center">
-      <Button color="alternative" on:click={() => (showModal = false)}
+      <Button type="secondary" on:click={() => (showModal = false)}
         >{$localLang.global.cancel}</Button
       >
-      <Button color="purple" on:click={addStep}>Save</Button>
+      <Button type="accent" on:click={addStep}>Save</Button>
     </div>
   {:else if modalType === "edit-tutorial"}
     <div class="flex flex-wrap gap-2 justify-center items-center">
@@ -519,10 +519,10 @@
     </div>
 
     <div class="flex flex-wrap gap-2 justify-center">
-      <Button color="alternative" on:click={() => (showModal = false)}
+      <Button type="secondary" on:click={() => (showModal = false)}
         >{$localLang.global.cancel}</Button
       >
-      <Button color="purple" on:click={saveTutorialConfig}>{$localLang.global.save}</Button>
+      <Button type="accent" on:click={saveTutorialConfig}>{$localLang.global.save}</Button>
     </div>
   {/if}
 </Modal>

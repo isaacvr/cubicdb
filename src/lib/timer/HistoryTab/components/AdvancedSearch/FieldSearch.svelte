@@ -39,7 +39,7 @@
 <div
   class="flex gap-2 items-center justify-center bg-gray-900 rounded-md border-2 border-green-600 p-1 px-2"
 >
-  <Button class="p-1 h-6" color="red" on:click={deleteFilter}>
+  <Button size="xs" icon type="danger" on:click={deleteFilter}>
     <TrashIcon size="1rem" />
   </Button>
 

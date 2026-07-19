@@ -9,8 +9,7 @@
   import { globalLang } from "@stores/language.service";
   import { getLanguage } from "@lang/index";
   import { ICONS, getModeMap } from "@constants";
-  import { Card, Heading } from "$lib/cubicdbKit";
-  import Button from "@material/Button.svelte";
+  import { Button, Card, FileButton, Heading } from "$lib/cubicdbKit";
   import CubeCategory from "@components/wca/CubeCategory.svelte";
   import { dataService } from "$lib/data-services/data.service";
   import { sessionController } from "$lib/controllers/SessionController";
@@ -169,27 +168,17 @@
 <Card class="mx-auto mt-8 w-full max-w-3xl">
   <Heading tag="h3" class="text-center">{$localLang.IMPORT_EXPORT.title}</Heading>
   <section class="flex items-center gap-2 justify-center my-4">
-    <Button
-      on:click={() => (isImport = true)}
-      class="bg-{isImport ? 'green' : 'gray'}-700 text-gray-300"
+    <Button on:click={() => (isImport = true)} type={isImport ? "success" : "secondary"}
       >{$localLang.IMPORT_EXPORT.import}</Button
     >
-    <Button
-      on:click={() => (isImport = false)}
-      class="bg-{!isImport ? 'green' : 'gray'}-700 text-gray-300"
+    <Button on:click={() => (isImport = false)} type={!isImport ? "success" : "secondary"}
       >{$localLang.IMPORT_EXPORT.export}</Button
     >
 
     {#if !isImport && ownData}
-      <Button on:click={selectAllOwn} class="bg-orange-800 text-gray-300"
-        >{$localLang.IMPORT_EXPORT.selectAll}</Button
-      >
-      <Button on:click={selectNoneOwn} class="bg-orange-800 text-gray-300"
-        >{$localLang.IMPORT_EXPORT.selectNone}</Button
-      >
-      <Button on:click={exportData} class="bg-purple-800 text-gray-300"
-        >{$localLang.global.save}</Button
-      >
+      <Button on:click={selectAllOwn} type="warning">{$localLang.IMPORT_EXPORT.selectAll}</Button>
+      <Button on:click={selectNoneOwn} type="warning">{$localLang.IMPORT_EXPORT.selectNone}</Button>
+      <Button on:click={exportData} type="accent">{$localLang.global.save}</Button>
     {/if}
   </section>
 
@@ -208,20 +197,15 @@
           <Select bind:value={mode} items={Adaptors[parser].modes} transform={(_, pos) => pos} />
         {/if}
 
-        <Button class="bg-purple-800 text-gray-300" file on:files={e => processFiles(e.detail)}
-          >{$localLang.IMPORT_EXPORT.selectFile}</Button
-        >
+        <FileButton type="accent" on:files={e => processFiles(e.detail)}>
+          {$localLang.IMPORT_EXPORT.selectFile}
+        </FileButton>
 
         {#if cubeData}
-          <Button on:click={selectAll} class="bg-orange-800 text-gray-300"
-            >{$localLang.IMPORT_EXPORT.selectAll}</Button
+          <Button on:click={selectAll} type="warning">{$localLang.IMPORT_EXPORT.selectAll}</Button>
+          <Button on:click={selectNone} type="warning">{$localLang.IMPORT_EXPORT.selectNone}</Button
           >
-          <Button on:click={selectNone} class="bg-orange-800 text-gray-300"
-            >{$localLang.IMPORT_EXPORT.selectNone}</Button
-          >
-          <Button on:click={save} class="bg-green-800 text-gray-300"
-            >{$localLang.global.save}</Button
-          >
+          <Button on:click={save} type="success">{$localLang.global.save}</Button>
         {/if}
       </div>
     </section>
@@ -233,8 +217,8 @@
             <Checkbox bind:checked={s.editing} />
             <Button
               on:click={() => (sSession = s)}
-              class="p-2 bg-blue-700/40 text-gray-300 rounded-md font-bold shadow-md cursor-pointer
-              {s === sSession ? 'bg-blue-700 underline' : ''} {s.icon ? ' pl-8' : ''}"
+              type={s === sSession ? "primary" : "secondary"}
+              class="font-bold {s === sSession ? 'underline' : ''} {s.icon ? 'pl-8' : ''}"
             >
               {#if s.icon}
                 <span
@@ -275,9 +259,8 @@
           <Checkbox bind:checked={s.editing} />
           <Button
             on:click={() => (oSession = s)}
-            class="p-2 bg-blue-700/40 text-gray-300 rounded-md font-bold shadow-md cursor-pointer
-              {s === oSession ? 'bg-blue-700 underline' : ''}
-              "
+            type={s === oSession ? "primary" : "secondary"}
+            class="font-bold {s === oSession ? 'underline' : ''}"
           >
             {s.name}
           </Button>

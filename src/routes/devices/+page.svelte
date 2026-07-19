@@ -136,7 +136,7 @@
     </div>
 
     <div class="flex flex-wrap items-center justify-center mx-auto gap-2 mt-4">
-      <Button color="error" onclick={() => {}}>
+      <Button type="danger" onclick={() => {}}>
         {$localLang.global.delete}
       </Button>
       {#if !device.isConnected}

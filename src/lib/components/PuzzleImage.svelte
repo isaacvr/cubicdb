@@ -244,7 +244,7 @@
       tabindex="-1"
       onkeyup={() => {}}
     >
-      <Button class="bg-base-200">
+      <Button type="secondary" size="sm" icon>
         <DownloadIcon size="1.2rem" />
       </Button>
       <Dropdown
@@ -259,7 +259,7 @@
         {/each}
       </Dropdown>
 
-      <Button class="bg-base-200"><CopyIcon size="1.2rem" /></Button>
+      <Button type="secondary" size="sm" icon><CopyIcon size="1.2rem" /></Button>
       <Dropdown
         trigger="hover"
         placement="right-start"
@@ -273,7 +273,9 @@
       </Dropdown>
 
       {#if type === "svg"}
-        <Button class="bg-base-200" onclick={handleCopyCode}><CodeIcon size="1.2rem" /></Button>
+        <Button type="secondary" size="sm" icon onclick={handleCopyCode}>
+          <CodeIcon size="1.2rem" />
+        </Button>
         <Tooltip
           class="bg-base-100 text-base-content z-10"
           {placement}

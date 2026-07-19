@@ -44,7 +44,7 @@
   <div class="header">
     {#if canDelete}
       <Tooltip tooltipText={$localLang.global.delete}>
-        <Button class="p-1" color="red" on:click={deleteGate}>
+        <Button size="xs" icon type="danger" on:click={deleteGate}>
           <TrashIcon size="1rem" />
         </Button>
       </Tooltip>
@@ -71,7 +71,7 @@
     </span>
 
     <button
-      color="none"
+      type="tertiary"
       class={"p-1 ml-auto action " + (expanded ? "expanded" : "")}
       on:click={() => (expanded = !expanded)}
     >
@@ -89,8 +89,9 @@
     {/each}
 
     <div class="actions flex items-center gap-2 mx-auto">
-      <Button color="none" class="py-2" on:click={addFilter}>{$localLang.TIMER.addFilter}</Button>
-      <Button color="none" class="py-2" on:click={addGroup}>{$localLang.TIMER.addGroup}</Button>
+      <Button type="tertiary" class="py-2" on:click={addFilter}>{$localLang.TIMER.addFilter}</Button
+      >
+      <Button type="tertiary" class="py-2" on:click={addGroup}>{$localLang.TIMER.addGroup}</Button>
     </div>
   </div>
 </div>

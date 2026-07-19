@@ -33,6 +33,35 @@
   let tm: any;
   let notService = NotificationService.getInstance();
 
+  function toButtonType(color?: string) {
+    switch (color) {
+      case "error":
+      case "danger":
+      case "red":
+        return "danger";
+      case "urgent":
+      case "warning":
+      case "yellow":
+        return "warning";
+      case "green":
+        return "success";
+      case "blue":
+        return "info";
+      case "purple":
+        return "accent";
+      case "cancel":
+      case "neutral":
+      case "secondary":
+        return "secondary";
+      case "none":
+      case "ghost":
+        return "tertiary";
+      case "primary":
+      default:
+        return "primary";
+    }
+  }
+
   function close() {
     if (!open) return;
 
@@ -75,7 +104,7 @@
       <div class="flex gap-2 mt-4">
         {#each actions || [] as action}
           <Button
-            color={action.color}
+            type={toButtonType(action.color)}
             onclick={(e: any) => {
               action.callback(e);
               close();

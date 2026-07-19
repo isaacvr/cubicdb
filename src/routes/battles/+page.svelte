@@ -378,9 +378,9 @@
   <!-- IDLE -->
   {#if state === "idle"}
     <div class="flex items-center justify-center gap-4">
-      <Button on:click={() => toState("create")} color="green">Create</Button>
-      <Button on:click={() => toState("join")} color="blue">Join</Button>
-      <Button on:click={() => (eventList.length = 0)} color="purple">Clear</Button>
+      <Button on:click={() => toState("create")} type="success">Create</Button>
+      <Button on:click={() => toState("join")} type="info">Join</Button>
+      <Button on:click={() => (eventList.length = 0)} type="accent">Clear</Button>
     </div>
   {/if}
 
@@ -404,8 +404,8 @@
     </div>
 
     <div class="flex items-center justify-center gap-4">
-      <Button on:click={() => toState("idle")} color="red">Back</Button>
-      <Button on:click={() => tryCreate() && toState("waiting")} color="blue">Create</Button>
+      <Button on:click={() => toState("idle")} type="danger">Back</Button>
+      <Button on:click={() => tryCreate() && toState("waiting")} type="info">Create</Button>
     </div>
   {/if}
 
@@ -425,8 +425,8 @@
       </span>
     </div>
     <div class="flex items-center justify-center gap-4 my-6">
-      <Button on:click={() => toState("idle")} color="red">Back</Button>
-      <Button on:click={() => tryJoin() && toState("waiting")} color="blue">Join</Button>
+      <Button on:click={() => toState("idle")} type="danger">Back</Button>
+      <Button on:click={() => tryJoin() && toState("waiting")} type="info">Join</Button>
     </div>
   {/if}
 
@@ -435,7 +435,7 @@
     <h2 class="text-gray-300 text-2xl text-center">Waiting...</h2>
 
     <div class="flex items-center justify-center gap-4">
-      <Button on:click={() => toState("idle")} color="red">Back</Button>
+      <Button on:click={() => toState("idle")} type="danger">Back</Button>
     </div>
   {/if}
 
@@ -444,7 +444,7 @@
     <div class="text-gray-300 text-xl flex items-center justify-center gap-2">
       Game ID:
       <span class="bg-violet-700 text-gray-300 px-2 py-1 rounded-md">{gameID}</span>
-      <Button color="none" class="h-8 w-8 p-0 me-3 rounded-full" on:click={toClipboard}>
+      <Button type="tertiary" size="sm" icon class="me-3" on:click={toClipboard}>
         <CopyIcon size="1.2rem" />
       </Button>
     </div>
@@ -467,15 +467,15 @@
         <Tooltip placement="top">Observers</Tooltip>
       </li>
 
-      <button class="bg-red-700 text-gray-300" on:click={exit}>
+      <Button type="danger" size="sm" icon on:click={exit}>
         <div class="flex items-center"><XIcon size="1.2rem" /></div>
         <Tooltip placement="top">Exit</Tooltip>
-      </button>
+      </Button>
     </ul>
 
     {#if isCreator}
       {#if !$game.started && $game.players.length > 1}
-        <Button on:click={start} color="green" class="my-8 mx-auto">Start!</Button>
+        <Button on:click={start} type="success" class="my-8 mx-auto">Start!</Button>
       {:else}
         <span class="flex justify-center text-yellow-300">Share the game ID with your friends!</span
         >
@@ -519,10 +519,10 @@
 
     <div class="flex items-center justify-center gap-4 w-full">
       {#if isCreator}
-        <Button on:click={rematch} color="purple" class="my-8">Rematch</Button>
+        <Button on:click={rematch} type="accent" class="my-8">Rematch</Button>
       {/if}
 
-      <Button on:click={exit} color="red" class="my-8">Exit</Button>
+      <Button on:click={exit} type="danger" class="my-8">Exit</Button>
     </div>
   {/if}
 
@@ -531,7 +531,7 @@
     <h2 class="text-gray-300 text-2xl text-center">Error</h2>
 
     <div class="flex items-center justify-center gap-4">
-      <Button on:click={() => toState("idle")} color="red">Back</Button>
+      <Button on:click={() => toState("idle")} type="danger">Back</Button>
     </div>
   {/if}
 

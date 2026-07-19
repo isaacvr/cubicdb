@@ -231,7 +231,7 @@
     </div>
 
     <div class="action mt-auto flex items-center gap-2">
-      <Button color="cancel" class="flex-1" onclick={() => (showOptions = false)}>
+      <Button type="secondary" class="flex-1" onclick={() => (showOptions = false)}>
         {$localLang.global.cancel}
       </Button>
       <Button class="flex-1" onclick={setPuzzle}>{$localLang.global.accept}</Button>

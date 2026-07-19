@@ -1,5 +1,6 @@
 <script lang="ts">
   import { tick } from "svelte";
+  import Button from "$lib/cubicdbKit/Button.svelte";
   import { logger } from "$lib/logger/singleton";
   import type { LogEntry } from "$lib/logger/types";
   import {
@@ -62,12 +63,12 @@
     if (!isOpen) return;
     const previousLastKey = logs.length > 0 ? logKey(logs.at(-1)!, logs.length - 1) : null;
     const nextLogs = logger.getLogsByCategory(filter);
-    const nextLastKey = nextLogs.length > 0
-      ? logKey(nextLogs.at(-1)!, nextLogs.length - 1)
-      : null;
+    const nextLastKey = nextLogs.length > 0 ? logKey(nextLogs.at(-1)!, nextLogs.length - 1) : null;
     const hasNewLogs = logs.length !== nextLogs.length || previousLastKey !== nextLastKey;
     logs = nextLogs;
-    expandedKeys = expandedKeys.filter(key => logs.some((log, index) => logKey(log, index) === key));
+    expandedKeys = expandedKeys.filter(key =>
+      logs.some((log, index) => logKey(log, index) === key)
+    );
     if (!autoScroll || !hasNewLogs) return;
     await tick();
     logList?.scrollTo({ top: logList.scrollHeight });
@@ -177,9 +178,11 @@
 </script>
 
 <div class="fixed bottom-4 right-4 z-50 pointer-events-auto">
-  <button
+  <Button
     onclick={togglePanel}
-    class="btn btn-sm btn-circle btn-outline bg-base-100"
+    type="secondary"
+    size="sm"
+    icon
     title="Event Debug Panel"
     aria-label="Toggle event debug panel"
   >
@@ -188,7 +191,7 @@
     {:else}
       <ChevronUp size={16} />
     {/if}
-  </button>
+  </Button>
 </div>
 
 {#if isOpen}
@@ -203,14 +206,16 @@
         <h3 class="font-semibold text-sm truncate">Event Console</h3>
         <span class="badge badge-sm">{logs.length}</span>
       </div>
-      <button
+      <Button
         onclick={() => (isOpen = false)}
-        class="btn btn-xs btn-ghost btn-circle"
+        type="tertiary"
+        size="xs"
+        icon
         title="Close event console"
         aria-label="Close event console"
       >
         <X size={14} />
-      </button>
+      </Button>
     </header>
 
     <div class="flex flex-wrap items-center gap-2 p-2 border-b border-base-200 bg-base-200/80">
@@ -234,26 +239,32 @@
     </div>
 
     <div class="flex flex-wrap gap-1 p-2 border-b border-base-200 bg-base-200/80">
-      <button onclick={expandAll} class="btn btn-xs btn-ghost gap-1" title="Expand all events">
+      <Button onclick={expandAll} type="tertiary" size="xs" class="gap-1" title="Expand all events">
         <Expand size={12} />
         Expand all
-      </button>
-      <button onclick={collapseAll} class="btn btn-xs btn-ghost gap-1" title="Collapse all events">
+      </Button>
+      <Button
+        onclick={collapseAll}
+        type="tertiary"
+        size="xs"
+        class="gap-1"
+        title="Collapse all events"
+      >
         <Minimize2 size={12} />
         Collapse all
-      </button>
+      </Button>
       <div class="grow"></div>
-      <button onclick={copyLogs} class="btn btn-xs btn-ghost gap-1" title="Copy logs">
+      <Button onclick={copyLogs} type="tertiary" size="xs" class="gap-1" title="Copy logs">
         <Copy size={12} />
         Copy
-      </button>
-      <button onclick={exportLogs} class="btn btn-xs btn-ghost" title="Export logs as JSON">
+      </Button>
+      <Button onclick={exportLogs} type="tertiary" size="xs" title="Export logs as JSON">
         Export
-      </button>
-      <button onclick={clearLogs} class="btn btn-xs btn-ghost gap-1" title="Clear logs">
+      </Button>
+      <Button onclick={clearLogs} type="tertiary" size="xs" class="gap-1" title="Clear logs">
         <Trash2 size={12} />
         Clear
-      </button>
+      </Button>
     </div>
 
     <div bind:this={logList} class="flex-1 overflow-y-auto bg-base-100 font-mono text-xs">
@@ -303,15 +314,17 @@
                   <dd class="min-w-0 pt-1">
                     <pre
                       class="max-h-80 overflow-auto rounded bg-neutral text-neutral-content
-                        border border-base-content/15 p-2 text-[0.7rem] leading-relaxed select-text"
-                    >{safeJson(log.data.payload)}</pre>
+                        border border-base-content/15 p-2 text-[0.7rem] leading-relaxed select-text">{safeJson(
+                        log.data.payload
+                      )}</pre>
                   </dd>
                 </dl>
               {:else if log.data}
                 <pre
                   class="max-h-80 overflow-auto rounded bg-neutral text-neutral-content
-                    border border-base-content/15 p-2 text-[0.7rem] leading-relaxed select-text"
-                >{safeJson(log.data)}</pre>
+                    border border-base-content/15 p-2 text-[0.7rem] leading-relaxed select-text">{safeJson(
+                    log.data
+                  )}</pre>
               {/if}
               {#if log.stackTrace}
                 <pre class="mt-2 overflow-auto text-error select-text">{log.stackTrace}</pre>
@@ -322,7 +335,9 @@
       {/if}
     </div>
 
-    <footer class="text-xs text-base-content/50 px-3 py-1.5 border-t border-base-200 bg-base-200/80">
+    <footer
+      class="text-xs text-base-content/50 px-3 py-1.5 border-t border-base-200 bg-base-200/80"
+    >
       Category: <strong>{filter || "all"}</strong> · Total: <strong>{logs.length}</strong>
     </footer>
   </aside>

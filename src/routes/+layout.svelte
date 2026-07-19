@@ -297,7 +297,7 @@
       </Popover> -->
       {/if}
 
-      <Button color="none" class="p-1">
+      <Button type="tertiary" size="sm" icon>
         <MonitorSmartphoneIcon />
       </Button>
 
@@ -314,7 +314,6 @@
 
           {#if device.type === "gan_icarry" && !device.isConnected}
             <button
-              class="btn btn-circle"
               onclick={() =>
                 reconnect(device as GANInput, device.macAddress).catch(() =>
                   console.log("Error al conectar")
@@ -342,21 +341,20 @@
         <div class="w-0 mx-2 rounded-full h-6 border border-primary"></div>
 
         <Button
-          class="bg-transparent text-base-content hover:bg-neutral border-none px-3"
+          type="tertiary"
+          size="sm"
+          icon
           aria-label={$localLang.global.minimize}
           onclick={minimize}
         >
           <MinusIcon size="1.2rem" />
         </Button>
 
-        <Button
-          class="bg-transparent text-base-content hover:bg-error border-none px-3"
-          onclick={close}
-        >
+        <Button type="danger" size="sm" icon onclick={close}>
           <XIcon size="1.2rem" />
         </Button>
       {:else if browser && !document.fullscreenElement}
-        <Button class="p-2" on:click={fullScreen}>
+        <Button type="tertiary" size="sm" icon on:click={fullScreen}>
           <ArrowUpRightDownLeftOutline size="sm" />
         </Button>
         <!-- <Tooltip>{$localLang.global.fullScreen}</Tooltip> -->

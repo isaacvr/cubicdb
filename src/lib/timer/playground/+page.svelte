@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Heading, Card } from "@lib/cubicdbKit";
+  import { Heading, Card, Button } from "@lib/cubicdbKit";
   import SolvePlayground from "./SolvePlayground.svelte";
   import ReconstructionPlayground from "./ReconstructionPlayground.svelte";
   import SessionPlayground from "./SessionPlayground.svelte";
@@ -9,9 +9,7 @@
 
 <div class="min-h-screen bg-base-100">
   <div class="navbar bg-base-200 shadow-lg">
-    <div class="flex-1">
-      CubicDB Playground
-    </div>
+    <div class="flex-1">CubicDB Playground</div>
     <div class="flex-none gap-2">
       <p class="text-sm opacity-75">Testing Ground for Timer Features</p>
     </div>
@@ -19,33 +17,33 @@
 
   <div class="p-6">
     <div class="tabs tabs-bordered mb-6">
-      <button 
-        class="tab {activePlayground === "overview" ? "tab-active" : ""}" 
-        onclick={() => activePlayground = "overview"}
+      <button
+        class="tab {activePlayground === 'overview' ? 'tab-active' : ''}"
+        onclick={() => (activePlayground = "overview")}
       >
         Overview
       </button>
-      <button 
-        class="tab {activePlayground === "solves" ? "tab-active" : ""}" 
-        onclick={() => activePlayground = "solves"}
+      <button
+        class="tab {activePlayground === 'solves' ? 'tab-active' : ''}"
+        onclick={() => (activePlayground = "solves")}
       >
         Solves
       </button>
-      <button 
-        class="tab {activePlayground === "reconstructions" ? "tab-active" : ""}" 
-        onclick={() => activePlayground = "reconstructions"}
+      <button
+        class="tab {activePlayground === 'reconstructions' ? 'tab-active' : ''}"
+        onclick={() => (activePlayground = "reconstructions")}
       >
         Reconstructions
       </button>
-      <button 
-        class="tab {activePlayground === "sessions" ? "tab-active" : ""}" 
-        onclick={() => activePlayground = "sessions"}
+      <button
+        class="tab {activePlayground === 'sessions' ? 'tab-active' : ''}"
+        onclick={() => (activePlayground = "sessions")}
       >
         Sessions
       </button>
-      <button 
-        class="tab {activePlayground === "docs" ? "tab-active" : ""}" 
-        onclick={() => activePlayground = "docs"}
+      <button
+        class="tab {activePlayground === 'docs' ? 'tab-active' : ''}"
+        onclick={() => (activePlayground = "docs")}
       >
         Use Cases Documentation
       </button>
@@ -57,8 +55,8 @@
           <Heading tag="h2">Timer Feature Playground</Heading>
 
           <p class="text-lg leading-relaxed">
-            Welcome to the Timer Playground! This is a controlled environment where you can test and verify
-            all the major features and use cases of the timer without affecting real data.
+            Welcome to the Timer Playground! This is a controlled environment where you can test and
+            verify all the major features and use cases of the timer without affecting real data.
           </p>
 
           <div class="divider">Available Test Areas</div>
@@ -79,14 +77,15 @@
                   </ul>
                 </div>
                 <div class="card-actions justify-end mt-4">
-                  <button
-                    class="btn btn-sm btn-outline btn-primary-content"
+                  <Button
+                    size="sm"
+                    type="secondary"
                     onclick={() => {
                       activePlayground = "solves";
                     }}
                   >
                     Open Playground
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -106,14 +105,15 @@
                   </ul>
                 </div>
                 <div class="card-actions justify-end mt-4">
-                  <button
-                    class="btn btn-sm btn-outline btn-success-content"
+                  <Button
+                    size="sm"
+                    type="secondary"
                     onclick={() => {
                       activePlayground = "reconstructions";
                     }}
                   >
                     Open Playground
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -133,14 +133,15 @@
                   </ul>
                 </div>
                 <div class="card-actions justify-end mt-4">
-                  <button
-                    class="btn btn-sm btn-outline btn-info-content"
+                  <Button
+                    size="sm"
+                    type="secondary"
                     onclick={() => {
                       activePlayground = "sessions";
                     }}
                   >
                     Open Playground
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -244,16 +245,16 @@
 
           <div class="alert">
             <p class="text-sm">
-              <strong>Event-Driven Design:</strong> All playgrounds use Svelte stores to simulate
-              the event-driven architecture of the main timer. When you trigger an action, the store
-              updates are automatically reflected in all dependent components.
+              <strong>Event-Driven Design:</strong> All playgrounds use Svelte stores to simulate the
+              event-driven architecture of the main timer. When you trigger an action, the store updates
+              are automatically reflected in all dependent components.
             </p>
           </div>
 
           <div class="alert">
             <p class="text-sm">
-              <strong>Derived State:</strong> Statistics and filtered lists are computed as derived
-              stores, ensuring they automatically update whenever the source data changes.
+              <strong>Derived State:</strong> Statistics and filtered lists are computed as derived stores,
+              ensuring they automatically update whenever the source data changes.
             </p>
           </div>
 

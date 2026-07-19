@@ -1,5 +1,6 @@
 <script lang="ts">
   import { createEventDispatcher, type Snippet } from "svelte";
+  import Button from "./Button.svelte";
 
   interface ModalProps {
     open?: boolean;
@@ -54,7 +55,7 @@
       {/if}
       {#if autoclose}
         <div class="modal-action">
-          <button class="btn" onclick={close}>Close</button>
+          <Button type="secondary" onclick={close}>Close</Button>
         </div>
       {/if}
     </div>

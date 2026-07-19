@@ -186,8 +186,10 @@
     <div class={"flex justify-evenly w-full items-end " + ($mState === "STOPPED" ? "" : "hidden")}>
       {#each solveControl as control}
         <Button
-          color="none"
-          class="flex my-3 mx-1 w-5 h-5 p-0 {control.highlight(penalty) ? 'text-red-500' : ''}"
+          type={control.highlight(penalty) ? "danger" : "tertiary"}
+          size="xs"
+          icon
+          class="my-3 mx-1"
           on:click={control.handler}
         >
           <svelte:component this={control.icon} width="100%" height="100%" />
@@ -197,20 +199,13 @@
 
     <div class="flex justify-evenly items-center mt-auto">
       {#if $mState != "DISCONNECTED" && $mState != "CONNECTING" && $mState != "CONNECTION_ERROR"}
-        <Button
-          color="none"
-          class="rounded-full border border-red-500 ring-red-800 p-3"
-          on:click={onOff}
-        >
+        <Button type="danger" size="md" icon on:click={onOff}>
           <PowerIcon size="1.4rem" />
         </Button>
       {/if}
-      <Button color="none" class="rounded-full border border-primary-500 p-3" on:click={reset}>
+      <Button type="tertiary" size="md" icon on:click={reset}>
         <RotateCcwIcon size="1.4rem" />
       </Button>
-      <!-- <Button color="none" class="rounded-full border border-purple-500 ring-purple-800 p-3" on:click={ reset }>
-        <SettingsIcon size="1.4rem"/>
-      </Button> -->
     </div>
   </div>
 
@@ -235,7 +230,7 @@
   <a href={url} target="_blank" class="flex bg-gray-900 w-max mx-auto p-2 rounded-md">{url}</a>
 
   <div class="flex items-center justify-center gap-2 w-full">
-    <Button color="alternative">{$localLang.global.cancel}</Button>
-    <Button color="primary">{$localLang.global.accept}</Button>
+    <Button type="secondary">{$localLang.global.cancel}</Button>
+    <Button type="primary">{$localLang.global.accept}</Button>
   </div>
 </Modal>

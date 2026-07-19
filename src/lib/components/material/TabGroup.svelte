@@ -57,12 +57,9 @@
   <footer class={"flex mt-auto border-t border-t-gray-700 gap-1 px-2 py-1 " + footerClass}>
     {#each tabs as tab}
       <Button
-        color="none"
+        type={tab.index === $selectedTab ? "primary" : "secondary"}
         aria-label={tab.ariaLabel}
-        class="rounded-lg w-full
-        {tab.index === $selectedTab
-          ? 'bg-primary-600 tx-text hover:bg-primary-500 z-10 '
-          : 'bg-backgroundLeve1 hover:bg-backgroundLeve2 tx-text'}"
+        class="w-full {tab.index === $selectedTab ? 'z-10' : ''}"
         on:click={() => selectTab(tab)}
       >
         {#if tab.icon}

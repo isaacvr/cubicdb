@@ -682,7 +682,7 @@
   <div class="mt-2 flex flex-wrap justify-evenly gap-1">
     <Button
       aria-label={$localLang.global.delete}
-      color="error"
+      type="danger"
       onclick={() => {
         _delete([sSolve]);
         // modal.close();
@@ -694,7 +694,7 @@
 
     <Button
       aria-label={$localLang.global.cancel}
-      color="cancel"
+      type="secondary"
       onclick={() => {
         /*modal.close()*/
       }}
@@ -718,7 +718,8 @@
       <Button
         aria-label={$localLang.global.save}
         onclick={checkReconstruction}
-        class="text-green-400 hover:bg-green-900 hover:text-gray-200 mr-2 text-sm px-2"
+        type="success"
+        class="mr-2 text-sm"
       >
         {$localLang.global.reconstruction}
       </Button>
@@ -750,7 +751,7 @@
   <h1 class="mb-4 text-lg">{$localLang.TIMER.removeAllSolves}</h1>
   <div class="flex justify-center gap-2">
     <Button
-      color="cancel"
+      type="secondary"
       aria-label={$localLang.global.cancel}
       onclick={() => deleteAllModal.close()}
     >
@@ -758,7 +759,7 @@
     </Button>
 
     <Button
-      color="error"
+      type="danger"
       aria-label={$localLang.global.delete}
       onclick={() => deleteAllModal.close(true)}
     >

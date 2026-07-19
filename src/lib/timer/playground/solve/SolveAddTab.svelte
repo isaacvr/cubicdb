@@ -14,10 +14,14 @@
 
   function getPenaltyLabel(penalty: Penalty): string {
     switch (penalty) {
-      case Penalty.NONE: return "Clean";
-      case Penalty.P2: return "+2";
-      case Penalty.DNF: return "DNF";
-      default: return "Unknown";
+      case Penalty.NONE:
+        return "Clean";
+      case Penalty.P2:
+        return "+2";
+      case Penalty.DNF:
+        return "DNF";
+      default:
+        return "Unknown";
     }
   }
 
@@ -47,28 +51,40 @@
 
 <Card title="Add New Solve">
   <div class="space-y-4">
-    <Input
-      placeholder="Time in milliseconds (e.g., 5000)"
-      bind:value={newTime}
-      type="number"
-    />
-    <Input
-      placeholder="Comments..."
-      bind:value={newComments}
-    />
+    <Input placeholder="Time in milliseconds (e.g., 5000)" bind:value={newTime} type="number" />
+    <Input placeholder="Comments..." bind:value={newComments} />
     <div class="flex gap-2">
-      <button class="btn btn-primary" onclick={() => { newPenalty = Penalty.NONE; }}>
+      <Button
+        onclick={() => {
+          newPenalty = Penalty.NONE;
+        }}
+      >
         No Penalty
-      </button>
-      <button class="btn btn-warning" onclick={() => { newPenalty = Penalty.P2; }}>
+      </Button>
+      <Button
+        type="warning"
+        onclick={() => {
+          newPenalty = Penalty.P2;
+        }}
+      >
         +2
-      </button>
-      <button class="btn btn-error" onclick={() => { newPenalty = Penalty.DNF; }}>
+      </Button>
+      <Button
+        type="danger"
+        onclick={() => {
+          newPenalty = Penalty.DNF;
+        }}
+      >
         DNF
-      </button>
-      <button class="btn btn-error" onclick={() => { newPenalty = Penalty.DNS; }}>
+      </Button>
+      <Button
+        type="danger"
+        onclick={() => {
+          newPenalty = Penalty.DNS;
+        }}
+      >
         DNS
-      </button>
+      </Button>
     </div>
     <p class="text-sm text-gray-500">
       Current penalty: <strong>{getPenaltyLabel(newPenalty)}</strong>

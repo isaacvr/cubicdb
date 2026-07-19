@@ -1,5 +1,6 @@
 // DaisyUI-based components exported from cubicdbKit
 export { default as Button } from "./Button.svelte";
+export { default as FileButton } from "./FileButton.svelte";
 export { default as Accordion } from "./Accordion.svelte";
 export { default as Avatar } from "./Avatar.svelte";
 export { default as Badge } from "./Badge.svelte";

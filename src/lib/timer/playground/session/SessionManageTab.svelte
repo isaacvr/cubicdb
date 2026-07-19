@@ -12,15 +12,8 @@
     onDuplicate: (session: SessionWithStats) => void;
   }
 
-  let {
-    sessions,
-    activeSessionId,
-    onAdd,
-    onDelete,
-    onSelect,
-    onRename,
-    onDuplicate,
-  }: Props = $props();
+  let { sessions, activeSessionId, onAdd, onDelete, onSelect, onRename, onDuplicate }: Props =
+    $props();
 
   let newSessionName = $state("");
   let editingId: string | null = $state(null);
@@ -62,13 +55,17 @@
 
     <div class="space-y-2">
       {#each sessions as session (session._id)}
-        <div class="card {activeSessionId === session._id ? 'bg-primary text-primary-content' : 'bg-base-200'}">
+        <div
+          class="card {activeSessionId === session._id
+            ? 'bg-primary text-primary-content'
+            : 'bg-base-200'}"
+        >
           <div class="card-body p-4">
             {#if editingId === session._id}
               <div class="flex gap-2">
                 <Input bind:value={editingName} class="flex-1" />
-                <Button onclick={saveEdit} class="btn-sm">Save</Button>
-                <Button onclick={cancelEdit} class="btn-sm btn-ghost">Cancel</Button>
+                <Button onclick={saveEdit} size="sm">Save</Button>
+                <Button onclick={cancelEdit} size="sm" type="tertiary">Cancel</Button>
               </div>
             {:else}
               <div class="flex justify-between items-center">
@@ -78,16 +75,24 @@
                     {session.solveCount} solves - Created {session.createdAt.toLocaleDateString()}
                   </p>
                   {#if session.lastSolve}
-                    <p class="text-sm opacity-75">Last solve: {session.lastSolve.toLocaleTimeString()}</p>
+                    <p class="text-sm opacity-75">
+                      Last solve: {session.lastSolve.toLocaleTimeString()}
+                    </p>
                   {/if}
                 </div>
                 <div class="flex gap-1 flex-wrap justify-end">
                   {#if activeSessionId !== session._id}
-                    <Button onclick={() => onSelect(session._id)} class="btn-sm btn-outline">Select</Button>
+                    <Button onclick={() => onSelect(session._id)} size="sm" type="secondary">
+                      Select
+                    </Button>
                   {/if}
-                  <Button onclick={() => startEdit(session)} class="btn-sm btn-info">Rename</Button>
-                  <Button onclick={() => onDuplicate(session)} class="btn-sm btn-warning">Duplicate</Button>
-                  <Button onclick={() => onDelete(session._id)} class="btn-sm btn-error">Delete</Button>
+                  <Button onclick={() => startEdit(session)} size="sm" type="info">Rename</Button>
+                  <Button onclick={() => onDuplicate(session)} size="sm" type="warning">
+                    Duplicate
+                  </Button>
+                  <Button onclick={() => onDelete(session._id)} size="sm" type="danger">
+                    Delete
+                  </Button>
                 </div>
               </div>
             {/if}

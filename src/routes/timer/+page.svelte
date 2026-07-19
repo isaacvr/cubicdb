@@ -490,10 +490,10 @@
   </div>
 
   <div class="flex justify-center gap-2 mx-auto pt-4">
-    <Button color="cancel" onclick={() => (showAddSessionDialog = false)}>
+    <Button type="secondary" onclick={() => (showAddSessionDialog = false)}>
       {$localLang.global.cancel}
     </Button>
-    <Button color="primary" onclick={newSession}>
+    <Button type="primary" onclick={newSession}>
       {$localLang.global.save}
     </Button>
   </div>

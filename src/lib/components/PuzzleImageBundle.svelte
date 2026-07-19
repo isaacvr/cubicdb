@@ -54,10 +54,12 @@
 {/if}
 
 <Button
-  color="none"
+  type="tertiary"
+  size="sm"
+  icon
   onclick={ev => step(ev, -1)}
   disabled={selectedImg === 0}
-  class={preview.length < 2 ? "hidden" : "rounded-full p-2 mt-2"}
+  class={preview.length < 2 ? "hidden" : "mt-2"}
 >
   <ChevronLeftIcon class="pointer-events-none" />
 </Button>
@@ -75,10 +77,12 @@
 />
 
 <Button
-  color="none"
+  type="tertiary"
+  size="sm"
+  icon
   onclick={ev => step(ev, 1)}
   disabled={selectedImg + 1 === preview.length}
-  class={preview.length < 2 ? "hidden" : "rounded-full p-2 mt-2"}
+  class={preview.length < 2 ? "hidden" : "mt-2"}
 >
   <ChevronRightIcon class="pointer-events-none" />
 </Button>

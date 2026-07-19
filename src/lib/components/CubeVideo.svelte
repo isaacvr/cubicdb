@@ -38,9 +38,11 @@
     <!-- Controls -->
     <div class="flex absolute bottom-0 justify-end w-full">
       <Button
-        color="none"
+        type="tertiary"
+        size="sm"
+        icon
         on:click={() => (playing ? video?.pause() : video?.play())}
-        class="w-[2rem] h-full rounded-none shadow-none hover:bg-green-600 !p-1 mr-1"
+        class="mr-1"
       >
         {#if playing}
           <PauseIcon size="1.2rem" />

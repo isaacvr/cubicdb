@@ -440,11 +440,7 @@
       </tbody>
     </table>
 
-    <Button
-      color="none"
-      class="bg-orange-400 hover:bg-orange-300 text-black mt-4"
-      on:click={saveConfig}
-    >
+    <Button type="warning" class="mt-4" on:click={saveConfig}>
       {$localLang.global.save}
     </Button>
   {:else}

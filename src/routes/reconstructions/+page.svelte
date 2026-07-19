@@ -639,7 +639,7 @@
     </div>
 
     <div class="action mt-auto flex items-center gap-2">
-      <Button class="flex-1 bg-primary" onclick={() => (showOptions = false)}>
+      <Button class="flex-1" onclick={() => (showOptions = false)}>
         {$localLang.global.accept}
       </Button>
     </div>

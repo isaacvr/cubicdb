@@ -50,6 +50,14 @@
   --cdb-color-primary-soft: rgba(58, 189, 248, 0.05);
   --cdb-color-primary-disabled: #174c63;
   --cdb-color-ready: #2ed4bf;
+  --cdb-color-success: #2ed4bf;
+  --cdb-color-success-content: #030406;
+  --cdb-color-info: #38bdf8;
+  --cdb-color-info-content: #030406;
+  --cdb-color-accent: #a78bfa;
+  --cdb-color-accent-content: #030406;
+  --cdb-color-warning: #facc15;
+  --cdb-color-warning-content: #030406;
   --cdb-color-prevention: #fb7085;
   --cdb-color-border-subtle: rgba(58, 189, 248, 0.05);
   --cdb-color-border-visible: rgba(58, 189, 248, 0.2);

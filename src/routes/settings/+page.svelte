@@ -29,7 +29,14 @@
   import { browser } from "$app/environment";
   import { dataService } from "$lib/data-services/data.service";
   import type { Language } from "$lib/interfaces/language.types";
-  import { AirplayIcon, CaseSensitiveIcon, DatabaseIcon, DownloadIcon, EraserIcon, MonitorDownIcon } from "lucide-svelte";
+  import {
+    AirplayIcon,
+    CaseSensitiveIcon,
+    DatabaseIcon,
+    DownloadIcon,
+    EraserIcon,
+    MonitorDownIcon,
+  } from "lucide-svelte";
 
   const notService = NotificationService.getInstance();
 
@@ -410,7 +417,7 @@
         <div class="flex flex-col items-center justify-center gap-4">
           <div class="flex justify-center gap-2">
             {#each displays as display}
-              <Button color="alternative" class="gap-2" on:click={() => useDisplay(display.id)}>
+              <Button type="secondary" class="gap-2" on:click={() => useDisplay(display.id)}>
                 <AirplayIcon size="1.2rem" />
                 {display.label}
               </Button>
@@ -500,7 +507,7 @@
               <TableBodyCell>{byteToString(st.length)}</TableBodyCell>
               <TableBodyCell>
                 {#if st.clean}
-                  <Button on:click={() => preClearCache(st.db, st.name)} color="alternative" shadow>
+                  <Button on:click={() => preClearCache(st.db, st.name)} type="secondary" shadow>
                     <EraserIcon size="1.2rem" />
                   </Button>
 
@@ -518,8 +525,8 @@
 
   <!-- Actions -->
   <div class="actions flex gap-4 items-center justify-center mt-8">
-    <Button color="green" on:click={save}>{$localLang.global.save}</Button>
-    <Button color="purple" on:click={reset}>{$localLang.global.reset}</Button>
+    <Button type="success" on:click={save}>{$localLang.global.save}</Button>
+    <Button type="accent" on:click={reset}>{$localLang.global.reset}</Button>
   </div>
 </Card>
 
@@ -529,14 +536,14 @@
   </h1>
   <div class="flex justify-evenly">
     <Button
-      color="alternative"
+      type="secondary"
       aria-label={$localLang.global.cancel}
       on:click={() => (showDelete = false)}
     >
       {$localLang.global.cancel}
     </Button>
 
-    <Button color="red" aria-label={$localLang.global.delete} on:click={() => clearCache(sDb)}>
+    <Button type="danger" aria-label={$localLang.global.delete} on:click={() => clearCache(sDb)}>
       {$localLang.global.delete}
     </Button>
   </div>

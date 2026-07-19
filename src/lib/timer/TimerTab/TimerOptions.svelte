@@ -117,8 +117,6 @@
   let showToolsMenu = $state(false);
 
   const DD_CLASS = "font-medium p-2 text-sm hover:bg-primary flex items-center";
-  const TIMER_OPTION_BUTTON_COLOR = "ghost";
-  const TIMER_OPTION_BUTTON_CLASS = "cdb-action-icon-button size-8 min-h-8 p-0";
 
   const tools: ToolItem[] = [
     {
@@ -394,7 +392,7 @@
 
 {#if options.seed}
   <Tooltip tooltipText="Seed" placement="bottom-end" class="z-10">
-    <Button color="neutral" class="group" aria-label="Seed" onclick={prepareShowSeedModal}>
+    <Button type="secondary" class="group" aria-label="Seed" onclick={prepareShowSeedModal}>
       <BeanIcon class="group-hover:text-green-500" size={iconSize} />
     </Button>
   </Tooltip>
@@ -403,7 +401,7 @@
 {#if options.tools}
   <Tooltip tooltipText={$localLang.HOME.tools} placement="bottom-end" class="z-10">
     <Button
-      color="neutral"
+      type="secondary"
       class="group"
       id="tools"
       aria-label={$localLang.HOME.tools}
@@ -436,7 +434,7 @@
 
 {#if options.hints}
   <Tooltip tooltipText="Hints" placement="bottom-end" class="z-10">
-    <Button color="neutral" class="group">
+    <Button type="secondary" class="group">
       <LightbulbIcon class="group-hover:text-warning" size={iconSize} />
     </Button>
   </Tooltip>
@@ -449,7 +447,7 @@
     class="z-30"
     keyBindings={["control", "comma"]}
   >
-    <Button color="neutral" class="group" onclick={handleSettingsDialog}>
+    <Button type="secondary" class="group" onclick={handleSettingsDialog}>
       <Settings2Icon class="group-hover:text-warning" size={iconSize} />
     </Button>
   </Tooltip>
@@ -458,9 +456,9 @@
 {#if options.modeSettings && $session.settings.sessionType === "mixed"}
   <Tooltip tooltipText={$localLang.global.settings} placement="bottom-end" class="z-30">
     <Button
-      color={TIMER_OPTION_BUTTON_COLOR}
-      class={TIMER_OPTION_BUTTON_CLASS}
-      style="--dash: 18;"
+      type="tertiary"
+      size="sm"
+      icon
       onclick={() => {
         showMixedSettingsDialog = true;
       }}
@@ -478,9 +476,9 @@
     keyBindings={["control", "s"]}
   >
     <Button
-      color={TIMER_OPTION_BUTTON_COLOR}
-      class={TIMER_OPTION_BUTTON_CLASS}
-      style="--dash: 18;"
+      type="tertiary"
+      size="sm"
+      icon
       onclick={(event: MouseEvent) => initScrambler(undefined, undefined, undefined, event)}
     >
       <RefreshCwIcon size={iconSize} />
@@ -491,9 +489,9 @@
 {#if options.copyScramble}
   <Tooltip tooltipText={$localLang.TIMER.copyScramble} placement="bottom-end" class="z-30">
     <Button
-      color={TIMER_OPTION_BUTTON_COLOR}
-      class={TIMER_OPTION_BUTTON_CLASS}
-      style="--dash: 18;"
+      type="tertiary"
+      size="sm"
+      icon
       onclick={() => {
         copyToClipboard($scramble).then(() => {
           notification.addNotification({
@@ -517,9 +515,9 @@
     keyBindings={["control", "e"]}
   >
     <Button
-      color={TIMER_OPTION_BUTTON_COLOR}
-      class={TIMER_OPTION_BUTTON_CLASS}
-      style="--dash: 18;"
+      type="tertiary"
+      size="sm"
+      icon
       onclick={() =>
         openDialog(
           "edit-scramble",
@@ -540,7 +538,7 @@
     class="z-30"
     keyBindings={["control", "o"]}
   >
-    <Button color={TIMER_OPTION_BUTTON_COLOR} class={TIMER_OPTION_BUTTON_CLASS} style="--dash: 23;">
+    <Button type="tertiary" size="sm" icon>
       <HistoryIcon size={iconSize} />
     </Button>
   </Tooltip>
@@ -580,8 +578,9 @@
       {#each $solves.slice(0, 500) as s (s._id)}
         <Button
           aria-label={$localLang.TIMER.scramble}
+          type="tertiary"
           class="
-          col-span-3 cursor-pointer hover:text-blue-400 my-2 justify-start p-0 rounded-none
+          col-span-3 cursor-pointer my-2 justify-start
           text-ellipsis overflow-hidden whitespace-nowrap
         "
           onclick={(event: MouseEvent) => select(s, event)}>{s.scramble}</Button
@@ -627,28 +626,6 @@
         {/each}
       </div>
     {/if}
-
-    <!-- External Timer -->
-    <!-- {#if modalData.settings.input === "ExternalTimer"}
-      <section class="bg-white/10 p-2 shadow-md rounded-md">
-        <ul class="mt-4">
-          {#each $externalTimers as { id, name } (id)}
-            <li
-              class="flex items-center justify-between mt-2 pl-4 bg-white/10 rounded-md text-white"
-            >
-              {name}
-              <Button
-                color={id === $device.id ? "red" : "green"}
-                loading={isConnecting}
-                onclick={() => selectExternalTimer(id)}
-              >
-                {id === $device.id ? $localLang.TIMER.disconnect : $localLang.TIMER.connect}
-              </Button>
-            </li>
-          {/each}
-        </ul>
-      </section>
-    {/if} -->
 
     <!-- Stackmat selector -->
     {#if selectedDevice && selectedDevice.type === "stackmat"}
@@ -759,7 +736,7 @@
   {/if}
 
   <div class="flex w-full justify-center gap-2">
-    <Button color="cancel" aria-label={$localLang.global.cancel} onclick={() => (show = false)}>
+    <Button type="secondary" aria-label={$localLang.global.cancel} onclick={() => (show = false)}>
       {$localLang.global.cancel}
     </Button>
 
@@ -801,9 +778,8 @@
 
 {#snippet renderCase(cs: Case)}
   <Button
-    color="neutral"
-    class={"shaded-card aspect-square " +
-      ($selectedCases[cs.pos] ? "border border-primary/80!" : "")}
+    type={$selectedCases[cs.pos] ? "primary" : "secondary"}
+    class="shaded-card aspect-square"
     contentClass="grid"
     onclick={() => {
       $selectedCases[cs.pos] = !$selectedCases[cs.pos];
@@ -854,10 +830,10 @@
 
   {#if cases.cases.length > 0}
     <div class="actions flex gap-2 flex-wrap justify-center items-center my-2">
-      <Button color="accept" onclick={() => ($selectedCases = $selectedCases.map(() => true))}>
+      <Button type="secondary" onclick={() => ($selectedCases = $selectedCases.map(() => true))}>
         {$localLang.IMPORT_EXPORT.selectAll}
       </Button>
-      <Button color="urgent" onclick={() => ($selectedCases = $selectedCases.map(() => false))}>
+      <Button type="warning" onclick={() => ($selectedCases = $selectedCases.map(() => false))}>
         {$localLang.IMPORT_EXPORT.selectNone}
       </Button>
 
@@ -876,7 +852,7 @@
               {$localLang.TIMER.caseName(group.name)}
 
               <Button
-                color="none"
+                type="tertiary"
                 class="text-success ml-4 text-xs"
                 onclick={() => {
                   group.cases.forEach(cs => ($selectedCases[cs.pos] = true));
@@ -886,7 +862,7 @@
               </Button>
 
               <Button
-                color="none"
+                type="tertiary"
                 class="text-error text-xs"
                 onclick={() => {
                   group.cases.forEach(cs => ($selectedCases[cs.pos] = false));

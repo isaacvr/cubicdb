@@ -1,14 +1,14 @@
 <script lang="ts">
   import Modal from "@components/Modal.svelte";
-  import Button from "@material/Button.svelte";
+  import { Button, FileButton } from "$lib/cubicdbKit";
   import Input from "@material/Input.svelte";
   import { pixelate, type RGBAColor } from "@helpers/imageProcessing";
   import { generatePdf } from "@helpers/pdfComposer";
-  
+
   import { localLang } from "@stores/language.service";
   import Cropper from "svelte-easy-crop";
   import { DownloadIcon, EyeIcon } from "lucide-svelte";
-  
+
   let imgStr = "";
   let imgElement: HTMLImageElement;
   let imgW = 25;
@@ -197,16 +197,12 @@
   {/if}
 
   <div class="flex flex-wrap gap-2">
-    <Button class="bg-purple-700 text-gray-300 mt-8" file="image" on:files={imageHandler}
-      >{$localLang.TOOLS.selectImage}</Button
-    >
+    <FileButton type="accent" class="mt-8" accept="image/*" on:files={imageHandler}>
+      {$localLang.TOOLS.selectImage}
+    </FileButton>
 
     {#if imgStr}
-      <Button
-        class="bg-green-700 text-gray-300 mt-8"
-        loading={generatingMosaic}
-        on:click={generateMosaic}
-      >
+      <Button type="success" class="mt-8" loading={generatingMosaic} on:click={generateMosaic}>
         {$localLang.TOOLS.generate}
       </Button>
     {/if}
@@ -217,10 +213,10 @@
       <li class="grid place-items-center w-full relative">
         <img class="w-full" src={res.img} alt="" />
         <div class="absolute w-full h-full inset-0 flex items-center justify-center gap-2">
-          <Button class="text-current hover:bg-purple-700" on:click={() => downloadPDF(res)}>
+          <Button type="accent" icon on:click={() => downloadPDF(res)}>
             <DownloadIcon size="2rem" />
           </Button>
-          <Button class="text-current hover:bg-purple-700" on:click={() => showPreview(res)}>
+          <Button type="accent" icon on:click={() => showPreview(res)}>
             <EyeIcon size="2rem" />
           </Button>
         </div>

@@ -10,6 +10,7 @@
   import { scrambleToPuzzle } from "@helpers/scrambleToPuzzle";
   import { modeToName } from "@helpers/strings";
   import CubeCategory from "@components/wca/CubeCategory.svelte";
+  import Button from "$lib/cubicdbKit/Button.svelte";
   import { getHTMLTemplate } from "./getHTMLTemplate";
   import { localLang } from "@stores/language.service";
   import { TrashIcon } from "lucide-svelte";
@@ -260,8 +261,7 @@
       hasIcon={v => v[1]}
     />
 
-    <button
-      class="btn btn-primary py-2"
+    <Button
       onclick={() =>
         (categories = [
           ...categories,
@@ -273,7 +273,7 @@
             format: getModeFormat(mode[1]),
             scrambles: mode[1] === "r3ni" ? 10 : 1,
           },
-        ])}>{$localLang.CONTEST.addCategory}</button
+        ])}>{$localLang.CONTEST.addCategory}</Button
     >
   </div>
 
@@ -334,20 +334,22 @@
           </tbody>
         </table>
 
-        <button
-          color="red"
-          class="btn btn-error !p-1 w-7 h-7 min-h-0 aspect-square absolute -top-3 -right-2"
+        <Button
+          type="danger"
+          size="sm"
+          icon
+          class="absolute -top-3 -right-2"
           onclick={() => {
             categories = categories.filter((_, p) => p != pos);
-          }}><TrashIcon size="1rem" /></button
+          }}><TrashIcon size="1rem" /></Button
         >
       </li>
     {/each}
   </ul>
 
   {#if categories.length > 0 && contestName.trim()}
-    <button class="btn btn-primary" onclick={generateScrambles}>
+    <Button onclick={generateScrambles}>
       {$localLang.global.generate}
-    </button>
+    </Button>
   {/if}
 </div>
