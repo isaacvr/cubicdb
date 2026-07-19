@@ -13,6 +13,8 @@ describe('modal behavior contracts', () => {
     expect(modal).toContain('size?: "sm" | "md" | "lg" | "xl" | "2xl"');
     expect(modal).toContain('title?: string');
     expect(modal).toContain('showCloseButton?: boolean');
+    expect(modal).toContain('closeOnClickOutside = $bindable(false)');
+    expect(modal).toContain('showCloseButton ?? (cancel && Boolean(title))');
     expect(modal).toContain('z-[1000]');
     expect(modal).toContain('max-w-[calc(100vw-1rem)]');
     expect(modal).toContain('max-h-[calc(100svh-1rem)]');
@@ -20,6 +22,7 @@ describe('modal behavior contracts', () => {
     expect(modal).toContain('{#if title}');
     expect(modal).toContain('{#if shouldShowCloseButton}');
     expect(modal).toContain('variant === "fullscreen" ? "p-0" : "p-6"');
+    expect(modal).not.toContain('if (!cancel) return;');
     expect(modal).not.toContain('fixed right-3 top-3');
     expect(modal).not.toContain('modal-surface');
     expect(modal).toContain('dialog[data-type="modal"][open]');

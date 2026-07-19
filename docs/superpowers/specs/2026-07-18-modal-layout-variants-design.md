@@ -9,7 +9,7 @@ Standardize the shared application modal so it supports both fullscreen workflow
 - Fullscreen modals keep the current blurred backdrop and fit the screen.
 - Fullscreen modal content reserves a top section only when a title or close button exists.
 - Limited-width modals keep the same blurred backdrop and grow only up to an explicit size.
-- Clicking outside the content may close the modal when `closeOnClickOutside` is enabled.
+- Clicking outside the content may close the modal only when `closeOnClickOutside` is enabled. The default is `false`.
 - Clicking inside modal content must not close the modal.
 - If there is no title and no close button, the modal must not reserve top-bar space.
 - The close button belongs in the top bar area, not floating over the body content.
@@ -25,7 +25,7 @@ New props:
 - `title?: string` renders the top-bar title.
 - `showCloseButton?: boolean` explicitly controls the top-bar close button.
 
-The legacy `cancel` prop remains supported as the default close-button flag. In other words, existing callers with `cancel={false}` still hide the close button.
+The legacy `cancel` prop remains supported as a close-button permission flag. If `showCloseButton` is omitted, the close button appears only when the modal has a title and `cancel` is true. Existing callers with `cancel={false}` still hide the default close button.
 
 ## Layout
 
@@ -36,6 +36,14 @@ Inside the shell:
 1. `.modal-box` owns the modal dimensions.
 2. A top bar renders only when `title` or the close button is visible.
 3. The body fills the remaining space and scrolls if its content exceeds available height.
+
+Default close behavior:
+
+- `closeOnClickOutside = false`.
+- `closeOnEscape = true`.
+- `showCloseButton` defaults to `true` only for titled modals.
+- `showCloseButton={false}` is allowed when a caller intentionally uses outside click, explicit action buttons, or a content-only modal.
+- Clicking inside modal content never closes the modal.
 
 Fullscreen variant:
 

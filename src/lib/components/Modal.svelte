@@ -32,7 +32,7 @@
   let {
     show = $bindable(false),
     cancel = $bindable(true),
-    closeOnClickOutside = $bindable(true),
+    closeOnClickOutside = $bindable(false),
     closeOnEscape = $bindable(true),
     variant = "limited",
     size = "lg",
@@ -45,7 +45,7 @@
   }: ModalProps = $props();
 
   let modal: HTMLDialogElement;
-  let shouldShowCloseButton = $derived(showCloseButton ?? cancel);
+  let shouldShowCloseButton = $derived(showCloseButton ?? (cancel && Boolean(title)));
   let hasHeader = $derived(Boolean(title) || shouldShowCloseButton);
 
   function modalBoxClass(variant: ModalVariant, size: ModalSize, customClass: string) {
@@ -84,7 +84,6 @@
   }
 
   function handleClick(ev: MouseEvent) {
-    if (!cancel) return;
     if (!modal) return;
     if (ev.target != ev.currentTarget) return;
 
