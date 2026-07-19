@@ -82,6 +82,7 @@
   const groupStore = timerController.group;
   const modeStore = timerController.mode;
   const probabilityStore = timerController.prob;
+  const tabStore = timerController.tab;
   const timerApplication = getTimerApplicationContext();
 
   function createSolveDraft(
@@ -450,7 +451,7 @@
   <div class="actions flex items-center justify-between gap-2">
     <SegmentedTabs
       class="mr-auto"
-      selected={String(get(timerController.tab))}
+      selected={String($tabStore)}
       items={[
         { id: "0", label: $localLang.TIMER.timerTab, icon: TimerIcon },
         { id: "1", label: $localLang.TIMER.historyTab, icon: LogsIcon },
@@ -482,7 +483,7 @@
 <style>
   .timer-layout {
     grid-template-rows: 2.5rem minmax(0, 1fr);
-    padding: 7px;
+    padding: 0.4375rem;
   }
 
   .content {

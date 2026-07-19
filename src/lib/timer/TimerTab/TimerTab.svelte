@@ -354,7 +354,7 @@
     contentClass="grid min-h-0"
   >
     <div
-      class="cdb-timer-display flex flex-col justify-center gap-2 items-center w-full h-full active:bg-transparent"
+      class="flex flex-col justify-center gap-2 items-center w-full h-full active:bg-transparent"
       role="timer"
     >
       {#if $device.type === "manual_entry"}
@@ -466,7 +466,7 @@
     gap: 0.5rem;
   }
 
-  @media (max-width: 900px) {
+  @media (max-width: 56.25rem) {
     section {
       grid-template-areas:
         "scramble"

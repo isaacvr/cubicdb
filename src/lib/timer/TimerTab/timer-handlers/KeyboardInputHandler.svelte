@@ -150,22 +150,15 @@
 </script>
 
 {#snippet displayTimer(tm: string[])}
-  <span class="select-none">{tm[0]}</span>
+  <span class="cdb-timer-display-main select-none">{tm[0]}</span>
   {#if tm[1]}
-    <span
-      class="text-base-content/70 bg-primary bg-clip-text
-        opacity-70 text-8xl mt-auto select-none">.{tm[1]}</span
-    >
+    <span class="cdb-timer-display-fraction mt-auto select-none">.{tm[1]}</span>
   {/if}
 {/snippet}
 
 <div class={twMerge("flex flex-col items-center transition-all duration-200 mx-auto", _cl)}>
   {#if $timerState === TimerState.RUNNING || $timerState === TimerState.PAUSE}
-    <span
-      class="timer flex tx-text max-sm:text-7xl max-sm:leading-32"
-      in:scale
-      class:ready={$ready}
-    >
+    <span class="timer cdb-timer-display tx-text" in:scale class:ready={$ready}>
       {#if $session.settings.showElapsedTime || $device.type === "gan_icarry"}
         {@render displayTimer(timer($time, $decimals, false).split("."))}
       {:else}
@@ -174,14 +167,14 @@
     </span>
   {:else if $device.type === TIMER_DEVICE_TYPES.KEYBOARD}
     <span
-      class="timer flex items-end tx-text max-sm:text-7xl max-sm:leading-32"
+      class="timer cdb-timer-display tx-text"
       class:prevention={$timerState === TimerState.PREVENTION}
       class:ready={$ready}
       class:text-error={$timerState === TimerState.PREVENTION && !$ready}
       class:text-success={$ready}
     >
       {#if $timerState === TimerState.INSPECTION && $time <= 0}
-        <span class="select-none text-warning">+2</span>
+        <span class="cdb-timer-display-main select-none text-warning">+2</span>
       {:else}
         {@render displayTimer(timer($time, $decimals, false).split("."))}
       {/if}
