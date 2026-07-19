@@ -189,9 +189,10 @@
     MENU,
     page,
     {
-      loadSolves: () => eventTimerRuntime.requestSolvesList({
-        sessionId: page.params.sessionId,
-      }),
+      loadSolves: () =>
+        eventTimerRuntime.requestSolvesList({
+          sessionId: page.params.sessionId,
+        }),
     }
   );
 
@@ -310,11 +311,8 @@
           selectedProbability: get(probabilityStore),
           modeOverride: useMode || _mode || undefined,
           lengthOverride: useLen || undefined,
-          probabilityOverride: useProb !== -1
-            ? useProb
-            : _prob !== undefined && _prob !== -1
-              ? _prob
-              : undefined,
+          probabilityOverride:
+            useProb !== -1 ? useProb : _prob !== undefined && _prob !== -1 ? _prob : undefined,
           providedScramble: useScramble || scr || undefined,
           source,
         });
@@ -355,13 +353,15 @@
     ]);
     if (configuration === lastScrambleConfiguration) return;
     lastScrambleConfiguration = configuration;
-    untrack(() => timerContext.initScrambler(
-      useScramble || undefined,
-      useMode || undefined,
-      useProb !== -1 ? useProb : undefined,
-      undefined,
-      SCRAMBLE_REQUEST_SOURCES.SESSION_SCRAMBLE_SETTINGS_CHANGED
-    ));
+    untrack(() =>
+      timerContext.initScrambler(
+        useScramble || undefined,
+        useMode || undefined,
+        useProb !== -1 ? useProb : undefined,
+        undefined,
+        SCRAMBLE_REQUEST_SOURCES.SESSION_SCRAMBLE_SETTINGS_CHANGED
+      )
+    );
   });
 
   $effect(() => {
