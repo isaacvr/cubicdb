@@ -1,11 +1,12 @@
 <script lang="ts">
-  import type { Component } from "svelte";
   import { twMerge } from "tailwind-merge";
+
+  type IconComponent = any;
 
   export interface SegmentedTabItem {
     id: string;
     label: string;
-    icon?: Component<any>;
+    icon?: IconComponent;
     disabled?: boolean;
   }
 

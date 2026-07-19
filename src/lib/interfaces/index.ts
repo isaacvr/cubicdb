@@ -9,6 +9,7 @@ import type { HTMLImgAttributes } from "svelte/elements";
 import type { BezierSticker } from "@classes/puzzle/BezierSticker";
 import type { LanguageCode } from "./language.types";
 import type { Device } from "$lib/timer/adaptors/devices";
+import type { ScrambleRequestSource } from "$lib/events/timer/ScrambleEventTypes";
 
 export const PuzzleTypeName = [
   "rubik",
@@ -506,7 +507,7 @@ export interface TimerContext {
     _mode?: string,
     probability?: number | number[],
     nativeEvent?: Pick<Event, "timeStamp">,
-    source?: string,
+    source?: ScrambleRequestSource
   ) => any;
   selectedGroup: (rescramble?: boolean, saveGroup?: boolean) => any;
   selectedMode: (rescramble?: boolean, saveMode?: boolean, updateProb?: boolean) => any;
@@ -808,7 +809,7 @@ export interface InputContext {
     _mode?: string,
     probability?: number | number[],
     nativeEvent?: Pick<Event, "timeStamp">,
-    source?: string,
+    source?: ScrambleRequestSource
   ) => void;
   addSolve: (time?: number, penalty?: Penalty) => void;
   createNewSolve: () => void;

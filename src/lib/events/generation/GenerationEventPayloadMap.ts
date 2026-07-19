@@ -1,4 +1,4 @@
-import { GENERATION_EVENTS, type GenerationEventType } from './GenerationEventRegistry';
+import { GENERATION_EVENTS } from "./GenerationEventRegistry";
 import type {
   GenerationFailurePayload,
   ImageGenerationConfig,
@@ -6,9 +6,9 @@ import type {
   ImageGenerationRetryPayload,
   ScrambleGenerationConfig,
   ScrambleGenerationResult,
-} from './GenerationEventTypes';
+} from "./GenerationEventTypes";
 
-export interface GenerationEventPayloadMap extends Record<GenerationEventType, object> {
+export interface GenerationEventPayloadMap {
   [GENERATION_EVENTS.SCRAMBLE_REQUESTED]: {
     scopeId: string;
     config: ScrambleGenerationConfig;

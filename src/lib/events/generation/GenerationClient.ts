@@ -1,14 +1,15 @@
-import type { EventSubscription, IEventBus } from '$lib/events/EventBus';
-import type { TimerEvent } from '$lib/events/timer/TimerEvent';
-import type { NativeTimestampSource, TimerEventFactory } from '$lib/events/timer/TimerEventFactory';
-import { GENERATION_EVENTS } from './GenerationEventRegistry';
+import type { EventSubscription, IEventBus } from "$lib/events/EventBus";
+import type { TimerEvent, TimerEventType } from "$lib/events/timer/TimerEvent";
+import type { NativeTimestampSource, TimerEventFactory } from "$lib/events/timer/TimerEventFactory";
+import type { TimerEventPayloadMap } from "$lib/events/timer/TimerEventPayloadMap";
+import { GENERATION_EVENTS } from "./GenerationEventRegistry";
 import type {
   GenerationFailurePayload,
   ImageGenerationConfig,
   ImageGenerationResult,
   ScrambleGenerationConfig,
   ScrambleGenerationResult,
-} from './GenerationEventTypes';
+} from "./GenerationEventTypes";
 
 export interface GenerationRequestOptions {
   sourceEvent?: NativeTimestampSource;
@@ -41,7 +42,7 @@ type ScopedResultPayload = { scopeId: string; requestId: string };
 export function createGenerationClient(
   bus: IEventBus<TimerEvent>,
   events: TimerEventFactory,
-  scopeId: string,
+  scopeId: string
 ): GenerationClient {
   const subscriptions: EventSubscription[] = [];
   let subscriptionSequence = 0;
@@ -51,10 +52,10 @@ export function createGenerationClient(
     return () => subscription.unsubscribe();
   }
 
-  async function publish<K extends TimerEvent['type']>(
+  async function publish<K extends TimerEventType>(
     type: K,
-    payload: Extract<TimerEvent, { type: K }>['payload'],
-    options?: GenerationRequestOptions,
+    payload: TimerEventPayloadMap[K],
+    options?: GenerationRequestOptions
   ): Promise<string> {
     const event = options?.sourceEvent
       ? events.fromNative(type, payload, options.sourceEvent)
@@ -64,28 +65,28 @@ export function createGenerationClient(
   }
 
   function subscribe<TPayload extends ScopedResultPayload>(
-    type: TimerEvent['type'],
+    type: TimerEventType,
     label: string,
     maybeRequestIdOrHandler: string | Handler<TPayload>,
-    maybeHandler?: Handler<TPayload>,
+    maybeHandler?: Handler<TPayload>
   ): Detach {
-    const requestId = typeof maybeRequestIdOrHandler === 'string'
-      ? maybeRequestIdOrHandler
-      : null;
-    const handler = (typeof maybeRequestIdOrHandler === 'string'
-      ? maybeHandler
-      : maybeRequestIdOrHandler) as Handler<TPayload>;
+    const requestId = typeof maybeRequestIdOrHandler === "string" ? maybeRequestIdOrHandler : null;
+    const handler = (
+      typeof maybeRequestIdOrHandler === "string" ? maybeHandler : maybeRequestIdOrHandler
+    ) as Handler<TPayload>;
 
-    return track(bus.subscribe(
-      type,
-      `${scopeId}:generation-client:${label}:${++subscriptionSequence}`,
-      event => {
-        const payload = event.payload as TPayload;
-        if (payload.scopeId !== scopeId) return;
-        if (requestId !== null && payload.requestId !== requestId) return;
-        handler(payload);
-      },
-    ));
+    return track(
+      bus.subscribe(
+        type,
+        `${scopeId}:generation-client:${label}:${++subscriptionSequence}`,
+        event => {
+          const payload = event.payload as TPayload;
+          if (payload.scopeId !== scopeId) return;
+          if (requestId !== null && payload.requestId !== requestId) return;
+          handler(payload);
+        }
+      )
+    );
   }
 
   return {
@@ -94,20 +95,26 @@ export function createGenerationClient(
       request(config, options) {
         return publish(GENERATION_EVENTS.SCRAMBLE_REQUESTED, { scopeId, config }, options);
       },
-      onGenerated(requestIdOrHandler, maybeHandler?) {
+      onGenerated(
+        requestIdOrHandler: string | Handler<ScrambleGenerationResult>,
+        maybeHandler?: Handler<ScrambleGenerationResult>
+      ) {
         return subscribe<ScrambleGenerationResult>(
           GENERATION_EVENTS.SCRAMBLE_GENERATED,
-          'scramble-generated',
+          "scramble-generated",
           requestIdOrHandler,
-          maybeHandler,
+          maybeHandler
         );
       },
-      onFailed(requestIdOrHandler, maybeHandler?) {
+      onFailed(
+        requestIdOrHandler: string | Handler<GenerationFailurePayload>,
+        maybeHandler?: Handler<GenerationFailurePayload>
+      ) {
         return subscribe<GenerationFailurePayload>(
           GENERATION_EVENTS.SCRAMBLE_FAILED,
-          'scramble-failed',
+          "scramble-failed",
           requestIdOrHandler,
-          maybeHandler,
+          maybeHandler
         );
       },
     },
@@ -115,20 +122,26 @@ export function createGenerationClient(
       request(config, options) {
         return publish(GENERATION_EVENTS.IMAGE_REQUESTED, { scopeId, config }, options);
       },
-      onGenerated(requestIdOrHandler, maybeHandler?) {
+      onGenerated(
+        requestIdOrHandler: string | Handler<ImageGenerationResult>,
+        maybeHandler?: Handler<ImageGenerationResult>
+      ) {
         return subscribe<ImageGenerationResult>(
           GENERATION_EVENTS.IMAGE_GENERATED,
-          'image-generated',
+          "image-generated",
           requestIdOrHandler,
-          maybeHandler,
+          maybeHandler
         );
       },
-      onFailed(requestIdOrHandler, maybeHandler?) {
+      onFailed(
+        requestIdOrHandler: string | Handler<GenerationFailurePayload>,
+        maybeHandler?: Handler<GenerationFailurePayload>
+      ) {
         return subscribe<GenerationFailurePayload>(
           GENERATION_EVENTS.IMAGE_FAILED,
-          'image-failed',
+          "image-failed",
           requestIdOrHandler,
-          maybeHandler,
+          maybeHandler
         );
       },
     },

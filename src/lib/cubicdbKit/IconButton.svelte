@@ -1,9 +1,10 @@
 <script lang="ts">
-  import type { Component } from "svelte";
   import { twMerge } from "tailwind-merge";
 
+  type IconComponent = any;
+
   interface IconButtonProps {
-    icon: Component<any>;
+    icon: IconComponent;
     label: string;
     onclick?: (event: MouseEvent) => void;
     class?: string;
@@ -34,7 +35,7 @@
   class={twMerge("cdb-icon-button", customClass)}
   data-size={size}
   data-variant={variant}
-  onclick={onclick}
+  {onclick}
 >
   <Icon size={size === "md" ? 20 : 16} class={iconClass} />
 </button>
