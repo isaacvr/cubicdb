@@ -1,4 +1,5 @@
 # Internal data
+.superpowers/
 /src/scrappers/data
 /src/lib/fixed/solves.db
 /src/lib/fixed/sessions.db
