@@ -195,6 +195,6 @@
   $effect(() => (controlled = !!useDevice || controlled) as any);
 </script>
 
-<svelte:window on:resize={() => threeAdaptor.resizeHandler()} onkeydown={keyDownHandler} />
+<svelte:window onresize={() => threeAdaptor.resizeHandler()} onkeydown={keyDownHandler} />
 
 <canvas bind:this={canvas} class={_cl}></canvas>

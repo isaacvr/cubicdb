@@ -78,7 +78,7 @@
   $: adjustSource(bpm, vol);
 </script>
 
-<svelte:window on:keyup={keyUp} />
+<svelte:window onkeyup={keyUp} />
 
 <div class="metronome">
   <span>BPM</span>
@@ -90,7 +90,7 @@
   <span>{vol}</span>
 
   <Button
-    on:click={() => (running ? stop() : start())}
+    onclick={() => (running ? stop() : start())}
     type={running ? "danger" : "accent"}
     class="shadow-md col-span-full"
   >

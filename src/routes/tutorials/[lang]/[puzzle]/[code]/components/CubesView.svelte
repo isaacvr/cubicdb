@@ -8,7 +8,6 @@
   import AlgorithmEditorModal from "@components/AlgorithmEditorModal.svelte";
   import { CubeMode } from "@constants";
 
-  import { createEventDispatcher } from "svelte";
   import {
     ChevronLeftIcon,
     ChevronRightIcon,
@@ -19,10 +18,9 @@
     TrashIcon,
   } from "lucide-svelte";
 
-  const dispatch = createEventDispatcher();
-
   export let block: ITutorialCubes;
   export let editMode = false;
+  export let ondelete: () => void = () => {};
 
   let images: string[] = [];
   let scrambles: string[] = [];
@@ -231,7 +229,7 @@
 
   function removeCubes() {
     showDropdown = false;
-    dispatch("delete");
+    ondelete();
   }
 
   $: editing
@@ -264,7 +262,7 @@
           {#if editMode && editing}
             <div class="actions absolute flex flex-col top-1 -left-3 z-10">
               {#each CubeActions as action}
-                <Button type="secondary" size="xs" icon on:click={() => action[0](pos)}>
+                <Button type="secondary" size="xs" icon onclick={() => action[0](pos)}>
                   <svelte:component this={action[1]} size="1.2rem" />
                 </Button>
               {/each}
@@ -305,9 +303,9 @@
       class="flex justify-center items-center gap-4 border border-gray-600 transition-all duration-200
         rounded-md p-2 w-min shadow-sm hover:shadow-lg hover:shadow-primary-800 shadow-primary-800 mx-auto"
     >
-      <Button class="mx-auto" on:click={addAlg}><PlusIcon size="1.2rem" /></Button>
-      <Button type="secondary" on:click={() => (editing = false)}>Cancel</Button>
-      <Button type="accent" on:click={save}>Save</Button>
+      <Button class="mx-auto" onclick={addAlg}><PlusIcon size="1.2rem" /></Button>
+      <Button type="secondary" onclick={() => (editing = false)}>Cancel</Button>
+      <Button type="accent" onclick={save}>Save</Button>
     </div>
   {/if}
 
@@ -318,11 +316,11 @@
       </Button>
 
       <Dropdown placement="right" class="z-50 relative" bind:open={showDropdown}>
-        <DropdownItem defaultClass={dropdownDefaultClass} on:click={startEditing}>
+        <DropdownItem defaultClass={dropdownDefaultClass} onclick={startEditing}>
           <PencilIcon size="1.2rem" /> Edit
         </DropdownItem>
 
-        <DropdownItem defaultClass={dropdownDefaultClass} on:click={removeCubes}>
+        <DropdownItem defaultClass={dropdownDefaultClass} onclick={removeCubes}>
           <TrashIcon size="1.2rem" /> Delete
         </DropdownItem>
       </Dropdown>
@@ -331,8 +329,8 @@
 </div>
 
 <AlgorithmEditorModal
-  on:render={renderSAlg}
-  on:save={saveAlg}
+  onrender={renderSAlg}
+  onsave={saveAlg}
   bind:alg={sAlg}
   bind:show
   bind:isAdding

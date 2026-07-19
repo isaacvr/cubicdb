@@ -5,7 +5,7 @@
   import { weakRandomUUID } from "@helpers/strings";
   import type { Placement, Side } from "@interfaces";
   import { Dropdown, DropdownItem } from "$lib/cubicdbKit";
-  import { createEventDispatcher, onMount, tick, untrack } from "svelte";
+  import { onMount, tick, untrack } from "svelte";
   import Button from "$lib/cubicdbKit/Button.svelte";
   import { twMerge } from "tailwind-merge";
   import { ChevronDownIcon } from "lucide-svelte";
@@ -25,6 +25,8 @@
     iconKey?: string;
     iconSize?: string | null;
     preferIcon?: boolean;
+    onopen?: () => void;
+    onclose?: () => void;
     [key: string]: any;
   }
 
@@ -43,10 +45,11 @@
     iconKey = "icon",
     iconSize = "1.2rem",
     preferIcon = false,
+    onopen = () => {},
+    onclose = () => {},
   }: SelectProps = $props();
 
   const selectID = "s" + weakRandomUUID().replace(/-/g, "");
-  const dispatch = createEventDispatcher();
 
   let list: HTMLUListElement | null;
   let dropdown: HTMLDetailsElement | null;
@@ -91,8 +94,8 @@
   }
 
   function emitStatus(st: boolean) {
-    st && dispatch("open");
-    !st && dispatch("close");
+    st && onopen();
+    !st && onclose();
 
     st && (focused = findValuePosition());
   }

@@ -3,12 +3,10 @@
   import type { ITutorialList } from "@interfaces";
   import { Dropdown, DropdownItem, Input } from "$lib/cubicdbKit";
   import { EllipsisVerticalIcon, PencilIcon, TrashIcon } from "lucide-svelte";
-  import { createEventDispatcher } from "svelte";
-
-  const dispatch = createEventDispatcher();
 
   export let block: ITutorialList;
   export let editMode = false;
+  export let ondelete: () => void = () => {};
 
   let editing = false;
   let tempList: string[] = [];
@@ -40,7 +38,7 @@
 
   function removeList() {
     showDropdown = false;
-    dispatch("delete");
+    ondelete();
   }
 </script>
 

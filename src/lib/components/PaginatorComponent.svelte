@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { createEventDispatcher } from "svelte";
   import type { Paginator } from "@classes/Paginator";
   import {
     ChevronLeftIcon,
@@ -9,14 +8,13 @@
   } from "lucide-svelte";
 
   export let pg: Paginator;
-
-  const dispatch = createEventDispatcher();
+  export let onupdate: () => void = () => {};
 
   function setPage(p: number) {
     p === -1 && pg.nextPage();
     p === -2 && pg.prevPage();
     p != -1 && p != -2 && pg.setPage(p);
-    dispatch("update");
+    onupdate();
   }
 </script>
 
@@ -25,21 +23,21 @@
     (pg.pages > 1 ? "" : "hidden")}
 >
   <li class="paginator-item">
-    <button on:click={() => setPage(1)}> <ChevronsLeftIcon /> </button>
+    <button onclick={() => setPage(1)}> <ChevronsLeftIcon /> </button>
   </li>
   <li class="paginator-item">
-    <button on:click={() => setPage(-2)}> <ChevronLeftIcon /> </button>
+    <button onclick={() => setPage(-2)}> <ChevronLeftIcon /> </button>
   </li>
   {#each pg.labels as lb}
     <li class="paginator-item" class:selected={pg.page === lb}>
-      <button on:click={() => setPage(lb)}>{lb}</button>
+      <button onclick={() => setPage(lb)}>{lb}</button>
     </li>
   {/each}
   <li class="paginator-item">
-    <button on:click={() => setPage(-1)}> <ChevronRightIcon /> </button>
+    <button onclick={() => setPage(-1)}> <ChevronRightIcon /> </button>
   </li>
   <li class="paginator-item">
-    <button on:click={() => setPage(Infinity)}> <ChevronsRightIcon /> </button>
+    <button onclick={() => setPage(Infinity)}> <ChevronsRightIcon /> </button>
   </li>
 </ul>
 

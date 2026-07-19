@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { createEventDispatcher, type Snippet } from "svelte";
+  import type { Snippet } from "svelte";
   import Button from "./Button.svelte";
 
   interface ModalProps {
@@ -10,9 +10,8 @@
     title?: string;
     autoclose?: boolean;
     outsideclose?: boolean;
+    onclose?: () => void;
   }
-
-  const dispatch = createEventDispatcher();
 
   let {
     open = $bindable(false),
@@ -22,6 +21,7 @@
     title,
     autoclose = true,
     outsideclose = false,
+    onclose = () => {},
   }: ModalProps = $props();
 
   function isVisible() {
@@ -33,7 +33,7 @@
     if (typeof show === "boolean") {
       show = false;
     }
-    dispatch("close");
+    onclose();
   }
 
   function handleBackdropClick(event: MouseEvent) {

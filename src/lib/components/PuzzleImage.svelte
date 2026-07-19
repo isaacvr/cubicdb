@@ -47,7 +47,6 @@
 
   type ImageType = "raster" | "svg";
 
-  // let dispatch = createEventDispatcher();
   let type: ImageType = $state("raster");
   let imgWidth: number = $state(0);
   let imgHeight: number = $state(0);

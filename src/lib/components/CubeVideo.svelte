@@ -29,8 +29,8 @@
       class="rounded-md"
       bind:this={video}
       src={videoSrc}
-      on:play={() => (playing = true)}
-      on:pause={() => (playing = false)}
+      onplay={() => (playing = true)}
+      onpause={() => (playing = false)}
     >
       <track kind="captions" />
     </video>
@@ -41,7 +41,7 @@
         type="tertiary"
         size="sm"
         icon
-        on:click={() => (playing ? video?.pause() : video?.play())}
+        onclick={() => (playing ? video?.pause() : video?.play())}
         class="mr-1"
       >
         {#if playing}

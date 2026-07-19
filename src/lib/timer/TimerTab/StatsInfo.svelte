@@ -216,7 +216,7 @@
   bind:open={showModal}
   outsideclose
   title={$localLang.global.summary}
-  on:close={recoverEnableKeyboard}
+  onclose={recoverEnableKeyboard}
   class="max-w-2xl grid bg-backgroundLevel2 "
   type="tertiary"
 >
@@ -224,10 +224,10 @@
 
   <svelte:fragment slot="footer">
     <div class="flex justify-center gap-4 w-full">
-      <Button type="secondary" on:click={() => toClipboard(textSummary)}
+      <Button type="secondary" onclick={() => toClipboard(textSummary)}
         >{$localLang.global.clickToCopy}</Button
       >
-      <Button type="warning" on:click={() => (showModal = false)}
+      <Button type="warning" onclick={() => (showModal = false)}
         >{$localLang.global.accept}</Button
       >
     </div>

@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { createEventDispatcher } from "svelte";
   import { twMerge } from "tailwind-merge";
 
   type RangeVariants = "default" | "progress";
@@ -17,11 +16,8 @@
     formatValue?: (value: number) => string;
     onclick?: (ev: MouseEvent) => any;
     onmousedown?: (ev: MouseEvent) => any;
+    onchange?: (change: { value: number }) => void;
   }
-
-  const dispatch = createEventDispatcher<{
-    change: { value: number };
-  }>();
 
   let {
     min = $bindable(0),
@@ -36,6 +32,7 @@
     formatValue = value => String(value),
     onclick = () => {},
     onmousedown = () => {},
+    onchange = () => {},
   }: RangeProps = $props();
 
   const RANGE_VARIANTS: Record<RangeVariants, string> = {
@@ -49,7 +46,7 @@
   function handleInput(e: Event) {
     const target = e.currentTarget as HTMLInputElement;
     value = target.valueAsNumber;
-    dispatch("change", { value });
+    onchange({ value });
   }
 </script>
 

@@ -5,7 +5,6 @@
   import { Button, Input, Range } from "$lib/cubicdbKit";
   import { CubeModeMap } from "@constants";
   import PuzzleImage from "@components/PuzzleImage.svelte";
-  import { createEventDispatcher } from "svelte";
   import { TrashIcon } from "lucide-svelte";
 
   type AlgProp = { tutorial: false; alg: Algorithm } | { tutorial: true; alg: ITutorialAlg };
@@ -16,8 +15,8 @@
   export let solTemp: Solution[];
   export let img;
   export let alg: AlgProp;
-
-  const dispatch = createEventDispatcher();
+  export let onrender: () => void = () => {};
+  export let onsave: () => void = () => {};
 
   const rotStep = Math.PI / 12;
 
@@ -38,11 +37,11 @@
   }
 
   function renderSAlg() {
-    dispatch("render");
+    onrender();
   }
 
   function saveAlgorithm() {
-    dispatch("save");
+    onsave();
   }
 
   function selectPosition({
@@ -155,7 +154,8 @@
                 type="danger"
                 size="sm"
                 icon
-                on:click|stopPropagation={() => {
+                onclick={e => {
+                  e.stopPropagation();
                   tipTemp = tipTemp.filter((_, p) => p != pos);
                 }}
               >
@@ -166,7 +166,7 @@
         </ul>
       {/if}
 
-      <Button type="info" class="mt-4" on:click={addTip}>Añadir flecha</Button>
+      <Button type="info" class="mt-4" onclick={addTip}>Añadir flecha</Button>
     </section>
 
     <section class="place-items-center max-h-52 w-full h-full">
@@ -187,7 +187,8 @@
                   type="danger"
                   size="sm"
                   icon
-                  on:click|stopPropagation={() => {
+                  onclick={e => {
+                    e.stopPropagation();
                     solTemp = solTemp.filter((_, p) => p != pos);
                   }}
                 >
@@ -198,13 +199,13 @@
           </ul>
         {/if}
 
-        <Button type="info" class="mt-4" on:click={addSolution}>Añadir solución</Button>
+        <Button type="info" class="mt-4" onclick={addSolution}>Añadir solución</Button>
       </section>
     {/if}
 
     <section class="actions col-span-full">
-      <Button type="accent" on:click={renderSAlg}>Actualizar Imagen</Button>
-      <Button type="success" on:click={saveAlgorithm}>Guardar</Button>
+      <Button type="accent" onclick={renderSAlg}>Actualizar Imagen</Button>
+      <Button type="success" onclick={saveAlgorithm}>Guardar</Button>
     </section>
   </div>
 </Modal>

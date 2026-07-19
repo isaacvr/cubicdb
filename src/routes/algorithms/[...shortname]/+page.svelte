@@ -374,7 +374,7 @@
   <meta name="description" content={meta.description} />
 </svelte:head>
 
-<svelte:window on:keydown={handlekeyDown} />
+<svelte:window onkeydown={handlekeyDown} />
 
 <main class="container-mini">
   <!-- All solutions -->
@@ -446,7 +446,7 @@
           size={$screen.isMobile ? "lg" : "sm"}
           icon
           class="grid place-items-center cursor-pointer {$screen.isMobile ? 'shadow-xl' : ''}"
-          on:click={toggleListView}
+          onclick={toggleListView}
           aria-label={$localLang.ALGORITHMS.toggleView}
         >
           {#if algorithms.listView}
@@ -463,7 +463,7 @@
           size="sm"
           icon
           class="grid place-items-center cursor-pointer"
-          on:click={addAlgorithm}
+          onclick={addAlgorithm}
         >
           <PlusIcon size="1.2rem" />
         </Button>
@@ -503,7 +503,7 @@
                     }}
                     ><PencilIcon size="1.2rem" />
                   </Button>
-                  <Button type="danger" size="sm" icon on:click={() => removeAlg(currentList[pos])}
+                  <Button type="danger" size="sm" icon onclick={() => removeAlg(currentList[pos])}
                     ><TrashIcon size="1.2rem" />
                   </Button>
                 </div>
@@ -546,10 +546,10 @@
 
             {#if allowAlgAdmin}
               <ul class="absolute no-grid flex flex-col gap-2 justify-start top-0 left-0">
-                <Button type="secondary" size="sm" icon on:click={() => selectAlg(c)}
+                <Button type="secondary" size="sm" icon onclick={() => selectAlg(c)}
                   ><PencilIcon size="1.2rem" />
                 </Button>
-                <Button type="danger" size="sm" icon on:click={() => removeAlg(c)}
+                <Button type="danger" size="sm" icon onclick={() => removeAlg(c)}
                   ><TrashIcon size="1.2rem" />
                 </Button>
               </ul>
@@ -562,8 +562,8 @@
 </main>
 
 <AlgorithmEditorModal
-  on:render={renderSAlg}
-  on:save={saveAlgorithm}
+  onrender={renderSAlg}
+  onsave={saveAlgorithm}
   bind:alg={sAlg}
   bind:show
   bind:tipTemp

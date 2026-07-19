@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { createEventDispatcher } from "svelte";
   import type { Snippet } from "svelte";
   import { twMerge } from "tailwind-merge";
   import type { ButtonNativeType, ButtonSize, ButtonType } from "./Button.types";
@@ -20,10 +19,6 @@
     buttonType?: ButtonNativeType;
     [key: string]: any;
   }
-
-  const dispatch = createEventDispatcher<{
-    click: MouseEvent;
-  }>();
 
   let {
     class: cl = $bindable(""),
@@ -69,7 +64,6 @@
     }
 
     onclick(ev);
-    dispatch("click", ev);
   }
 </script>
 

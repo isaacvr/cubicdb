@@ -191,7 +191,7 @@
   $: ($localLang, updateTexts());
 </script>
 
-<svelte:window on:keyup={handleKeyUp} />
+<svelte:window onkeyup={handleKeyUp} />
 
 <Card
   class="flex flex-col relative items-center mt-4 max-w-2xl w-[calc(100%-2rem)] max-h-[calc(100svh-6rem)] mx-auto mb-8"
@@ -205,7 +205,7 @@
       size="sm"
       icon
       class="absolute right-4 top-4"
-      on:click={() => (showModal = true)}>?</Button
+      onclick={() => (showModal = true)}>?</Button
     >
   {/if}
 
@@ -218,7 +218,7 @@
       <Select items={CASES} transform={e => e} bind:value={cases} />
     </div>
 
-    <Button on:click={next} type="success" class="mt-2">{$localLang.PLL.next}</Button>
+    <Button onclick={next} type="success" class="mt-2">{$localLang.PLL.next}</Button>
   {/if}
 
   {#if stage === 1}
@@ -235,7 +235,7 @@
           class:isMobile={$screen.isMobile}
           class:right={f === caseName[idx] && showAnswer}
           class:wrong={f != caseName[idx] && f === lastAnswer && showAnswer}
-          on:click={() => addAnswer(f)}>{f}</button
+          onclick={() => addAnswer(f)}>{f}</button
         >
       {/each}
     </div>
@@ -247,7 +247,7 @@
       {#if correct === cases}
         <CheckIcon width="1.2rem" height="1.2rem" class="text-green-500" />
       {/if}
-      <Button on:click={next} type="success" class="ml-12">{$localLang.PLL.tryAgain}</Button>
+      <Button onclick={next} type="success" class="ml-12">{$localLang.PLL.tryAgain}</Button>
     </div>
 
     <Table shadow divClass="w-full relative overflow-x-auto">

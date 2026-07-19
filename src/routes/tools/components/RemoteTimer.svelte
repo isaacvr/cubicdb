@@ -66,12 +66,16 @@
 
   machine.init();
 
-  function handleLeft(e: MouseEvent) {
+  function preventTouchStartDefault(event: TouchEvent) {
+    event.preventDefault();
+  }
+
+  function handleLeft(e: PointerEvent) {
     machine.handleLeft(e);
     leftDown = e.type === "pointerdown";
   }
 
-  function handleRight(e: MouseEvent) {
+  function handleRight(e: PointerEvent) {
     machine.handleRight(e);
     rightDown = e.type === "pointerdown";
   }
@@ -149,8 +153,8 @@
 {#if $mState === "DISCONNECTED" || $mState === "CONNECTING" || $mState === "CONNECTION_ERROR"}
   <Card class="flex-row gap-2 max-w-sm w-full items-center justify-between mt-4 mb-0 mx-auto">
     <Input bind:value={url} />
-    <Button on:click={connect}>Connect</Button>
-    <Button on:click={() => (showModal = true)}>Auth</Button>
+    <Button onclick={connect}>Connect</Button>
+    <Button onclick={() => (showModal = true)}>Auth</Button>
   </Card>
 {/if}
 
@@ -165,9 +169,9 @@
   >
     <button
       class={"w-full h-full grid place-items-center " + ($mLeftDown ? "text-primary-400" : "")}
-      on:touchstart|preventDefault
-      on:pointerdown={handleLeft}
-      on:pointerup={handleLeft}
+      ontouchstart={preventTouchStartDefault}
+      onpointerdown={handleLeft}
+      onpointerup={handleLeft}
     >
       <HandIcon
         size="40%"
@@ -190,7 +194,7 @@
           size="xs"
           icon
           class="my-3 mx-1"
-          on:click={control.handler}
+          onclick={control.handler}
         >
           <svelte:component this={control.icon} width="100%" height="100%" />
         </Button>
@@ -199,11 +203,11 @@
 
     <div class="flex justify-evenly items-center mt-auto">
       {#if $mState != "DISCONNECTED" && $mState != "CONNECTING" && $mState != "CONNECTION_ERROR"}
-        <Button type="danger" size="md" icon on:click={onOff}>
+        <Button type="danger" size="md" icon onclick={onOff}>
           <PowerIcon size="1.4rem" />
         </Button>
       {/if}
-      <Button type="tertiary" size="md" icon on:click={reset}>
+      <Button type="tertiary" size="md" icon onclick={reset}>
         <RotateCcwIcon size="1.4rem" />
       </Button>
     </div>
@@ -215,9 +219,9 @@
   >
     <button
       class={"w-full h-full grid place-items-center " + ($mRightDown ? "text-primary-400" : "")}
-      on:touchstart|preventDefault
-      on:pointerdown={handleRight}
-      on:pointerup={handleRight}
+      ontouchstart={preventTouchStartDefault}
+      onpointerdown={handleRight}
+      onpointerup={handleRight}
     >
       <HandIcon size="40%" class={$mRightDown ? "text-white " : "text-primary-200"} />
     </button>

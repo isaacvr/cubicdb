@@ -295,47 +295,47 @@
       {#if currentStep}
         {#if editMode}
           <div class="flex items-center justify-center mx-auto gap-2">
-            <button class={IBASubtitle} on:click={() => addBlock(0, "subtitle")}>
+            <button class={IBASubtitle} onclick={() => addBlock(0, "subtitle")}>
               <Heading1Icon size="1.2rem" />
             </button>
 
-            <button class={IBAText} on:click={() => addBlock(0, "text")}>
+            <button class={IBAText} onclick={() => addBlock(0, "text")}>
               <LetterTextIcon size="1.2rem" />
             </button>
 
-            <button class={IBAList} on:click={() => addBlock(0, "list")}>
+            <button class={IBAList} onclick={() => addBlock(0, "list")}>
               <ListIcon size="1.2rem" />
             </button>
 
-            <button class={IBACubes} on:click={() => addBlock(0, "cubes")}>
+            <button class={IBACubes} onclick={() => addBlock(0, "cubes")}>
               <WCACategory icon="333" size="1.2rem" />
             </button>
           </div>
         {/if}
         {#each currentStep.content as bl, pos (bl)}
           {#if bl.type === "text" || bl.type === "subtitle"}
-            <TextView bind:block={bl} {editMode} on:delete={() => removeBlock(pos)} />
+            <TextView bind:block={bl} {editMode} ondelete={() => removeBlock(pos)} />
           {:else if bl.type === "list"}
-            <ListView bind:block={bl} {editMode} on:delete={() => removeBlock(pos)} />
+            <ListView bind:block={bl} {editMode} ondelete={() => removeBlock(pos)} />
           {:else if bl.type === "cubes"}
-            <CubesView bind:block={bl} {editMode} on:delete={() => removeBlock(pos)} />
+            <CubesView bind:block={bl} {editMode} ondelete={() => removeBlock(pos)} />
           {/if}
 
           {#if editMode}
             <div class="flex items-center justify-center mx-auto gap-2">
-              <button class={IBASubtitle} on:click={() => addBlock(pos + 1, "subtitle")}>
+              <button class={IBASubtitle} onclick={() => addBlock(pos + 1, "subtitle")}>
                 <Heading1Icon size="1.2rem" />
               </button>
 
-              <button class={IBAText} on:click={() => addBlock(pos + 1, "text")}>
+              <button class={IBAText} onclick={() => addBlock(pos + 1, "text")}>
                 <LetterTextIcon size="1.2rem" />
               </button>
 
-              <button class={IBAList} on:click={() => addBlock(pos + 1, "list")}>
+              <button class={IBAList} onclick={() => addBlock(pos + 1, "list")}>
                 <ListIcon size="1.2rem" />
               </button>
 
-              <button class={IBACubes} on:click={() => addBlock(pos + 1, "cubes")}>
+              <button class={IBACubes} onclick={() => addBlock(pos + 1, "cubes")}>
                 <WCACategory icon="333" size="1.2rem" />
               </button>
             </div>
@@ -351,7 +351,7 @@
       {tut.name}
 
       {#if editMode}
-        <Button type="tertiary" size="sm" icon on:click={editTutorial}>
+        <Button type="tertiary" size="sm" icon onclick={editTutorial}>
           <SettingsIcon />
         </Button>
       {/if}
@@ -359,7 +359,7 @@
 
     <ul>
       <li>
-        <button class="step-item" class:current={index === 0} on:click={() => (index = 0)}>
+        <button class="step-item" class:current={index === 0} onclick={() => (index = 0)}>
           <h3 class="text-lg tx-text">{$localLang.global.summary}</h3>
         </button>
       </li>
@@ -369,7 +369,7 @@
           <button
             class="step-item tx-text"
             class:current={pos + 1 === index}
-            on:click={() => (index = pos + 1)}
+            onclick={() => (index = pos + 1)}
           >
             {#if step.icon}
               <WCACategory size="1rem" icon={step.icon} class="text-white" />
@@ -389,16 +389,16 @@
             </Button>
 
             <Dropdown placement="right" class="relative w-max">
-              <DropdownItem defaultClass={dropdownDefaultClass} on:click={() => edit(pos)}>
+              <DropdownItem defaultClass={dropdownDefaultClass} onclick={() => edit(pos)}>
                 <PencilIcon size="1.2rem" /> Edit
               </DropdownItem>
-              <DropdownItem defaultClass={dropdownDefaultClass} on:click={() => moveUp(pos)}>
+              <DropdownItem defaultClass={dropdownDefaultClass} onclick={() => moveUp(pos)}>
                 <ChevronUpIcon size="1.2rem" /> Move Up
               </DropdownItem>
-              <DropdownItem defaultClass={dropdownDefaultClass} on:click={() => moveDown(pos)}>
+              <DropdownItem defaultClass={dropdownDefaultClass} onclick={() => moveDown(pos)}>
                 <ChevronDownIcon size="1.2rem" /> Move Down
               </DropdownItem>
-              <DropdownItem defaultClass={dropdownDefaultClass} on:click={() => preRemove(pos)}>
+              <DropdownItem defaultClass={dropdownDefaultClass} onclick={() => preRemove(pos)}>
                 <TrashIcon size="1.2rem" /> Delete
               </DropdownItem>
             </Dropdown>
@@ -408,11 +408,11 @@
 
       {#if editMode}
         <li class="flex justify-center mt-4 gap-2">
-          <Button class="gap-2" on:click={() => edit(-1)}>
+          <Button class="gap-2" onclick={() => edit(-1)}>
             <PlusIcon size="1.2rem" /> Add step
           </Button>
 
-          <Button type="accent" class="gap-2" on:click={saveTutorial}>Save</Button>
+          <Button type="accent" class="gap-2" onclick={saveTutorial}>Save</Button>
         </li>
       {/if}
     </ul>
@@ -426,7 +426,7 @@
   <Button
     type="secondary"
     class={"transition-all duration-200 " + (index === 0 ? "opacity-0 pointer-events-none" : "")}
-    on:click={() => (index -= 1)}
+    onclick={() => (index -= 1)}
   >
     {$localLang.global.back}
   </Button>
@@ -435,7 +435,7 @@
     type="accent"
     class={"transition-all duration-200 " +
       (index === tut.steps.length ? "opacity-0 pointer-events-none" : "")}
-    on:click={() => (index += 1)}
+    onclick={() => (index += 1)}
   >
     {$localLang.global.next}
   </Button>
@@ -448,10 +448,10 @@
     </h2>
 
     <div class="flex flex-wrap gap-2 justify-center">
-      <Button type="secondary" on:click={() => (showModal = false)}
+      <Button type="secondary" onclick={() => (showModal = false)}
         >{$localLang.global.cancel}</Button
       >
-      <Button type="danger" on:click={remove} class="flex items-center gap-2">
+      <Button type="danger" onclick={remove} class="flex items-center gap-2">
         <TrashIcon size="1.2rem" />
         {$localLang.global.delete}
       </Button>
@@ -470,10 +470,10 @@
     </div>
 
     <div class="flex flex-wrap gap-2 justify-center">
-      <Button type="secondary" on:click={() => (showModal = false)}
+      <Button type="secondary" onclick={() => (showModal = false)}
         >{$localLang.global.cancel}</Button
       >
-      <Button type="accent" on:click={addStep}>Save</Button>
+      <Button type="accent" onclick={addStep}>Save</Button>
     </div>
   {:else if modalType === "edit-tutorial"}
     <div class="flex flex-wrap gap-2 justify-center items-center">
@@ -519,10 +519,10 @@
     </div>
 
     <div class="flex flex-wrap gap-2 justify-center">
-      <Button type="secondary" on:click={() => (showModal = false)}
+      <Button type="secondary" onclick={() => (showModal = false)}
         >{$localLang.global.cancel}</Button
       >
-      <Button type="accent" on:click={saveTutorialConfig}>{$localLang.global.save}</Button>
+      <Button type="accent" onclick={saveTutorialConfig}>{$localLang.global.save}</Button>
     </div>
   {/if}
 </Modal>

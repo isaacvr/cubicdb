@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { createEventDispatcher, setContext } from "svelte";
+  import { setContext } from "svelte";
   import type { ActiveTool } from "@interfaces";
   import { writable } from "svelte/store";
   import Button from "$lib/cubicdbKit/Button.svelte";
@@ -12,8 +12,6 @@
   }
 
   let { tool, onexpand, oncollapse, onclose }: ToolFrameProps = $props();
-
-  const dispatch = createEventDispatcher();
 
   let open = tool.open;
   let configMode = writable(false);

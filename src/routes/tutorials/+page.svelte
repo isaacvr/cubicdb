@@ -242,7 +242,7 @@
     {/each}
 
     {#if allowAdmin}
-      <Button size="sm" icon class="mt-auto" on:click={preAddTutorial}>
+      <Button size="sm" icon class="mt-auto" onclick={preAddTutorial}>
         <PlusIcon size="1.2rem" />
       </Button>
     {/if}
@@ -286,14 +286,14 @@
             <Dropdown placement="left" class="z-50 relative">
               <DropdownItem
                 defaultClass={dropdownDefaultClass}
-                on:click={() => viewTutorial(tut, true)}
+                onclick={() => viewTutorial(tut, true)}
               >
                 <PencilIcon size="1.2rem" /> Edit
               </DropdownItem>
 
               <DropdownItem
                 defaultClass={dropdownDefaultClass}
-                on:click={() => preRemoveTutorial(tut)}
+                onclick={() => preRemoveTutorial(tut)}
               >
                 <TrashIcon size="1.2rem" /> Delete
               </DropdownItem>
@@ -311,20 +311,20 @@
   </section>
 </div>
 
-<Modal open={!!sTut} on:close={() => (sTut = null)}>
+<Modal open={!!sTut} onclose={() => (sTut = null)}>
   <h2 class="text-center text-xl text-white">
     ¿Are you sure to delete "{sTut?.name}" tutorial?
   </h2>
 
   <div class="flex flex-wrap gap-2 justify-center">
-    <Button type="secondary" on:click={() => (sTut = null)}>Cancel</Button>
-    <Button type="danger" on:click={removeTutorial} class="flex items-center gap-2">
+    <Button type="secondary" onclick={() => (sTut = null)}>Cancel</Button>
+    <Button type="danger" onclick={removeTutorial} class="flex items-center gap-2">
       <TrashIcon size="1.2rem" /> Delete
     </Button>
   </div>
 </Modal>
 
-<Modal bind:open={showModal} on:close={() => (showModal = false)}>
+<Modal bind:open={showModal} onclose={() => (showModal = false)}>
   <div class="flex flex-wrap gap-2 justify-center items-center">
     <section>
       <span>Name: </span>
@@ -380,8 +380,8 @@
   </div>
 
   <div class="flex flex-wrap gap-2 justify-center">
-    <Button type="secondary" on:click={() => (showModal = false)}>Cancel</Button>
-    <Button type="accent" on:click={addTutorial}>Save</Button>
+    <Button type="secondary" onclick={() => (showModal = false)}>Cancel</Button>
+    <Button type="accent" onclick={addTutorial}>Save</Button>
   </div>
 </Modal>
 

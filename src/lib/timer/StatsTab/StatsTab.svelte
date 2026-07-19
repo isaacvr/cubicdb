@@ -753,7 +753,7 @@
   });
 </script>
 
-<svelte:window on:resize={handleResize} />
+<svelte:window onresize={handleResize} />
 
 <section
   role="tabpanel"
@@ -827,7 +827,7 @@
               <Button
                 class="px-1 text-sm h-6 hover:tx-primary-300 tx-text"
                 ariaLabel={$localLang.TIMER.go}
-                on:click={() => selectSolveById($stats[ao.key].id || "", ao.select)}
+                onclick={() => selectSolveById($stats[ao.key].id || "", ao.select)}
               >
                 {timer(
                   $stats[ao.key][/^(best|worst)$/.test(ao.key) ? "value" : "best"] || 0,

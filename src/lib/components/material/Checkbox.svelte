@@ -1,6 +1,6 @@
 <script lang="ts">
   import { processKey } from "@helpers/strings";
-  import { createEventDispatcher, onMount } from "svelte";
+  import { onMount } from "svelte";
 
   export let checked: boolean = false;
   export let undef = false;
@@ -8,16 +8,17 @@
   export let disabled = false;
   export let tabindex = 0;
   export let hasKeybinding = false;
+  export let onchecked: () => void = () => {};
+  export let onunchecked: () => void = () => {};
+  export let onchange: (change: { value: boolean }) => void = () => {};
   let _class = "";
   export { _class as class };
 
-  const dispatch = createEventDispatcher();
-
   function toggle() {
     checked = !checked;
-    checked && dispatch("checked");
-    !checked && dispatch("unchecked");
-    dispatch("change", { value: checked });
+    checked && onchecked();
+    !checked && onunchecked();
+    onchange({ value: checked });
   }
 
   function handleKeydown(ev: KeyboardEvent) {
@@ -27,7 +28,7 @@
   }
 
   onMount(() => {
-    dispatch("change", { value: checked });
+    onchange({ value: checked });
   });
 </script>
 

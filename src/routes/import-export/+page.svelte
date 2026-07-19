@@ -168,17 +168,17 @@
 <Card class="mx-auto mt-8 w-full max-w-3xl">
   <Heading tag="h3" class="text-center">{$localLang.IMPORT_EXPORT.title}</Heading>
   <section class="flex items-center gap-2 justify-center my-4">
-    <Button on:click={() => (isImport = true)} type={isImport ? "success" : "secondary"}
+    <Button onclick={() => (isImport = true)} type={isImport ? "success" : "secondary"}
       >{$localLang.IMPORT_EXPORT.import}</Button
     >
-    <Button on:click={() => (isImport = false)} type={!isImport ? "success" : "secondary"}
+    <Button onclick={() => (isImport = false)} type={!isImport ? "success" : "secondary"}
       >{$localLang.IMPORT_EXPORT.export}</Button
     >
 
     {#if !isImport && ownData}
-      <Button on:click={selectAllOwn} type="warning">{$localLang.IMPORT_EXPORT.selectAll}</Button>
-      <Button on:click={selectNoneOwn} type="warning">{$localLang.IMPORT_EXPORT.selectNone}</Button>
-      <Button on:click={exportData} type="accent">{$localLang.global.save}</Button>
+      <Button onclick={selectAllOwn} type="warning">{$localLang.IMPORT_EXPORT.selectAll}</Button>
+      <Button onclick={selectNoneOwn} type="warning">{$localLang.IMPORT_EXPORT.selectNone}</Button>
+      <Button onclick={exportData} type="accent">{$localLang.global.save}</Button>
     {/if}
   </section>
 
@@ -197,15 +197,14 @@
           <Select bind:value={mode} items={Adaptors[parser].modes} transform={(_, pos) => pos} />
         {/if}
 
-        <FileButton type="accent" on:files={e => processFiles(e.detail)}>
+        <FileButton type="accent" onfiles={processFiles}>
           {$localLang.IMPORT_EXPORT.selectFile}
         </FileButton>
 
         {#if cubeData}
-          <Button on:click={selectAll} type="warning">{$localLang.IMPORT_EXPORT.selectAll}</Button>
-          <Button on:click={selectNone} type="warning">{$localLang.IMPORT_EXPORT.selectNone}</Button
-          >
-          <Button on:click={save} type="success">{$localLang.global.save}</Button>
+          <Button onclick={selectAll} type="warning">{$localLang.IMPORT_EXPORT.selectAll}</Button>
+          <Button onclick={selectNone} type="warning">{$localLang.IMPORT_EXPORT.selectNone}</Button>
+          <Button onclick={save} type="success">{$localLang.global.save}</Button>
         {/if}
       </div>
     </section>
@@ -216,7 +215,7 @@
           <li class="flex gap-1 mr-2">
             <Checkbox bind:checked={s.editing} />
             <Button
-              on:click={() => (sSession = s)}
+              onclick={() => (sSession = s)}
               type={s === sSession ? "primary" : "secondary"}
               class="font-bold {s === sSession ? 'underline' : ''} {s.icon ? 'pl-8' : ''}"
             >
@@ -258,7 +257,7 @@
         <li class="flex gap-1 mr-2">
           <Checkbox bind:checked={s.editing} />
           <Button
-            on:click={() => (oSession = s)}
+            onclick={() => (oSession = s)}
             type={s === oSession ? "primary" : "secondary"}
             class="font-bold {s === oSession ? 'underline' : ''}"
           >

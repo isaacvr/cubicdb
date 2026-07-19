@@ -60,7 +60,7 @@
         type={tab.index === $selectedTab ? "primary" : "secondary"}
         aria-label={tab.ariaLabel}
         class="w-full {tab.index === $selectedTab ? 'z-10' : ''}"
-        on:click={() => selectTab(tab)}
+        onclick={() => selectTab(tab)}
       >
         {#if tab.icon}
           <svelte:component this={tab.icon} />

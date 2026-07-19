@@ -6,16 +6,16 @@
     SearchFilter,
   } from "$lib/timer/HistoryTab/AdvancedSearch/adaptors/types";
   import type { Writable } from "svelte/store";
-  import { createEventDispatcher, getContext } from "svelte";
+  import { getContext } from "svelte";
   import { FieldAdaptor } from "$lib/timer/HistoryTab/AdvancedSearch/adaptors";
   import OperatorIcon from "./OperatorIcon.svelte";
   import { localLang } from "@stores/language.service";
   import { TrashIcon } from "lucide-svelte";
 
-  const dispatch = createEventDispatcher();
   const fields: Writable<SearchFilter[]> = getContext("advanced-search");
 
   export let filter: FieldAdaptor;
+  export let ondelete: (filter: FieldAdaptor) => void = () => {};
 
   function updateField(s: SearchFilter) {
     filter.setField(s);
@@ -28,7 +28,7 @@
   }
 
   function deleteFilter() {
-    dispatch("delete", filter);
+    ondelete(filter);
   }
 
   function getLabel(e: InternalFilter) {
@@ -39,7 +39,7 @@
 <div
   class="flex gap-2 items-center justify-center bg-gray-900 rounded-md border-2 border-green-600 p-1 px-2"
 >
-  <Button size="xs" icon type="danger" on:click={deleteFilter}>
+  <Button size="xs" icon type="danger" onclick={deleteFilter}>
     <TrashIcon size="1rem" />
   </Button>
 

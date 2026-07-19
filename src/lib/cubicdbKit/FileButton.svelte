@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { createEventDispatcher } from "svelte";
   import type { Snippet } from "svelte";
   import Button from "./Button.svelte";
   import type { ButtonSize, ButtonType } from "./Button.types";
@@ -9,6 +8,7 @@
     loading?: boolean;
     children?: Snippet;
     onclick?: (event: MouseEvent) => void;
+    onfiles?: (files: FileList) => void;
     class?: string;
     contentClass?: string;
     type?: ButtonType;
@@ -21,16 +21,12 @@
     [key: string]: any;
   }
 
-  const dispatch = createEventDispatcher<{
-    click: MouseEvent;
-    files: FileList;
-  }>();
-
   let {
     accept,
     loading = $bindable(false),
     children,
     onclick = () => {},
+    onfiles = () => {},
     multiple = false,
     disabled = false,
     ...buttonProps
@@ -45,7 +41,6 @@
     }
 
     onclick(event);
-    dispatch("click", event);
     inputElement.click();
   }
 
@@ -53,7 +48,7 @@
     const target = event.currentTarget as HTMLInputElement;
 
     if (target.files) {
-      dispatch("files", target.files);
+      onfiles(target.files);
     }
 
     target.value = "";

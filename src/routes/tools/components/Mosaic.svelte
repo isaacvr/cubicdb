@@ -27,8 +27,8 @@
   const blockWidth = 3;
   const blockHeight = 4;
 
-  function imageHandler(ev: any) {
-    let img = ev.detail[0];
+  function imageHandler(files: FileList) {
+    let img = files[0];
     let fr = new FileReader();
 
     fr.onloadend = ev1 => {
@@ -197,12 +197,12 @@
   {/if}
 
   <div class="flex flex-wrap gap-2">
-    <FileButton type="accent" class="mt-8" accept="image/*" on:files={imageHandler}>
+    <FileButton type="accent" class="mt-8" accept="image/*" onfiles={imageHandler}>
       {$localLang.TOOLS.selectImage}
     </FileButton>
 
     {#if imgStr}
-      <Button type="success" class="mt-8" loading={generatingMosaic} on:click={generateMosaic}>
+      <Button type="success" class="mt-8" loading={generatingMosaic} onclick={generateMosaic}>
         {$localLang.TOOLS.generate}
       </Button>
     {/if}
@@ -213,10 +213,10 @@
       <li class="grid place-items-center w-full relative">
         <img class="w-full" src={res.img} alt="" />
         <div class="absolute w-full h-full inset-0 flex items-center justify-center gap-2">
-          <Button type="accent" icon on:click={() => downloadPDF(res)}>
+          <Button type="accent" icon onclick={() => downloadPDF(res)}>
             <DownloadIcon size="2rem" />
           </Button>
-          <Button type="accent" icon on:click={() => showPreview(res)}>
+          <Button type="accent" icon onclick={() => showPreview(res)}>
             <EyeIcon size="2rem" />
           </Button>
         </div>

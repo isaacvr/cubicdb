@@ -451,7 +451,7 @@
   });
 </script>
 
-<svelte:window on:keydown={handleKeydown} on:resize={handleResize} />
+<svelte:window onkeydown={handleKeydown} onresize={handleResize} />
 
 <div class="simulator" class:expanded={showOptions}>
   <div class="shaded-card relative overflow-hidden flex flex-col">

@@ -1,9 +1,6 @@
 <script lang="ts">
   import { LoaderCircleIcon } from "lucide-svelte";
   import { ripple } from "./actions/ripple";
-  import { createEventDispatcher } from "svelte";
-
-  const dispatch = createEventDispatcher();
 
   export let flat = false;
   export let rp = true;
@@ -11,19 +8,21 @@
   export let tabindex = 0;
   export let ariaLabel = "";
   export let loading = false;
+  export let onclick: (event: MouseEvent) => void = () => {};
+  export let onfiles: (files: FileList | null) => void = () => {};
   let cl = "";
   export { cl as class };
 
   function handleClick(e: MouseEvent) {
-    dispatch("click", e);
+    onclick(e);
 
     if (file) {
       let f = document.createElement("input");
       f.type = "file";
       f.style.display = "none";
       f.accept = typeof file === "string" ? file + "/*" : "";
-      f.addEventListener("change", e => {
-        dispatch("files", f.files);
+      f.addEventListener("change", () => {
+        onfiles(f.files);
         f.remove();
       });
       document.body.appendChild(f);
@@ -43,7 +42,7 @@
     (flat ? " shadow-none px-2 py-1 " : "") +
     (cl || " hover:bg-white/10 border-none text-gray-400") +
     (loading ? " isLoading pointer-events-none" : "")}
-  on:click={handleClick}
+  onclick={handleClick}
   use:ripple={rp}
   aria-label={ariaLabel}
 >

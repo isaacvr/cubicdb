@@ -424,11 +424,11 @@
   });
 </script>
 
-<svelte:window on:keydown={handleKeydown} onclick={globalHandleClick} />
+<svelte:window onkeydown={handleKeydown} onclick={globalHandleClick} />
 
 <section role="tabpanel" class={"w-full h-full " + ($tab != 1 ? "!hidden" : "")}>
   <!-- Pagination -->
-  <PaginatorComponent {pg} on:update={updateSolves} />
+  <PaginatorComponent {pg} onupdate={updateSolves} />
 
   <!-- Solves -->
   <div id="grid" class="pt-4 grid overflow-scroll" bind:this={solvesElement}>
@@ -772,8 +772,8 @@
   <AdvancedSearch
     fields={advancedSearchFields}
     bind:gate={advancedSearchGate}
-    on:close={() => (searchModal = false)}
-    on:apply={updatePaginator}
+    onclose={() => (searchModal = false)}
+    onapply={updatePaginator}
   />
 </Modal>
 

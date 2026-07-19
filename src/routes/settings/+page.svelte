@@ -417,7 +417,7 @@
         <div class="flex flex-col items-center justify-center gap-4">
           <div class="flex justify-center gap-2">
             {#each displays as display}
-              <Button type="secondary" class="gap-2" on:click={() => useDisplay(display.id)}>
+              <Button type="secondary" class="gap-2" onclick={() => useDisplay(display.id)}>
                 <AirplayIcon size="1.2rem" />
                 {display.label}
               </Button>
@@ -425,7 +425,7 @@
           </div>
 
           <div>
-            <Button on:click={updateDisplays}>{$localLang.global.update}</Button>
+            <Button onclick={updateDisplays}>{$localLang.global.update}</Button>
           </div>
         </div>
       </TabItem>
@@ -437,7 +437,7 @@
           <div class="flex w-full gap-4 items-center">
             <span>{$localLang.SETTINGS.version} (CubicDB):</span>
             <mark class="ml-auto">{$version}</mark>
-            <Button on:click={() => canCheckUpdate && checkUpdate()}>
+            <Button onclick={() => canCheckUpdate && checkUpdate()}>
               {#if !canCheckUpdate}
                 <Spinner size="4" color="white" />
               {:else}
@@ -451,7 +451,7 @@
           <div class="flex w-full gap-4 items-center">
             <span>{$localLang.HOME.algorithms}:</span>
             <mark class="ml-auto">{algVersion}</mark>
-            <Button on:click={() => canCheckAlgs && checkAlgs()}>
+            <Button onclick={() => canCheckAlgs && checkAlgs()}>
               {#if !canCheckAlgs}
                 <Spinner size="4" color="white" />
               {:else}
@@ -465,7 +465,7 @@
           <div class="flex w-full gap-4 items-center">
             <span>{$localLang.HOME.tutorials}:</span>
             <mark class="ml-auto">{tutVersion}</mark>
-            <Button on:click={() => canCheckTuts && checkTuts()}>
+            <Button onclick={() => canCheckTuts && checkTuts()}>
               {#if !canCheckTuts}
                 <Spinner size="4" color="white" />
               {:else}
@@ -479,7 +479,7 @@
           <div class="flex w-full gap-4 items-center">
             <span>{$localLang.HOME.reconstructions}:</span>
             <mark class="ml-auto">{recVersion}</mark>
-            <Button on:click={() => canCheckRecs && checkRecs()}>
+            <Button onclick={() => canCheckRecs && checkRecs()}>
               {#if !canCheckRecs}
                 <Spinner size="4" color="white" />
               {:else}
@@ -507,7 +507,7 @@
               <TableBodyCell>{byteToString(st.length)}</TableBodyCell>
               <TableBodyCell>
                 {#if st.clean}
-                  <Button on:click={() => preClearCache(st.db, st.name)} type="secondary" shadow>
+                  <Button onclick={() => preClearCache(st.db, st.name)} type="secondary" shadow>
                     <EraserIcon size="1.2rem" />
                   </Button>
 
@@ -525,8 +525,8 @@
 
   <!-- Actions -->
   <div class="actions flex gap-4 items-center justify-center mt-8">
-    <Button type="success" on:click={save}>{$localLang.global.save}</Button>
-    <Button type="accent" on:click={reset}>{$localLang.global.reset}</Button>
+    <Button type="success" onclick={save}>{$localLang.global.save}</Button>
+    <Button type="accent" onclick={reset}>{$localLang.global.reset}</Button>
   </div>
 </Card>
 
@@ -538,12 +538,12 @@
     <Button
       type="secondary"
       aria-label={$localLang.global.cancel}
-      on:click={() => (showDelete = false)}
+      onclick={() => (showDelete = false)}
     >
       {$localLang.global.cancel}
     </Button>
 
-    <Button type="danger" aria-label={$localLang.global.delete} on:click={() => clearCache(sDb)}>
+    <Button type="danger" aria-label={$localLang.global.delete} onclick={() => clearCache(sDb)}>
       {$localLang.global.delete}
     </Button>
   </div>

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { createEventDispatcher, type Snippet } from "svelte";
+  import type { Snippet } from "svelte";
 
   interface DropdownItemProps {
     class?: string;
@@ -7,10 +7,6 @@
     onclick?: (event: MouseEvent) => void;
     children?: Snippet;
   }
-
-  const dispatch = createEventDispatcher<{
-    click: MouseEvent;
-  }>();
 
   let {
     class: customClass = "",
@@ -21,7 +17,6 @@
 
   function handleClick(event: MouseEvent) {
     onclick(event);
-    dispatch("click", event);
   }
 </script>
 

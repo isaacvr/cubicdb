@@ -368,7 +368,7 @@
   $: enableKeyboard.set(!(locked || isObserver || ending || !socket.connected));
 </script>
 
-<svelte:body on:keydown={ev => ev.code === "Space" && ev.preventDefault()} />
+<svelte:body onkeydown={ev => ev.code === "Space" && ev.preventDefault()} />
 
 <Card
   class="mt-4 max-w-4xl w-[calc(100%-2rem)] mx-auto mb-8 flex flex-col items-center gap-4 relative"
@@ -378,9 +378,9 @@
   <!-- IDLE -->
   {#if state === "idle"}
     <div class="flex items-center justify-center gap-4">
-      <Button on:click={() => toState("create")} type="success">Create</Button>
-      <Button on:click={() => toState("join")} type="info">Join</Button>
-      <Button on:click={() => (eventList.length = 0)} type="accent">Clear</Button>
+      <Button onclick={() => toState("create")} type="success">Create</Button>
+      <Button onclick={() => toState("join")} type="info">Join</Button>
+      <Button onclick={() => (eventList.length = 0)} type="accent">Clear</Button>
     </div>
   {/if}
 
@@ -404,8 +404,8 @@
     </div>
 
     <div class="flex items-center justify-center gap-4">
-      <Button on:click={() => toState("idle")} type="danger">Back</Button>
-      <Button on:click={() => tryCreate() && toState("waiting")} type="info">Create</Button>
+      <Button onclick={() => toState("idle")} type="danger">Back</Button>
+      <Button onclick={() => tryCreate() && toState("waiting")} type="info">Create</Button>
     </div>
   {/if}
 
@@ -417,16 +417,16 @@
 
       <span class="col-span-1 flex justify-end items-center">Game ID:</span>
       <div class="col-span-2">
-        <Input bind:value={gameID} on:UENTER={() => tryJoin() && toState("waiting")} />
+        <Input bind:value={gameID} onUENTER={() => tryJoin() && toState("waiting")} />
       </div>
 
       <span class="col-span-3 flex justify-center gap-2">
-        <Checkbox {checked} on:change={e => (checked = e.detail.value)} label="Join as observer" />
+        <Checkbox {checked} onchange={e => (checked = e.value)} label="Join as observer" />
       </span>
     </div>
     <div class="flex items-center justify-center gap-4 my-6">
-      <Button on:click={() => toState("idle")} type="danger">Back</Button>
-      <Button on:click={() => tryJoin() && toState("waiting")} type="info">Join</Button>
+      <Button onclick={() => toState("idle")} type="danger">Back</Button>
+      <Button onclick={() => tryJoin() && toState("waiting")} type="info">Join</Button>
     </div>
   {/if}
 
@@ -435,7 +435,7 @@
     <h2 class="text-gray-300 text-2xl text-center">Waiting...</h2>
 
     <div class="flex items-center justify-center gap-4">
-      <Button on:click={() => toState("idle")} type="danger">Back</Button>
+      <Button onclick={() => toState("idle")} type="danger">Back</Button>
     </div>
   {/if}
 
@@ -444,7 +444,7 @@
     <div class="text-gray-300 text-xl flex items-center justify-center gap-2">
       Game ID:
       <span class="bg-violet-700 text-gray-300 px-2 py-1 rounded-md">{gameID}</span>
-      <Button type="tertiary" size="sm" icon class="me-3" on:click={toClipboard}>
+      <Button type="tertiary" size="sm" icon class="me-3" onclick={toClipboard}>
         <CopyIcon size="1.2rem" />
       </Button>
     </div>
@@ -452,7 +452,7 @@
     <ul id="actions" class="absolute top-2 right-2 flex items-center gap-2">
       <li class="bg-gray-500 text-gray-300 cursor-pointer">
         <button
-          on:click={() => {
+          onclick={() => {
             socket.disconnect();
 
             setTimeout(() => socket.connect(), 10000);
@@ -467,7 +467,7 @@
         <Tooltip placement="top">Observers</Tooltip>
       </li>
 
-      <Button type="danger" size="sm" icon on:click={exit}>
+      <Button type="danger" size="sm" icon onclick={exit}>
         <div class="flex items-center"><XIcon size="1.2rem" /></div>
         <Tooltip placement="top">Exit</Tooltip>
       </Button>
@@ -475,7 +475,7 @@
 
     {#if isCreator}
       {#if !$game.started && $game.players.length > 1}
-        <Button on:click={start} type="success" class="my-8 mx-auto">Start!</Button>
+        <Button onclick={start} type="success" class="my-8 mx-auto">Start!</Button>
       {:else}
         <span class="flex justify-center text-yellow-300">Share the game ID with your friends!</span
         >
@@ -519,10 +519,10 @@
 
     <div class="flex items-center justify-center gap-4 w-full">
       {#if isCreator}
-        <Button on:click={rematch} type="accent" class="my-8">Rematch</Button>
+        <Button onclick={rematch} type="accent" class="my-8">Rematch</Button>
       {/if}
 
-      <Button on:click={exit} type="danger" class="my-8">Exit</Button>
+      <Button onclick={exit} type="danger" class="my-8">Exit</Button>
     </div>
   {/if}
 
@@ -531,7 +531,7 @@
     <h2 class="text-gray-300 text-2xl text-center">Error</h2>
 
     <div class="flex items-center justify-center gap-4">
-      <Button on:click={() => toState("idle")} type="danger">Back</Button>
+      <Button onclick={() => toState("idle")} type="danger">Back</Button>
     </div>
   {/if}
 

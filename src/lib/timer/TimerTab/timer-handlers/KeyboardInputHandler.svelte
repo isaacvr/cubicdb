@@ -72,9 +72,6 @@
 
           $lastSolve.penalty = $lastSolve.penalty === Penalty.DNF ? Penalty.NONE : Penalty.DNF;
           $time = $lastSolve.penalty === Penalty.DNF ? Infinity : $lastSolve.time;
-          // battle
-          //   ? dispatch("update", $lastSolve)
-          //   : $dataService.solve.updateSolve($lastSolve).then(handleUpdateSolve);
         }
       },
     },
@@ -89,11 +86,7 @@
           $lastSolve.penalty === Penalty.P2 ? ($lastSolve.time += 2000) : ($lastSolve.time -= 2000);
           $time = $lastSolve.time;
 
-          // if (battle) {
-          //   // dispatch("update", $lastSolve);
-          // } else {
           requestUpdateSolve($lastSolve);
-          // }
         }
       },
     },

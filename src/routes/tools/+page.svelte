@@ -358,10 +358,10 @@
 </svelte:head>
 
 <svelte:window
-  on:keyup={handleKeyup}
-  on:mousedown={() => (md = true)}
-  on:mouseup={() => (md = false)}
-  on:resize={updateDim}
+  onkeyup={handleKeyup}
+  onmousedown={() => (md = true)}
+  onmouseup={() => (md = false)}
+  onresize={updateDim}
 />
 
 <!-- Selection -->
@@ -463,7 +463,7 @@
         </ul>
 
         <div class="flex gap-2 items-center justify-center pt-4">
-          <Button type="secondary" size="sm" icon class="me-3" on:click={toClipboard}
+          <Button type="secondary" size="sm" icon class="me-3" onclick={toClipboard}
             ><CopyIcon size="1.2rem" /></Button
           >
           <Tooltip placement="bottom">{$localLang.global.clickToCopy}</Tooltip>
@@ -472,8 +472,8 @@
     {/if}
 
     <div class="flex items-center justify-center gap-2 mt-8">
-      <Input type="number" class="!w-20" bind:value={batch} min={1} on:UENTER={generateBatch} />
-      <Button type="accent" on:click={generateBatch}>{$localLang.global.generate}</Button>
+      <Input type="number" class="!w-20" bind:value={batch} min={1} onUENTER={generateBatch} />
+      <Button type="accent" onclick={generateBatch}>{$localLang.global.generate}</Button>
     </div>
   {:else if option === "statistics"}
     <div class="mt-4">
@@ -513,16 +513,15 @@
           focus={true}
           bind:value={timeStr}
           stopKeyupPropagation
-          on:UENTER={addTimeString}
+          onUENTER={addTimeString}
           class="w-full text-8xl mx-auto !h-24 text-center {validTimeStr(timeStr)
             ? ''
             : '!border-red-400 !border-2'}
             focus-within:shadow-black"
           inpClass="text-center"
         />
-        <Button type="accent" class="h-min" on:click={addTimeString}>{$localLang.global.add}</Button
-        >
-        <Button type="danger" class="h-min" on:click={clear}>{$localLang.global.clear}</Button>
+        <Button type="accent" class="h-min" onclick={addTimeString}>{$localLang.global.add}</Button>
+        <Button type="danger" class="h-min" onclick={clear}>{$localLang.global.clear}</Button>
       </div>
     </div>
   {:else if option === "metrics"}
@@ -581,8 +580,8 @@
       </div>
 
       <div class="actions">
-        <Button type="accent" on:click={solve} class="ml-4">{$localLang.TOOLS.solve}</Button>
-        <Button type="danger" on:click={clearCube}>{$localLang.global.clear}</Button>
+        <Button type="accent" onclick={solve} class="ml-4">{$localLang.TOOLS.solve}</Button>
+        <Button type="danger" onclick={clearCube}>{$localLang.global.clear}</Button>
       </div>
     </div>
   {:else if option === "mosaic"}

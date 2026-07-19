@@ -1,11 +1,11 @@
 <script lang="ts">
   import type { Algorithm, AlgorithmTree } from "@interfaces";
   import { ChevronRightIcon, TrashIcon, PencilIcon, PlusIcon } from "lucide-svelte";
-  import { createEventDispatcher } from "svelte";
 
   export let obj: AlgorithmTree;
-
-  const dispatch = createEventDispatcher();
+  export let oneditstep: (algorithm: Algorithm) => void = () => {};
+  export let onadd: (algorithm: Algorithm) => void = () => {};
+  export let ondelete: (algorithm: Algorithm) => void = () => {};
 
   function toggleExpanded(ev: MouseEvent) {
     ev.stopPropagation();
@@ -13,15 +13,15 @@
   }
 
   function editAlgorithm(a: Algorithm) {
-    dispatch("edit-step", a);
+    oneditstep(a);
   }
 
   function addSection(a: Algorithm) {
-    dispatch("add", a);
+    onadd(a);
   }
 
   function deleteSection(a: Algorithm) {
-    dispatch("delete", a);
+    ondelete(a);
   }
 </script>
 
@@ -60,9 +60,9 @@
       {#each obj.children as child (child.alg.parentPath + "/" + child.route)}
         <svelte:self
           obj={child}
-          on:edit-step={ev => editAlgorithm(ev.detail)}
-          on:add={ev => addSection(ev.detail)}
-          on:delete={ev => deleteSection(ev.detail)}
+          oneditstep={editAlgorithm}
+          onadd={addSection}
+          ondelete={deleteSection}
         />
       {/each}
     </div>

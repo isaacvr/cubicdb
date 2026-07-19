@@ -1,8 +1,6 @@
 <script lang="ts">
   import { minmax } from "@helpers/math";
-  import { createEventDispatcher, tick } from "svelte";
-
-  const dispatch = createEventDispatcher();
+  import { tick } from "svelte";
 
   type InputType = "text" | "number" | "date";
 
@@ -18,6 +16,15 @@
   export let inpClass = "";
   export let stopKeyupPropagation = false;
   export let stopKeydownPropagation = false;
+  export let onkeyup: (event: KeyboardEvent) => void = () => {};
+  export let onUENTER: (event: KeyboardEvent) => void = () => {};
+  export let onUESCAPE: (event: KeyboardEvent) => void = () => {};
+  export let onkeydown: (event: KeyboardEvent) => void = () => {};
+  export let onDENTER: (event: KeyboardEvent) => void = () => {};
+  export let onDESCAPE: (event: KeyboardEvent) => void = () => {};
+  export let oninput: (event: Event) => void = () => {};
+  export let onchange: (event: Event) => void = () => {};
+  export let onclick: (event: MouseEvent) => void = () => {};
 
   let cl = "";
   export { cl as class };
@@ -29,20 +36,20 @@
 
   function keyup(e: KeyboardEvent) {
     stopKeyupPropagation && e.stopPropagation();
-    dispatch("keyup", e);
-    (e.code === "Enter" || e.code === "NumpadEnter" || e.key === "Enter") && dispatch("UENTER", e);
-    e.code === "Esc" && dispatch("UESCAPE", e);
+    onkeyup(e);
+    (e.code === "Enter" || e.code === "NumpadEnter" || e.key === "Enter") && onUENTER(e);
+    e.code === "Esc" && onUESCAPE(e);
   }
 
   function keydown(e: KeyboardEvent) {
     stopKeydownPropagation && e.stopPropagation();
-    dispatch("keydown", e);
-    (e.code === "Enter" || e.code === "NumpadEnter" || e.key === "Enter") && dispatch("DENTER", e);
-    e.code === "Esc" && dispatch("DESCAPE", e);
+    onkeydown(e);
+    (e.code === "Enter" || e.code === "NumpadEnter" || e.key === "Enter") && onDENTER(e);
+    e.code === "Esc" && onDESCAPE(e);
   }
 
   function input(e: any) {
-    dispatch("input", e);
+    oninput(e);
   }
 
   function change(e: any) {
@@ -55,11 +62,11 @@
       t.value = value = minmax(t.value, min, max);
     }
 
-    dispatch("change", e);
+    onchange(e);
   }
 
   function click(e: MouseEvent) {
-    dispatch("click", e);
+    onclick(e);
   }
 </script>
 
@@ -73,11 +80,11 @@
       class={inpClass || ""}
       bind:this={ref}
       bind:value
-      on:click={click}
-      on:keydown={keydown}
-      on:keyup={keyup}
-      on:input={input}
-      on:change={change}
+      onclick={click}
+      onkeydown={keydown}
+      onkeyup={keyup}
+      oninput={input}
+      onchange={change}
       {disabled}
       type="text"
       autocomplete="off"
@@ -94,11 +101,11 @@
       {disabled}
       {step}
       type="number"
-      on:click={click}
-      on:keydown={keydown}
-      on:keyup={keyup}
-      on:input={input}
-      on:change={change}
+      onclick={click}
+      onkeydown={keydown}
+      onkeyup={keyup}
+      oninput={input}
+      onchange={change}
       bind:value
       placeholder=""
     />
@@ -109,11 +116,11 @@
       class={inpClass || ""}
       {disabled}
       type="date"
-      on:click={click}
-      on:keydown={keydown}
-      on:keyup={keyup}
-      on:input={input}
-      on:change={change}
+      onclick={click}
+      onkeydown={keydown}
+      onkeyup={keyup}
+      oninput={input}
+      onchange={change}
       bind:value
       placeholder=""
     />

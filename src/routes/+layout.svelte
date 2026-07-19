@@ -224,7 +224,7 @@
   <!-- {@html jsonld || ""} -->
 </svelte:head>
 
-<svelte:window on:resize={handleResize} />
+<svelte:window onresize={handleResize} />
 
 <div class="layout cdb-app-background" data-navigation-collapsed={navigationCollapsed}>
   <div class="navbar-shell draggable custom-cursor">
@@ -251,7 +251,7 @@
               containerClass="max-h-[20rem] overflow-y-auto overflow-x-hidden rounded-md
                 z-50 w-max bg-base-200"
               id="layout-session-dropdown"
-              on:show={({ detail }) => {
+              onshow={({ detail }) => {
                 if (detail) {
                   $sessions = $sessions.sort(nameCmp);
 
@@ -291,7 +291,7 @@
         <!-- <Popover class="z-50 bg-base-200">
         <span class="flex justify-center">{$localLang.global.downloading}</span>
         <progress class="w-[10rem] my-3 progress" value={progress} max={100}></progress>
-        <Button class="py-2 w-full" on:click={cancelUpdate}>
+        <Button class="py-2 w-full" onclick={cancelUpdate}>
           {$localLang.global.cancel}
         </Button>
       </Popover> -->
@@ -354,7 +354,7 @@
           <XIcon size="1.2rem" />
         </Button>
       {:else if browser && !document.fullscreenElement}
-        <Button type="tertiary" size="sm" icon on:click={fullScreen}>
+        <Button type="tertiary" size="sm" icon onclick={fullScreen}>
           <ArrowUpRightDownLeftOutline size="sm" />
         </Button>
         <!-- <Tooltip>{$localLang.global.fullScreen}</Tooltip> -->

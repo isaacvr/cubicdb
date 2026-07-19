@@ -440,7 +440,7 @@
       </tbody>
     </table>
 
-    <Button type="warning" class="mt-4" on:click={saveConfig}>
+    <Button type="warning" class="mt-4" onclick={saveConfig}>
       {$localLang.global.save}
     </Button>
   {:else}

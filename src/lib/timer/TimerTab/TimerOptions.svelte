@@ -405,7 +405,7 @@
       class="group"
       id="tools"
       aria-label={$localLang.HOME.tools}
-      on:keydown={e => (e.detail.code === "Space" ? e.detail.preventDefault() : null)}
+      onkeydown={e => (e.code === "Space" ? e.preventDefault() : null)}
     >
       <HammerIcon class="group-hover:text-warning" size={iconSize} />
     </Button>
@@ -550,9 +550,9 @@
     {@const ToolComponent = tool.tool.component}
     <ToolFrame
       {tool}
-      on:close={() => (toolList = toolList.filter(t => t.tool.id != tool.tool.id))}
-      on:expand={() => (tool.open = true)}
-      on:collapse={() => (tool.open = false)}
+      onclose={() => (toolList = toolList.filter(t => t.tool.id != tool.tool.id))}
+      onexpand={() => (tool.open = true)}
+      oncollapse={() => (tool.open = false)}
     >
       <ToolComponent {context} />
     </ToolFrame>
@@ -685,7 +685,7 @@
       <section>
         <Checkbox
           bind:checked={modalData.settings.showBackFace}
-          on:change={() => ($session = $session)}
+          onchange={() => ($session = $session)}
           class="w-5 h-5"
           label={$localLang.global.showBackFace}
         />

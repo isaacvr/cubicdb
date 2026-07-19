@@ -43,7 +43,7 @@
   <table>
     <thead>
       <tr>
-        {#if selection}<th><Checkbox bind:checked={selectAll} on:change={changeAll} /></th>{/if}
+        {#if selection}<th><Checkbox bind:checked={selectAll} onchange={changeAll} /></th>{/if}
         {#each columns as hd}
           <th>{hd.text}</th>
         {/each}
@@ -55,7 +55,7 @@
           {#each r as v, i}
             {#if i == 0}
               {#if selection}
-                <td><Checkbox bind:checked={r[0]} on:change={changeSingle} /></td>
+                <td><Checkbox bind:checked={r[0]} onchange={changeSingle} /></td>
               {/if}
             {:else}
               <td>{v}</td>

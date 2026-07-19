@@ -211,7 +211,7 @@
         <li class="donation">
           <img src={dnt.logo} alt="" class="donation-img border" />
           <img src={dnt.qr} alt="" class="donation-QR" />
-          <button class="donation-address" on:click={() => toClipboard(dnt.address)}
+          <button class="donation-address" onclick={() => toClipboard(dnt.address)}
             ><span>{dnt.address}</span> <CopyIcon size="1.2rem" />
           </button>
           <span class="donation-currency flex items-center gap-2">

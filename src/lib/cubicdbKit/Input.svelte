@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { createEventDispatcher } from "svelte";
   import type { HTMLInputAttributes } from "svelte/elements";
 
   interface InputProps {
@@ -16,14 +15,11 @@
     readOnly?: boolean;
     name?: string;
     autocomplete?: HTMLInputAttributes["autocomplete"];
+    oninput?: (event: Event) => void;
+    onkeydown?: (event: KeyboardEvent) => void;
+    onUENTER?: () => void;
     [key: string]: any;
   }
-
-  const dispatch = createEventDispatcher<{
-    input: Event;
-    keydown: KeyboardEvent;
-    UENTER: void;
-  }>();
 
   let {
     value = $bindable(""),
@@ -37,20 +33,28 @@
     autofocus = false,
     readonly = false,
     readOnly = false,
+    oninput = () => {},
+    onkeydown = () => {},
+    onUENTER = () => {},
     ...restProps
   }: InputProps = $props();
 
   function handleInput(e: Event) {
     const target = e.currentTarget as HTMLInputElement;
-    value = type === "number" ? (Number.isNaN(target.valueAsNumber) ? 0 : target.valueAsNumber) : target.value;
-    dispatch("input", e);
+    value =
+      type === "number"
+        ? Number.isNaN(target.valueAsNumber)
+          ? 0
+          : target.valueAsNumber
+        : target.value;
+    oninput(e);
   }
 
   function handleKeydown(e: KeyboardEvent) {
     if (e.code === "Enter") {
-      dispatch("UENTER");
+      onUENTER();
     }
-    dispatch("keydown", e);
+    onkeydown(e);
   }
 </script>
 

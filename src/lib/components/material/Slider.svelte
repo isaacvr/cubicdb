@@ -1,13 +1,13 @@
 <script lang="ts">
   import { map, minmax } from "@helpers/math";
-  import { createEventDispatcher, onMount } from "svelte";
+  import { onMount } from "svelte";
 
   // let type: 'simple' | 'range' | 'reverse' = "simple";
   export let min = 0;
   export let max = 100;
   export let value = 0;
+  export let onmousedown: (event: MouseEvent) => void = () => {};
 
-  let dispatch = createEventDispatcher();
   let wrapper: HTMLButtonElement;
   let mark: HTMLSpanElement;
   let moving = false;
@@ -18,7 +18,7 @@
   function mousedownHandler(ev: MouseEvent) {
     moving = true;
     xToValue(ev.x);
-    dispatch("mousedown", ev);
+    onmousedown(ev);
   }
 
   function mouseupHandler() {
@@ -63,14 +63,14 @@
   $: isMounted && valueToPercent(value);
 </script>
 
-<svelte:window on:mousemove={mousemoveHandler} on:mouseup={mouseupHandler} />
+<svelte:window onmousemove={mousemoveHandler} onmouseup={mouseupHandler} />
 
 <button
   aria-label="slider"
   bind:this={wrapper}
   class={"wrapper cursor-pointer " + (cl || "")}
-  on:click={wrapperClickHandler}
-  on:mousedown={mousedownHandler}
+  onclick={wrapperClickHandler}
+  onmousedown={mousedownHandler}
 >
   <span bind:this={mark} class="mark"></span>
 </button>
