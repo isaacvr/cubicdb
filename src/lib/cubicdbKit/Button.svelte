@@ -42,6 +42,7 @@
     cancel: "btn-neutral",
     urgent: "btn-accent",
     error: "btn-error",
+    ghost: "btn-ghost cdb-button-ghost",
     neutral: "btn-ghost border border-base-content/20",
     none: "btn-ghost bg-transparent border-transparent shadow-none",
     alternative: "btn-neutral",

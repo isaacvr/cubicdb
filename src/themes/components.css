@@ -270,6 +270,77 @@ pre .operator {
   white-space: nowrap;
 }
 
+.cdb-button-ghost {
+  border-color: transparent;
+  background: transparent;
+  color: var(--cdb-color-base-content, #e9eaeb);
+  box-shadow: none;
+}
+
+.cdb-button-ghost:hover {
+  border-color: transparent;
+  background: var(--cdb-button-ghost-hover-background, rgba(58, 189, 248, 0.05));
+  color: var(--cdb-color-base-content, #e9eaeb);
+}
+
+.cdb-button-ghost:active,
+.cdb-button-ghost:focus-visible {
+  background: var(--cdb-button-ghost-active-background, rgba(58, 189, 248, 0.1));
+}
+
+.cdb-action-icon-button {
+  width: 2rem;
+  height: 2rem;
+  min-height: 2rem;
+  padding: 0;
+}
+
+.cdb-primary-icon-button {
+  width: 2.5rem;
+  height: 2.5rem;
+  min-height: 2.5rem;
+  padding: 0;
+  border-color: transparent;
+  background: var(--cdb-color-primary, #3abdf8);
+  color: var(--cdb-color-primary-content, #030406);
+  box-shadow: var(--cdb-shadow-control, 0 0.375rem 1.125rem rgba(58, 189, 248, 0.14));
+}
+
+.cdb-primary-icon-button:hover,
+.cdb-primary-icon-button:focus-visible {
+  border-color: transparent;
+  background: var(--cdb-color-primary, #3abdf8);
+  color: var(--cdb-color-primary-content, #030406);
+  filter: brightness(1.04);
+}
+
+.cdb-primary-icon-button:active {
+  filter: brightness(0.96);
+}
+
+.cdb-danger-icon-button {
+  width: 2.5rem;
+  height: 2.5rem;
+  min-height: 2.5rem;
+  padding: 0;
+  border-color: transparent;
+  background: var(--cdb-color-prevention, #fb7085);
+  color: var(--cdb-color-base-content, #e9eaeb);
+  box-shadow: var(--cdb-shadow-control, 0 0.375rem 1.125rem rgba(251, 112, 133, 0.16));
+}
+
+.cdb-danger-icon-button:hover,
+.cdb-danger-icon-button:focus-visible {
+  border-color: transparent;
+  background: var(--cdb-color-prevention, #fb7085);
+  color: var(--cdb-color-base-content, #e9eaeb);
+  filter: brightness(1.04);
+}
+
+.cdb-danger-icon-button:active {
+  filter: brightness(0.96);
+}
+
 .cdb-icon-button {
   display: inline-flex;
   align-items: center;
@@ -415,12 +486,14 @@ pre .operator {
   width: var(--cdb-side-nav-width-expanded, 16.5rem);
   padding: 0 var(--cdb-space-xs, 0.25rem);
   overflow: hidden auto;
+  background: var(--cdb-side-nav-background, transparent);
   color: var(--cdb-color-base-content, #e9eaeb);
   transition: width 160ms ease;
 }
 
 .cdb-side-nav[data-collapsed="true"] {
   width: var(--cdb-side-nav-width-collapsed, 2.5rem);
+  padding-inline: 0;
 }
 
 .cdb-side-nav-section {
@@ -444,7 +517,7 @@ pre .operator {
   min-height: var(--cdb-control-height-md, 2.5rem);
   padding: 0 var(--cdb-space-sm, 0.5rem);
   border-radius: var(--cdb-radius-control, 0.5rem);
-  color: inherit;
+  color: var(--cdb-side-nav-item-color, var(--cdb-color-base-content, #e9eaeb));
   font-size: 0.875rem;
   font-weight: 500;
   text-decoration: none;
@@ -455,22 +528,48 @@ pre .operator {
 
 .cdb-side-nav-item:hover,
 .cdb-side-nav-item[data-active="true"] {
-  background: var(--cdb-color-primary-soft, rgba(58, 189, 248, 0.05));
-  color: var(--cdb-color-primary, #3abdf8);
+  background: var(--cdb-side-nav-active-background, rgba(58, 189, 248, 0.16));
+  color: var(--cdb-side-nav-active-color, #e9eaeb);
+}
+
+.cdb-side-nav-item[data-accent="support"] svg {
+  color: var(--cdb-side-nav-support-color, #fb7085);
+}
+
+.cdb-side-nav-item[data-active="true"] svg {
+  color: var(--cdb-side-nav-active-color, #e9eaeb);
+}
+
+.cdb-side-nav[data-collapsed="true"] .cdb-side-nav-item {
+  width: var(--cdb-control-height-md, 2.5rem);
+  height: var(--cdb-control-height-md, 2.5rem);
+  justify-content: center;
+  margin-inline: auto;
+  padding: 0;
 }
 
 .cdb-side-nav-item svg {
   flex: 0 0 auto;
+  color: var(--cdb-side-nav-icon-color, var(--cdb-color-primary, #3abdf8));
 }
 
 .cdb-side-nav[data-collapsed="true"] .cdb-side-nav-label {
+  display: none;
   width: 0;
   opacity: 0;
   overflow: hidden;
 }
 
 .cdb-side-nav-toggle {
+  --cdb-icon-button-size: 1.5rem;
+  flex: 0 0 auto;
   margin-left: auto;
+  margin-right: var(--cdb-space-sm, 0.5rem);
+}
+
+.cdb-side-nav[data-collapsed="true"] .cdb-side-nav-toggle {
+  --cdb-icon-button-size: var(--cdb-control-height-md, 2.5rem);
+  margin-inline: auto;
 }
 
 .svg-container:hover svg * {

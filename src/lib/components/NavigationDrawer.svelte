@@ -39,14 +39,14 @@
   Icon: any,
   key: keyof typeof $localLang.HOME
 )}
-  {@const colorType = ["", "", "", ""]}
   <li>
     <a
-      class={twMerge("svg-container cdb-side-nav-item", colorType[type])}
+      class={twMerge("svg-container cdb-side-nav-item")}
       style={`--dash: ${dash};`}
       {href}
       aria-current={isActive(href) ? "page" : undefined}
       data-active={isActive(href)}
+      data-accent={type === 3 ? "support" : undefined}
       title={collapsed ? $localLang.HOME[key] : undefined}
     >
       <Icon size="1.25rem" />
@@ -55,11 +55,7 @@
   </li>
 {/snippet}
 
-<div
-  class="navigation cdb-side-nav"
-  data-collapsed={collapsed}
-  style="--cdb-side-nav-width-expanded: var(--cdb-side-nav-width-expanded); --cdb-side-nav-width-collapsed: var(--cdb-side-nav-width-collapsed);"
->
+<div class="navigation cdb-side-nav" data-collapsed={collapsed}>
   <!-- Normal Pages -->
   <ul class="cdb-side-nav-section">
     {@render listItem(0, 50, "/timer", TimerIcon, "timer")}

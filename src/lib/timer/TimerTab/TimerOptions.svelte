@@ -117,6 +117,8 @@
   let showToolsMenu = $state(false);
 
   const DD_CLASS = "font-medium p-2 text-sm hover:bg-primary flex items-center";
+  const TIMER_OPTION_BUTTON_COLOR = "ghost";
+  const TIMER_OPTION_BUTTON_CLASS = "cdb-action-icon-button size-8 min-h-8 p-0";
 
   const tools: ToolItem[] = [
     {
@@ -456,6 +458,8 @@
 {#if options.modeSettings && $session.settings.sessionType === "mixed"}
   <Tooltip tooltipText={$localLang.global.settings} placement="bottom-end" class="z-30">
     <Button
+      color={TIMER_OPTION_BUTTON_COLOR}
+      class={TIMER_OPTION_BUTTON_CLASS}
       style="--dash: 18;"
       onclick={() => {
         showMixedSettingsDialog = true;
@@ -474,6 +478,8 @@
     keyBindings={["control", "s"]}
   >
     <Button
+      color={TIMER_OPTION_BUTTON_COLOR}
+      class={TIMER_OPTION_BUTTON_CLASS}
       style="--dash: 18;"
       onclick={(event: MouseEvent) => initScrambler(undefined, undefined, undefined, event)}
     >
@@ -483,12 +489,10 @@
 {/if}
 
 {#if options.copyScramble}
-  <Tooltip
-    tooltipText={$localLang.TIMER.copyScramble}
-    placement="bottom-end"
-    class="z-30"
-  >
+  <Tooltip tooltipText={$localLang.TIMER.copyScramble} placement="bottom-end" class="z-30">
     <Button
+      color={TIMER_OPTION_BUTTON_COLOR}
+      class={TIMER_OPTION_BUTTON_CLASS}
       style="--dash: 18;"
       onclick={() => {
         copyToClipboard($scramble).then(() => {
@@ -513,13 +517,16 @@
     keyBindings={["control", "e"]}
   >
     <Button
+      color={TIMER_OPTION_BUTTON_COLOR}
+      class={TIMER_OPTION_BUTTON_CLASS}
       style="--dash: 18;"
-      onclick={() => openDialog(
-        "edit-scramble",
-        $scramble,
-        (scr: string, nativeEvent?: KeyboardEvent | MouseEvent) =>
-          scr && initScrambler(scr, undefined, undefined, nativeEvent)
-      )}
+      onclick={() =>
+        openDialog(
+          "edit-scramble",
+          $scramble,
+          (scr: string, nativeEvent?: KeyboardEvent | MouseEvent) =>
+            scr && initScrambler(scr, undefined, undefined, nativeEvent)
+        )}
     >
       <SquarePenIcon size={iconSize} />
     </Button>
@@ -533,7 +540,7 @@
     class="z-30"
     keyBindings={["control", "o"]}
   >
-    <Button style="--dash: 23;">
+    <Button color={TIMER_OPTION_BUTTON_COLOR} class={TIMER_OPTION_BUTTON_CLASS} style="--dash: 23;">
       <HistoryIcon size={iconSize} />
     </Button>
   </Tooltip>
@@ -577,7 +584,7 @@
           col-span-3 cursor-pointer hover:text-blue-400 my-2 justify-start p-0 rounded-none
           text-ellipsis overflow-hidden whitespace-nowrap
         "
-           onclick={(event: MouseEvent) => select(s, event)}>{s.scramble}</Button
+          onclick={(event: MouseEvent) => select(s, event)}>{s.scramble}</Button
         >
         <span class="col-span-1 flex items-center justify-center">{timer(s.time, true, true)}</span>
       {/each}

@@ -56,6 +56,8 @@
   --cdb-color-border-focus: #3abdf8;
   --cdb-color-overlay: rgba(3, 4, 6, 0.75);
 
+  --cdb-button-ghost-hover-background: var(--cdb-color-base-soft);
+  --cdb-button-ghost-active-background: var(--cdb-color-base-raised);
   --cdb-surface-panel: var(--cdb-color-base-soft);
   --cdb-surface-raised: var(--cdb-color-base-raised);
   --cdb-radius-control: 0.5rem;
@@ -71,6 +73,12 @@
   --cdb-control-height-md: 2.5rem;
   --cdb-side-nav-width-collapsed: 2.5rem;
   --cdb-side-nav-width-expanded: 16.5rem;
+  --cdb-side-nav-background: transparent;
+  --cdb-side-nav-item-color: var(--cdb-color-base-content);
+  --cdb-side-nav-icon-color: var(--cdb-color-base-content);
+  --cdb-side-nav-active-background: rgba(58, 189, 248, 0.16);
+  --cdb-side-nav-active-color: var(--cdb-color-base-content);
+  --cdb-side-nav-support-color: var(--cdb-color-prevention);
   --cdb-timer-ready-glow: 0 0 1.5rem rgba(46, 212, 191, 0.5);
   --cdb-timer-prevention-glow: 0 0 1.5rem rgba(251, 112, 133, 0.35);
   --cdb-shadow-panel: 0 1rem 2.75rem rgba(0, 0, 0, 0.18);

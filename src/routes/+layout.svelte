@@ -65,6 +65,7 @@
   let itv: any;
   let progress = $state(0);
   let parts: { link: string; name: string }[] = $state([]);
+  let navigationCollapsed = $state(false);
   // let jsonld = $state("");
 
   function handleProgress(p: number) {
@@ -225,26 +226,27 @@
 
 <svelte:window on:resize={handleResize} />
 
-<div class="layout">
-  <div class="topbar-logo px-2">
-    <CubicDbLogo />
-  </div>
+<div class="layout cdb-app-background" data-navigation-collapsed={navigationCollapsed}>
+  <div class="navbar-shell draggable custom-cursor">
+    <div class="navbar-logo px-2">
+      <CubicDbLogo />
+    </div>
 
-  <div class="topbar-content draggable custom-cursor">
-    <div class="breadcrumbs text-sm mr-auto">
-      <ul>
-        {#each parts as part, pos (pos)}
-          {#if parts[0].link === "/timer" && pos === 1}
-            {@const session = $sessions.find(s => s._id === part.name)}
+    <div class="navbar-content">
+      <div class="breadcrumbs text-sm mr-auto">
+        <ul>
+          {#each parts as part, pos (pos)}
+            {#if parts[0].link === "/timer" && pos === 1}
+              {@const session = $sessions.find(s => s._id === part.name)}
 
-            <li class="cursor-pointer last-of-type:font-bold">
-              <a href={part.link} class="gap-1">
-                <TimerSessionIcon icon={session?.settings.sessionType} size="1.2rem" />
-                {session?.name || ""}
-              </a>
-            </li>
+              <li class="cursor-pointer last-of-type:font-bold">
+                <a href={part.link} class="gap-1">
+                  <TimerSessionIcon icon={session?.settings.sessionType} size="1.2rem" />
+                  {session?.name || ""}
+                </a>
+              </li>
 
-            <!-- <Dropdown
+              <!-- <Dropdown
               bind:open={dropdownOpen}
               containerClass="max-h-[20rem] overflow-y-auto overflow-x-hidden rounded-md
                 z-50 w-max bg-base-200"
@@ -273,33 +275,33 @@
                 </DropdownItem>
               {/each}
             </Dropdown> -->
-          {:else}
-            <li class="cursor-pointer last-of-type:font-bold">
-              <a href={part.link}>{part.name}</a>
-            </li>
-          {/if}
-        {/each}
-        <!-- <li class="cursor-pointer hover:underline font-bold">{data.title}</li>
+            {:else}
+              <li class="cursor-pointer last-of-type:font-bold">
+                <a href={part.link}>{part.name}</a>
+              </li>
+            {/if}
+          {/each}
+          <!-- <li class="cursor-pointer hover:underline font-bold">{data.title}</li>
         <li class="cursor-pointer hover:underline">3x3</li> -->
-      </ul>
-    </div>
+        </ul>
+      </div>
 
-    {#if progress}
-      <div role="button" class="mr-2 tx-emphasis cursor-default">{progress + "%"}</div>
-      <!-- <Popover class="z-50 bg-base-200">
+      {#if progress}
+        <div role="button" class="mr-2 tx-emphasis cursor-default">{progress + "%"}</div>
+        <!-- <Popover class="z-50 bg-base-200">
         <span class="flex justify-center">{$localLang.global.downloading}</span>
         <progress class="w-[10rem] my-3 progress" value={progress} max={100}></progress>
         <Button class="py-2 w-full" on:click={cancelUpdate}>
           {$localLang.global.cancel}
         </Button>
       </Popover> -->
-    {/if}
+      {/if}
 
-    <Button color="none" class="p-1">
-      <MonitorSmartphoneIcon />
-    </Button>
+      <Button color="none" class="p-1">
+        <MonitorSmartphoneIcon />
+      </Button>
 
-    <!-- <Dropdown
+      <!-- <Dropdown
       containerClass="max-h-[20rem] overflow-y-auto overflow-x-hidden rounded-md
         z-50 w-max bg-base-200"
     >
@@ -332,36 +334,37 @@
       {/each}
     </Dropdown> -->
 
-    <div class="w-0 mx-2 rounded-full h-6 border border-primary"></div>
-
-    {#if $dataService.isElectron && $screen.width > 640}
-      <span class="text-sm">{date}</span>
-
       <div class="w-0 mx-2 rounded-full h-6 border border-primary"></div>
 
-      <Button
-        class="bg-transparent text-base-content hover:bg-neutral border-none px-3"
-        aria-label={$localLang.global.minimize}
-        onclick={minimize}
-      >
-        <MinusIcon size="1.2rem" />
-      </Button>
+      {#if $dataService.isElectron && $screen.width > 640}
+        <span class="text-sm">{date}</span>
 
-      <Button
-        class="bg-transparent text-base-content hover:bg-error border-none px-3"
-        onclick={close}
-      >
-        <XIcon size="1.2rem" />
-      </Button>
-    {:else if browser && !document.fullscreenElement}
-      <Button class="p-2" on:click={fullScreen}>
-        <ArrowUpRightDownLeftOutline size="sm" />
-      </Button>
-      <!-- <Tooltip>{$localLang.global.fullScreen}</Tooltip> -->
-    {/if}
+        <div class="w-0 mx-2 rounded-full h-6 border border-primary"></div>
+
+        <Button
+          class="bg-transparent text-base-content hover:bg-neutral border-none px-3"
+          aria-label={$localLang.global.minimize}
+          onclick={minimize}
+        >
+          <MinusIcon size="1.2rem" />
+        </Button>
+
+        <Button
+          class="bg-transparent text-base-content hover:bg-error border-none px-3"
+          onclick={close}
+        >
+          <XIcon size="1.2rem" />
+        </Button>
+      {:else if browser && !document.fullscreenElement}
+        <Button class="p-2" on:click={fullScreen}>
+          <ArrowUpRightDownLeftOutline size="sm" />
+        </Button>
+        <!-- <Tooltip>{$localLang.global.fullScreen}</Tooltip> -->
+      {/if}
+    </div>
   </div>
 
-  <NavigationDrawer {parts} />
+  <NavigationDrawer {parts} bind:collapsed={navigationCollapsed} />
 
   <div class="content">
     {@render children?.()}
@@ -415,11 +418,11 @@
   .layout {
     display: grid;
     grid-template-areas:
-      "topbarLogo topbarContent"
+      "navbar navbar"
       "navigation content"
       "footer footer";
 
-    grid-template-columns: auto 1fr;
+    grid-template-columns: var(--cdb-side-nav-width-expanded) minmax(0, 1fr);
     /* grid-template-rows: 2.5rem calc(100svh - 5rem) 2.5rem; */
     grid-template-rows: 2.5rem calc(100svh - 2.5rem);
 
@@ -428,12 +431,18 @@
     box-sizing: border-box;
   }
 
-  .topbar-logo {
-    grid-area: topbarLogo;
+  .layout[data-navigation-collapsed="true"] {
+    grid-template-columns: var(--cdb-side-nav-width-collapsed) minmax(0, 1fr);
   }
 
-  .topbar-content {
-    grid-area: topbarContent;
+  .navbar-shell {
+    grid-area: navbar;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+  }
+
+  .navbar-content {
     display: flex;
     align-items: center;
     justify-content: end;

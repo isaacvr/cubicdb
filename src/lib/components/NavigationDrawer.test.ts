@@ -10,8 +10,9 @@ describe("NavigationDrawer CubicDB design contract", () => {
 
     expect(source).toContain("cdb-side-nav");
     expect(source).toContain("data-collapsed={collapsed}");
-    expect(source).toContain("--cdb-side-nav-width-expanded");
-    expect(source).toContain("--cdb-side-nav-width-collapsed");
+    expect(source).not.toContain(
+      'style="--cdb-side-nav-width-expanded: var(--cdb-side-nav-width-expanded);'
+    );
   });
 
   it("marks active navigation items semantically for styling and accessibility", () => {
