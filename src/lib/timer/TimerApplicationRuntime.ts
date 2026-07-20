@@ -14,7 +14,7 @@ import { DeviceManager } from './devices/DeviceManager';
 import type { ITimerDevice } from './devices/ITimerDevice';
 import { KeyboardDevice, type KeyboardDeviceOptions } from './devices/KeyboardDevice';
 import { KeyboardInputBoundary } from './handlers/KeyboardInputBoundary';
-import { CubeBundleScramblePreviewGenerator } from './scramble/CubeBundleScramblePreviewGenerator';
+import { CubicDBModuleImageGenerator } from './scramble/CubicDBModuleImageGenerator';
 import { CSTimerScrambleGenerator } from './scramble/CSTimerScrambleGenerator';
 import type { IImageGenerator } from './scramble/IImageGenerator';
 import type { IScrambleGenerator } from './scramble/IScrambleGenerator';
@@ -46,6 +46,7 @@ export interface TimerApplicationRuntime {
   readonly keyboardBoundary: KeyboardInputBoundary;
   readonly scrambleService: ScrambleService;
   readonly imageGenerationService: ImageGenerationService;
+  readonly imageGenerator: IImageGenerator;
   readonly solvePersistenceService: SolvePersistenceService;
   readonly ready: Promise<void>;
   createGenerationClient(scopeId: string): GenerationClient;
@@ -85,10 +86,11 @@ export function createTimerApplicationRuntime(
     events,
     options.scrambleGenerators ?? [new CSTimerScrambleGenerator()],
   );
+  const imageGenerator = options.imageGenerator ?? new CubicDBModuleImageGenerator();
   const imageGenerationService = new ImageGenerationService(
     bus,
     events,
-    options.imageGenerator ?? new CubeBundleScramblePreviewGenerator(),
+    imageGenerator,
   );
   const solvePersistenceService = new SolvePersistenceService(
     bus,
@@ -111,6 +113,7 @@ export function createTimerApplicationRuntime(
     keyboardBoundary,
     scrambleService,
     imageGenerationService,
+    imageGenerator,
     solvePersistenceService,
     ready,
     createGenerationClient(scopeId: string) {

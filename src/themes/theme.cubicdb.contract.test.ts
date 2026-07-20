@@ -22,6 +22,6 @@ describe("CubicDB theme tokens", () => {
   it("defines the default View Transition debugging duration", () => {
     const css = readFileSync(themePath, "utf8");
 
-    expect(css).toContain("--cdb-view-transition-duration: 1000ms;");
+    expect(css).toContain("--cdb-view-transition-duration: 250ms;");
   });
 });

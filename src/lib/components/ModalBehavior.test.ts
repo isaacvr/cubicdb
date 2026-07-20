@@ -80,6 +80,13 @@ describe("modal behavior contracts", () => {
     expect(modal).not.toContain("view-transition-name: {transitionName};");
   });
 
+  it("does not run a separate dialog entrance animation during modal view transitions", () => {
+    const modal = source("./Modal.svelte");
+
+    expect(modal).not.toContain("animation: enter");
+    expect(modal).not.toContain("ease-in 1");
+  });
+
   it("hides solve steps outside multi-step sessions and keeps invalid comments visually neutral", () => {
     const historyTab = source("../timer/HistoryTab/HistoryTab.svelte");
 

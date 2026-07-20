@@ -143,7 +143,7 @@
   onkeyup={keyUpHandler}
   onkeydown={keyDownHandler}
   oncancel={e => !cancel && e.preventDefault()}
-  class="modal z-[1000] mx-auto text-sm rounded-md show p-2 overflow-visible"
+  class="modal z-[1000] mx-auto text-sm rounded-md p-2 overflow-visible"
   style="view-transition-name: none;"
 >
   <div class={modalBoxClass(variant, size, _cl)} style="view-transition-name: {activeTransitionName};">
@@ -205,9 +205,5 @@
     border-radius: var(--radius-box);
     box-shadow: var(--cdb-shadow-modal);
     backdrop-filter: none;
-  }
-
-  .show {
-    animation: enter 400ms ease-in 1;
   }
 </style>

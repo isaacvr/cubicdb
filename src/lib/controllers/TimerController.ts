@@ -25,9 +25,8 @@ import { between } from "@helpers/math";
 import { getScramble, pScramble } from "@cstimer/scramble";
 import { rndEl } from "@cstimer/lib/mathlib";
 import { ScrambleParser } from "@classes/scramble-parser";
-import { scrambleToPuzzle } from "@helpers/scrambleToPuzzle";
-import { pGenerateCubeBundle } from "@helpers/cube-draw";
 import { createEmptySession } from "@helpers/object";
+import { genImages } from "cubicdb-module";
 
 interface TimerEnv {
   useMode: string;
@@ -305,10 +304,8 @@ export class TimerController implements ITimerController {
   }
 
   async updateImage(md: string) {
-    const { scramble, preview } = this;
-    const cb = scrambleToPuzzle(get(scramble), md);
-    const date = Date.now();
+    const { scramble } = this;
 
-    this.setPreview(await pGenerateCubeBundle(cb, 500));
+    this.setPreview(genImages([{ scramble: get(scramble), type: md }]));
   }
 }

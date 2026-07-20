@@ -12,6 +12,7 @@ import {
 import { TimerDeviceTestHarness } from './devices/TimerDeviceTestHarness';
 import { KeyboardInputBoundary } from './handlers/KeyboardInputBoundary';
 import type { IScrambleGenerator } from './scramble/IScrambleGenerator';
+import { CubicDBModuleImageGenerator } from './scramble/CubicDBModuleImageGenerator';
 import type { IImageGenerator } from './scramble/IImageGenerator';
 import { ImageGenerationService } from './scramble/ImageGenerationService';
 import { ScrambleService } from './scramble/ScrambleService';
@@ -69,6 +70,16 @@ describe('TimerApplicationRuntime', () => {
     });
 
     expect(runtime.imageGenerationService).toBeInstanceOf(ImageGenerationService);
+    await runtime.destroy();
+  });
+
+  it('uses cubicdb-module as the default image generator', async () => {
+    const runtime = createTimerApplicationRuntime({
+      eventLogSink: null,
+      devices: [],
+    });
+
+    expect(runtime.imageGenerator).toBeInstanceOf(CubicDBModuleImageGenerator);
     await runtime.destroy();
   });
 

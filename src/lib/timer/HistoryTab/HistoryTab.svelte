@@ -11,7 +11,7 @@
   import Modal from "@components/Modal.svelte";
   import TextArea from "@material/TextArea.svelte";
 
-  import { pGenerateCubeBundle } from "@helpers/cube-draw";
+  import { genImages } from "cubicdb-module";
   import { options } from "@cstimer/scramble/scramble";
   import { STEP_COLORS } from "@constants";
   import { Paginator } from "@classes/Paginator";
@@ -36,7 +36,6 @@
   import { GateAdaptor } from "$lib/timer/HistoryTab/AdvancedSearch/adaptors";
   import type { SearchFilter } from "$lib/timer/HistoryTab/AdvancedSearch/adaptors/types";
   import { dataService } from "$lib/data-services/data.service";
-  import { scrambleToPuzzle } from "@helpers/scrambleToPuzzle";
   import PuzzleImageBundle from "@components/PuzzleImageBundle.svelte";
   import Button from "$lib/cubicdbKit/Button.svelte";
   import Tooltip from "$lib/cubicdbKit/Tooltip.svelte";
@@ -73,8 +72,6 @@
   const { tab, solves, session } = timerController;
 
   let pg = $state(new Paginator([], 100));
-  let LAST_CLICK = 0;
-
   // let modal: any;
   let deleteAllModal: any;
   let show = $state(false);
@@ -143,9 +140,23 @@
     };
   }
 
+  function generateSolvePreview(solve: Solve) {
+    const sMode = solve.mode as string;
+    const md = options.has(sMode) ? sMode : "333";
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (sSolve?._id === solve._id) {
+          preview = genImages([{ scramble: solve.scramble, type: md }]);
+        }
+      });
+    });
+  }
+
   export function editSolve(s: Solve) {
     gSolve = s;
     sSolve = createEditableSolve(s);
+    preview = [""];
 
     if (sSolve.steps && isMultiStepSession()) {
       solveSteps = calcPercents(sSolve.steps, sSolve.time);
@@ -153,16 +164,8 @@
       solveSteps = [];
     }
 
-    let sMode = sSolve.mode as string;
-    let md = options.has(sMode) ? sMode : "333";
-
-    let cubes = scrambleToPuzzle(sSolve.scramble, md);
-
-    pGenerateCubeBundle(cubes, 400).then(res => {
-      preview = res;
-    });
-
     show = true;
+    generateSolvePreview(sSolve);
   }
 
   function selectSolve(s: Solve) {
@@ -170,39 +173,39 @@
     $selected += s.selected ? 1 : -1;
   }
 
+  function openSolveDetails(s: Solve, transitionTarget: HTMLButtonElement) {
+    if (!transitionTarget.isConnected) {
+      editSolve(s);
+      return;
+    }
+
+    const transitionNames = createSolveEditTransitionNames(s);
+    const dateTarget = transitionTarget.querySelector<HTMLElement>(".solve-row-date");
+    const timeTarget = transitionTarget.querySelector<HTMLElement>(".solve-row-time");
+
+    solveEditTransitionNames = transitionNames;
+    transitionTarget.style.viewTransitionName = transitionNames.shell;
+    if (dateTarget) dateTarget.style.viewTransitionName = transitionNames.date;
+    if (timeTarget) timeTarget.style.viewTransitionName = transitionNames.time;
+
+    startViewTransition(async () => {
+      transitionTarget.style.viewTransitionName = "none";
+      if (dateTarget) dateTarget.style.viewTransitionName = "none";
+      if (timeTarget) timeTarget.style.viewTransitionName = "none";
+      editSolve(s);
+      await tick();
+    });
+  }
+
   function handleClick(s: Solve, ev: MouseEvent) {
     const transitionTarget = ev.currentTarget as HTMLButtonElement;
 
-    if (performance.now() - LAST_CLICK < 200 || $selected) {
+    if ($selected) {
       selectSolve(s);
-    } else {
-      setTimeout(() => {
-        if (performance.now() - LAST_CLICK >= 200) {
-          if (!transitionTarget.isConnected) {
-            editSolve(s);
-            return;
-          }
-
-          const transitionNames = createSolveEditTransitionNames(s);
-          const dateTarget = transitionTarget.querySelector<HTMLElement>(".solve-row-date");
-          const timeTarget = transitionTarget.querySelector<HTMLElement>(".solve-row-time");
-
-          solveEditTransitionNames = transitionNames;
-          transitionTarget.style.viewTransitionName = transitionNames.shell;
-          if (dateTarget) dateTarget.style.viewTransitionName = transitionNames.date;
-          if (timeTarget) timeTarget.style.viewTransitionName = transitionNames.time;
-
-          startViewTransition(async () => {
-            transitionTarget.style.viewTransitionName = "none";
-            if (dateTarget) dateTarget.style.viewTransitionName = "none";
-            if (timeTarget) timeTarget.style.viewTransitionName = "none";
-            editSolve(s);
-          });
-        }
-      }, 200);
+      return;
     }
 
-    LAST_CLICK = performance.now();
+    openSolveDetails(s, transitionTarget);
   }
 
   function setPenalty(p: Penalty, update?: boolean) {

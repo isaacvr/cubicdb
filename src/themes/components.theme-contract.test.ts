@@ -100,9 +100,13 @@ describe("CubicDB theme utility classes", () => {
     const css = readFileSync(componentsCssPath, "utf8");
 
     expect(css).toContain("::view-transition-group(*)");
+    expect(css).toContain("::view-transition-old(root)");
+    expect(css).toContain("::view-transition-new(root)");
+    expect(css).toContain("animation: none;");
     expect(css).toContain("::view-transition-old(*)");
     expect(css).toContain("::view-transition-new(*)");
     expect(css).toContain("animation-duration: var(--cdb-view-transition-duration, 250ms)");
+    expect(css).toContain("animation-timing-function: linear;");
   });
 
   it("lets matched View Transition snapshots morph to the target box aspect ratio", () => {

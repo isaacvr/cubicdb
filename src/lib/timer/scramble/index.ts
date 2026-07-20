@@ -1,4 +1,5 @@
 export * from './CSTimerScrambleGenerator';
+export * from './CubicDBModuleImageGenerator';
 export * from './CubeBundleScramblePreviewGenerator';
 export * from './createScrambleRequestInput';
 export * from './IImageGenerator';
