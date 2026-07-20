@@ -40,8 +40,10 @@ describe('managed keyboard UI wiring', () => {
   it('renders semantic prevention and ready feedback', () => {
     const keyboardDisplay = source('./TimerTab/timer-handlers/KeyboardInputHandler.svelte');
 
-    expect(keyboardDisplay).toContain('class:text-error={$timerState === TimerState.PREVENTION && !$ready}');
-    expect(keyboardDisplay).toContain('class:text-success={$ready}');
+    expect(keyboardDisplay).toContain('class:prevention={$timerState === TimerState.PREVENTION}');
+    expect(keyboardDisplay).toContain('class:ready={$ready}');
+    expect(keyboardDisplay).not.toContain('class:text-error={$timerState === TimerState.PREVENTION && !$ready}');
+    expect(keyboardDisplay).not.toContain('class:text-success={$ready}');
     expect(keyboardDisplay).toContain(
       '<span class="cdb-timer-display-main select-none text-warning">+2</span>',
     );

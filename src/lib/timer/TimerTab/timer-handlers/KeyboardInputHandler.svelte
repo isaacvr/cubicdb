@@ -163,8 +163,6 @@
       class="timer cdb-timer-display tx-text"
       class:prevention={$timerState === TimerState.PREVENTION}
       class:ready={$ready}
-      class:text-error={$timerState === TimerState.PREVENTION && !$ready}
-      class:text-success={$ready}
     >
       {#if $timerState === TimerState.INSPECTION && $time <= 0}
         <span class="cdb-timer-display-main select-none text-warning">+2</span>
