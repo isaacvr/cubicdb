@@ -236,12 +236,13 @@
         <ul>
           {#each parts as part, pos (pos)}
             {#if parts[0].link === "/timer" && pos === 1}
-              {@const session = $sessions.find(s => s._id === part.name)}
+              {@const sessionId = part.link.split("/").filter(Boolean).at(-1) || part.name}
+              {@const session = $sessions.find(s => s._id === sessionId)}
 
               <li class="cursor-pointer last-of-type:font-bold">
                 <a href={part.link} class="gap-1">
                   <TimerSessionIcon icon={session?.settings.sessionType} size="1.2rem" />
-                  {session?.name || ""}
+                  <span>{session?.name || sessionId}</span>
                 </a>
               </li>
 

@@ -205,7 +205,7 @@
 </script>
 
 <div
-  class={"rounded flex place-items-center puzzle-img w-full h-full " +
+  class={"rounded flex place-items-center puzzle-img relative w-full h-full " +
     (!src ? " bg-gray-700 animate-pulse " : " ") +
     (_cl || "")}
   style:width={width || size || "100%"}
@@ -237,15 +237,18 @@
 
   {#if allowDownload}
     <div
-      class={"options absolute top-0 right-0 gap-1 grid bg-base-200 rounded-md " + downloadDivClass}
+      class={"options absolute top-2 right-2 z-10 gap-1 grid bg-base-200/95 rounded-md shadow-lg backdrop-blur-sm " +
+        downloadDivClass}
       onclick={e => e.stopPropagation()}
       role="button"
       tabindex="-1"
       onkeyup={() => {}}
     >
-      <Button type="secondary" size="sm" icon>
-        <DownloadIcon size="1.2rem" />
-      </Button>
+      <Tooltip tooltipText={$localLang.global.download} {placement}>
+        <Button type="secondary" size="sm" icon onclick={() => handleDownload(1)}>
+          <DownloadIcon size="1.2rem" />
+        </Button>
+      </Tooltip>
       <Dropdown
         trigger="hover"
         placement="right-start"
@@ -258,7 +261,11 @@
         {/each}
       </Dropdown>
 
-      <Button type="secondary" size="sm" icon><CopyIcon size="1.2rem" /></Button>
+      <Tooltip tooltipText={$localLang.global.copy} {placement}>
+        <Button type="secondary" size="sm" icon onclick={() => handleCopy(1)}>
+          <CopyIcon size="1.2rem" />
+        </Button>
+      </Tooltip>
       <Dropdown
         trigger="hover"
         placement="right-start"
@@ -272,14 +279,15 @@
       </Dropdown>
 
       {#if type === "svg"}
-        <Button type="secondary" size="sm" icon onclick={handleCopyCode}>
-          <CodeIcon size="1.2rem" />
-        </Button>
         <Tooltip
           class="bg-base-100 text-base-content z-10"
           {placement}
           tooltipText={replaceParams($localLang.global.copyCode, ["SVG"])}
-        ></Tooltip>
+        >
+          <Button type="secondary" size="sm" icon onclick={handleCopyCode}>
+            <CodeIcon size="1.2rem" />
+          </Button>
+        </Tooltip>
       {/if}
     </div>
   {/if}

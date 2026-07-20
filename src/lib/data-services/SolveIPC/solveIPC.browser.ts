@@ -11,9 +11,16 @@ const debug = false;
 
 interface DATABASE {}
 
+export function normalizeSessionId(sessionId: SolveListQuery["sessionId"] | Solve["session"]): string | number {
+  if (typeof sessionId === "number") return sessionId;
+  if (typeof sessionId === "string" && /^-?\d+$/.test(sessionId)) return Number(sessionId);
+  return sessionId;
+}
+
 export function filterSolvesByQuery(solves: Solve[], query?: SolveListQuery): Solve[] {
   if (!query?.sessionId) return solves;
-  return solves.filter(solve => solve.session === query.sessionId);
+  const sessionId = normalizeSessionId(query.sessionId);
+  return solves.filter(solve => normalizeSessionId(solve.session) === sessionId);
 }
 
 export class SolveBrowserIPC implements SolveIPC {

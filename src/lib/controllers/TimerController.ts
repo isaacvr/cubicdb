@@ -37,6 +37,13 @@ interface TimerEnv {
   genScramble: boolean;
 }
 
+function normalizeSessionId(sessionId: unknown): string | number | undefined {
+  if (typeof sessionId === "number") return sessionId;
+  if (typeof sessionId === "string" && /^-?\d+$/.test(sessionId)) return Number(sessionId);
+  if (typeof sessionId === "string") return sessionId;
+  return undefined;
+}
+
 export class TimerController implements ITimerController {
   timerState = writable<TimerState>(TimerState.CLEAN);
   ready = writable(false);
@@ -136,7 +143,8 @@ export class TimerController implements ITimerController {
   updateSolves() {
     const { solves, allSolves, session, Ao5 } = this;
 
-    solves.set(get(allSolves).filter(s => s.session === (get(session) || {})._id));
+    const sessionId = normalizeSessionId((get(session) || {})._id);
+    solves.set(get(allSolves).filter(s => normalizeSessionId(s.session) === sessionId));
 
     // Calc next Ao5
     const arr = get(solves)

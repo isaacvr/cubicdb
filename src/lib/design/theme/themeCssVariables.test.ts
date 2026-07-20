@@ -17,8 +17,10 @@ describe("CubicDB semantic theme", () => {
   it("emits semantic CubicDB variables and DaisyUI compatibility variables", () => {
     const variables = createThemeCssVariables(CUBICDB_THEME);
 
-    expect(variables["--cdb-color-primary"]).toBe("#3abdf8");
-    expect(variables["--cdb-surface-panel"]).toBe("rgba(58, 189, 248, 0.05)");
+    expect(variables["--cdb-color-primary"]).toBe("var(--color-primary)");
+    expect(variables["--cdb-surface-panel"]).toBe(
+      "color-mix(in oklab, var(--color-primary) 12%, transparent)"
+    );
     expect(variables["--cdb-radius-panel"]).toBe("12px");
     expect(variables["--color-primary"]).toBe("#3abdf8");
     expect(variables["--color-base-100"]).toBe("#061319");
@@ -29,7 +31,7 @@ describe("CubicDB semantic theme", () => {
     const css = createThemeCssText(CUBICDB_THEME, '[data-theme="cubicdb"]');
 
     expect(css).toContain('[data-theme="cubicdb"]');
-    expect(css).toContain("--cdb-color-primary: #3abdf8;");
+    expect(css).toContain("--cdb-color-primary: var(--color-primary);");
     expect(css).toContain("--color-primary: #3abdf8;");
   });
 });

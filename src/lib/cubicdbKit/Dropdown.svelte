@@ -19,15 +19,7 @@
 
   let dropdownElement: HTMLDivElement | undefined;
   let triggerElement: HTMLElement | null = null;
-
-  const placementMap: Record<string, string> = {
-    top: "bottom-full left-0 mb-2",
-    bottom: "top-full left-0 mt-2",
-    left: "right-full top-0 mr-2",
-    right: "left-full top-0 ml-2",
-    "right-start": "left-full top-0 ml-2",
-    "left-start": "right-full top-0 mr-2",
-  };
+  let floatingStyle = $state("");
 
   function show() {
     open = true;
@@ -39,6 +31,47 @@
 
   function toggle() {
     open = !open;
+  }
+
+  function updateFloatingPosition() {
+    if (!triggerElement) return;
+
+    const triggerRect = triggerElement.getBoundingClientRect();
+    const dropdownRect = dropdownElement?.getBoundingClientRect();
+    const dropdownWidth = dropdownRect?.width || 160;
+    const dropdownHeight = dropdownRect?.height || 0;
+    const gap = 8;
+    let top = triggerRect.bottom + gap;
+    let left = triggerRect.left;
+
+    switch (placement) {
+      case "top":
+        top = triggerRect.top - dropdownHeight - gap;
+        left = triggerRect.left;
+        break;
+      case "left":
+      case "left-start":
+        top = triggerRect.top;
+        left = triggerRect.left - dropdownWidth - gap;
+        break;
+      case "right":
+      case "right-start":
+        top = triggerRect.top;
+        left = triggerRect.right + gap;
+        break;
+      case "bottom":
+      default:
+        top = triggerRect.bottom + gap;
+        left = triggerRect.left;
+        break;
+    }
+
+    const maxLeft = window.innerWidth - dropdownWidth - gap;
+    const maxTop = window.innerHeight - dropdownHeight - gap;
+    floatingStyle = `top: ${Math.max(gap, Math.min(top, maxTop))}px; left: ${Math.max(
+      gap,
+      Math.min(left, maxLeft)
+    )}px;`;
   }
 
   onMount(() => {
@@ -74,6 +107,9 @@
       document.addEventListener("click", onDocClick);
     }
 
+    window.addEventListener("resize", updateFloatingPosition);
+    document.addEventListener("scroll", updateFloatingPosition, true);
+
     return () => {
       triggerElement?.removeEventListener("click", onClick);
       triggerElement?.removeEventListener("mouseenter", onEnter);
@@ -81,13 +117,22 @@
       dropdownElement?.removeEventListener("mouseenter", onEnter);
       dropdownElement?.removeEventListener("mouseleave", onLeave);
       document.removeEventListener("click", onDocClick);
+      window.removeEventListener("resize", updateFloatingPosition);
+      document.removeEventListener("scroll", updateFloatingPosition, true);
     };
+  });
+
+  $effect(() => {
+    if (open) {
+      updateFloatingPosition();
+    }
   });
 </script>
 
 <div
   bind:this={dropdownElement}
-  class="absolute z-50 min-w-40 rounded-box border border-base-300 bg-base-100 p-1 shadow-xl {placementMap[placement] || placementMap.bottom} {open ? 'block' : 'hidden'} {customClass}"
+  class="fixed z-[1100] min-w-40 rounded-box border border-base-300 bg-base-100 p-1 shadow-xl {open ? 'block' : 'hidden'} {customClass}"
+  style={floatingStyle}
   role="menu"
 >
   {#if children}

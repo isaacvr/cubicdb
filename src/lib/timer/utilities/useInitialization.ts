@@ -6,6 +6,13 @@ import type { SCRAMBLE_MENU } from '@constants';
 import { SelectSession } from '$lib/core/usecases/SelectSession';
 import type { Solve } from '@interfaces';
 
+function normalizeSessionId(sessionId: unknown): string | number | undefined {
+  if (typeof sessionId === 'number') return sessionId;
+  if (typeof sessionId === 'string' && /^-?\d+$/.test(sessionId)) return Number(sessionId);
+  if (typeof sessionId === 'string') return sessionId;
+  return undefined;
+}
+
 interface InitializationOptions {
   battle?: boolean;
   timerOnly?: boolean;
@@ -56,8 +63,8 @@ export function useInitialization(
     sessions.forEach(s => (s.tName = s.name.toLowerCase()));
     setTimeout(() => sessions.sort((a, b) => a.tName?.localeCompare(b.tName || '') || 0), 1000);
 
-    const ss = page?.params?.sessionId;
-    const currentSession = sessions.find(s => s._id === ss);
+    const ss = normalizeSessionId(page?.params?.sessionId);
+    const currentSession = sessions.find(s => normalizeSessionId(s._id) === ss);
     session.set(currentSession || sessions[0]);
 
     // select mode/group/prob using the use-case
@@ -106,6 +113,7 @@ export function useInitialization(
 
       updateCurrentSession();
       timerController.updateSolves();
+      timerController.updateStatistics(true);
       queueMicrotask(() => {
         unsubscribe?.();
         if (sessionsReadyUnsubscribe === unsubscribe) sessionsReadyUnsubscribe = null;

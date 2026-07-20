@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Penalty, type Solve } from '@interfaces';
-import { filterSolvesByQuery } from './solveIPC.browser';
+import { filterSolvesByQuery, normalizeSessionId } from './solveIPC.browser';
 
 function solve(overrides: Partial<Solve> = {}): Solve {
   return {
@@ -30,5 +30,13 @@ describe('filterSolvesByQuery', () => {
     const second = solve({ _id: 'two', session: 'session:two' });
 
     expect(filterSolvesByQuery([first, second], { sessionId: 'session:one' })).toEqual([first]);
+  });
+
+  it('matches route string session ids against legacy numeric solve session ids', () => {
+    const first = solve({ _id: 'one', session: 1 as any });
+    const second = solve({ _id: 'two', session: 2 as any });
+
+    expect(filterSolvesByQuery([first, second], { sessionId: '1' })).toEqual([first]);
+    expect(normalizeSessionId('1')).toBe(1);
   });
 });

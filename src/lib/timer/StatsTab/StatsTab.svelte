@@ -17,7 +17,6 @@
   import { AON, STEP_COLORS } from "@constants";
   import { screen } from "@stores/screen.store";
   import * as echarts from "echarts";
-  import { dataService } from "$lib/data-services/data.service";
   import Button from "$lib/cubicdbKit/Button.svelte";
   import { ExternalLinkIcon } from "lucide-svelte";
 
@@ -53,15 +52,67 @@
 
   let stepPercentSerie: HTMLDivElement | null = $state(null);
   let stepPercentChart: echarts.ECharts;
+  let resizeFrame = 0;
 
-  const tooltipStyle: echarts.TooltipComponentOption = {
-    trigger: "axis",
-    axisPointer: {
-      type: "line",
-    },
-    textStyle: { color: "#a2a0a0" },
-    backgroundColor: "#1c1b2a",
-    confine: true,
+  interface ChartTheme {
+    text: string;
+    mutedText: string;
+    primary: string;
+    accent: string;
+    success: string;
+    tooltipBackground: string;
+    tooltipBorder: string;
+    trendBand: string;
+  }
+
+  function cssVar(name: string, fallback: string) {
+    if (typeof document === "undefined") return fallback;
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
+  }
+
+  function getChartTheme(): ChartTheme {
+    return {
+      text: cssVar("--color-base-content", "#e9eaeb"),
+      mutedText: cssVar("--cdb-color-base-content-muted", "rgba(233, 234, 235, 0.6)"),
+      primary: cssVar("--color-primary", "#3abdf8"),
+      accent: cssVar("--color-accent", "#a78bfa"),
+      success: cssVar("--color-success", "#2ed4bf"),
+      tooltipBackground: cssVar("--color-base-300", "#071016"),
+      tooltipBorder: cssVar("--cdb-color-border-visible", "rgba(58, 189, 248, 0.2)"),
+      trendBand: cssVar("--cdb-chart-trend-band", "rgba(233, 234, 235, 0.18)"),
+    };
+  }
+
+  function getTooltipStyle(theme = getChartTheme()): echarts.TooltipComponentOption {
+    return {
+      trigger: "axis",
+      axisPointer: {
+        type: "line",
+      },
+      textStyle: { color: theme.text },
+      backgroundColor: theme.tooltipBackground,
+      borderColor: theme.tooltipBorder,
+      confine: true,
+    };
+  }
+
+  function getTitleStyle(theme = getChartTheme()) {
+    return {
+      fontSize: $screen.isMobile ? 20 : 30,
+      color: theme.text,
+    };
+  }
+
+  function getTextStyle(theme = getChartTheme()) {
+    return {
+      fontFamily: localStorage.getItem("app-font") || "Ubuntu",
+      color: theme.text,
+    };
+  }
+
+  function goToBestMark(id: string, select: number) {
+    $tab = 1;
+    selectSolveById(id, select);
   };
 
   const rendererType = "svg";
@@ -90,6 +141,8 @@
   }
 
   function updateChart(sv: Solve[]) {
+    const theme = getChartTheme();
+    const tooltipStyle = getTooltipStyle(theme);
     const len = sv.length - 1;
     let avgs = [5, 12, 50, 100];
 
@@ -138,7 +191,7 @@
           type: "line",
           showSymbol: false,
           tooltip: { show: false },
-          lineStyle: { type: "dashed", color: "white" },
+          lineStyle: { type: "dashed", color: theme.text },
         },
         {
           name: "trend-low",
@@ -155,7 +208,7 @@
           type: "line",
           showSymbol: false,
           stack: "trend-band",
-          areaStyle: { color: "#fff4" },
+          areaStyle: { color: theme.trendBand },
           lineStyle: { opacity: 0 },
           tooltip: { show: false },
         },
@@ -190,8 +243,7 @@
           text: $localLang.TIMER.timeDistribution,
           left: "center",
           textStyle: {
-            fontSize: $screen.isMobile ? 20 : 30,
-            color: $dataService.theme.currentTheme.colors.text,
+            ...getTitleStyle(theme),
           },
         },
       ],
@@ -235,9 +287,9 @@
         axisPointer: {
           type: "cross",
           label: {
-            color: tooltipStyle.textStyle?.color,
+            color: theme.text,
             backgroundColor: tooltipStyle.backgroundColor,
-            borderColor: "#ddff",
+            borderColor: theme.tooltipBorder,
             borderWidth: 2,
             formatter({ axisDimension, value }: any) {
               return axisDimension === "x"
@@ -314,7 +366,7 @@
       if (!ev.selected[trendName]) {
         hTrend.areaStyle!.color = "transparent";
       } else {
-        hTrend.areaStyle!.color = "#fff4";
+        hTrend.areaStyle!.color = theme.trendBand;
       }
 
       // @ts-ignore
@@ -335,8 +387,7 @@
           text: $localLang.TIMER.hourDistribution,
           left: "center",
           textStyle: {
-            fontSize: $screen.isMobile ? 20 : 30,
-            color: $dataService.theme.currentTheme.colors.text,
+            ...getTitleStyle(theme),
           },
         },
       ],
@@ -358,11 +409,11 @@
           type: "line",
           smooth: true,
           areaStyle: { opacity: 0.2 },
-          color: "#36a2eb",
+          color: theme.primary,
         },
       ],
       backgroundColor: "transparent",
-      textStyle: { fontFamily: localStorage.getItem("app-font") || "Ubuntu" },
+      textStyle: getTextStyle(theme),
       tooltip: {
         ...tooltipStyle,
         axisPointer: {
@@ -390,8 +441,7 @@
           text: $localLang.TIMER.weekDistribution,
           left: "center",
           textStyle: {
-            fontSize: $screen.isMobile ? 20 : 30,
-            color: $dataService.theme.currentTheme.colors.text,
+            ...getTitleStyle(theme),
           },
         },
       ],
@@ -408,11 +458,11 @@
           type: "line",
           smooth: true,
           areaStyle: { opacity: 0.2 },
-          color: "#40c883",
+          color: theme.success,
         },
       ],
       backgroundColor: "transparent",
-      textStyle: { fontFamily: localStorage.getItem("app-font") || "Ubuntu" },
+      textStyle: getTextStyle(theme),
       tooltip: {
         ...tooltipStyle,
       },
@@ -424,6 +474,20 @@
 
   function updateStats() {
     if (headless) return;
+    if ($tab !== 2) return;
+    if (!distChart || distChart.isDisposed()) return;
+    if (!$solves.length || !Number.isFinite($stats.best.value) || !Number.isFinite($stats.worst.value)) {
+      distChart?.setOption({
+        title: [{ text: $localLang.TIMER.histogram, textStyle: getTitleStyle() }],
+        xAxis: { type: "category", data: [] },
+        yAxis: { type: "value", min: 0, max: "dataMax", scale: true },
+        series: [{ name: $localLang.TIMER.solves, data: [], type: "bar" }],
+      });
+      return;
+    }
+
+    const theme = getChartTheme();
+    const tooltipStyle = getTooltipStyle(theme);
 
     // HISTOGRAM
     let minT = $stats.best.value;
@@ -437,7 +501,8 @@
     let nonPenalty = 0;
     let cants = $solves.reduce((acc, s) => {
       if (!infinitePenalty(s)) {
-        acc[Math.floor(((s.time - minT) * splits) / (maxT - minT))] += 1;
+        const index = between(Math.floor(((s.time - minT) * splits) / (maxT - minT)), 0, splits - 1);
+        acc[index] += 1;
         nonPenalty += 1;
       }
       return acc;
@@ -449,8 +514,7 @@
           text: $localLang.TIMER.histogram,
           left: "center",
           textStyle: {
-            fontSize: $screen.isMobile ? 20 : 30,
-            color: $dataService.theme.currentTheme.colors.text,
+            ...getTitleStyle(theme),
           },
         },
       ],
@@ -465,14 +529,14 @@
           name: $localLang.TIMER.solves,
           data: cants,
           type: "bar",
-          color: "#cd69ff",
+          color: theme.accent,
           itemStyle: {
             borderRadius: [10, 10, 0, 0],
           },
         },
       ],
       backgroundColor: "transparent",
-      textStyle: { fontFamily: localStorage.getItem("app-font") || "Ubuntu" },
+      textStyle: getTextStyle(theme),
       tooltip: { ...tooltipStyle },
     };
 
@@ -503,8 +567,11 @@
   }
 
   function updateChartText() {
+    if (!headless && $tab !== 2) return;
+    const theme = getChartTheme();
+
     timeChart?.setOption({
-      title: [{ text: $localLang.TIMER.timeDistribution }],
+      title: [{ text: $localLang.TIMER.timeDistribution, textStyle: getTitleStyle(theme) }],
       legend: { data: $localLang.TIMER.timeChartLabels },
       series: $localLang.TIMER.timeChartLabels.map(s => ({ name: s })),
     });
@@ -512,18 +579,18 @@
     if (headless) return;
 
     hourChart?.setOption({
-      title: [{ text: $localLang.TIMER.hourDistribution }],
+      title: [{ text: $localLang.TIMER.hourDistribution, textStyle: getTitleStyle(theme) }],
       series: [{ name: $localLang.TIMER.solves }],
     });
 
     weekChart?.setOption({
-      title: [{ text: $localLang.TIMER.weekDistribution }],
+      title: [{ text: $localLang.TIMER.weekDistribution, textStyle: getTitleStyle(theme) }],
       series: [{ name: $localLang.TIMER.solves }],
       xAxis: { data: $localLang.TIMER.days },
     });
 
     distChart?.setOption({
-      title: [{ text: $localLang.TIMER.histogram }],
+      title: [{ text: $localLang.TIMER.histogram, textStyle: getTitleStyle(theme) }],
       series: [{ name: $localLang.TIMER.solves }],
     });
 
@@ -536,18 +603,29 @@
       return;
     }
 
-    stepTimeChart?.setOption({ title: { text: $localLang.TIMER.stepsAverage } });
-    stepPercentChart?.setOption({ title: { text: $localLang.TIMER.stepsPercent } });
+    stepTimeChart?.setOption({
+      title: { text: $localLang.TIMER.stepsAverage, textStyle: getTitleStyle(theme) },
+    });
+    stepPercentChart?.setOption({
+      title: { text: $localLang.TIMER.stepsPercent, textStyle: getTitleStyle(theme) },
+    });
   }
 
   function handleResize() {
-    [timeChart, hourChart, weekChart, distChart, stepTimeChart, stepPercentChart].forEach(c =>
-      c?.resize()
-    );
+    if (!headless && $tab !== 2) return;
+    if (resizeFrame) cancelAnimationFrame(resizeFrame);
+    resizeFrame = requestAnimationFrame(() => {
+      resizeFrame = 0;
+      [timeChart, hourChart, weekChart, distChart, stepTimeChart, stepPercentChart].forEach(c => {
+        if (c && !c.isDisposed()) c.resize();
+      });
+    });
   }
 
   function initGraphs(s: any, timerOnly = false) {
     void s; // Just for $solves detection change
+
+    if (!headless && $tab !== 2) return;
 
     if (!timeChart) {
       timeChart = echarts.init(timeSerie, "dark", { renderer: rendererType });
@@ -575,6 +653,10 @@
 
   async function updateMultiSteps(ss: Session) {
     if (!ss) return;
+    if (!headless && $tab !== 2) return;
+
+    const theme = getChartTheme();
+    const tooltipStyle = getTooltipStyle(theme);
 
     if (!ss.settings || ss.settings.sessionType != "multi-step") {
       stepTimeChart?.dispose();
@@ -643,8 +725,7 @@
             text: $localLang.TIMER.stepsAverage,
             left: "center",
             textStyle: {
-              fontSize: $screen.isMobile ? 20 : 30,
-              color: $dataService.theme.currentTheme.colors.text,
+              ...getTitleStyle(theme),
             },
           },
         ],
@@ -674,14 +755,14 @@
               itemStyle: { color: STEP_COLORS[p % STEP_COLORS.length] },
             })),
             type: "bar",
-            color: "#cd69ff",
+            color: theme.accent,
             itemStyle: {
               borderRadius: [10, 10, 0, 0],
             },
           },
         ],
         backgroundColor: "transparent",
-        textStyle: { fontFamily: localStorage.getItem("app-font") || "Ubuntu" },
+        textStyle: getTextStyle(theme),
         tooltip: {
           ...tooltipStyle,
           valueFormatter(v) {
@@ -705,8 +786,7 @@
             text: $localLang.TIMER.stepsPercent,
             left: "center",
             textStyle: {
-              fontSize: $screen.isMobile ? 20 : 30,
-              color: $dataService.theme.currentTheme.colors.text,
+              ...getTitleStyle(theme),
             },
           },
         ],
@@ -720,12 +800,12 @@
             })),
             type: "pie",
             radius: ["40%", "70%"],
-            itemStyle: { borderRadius: 10, borderWidth: 3, borderColor: "#fff1" },
+            itemStyle: { borderRadius: 10, borderWidth: 3, borderColor: theme.tooltipBorder },
             top: "4%",
           },
         ],
         backgroundColor: "transparent",
-        textStyle: { fontFamily: localStorage.getItem("app-font") || "Ubuntu", fontSize: 17 },
+        textStyle: { ...getTextStyle(theme), fontSize: 17 },
         tooltip: {
           ...tooltipStyle,
           trigger: "item",
@@ -740,7 +820,7 @@
     }
   }
 
-  $effect(() => initGraphs($solves, true));
+  $effect(() => initGraphs($solves, headless || $tab !== 2));
   $effect(() => updateStats());
   $effect(() => updateChartText());
   $effect(() => {
@@ -821,13 +901,15 @@
       <div id="best-marks">
         {#each $localLang.TIMER.bestList as ao}
           {#if $stats[ao.key].id}
-            <span class="flex items-center justify-between px-2 rounded-md bg-black/40 tx-text">
+            <span class="best-mark-row">
               {ao.title}:
 
               <Button
-                class="px-1 text-sm h-6 hover:tx-primary-300 tx-text"
+                type="tertiary"
+                size="sm"
+                class="best-mark-button"
                 ariaLabel={$localLang.TIMER.go}
-                onclick={() => selectSolveById($stats[ao.key].id || "", ao.select)}
+                onclick={() => goToBestMark($stats[ao.key].id || "", ao.select)}
               >
                 {timer(
                   $stats[ao.key][/^(best|worst)$/.test(ao.key) ? "value" : "best"] || 0,
@@ -901,8 +983,12 @@
   }
 
   .card {
-    @apply text-gray-300 p-6 rounded-md;
-    background-color: var(--th-backgroundLevel1);
+    @apply rounded-md;
+    padding: var(--cdb-space-lg);
+    background: var(--cdb-surface-panel);
+    color: var(--color-base-content);
+    border: 0.0625rem solid var(--cdb-color-border-subtle);
+    box-shadow: var(--cdb-shadow-panel);
   }
 
   .stats {
@@ -918,11 +1004,33 @@
   }
 
   #best-marks {
-    @apply grid gap-y-1;
-    grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
+    @apply grid;
+    grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
     margin: auto;
     column-gap: 1rem;
     row-gap: 0.5rem;
+  }
+
+  .best-mark-row {
+    @apply flex items-center justify-between rounded-md text-sm;
+    min-height: 1.75rem;
+    gap: 0.5rem;
+    padding: 0.125rem 0.25rem;
+    background: color-mix(in oklab, var(--color-base-content) 5%, transparent);
+    color: var(--color-base-content);
+  }
+
+  :global(.best-mark-button) {
+    min-height: 1.5rem;
+    height: 1.5rem;
+    gap: 0.25rem;
+    padding-inline: 0.25rem;
+    color: var(--color-base-content);
+  }
+
+  :global(.best-mark-button:hover) {
+    color: var(--color-primary);
+    background: var(--cdb-button-ghost-hover-background);
   }
 
   .steps-graph {

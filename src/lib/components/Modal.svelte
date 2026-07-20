@@ -47,14 +47,16 @@
   let modal: HTMLDialogElement;
   let shouldShowCloseButton = $derived(showCloseButton ?? (cancel && Boolean(title)));
   let hasHeader = $derived(Boolean(title) || shouldShowCloseButton);
+  let activeTransitionName = $derived(show ? transitionName : "none");
 
   function modalBoxClass(variant: ModalVariant, size: ModalSize, customClass: string) {
     return twMerge(
-      "modal-box bg-base-200 relative p-0 overflow-hidden flex flex-col max-w-[calc(100vw-1rem)] max-h-[calc(100svh-1rem)]",
+      "modal-box relative p-0 overflow-hidden flex flex-col max-w-[calc(100vw-1rem)] max-h-[calc(100svh-1rem)]",
       variant === "fullscreen"
         ? "w-[calc(100vw-1rem)] h-[calc(100svh-1rem)] max-w-none max-h-none"
         : `w-full ${LIMITED_SIZE_CLASSES[size]}`,
-      customClass || ""
+      customClass || "",
+      "cdb-modal-surface"
     );
   }
 
@@ -83,19 +85,25 @@
     }
   }
 
+  function getModalContentRect() {
+    return modal.firstElementChild?.getBoundingClientRect();
+  }
+
   function handleClick(ev: MouseEvent) {
     if (!modal) return;
     if (ev.target != ev.currentTarget) return;
+    if (!closeOnClickOutside) return;
 
-    let bb = modal.getBoundingClientRect();
-    let x1 = bb.x,
-      y1 = bb.y;
-    let x2 = x1 + bb.width,
-      y2 = y1 + bb.height;
-    let cx = ev.x,
-      cy = ev.y;
+    const contentRect = getModalContentRect();
+    if (!contentRect) return;
 
-    if (closeOnClickOutside && ((cx - x1) * (cx - x2) > 0 || (cy - y1) * (cy - y2) > 0)) {
+    const clickedOutsideContent =
+      ev.clientX < contentRect.left ||
+      ev.clientX > contentRect.right ||
+      ev.clientY < contentRect.top ||
+      ev.clientY > contentRect.bottom;
+
+    if (clickedOutsideContent) {
       close(null);
     }
   }
@@ -136,9 +144,9 @@
   onkeydown={keyDownHandler}
   oncancel={e => !cancel && e.preventDefault()}
   class="modal z-[1000] mx-auto text-sm rounded-md show p-2 overflow-visible"
-  style="view-transition-name: {transitionName};"
+  style="view-transition-name: none;"
 >
-  <div class={modalBoxClass(variant, size, _cl)}>
+  <div class={modalBoxClass(variant, size, _cl)} style="view-transition-name: {activeTransitionName};">
     {#if hasHeader}
       <header class="flex shrink-0 items-center gap-4 border-b border-base-content/10 px-6 py-3">
         {#if title}
@@ -188,6 +196,15 @@
     animation: fadeIn 200ms linear 0ms forwards;
     background-color: #0003;
     backdrop-filter: blur(0.5rem);
+  }
+
+  .cdb-modal-surface {
+    background-color: var(--color-base-200);
+    color: var(--color-base-content);
+    border: 0.0625rem solid color-mix(in oklab, var(--color-base-content) 10%, transparent);
+    border-radius: var(--radius-box);
+    box-shadow: var(--cdb-shadow-modal);
+    backdrop-filter: none;
   }
 
   .show {

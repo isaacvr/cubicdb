@@ -21,7 +21,12 @@
 
   import { localLang } from "@stores/language.service";
   import { tick } from "svelte";
-  import { copyToClipboard, defaultInner, parseReconstruction } from "@helpers/strings";
+  import {
+    copyToClipboard,
+    defaultInner,
+    parseReconstruction,
+    replaceParams,
+  } from "@helpers/strings";
   import { calcPercents } from "@helpers/math";
   import { startViewTransition } from "@helpers/DOM";
   import { navigate } from "svelte-routing";
@@ -52,6 +57,7 @@
     SquareDashedIcon,
     TrashIcon,
     XIcon,
+    RouteIcon,
   } from "lucide-svelte";
 
   const notification = NotificationService.getInstance();
@@ -72,6 +78,7 @@
   // let modal: any;
   let deleteAllModal: any;
   let show = $state(false);
+  let showDeleteSolve = $state(false);
   let showDeleteAll = $state(false);
   let sSolve: Solve = $state(createEmptySolve());
   let gSolve: Solve;
@@ -86,6 +93,8 @@
   let collapsed = $state(false);
   let reconstructionError = $state(true);
   let showDropdown = $state(false);
+  let penaltyTriggerElement: HTMLDivElement;
+  let solveEditTransitionNames = $state(createSolveEditTransitionNames());
   let searchModal = $state(false);
   let advancedSearchGate = $state(new GateAdaptor("and"));
   const advancedSearchFields: SearchFilter[] = [
@@ -100,6 +109,16 @@
     { label: "DNS", penalty: Penalty.DNS },
   ];
 
+  function createSolveEditTransitionNames(solve?: Solve) {
+    const id = solve?._id || Date.now();
+
+    return {
+      shell: `solve-edit-shell-${id}`,
+      date: `solve-edit-date-${id}`,
+      time: `solve-edit-time-${id}`,
+    };
+  }
+
   function closeHandler(s?: Solve) {
     preview = [""];
 
@@ -113,6 +132,10 @@
     show = false;
   }
 
+  function closeDetailsWithoutSaving() {
+    closeHandler();
+  }
+
   function createEditableSolve(solve: Solve): Solve {
     return {
       ...solve,
@@ -124,8 +147,10 @@
     gSolve = s;
     sSolve = createEditableSolve(s);
 
-    if (sSolve.steps) {
+    if (sSolve.steps && isMultiStepSession()) {
       solveSteps = calcPercents(sSolve.steps, sSolve.time);
+    } else {
+      solveSteps = [];
     }
 
     let sMode = sSolve.mode as string;
@@ -146,17 +171,31 @@
   }
 
   function handleClick(s: Solve, ev: MouseEvent) {
+    const transitionTarget = ev.currentTarget as HTMLButtonElement;
+
     if (performance.now() - LAST_CLICK < 200 || $selected) {
       selectSolve(s);
     } else {
       setTimeout(() => {
         if (performance.now() - LAST_CLICK >= 200) {
-          let target = ev.target as HTMLButtonElement;
+          if (!transitionTarget.isConnected) {
+            editSolve(s);
+            return;
+          }
 
-          target.classList.add("modal-transition");
+          const transitionNames = createSolveEditTransitionNames(s);
+          const dateTarget = transitionTarget.querySelector<HTMLElement>(".solve-row-date");
+          const timeTarget = transitionTarget.querySelector<HTMLElement>(".solve-row-time");
+
+          solveEditTransitionNames = transitionNames;
+          transitionTarget.style.viewTransitionName = transitionNames.shell;
+          if (dateTarget) dateTarget.style.viewTransitionName = transitionNames.date;
+          if (timeTarget) timeTarget.style.viewTransitionName = transitionNames.time;
 
           startViewTransition(async () => {
-            target.classList.remove("modal-transition");
+            transitionTarget.style.viewTransitionName = "none";
+            if (dateTarget) dateTarget.style.viewTransitionName = "none";
+            if (timeTarget) timeTarget.style.viewTransitionName = "none";
             editSolve(s);
           });
         }
@@ -228,6 +267,19 @@
 
   function _delete(s: Solve[]) {
     requestRemoveSolves(s);
+  }
+
+  function requestDeleteSolve(s: Solve) {
+    sSolve = s;
+    showDeleteSolve = true;
+    showContextMenu = false;
+  }
+
+  function confirmDeleteSolve(confirmed: boolean) {
+    if (!confirmed) return;
+    _delete([sSolve]);
+    showDeleteSolve = false;
+    closeHandler();
   }
 
   function deleteSelected() {
@@ -329,8 +381,10 @@
 
     sSolve = s;
 
-    if (sSolve.steps) {
+    if (sSolve.steps && isMultiStepSession()) {
       solveSteps = calcPercents(sSolve.steps, sSolve.time);
+    } else {
+      solveSteps = [];
     }
 
     showContextMenu = true;
@@ -381,11 +435,15 @@
 
     if (o && !Array.isArray(o)) {
       let res = parseReconstruction(s, o.type, o.order ? o.order[0] : -1);
-      reconstructionError = res.finalAlpha === 0;
-      return res.result;
+      reconstructionError = res.hasError || res.finalAlpha === 0;
+      return res.hasError ? defaultInner(s, true) : res.result;
     }
 
     return defaultInner(s, true);
+  }
+
+  function isMultiStepSession() {
+    return $session?.settings.sessionType === "multi-step";
   }
 
   async function focusTextArea(f: boolean) {
@@ -426,16 +484,19 @@
 
 <svelte:window onkeydown={handleKeydown} onclick={globalHandleClick} />
 
-<section role="tabpanel" class={"w-full h-full " + ($tab != 1 ? "!hidden" : "")}>
+<section
+  role="tabpanel"
+  class={"relative flex flex-col min-h-0 overflow-hidden w-full h-full " + ($tab != 1 ? "!hidden" : "")}
+>
   <!-- Pagination -->
   <PaginatorComponent {pg} onupdate={updateSolves} />
 
   <!-- Solves -->
-  <div id="grid" class="pt-4 grid overflow-scroll" bind:this={solvesElement}>
+  <div id="grid" class="pt-4 grid min-h-0 flex-1 overflow-auto" bind:this={solvesElement}>
     {#each pSolves as solve (solve._id)}
       {@const stime = sTimer(solve, true)}
       <button
-        class="shadow-md w-full h-full min-h-[3rem] rounded-md p-1 bg-base-200 relative
+        class="shadow-md w-full h-full rounded-md p-1 bg-base-200 relative
           flex items-center justify-center transition-all duration-200 select-none cursor-pointer
           border border-primary/50
           hover:shadow-lg hover:shadow-primary/25 hover:bg-primary hover:text-primary-content
@@ -444,11 +505,13 @@
         oncontextmenu={e => handleContextMenu(e, solve)}
         class:selected={solve.selected}
       >
-        <div class="pointer-events-none font-small absolute top-0 left-2">
+        <div
+          class="solve-row-date pointer-events-none font-small absolute top-0 left-2"
+        >
           {moment(solve.date).format("DD/MM")}
         </div>
         <span
-          class={"pointer-events-none time text-center font-bold " +
+          class={"solve-row-time pointer-events-none time text-center font-bold " +
             (stime === "DNF" ? "text-error font-bold" : "")}
         >
           {stime}
@@ -574,7 +637,7 @@
       </li>
     {/if}
     <li>
-      <button onclick={() => _delete([sSolve])}>
+      <button onclick={() => requestDeleteSolve(sSolve)}>
         <TrashIcon size="1.2rem" />
         {$localLang.global.delete}
       </button>
@@ -585,11 +648,18 @@
 <Modal
   bind:show
   onclose={closeHandler}
+  title={$localLang.TIMER.edit}
+  showCloseButton
+  closeOnClickOutside
+  size="2xl"
   class="w-[min(100%,40rem)] shaded-card"
-  transitionName="modal"
+  transitionName={solveEditTransitionNames.shell}
 >
   <div class="flex justify-between items-center m-2">
-    <span class="view-time m-1 w-max text-lg font-bold">
+    <span
+      class="view-time m-1 w-max text-lg font-bold"
+      style:view-transition-name={solveEditTransitionNames.time}
+    >
       {#if sSolve.penalty === Penalty.NONE || sSolve.penalty === Penalty.P2}
         {sTimer(sSolve, true, true)}
       {/if}
@@ -605,7 +675,7 @@
     </span>
     <span class="flex items-center font-small">
       <CalendarIcon size="1.2rem" />
-      <span class="ml-2">
+      <span class="ml-2" style:view-transition-name={solveEditTransitionNames.date}>
         {moment(sSolve?.date).format("D MMM YYYY")} <br />
         {moment(sSolve?.date).format("HH:MM")}
       </span>
@@ -630,15 +700,14 @@
       {#if preview}
         <PuzzleImageBundle
           src={preview}
-          allowDownload={!collapsed}
-          onclick={() => (collapsed = !collapsed)}
+          allowDownload
         />
       {:else}
         <Spinner size="20" />
       {/if}
     </div>
 
-    {#if sSolve?.steps}
+    {#if isMultiStepSession() && sSolve?.steps?.length}
       <hr class="w-full border border-t-gray-400 col-span-2" />
       <h3 class="text-center col-span-2 mt-2 mb-8 text-lg">
         {$localLang.global.steps}
@@ -683,10 +752,7 @@
     <Button
       aria-label={$localLang.global.delete}
       type="danger"
-      onclick={() => {
-        _delete([sSolve]);
-        // modal.close();
-      }}
+      onclick={() => (showDeleteSolve = true)}
     >
       <TrashIcon size="1.2rem" />
       {$localLang.global.delete}
@@ -695,9 +761,7 @@
     <Button
       aria-label={$localLang.global.cancel}
       type="secondary"
-      onclick={() => {
-        /*modal.close()*/
-      }}
+      onclick={closeDetailsWithoutSaving}
     >
       <XIcon size="1.2rem" />
       {$localLang.global.cancel}
@@ -715,30 +779,69 @@
     </Button>
 
     {#if !reconstructionError}
-      <Button
-        aria-label={$localLang.global.save}
-        onclick={checkReconstruction}
-        type="success"
-        class="mr-2 text-sm"
-      >
-        {$localLang.global.reconstruction}
-      </Button>
+      <Tooltip tooltipText={$localLang.global.reconstruction}>
+        <Button
+          aria-label={$localLang.global.reconstruction}
+          onclick={checkReconstruction}
+          type="success"
+          size="sm"
+          icon
+        >
+          <RouteIcon size="1.2rem" />
+        </Button>
+      </Tooltip>
     {/if}
 
-    <Button>
-      {[{ label: $localLang.TIMER.noPenalty, penalty: Penalty.NONE }, ...PENALTIES].find(
-        p => p.penalty === sSolve.penalty
-      )?.label || $localLang.TIMER.noPenalty}
+    <div class="relative" bind:this={penaltyTriggerElement}>
+      <Button>
+        {[{ label: $localLang.TIMER.noPenalty, penalty: Penalty.NONE }, ...PENALTIES].find(
+          p => p.penalty === sSolve.penalty
+        )?.label || $localLang.TIMER.noPenalty}
 
-      <ChevronDownIcon size="1.2rem" />
+        <ChevronDownIcon size="1.2rem" />
+      </Button>
+      <Dropdown
+        trigger={penaltyTriggerElement}
+        bind:open={showDropdown}
+        class="bg-base-200 text-base-content rounded-md"
+      >
+        {#each [{ label: $localLang.TIMER.noPenalty, penalty: Penalty.NONE }, ...PENALTIES] as p}
+          <DropdownItem class="bg-base-200 hover:bg-base-300" onclick={() => setPenalty(p.penalty)}>
+            {p.label}
+          </DropdownItem>
+        {/each}
+      </Dropdown>
+    </div>
+  </div>
+</Modal>
+
+<Modal
+  class="shaded-card"
+  bind:show={showDeleteSolve}
+  title={$localLang.global.delete}
+  showCloseButton
+  closeOnClickOutside
+  onclose={confirmDeleteSolve}
+>
+  <h1 class="mb-4 text-lg">
+    {replaceParams($localLang.global.deleteWarning, [sTimer(sSolve, true)])}
+  </h1>
+  <div class="flex justify-center gap-2">
+    <Button
+      type="secondary"
+      aria-label={$localLang.global.cancel}
+      onclick={() => (showDeleteSolve = false)}
+    >
+      {$localLang.global.cancel}
     </Button>
-    <Dropdown bind:open={showDropdown} class="bg-backgroundLevel2 rounded-md">
-      {#each [{ label: $localLang.TIMER.noPenalty, penalty: Penalty.NONE }, ...PENALTIES] as p}
-        <DropdownItem class="bg-backgroundLevel2 " onclick={() => setPenalty(p.penalty)}>
-          {p.label}
-        </DropdownItem>
-      {/each}
-    </Dropdown>
+
+    <Button
+      type="danger"
+      aria-label={$localLang.global.delete}
+      onclick={() => confirmDeleteSolve(true)}
+    >
+      {$localLang.global.delete}
+    </Button>
   </div>
 </Modal>
 
@@ -786,7 +889,7 @@
 
   #grid {
     grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));
-    max-height: calc(100% - 2rem);
+    grid-auto-rows: 3rem;
     gap: 0.5rem;
     padding-bottom: 2rem;
     padding-right: 0.5rem;
@@ -865,11 +968,4 @@
     font-size: 0.8rem;
   }
 
-  .modal-transition {
-    view-transition-name: modal;
-  }
-
-  .view-time {
-    view-transition-name: time;
-  }
 </style>

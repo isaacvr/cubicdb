@@ -95,4 +95,21 @@ describe("CubicDB theme utility classes", () => {
     expect(css).toContain(".cdb-button-ghost:hover");
     expect(css).toContain("background: var(--cdb-button-ghost-hover-background");
   });
+
+  it("exposes a global View Transition duration token for debugging", () => {
+    const css = readFileSync(componentsCssPath, "utf8");
+
+    expect(css).toContain("::view-transition-group(*)");
+    expect(css).toContain("::view-transition-old(*)");
+    expect(css).toContain("::view-transition-new(*)");
+    expect(css).toContain("animation-duration: var(--cdb-view-transition-duration, 250ms)");
+  });
+
+  it("lets matched View Transition snapshots morph to the target box aspect ratio", () => {
+    const css = readFileSync(componentsCssPath, "utf8");
+
+    expect(css).toContain("width: 100%;");
+    expect(css).toContain("height: 100%;");
+    expect(css).toContain("object-fit: fill;");
+  });
 });

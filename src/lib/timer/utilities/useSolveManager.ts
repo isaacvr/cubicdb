@@ -1,7 +1,6 @@
 import { get } from 'svelte/store';
 import type { Solve } from '@interfaces';
 import type { TimerController } from '$lib/controllers/TimerController';
-import { binSearch } from '@helpers/object';
 import { INITIAL_STATISTICS } from '@helpers/statistics';
 
 export function useSolveManager(timerController: TimerController) {
@@ -53,33 +52,31 @@ export function useSolveManager(timerController: TimerController) {
   }
 
   function handleUpdateSolve(updatedSolve: Solve) {
-    const allSolvesVal = get(allSolves);
-    for (let i = 0, maxi = allSolvesVal.length; i < maxi; i += 1) {
-      if (allSolvesVal[i]._id === updatedSolve._id) {
-        allSolvesVal[i].comments = updatedSolve.comments;
-        allSolvesVal[i].penalty = updatedSolve.penalty;
-        allSolvesVal[i].time = updatedSolve.time;
-        break;
-      }
-    }
+    allSolves.update(allSolvesVal =>
+      allSolvesVal.map(solve =>
+        solve._id === updatedSolve._id
+          ? {
+              ...solve,
+              comments: updatedSolve.comments,
+              penalty: updatedSolve.penalty,
+              time: updatedSolve.time,
+            }
+          : solve
+      )
+    );
     stats.set(INITIAL_STATISTICS);
     setSolves(false);
   }
 
   function handleRemoveSolves(ids: Solve[]) {
     const solvesVal = get(solves);
-    const allSolvesVal = get(allSolves);
     const sl = solvesVal.length;
+    const idsToRemove = new Set(ids.map(solve => solve._id));
 
-    for (let i = 0, maxi = ids.length; i < maxi; i += 1) {
-      const pos1 = binSearch<Solve>(ids[i], solvesVal, (a: Solve, b: Solve) => b.date - a.date);
-      const pos2 = binSearch<Solve>(ids[i], allSolvesVal, (a: Solve, b: Solve) => b.date - a.date);
+    solves.set(solvesVal.filter(solve => !idsToRemove.has(solve._id)));
+    allSolves.update(allSolvesVal => allSolvesVal.filter(solve => !idsToRemove.has(solve._id)));
 
-      if (pos1 > -1) solvesVal.splice(pos1, 1);
-      if (pos2 > -1) allSolvesVal.splice(pos2, 1);
-    }
-
-    if (solvesVal.length != sl) {
+    if (get(solves).length != sl) {
       stats.set(INITIAL_STATISTICS);
       setSolves();
     }

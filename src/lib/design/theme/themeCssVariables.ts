@@ -7,35 +7,45 @@ function appendTypographyVariables(theme: AppThemeDefinition, variables: ThemeCs
 }
 
 function appendSemanticVariables(theme: AppThemeDefinition, variables: ThemeCssVariables) {
-  variables["--cdb-color-base"] = theme.colors.base;
-  variables["--cdb-color-base-soft"] = theme.colors.baseSoft;
-  variables["--cdb-color-base-raised"] = theme.colors.baseRaised;
-  variables["--cdb-color-base-content"] = theme.colors.baseContent;
-  variables["--cdb-color-base-content-muted"] = theme.colors.baseContentMuted;
-  variables["--cdb-color-base-content-subtle"] = theme.colors.baseContentSubtle;
-  variables["--cdb-color-primary"] = theme.colors.primary;
-  variables["--cdb-color-primary-content"] = theme.colors.primaryContent;
-  variables["--cdb-color-primary-soft"] = theme.colors.primarySoft;
-  variables["--cdb-color-primary-disabled"] = theme.colors.primaryDisabled;
-  variables["--cdb-color-secondary"] = theme.colors.secondary;
-  variables["--cdb-color-secondary-content"] = theme.colors.secondaryContent;
-  variables["--cdb-color-accent"] = theme.colors.accent;
-  variables["--cdb-color-accent-content"] = theme.colors.accentContent;
-  variables["--cdb-color-info"] = theme.colors.info;
-  variables["--cdb-color-info-content"] = theme.colors.infoContent;
-  variables["--cdb-color-success"] = theme.colors.success;
-  variables["--cdb-color-success-content"] = theme.colors.successContent;
-  variables["--cdb-color-warning"] = theme.colors.warning;
-  variables["--cdb-color-warning-content"] = theme.colors.warningContent;
-  variables["--cdb-color-error"] = theme.colors.error;
-  variables["--cdb-color-error-content"] = theme.colors.errorContent;
-  variables["--cdb-color-border-subtle"] = theme.colors.borderSubtle;
-  variables["--cdb-color-border-visible"] = theme.colors.borderVisible;
-  variables["--cdb-color-border-focus"] = theme.colors.borderFocus;
+  variables["--cdb-color-base"] = "var(--color-base-100)";
+  variables["--cdb-color-base-soft"] =
+    "color-mix(in oklab, var(--color-primary) 12%, transparent)";
+  variables["--cdb-color-base-raised"] =
+    "color-mix(in oklab, var(--color-primary) 18%, transparent)";
+  variables["--cdb-color-base-content"] = "var(--color-base-content)";
+  variables["--cdb-color-base-content-muted"] =
+    "color-mix(in oklab, var(--color-base-content) 60%, transparent)";
+  variables["--cdb-color-base-content-subtle"] =
+    "color-mix(in oklab, var(--color-base-content) 40%, transparent)";
+  variables["--cdb-color-primary"] = "var(--color-primary)";
+  variables["--cdb-color-primary-content"] = "var(--color-primary-content)";
+  variables["--cdb-color-primary-soft"] =
+    "color-mix(in oklab, var(--color-primary) 12%, transparent)";
+  variables["--cdb-color-primary-disabled"] =
+    "color-mix(in oklab, var(--color-primary) 35%, var(--color-base-300))";
+  variables["--cdb-color-secondary"] = "var(--color-secondary)";
+  variables["--cdb-color-secondary-content"] = "var(--color-secondary-content)";
+  variables["--cdb-color-accent"] = "var(--color-accent)";
+  variables["--cdb-color-accent-content"] = "var(--color-accent-content)";
+  variables["--cdb-color-info"] = "var(--color-info)";
+  variables["--cdb-color-info-content"] = "var(--color-info-content)";
+  variables["--cdb-color-success"] = "var(--color-success)";
+  variables["--cdb-color-success-content"] = "var(--color-success-content)";
+  variables["--cdb-color-warning"] = "var(--color-warning)";
+  variables["--cdb-color-warning-content"] = "var(--color-warning-content)";
+  variables["--cdb-color-error"] = "var(--color-error)";
+  variables["--cdb-color-error-content"] = "var(--color-error-content)";
+  variables["--cdb-color-border-subtle"] =
+    "color-mix(in oklab, var(--color-primary) 12%, transparent)";
+  variables["--cdb-color-border-visible"] =
+    "color-mix(in oklab, var(--color-primary) 30%, transparent)";
+  variables["--cdb-color-border-focus"] = "var(--color-primary)";
   variables["--cdb-color-overlay"] = theme.colors.overlay;
 
-  variables["--cdb-surface-panel"] = theme.colors.baseSoft;
-  variables["--cdb-surface-raised"] = theme.colors.baseRaised;
+  variables["--cdb-surface-panel"] =
+    "color-mix(in oklab, var(--color-primary) 12%, transparent)";
+  variables["--cdb-surface-raised"] =
+    "color-mix(in oklab, var(--color-primary) 18%, transparent)";
 }
 
 function appendShapeVariables(theme: AppThemeDefinition, variables: ThemeCssVariables) {

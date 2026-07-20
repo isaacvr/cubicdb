@@ -9,18 +9,26 @@ export function useKeyboardHandler(
 ) {
   const { timerState } = timerController;
 
+  function isTextEditingTarget(target: EventTarget | null) {
+    if (!(target instanceof HTMLElement)) return false;
+
+    return Boolean(
+      target.closest("input, textarea, select, [contenteditable='true'], [contenteditable='']")
+    );
+  }
+
   function handleKeydown(e: KeyboardEvent) {
     if (!get(keyboardEnabled)) return;
+    if (isTextEditingTarget(e.target)) return;
 
     const state = get(timerState);
 
-    if (
-      !options?.battle &&
-      (state === TimerState.CLEAN || state === TimerState.STOPPED)
-    ) {
-      if (e.key === 'ArrowRight') {
+    if (!options?.battle && (state === TimerState.CLEAN || state === TimerState.STOPPED)) {
+      if (e.ctrlKey && e.key === "ArrowRight") {
+        e.preventDefault();
         timerController.nextTab();
-      } else if (e.key === 'ArrowLeft') {
+      } else if (e.ctrlKey && e.key === "ArrowLeft") {
+        e.preventDefault();
         timerController.prevTab();
       }
     }

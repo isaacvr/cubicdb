@@ -233,9 +233,9 @@
   });
 
   function keyboardKeyDownHandler(event: KeyboardEvent) {
+    keyboardMgr.handleKeydown(event);
     if (!timerKeyboardInputActive) return;
     if (managedKeyboardActive) return;
-    keyboardMgr.handleKeydown(event);
   }
 
   function keyboardKeyUpHandler(event: KeyboardEvent) {
