@@ -61,7 +61,7 @@
     var(--color-primary) 35%,
     var(--color-base-300)
   );
-  --cdb-color-ready: var(--color-primary);
+  --cdb-color-ready: #2ed4bf;
   --cdb-color-success: var(--color-success);
   --cdb-color-success-content: var(--color-success-content);
   --cdb-color-info: var(--color-info, var(--color-primary));
@@ -70,7 +70,7 @@
   --cdb-color-accent-content: var(--color-accent-content);
   --cdb-color-warning: var(--color-warning);
   --cdb-color-warning-content: var(--color-warning-content);
-  --cdb-color-prevention: var(--color-primary);
+  --cdb-color-prevention: #fb7085;
   --cdb-color-border-subtle: color-mix(in oklab, var(--color-primary) 12%, transparent);
   --cdb-color-border-visible: color-mix(in oklab, var(--color-primary) 30%, transparent);
   --cdb-color-border-focus: var(--color-primary);
@@ -100,10 +100,8 @@
   --cdb-side-nav-active-background: rgba(58, 189, 248, 0.16);
   --cdb-side-nav-active-color: var(--cdb-color-primary);
   --cdb-side-nav-support-color: var(--cdb-color-prevention);
-  --cdb-timer-ready-glow: 0 0 1.5rem
-    color-mix(in oklab, var(--color-primary) 50%, transparent);
-  --cdb-timer-prevention-glow: 0 0 1.5rem
-    color-mix(in oklab, var(--color-primary) 35%, transparent);
+  --cdb-timer-ready-glow: 0 0 1.5rem rgba(46, 212, 191, 0.5);
+  --cdb-timer-prevention-glow: 0 0 1.5rem rgba(251, 112, 133, 0.35);
   --cdb-shadow-panel: 0 1rem 2.75rem rgba(0, 0, 0, 0.18);
   --cdb-shadow-modal: 0 1.5rem 5rem rgba(0, 0, 0, 0.38);
   --cdb-shadow-control: 0 0.375rem 1.125rem rgba(58, 189, 248, 0.14);

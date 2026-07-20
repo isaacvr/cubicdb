@@ -19,13 +19,15 @@ describe("CubicDB theme tokens", () => {
     expect(css).toContain("--cdb-side-nav-active-color: var(--cdb-color-primary);");
   });
 
-  it("uses primary aqua feedback for timer prevention and ready states", () => {
+  it("uses the restored timer feedback colors", () => {
     const css = readFileSync(themePath, "utf8");
 
-    expect(css).toContain("--cdb-color-ready: var(--color-primary);");
-    expect(css).toContain("--cdb-color-prevention: var(--color-primary);");
-    expect(css).toContain("var(--color-primary) 50%");
-    expect(css).toContain("var(--color-primary) 35%");
+    expect(css).toContain("--cdb-color-ready: #2ed4bf;");
+    expect(css).toContain("--cdb-color-prevention: #fb7085;");
+    expect(css).toContain("--cdb-timer-ready-glow: 0 0 1.5rem rgba(46, 212, 191, 0.5);");
+    expect(css).toContain(
+      "--cdb-timer-prevention-glow: 0 0 1.5rem rgba(251, 112, 133, 0.35);",
+    );
   });
 
   it("defines the default View Transition debugging duration", () => {
