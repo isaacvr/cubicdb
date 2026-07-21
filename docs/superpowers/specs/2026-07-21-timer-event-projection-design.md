@@ -21,7 +21,7 @@ The next slice establishes one consistent event flow resembling Redux without ad
 
 ```text
 UI or device
-  -> feature facade (`useSolve()`, `useScramble()`, etc.)
+  -> feature facade (`useSolve(sessionId)`, `useScramble()`, etc.)
   -> typed event emitter
   -> EventBus
   -> service module and/or projection module
@@ -43,13 +43,13 @@ The event stream is the internal communication mechanism. Projections are the re
 | Reducer | Projection handler | Applies matching result/fact events to application- or owner-scoped reactive state |
 | Store selector | Readonly projection view | Exposes only the state a UI component needs |
 | Store setup | Timer/application runtime | Attaches modules and guarantees teardown |
-| React hook | Feature facade such as `useSolve()` | Presents reactive state and commands while hiding all event infrastructure |
+| React hook | Feature facade such as `useSolve(sessionId)` | Presents reactive state and commands while hiding all event infrastructure |
 
 This mapping is conceptual. CubicDB retains domain-specific events, async publication, direct high-frequency timer readings, and independently attachable modules.
 
 ## Architectural Rules
 
-1. Svelte components consume small feature facades such as `useSolve()`, `useScramble()`, and the application-global `useDevices()`.
+1. Svelte components consume small feature facades such as `useSolve(sessionId)`, `useScramble()`, and the application-global `useDevices()`.
 2. Feature facades publish typed events through small event-family emitters and expose readonly projection state.
 3. Components do not import the EventBus, event factory, event registry, emitters, persistence ports, or environment adapters.
 4. Components never build event envelopes by hand.
@@ -63,6 +63,7 @@ This mapping is conceptual. CubicDB retains domain-specific events, async public
 12. Detached modules must stop reacting, including after Timer route remounts.
 13. Expected failures become typed failure events and feature-level `Result` values; storage or transport errors do not escape directly into components.
 14. The migration preserves current behavior and follows the existing Figma visual design. It does not add Timer features.
+15. A solve never exists outside a session scope. Every solve query, mutation, event, projection, and facade instance has one explicit `sessionId`.
 
 ## Runtime Boundaries
 
@@ -105,9 +106,10 @@ The preferred component shape is:
 
 ```svelte
 <script lang="ts">
-  const solve = useSolve();
+  const session = useTimerSession();
+  const solve = useSolve(() => session.current._id);
 
-  onMount(() => solve.loadBySession($session._id));
+  onMount(() => solve.load());
 </script>
 
 <button onclick={() => solve.update(tmpSolve)}>Save edited solve</button>
@@ -125,14 +127,15 @@ Each facade has three responsibilities:
 - expose domain-readable commands;
 - translate commands into typed event publication and correlated results.
 
-For example, `useSolve()` exposes:
+For example, `useSolve(sessionId)` exposes:
 
 ```ts
 interface SolveFeature {
+  readonly sessionId: string;
   readonly items: readonly Solve[];
   readonly loading: boolean;
   readonly error: SolveFeatureError | null;
-  loadBySession(sessionId: string): Promise<Result<void, SolveFeatureError>>;
+  load(): Promise<Result<void, SolveFeatureError>>;
   add(solve: Partial<Solve>): Promise<Result<Solve, SolveFeatureError>>;
   update(solve: Solve): Promise<Result<Solve, SolveFeatureError>>;
   remove(solves: readonly Solve[]): Promise<Result<readonly Solve[], SolveFeatureError>>;
@@ -141,10 +144,12 @@ interface SolveFeature {
 
 Expected command failures return `Result` and also update reactive error state. This lets a modal decide whether to close after a save while the rest of the UI can render or notify from the same failure projection. Facades correlate result/failure events internally; components never handle request IDs.
 
+`useSolve(sessionId)` requires a session ID or reactive session-ID provider when it is created. There is no unscoped overload and no application-global solve array. The facade supplies its session ID to add operations and rejects update/remove inputs belonging to another session. When a reactive session ID changes, the facade clears the previous session projection before loading the new one so solves from two sessions are never displayed together accidentally.
+
 The initial Timer feature facades are:
 
 - `useTimer()` for lifecycle/display state and input commands;
-- `useSolve()` for solve queries and mutations;
+- `useSolve(sessionId)` for solve queries and mutations;
 - `useScramble()` for scramble and preview commands/state;
 - `useTimerSession()` for selected-session settings, including the session's preferred device ID;
 - `useDevices()` for the application-global device catalog, discovery, connection, disconnection, and persisted device configuration;
@@ -173,7 +178,7 @@ The existing `TimerReactor` may be adapted into this module if doing so keeps it
 
 ### Solve Projection
 
-Owns the current Timer's solve collection and selection-compatible state. It reacts to:
+Owns one session's solve collection and selection-compatible state. Its identity is the pair `{ ownerId, sessionId }`, allowing multiple components or Timer owners to query different sessions concurrently without overwriting one another. It reacts to:
 
 - solve list loaded;
 - solve added;
@@ -181,7 +186,7 @@ Owns the current Timer's solve collection and selection-compatible state. It rea
 - solves removed;
 - relevant persistence failures.
 
-It ignores events for other owners. Session filtering remains explicit in the request and result payloads; it is not inferred from global controller state.
+It ignores events for other owners or sessions. `sessionId` is required explicitly in every solve request, result, and failure payload; it is never inferred from global controller state or treated as an optional list filter.
 
 ### Scramble Projection
 
@@ -239,8 +244,8 @@ Example solve update:
 
 ```text
 HistoryTab
-  -> useSolve().update(solve, nativeEvent)
-  -> solveEventEmitters.requestUpdate(ownerId, solve, nativeEvent)
+  -> useSolve(sessionId).update(solve, nativeEvent)
+  -> solveEventEmitters.requestUpdate(ownerId, sessionId, solve, nativeEvent)
   -> SOLVE_UPDATE_REQUESTED
   -> SolvePersistenceModule
   -> SOLVE_UPDATED or SOLVE_UPDATE_FAILED
@@ -288,7 +293,7 @@ Matches the Figma options experience and invokes feature-facade commands for scr
 
 ### `HistoryTab.svelte`
 
-Uses `useSolve()` for solve lists and mutations and `useScramble()` for solve-preview generation. Modal open state, pagination, filtering, and temporary editing state may remain local.
+Uses session-scoped `useSolve(sessionId)` for solve lists and mutations and `useScramble()` for solve-preview generation. Modal open state, pagination, filtering, and temporary editing state may remain local.
 
 ### `StatsTab.svelte`
 
@@ -315,7 +320,7 @@ Existing semantic theme variables and CubicDB UI primitives remain the implement
 ## Migration Sequence
 
 1. Add projection contracts and focused unit tests.
-2. Extract current lifecycle and inline solve subscriptions into owner-scoped projection modules.
+2. Make `sessionId` required across solve event payloads and extract current lifecycle and inline solve subscriptions into session-scoped projection modules.
 3. Add explicitly application-scoped or owner-scoped feature facades and expose only those facades to components.
 4. Migrate scramble and preview UI requests.
 5. Migrate History solve list/update/remove and solve-preview requests.
@@ -343,6 +348,8 @@ Each step is a reversible vertical commit with focused automated verification an
 
 - Each projection applies its supported events.
 - Each projection ignores other owners/scopes.
+- Solve projections require a session ID and ignore solve events for every other session.
+- Concurrent solve facades for different sessions never overwrite or combine their collections.
 - The global device projection accepts application-global catalog/lifecycle events without a Timer owner.
 - Timer device lease projections ignore other owners while sharing the same global catalog.
 - Scramble and preview projections ignore stale request IDs.
@@ -363,6 +370,7 @@ Each step is a reversible vertical commit with focused automated verification an
 ### Component and source contracts
 
 - Timer UI components use feature facades rather than importing event infrastructure, services, or controllers.
+- Production code cannot construct an unscoped solve facade or request an unscoped solve list.
 - `Timer.svelte` contains no inline event subscriptions after cleanup.
 - `InputContext` and broad `TimerContext` disappear from production Timer UI.
 - Figma-aligned layout and options-dialog contracts remain present.
@@ -385,6 +393,7 @@ Do not run a production build or `svelte-check` for these migration slices unles
 The Timer migration is complete when:
 
 - all Timer UI data access uses small feature facades backed by typed event publication and readonly projections;
+- every solve operation and reactive collection is scoped to exactly one session;
 - components do not know which environment or persistence technology implements a feature;
 - service modules own asynchronous work and publish typed results/failures;
 - projection modules have explicit application or owner scope and are independently attachable and detachable;
