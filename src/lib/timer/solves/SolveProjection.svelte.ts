@@ -7,6 +7,14 @@ import type { TimerEvent } from "$lib/events/timer/TimerEvent";
 import { TIMER_EVENTS } from "$lib/events/timer/TimerEventRegistry";
 import type { SolveFeatureError } from "./SolveFeatureError";
 
+function byDateDescending(first: Solve, second: Solve): number {
+  return Number(second.date ?? 0) - Number(first.date ?? 0);
+}
+
+function orderSolvesByDateDescending(solves: readonly Solve[]): Solve[] {
+  return [...solves].sort(byDateDescending);
+}
+
 export interface SolveProjection {
   readonly ownerId: string;
   readonly sessionId: string;
@@ -60,21 +68,26 @@ class ReactiveSolveProjection implements SolveProjection {
         `${ownerId}:${sessionId}:list-loaded`,
         event => {
           if (!this.matches(event.payload)) return;
-          this.projectedItems = event.payload.solves.filter(
-            solve => String(solve.session) === this.sessionId
+          this.projectedItems = orderSolvesByDateDescending(
+            event.payload.solves.filter(solve => String(solve.session) === this.sessionId)
           );
           this.complete(event.payload.requestId, Ok(undefined));
         }
       ),
       bus.subscribe(TIMER_EVENTS.SOLVE_ADDED, `${ownerId}:${sessionId}:added`, event => {
         if (!this.matches(event.payload)) return;
-        this.projectedItems = [event.payload.solve, ...this.projectedItems];
+        this.projectedItems = orderSolvesByDateDescending([
+          event.payload.solve,
+          ...this.projectedItems,
+        ]);
         this.complete(event.payload.requestId, Ok(event.payload.solve));
       }),
       bus.subscribe(TIMER_EVENTS.SOLVE_UPDATED, `${ownerId}:${sessionId}:updated`, event => {
         if (!this.matches(event.payload)) return;
-        this.projectedItems = this.projectedItems.map(solve =>
-          solve._id === event.payload.solve._id ? event.payload.solve : solve
+        this.projectedItems = orderSolvesByDateDescending(
+          this.projectedItems.map(solve =>
+            solve._id === event.payload.solve._id ? event.payload.solve : solve
+          )
         );
         this.complete(event.payload.requestId, Ok(event.payload.solve));
       }),

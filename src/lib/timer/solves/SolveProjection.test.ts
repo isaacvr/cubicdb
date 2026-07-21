@@ -6,12 +6,12 @@ import { TimerEventFactory } from "$lib/events/timer/TimerEventFactory";
 import { TIMER_EVENTS } from "$lib/events/timer/TimerEventRegistry";
 import { createSolveProjection } from "./SolveProjection.svelte";
 
-function solve(id: string, session = "session:one"): Solve {
+function solve(id: string, session = "session:one", date = 1): Solve {
   return {
     _id: id,
     session,
     time: 1000,
-    date: 1,
+    date,
     scramble: "R U",
     penalty: Penalty.NONE,
     selected: false,
@@ -90,7 +90,61 @@ describe("SolveProjection", () => {
     expect(projection.consumeResult<void>("list-request")).toBeUndefined();
   });
 
-  it("prepends adds, replaces updates, and filters removals", async () => {
+  it("orders loaded solves by date descending", async () => {
+    const { bus, events, projection } = setup();
+    const oldest = solve("oldest", "session:one", 100);
+    const newest = solve("newest", "session:one", 300);
+    const middle = solve("middle", "session:one", 200);
+
+    await bus.publish(
+      events.create(TIMER_EVENTS.SOLVES_LIST_LOADED, {
+        ownerId: "timer:one",
+        sessionId: "session:one",
+        requestId: "list-request",
+        solves: [oldest, newest, middle],
+      })
+    );
+
+    expect(projection.items.map(item => item._id)).toEqual(["newest", "middle", "oldest"]);
+  });
+
+  it("keeps added and updated solves ordered by date descending", async () => {
+    const { bus, events, projection } = setup();
+    const oldest = solve("oldest", "session:one", 100);
+    const newest = solve("newest", "session:one", 300);
+    const movedToMiddle = solve("oldest", "session:one", 200);
+
+    await bus.publish(
+      events.create(TIMER_EVENTS.SOLVE_ADDED, {
+        ownerId: "timer:one",
+        sessionId: "session:one",
+        requestId: "add-oldest",
+        solve: oldest,
+      })
+    );
+    await bus.publish(
+      events.create(TIMER_EVENTS.SOLVE_ADDED, {
+        ownerId: "timer:one",
+        sessionId: "session:one",
+        requestId: "add-newest",
+        solve: newest,
+      })
+    );
+    await bus.publish(
+      events.create(TIMER_EVENTS.SOLVE_UPDATED, {
+        ownerId: "timer:one",
+        sessionId: "session:one",
+        requestId: "update-oldest",
+        previousSolve: oldest,
+        solve: movedToMiddle,
+      })
+    );
+
+    expect(projection.items.map(item => item._id)).toEqual(["newest", "oldest"]);
+    expect(projection.items.map(item => item.date)).toEqual([300, 200]);
+  });
+
+  it("adds, replaces updates, and filters removals", async () => {
     const { bus, events, projection } = setup();
     const first = solve("first");
     const updated = { ...first, time: 900 };
