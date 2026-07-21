@@ -7,7 +7,7 @@ export type SessionIdSource = string | (() => string);
 
 export function useSolve(source: SessionIdSource): SolveFeature {
   const runtime = getTimerRuntimeContext();
-  const sessionId = () => (typeof source === "function" ? source() : source);
+  const sessionId = () => String(typeof source === "function" ? source() : source);
   const feature = () => runtime.getSolveFeature(sessionId());
 
   return {
