@@ -20,10 +20,12 @@ describe("solve feature boundary", () => {
     expect(hookSource).toContain("getSolveFeature");
   });
 
-  it("documents History as the next facade migration boundary", () => {
+  it("routes History persisted solve actions through the solve facade", () => {
     const historySource = read("./HistoryTab/HistoryTab.svelte");
 
     expect(historySource).toContain("context: TimerContext");
-    expect(historySource).not.toContain("useSolve(");
+    expect(historySource).toContain("useSolve(");
+    expect(historySource).not.toContain("requestUpdateSolve");
+    expect(historySource).not.toContain("requestRemoveSolves");
   });
 });

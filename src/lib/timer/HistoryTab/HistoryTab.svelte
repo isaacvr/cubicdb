@@ -39,6 +39,7 @@
   import PuzzleImageBundle from "@components/PuzzleImageBundle.svelte";
   import Button from "$lib/cubicdbKit/Button.svelte";
   import Tooltip from "$lib/cubicdbKit/Tooltip.svelte";
+  import { useSolve } from "$lib/timer/solves";
   import { createEmptySolve } from "@helpers/object";
   import {
     CalendarIcon,
@@ -68,8 +69,9 @@
 
   let { context = $bindable(), timerController = $bindable() }: HistoryTabProps = $props();
 
-  const { selected, requestUpdateSolve, requestRemoveSolves } = context;
+  const { selected } = context;
   const { tab, solves, session } = timerController;
+  const solveFeature = useSolve(() => $session?._id ?? "");
 
   let pg = $state(new Paginator([], 100));
   // let modal: any;
@@ -126,7 +128,7 @@
       s.comments = comments;
       gSolve.comments = comments;
       gSolve.penalty = s.penalty;
-      requestUpdateSolve(s);
+      void solveFeature.update(s);
     }
     show = false;
   }
@@ -221,7 +223,7 @@
     sSolve.penalty = p;
 
     if (update) {
-      requestUpdateSolve(sSolve);
+      void solveFeature.update(sSolve);
     }
 
     showDropdown = false;
@@ -269,7 +271,7 @@
   }
 
   function _delete(s: Solve[]) {
-    requestRemoveSolves(s);
+    void solveFeature.remove(s);
   }
 
   function requestDeleteSolve(s: Solve) {
