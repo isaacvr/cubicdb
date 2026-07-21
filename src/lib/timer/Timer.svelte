@@ -29,6 +29,7 @@
   import { page } from "$app/state";
   import { createTimerRuntime } from "./TimerCompositionRoot.svelte";
   import { getTimerApplicationContext } from "./context/timerApplicationContext";
+  import { setTimerRuntimeContext } from "./context/timerRuntimeContext";
   import { TIMER_DEVICE_IDS } from "./devices/TimerDeviceDescriptor";
   import { resolveTimerDeviceSelection } from "./devices/TimerDeviceSelection";
   import {
@@ -149,6 +150,7 @@
       return createSolveDraft(elapsedMs, penalty, steps);
     },
   });
+  setTimerRuntimeContext(eventTimerRuntime);
   let requestedDeviceId: string | null = null;
   let managedKeyboardActive = $derived(
     eventTimerRuntime.state.activeDeviceId === TIMER_DEVICE_IDS.KEYBOARD

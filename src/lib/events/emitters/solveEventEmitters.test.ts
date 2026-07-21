@@ -31,20 +31,20 @@ function setup() {
 }
 
 describe("solveEventEmitters", () => {
-  it("publishes solve list requests with owner and query", async () => {
+  it("publishes solve list requests with owner and session", async () => {
     const { bus, events, observed } = setup();
     const emitters = createSolveEventEmitters({ bus, events });
 
     await emitters.requestList({
       ownerId: "timer:1",
-      query: { sessionId: "session-1" },
+      sessionId: "session-1",
     });
 
     expect(observed[0]).toMatchObject({
       type: TIMER_EVENTS.SOLVES_LIST_REQUESTED,
       payload: {
         ownerId: "timer:1",
-        query: { sessionId: "session-1" },
+        sessionId: "session-1",
       },
     });
   });
@@ -53,9 +53,9 @@ describe("solveEventEmitters", () => {
     const { bus, events, observed } = setup();
     const emitters = createSolveEventEmitters({ bus, events });
 
-    await emitters.requestAdd({ ownerId: "timer:1", solve });
-    await emitters.requestUpdate({ ownerId: "timer:1", solve });
-    await emitters.requestRemove({ ownerId: "timer:1", solves: [solve] });
+    await emitters.requestAdd({ ownerId: "timer:1", sessionId: "session-1", solve });
+    await emitters.requestUpdate({ ownerId: "timer:1", sessionId: "session-1", solve });
+    await emitters.requestRemove({ ownerId: "timer:1", sessionId: "session-1", solves: [solve] });
 
     expect(observed.map(event => event.type)).toEqual([
       TIMER_EVENTS.SOLVE_ADD_REQUESTED,
@@ -64,6 +64,7 @@ describe("solveEventEmitters", () => {
     ]);
     expect(observed[2].payload).toMatchObject({
       ownerId: "timer:1",
+      sessionId: "session-1",
       solves: [solve],
     });
   });
@@ -74,6 +75,7 @@ describe("solveEventEmitters", () => {
 
     await emitters.requestUpdate({
       ownerId: "timer:1",
+      sessionId: "session-1",
       solve,
       sourceEvent: { timeStamp: 42 },
     });

@@ -123,6 +123,7 @@ describe("keyboard timer flow", () => {
         type: TIMER_EVENTS.SOLVE_ADD_REQUESTED,
         payload: expect.objectContaining({
           ownerId: "timer:local-runtime",
+          sessionId: "session",
           solve: expect.objectContaining({
             time: Infinity,
             penalty: Penalty.DNF,

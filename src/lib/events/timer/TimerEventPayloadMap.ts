@@ -15,11 +15,13 @@ import type {
   ScramblePreviewClearReason,
   ScrambleRequestInput,
 } from "./ScrambleEventTypes";
-import type { SolveListQuery } from "$lib/timer/solves/SolveListQuery";
+import type { SolveFeatureError, SolveOperation } from "$lib/timer/solves/SolveFeatureError";
 
 type EmptyPayload = Record<string, never>;
 type DevicePayload = { deviceId: string };
 type OwnerDevicePayload = { ownerId: string; deviceId: string };
+type SolveScopePayload = { ownerId: string; sessionId: string };
+type SolveResultPayload = SolveScopePayload & { requestId: string };
 
 export interface TimerEventPayloadMap extends GenerationEventPayloadMap {
   [TIMER_EVENTS.KEYBOARD_KEY_DOWN]: { code: string; repeat: boolean };
@@ -73,14 +75,21 @@ export interface TimerEventPayloadMap extends GenerationEventPayloadMap {
     settings: Partial<SessionSettings>;
   };
   [TIMER_EVENTS.SESSION_SETTINGS_CHANGED]: { session: Session; changedKeys: string[] };
-  [TIMER_EVENTS.SOLVES_LIST_REQUESTED]: { ownerId: string; query?: SolveListQuery };
-  [TIMER_EVENTS.SOLVES_LIST_LOADED]: { ownerId: string; query?: SolveListQuery; solves: Solve[] };
-  [TIMER_EVENTS.SOLVE_ADD_REQUESTED]: { ownerId: string; solve: Partial<Solve> };
-  [TIMER_EVENTS.SOLVE_ADDED]: { ownerId: string; solve: Solve };
-  [TIMER_EVENTS.SOLVE_UPDATE_REQUESTED]: { ownerId: string; solve: Solve };
-  [TIMER_EVENTS.SOLVE_UPDATED]: { ownerId: string; previousSolve: Solve; solve: Solve };
-  [TIMER_EVENTS.SOLVES_REMOVE_REQUESTED]: { ownerId: string; solves: Solve[] };
-  [TIMER_EVENTS.SOLVES_REMOVED]: { ownerId: string; solves: Solve[] };
+  [TIMER_EVENTS.SOLVES_LIST_REQUESTED]: SolveScopePayload;
+  [TIMER_EVENTS.SOLVES_LIST_LOADED]: SolveResultPayload & { solves: Solve[] };
+  [TIMER_EVENTS.SOLVE_ADD_REQUESTED]: SolveScopePayload & { solve: Partial<Solve> };
+  [TIMER_EVENTS.SOLVE_ADDED]: SolveResultPayload & { solve: Solve };
+  [TIMER_EVENTS.SOLVE_UPDATE_REQUESTED]: SolveScopePayload & { solve: Solve };
+  [TIMER_EVENTS.SOLVE_UPDATED]: SolveResultPayload & {
+    previousSolve: Solve;
+    solve: Solve;
+  };
+  [TIMER_EVENTS.SOLVES_REMOVE_REQUESTED]: SolveScopePayload & { solves: Solve[] };
+  [TIMER_EVENTS.SOLVES_REMOVED]: SolveResultPayload & { solves: Solve[] };
+  [TIMER_EVENTS.SOLVE_REQUEST_FAILED]: SolveResultPayload & {
+    operation: SolveOperation;
+    error: SolveFeatureError;
+  };
   [TIMER_EVENTS.SCRAMBLE_REQUESTED]: ScrambleRequestInput & { ownerId: string };
   [TIMER_EVENTS.SCRAMBLE_GENERATED]: ScrambleRequestInput & {
     ownerId: string;

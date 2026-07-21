@@ -19,7 +19,11 @@ import {
   type ScrambleRequestInput,
   type ScrambleRequestSource,
 } from "$lib/events/timer/ScrambleEventTypes";
-import type { SolveListQuery } from "./solves/SolveListQuery";
+import {
+  createSolveFeature,
+  type InternalSolveFeature,
+  type SolveFeature,
+} from "./solves/SolveFeature";
 import { createImageGenerationConfig } from "./scramble/createImageGenerationConfig";
 import { createTimerMigrationFlags, type TimerMigrationFlags } from "./TimerMigrationFlags";
 import { TimerReactor } from "./TimerReactor";
@@ -66,10 +70,14 @@ export interface TimerRuntime {
     input: ScrambleRequestInput,
     nativeEvent?: NativeTimestampSource
   ): Promise<string>;
+  getSolveFeature(sessionId: string): SolveFeature;
   requestSolveAdd(solve: Partial<Solve>, nativeEvent?: NativeTimestampSource): Promise<void>;
   requestSolveUpdate(solve: Solve, nativeEvent?: NativeTimestampSource): Promise<void>;
   requestSolvesRemove(solves: Solve[], nativeEvent?: NativeTimestampSource): Promise<void>;
-  requestSolvesList(query?: SolveListQuery, nativeEvent?: NativeTimestampSource): Promise<Solve[]>;
+  requestSolvesList(
+    query: { sessionId: string },
+    nativeEvent?: NativeTimestampSource
+  ): Promise<Solve[]>;
   cancelActiveInput(timestamp?: number): void;
   destroy(): Promise<void>;
 }
@@ -212,7 +220,23 @@ export function createTimerRuntime(options: TimerRuntimeOptions = {}): TimerRunt
       : null;
   const ready = application.ready;
   let destroyed = false;
-  let solveListRequestSequence = 0;
+  const solveFeatures = new Map<string, InternalSolveFeature>();
+
+  function getSolveFeature(sessionId: string): SolveFeature {
+    if (!sessionId) throw new Error("useSolve requires a sessionId");
+    let feature = solveFeatures.get(sessionId);
+    if (!feature) {
+      feature = createSolveFeature({
+        bus: application.bus,
+        events: application.events,
+        ownerId,
+        sessionId,
+        ready,
+      });
+      solveFeatures.set(sessionId, feature);
+    }
+    return feature;
+  }
 
   async function publishScrambleRequest(
     input: ScrambleRequestInput,
@@ -238,86 +262,9 @@ export function createTimerRuntime(options: TimerRuntimeOptions = {}): TimerRunt
     solve: Partial<Solve>,
     nativeEvent?: NativeTimestampSource
   ): Promise<void> {
-    const event = nativeEvent
-      ? application.events.fromNative(
-          TIMER_EVENTS.SOLVE_ADD_REQUESTED,
-          {
-            ownerId,
-            solve,
-          },
-          nativeEvent
-        )
-      : application.events.create(TIMER_EVENTS.SOLVE_ADD_REQUESTED, {
-          ownerId,
-          solve,
-        });
-    await application.bus.publish(event);
-  }
-
-  async function publishSolveUpdateRequest(
-    solve: Solve,
-    nativeEvent?: NativeTimestampSource
-  ): Promise<void> {
-    const event = nativeEvent
-      ? application.events.fromNative(
-          TIMER_EVENTS.SOLVE_UPDATE_REQUESTED,
-          {
-            ownerId,
-            solve,
-          },
-          nativeEvent
-        )
-      : application.events.create(TIMER_EVENTS.SOLVE_UPDATE_REQUESTED, {
-          ownerId,
-          solve,
-        });
-    await application.bus.publish(event);
-  }
-
-  async function publishSolvesRemoveRequest(
-    solves: Solve[],
-    nativeEvent?: NativeTimestampSource
-  ): Promise<void> {
-    const event = nativeEvent
-      ? application.events.fromNative(
-          TIMER_EVENTS.SOLVES_REMOVE_REQUESTED,
-          {
-            ownerId,
-            solves,
-          },
-          nativeEvent
-        )
-      : application.events.create(TIMER_EVENTS.SOLVES_REMOVE_REQUESTED, {
-          ownerId,
-          solves,
-        });
-    await application.bus.publish(event);
-  }
-
-  async function publishSolvesListRequest(
-    query?: SolveListQuery,
-    nativeEvent?: NativeTimestampSource
-  ): Promise<Solve[]> {
-    const loaded = new Promise<Solve[]>(resolve => {
-      const subscription = application.bus.subscribe(
-        TIMER_EVENTS.SOLVES_LIST_LOADED,
-        `${ownerId}:timer-runtime:solves-list-loaded:${++solveListRequestSequence}`,
-        event => {
-          if (event.payload.ownerId !== ownerId) return;
-          subscription.unsubscribe();
-          resolve(event.payload.solves);
-        }
-      );
-    });
-    const event = nativeEvent
-      ? application.events.fromNative(
-          TIMER_EVENTS.SOLVES_LIST_REQUESTED,
-          { ownerId, query },
-          nativeEvent
-        )
-      : application.events.create(TIMER_EVENTS.SOLVES_LIST_REQUESTED, { ownerId, query });
-    await application.bus.publish(event);
-    return loaded;
+    const sessionId = String(solve.session ?? state.session?._id ?? "");
+    if (!sessionId) return;
+    await getSolveFeature(sessionId).add(solve, nativeEvent);
   }
 
   return {
@@ -331,6 +278,7 @@ export function createTimerRuntime(options: TimerRuntimeOptions = {}): TimerRunt
     flags,
     keyboard,
     ready,
+    getSolveFeature,
     async requestActiveDevice(deviceId: string): Promise<boolean> {
       await application.ready;
       await application.bus.publish(
@@ -363,16 +311,19 @@ export function createTimerRuntime(options: TimerRuntimeOptions = {}): TimerRunt
       await publishSolveAddRequest(solve, nativeEvent);
     },
     async requestSolveUpdate(solve: Solve, nativeEvent?: NativeTimestampSource): Promise<void> {
-      await publishSolveUpdateRequest(solve, nativeEvent);
+      await getSolveFeature(String(solve.session)).update(solve, nativeEvent);
     },
     async requestSolvesRemove(solves: Solve[], nativeEvent?: NativeTimestampSource): Promise<void> {
-      await publishSolvesRemoveRequest(solves, nativeEvent);
+      if (solves.length === 0) return;
+      await getSolveFeature(String(solves[0].session)).remove(solves, nativeEvent);
     },
     async requestSolvesList(
-      query?: SolveListQuery,
+      query: { sessionId: string },
       nativeEvent?: NativeTimestampSource
     ): Promise<Solve[]> {
-      return publishSolvesListRequest(query, nativeEvent);
+      const feature = getSolveFeature(String(query.sessionId));
+      const result = await feature.load(nativeEvent);
+      return result.ok ? [...feature.items] : [];
     },
     cancelActiveInput(timestamp?: number): void {
       application.keyboardDevice?.cancel(timestamp);
@@ -390,6 +341,8 @@ export function createTimerRuntime(options: TimerRuntimeOptions = {}): TimerRunt
       runStoppedSubscription?.unsubscribe();
       for (const subscription of lifecycleSubscriptions) subscription.unsubscribe();
       generation.destroy();
+      for (const feature of solveFeatures.values()) feature.destroy();
+      solveFeatures.clear();
       if (ownsApplication) await application.destroy();
     },
   };

@@ -1,16 +1,43 @@
 # Solve CRUD
 
+## Implemented Event-Driven Access
+
+Timer components now have a session-scoped feature API. Its production flow is:
+
+```text
+useSolve(sessionId)
+  -> session-scoped request event
+  -> application SolvePersistenceService
+  -> correlated result/failure event
+  -> { ownerId, sessionId } SolveProjection
+  -> reactive facade getters
+```
+
+`useSolve(sessionId)` exposes `items`, `loading`, and `error`, plus `load`, `add`,
+`update`, and `remove` commands. Components do not know which persistence adapter
+or storage technology handles those commands. Expected storage failures return a
+typed `Result` and are also projected reactively.
+
+Every solve event includes a session ID, and every persistence result includes the
+request event ID. There is no application-wide or unscoped solve collection: a
+solve always belongs to exactly one session. The Timer runtime caches one facade
+per session and destroys all projections with its owner scope.
+
+Migrating `HistoryTab.svelte` from the legacy Timer context to
+`useSolve(() => session.current._id)` is the next implementation slice. Until that
+migration, the existing History behavior and Figma-derived design remain unchanged.
+
 ## Penalty Editing Rules
 
 Editing rules depend on the **origin** of the penalty:
 
-| Origin | Current penalty | Can change to |
-|---|---|---|
-| No penalty | NONE | P2, DNF |
-| Manual +2 | P2 | NONE, DNF |
-| Manual DNF | DNF | NONE, P2 |
-| +2 from inspection | P2 | DNF (remove only if accidental) |
-| DNF from inspection | DNF | **Not editable** |
+| Origin              | Current penalty | Can change to                   |
+| ------------------- | --------------- | ------------------------------- |
+| No penalty          | NONE            | P2, DNF                         |
+| Manual +2           | P2              | NONE, DNF                       |
+| Manual DNF          | DNF             | NONE, P2                        |
+| +2 from inspection  | P2              | DNF (remove only if accidental) |
+| DNF from inspection | DNF             | **Not editable**                |
 
 Note: the solve must record the penalty origin to enforce these rules.
 
@@ -20,7 +47,7 @@ Note: the solve must record the penalty origin to enforce these rules.
  */
 interface PenaltyInfo {
   penalty: Penalty;
-  source: 'none' | 'manual' | 'inspection';
+  source: "none" | "manual" | "inspection";
 }
 ```
 

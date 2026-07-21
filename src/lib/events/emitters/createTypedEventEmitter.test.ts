@@ -30,7 +30,7 @@ describe("createTypedEventEmitter", () => {
     setNow(456);
     const eventId = await emit(TIMER_EVENTS.SOLVES_LIST_REQUESTED, {
       ownerId: "timer:1",
-      query: { sessionId: "session-1" },
+      sessionId: "session-1",
     });
 
     expect(eventId).toBe("event-1");
@@ -41,7 +41,7 @@ describe("createTypedEventEmitter", () => {
         timestamp: 456,
         payload: {
           ownerId: "timer:1",
-          query: { sessionId: "session-1" },
+          sessionId: "session-1",
         },
       },
     ]);

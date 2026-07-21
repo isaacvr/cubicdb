@@ -33,6 +33,7 @@
 ### Task 1: Require Session Scope and Correlation in Solve Events
 
 **Files:**
+
 - Create: `src/lib/timer/solves/SolveFeatureError.ts`
 - Modify: `src/lib/events/timer/TimerEventRegistry.ts`
 - Modify: `src/lib/events/timer/TimerEventPayloadMap.ts`
@@ -43,6 +44,7 @@
 - Modify fixtures in: `src/lib/timer/devices/KeyboardTimerFlow.integration.test.ts`
 
 **Interfaces:**
+
 - Consumes: `Result<T, E>` conventions and existing `TimerEventFactory.create()` typing.
 - Produces: `SolveOperation`, `SolveFeatureError`, `normalizeSolveFeatureError()`, required `sessionId` on all solve events, `requestId` on result/failure events, and `TIMER_EVENTS.SOLVE_REQUEST_FAILED`.
 
@@ -51,54 +53,54 @@
 Append to `TimerEventTypes.test-d.ts` using a complete solve fixture:
 
 ```ts
-import { Penalty, type Solve } from '@interfaces';
+import { Penalty, type Solve } from "@interfaces";
 
 const typedSolve: Solve = {
-  _id: 'solve:one',
-  session: 'session:one',
+  _id: "solve:one",
+  session: "session:one",
   time: 1234,
   date: 1,
-  scramble: 'R U',
+  scramble: "R U",
   penalty: Penalty.NONE,
   selected: false,
 };
 
 factory.create(TIMER_EVENTS.SOLVE_UPDATE_REQUESTED, {
-  ownerId: 'timer:one',
-  sessionId: 'session:one',
+  ownerId: "timer:one",
+  sessionId: "session:one",
   solve: typedSolve,
 });
 
 factory.create(TIMER_EVENTS.SOLVE_UPDATED, {
-  ownerId: 'timer:one',
-  sessionId: 'session:one',
-  requestId: 'request:one',
+  ownerId: "timer:one",
+  sessionId: "session:one",
+  requestId: "request:one",
   previousSolve: typedSolve,
   solve: typedSolve,
 });
 
 factory.create(TIMER_EVENTS.SOLVE_REQUEST_FAILED, {
-  ownerId: 'timer:one',
-  sessionId: 'session:one',
-  requestId: 'request:one',
-  operation: 'update',
+  ownerId: "timer:one",
+  sessionId: "session:one",
+  requestId: "request:one",
+  operation: "update",
   error: {
-    code: 'SOLVE_PERSISTENCE_FAILED',
-    operation: 'update',
-    message: 'Update failed',
+    code: "SOLVE_PERSISTENCE_FAILED",
+    operation: "update",
+    message: "Update failed",
   },
 });
 
 // @ts-expect-error solve requests require sessionId.
 factory.create(TIMER_EVENTS.SOLVE_UPDATE_REQUESTED, {
-  ownerId: 'timer:one',
+  ownerId: "timer:one",
   solve: typedSolve,
 });
 
 // @ts-expect-error solve results require requestId.
 factory.create(TIMER_EVENTS.SOLVE_UPDATED, {
-  ownerId: 'timer:one',
-  sessionId: 'session:one',
+  ownerId: "timer:one",
+  sessionId: "session:one",
   previousSolve: typedSolve,
   solve: typedSolve,
 });
@@ -119,31 +121,31 @@ Expected: FAIL because solve payloads do not yet require `sessionId`/`requestId`
 Create `SolveFeatureError.ts`:
 
 ```ts
-export type SolveOperation = 'list' | 'add' | 'update' | 'remove';
+export type SolveOperation = "list" | "add" | "update" | "remove";
 
 export type SolveFeatureError =
   | {
-      code: 'SOLVE_PERSISTENCE_FAILED';
+      code: "SOLVE_PERSISTENCE_FAILED";
       operation: SolveOperation;
       message: string;
     }
   | {
-      code: 'SESSION_SCOPE_MISMATCH';
-      operation: 'update' | 'remove';
+      code: "SESSION_SCOPE_MISMATCH";
+      operation: "update" | "remove";
       message: string;
     }
   | {
-      code: 'SOLVE_RESPONSE_MISSING';
+      code: "SOLVE_RESPONSE_MISSING";
       operation: SolveOperation;
       message: string;
     };
 
 export function normalizeSolveFeatureError(
   error: unknown,
-  operation: SolveOperation,
+  operation: SolveOperation
 ): SolveFeatureError {
   return {
-    code: 'SOLVE_PERSISTENCE_FAILED',
+    code: "SOLVE_PERSISTENCE_FAILED",
     operation,
     message: error instanceof Error ? error.message : String(error),
   };
@@ -222,10 +224,12 @@ git -c commit.gpgsign=false commit -m "feat: scope solve events to sessions"
 ### Task 2: Make Solve Emitters Session-Scoped
 
 **Files:**
+
 - Modify: `src/lib/events/emitters/solveEventEmitters.ts`
 - Modify: `src/lib/events/emitters/solveEventEmitters.test.ts`
 
 **Interfaces:**
+
 - Consumes: solve request event payloads from Task 1.
 - Produces: `requestList`, `requestAdd`, `requestUpdate`, and `requestRemove`, each requiring `{ ownerId, sessionId }` and returning `Promise<string>` request IDs.
 
@@ -234,10 +238,10 @@ git -c commit.gpgsign=false commit -m "feat: scope solve events to sessions"
 Update calls to this form:
 
 ```ts
-await emitters.requestList({ ownerId: 'timer:1', sessionId: 'session-1' });
-await emitters.requestAdd({ ownerId: 'timer:1', sessionId: 'session-1', solve });
-await emitters.requestUpdate({ ownerId: 'timer:1', sessionId: 'session-1', solve });
-await emitters.requestRemove({ ownerId: 'timer:1', sessionId: 'session-1', solves: [solve] });
+await emitters.requestList({ ownerId: "timer:1", sessionId: "session-1" });
+await emitters.requestAdd({ ownerId: "timer:1", sessionId: "session-1", solve });
+await emitters.requestUpdate({ ownerId: "timer:1", sessionId: "session-1", solve });
+await emitters.requestRemove({ ownerId: "timer:1", sessionId: "session-1", solves: [solve] });
 ```
 
 Assert every observed payload contains `sessionId: 'session-1'`, and retain the native timestamp assertion.
@@ -292,10 +296,12 @@ git -c commit.gpgsign=false commit -m "feat: add session-scoped solve emitters"
 ### Task 3: Publish Correlated Solve Results and Failures
 
 **Files:**
+
 - Modify: `src/lib/timer/solves/SolvePersistenceService.ts`
 - Modify: `src/lib/timer/solves/SolvePersistenceService.test.ts`
 
 **Interfaces:**
+
 - Consumes: required `sessionId` request payloads; existing `SolvePersistencePort`.
 - Produces: correlated result events with `requestId: request.id`, plus `SOLVE_REQUEST_FAILED` for expected port errors.
 
@@ -305,8 +311,8 @@ For list, add, update, and remove success assertions:
 
 ```ts
 expect(observed.at(-1)?.payload).toMatchObject({
-  ownerId: 'timer:one',
-  sessionId: 'session:one',
+  ownerId: "timer:one",
+  sessionId: "session:one",
   requestId: request.id,
 });
 ```
@@ -315,8 +321,8 @@ Capture `request` before publishing. For example:
 
 ```ts
 const request = events.create(TIMER_EVENTS.SOLVE_UPDATE_REQUESTED, {
-  ownerId: 'timer:one',
-  sessionId: 'session:one',
+  ownerId: "timer:one",
+  sessionId: "session:one",
   solve: updatedSolve,
 });
 await bus.publish(request);
@@ -325,17 +331,19 @@ await bus.publish(request);
 Add one representative failure test:
 
 ```ts
-it('normalizes persistence failures into correlated solve failure events', async () => {
+it("normalizes persistence failures into correlated solve failure events", async () => {
   const port: SolvePersistencePort = {
     loadSolves: vi.fn(),
     addSolve: vi.fn(),
-    updateSolve: vi.fn(async () => { throw new Error('disk unavailable'); }),
+    updateSolve: vi.fn(async () => {
+      throw new Error("disk unavailable");
+    }),
     removeSolves: vi.fn(),
   };
   const { bus, events, observed, service } = createHarness(port);
   const request = events.create(TIMER_EVENTS.SOLVE_UPDATE_REQUESTED, {
-    ownerId: 'timer:one',
-    sessionId: 'session:one',
+    ownerId: "timer:one",
+    sessionId: "session:one",
     solve: createSolve(),
   });
 
@@ -344,14 +352,14 @@ it('normalizes persistence failures into correlated solve failure events', async
   expect(observed.at(-1)).toMatchObject({
     type: TIMER_EVENTS.SOLVE_REQUEST_FAILED,
     payload: {
-      ownerId: 'timer:one',
-      sessionId: 'session:one',
+      ownerId: "timer:one",
+      sessionId: "session:one",
       requestId: request.id,
-      operation: 'update',
+      operation: "update",
       error: {
-        code: 'SOLVE_PERSISTENCE_FAILED',
-        operation: 'update',
-        message: 'disk unavailable',
+        code: "SOLVE_PERSISTENCE_FAILED",
+        operation: "update",
+        message: "disk unavailable",
       },
     },
   });
@@ -423,10 +431,12 @@ git -c commit.gpgsign=false commit -m "feat: correlate solve persistence results
 ### Task 4: Add the Session-Scoped Solve Projection
 
 **Files:**
+
 - Create: `src/lib/timer/solves/SolveProjection.svelte.ts`
 - Create: `src/lib/timer/solves/SolveProjection.test.ts`
 
 **Interfaces:**
+
 - Consumes: `EventBus<TimerEvent>`, `{ ownerId, sessionId }`, solve request/result/failure events.
 - Produces: `createSolveProjection()`, readonly reactive `items/loading/error`, `consumeResult<T>(requestId)`, and idempotent `detach()`.
 
@@ -435,17 +445,32 @@ git -c commit.gpgsign=false commit -m "feat: correlate solve persistence results
 Cover these exact behaviors using a real bus/factory:
 
 ```ts
-it('projects only its owner and session', async () => {
-  const projection = createSolveProjection({ bus, ownerId: 'timer:one', sessionId: 'session:one' });
-  await bus.publish(events.create(TIMER_EVENTS.SOLVES_LIST_LOADED, {
-    ownerId: 'timer:two', sessionId: 'session:one', requestId: 'other-owner', solves: [first],
-  }));
-  await bus.publish(events.create(TIMER_EVENTS.SOLVES_LIST_LOADED, {
-    ownerId: 'timer:one', sessionId: 'session:two', requestId: 'other-session', solves: [second],
-  }));
-  await bus.publish(events.create(TIMER_EVENTS.SOLVES_LIST_LOADED, {
-    ownerId: 'timer:one', sessionId: 'session:one', requestId: 'matching', solves: [first],
-  }));
+it("projects only its owner and session", async () => {
+  const projection = createSolveProjection({ bus, ownerId: "timer:one", sessionId: "session:one" });
+  await bus.publish(
+    events.create(TIMER_EVENTS.SOLVES_LIST_LOADED, {
+      ownerId: "timer:two",
+      sessionId: "session:one",
+      requestId: "other-owner",
+      solves: [first],
+    })
+  );
+  await bus.publish(
+    events.create(TIMER_EVENTS.SOLVES_LIST_LOADED, {
+      ownerId: "timer:one",
+      sessionId: "session:two",
+      requestId: "other-session",
+      solves: [second],
+    })
+  );
+  await bus.publish(
+    events.create(TIMER_EVENTS.SOLVES_LIST_LOADED, {
+      ownerId: "timer:one",
+      sessionId: "session:one",
+      requestId: "matching",
+      solves: [first],
+    })
+  );
   expect(projection.items).toEqual([first]);
 });
 ```
@@ -516,6 +541,7 @@ git -c commit.gpgsign=false commit -m "feat: add session-scoped solve projection
 ### Task 5: Add the Hook-Style Solve Feature
 
 **Files:**
+
 - Create: `src/lib/timer/solves/SolveFeature.ts`
 - Create: `src/lib/timer/solves/SolveFeature.test.ts`
 - Create: `src/lib/timer/solves/useSolve.ts`
@@ -523,6 +549,7 @@ git -c commit.gpgsign=false commit -m "feat: add session-scoped solve projection
 - Create: `src/lib/timer/context/timerRuntimeContext.ts`
 
 **Interfaces:**
+
 - Consumes: session-scoped solve emitters and projection.
 - Produces: `SolveFeature`, `createSolveFeature()`, `useSolve(sessionIdSource)`, `setTimerRuntimeContext()`, and `getTimerRuntimeContext()`.
 
@@ -533,10 +560,14 @@ Create a harness with the real bus, event factory, projection, and a test persis
 ```ts
 await expect(feature.load()).resolves.toEqual(Ok(undefined));
 await expect(feature.add({ time: 1000 })).resolves.toMatchObject({ ok: true });
-await expect(feature.update(otherSessionSolve)).resolves.toEqual(Err(expect.objectContaining({
-  code: 'SESSION_SCOPE_MISMATCH',
-})));
-expect(feature.items.every(solve => solve.session === 'session:one')).toBe(true);
+await expect(feature.update(otherSessionSolve)).resolves.toEqual(
+  Err(
+    expect.objectContaining({
+      code: "SESSION_SCOPE_MISMATCH",
+    })
+  )
+);
+expect(feature.items.every(solve => solve.session === "session:one")).toBe(true);
 ```
 
 Test remove rejects if any solve belongs to another session, failures return `Err`, and `destroy()` detaches the projection.
@@ -560,9 +591,18 @@ export interface SolveFeature {
   readonly loading: boolean;
   readonly error: SolveFeatureError | null;
   load(sourceEvent?: NativeTimestampSource): Promise<Result<void, SolveFeatureError>>;
-  add(solve: Partial<Solve>, sourceEvent?: NativeTimestampSource): Promise<Result<Solve, SolveFeatureError>>;
-  update(solve: Solve, sourceEvent?: NativeTimestampSource): Promise<Result<Solve, SolveFeatureError>>;
-  remove(solves: readonly Solve[], sourceEvent?: NativeTimestampSource): Promise<Result<readonly Solve[], SolveFeatureError>>;
+  add(
+    solve: Partial<Solve>,
+    sourceEvent?: NativeTimestampSource
+  ): Promise<Result<Solve, SolveFeatureError>>;
+  update(
+    solve: Solve,
+    sourceEvent?: NativeTimestampSource
+  ): Promise<Result<Solve, SolveFeatureError>>;
+  remove(
+    solves: readonly Solve[],
+    sourceEvent?: NativeTimestampSource
+  ): Promise<Result<readonly Solve[], SolveFeatureError>>;
 }
 
 export interface InternalSolveFeature extends SolveFeature {
@@ -574,10 +614,10 @@ The internal return also includes `destroy()`. Each command awaits the emitter r
 
 ```ts
 Err({
-  code: 'SOLVE_RESPONSE_MISSING',
+  code: "SOLVE_RESPONSE_MISSING",
   operation,
   message: `No correlated ${operation} result for ${requestId}`,
-})
+});
 ```
 
 For `add`, publish `{ ...solve, session: sessionId }`. Before update/remove, compare `String(solve.session)` with `sessionId` and return `SESSION_SCOPE_MISMATCH` without publishing when different.
@@ -589,8 +629,8 @@ Create `src/lib/timer/solves/index.ts` exporting `SolveFeature`, `SolveFeatureEr
 Create `timerRuntimeContext.ts`:
 
 ```ts
-import { createContext } from 'svelte';
-import type { TimerRuntime } from '../TimerCompositionRoot.svelte';
+import { createContext } from "svelte";
+import type { TimerRuntime } from "../TimerCompositionRoot.svelte";
 
 export const [getTimerRuntimeContext, setTimerRuntimeContext] = createContext<TimerRuntime>();
 ```
@@ -602,16 +642,32 @@ export type SessionIdSource = string | (() => string);
 
 export function useSolve(source: SessionIdSource): SolveFeature {
   const runtime = getTimerRuntimeContext();
-  const sessionId = () => typeof source === 'function' ? source() : source;
+  const sessionId = () => (typeof source === "function" ? source() : source);
   return {
-    get sessionId() { return sessionId(); },
-    get items() { return runtime.getSolveFeature(sessionId()).items; },
-    get loading() { return runtime.getSolveFeature(sessionId()).loading; },
-    get error() { return runtime.getSolveFeature(sessionId()).error; },
-    load(native) { return runtime.getSolveFeature(sessionId()).load(native); },
-    add(solve, native) { return runtime.getSolveFeature(sessionId()).add(solve, native); },
-    update(solve, native) { return runtime.getSolveFeature(sessionId()).update(solve, native); },
-    remove(solves, native) { return runtime.getSolveFeature(sessionId()).remove(solves, native); },
+    get sessionId() {
+      return sessionId();
+    },
+    get items() {
+      return runtime.getSolveFeature(sessionId()).items;
+    },
+    get loading() {
+      return runtime.getSolveFeature(sessionId()).loading;
+    },
+    get error() {
+      return runtime.getSolveFeature(sessionId()).error;
+    },
+    load(native) {
+      return runtime.getSolveFeature(sessionId()).load(native);
+    },
+    add(solve, native) {
+      return runtime.getSolveFeature(sessionId()).add(solve, native);
+    },
+    update(solve, native) {
+      return runtime.getSolveFeature(sessionId()).update(solve, native);
+    },
+    remove(solves, native) {
+      return runtime.getSolveFeature(sessionId()).remove(solves, native);
+    },
   };
 }
 ```
@@ -636,11 +692,13 @@ git -c commit.gpgsign=false commit -m "feat: add session-scoped solve facade"
 ### Task 6: Compose Solve Features in the Timer Runtime
 
 **Files:**
+
 - Modify: `src/lib/timer/TimerCompositionRoot.svelte.ts`
 - Modify: `src/lib/timer/TimerCompositionRoot.test.ts`
 - Modify: `src/lib/timer/Timer.svelte`
 
 **Interfaces:**
+
 - Consumes: `createSolveFeature()` and `SolveFeature` from Task 5.
 - Produces: `TimerRuntime.getSolveFeature(sessionId: string): SolveFeature`; compatibility request methods delegate to the facade.
 
@@ -649,9 +707,9 @@ git -c commit.gpgsign=false commit -m "feat: add session-scoped solve facade"
 Add tests proving:
 
 ```ts
-const first = runtime.getSolveFeature('session:one');
-const same = runtime.getSolveFeature('session:one');
-const second = runtime.getSolveFeature('session:two');
+const first = runtime.getSolveFeature("session:one");
+const same = runtime.getSolveFeature("session:one");
+const second = runtime.getSolveFeature("session:two");
 expect(same).toBe(first);
 expect(second).not.toBe(first);
 ```
@@ -680,7 +738,7 @@ Inside `createTimerRuntime()` add:
 const solveFeatures = new Map<string, InternalSolveFeature>();
 
 function getSolveFeature(sessionId: string): SolveFeature {
-  if (!sessionId) throw new Error('useSolve requires a sessionId');
+  if (!sessionId) throw new Error("useSolve requires a sessionId");
   let feature = solveFeatures.get(sessionId);
   if (!feature) {
     feature = createSolveFeature({
@@ -754,10 +812,12 @@ git -c commit.gpgsign=false commit -m "feat: compose session-scoped solve featur
 ### Task 7: Add Boundary Contracts and Verify the Slice
 
 **Files:**
+
 - Create: `src/lib/timer/SolveFeatureBoundary.contract.test.ts`
 - Modify: `docs/architecture/timer/solves.md`
 
 **Interfaces:**
+
 - Consumes: all APIs from Tasks 1–6.
 - Produces: regression guardrails and current architecture documentation; no UI migration.
 
@@ -767,8 +827,8 @@ The test reads `solves/useSolve.ts` and asserts it delegates through `getTimerRu
 
 ```ts
 expect(featureSource).not.toMatch(/dataService|SolveController|solveIPC\.(browser|electron)/);
-expect(hookSource).toContain('getTimerRuntimeContext');
-expect(hookSource).toContain('getSolveFeature');
+expect(hookSource).toContain("getTimerRuntimeContext");
+expect(hookSource).toContain("getSolveFeature");
 ```
 
 - [ ] **Step 2: Run the boundary test**
