@@ -110,4 +110,30 @@ describe("timer regression contracts", () => {
     expect(source).not.toContain("onclick={() => (collapsed = !collapsed)}");
     expect(source).toContain("bg-base-200 text-base-content");
   });
+
+  it("selects History intervals from the filtered solve list", () => {
+    const source = read("./HistoryTab/HistoryTab.svelte");
+    const selectIntervalStart = source.indexOf("function selectInterval");
+    const selectNoneStart = source.indexOf("function selectNone");
+    const selectIntervalBlock = source.slice(selectIntervalStart, selectNoneStart);
+
+    expect(selectIntervalBlock).toContain("fSolves.findIndex(s => s.selected)");
+    expect(selectIntervalBlock).toContain("fSolves.findLastIndex(s => s.selected)");
+    expect(selectIntervalBlock).toContain("fSolves[i].selected = true");
+    expect(selectIntervalBlock).toContain("$selected = countSelectedSolves()");
+    expect(selectIntervalBlock).not.toContain("$solves[i].selected");
+  });
+
+  it("uses themed keycaps for History action shortcuts", () => {
+    const source = read("./HistoryTab/HistoryTab.svelte");
+
+    expect(source).toContain("const HISTORY_ACTION_SHORTCUT_CLASS");
+    expect(source).toContain("border-warning bg-warning text-xs font-bold text-warning-content shadow-sm");
+    expect(source).toContain("<span class={HISTORY_ACTION_SHORTCUT_CLASS}>A</span>");
+    expect(source).toContain("<span class={HISTORY_ACTION_SHORTCUT_CLASS}>T</span>");
+    expect(source).toContain("<span class={HISTORY_ACTION_SHORTCUT_CLASS}>V</span>");
+    expect(source).toContain("<span class={HISTORY_ACTION_SHORTCUT_CLASS}>Esc</span>");
+    expect(source).toContain("<span class={HISTORY_ACTION_SHORTCUT_CLASS}>D</span>");
+    expect(source).not.toContain('<span class="kbd kbd-sm">');
+  });
 });

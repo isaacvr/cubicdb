@@ -90,7 +90,7 @@
   let collapsed = $state(false);
   let reconstructionError = $state(true);
   let showDropdown = $state(false);
-  let penaltyTriggerElement: HTMLDivElement;
+  let penaltyTriggerElement: HTMLDivElement | null = $state(null);
   let solveEditTransitionNames = $state(createSolveEditTransitionNames());
   let searchModal = $state(false);
   let advancedSearchGate = $state(new GateAdaptor("and"));
@@ -105,6 +105,8 @@
     { label: "DNF", penalty: Penalty.DNF },
     { label: "DNS", penalty: Penalty.DNS },
   ];
+  const HISTORY_ACTION_SHORTCUT_CLASS =
+    "kbd kbd-sm border-warning bg-warning text-xs font-bold text-warning-content shadow-sm";
 
   function createSolveEditTransitionNames(solve?: Solve) {
     const id = solve?._id || Date.now();
@@ -147,7 +149,7 @@
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         if (sSolve?._id === solve._id) {
-          preview = genImages([{ scramble: solve.scramble, type: md }]);
+          preview = genImages([{ scramble: solve.scramble, type: md as any }]);
         }
       });
     });
@@ -230,32 +232,26 @@
   }
 
   function selectAll() {
-    $selected = $solves.length;
-    for (let i = 0, maxi = $selected; i < maxi; i += 1) {
-      $solves[i].selected = true;
-    }
+    fSolves.forEach(s => (s.selected = true));
+    $selected = countSelectedSolves();
   }
 
   function selectInvert() {
-    $selected = $solves.length - $selected;
-    for (let i = 0, maxi = $solves.length; i < maxi; i += 1) {
-      $solves[i].selected = !$solves[i].selected;
-    }
+    fSolves.forEach(s => (s.selected = !s.selected));
+    $selected = countSelectedSolves();
   }
 
   function selectInterval() {
-    let i1, i2;
-    let len = $solves.length;
+    const firstSelectedIndex = fSolves.findIndex(s => s.selected);
+    const lastSelectedIndex = fSolves.findLastIndex(s => s.selected);
 
-    for (i1 = 0; i1 < len && !$solves[i1].selected; i1 += 1);
-    for (i2 = len - 1; i2 >= 0 && !$solves[i2].selected; i2 -= 1);
+    if (firstSelectedIndex < 0 || lastSelectedIndex <= firstSelectedIndex) return;
 
-    for (let i = i1; i <= i2; i += 1) {
-      if (!$solves[i].selected) {
-        $solves[i].selected = true;
-        $selected += 1;
-      }
+    for (let i = firstSelectedIndex; i <= lastSelectedIndex; i += 1) {
+      fSolves[i].selected = true;
     }
+
+    $selected = countSelectedSolves();
   }
 
   function selectNone() {
@@ -266,6 +262,10 @@
     for (let i = 0, maxi = sv.length; i < maxi; i += 1) {
       sv[i].selected = false;
     }
+  }
+
+  function countSelectedSolves() {
+    return $solves.filter(s => s.selected).length;
   }
 
   function _delete(s: Solve[]) {
@@ -322,7 +322,7 @@
     pSolves = fSolves.slice(pg.start, pg.end);
   }
 
-  function updatePaginator(s: any) {
+  function updatePaginator() {
     fSolves = $solves.filter(sv => advancedSearchGate.computeValue(sv));
     pg.setData(fSolves);
 
@@ -478,7 +478,7 @@
     });
   }
 
-  $effect(() => updatePaginator($solves));
+  $effect(() => updatePaginator());
   $effect(() => updatePageFromSelected());
   $effect(() => {
     if ($tab != 1 && $selected) selectNone();
@@ -489,7 +489,8 @@
 
 <section
   role="tabpanel"
-  class={"relative flex flex-col min-h-0 overflow-hidden w-full h-full " + ($tab != 1 ? "!hidden" : "")}
+  class={"relative flex flex-col min-h-0 overflow-hidden w-full h-full " +
+    ($tab != 1 ? "hidden!" : "")}
 >
   <!-- Pagination -->
   <PaginatorComponent {pg} onupdate={updateSolves} />
@@ -508,9 +509,7 @@
         oncontextmenu={e => handleContextMenu(e, solve)}
         class:selected={solve.selected}
       >
-        <div
-          class="solve-row-date pointer-events-none font-small absolute top-0 left-2"
-        >
+        <div class="solve-row-date pointer-events-none font-small absolute top-0 left-2">
           {moment(solve.date).format("DD/MM")}
         </div>
         <span
@@ -573,24 +572,25 @@
       pointer-events-none flex flex-wrap max-w-full justify-evenly actions bg-base-200 z-20"
   >
     <Button aria-label={$localLang.TIMER.selectAll} onclick={() => selectAll()}>
-      {$localLang.TIMER.selectAll} &nbsp; <span class="kbd kbd-sm">A</span>
+      {$localLang.TIMER.selectAll} &nbsp; <span class={HISTORY_ACTION_SHORTCUT_CLASS}>A</span>
     </Button>
 
     <Button aria-label={$localLang.TIMER.selectInterval} onclick={() => selectInterval()}>
-      {$localLang.TIMER.selectInterval} &nbsp; <span class="kbd kbd-sm">T</span>
+      {$localLang.TIMER.selectInterval} &nbsp;
+      <span class={HISTORY_ACTION_SHORTCUT_CLASS}>T</span>
     </Button>
 
     <Button aria-label={$localLang.TIMER.invertSelection} onclick={() => selectInvert()}>
       {$localLang.TIMER.invertSelection} &nbsp;
-      <span class="kbd kbd-sm">V</span>
+      <span class={HISTORY_ACTION_SHORTCUT_CLASS}>V</span>
     </Button>
 
     <Button aria-label={$localLang.global.cancel} onclick={() => selectNone()}>
-      {$localLang.global.cancel} &nbsp; <span class="kbd kbd-sm">Esc</span>
+      {$localLang.global.cancel} &nbsp; <span class={HISTORY_ACTION_SHORTCUT_CLASS}>Esc</span>
     </Button>
 
     <Button aria-label={$localLang.global.delete} onclick={() => deleteSelected()}>
-      {$localLang.global.delete} &nbsp; <span class="kbd kbd-sm">D</span>
+      {$localLang.global.delete} &nbsp; <span class={HISTORY_ACTION_SHORTCUT_CLASS}>D</span>
     </Button>
   </div>
 
@@ -692,7 +692,7 @@
 
     <pre
       contenteditable="false"
-      class="text-center text-sm break-words whitespace-normal overflow-auto max-h-[20svh]">
+      class="text-center text-sm wrap-break-word whitespace-normal overflow-auto max-h-[20svh]">
         {@html sSolve?.scramble?.replaceAll("\n", "<br>") || ""}
       </pre>
 
@@ -701,10 +701,7 @@
         flex items-center justify-center relative px-1 max-h-[30vh]"
     >
       {#if preview}
-        <PuzzleImageBundle
-          src={preview}
-          allowDownload
-        />
+        <PuzzleImageBundle src={preview} allowDownload />
       {:else}
         <Spinner size="20" />
       {/if}
@@ -970,5 +967,4 @@
     color: black;
     font-size: 0.8rem;
   }
-
 </style>
