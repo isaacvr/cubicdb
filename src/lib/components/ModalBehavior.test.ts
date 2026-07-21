@@ -56,7 +56,7 @@ describe("modal behavior contracts", () => {
     expect(historyTab).toContain("title={$localLang.TIMER.edit}");
     expect(historyTab).toContain("showCloseButton");
     expect(historyTab).toContain("closeOnClickOutside");
-    expect(historyTab).toContain("closeDetailsWithoutSaving");
+    expect(historyTab).toContain("onclick={() => closeHandler()}");
     expect(historyTab).toContain("showDeleteSolve");
     expect(historyTab).toContain("confirmDeleteSolve");
     expect(historyTab).toContain("replaceParams($localLang.global.deleteWarning");
@@ -76,7 +76,9 @@ describe("modal behavior contracts", () => {
 
     expect(modal).toContain('activeTransitionName = $derived(show ? transitionName : "none")');
     expect(modal).toContain('style="view-transition-name: none;"');
-    expect(modal).toContain('<div class={modalBoxClass(variant, size, _cl)} style="view-transition-name: {activeTransitionName};">');
+    expect(modal).toContain(
+      '<div class={modalBoxClass(variant, size, _cl)} style="view-transition-name: {activeTransitionName};">'
+    );
     expect(modal).not.toContain("view-transition-name: {transitionName};");
   });
 

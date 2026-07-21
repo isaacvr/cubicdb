@@ -21,17 +21,14 @@
 
   import { localLang } from "@stores/language.service";
   import { tick } from "svelte";
-  import {
-    copyToClipboard,
-    defaultInner,
-    parseReconstruction,
-    replaceParams,
-  } from "@helpers/strings";
+  import { defaultInner, parseReconstruction, replaceParams } from "@helpers/strings";
+  import { copyTextToClipboard } from "@helpers/clipboard";
   import { calcPercents } from "@helpers/math";
   import { startViewTransition } from "@helpers/DOM";
   import { navigate } from "svelte-routing";
   import { Dropdown, DropdownItem, Spinner } from "$lib/cubicdbKit";
   import AdvancedSearch from "./components/AdvancedSearch/AdvancedSearch.svelte";
+  import SolveGrid from "./components/SolveGrid.svelte";
   import PaginatorComponent from "@components/PaginatorComponent.svelte";
   import { GateAdaptor } from "$lib/timer/HistoryTab/AdvancedSearch/adaptors";
   import type { SearchFilter } from "$lib/timer/HistoryTab/AdvancedSearch/adaptors/types";
@@ -49,7 +46,6 @@
     Dice5Icon,
     DicesIcon,
     FilterIcon,
-    MessageSquarePlusIcon,
     MessageSquareTextIcon,
     PencilIcon,
     SaveIcon,
@@ -132,10 +128,6 @@
     show = false;
   }
 
-  function closeDetailsWithoutSaving() {
-    closeHandler();
-  }
-
   function createEditableSolve(solve: Solve): Solve {
     return {
       ...solve,
@@ -199,9 +191,7 @@
     });
   }
 
-  function handleClick(s: Solve, ev: MouseEvent) {
-    const transitionTarget = ev.currentTarget as HTMLButtonElement;
-
+  function handleSolveOpen(s: Solve, transitionTarget: HTMLButtonElement) {
     if (solveFeature.selectedCount) {
       selectSolve(s);
       return;
@@ -247,10 +237,6 @@
     solveFeature.clearSelection();
   }
 
-  function _delete(s: Solve[]) {
-    void solveFeature.remove(s);
-  }
-
   function requestDeleteSolve(s: Solve) {
     sSolve = s;
     showDeleteSolve = true;
@@ -259,7 +245,7 @@
 
   function confirmDeleteSolve(confirmed: boolean) {
     if (!confirmed) return;
-    _delete([sSolve]);
+    void solveFeature.remove([sSolve]);
     showDeleteSolve = false;
     closeHandler();
   }
@@ -307,14 +293,16 @@
     updateSolves();
   }
 
-  function toClipboard(text: string) {
-    copyToClipboard(text.replaceAll("<br>", "\n")).then(() => {
-      notification.addNotification({
-        header: $localLang.global.done,
-        text: $localLang.global.copiedToClipboard,
-        timeout: 1000,
-      });
+  function notifyCopiedToClipboard() {
+    notification.addNotification({
+      header: $localLang.global.done,
+      text: $localLang.global.copiedToClipboard,
+      timeout: 1000,
     });
+  }
+
+  function copyHistoryText(text: string) {
+    copyTextToClipboard(text, { normalizeHtmlBreaks: true }).then(notifyCopiedToClipboard);
   }
 
   function shareAoX(n: number) {
@@ -332,7 +320,7 @@
     );
 
     if (Ao5.length === n) {
-      toClipboard(
+      copyHistoryText(
         `Ao${n}: ${timer(Ao5[n - 1] as any, true)} = ${sv
           .map(s =>
             s === minMax[0] || s === minMax[1] ? "(" + sTimer(s, true) + ")" : sTimer(s, true)
@@ -343,7 +331,7 @@
   }
 
   function deleteAllHandler(all: boolean) {
-    all && _delete(solveFeature.solves);
+    all && void solveFeature.remove(solveFeature.solves);
   }
 
   function handleContextMenu(e: MouseEvent, s: Solve) {
@@ -447,13 +435,7 @@
     let idx = solveFeature.solves.length - solveIndex(sv);
     let arr = solveFeature.solves.slice(idx, idx + n);
 
-    copyToClipboard(solveSummary(arr)).then(() => {
-      notification.addNotification({
-        header: $localLang.global.done,
-        text: $localLang.global.copiedToClipboard,
-        timeout: 1000,
-      });
-    });
+    copyTextToClipboard(solveSummary(arr)).then(notifyCopiedToClipboard);
   }
 
   $effect(() => updatePaginator());
@@ -474,42 +456,12 @@
   <PaginatorComponent {pg} onupdate={updateSolves} />
 
   <!-- Solves -->
-  <div id="grid" class="pt-4 grid min-h-0 flex-1 overflow-auto" bind:this={solvesElement}>
-    {#each pSolves as solve (solve._id)}
-      {@const stime = sTimer(solve, true)}
-      <button
-        class="shadow-md w-full h-full rounded-md p-1 bg-base-200 relative
-          flex items-center justify-center transition-all duration-200 select-none cursor-pointer
-          border border-primary/50
-          hover:shadow-lg hover:shadow-primary/25 hover:bg-primary hover:text-primary-content
-        "
-        onclick={ev => handleClick(solve, ev)}
-        oncontextmenu={e => handleContextMenu(e, solve)}
-        class:selected={solve.selected}
-      >
-        <div class="solve-row-date pointer-events-none font-small absolute top-0 left-2">
-          {moment(solve.date).format("DD/MM")}
-        </div>
-        <span
-          class={"solve-row-time pointer-events-none time text-center font-bold " +
-            (stime === "DNF" ? "text-error font-bold" : "")}
-        >
-          {stime}
-        </span>
-
-        <div
-          class="pointer-events-none absolute right-1 top-0 h-full flex flex-col items-center justify-evenly"
-        >
-          {#if solve.penalty === Penalty.P2}
-            <span class="font-small text-error font-bold">+2</span>
-          {/if}
-          {#if solve.comments}
-            <MessageSquarePlusIcon size="1rem" />
-          {/if}
-        </div>
-      </button>
-    {/each}
-  </div>
+  <SolveGrid
+    solves={pSolves}
+    onOpen={handleSolveOpen}
+    onContextMenu={handleContextMenu}
+    onGridElement={element => (solvesElement = element)}
+  />
 
   <!-- Options -->
   <div class="absolute top-3 right-2 my-3 mx-1 flex flex-col gap-2">
@@ -592,7 +544,7 @@
       </button>
     </li>
     <li>
-      <button onclick={() => toClipboard(sSolve.scramble)}>
+      <button onclick={() => copyHistoryText(sSolve.scramble)}>
         <CopyIcon size="1.2rem" />
         {$localLang.TIMER.copyScramble}
       </button>
@@ -736,11 +688,7 @@
       {$localLang.global.delete}
     </Button>
 
-    <Button
-      aria-label={$localLang.global.cancel}
-      type="secondary"
-      onclick={closeDetailsWithoutSaving}
-    >
+    <Button aria-label={$localLang.global.cancel} type="secondary" onclick={() => closeHandler()}>
       <XIcon size="1.2rem" />
       {$localLang.global.cancel}
     </Button>
@@ -865,15 +813,6 @@
     grid-area: tabs;
   }
 
-  #grid {
-    grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));
-    grid-auto-rows: 3rem;
-    gap: 0.5rem;
-    padding-bottom: 2rem;
-    padding-right: 0.5rem;
-    margin-right: 2.5rem;
-  }
-
   .font-small {
     font-size: 0.7rem;
   }
@@ -892,10 +831,6 @@
     left: 50%;
     transform: translateX(-50%);
     width: min(100%, 40rem);
-  }
-
-  .selected {
-    @apply bg-warning text-primary-content hover:shadow-warning;
   }
 
   .isVisible {
