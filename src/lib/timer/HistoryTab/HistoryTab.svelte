@@ -69,8 +69,7 @@
 
   let { context = $bindable(), timerController = $bindable() }: HistoryTabProps = $props();
 
-  const { selected } = context;
-  const { tab, solves, session } = timerController;
+  const { tab, session } = timerController;
   const solveFeature = useSolve(() => $session?._id ?? "");
 
   let pg = $state(new Paginator([], 100));
@@ -173,8 +172,7 @@
   }
 
   function selectSolve(s: Solve) {
-    s.selected = !s.selected;
-    $selected += s.selected ? 1 : -1;
+    solveFeature.toggleSelected(s);
   }
 
   function openSolveDetails(s: Solve, transitionTarget: HTMLButtonElement) {
@@ -204,7 +202,7 @@
   function handleClick(s: Solve, ev: MouseEvent) {
     const transitionTarget = ev.currentTarget as HTMLButtonElement;
 
-    if ($selected) {
+    if (solveFeature.selectedCount) {
       selectSolve(s);
       return;
     }
@@ -234,40 +232,19 @@
   }
 
   function selectAll() {
-    fSolves.forEach(s => (s.selected = true));
-    $selected = countSelectedSolves();
+    solveFeature.selectAll(fSolves);
   }
 
   function selectInvert() {
-    fSolves.forEach(s => (s.selected = !s.selected));
-    $selected = countSelectedSolves();
+    solveFeature.invertSelection(fSolves);
   }
 
   function selectInterval() {
-    const firstSelectedIndex = fSolves.findIndex(s => s.selected);
-    const lastSelectedIndex = fSolves.findLastIndex(s => s.selected);
-
-    if (firstSelectedIndex < 0 || lastSelectedIndex <= firstSelectedIndex) return;
-
-    for (let i = firstSelectedIndex; i <= lastSelectedIndex; i += 1) {
-      fSolves[i].selected = true;
-    }
-
-    $selected = countSelectedSolves();
+    solveFeature.selectInterval(fSolves);
   }
 
   function selectNone() {
-    $selected = 0;
-    pSolves.forEach(s => (s.selected = false));
-
-    let sv = $solves;
-    for (let i = 0, maxi = sv.length; i < maxi; i += 1) {
-      sv[i].selected = false;
-    }
-  }
-
-  function countSelectedSolves() {
-    return $solves.filter(s => s.selected).length;
+    solveFeature.clearSelection();
   }
 
   function _delete(s: Solve[]) {
@@ -288,8 +265,7 @@
   }
 
   function deleteSelected() {
-    _delete($solves.filter(s => s.selected));
-    $selected = 0;
+    void solveFeature.removeSelected();
   }
 
   function handleKeydown(e: KeyboardEvent) {
@@ -310,7 +286,7 @@
         !show && selectInvert();
         break;
       case "KeyD":
-        !show && ($selected ? deleteSelected() : deleteAll());
+        !show && (solveFeature.selectedCount ? deleteSelected() : deleteAll());
         break;
       case "KeyF":
         e.ctrlKey && !show && !searchModal && (searchModal = true);
@@ -325,7 +301,7 @@
   }
 
   function updatePaginator() {
-    fSolves = $solves.filter(sv => advancedSearchGate.computeValue(sv));
+    fSolves = solveFeature.solves.filter(sv => advancedSearchGate.computeValue(sv));
     pg.setData(fSolves);
 
     updateSolves();
@@ -342,7 +318,7 @@
   }
 
   function shareAoX(n: number) {
-    let sv = $solves.slice(0, n).reverse();
+    let sv = solveFeature.solves.slice(0, n).reverse();
     let Ao5 = getAverageS(n, sv, AverageSetting.SEQUENTIAL);
     let minTime = (a: Solve, b: Solve) => {
       if (infinitePenalty(a)) return b;
@@ -367,7 +343,7 @@
   }
 
   function deleteAllHandler(all: boolean) {
-    all && _delete($solves);
+    all && _delete(solveFeature.solves);
   }
 
   function handleContextMenu(e: MouseEvent, s: Solve) {
@@ -396,7 +372,7 @@
   }
 
   function updatePageFromSelected() {
-    if ($selected) {
+    if (solveFeature.selectedCount) {
       let sv = fSolves;
 
       for (let i = 0, maxi = sv.length; i < maxi; i += 1) {
@@ -458,8 +434,8 @@
   function solveIndex(sv: Solve) {
     if (!sv) return -1;
 
-    for (let i = 0, maxi = $solves.length; i < maxi; i += 1) {
-      if ($solves[i]._id === sv._id) {
+    for (let i = 0, maxi = solveFeature.solves.length; i < maxi; i += 1) {
+      if (solveFeature.solves[i]._id === sv._id) {
         return maxi - i;
       }
     }
@@ -468,8 +444,8 @@
   }
 
   function copyAverage(sv: Solve, n: number) {
-    let idx = $solves.length - solveIndex(sv);
-    let arr = $solves.slice(idx, idx + n);
+    let idx = solveFeature.solves.length - solveIndex(sv);
+    let arr = solveFeature.solves.slice(idx, idx + n);
 
     copyToClipboard(solveSummary(arr)).then(() => {
       notification.addNotification({
@@ -483,7 +459,7 @@
   $effect(() => updatePaginator());
   $effect(() => updatePageFromSelected());
   $effect(() => {
-    if ($tab != 1 && $selected) selectNone();
+    if ($tab != 1 && solveFeature.selectedCount) selectNone();
   });
 </script>
 
@@ -537,7 +513,7 @@
 
   <!-- Options -->
   <div class="absolute top-3 right-2 my-3 mx-1 flex flex-col gap-2">
-    {#if $solves.length > 0}
+    {#if solveFeature.solves.length > 0}
       <Tooltip tooltipText={$localLang.TIMER.deleteAll} placement="left" keyBindings={["d"]}>
         <button onclick={deleteAll} class="cursor-pointer grid place-items-center">
           <TrashIcon size="1.2rem" />
@@ -569,7 +545,7 @@
 
   <!-- Solve Actions -->
   <div
-    class:isVisible={$selected}
+    class:isVisible={solveFeature.selectedCount}
     class="fixed rounded-md p-2 top-0 opacity-0 transition-all duration-300 shadow-md shadow-base-100
       pointer-events-none flex flex-wrap max-w-full justify-evenly actions bg-base-200 z-20"
   >

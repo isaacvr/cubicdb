@@ -48,6 +48,7 @@ describe("SolveFeature", () => {
 
     await expect(feature.load()).resolves.toEqual(Ok(undefined));
     expect(feature.items.map(item => item._id)).toEqual(["solve:one"]);
+    expect(feature.solves.map(item => item._id)).toEqual(["solve:one"]);
 
     const added = await feature.add({ time: 800 });
     expect(added).toMatchObject({ ok: true, value: { _id: "added", session: "session:one" } });
@@ -56,6 +57,36 @@ describe("SolveFeature", () => {
     const updated = solve({ time: 750 });
     await expect(feature.update(updated)).resolves.toEqual(Ok(updated));
     await expect(feature.remove([updated])).resolves.toEqual(Ok([updated]));
+    persistence.destroy();
+  });
+
+  it("owns solve selection state and removes selected solves", async () => {
+    const first = solve({ _id: "solve:first", date: 200 });
+    const second = solve({ _id: "solve:second", date: 100 });
+    const { feature, port, persistence } = setup({
+      loadSolves: vi.fn(async () => [second, first]),
+    });
+
+    await expect(feature.load()).resolves.toEqual(Ok(undefined));
+    expect(feature.solves.map(item => item._id)).toEqual(["solve:first", "solve:second"]);
+    expect(feature.selectedCount).toBe(0);
+
+    expect(feature.toggleSelected(feature.solves[0])).toBe(1);
+    expect(feature.selectedSolves.map(item => item._id)).toEqual(["solve:first"]);
+
+    expect(feature.selectAll(feature.solves)).toBe(2);
+    expect(feature.invertSelection([feature.solves[0]])).toBe(1);
+    expect(feature.selectedSolves.map(item => item._id)).toEqual(["solve:second"]);
+
+    await expect(feature.removeSelected()).resolves.toMatchObject({
+      ok: true,
+      value: [expect.objectContaining({ _id: "solve:second" })],
+    });
+    expect(port.removeSolves).toHaveBeenCalledWith([
+      expect.objectContaining({ _id: "solve:second" }),
+    ]);
+    expect(feature.solves.map(item => item._id)).toEqual(["solve:first"]);
+    expect(feature.selectedCount).toBe(0);
     persistence.destroy();
   });
 

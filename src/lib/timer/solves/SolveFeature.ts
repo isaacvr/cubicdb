@@ -10,8 +10,19 @@ import { createSolveProjection } from "./SolveProjection.svelte";
 export interface SolveFeature {
   readonly sessionId: string;
   readonly items: readonly Solve[];
+  readonly solves: readonly Solve[];
+  readonly selectedSolves: readonly Solve[];
+  readonly selectedCount: number;
   readonly loading: boolean;
   readonly error: SolveFeatureError | null;
+  toggleSelected(solve: Solve): number;
+  selectAll(solves?: readonly Solve[]): number;
+  invertSelection(solves?: readonly Solve[]): number;
+  selectInterval(solves: readonly Solve[]): number;
+  clearSelection(): number;
+  removeSelected(
+    sourceEvent?: NativeTimestampSource
+  ): Promise<Result<readonly Solve[], SolveFeatureError>>;
   load(sourceEvent?: NativeTimestampSource): Promise<Result<void, SolveFeatureError>>;
   add(
     solve: Partial<Solve>,
@@ -61,10 +72,36 @@ export function createSolveFeature(input: {
     });
   }
 
+  async function remove(
+    solves: readonly Solve[],
+    sourceEvent?: NativeTimestampSource
+  ): Promise<Result<readonly Solve[], SolveFeatureError>> {
+    if (solves.some(solve => String(solve.session) !== input.sessionId)) {
+      return scopeMismatch("remove");
+    }
+    await ready;
+    const requestId = await emitters.requestRemove({
+      ownerId: input.ownerId,
+      sessionId: input.sessionId,
+      solves: [...solves],
+      sourceEvent,
+    });
+    return consume<readonly Solve[]>(requestId, "remove");
+  }
+
   return {
     sessionId: input.sessionId,
     get items() {
       return projection.items;
+    },
+    get solves() {
+      return projection.items;
+    },
+    get selectedSolves() {
+      return projection.selectedItems;
+    },
+    get selectedCount() {
+      return projection.selectedCount;
     },
     get loading() {
       return projection.loading;
@@ -80,6 +117,24 @@ export function createSolveFeature(input: {
         sourceEvent,
       });
       return consume<void>(requestId, "list");
+    },
+    toggleSelected(solve) {
+      return projection.toggleSelected(solve);
+    },
+    selectAll(solves) {
+      return projection.selectAll(solves);
+    },
+    invertSelection(solves) {
+      return projection.invertSelection(solves);
+    },
+    selectInterval(solves) {
+      return projection.selectInterval(solves);
+    },
+    clearSelection() {
+      return projection.clearSelection();
+    },
+    async removeSelected(sourceEvent) {
+      return remove(projection.selectedItems, sourceEvent);
     },
     async add(solve, sourceEvent) {
       await ready;
@@ -102,19 +157,7 @@ export function createSolveFeature(input: {
       });
       return consume<Solve>(requestId, "update");
     },
-    async remove(solves, sourceEvent) {
-      if (solves.some(solve => String(solve.session) !== input.sessionId)) {
-        return scopeMismatch("remove");
-      }
-      await ready;
-      const requestId = await emitters.requestRemove({
-        ownerId: input.ownerId,
-        sessionId: input.sessionId,
-        solves: [...solves],
-        sourceEvent,
-      });
-      return consume<readonly Solve[]>(requestId, "remove");
-    },
+    remove,
     destroy() {
       projection.detach();
     },

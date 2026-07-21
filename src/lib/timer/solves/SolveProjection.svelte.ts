@@ -19,8 +19,15 @@ export interface SolveProjection {
   readonly ownerId: string;
   readonly sessionId: string;
   readonly items: readonly Solve[];
+  readonly selectedItems: readonly Solve[];
+  readonly selectedCount: number;
   readonly loading: boolean;
   readonly error: SolveFeatureError | null;
+  toggleSelected(solve: Solve): number;
+  selectAll(solves?: readonly Solve[]): number;
+  invertSelection(solves?: readonly Solve[]): number;
+  selectInterval(solves: readonly Solve[]): number;
+  clearSelection(): number;
   consumeResult<T>(requestId: string): Result<T, SolveFeatureError> | undefined;
   detach(): void;
 }
@@ -110,6 +117,14 @@ class ReactiveSolveProjection implements SolveProjection {
     return this.projectedItems;
   }
 
+  get selectedItems(): readonly Solve[] {
+    return this.projectedItems.filter(solve => solve.selected);
+  }
+
+  get selectedCount(): number {
+    return this.selectedItems.length;
+  }
+
   get loading(): boolean {
     return this.projectedLoading;
   }
@@ -122,6 +137,39 @@ class ReactiveSolveProjection implements SolveProjection {
     const result = this.results.get(requestId) as Result<T, SolveFeatureError> | undefined;
     this.results.delete(requestId);
     return result;
+  }
+
+  toggleSelected(solve: Solve): number {
+    this.projectedItems = this.projectedItems.map(item =>
+      item._id === solve._id ? { ...item, selected: !item.selected } : item
+    );
+    return this.selectedCount;
+  }
+
+  selectAll(solves: readonly Solve[] = this.projectedItems): number {
+    return this.setSelected(solves, true);
+  }
+
+  invertSelection(solves: readonly Solve[] = this.projectedItems): number {
+    const ids = new Set(solves.map(solve => solve._id));
+    this.projectedItems = this.projectedItems.map(item =>
+      ids.has(item._id) ? { ...item, selected: !item.selected } : item
+    );
+    return this.selectedCount;
+  }
+
+  selectInterval(solves: readonly Solve[]): number {
+    const firstSelectedIndex = solves.findIndex(solve => solve.selected);
+    const lastSelectedIndex = solves.findLastIndex(solve => solve.selected);
+    if (firstSelectedIndex < 0 || lastSelectedIndex <= firstSelectedIndex) {
+      return this.selectedCount;
+    }
+    return this.selectAll(solves.slice(firstSelectedIndex, lastSelectedIndex + 1));
+  }
+
+  clearSelection(): number {
+    this.projectedItems = this.projectedItems.map(item => ({ ...item, selected: false }));
+    return this.selectedCount;
   }
 
   detach(): void {
@@ -142,6 +190,14 @@ class ReactiveSolveProjection implements SolveProjection {
     this.projectedLoading = false;
     this.projectedError = null;
     this.results.set(requestId, result);
+  }
+
+  private setSelected(solves: readonly Solve[], selected: boolean): number {
+    const ids = new Set(solves.map(solve => solve._id));
+    this.projectedItems = this.projectedItems.map(item =>
+      ids.has(item._id) ? { ...item, selected } : item
+    );
+    return this.selectedCount;
   }
 }
 

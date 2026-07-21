@@ -17,11 +17,38 @@ export function useSolve(source: SessionIdSource): SolveFeature {
     get items() {
       return feature().items;
     },
+    get solves() {
+      return feature().solves;
+    },
+    get selectedSolves() {
+      return feature().selectedSolves;
+    },
+    get selectedCount() {
+      return feature().selectedCount;
+    },
     get loading() {
       return feature().loading;
     },
     get error() {
       return feature().error;
+    },
+    toggleSelected(solve: Solve) {
+      return feature().toggleSelected(solve);
+    },
+    selectAll(solves?: readonly Solve[]) {
+      return feature().selectAll(solves);
+    },
+    invertSelection(solves?: readonly Solve[]) {
+      return feature().invertSelection(solves);
+    },
+    selectInterval(solves: readonly Solve[]) {
+      return feature().selectInterval(solves);
+    },
+    clearSelection() {
+      return feature().clearSelection();
+    },
+    removeSelected(native?: NativeTimestampSource) {
+      return feature().removeSelected(native);
     },
     load(native?: NativeTimestampSource) {
       return feature().load(native);
