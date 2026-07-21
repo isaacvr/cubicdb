@@ -4,7 +4,7 @@
 
 **Status:** Approved direction pending written-spec review
 
-**Scope:** Complete the next Timer migration slice by introducing Redux-like, owner-scoped event projections while preserving current behavior and the existing Figma design.
+**Scope:** Complete the next Timer migration slice by introducing Redux-like feature facades backed by explicitly application-scoped or owner-scoped projections, while preserving current behavior and the existing Figma design.
 
 **Figma source:**
 
@@ -26,7 +26,7 @@ UI or device
   -> EventBus
   -> service module and/or projection module
   -> result event
-  -> owner-scoped readonly projection
+  -> appropriately scoped readonly projection
   -> Svelte UI
 ```
 
@@ -40,7 +40,7 @@ The event stream is the internal communication mechanism. Projections are the re
 | Action creator | Small typed event emitter | Creates the correct event envelope and preserves native timestamps |
 | Dispatch | `EventBus.publish` | Queues and delivers the event sequentially |
 | Middleware/effect | Service module | Performs persistence, generation, device, or other external work and emits results |
-| Reducer | Projection handler | Applies matching result/fact events to owner-scoped reactive state |
+| Reducer | Projection handler | Applies matching result/fact events to application- or owner-scoped reactive state |
 | Store selector | Readonly projection view | Exposes only the state a UI component needs |
 | Store setup | Timer/application runtime | Attaches modules and guarantees teardown |
 | React hook | Feature facade such as `useSolve()` | Presents reactive state and commands while hiding all event infrastructure |
@@ -49,14 +49,14 @@ This mapping is conceptual. CubicDB retains domain-specific events, async public
 
 ## Architectural Rules
 
-1. Svelte components consume small feature facades such as `useSolve()`, `useScramble()`, and `useTimerDevice()`.
+1. Svelte components consume small feature facades such as `useSolve()`, `useScramble()`, and the application-global `useDevices()`.
 2. Feature facades publish typed events through small event-family emitters and expose readonly projection state.
 3. Components do not import the EventBus, event factory, event registry, emitters, persistence ports, or environment adapters.
 4. Components never build event envelopes by hand.
 5. Request events express intent. Result/fact events are the only events that update projections.
 6. Service modules consume requests, perform work, and publish success or failure events.
 7. Projection modules consume facts/results and synchronously update reactive state.
-8. Every Timer projection filters owner-scoped events by `ownerId` and generation events by `scopeId`.
+8. Timer-instance projections filter owner-scoped events by `ownerId` and generation events by `scopeId`; application-global projections, including the device catalog, do not acquire a Timer owner scope.
 9. Programmatic events use the application monotonic clock. Browser/device events preserve their native timestamp.
 10. High-frequency elapsed-time readings continue through the direct callback channel and do not enter the EventBus.
 11. All module attachment returns an idempotent detach operation.
@@ -73,6 +73,7 @@ The root layout continues to create one `TimerApplicationRuntime` and place it i
 - EventBus and event factory;
 - event logging;
 - device catalog and device manager;
+- the global device projection and `useDevices()` dependencies;
 - scramble and image-generation services;
 - solve persistence service;
 - shared managed keyboard device and native boundary.
@@ -90,7 +91,7 @@ ownerId = scopeId = timer:<route-session-id-or-primary>
 The Timer runtime attaches only the modules required by that Timer instance and exposes:
 
 - feature-facade dependencies through internal context;
-- owner-scoped readonly projections for those facades;
+- owner-scoped readonly projections for Timer-instance facades;
 - the owner ID;
 - readiness and teardown.
 
@@ -98,7 +99,7 @@ It must not become a large command facade. Existing methods such as `requestSolv
 
 ## Feature Facades
 
-Feature facades are the only application-data API used by Timer UI components. They preserve the best property of the former `dataService` structure—a stable API independent of browser, Electron, IPC, or database technology—while adding owner-scoped reactive state and event-driven coordination.
+Feature facades are the only application-data API used by Timer UI components. They preserve the best property of the former `dataService` structure—a stable API independent of browser, Electron, IPC, or database technology—while adding explicitly scoped reactive state and event-driven coordination.
 
 The preferred component shape is:
 
@@ -145,9 +146,11 @@ The initial Timer feature facades are:
 - `useTimer()` for lifecycle/display state and input commands;
 - `useSolve()` for solve queries and mutations;
 - `useScramble()` for scramble and preview commands/state;
-- `useTimerSession()` for selected-session settings;
-- `useTimerDevice()` for catalog and active-device state;
+- `useTimerSession()` for selected-session settings, including the session's preferred device ID;
+- `useDevices()` for the application-global device catalog, discovery, connection, disconnection, and persisted device configuration;
 - `useTimerStatistics()` for statistics state.
+
+`useDevices()` is application-scoped, not Timer-scoped. A Timer session may select a preferred device, and a mounted Timer owner may request or release the corresponding active-device lease, but neither operation owns the physical device or its global management state.
 
 Facades are thin adapters, not service locators and not containers for business logic. Service modules, projection modules, and environment adapters remain independently testable behind them.
 
@@ -197,9 +200,27 @@ It accepts only results matching both the Timer scope and the latest tracked req
 
 Owns the selected session and the settings required by Timer UI and devices. In this first slice it may be hydrated through an explicit bridge from existing session loading, but components must read the projection rather than importing the controller directly.
 
-### Device Projection
+### Global Device Projection
 
-Owns available device descriptors, requested device, active device, and lease failure state for the Timer owner. Application-global discovery facts may be shared, but active-device state remains owner-scoped.
+Attached once by the application runtime and owned independently of Timer routes. It owns:
+
+- the complete device catalog;
+- discovery and platform-support state;
+- connection/disconnection state;
+- device metadata and persisted configuration;
+- application-level device failures.
+
+It does not contain a selected Timer session or claim that a device belongs to one Timer.
+
+### Timer Device Lease Projection
+
+Owned by a mounted Timer runtime and scoped by `ownerId`. It tracks only coordination between that Timer instance and the global device manager:
+
+- requested device ID;
+- active leased device ID;
+- lease or release rejection state.
+
+The session's preferred device ID remains session state. When a session becomes active, the Timer runtime requests a lease for that global device. Destroying or switching the Timer releases the lease without deleting, disconnecting, or otherwise taking ownership of the device.
 
 ### Statistics Projection
 
@@ -259,11 +280,11 @@ It no longer owns inline bus subscriptions, manager utilities, solve-selection c
 
 ### `TimerTab.svelte`
 
-Uses `useTimer()`, `useScramble()`, and `useTimerDevice()` to render lifecycle, scramble, preview, and active-device state and invoke commands. Native input boundaries emit events internally. Approved platform integration such as preventing sleep belongs behind a small boundary module, not a direct general-purpose data-service dependency.
+Uses `useTimer()`, `useScramble()`, and `useDevices()` to render lifecycle, scramble, preview, and global device information. Owner-scoped active lease state comes from `useTimer()`, while the preferred device ID comes from `useTimerSession()`. Native input boundaries emit events internally. Approved platform integration such as preventing sleep belongs behind a small boundary module, not a direct general-purpose data-service dependency.
 
 ### `TimerOptions.svelte`
 
-Matches the Figma options experience and invokes feature-facade commands for scramble refresh, provided/previous scramble use, session setting changes, active-device changes, and other existing controls. It does not call `sessionController`, `dataService`, an event emitter, or an `initInputHandler` callback.
+Matches the Figma options experience and invokes feature-facade commands for scramble refresh, provided/previous scramble use, session setting changes, preferred-device selection, active-device lease changes, and other existing controls. It reads the global catalog through `useDevices()` but persists the selected device through `useTimerSession()`. It does not call `sessionController`, `dataService`, an event emitter, or an `initInputHandler` callback.
 
 ### `HistoryTab.svelte`
 
@@ -295,10 +316,10 @@ Existing semantic theme variables and CubicDB UI primitives remain the implement
 
 1. Add projection contracts and focused unit tests.
 2. Extract current lifecycle and inline solve subscriptions into owner-scoped projection modules.
-3. Add owner-scoped feature facades and expose only those facades to components.
+3. Add explicitly application-scoped or owner-scoped feature facades and expose only those facades to components.
 4. Migrate scramble and preview UI requests.
 5. Migrate History solve list/update/remove and solve-preview requests.
-6. Migrate session and device options, preserving the Figma options design.
+6. Migrate session device preference and owner-scoped lease coordination without moving global device management into the Timer; preserve the Figma options design.
 7. Migrate managed and legacy input-handler boundaries.
 8. Migrate statistics reads and remove cross-component refresh callbacks.
 9. Remove `InputContext`, broad `TimerContext`, inline subscriptions, and obsolete runtime request facades.
@@ -322,6 +343,8 @@ Each step is a reversible vertical commit with focused automated verification an
 
 - Each projection applies its supported events.
 - Each projection ignores other owners/scopes.
+- The global device projection accepts application-global catalog/lifecycle events without a Timer owner.
+- Timer device lease projections ignore other owners while sharing the same global catalog.
 - Scramble and preview projections ignore stale request IDs.
 - Detach is idempotent and stops all reactions.
 - Event emitters preserve native timestamps.
@@ -332,6 +355,7 @@ Each step is a reversible vertical commit with focused automated verification an
 
 - Real EventBus request -> service -> result -> projection flows.
 - Timer mount/remount does not duplicate handlers.
+- Global device state survives Timer unmount and is observed consistently by multiple Timer owners.
 - Keyboard lifecycle still produces the existing visual and persistence behavior.
 - Solve completion persists once and requests the next scramble once.
 - Service failure produces one failure event and stable projection state.
@@ -363,7 +387,8 @@ The Timer migration is complete when:
 - all Timer UI data access uses small feature facades backed by typed event publication and readonly projections;
 - components do not know which environment or persistence technology implements a feature;
 - service modules own asynchronous work and publish typed results/failures;
-- projection modules are owner-scoped, independently attachable, and detachable;
+- projection modules have explicit application or owner scope and are independently attachable and detachable;
+- device discovery, connection, catalog, and persistence remain application-global while session preference and Timer leases remain correctly scoped;
 - high-frequency readings remain outside the EventBus;
 - `Timer.svelte` is a thin composition and layout shell;
 - Timer UI no longer depends on `InputContext`, broad `TimerContext`, direct controller/service calls, or sibling callbacks;
