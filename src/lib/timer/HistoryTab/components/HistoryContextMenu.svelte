@@ -15,7 +15,7 @@
   } from "lucide-svelte";
 
   interface HistoryContextMenuProps {
-    solves: Solve[];
+    solves: readonly Solve[];
     sessionMode?: string;
     onedit: (solve: Solve) => void;
     onselect: (solve: Solve) => void;

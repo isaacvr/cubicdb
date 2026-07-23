@@ -7,7 +7,7 @@
 
   interface HistoryOptionsProps {
     hasSolves: boolean;
-    solves: Solve[];
+    solves: readonly Solve[];
     ondeleteAll: () => void;
     oncopyText: (text: string) => void;
     onopenFilter: () => void;
