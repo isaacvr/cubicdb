@@ -8,12 +8,9 @@
     type TimerContext,
   } from "@interfaces";
   import { infinitePenalty, isMo3, sTimer, timer } from "@helpers/timer";
-  import Modal from "@components/Modal.svelte";
-  import TextArea from "@material/TextArea.svelte";
 
   import { genImages } from "cubicdb-module";
   import { options } from "@cstimer/scramble/scramble";
-  import { STEP_COLORS } from "@constants";
   import { Paginator } from "@classes/Paginator";
 
   import { getAverageS, solveSummary } from "@helpers/statistics";
@@ -26,34 +23,28 @@
   import { calcPercents } from "@helpers/math";
   import { startViewTransition } from "@helpers/DOM";
   import { navigate } from "svelte-routing";
-  import { Dropdown, DropdownItem, Spinner } from "$lib/cubicdbKit";
-  import AdvancedSearch from "./components/AdvancedSearch/AdvancedSearch.svelte";
+  import ConfirmationModal from "@components/ConfirmationModal.svelte";
+  import AdvancedSearchModal from "./components/AdvancedSearchModal.svelte";
+  import SolveDetailsModal from "./components/SolveDetailsModal.svelte";
   import SolveGrid from "./components/SolveGrid.svelte";
   import PaginatorComponent from "@components/PaginatorComponent.svelte";
   import { GateAdaptor } from "$lib/timer/HistoryTab/AdvancedSearch/adaptors";
   import type { SearchFilter } from "$lib/timer/HistoryTab/AdvancedSearch/adaptors/types";
   import { dataService } from "$lib/data-services/data.service";
-  import PuzzleImageBundle from "@components/PuzzleImageBundle.svelte";
   import Button from "$lib/cubicdbKit/Button.svelte";
   import Tooltip from "$lib/cubicdbKit/Tooltip.svelte";
   import { useSolve } from "$lib/timer/solves";
   import { createEmptySolve } from "@helpers/object";
   import {
-    CalendarIcon,
-    ChevronDownIcon,
     CopyIcon,
     Dice3Icon,
     Dice5Icon,
     DicesIcon,
     FilterIcon,
-    MessageSquareTextIcon,
     PencilIcon,
-    SaveIcon,
     Share2Icon,
     SquareDashedIcon,
     TrashIcon,
-    XIcon,
-    RouteIcon,
   } from "lucide-svelte";
 
   const notification = NotificationService.getInstance();
@@ -69,8 +60,6 @@
   const solveFeature = useSolve(() => $session?._id ?? "");
 
   let pg = $state(new Paginator([], 100));
-  // let modal: any;
-  let deleteAllModal: any;
   let show = $state(false);
   let showDeleteSolve = $state(false);
   let showDeleteAll = $state(false);
@@ -83,11 +72,7 @@
   let pSolves: Solve[] = $state([]);
   let fSolves: Solve[] = [];
   let solveSteps: number[] = $state([]);
-  let fComment = $state(false);
-  let collapsed = $state(false);
   let reconstructionError = $state(true);
-  let showDropdown = $state(false);
-  let penaltyTriggerElement: HTMLDivElement | null = $state(null);
   let solveEditTransitionNames = $state(createSolveEditTransitionNames());
   let searchModal = $state(false);
   let advancedSearchGate = $state(new GateAdaptor("and"));
@@ -200,7 +185,7 @@
     openSolveDetails(s, transitionTarget);
   }
 
-  function setPenalty(p: Penalty, update?: boolean) {
+  function setPenalty(p: Penalty) {
     if (!sSolve) return;
 
     if (p === Penalty.P2) {
@@ -209,12 +194,6 @@
       sSolve.time -= 2000;
     }
     sSolve.penalty = p;
-
-    if (update) {
-      void solveFeature.update(sSolve);
-    }
-
-    showDropdown = false;
   }
 
   function deleteAll() {
@@ -243,8 +222,7 @@
     showContextMenu = false;
   }
 
-  function confirmDeleteSolve(confirmed: boolean) {
-    if (!confirmed) return;
+  function confirmDeleteSolve() {
     void solveFeature.remove([sSolve]);
     showDeleteSolve = false;
     closeHandler();
@@ -252,6 +230,11 @@
 
   function deleteSelected() {
     void solveFeature.removeSelected();
+  }
+
+  function confirmDeleteAll() {
+    showDeleteAll = false;
+    void solveFeature.remove(solveFeature.solves);
   }
 
   function handleKeydown(e: KeyboardEvent) {
@@ -278,7 +261,7 @@
         e.ctrlKey && !show && !searchModal && (searchModal = true);
         break;
       case "Enter":
-        showDeleteAll && deleteAllModal.close(true);
+        showDeleteAll && confirmDeleteAll();
     }
   }
 
@@ -328,10 +311,6 @@
           .join(", ")}`
       );
     }
-  }
-
-  function deleteAllHandler(all: boolean) {
-    all && void solveFeature.remove(solveFeature.solves);
   }
 
   function handleContextMenu(e: MouseEvent, s: Solve) {
@@ -413,10 +392,6 @@
 
   function isMultiStepSession() {
     return $session?.settings.sessionType === "multi-step";
-  }
-
-  async function focusTextArea(f: boolean) {
-    setTimeout(() => (fComment = f), 100);
   }
 
   function solveIndex(sv: Solve) {
@@ -578,253 +553,52 @@
   </ul>
 </section>
 
-<Modal
+<SolveDetailsModal
   bind:show
+  bind:solve={sSolve}
+  {preview}
+  {solveSteps}
+  stepNames={$session?.settings.stepNames || []}
+  isMultiStepSession={isMultiStepSession()}
+  {reconstructionError}
+  penalties={PENALTIES}
+  transitionNames={solveEditTransitionNames}
   onclose={closeHandler}
-  title={$localLang.TIMER.edit}
-  showCloseButton
-  closeOnClickOutside
-  size="2xl"
-  class="w-[min(100%,40rem)] shaded-card"
-  transitionName={solveEditTransitionNames.shell}
->
-  <div class="flex justify-between items-center m-2">
-    <span
-      class="view-time m-1 w-max text-lg font-bold"
-      style:view-transition-name={solveEditTransitionNames.time}
-    >
-      {#if sSolve.penalty === Penalty.NONE || sSolve.penalty === Penalty.P2}
-        {sTimer(sSolve, true, true)}
-      {/if}
-      {#if sSolve.penalty === Penalty.P2}
-        <span class="font-small text-red-500">+2</span>
-      {/if}
-      {#if sSolve.penalty === Penalty.DNF}
-        <span class="font-small text-red-500">DNF</span>
-      {/if}
-      {#if sSolve.penalty === Penalty.DNS}
-        <span class="font-small text-red-500">DNS</span>
-      {/if}
-    </span>
-    <span class="flex items-center font-small">
-      <CalendarIcon size="1.2rem" />
-      <span class="ml-2" style:view-transition-name={solveEditTransitionNames.date}>
-        {moment(sSolve?.date).format("D MMM YYYY")} <br />
-        {moment(sSolve?.date).format("HH:MM")}
-      </span>
-    </span>
-  </div>
-  <div
-    class={"algorithm-container m-2 transition-all duration-300 delay-100 " +
-      (fComment || collapsed ? "collapsed" : "")}
-  >
-    <Dice5Icon size="1.2rem" />
+  ondelete={() => (showDeleteSolve = true)}
+  oncheckReconstruction={checkReconstruction}
+  onparse={parse}
+  onsetPenalty={setPenalty}
+/>
 
-    <pre
-      contenteditable="false"
-      class="text-center text-sm wrap-break-word whitespace-normal overflow-auto max-h-[20svh]">
-        {@html sSolve?.scramble?.replaceAll("\n", "<br>") || ""}
-      </pre>
-
-    <div
-      class="preview col-span-2 mx-auto overflow-hidden w-full h-full
-        flex items-center justify-center relative px-1 max-h-[30vh]"
-    >
-      {#if preview}
-        <PuzzleImageBundle src={preview} allowDownload />
-      {:else}
-        <Spinner size="20" />
-      {/if}
-    </div>
-
-    {#if isMultiStepSession() && sSolve?.steps?.length}
-      <hr class="w-full border border-t-gray-400 col-span-2" />
-      <h3 class="text-center col-span-2 mt-2 mb-8 text-lg">
-        {$localLang.global.steps}
-      </h3>
-
-      <div class="col-span-2 flex mb-4">
-        {#each solveSteps as s, p (p)}
-          <span
-            class="step-part"
-            data-percent={`${s}%`}
-            data-time={timer((sSolve.steps || [])[p], true, true)}
-            style={`
-                width: ${s}%;
-                background-color: ${STEP_COLORS[p]};
-                --p: ${p};
-              `}
-          ></span>
-        {/each}
-      </div>
-
-      <div class="col-span-2 flex mb-4 text-center -mt-4">
-        {#each solveSteps as s, p (p)}
-          <span style={`width: ${s}%; `}>{($session?.settings.stepNames || [])[p] || ""}</span>
-        {/each}
-      </div>
-    {/if}
-
-    <MessageSquareTextIcon size="1.2rem" />
-
-    <TextArea
-      blurOnEscape
-      onfocus={() => focusTextArea(true)}
-      onblur={() => focusTextArea(false)}
-      cClass={fComment ? "max-h-[30ch]" : "max-h-[20ch]"}
-      getInnerText={parse}
-      class="border border-gray-400 text-sm"
-      bind:value={sSolve.comments}
-      placeholder={$localLang.TIMER.comment}
-    />
-  </div>
-  <div class="mt-2 flex flex-wrap justify-evenly gap-1">
-    <Button
-      aria-label={$localLang.global.delete}
-      type="danger"
-      onclick={() => (showDeleteSolve = true)}
-    >
-      <TrashIcon size="1.2rem" />
-      {$localLang.global.delete}
-    </Button>
-
-    <Button aria-label={$localLang.global.cancel} type="secondary" onclick={() => closeHandler()}>
-      <XIcon size="1.2rem" />
-      {$localLang.global.cancel}
-    </Button>
-
-    <Button
-      aria-label={$localLang.global.save}
-      onclick={() => {
-        closeHandler(sSolve);
-      }}
-      class="mr-2 text-sm gap-1 px-2"
-    >
-      <SaveIcon size="1.2rem" />
-      {$localLang.global.save}
-    </Button>
-
-    {#if !reconstructionError}
-      <Tooltip tooltipText={$localLang.global.reconstruction}>
-        <Button
-          aria-label={$localLang.global.reconstruction}
-          onclick={checkReconstruction}
-          type="success"
-          size="sm"
-          icon
-        >
-          <RouteIcon size="1.2rem" />
-        </Button>
-      </Tooltip>
-    {/if}
-
-    <div class="relative" bind:this={penaltyTriggerElement}>
-      <Button>
-        {[{ label: $localLang.TIMER.noPenalty, penalty: Penalty.NONE }, ...PENALTIES].find(
-          p => p.penalty === sSolve.penalty
-        )?.label || $localLang.TIMER.noPenalty}
-
-        <ChevronDownIcon size="1.2rem" />
-      </Button>
-      <Dropdown
-        trigger={penaltyTriggerElement}
-        bind:open={showDropdown}
-        class="bg-base-200 text-base-content rounded-md"
-      >
-        {#each [{ label: $localLang.TIMER.noPenalty, penalty: Penalty.NONE }, ...PENALTIES] as p}
-          <DropdownItem class="bg-base-200 hover:bg-base-300" onclick={() => setPenalty(p.penalty)}>
-            {p.label}
-          </DropdownItem>
-        {/each}
-      </Dropdown>
-    </div>
-  </div>
-</Modal>
-
-<Modal
-  class="shaded-card"
+<ConfirmationModal
   bind:show={showDeleteSolve}
   title={$localLang.global.delete}
-  showCloseButton
-  closeOnClickOutside
-  onclose={confirmDeleteSolve}
->
-  <h1 class="mb-4 text-lg">
-    {replaceParams($localLang.global.deleteWarning, [sTimer(sSolve, true)])}
-  </h1>
-  <div class="flex justify-center gap-2">
-    <Button
-      type="secondary"
-      aria-label={$localLang.global.cancel}
-      onclick={() => (showDeleteSolve = false)}
-    >
-      {$localLang.global.cancel}
-    </Button>
+  message={replaceParams($localLang.global.deleteWarning, [sTimer(sSolve, true)])}
+  cancelLabel={$localLang.global.cancel}
+  confirmLabel={$localLang.global.delete}
+  onconfirm={confirmDeleteSolve}
+/>
 
-    <Button
-      type="danger"
-      aria-label={$localLang.global.delete}
-      onclick={() => confirmDeleteSolve(true)}
-    >
-      {$localLang.global.delete}
-    </Button>
-  </div>
-</Modal>
-
-<Modal
-  class="shaded-card"
-  bind:this={deleteAllModal}
+<ConfirmationModal
   bind:show={showDeleteAll}
-  onclose={deleteAllHandler}
->
-  <h1 class="mb-4 text-lg">{$localLang.TIMER.removeAllSolves}</h1>
-  <div class="flex justify-center gap-2">
-    <Button
-      type="secondary"
-      aria-label={$localLang.global.cancel}
-      onclick={() => deleteAllModal.close()}
-    >
-      {$localLang.global.cancel}
-    </Button>
+  message={$localLang.TIMER.removeAllSolves}
+  cancelLabel={$localLang.global.cancel}
+  confirmLabel={$localLang.global.delete}
+  onconfirm={confirmDeleteAll}
+/>
 
-    <Button
-      type="danger"
-      aria-label={$localLang.global.delete}
-      onclick={() => deleteAllModal.close(true)}
-    >
-      {$localLang.global.delete}
-    </Button>
-  </div>
-</Modal>
-
-<Modal bind:show={searchModal} class="max-w-xl w-full shaded-card">
-  <AdvancedSearch
-    fields={advancedSearchFields}
-    bind:gate={advancedSearchGate}
-    onclose={() => (searchModal = false)}
-    onapply={updatePaginator}
-  />
-</Modal>
+<AdvancedSearchModal
+  bind:show={searchModal}
+  fields={advancedSearchFields}
+  bind:gate={advancedSearchGate}
+  onapply={updatePaginator}
+/>
 
 <style lang="postcss">
   @reference "@src/themes/index.css";
 
   section {
     grid-area: tabs;
-  }
-
-  .font-small {
-    font-size: 0.7rem;
-  }
-
-  .algorithm-container {
-    display: grid;
-    grid-template-columns: 1.3rem 1fr;
-    grid-template-rows: auto 1fr auto auto auto;
-  }
-
-  .algorithm-container.collapsed {
-    grid-template-rows: auto 0.5fr auto auto auto;
   }
 
   .actions {
@@ -848,36 +622,5 @@
   .context-menu li button {
     @apply pointer-events-auto pr-2 hover:pl-2 hover:pr-1 p-1 rounded-md transition-all duration-200
     hover:bg-white/10 w-full flex gap-2 justify-start items-center;
-  }
-
-  .step-part {
-    height: 1.8rem;
-    display: flex;
-    position: relative;
-  }
-
-  .step-part:first-child {
-    @apply rounded-l-full;
-  }
-
-  .step-part:last-child {
-    @apply rounded-r-full;
-  }
-
-  .step-part::before {
-    content: attr(data-percent);
-    position: absolute;
-    left: 50%;
-    transform: translate(-50%, -1.5rem);
-  }
-
-  .step-part::after {
-    content: attr(data-time);
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    color: black;
-    font-size: 0.8rem;
   }
 </style>

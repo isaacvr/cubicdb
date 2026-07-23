@@ -44,22 +44,26 @@ describe("modal behavior contracts", () => {
 
   it("normalizes history solve comments before binding them in the details modal", () => {
     const historyTab = source("../timer/HistoryTab/HistoryTab.svelte");
+    const solveDetailsModal = source("../timer/HistoryTab/components/SolveDetailsModal.svelte");
 
     expect(historyTab).toContain("createEditableSolve");
     expect(historyTab).toContain('comments: solve.comments ?? ""');
-    expect(historyTab).toContain("bind:value={sSolve.comments}");
+    expect(solveDetailsModal).toContain("bind:value={solve.comments}");
   });
 
   it("makes history solve details closable and protects destructive actions", () => {
     const historyTab = source("../timer/HistoryTab/HistoryTab.svelte");
+    const solveDetailsModal = source("../timer/HistoryTab/components/SolveDetailsModal.svelte");
 
-    expect(historyTab).toContain("title={$localLang.TIMER.edit}");
-    expect(historyTab).toContain("showCloseButton");
-    expect(historyTab).toContain("closeOnClickOutside");
-    expect(historyTab).toContain("onclick={() => closeHandler()}");
+    expect(solveDetailsModal).toContain("title={$localLang.TIMER.edit}");
+    expect(solveDetailsModal).toContain("showCloseButton");
+    expect(solveDetailsModal).toContain("closeOnClickOutside");
+    expect(historyTab).toContain("<SolveDetailsModal");
+    expect(historyTab).toContain("onclose={closeHandler}");
     expect(historyTab).toContain("showDeleteSolve");
     expect(historyTab).toContain("confirmDeleteSolve");
     expect(historyTab).toContain("replaceParams($localLang.global.deleteWarning");
+    expect(historyTab).toContain("<ConfirmationModal");
   });
 
   it("closes outside-click modals by checking clicks against modal content, not dialog backdrop", () => {
@@ -91,9 +95,10 @@ describe("modal behavior contracts", () => {
 
   it("hides solve steps outside multi-step sessions and keeps invalid comments visually neutral", () => {
     const historyTab = source("../timer/HistoryTab/HistoryTab.svelte");
+    const solveDetailsModal = source("../timer/HistoryTab/components/SolveDetailsModal.svelte");
 
     expect(historyTab).toContain("function isMultiStepSession()");
-    expect(historyTab).toContain("{#if isMultiStepSession() && sSolve?.steps?.length}");
+    expect(solveDetailsModal).toContain("{#if isMultiStepSession && solve?.steps?.length}");
     expect(historyTab).toContain("return res.hasError ? defaultInner(s, true) : res.result");
     expect(historyTab).toContain("res.hasError || res.finalAlpha === 0");
   });
