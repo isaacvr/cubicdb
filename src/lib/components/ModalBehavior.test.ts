@@ -44,10 +44,11 @@ describe("modal behavior contracts", () => {
 
   it("normalizes history solve comments before binding them in the details modal", () => {
     const historyTab = source("../timer/HistoryTab/HistoryTab.svelte");
+    const detailsActions = source("../timer/HistoryTab/solveDetailsActions.ts");
     const solveDetailsModal = source("../timer/HistoryTab/components/SolveDetailsModal.svelte");
 
     expect(historyTab).toContain("createEditableSolve");
-    expect(historyTab).toContain('comments: solve.comments ?? ""');
+    expect(detailsActions).toContain('comments: solve.comments ?? ""');
     expect(solveDetailsModal).toContain("bind:value={solve.comments}");
   });
 

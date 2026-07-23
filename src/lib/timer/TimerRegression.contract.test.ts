@@ -27,23 +27,25 @@ describe("timer regression contracts", () => {
 
   it("does not assign duplicate view transition names to the solve edit modal", () => {
     const source = read("./HistoryTab/HistoryTab.svelte");
+    const actions = read("./HistoryTab/solveDetailsActions.ts");
     const detailsModal = read("./HistoryTab/components/SolveDetailsModal.svelte");
 
     expect(source).toContain(
-      "let solveEditTransitionNames = $state(createSolveEditTransitionNames())"
+      "let solveEditTransitionNames: SolveEditTransitionNames = $state(createSolveEditTransitionNames())"
     );
-    expect(source).toContain("function createSolveEditTransitionNames");
+    expect(actions).toContain("function createSolveEditTransitionNames");
     expect(source).toContain("function handleSolveOpen");
-    expect(source).toContain("if (!transitionTarget.isConnected)");
-    expect(source).toContain("const transitionNames = createSolveEditTransitionNames(s)");
-    expect(source).toContain('querySelector<HTMLElement>(".solve-row-date")');
-    expect(source).toContain('querySelector<HTMLElement>(".solve-row-time")');
-    expect(source).toContain("transitionTarget.style.viewTransitionName = transitionNames.shell");
-    expect(source).toContain("dateTarget.style.viewTransitionName = transitionNames.date");
-    expect(source).toContain("timeTarget.style.viewTransitionName = transitionNames.time");
-    expect(source).toContain('transitionTarget.style.viewTransitionName = "none"');
-    expect(source).toContain('dateTarget.style.viewTransitionName = "none"');
-    expect(source).toContain('timeTarget.style.viewTransitionName = "none"');
+    expect(source).toContain("openSolveDetailsWithTransition");
+    expect(actions).toContain("if (!transitionTarget.isConnected)");
+    expect(actions).toContain("const transitionNames = createSolveEditTransitionNames(solve)");
+    expect(actions).toContain('querySelector<HTMLElement>(".solve-row-date")');
+    expect(actions).toContain('querySelector<HTMLElement>(".solve-row-time")');
+    expect(actions).toContain("transitionTarget.style.viewTransitionName = transitionNames.shell");
+    expect(actions).toContain("dateTarget.style.viewTransitionName = transitionNames.date");
+    expect(actions).toContain("timeTarget.style.viewTransitionName = transitionNames.time");
+    expect(actions).toContain('transitionTarget.style.viewTransitionName = "none"');
+    expect(actions).toContain('dateTarget.style.viewTransitionName = "none"');
+    expect(actions).toContain('timeTarget.style.viewTransitionName = "none"');
     expect(source).toContain("transitionNames={solveEditTransitionNames}");
     expect(detailsModal).toContain("transitionName={transitionNames.shell}");
     expect(detailsModal).toContain("style:view-transition-name={transitionNames.date}");
@@ -55,8 +57,8 @@ describe("timer regression contracts", () => {
   it("opens solve details without delaying the view transition for double-click detection", () => {
     const source = read("./HistoryTab/HistoryTab.svelte");
 
-    expect(source).toContain("function openSolveDetails");
-    expect(source).toContain("openSolveDetails(s, transitionTarget)");
+    expect(source).toContain("function handleSolveOpen");
+    expect(source).toContain("openSolveDetailsWithTransition");
     expect(source).not.toContain(
       "setTimeout(() => {\n        if (performance.now() - LAST_CLICK >= 200)"
     );
@@ -64,26 +66,25 @@ describe("timer regression contracts", () => {
 
   it("defers solve preview generation until after the modal is opened for view transitions", () => {
     const source = read("./HistoryTab/HistoryTab.svelte");
-    const previewStart = source.indexOf("function generateSolvePreview");
+    const actions = read("./HistoryTab/solveDetailsActions.ts");
+    const previewStart = actions.indexOf("function generateSolvePreview");
     const editStart = source.indexOf("export function editSolve");
-    const editEnd = source.indexOf("function selectSolve");
-    const previewBlock = source.slice(previewStart, editStart);
+    const editEnd = source.indexOf("function handleSolveOpen");
+    const previewBlock = actions.slice(previewStart);
     const editBlock = source.slice(editStart, editEnd);
 
-    expect(source).toContain("function generateSolvePreview");
-    expect(source).toContain("function afterNextFrame");
-    expect(source).toContain("requestAnimationFrame");
+    expect(actions).toContain("function generateSolvePreview");
+    expect(actions).toContain("function afterNextFrame");
+    expect(actions).toContain("requestAnimationFrame");
     expect(previewBlock).toContain("await afterNextFrame()");
     expect(previewBlock.indexOf("await afterNextFrame()")).toBeLessThan(
-      previewBlock.indexOf("solvePreviewGenerator.generate")
+      previewBlock.indexOf("generator.generate")
     );
-    expect(editBlock.indexOf("show = true")).toBeLessThan(
-      editBlock.indexOf("generateSolvePreview(sSolve)")
-    );
+    expect(editBlock.indexOf("show = true")).toBeLessThan(editBlock.indexOf("loadSolvePreview"));
     expect(source).toContain("new CubicDBModuleImageGenerator()");
     expect(editBlock).not.toContain("pGenerateCubeBundle");
-    expect(source).not.toContain("scrambleToPuzzle");
-    expect(source).not.toContain("pGenerateCubeBundle");
+    expect(actions).not.toContain("scrambleToPuzzle");
+    expect(actions).not.toContain("pGenerateCubeBundle");
   });
 
   it("uses cubicdb-module for the controller plain scramble preview image", () => {
@@ -124,12 +125,9 @@ describe("timer regression contracts", () => {
 
   it("selects History intervals from the filtered solve list", () => {
     const source = read("./HistoryTab/HistoryTab.svelte");
-    const selectIntervalStart = source.indexOf("function selectInterval");
-    const selectNoneStart = source.indexOf("function selectNone");
-    const selectIntervalBlock = source.slice(selectIntervalStart, selectNoneStart);
 
-    expect(selectIntervalBlock).toContain("solveFeature.selectInterval(fSolves)");
-    expect(selectIntervalBlock).not.toContain("$solves[i].selected");
+    expect(source).toContain("solveFeature.selectInterval(fSolves)");
+    expect(source).not.toContain("$solves[i].selected");
   });
 
   it("uses themed keycaps for History action shortcuts", () => {
