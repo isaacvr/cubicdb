@@ -27,10 +27,13 @@ describe("timer regression contracts", () => {
 
   it("does not assign duplicate view transition names to the solve edit modal", () => {
     const source = read("./HistoryTab/HistoryTab.svelte");
+    const detailsModal = read("./HistoryTab/components/SolveDetailsModal.svelte");
 
-    expect(source).toContain("let solveEditTransitionNames = $state(createSolveEditTransitionNames())");
+    expect(source).toContain(
+      "let solveEditTransitionNames = $state(createSolveEditTransitionNames())"
+    );
     expect(source).toContain("function createSolveEditTransitionNames");
-    expect(source).toContain("const transitionTarget = ev.currentTarget as HTMLButtonElement");
+    expect(source).toContain("function handleSolveOpen");
     expect(source).toContain("if (!transitionTarget.isConnected)");
     expect(source).toContain("const transitionNames = createSolveEditTransitionNames(s)");
     expect(source).toContain('querySelector<HTMLElement>(".solve-row-date")');
@@ -41,9 +44,10 @@ describe("timer regression contracts", () => {
     expect(source).toContain('transitionTarget.style.viewTransitionName = "none"');
     expect(source).toContain('dateTarget.style.viewTransitionName = "none"');
     expect(source).toContain('timeTarget.style.viewTransitionName = "none"');
-    expect(source).toContain("transitionName={solveEditTransitionNames.shell}");
-    expect(source).toContain("style:view-transition-name={solveEditTransitionNames.date}");
-    expect(source).toContain("style:view-transition-name={solveEditTransitionNames.time}");
+    expect(source).toContain("transitionNames={solveEditTransitionNames}");
+    expect(detailsModal).toContain("transitionName={transitionNames.shell}");
+    expect(detailsModal).toContain("style:view-transition-name={transitionNames.date}");
+    expect(detailsModal).toContain("style:view-transition-name={transitionNames.time}");
     expect(source).not.toContain("view-transition-name: modal");
     expect(source).not.toContain("modal-transition");
   });
@@ -53,7 +57,9 @@ describe("timer regression contracts", () => {
 
     expect(source).toContain("function openSolveDetails");
     expect(source).toContain("openSolveDetails(s, transitionTarget)");
-    expect(source).not.toContain("setTimeout(() => {\n        if (performance.now() - LAST_CLICK >= 200)");
+    expect(source).not.toContain(
+      "setTimeout(() => {\n        if (performance.now() - LAST_CLICK >= 200)"
+    );
   });
 
   it("defers solve preview generation until after the modal is opened for view transitions", () => {
@@ -65,11 +71,16 @@ describe("timer regression contracts", () => {
     const editBlock = source.slice(editStart, editEnd);
 
     expect(source).toContain("function generateSolvePreview");
-    expect(previewBlock).toContain("requestAnimationFrame");
-    expect(previewBlock.indexOf("requestAnimationFrame")).toBeLessThan(
-      previewBlock.indexOf("genImages([{")
+    expect(source).toContain("function afterNextFrame");
+    expect(source).toContain("requestAnimationFrame");
+    expect(previewBlock).toContain("await afterNextFrame()");
+    expect(previewBlock.indexOf("await afterNextFrame()")).toBeLessThan(
+      previewBlock.indexOf("solvePreviewGenerator.generate")
     );
-    expect(editBlock.indexOf("show = true")).toBeLessThan(editBlock.indexOf("generateSolvePreview(sSolve)"));
+    expect(editBlock.indexOf("show = true")).toBeLessThan(
+      editBlock.indexOf("generateSolvePreview(sSolve)")
+    );
+    expect(source).toContain("new CubicDBModuleImageGenerator()");
     expect(editBlock).not.toContain("pGenerateCubeBundle");
     expect(source).not.toContain("scrambleToPuzzle");
     expect(source).not.toContain("pGenerateCubeBundle");
@@ -85,7 +96,7 @@ describe("timer regression contracts", () => {
   });
 
   it("keeps History solve rows at a fixed height when layout size changes", () => {
-    const source = read("./HistoryTab/HistoryTab.svelte");
+    const source = read("./HistoryTab/components/SolveGrid.svelte");
 
     expect(source).toContain("grid-auto-rows: 3rem");
     expect(source).toContain("shadow-md w-full h-full rounded-md");
@@ -103,7 +114,7 @@ describe("timer regression contracts", () => {
   });
 
   it("keeps solve edit preview actions visible and dropdowns themed inside the modal", () => {
-    const source = read("./HistoryTab/HistoryTab.svelte");
+    const source = read("./HistoryTab/components/SolveDetailsModal.svelte");
 
     expect(source).toContain("allowDownload");
     expect(source).not.toContain("allowDownload={!collapsed}");
@@ -117,23 +128,22 @@ describe("timer regression contracts", () => {
     const selectNoneStart = source.indexOf("function selectNone");
     const selectIntervalBlock = source.slice(selectIntervalStart, selectNoneStart);
 
-    expect(selectIntervalBlock).toContain("fSolves.findIndex(s => s.selected)");
-    expect(selectIntervalBlock).toContain("fSolves.findLastIndex(s => s.selected)");
-    expect(selectIntervalBlock).toContain("fSolves[i].selected = true");
-    expect(selectIntervalBlock).toContain("$selected = countSelectedSolves()");
+    expect(selectIntervalBlock).toContain("solveFeature.selectInterval(fSolves)");
     expect(selectIntervalBlock).not.toContain("$solves[i].selected");
   });
 
   it("uses themed keycaps for History action shortcuts", () => {
-    const source = read("./HistoryTab/HistoryTab.svelte");
+    const source = read("./HistoryTab/components/HistorySelectionToolbar.svelte");
 
-    expect(source).toContain("const HISTORY_ACTION_SHORTCUT_CLASS");
-    expect(source).toContain("border-warning bg-warning text-xs font-bold text-warning-content shadow-sm");
-    expect(source).toContain("<span class={HISTORY_ACTION_SHORTCUT_CLASS}>A</span>");
-    expect(source).toContain("<span class={HISTORY_ACTION_SHORTCUT_CLASS}>T</span>");
-    expect(source).toContain("<span class={HISTORY_ACTION_SHORTCUT_CLASS}>V</span>");
-    expect(source).toContain("<span class={HISTORY_ACTION_SHORTCUT_CLASS}>Esc</span>");
-    expect(source).toContain("<span class={HISTORY_ACTION_SHORTCUT_CLASS}>D</span>");
+    expect(source).toContain("const SHORTCUT_CLASS");
+    expect(source).toContain(
+      "border-warning bg-warning text-xs font-bold text-warning-content shadow-sm"
+    );
+    expect(source).toContain("<span class={SHORTCUT_CLASS}>A</span>");
+    expect(source).toContain("<span class={SHORTCUT_CLASS}>T</span>");
+    expect(source).toContain("<span class={SHORTCUT_CLASS}>V</span>");
+    expect(source).toContain("<span class={SHORTCUT_CLASS}>Esc</span>");
+    expect(source).toContain("<span class={SHORTCUT_CLASS}>D</span>");
     expect(source).not.toContain('<span class="kbd kbd-sm">');
   });
 });

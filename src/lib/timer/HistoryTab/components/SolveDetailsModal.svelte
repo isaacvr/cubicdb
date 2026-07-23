@@ -2,9 +2,12 @@
   import moment from "moment";
   import { options } from "@cstimer/scramble/scramble";
   import { STEP_COLORS } from "@constants";
-  import type { Penalty as PenaltyType, Solve } from "@interfaces";
+  import type { Penalty as PenaltyType, Session, Solve } from "@interfaces";
   import { Penalty } from "@interfaces";
   import { sTimer, timer } from "@helpers/timer";
+  import { calcPercents } from "@helpers/math";
+  import { defaultInner, parseReconstruction } from "@helpers/strings";
+  import { navigate } from "svelte-routing";
   import Modal from "@components/Modal.svelte";
   import PuzzleImageBundle from "@components/PuzzleImageBundle.svelte";
   import TextArea from "@material/TextArea.svelte";
@@ -38,16 +41,10 @@
     show?: boolean;
     solve: Solve;
     preview: string[];
-    solveSteps: number[];
-    stepNames: string[];
-    isMultiStepSession: boolean;
-    reconstructionError: boolean;
-    penalties: PenaltyOption[];
+    session?: Session;
     transitionNames: SolveEditTransitionNames;
     onclose: (solve?: Solve) => void;
     ondelete: () => void;
-    oncheckReconstruction: () => void;
-    onparse: (text: string) => string;
     onsetPenalty: (penalty: PenaltyType) => void;
   }
 
@@ -55,32 +52,68 @@
     show = $bindable(false),
     solve = $bindable(),
     preview,
-    solveSteps,
-    stepNames,
-    isMultiStepSession,
-    reconstructionError,
-    penalties,
+    session,
     transitionNames,
     onclose,
     ondelete,
-    oncheckReconstruction,
-    onparse,
     onsetPenalty,
   }: SolveDetailsModalProps = $props();
 
   let fComment = $state(false);
   let showDropdown = $state(false);
+  let reconstructionError = $state(true);
   let penaltyTriggerElement: HTMLDivElement | null = $state(null);
+  const penalties: PenaltyOption[] = [
+    { label: "+2", penalty: Penalty.P2 },
+    { label: "DNF", penalty: Penalty.DNF },
+    { label: "DNS", penalty: Penalty.DNS },
+  ];
 
   function focusTextArea(focused: boolean) {
     setTimeout(() => (fComment = focused), 100);
   }
+
+  let isMultiStepSession = $derived(session?.settings.sessionType === "multi-step");
+  let stepNames = $derived(session?.settings.stepNames || []);
+  let solveSteps = $derived(
+    isMultiStepSession && solve?.steps ? calcPercents(solve.steps, solve.time) : []
+  );
 
   let activePenaltyLabel = $derived(
     [{ label: $localLang.TIMER.noPenalty, penalty: Penalty.NONE }, ...penalties].find(
       p => p.penalty === solve.penalty
     )?.label || $localLang.TIMER.noPenalty
   );
+
+  function checkReconstruction() {
+    let o = options.get(solve?.mode || "333")!;
+
+    if (o && !Array.isArray(o)) {
+      let params = [
+        ["puzzle", o.type],
+        ["order", o.order ? o.order[0] : -1],
+        ["scramble", solve?.scramble || ""],
+        ["reconstruction", solve?.comments || ""],
+        ["returnTo", "/timer"],
+      ];
+
+      navigate("/reconstructions?" + params.map(p => encodeURI(p[0] + "=" + p[1])).join("&"));
+    }
+  }
+
+  function parse(text: string) {
+    let o = options.get(solve?.mode || "333");
+
+    reconstructionError = true;
+
+    if (o && !Array.isArray(o)) {
+      let res = parseReconstruction(text, o.type, o.order ? o.order[0] : -1);
+      reconstructionError = res.hasError || res.finalAlpha === 0;
+      return res.hasError ? defaultInner(text, true) : res.result;
+    }
+
+    return defaultInner(text, true);
+  }
 </script>
 
 <Modal
@@ -177,7 +210,7 @@
       onfocus={() => focusTextArea(true)}
       onblur={() => focusTextArea(false)}
       cClass={fComment ? "max-h-[30ch]" : "max-h-[20ch]"}
-      getInnerText={onparse}
+      getInnerText={parse}
       class="border border-gray-400 text-sm"
       bind:value={solve.comments}
       placeholder={$localLang.TIMER.comment}
@@ -209,7 +242,7 @@
       <Tooltip tooltipText={$localLang.global.reconstruction}>
         <Button
           aria-label={$localLang.global.reconstruction}
-          onclick={oncheckReconstruction}
+          onclick={checkReconstruction}
           type="success"
           size="sm"
           icon

@@ -1,57 +1,51 @@
 <script lang="ts">
-  import moment from "moment";
-  import {
-    AverageSetting,
-    Penalty,
-    type ITimerController,
-    type Solve,
-    type TimerContext,
-  } from "@interfaces";
-  import { infinitePenalty, isMo3, sTimer, timer } from "@helpers/timer";
+  import { Penalty, type ITimerController, type Solve, type TimerContext } from "@interfaces";
+  import { isMo3, sTimer } from "@helpers/timer";
 
-  import { genImages } from "cubicdb-module";
   import { options } from "@cstimer/scramble/scramble";
+  import { CubeMode } from "@constants";
   import { Paginator } from "@classes/Paginator";
 
-  import { getAverageS, solveSummary } from "@helpers/statistics";
   import { NotificationService } from "@stores/notification.service";
 
   import { localLang } from "@stores/language.service";
   import { tick } from "svelte";
-  import { defaultInner, parseReconstruction, replaceParams } from "@helpers/strings";
+  import { replaceParams } from "@helpers/strings";
   import { copyTextToClipboard } from "@helpers/clipboard";
-  import { calcPercents } from "@helpers/math";
   import { startViewTransition } from "@helpers/DOM";
-  import { navigate } from "svelte-routing";
   import ConfirmationModal from "@components/ConfirmationModal.svelte";
   import {
     createConfirmationModalModel,
     type ConfirmationModalModel,
   } from "@components/ConfirmationModal.types";
   import AdvancedSearchModal from "./components/AdvancedSearchModal.svelte";
+  import HistoryOptions from "./components/HistoryOptions.svelte";
+  import HistorySelectionToolbar from "./components/HistorySelectionToolbar.svelte";
   import SolveDetailsModal from "./components/SolveDetailsModal.svelte";
   import SolveGrid from "./components/SolveGrid.svelte";
   import PaginatorComponent from "@components/PaginatorComponent.svelte";
   import { GateAdaptor } from "$lib/timer/HistoryTab/AdvancedSearch/adaptors";
-  import type { SearchFilter } from "$lib/timer/HistoryTab/AdvancedSearch/adaptors/types";
   import { dataService } from "$lib/data-services/data.service";
-  import Button from "$lib/cubicdbKit/Button.svelte";
-  import Tooltip from "$lib/cubicdbKit/Tooltip.svelte";
   import { useSolve } from "$lib/timer/solves";
+  import { CubicDBModuleImageGenerator } from "$lib/timer/scramble";
   import { createEmptySolve } from "@helpers/object";
+  import {
+    averageSummaryFromSolve,
+    formatAverageShare,
+    solveIndex as getSolveIndex,
+  } from "./historySharing";
   import {
     CopyIcon,
     Dice3Icon,
     Dice5Icon,
     DicesIcon,
-    FilterIcon,
     PencilIcon,
-    Share2Icon,
     SquareDashedIcon,
     TrashIcon,
   } from "lucide-svelte";
 
   const notification = NotificationService.getInstance();
+  const solvePreviewGenerator = new CubicDBModuleImageGenerator();
 
   interface HistoryTabProps {
     context: TimerContext;
@@ -74,25 +68,9 @@
   let solvesElement: HTMLDivElement;
   let pSolves: Solve[] = $state([]);
   let fSolves: Solve[] = [];
-  let solveSteps: number[] = $state([]);
-  let reconstructionError = $state(true);
   let solveEditTransitionNames = $state(createSolveEditTransitionNames());
   let searchModal = $state(false);
   let advancedSearchGate = $state(new GateAdaptor("and"));
-  const advancedSearchFields: SearchFilter[] = [
-    { field: "time", name: $localLang.global.time, type: "map", fn: t => timer(t, true) },
-    { field: "date", name: $localLang.global.date, type: "date" },
-    { field: "comments", name: $localLang.TIMER.comments, type: "string" },
-  ];
-
-  const PENALTIES = [
-    { label: "+2", penalty: Penalty.P2 },
-    { label: "DNF", penalty: Penalty.DNF },
-    { label: "DNS", penalty: Penalty.DNS },
-  ];
-  const HISTORY_ACTION_SHORTCUT_CLASS =
-    "kbd kbd-sm border-warning bg-warning text-xs font-bold text-warning-content shadow-sm";
-
   function createSolveEditTransitionNames(solve?: Solve) {
     const id = solve?._id || Date.now();
 
@@ -123,17 +101,25 @@
     };
   }
 
-  function generateSolvePreview(solve: Solve) {
+  function afterNextFrame() {
+    return new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+  }
+
+  async function generateSolvePreview(solve: Solve) {
     const sMode = solve.mode as string;
     const md = options.has(sMode) ? sMode : "333";
 
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        if (sSolve?._id === solve._id) {
-          preview = genImages([{ scramble: solve.scramble, type: md as any }]);
-        }
+    await afterNextFrame();
+
+    if (sSolve?._id === solve._id) {
+      preview = await solvePreviewGenerator.generate({
+        scramble: solve.scramble,
+        scrambleMode: md,
+        puzzle: "rubik",
+        mode: CubeMode.NORMAL,
+        view: "trans",
       });
-    });
+    }
   }
 
   export function editSolve(s: Solve) {
@@ -141,14 +127,8 @@
     sSolve = createEditableSolve(s);
     preview = [""];
 
-    if (sSolve.steps && isMultiStepSession()) {
-      solveSteps = calcPercents(sSolve.steps, sSolve.time);
-    } else {
-      solveSteps = [];
-    }
-
     show = true;
-    generateSolvePreview(sSolve);
+    void generateSolvePreview(sSolve);
   }
 
   function selectSolve(s: Solve) {
@@ -293,15 +273,8 @@
     }
   }
 
-  function updateSolves() {
-    pSolves = fSolves.slice(pg.start, pg.end);
-  }
-
-  function updatePaginator() {
+  function updateFilteredSolves() {
     fSolves = solveFeature.solves.filter(sv => advancedSearchGate.computeValue(sv));
-    pg.setData(fSolves);
-
-    updateSolves();
   }
 
   function notifyCopiedToClipboard() {
@@ -317,28 +290,8 @@
   }
 
   function shareAoX(n: number) {
-    let sv = solveFeature.solves.slice(0, n).reverse();
-    let Ao5 = getAverageS(n, sv, AverageSetting.SEQUENTIAL);
-    let minTime = (a: Solve, b: Solve) => {
-      if (infinitePenalty(a)) return b;
-      if (infinitePenalty(b)) return a;
-      return a.time < b.time ? a : b;
-    };
-
-    let minMax = sv.reduce(
-      (acc, s) => [minTime(acc[0], s) === s ? s : acc[0], minTime(acc[1], s) === s ? acc[1] : s],
-      [sv[0], sv[0]]
-    );
-
-    if (Ao5.length === n) {
-      copyHistoryText(
-        `Ao${n}: ${timer(Ao5[n - 1] as any, true)} = ${sv
-          .map(s =>
-            s === minMax[0] || s === minMax[1] ? "(" + sTimer(s, true) + ")" : sTimer(s, true)
-          )
-          .join(", ")}`
-      );
-    }
+    const text = formatAverageShare(solveFeature.solves, n);
+    if (text) copyHistoryText(text);
   }
 
   function handleContextMenu(e: MouseEvent, s: Solve) {
@@ -357,12 +310,6 @@
 
     sSolve = s;
 
-    if (sSolve.steps && isMultiStepSession()) {
-      solveSteps = calcPercents(sSolve.steps, sSolve.time);
-    } else {
-      solveSteps = [];
-    }
-
     showContextMenu = true;
   }
 
@@ -374,7 +321,7 @@
         if (sv[i].selected) {
           let page = Math.ceil((i + 1) / pg.limit);
           pg.setPage(page);
-          updateSolves();
+          pSolves = fSolves.slice(pg.start, pg.end);
           tick().then(() => {
             solvesElement.children[i - pg.start].scrollIntoView({ block: "center" });
           });
@@ -384,64 +331,21 @@
     }
   }
 
-  function globalHandleClick(ev: MouseEvent) {
+  function globalHandleClick() {
     showContextMenu = false;
   }
 
-  function checkReconstruction() {
-    let o = options.get(sSolve?.mode || "333")!;
-
-    if (o && !Array.isArray(o)) {
-      let params = [
-        ["puzzle", o.type],
-        ["order", o.order ? o.order[0] : -1],
-        ["scramble", sSolve?.scramble || ""],
-        ["reconstruction", sSolve?.comments || ""],
-        ["returnTo", "/timer"],
-      ];
-
-      navigate("/reconstructions?" + params.map(p => encodeURI(p[0] + "=" + p[1])).join("&"));
-    }
-  }
-
-  function parse(s: string) {
-    let o = options.get(sSolve?.mode || "333");
-
-    reconstructionError = true;
-
-    if (o && !Array.isArray(o)) {
-      let res = parseReconstruction(s, o.type, o.order ? o.order[0] : -1);
-      reconstructionError = res.hasError || res.finalAlpha === 0;
-      return res.hasError ? defaultInner(s, true) : res.result;
-    }
-
-    return defaultInner(s, true);
-  }
-
-  function isMultiStepSession() {
-    return $session?.settings.sessionType === "multi-step";
-  }
-
   function solveIndex(sv: Solve) {
-    if (!sv) return -1;
-
-    for (let i = 0, maxi = solveFeature.solves.length; i < maxi; i += 1) {
-      if (solveFeature.solves[i]._id === sv._id) {
-        return maxi - i;
-      }
-    }
-
-    return -1;
+    return getSolveIndex(solveFeature.solves, sv);
   }
 
   function copyAverage(sv: Solve, n: number) {
-    let idx = solveFeature.solves.length - solveIndex(sv);
-    let arr = solveFeature.solves.slice(idx, idx + n);
-
-    copyTextToClipboard(solveSummary(arr)).then(notifyCopiedToClipboard);
+    copyTextToClipboard(averageSummaryFromSolve(solveFeature.solves, sv, n)).then(
+      notifyCopiedToClipboard
+    );
   }
 
-  $effect(() => updatePaginator());
+  $effect(() => updateFilteredSolves());
   $effect(() => updatePageFromSelected());
   $effect(() => {
     if ($tab != 1 && solveFeature.selectedCount) selectNone();
@@ -456,7 +360,7 @@
     ($tab != 1 ? "hidden!" : "")}
 >
   <!-- Pagination -->
-  <PaginatorComponent {pg} onupdate={updateSolves} />
+  <PaginatorComponent {pg} data={fSolves} bind:items={pSolves} />
 
   <!-- Solves -->
   <SolveGrid
@@ -466,66 +370,22 @@
     onGridElement={element => (solvesElement = element)}
   />
 
-  <!-- Options -->
-  <div class="absolute top-3 right-2 my-3 mx-1 flex flex-col gap-2">
-    {#if solveFeature.solves.length > 0}
-      <Tooltip tooltipText={$localLang.TIMER.deleteAll} placement="left" keyBindings={["d"]}>
-        <button onclick={deleteAll} class="cursor-pointer grid place-items-center">
-          <TrashIcon size="1.2rem" />
-        </button>
-      </Tooltip>
-    {/if}
+  <HistoryOptions
+    hasSolves={solveFeature.solves.length > 0}
+    ondeleteAll={deleteAll}
+    onshareAo5={() => shareAoX(5)}
+    onshareAo12={() => shareAoX(12)}
+    onopenFilter={() => (searchModal = true)}
+  />
 
-    <Tooltip tooltipText={$localLang.TIMER.shareAo5} placement="left">
-      <button onclick={() => shareAoX(5)} class="cursor-pointer grid place-items-center">
-        <Share2Icon size="1.2rem" />
-      </button>
-    </Tooltip>
-
-    <Tooltip tooltipText={$localLang.TIMER.shareAo12} placement="left">
-      <button onclick={() => shareAoX(12)} class="cursor-pointer grid place-items-center">
-        <Share2Icon size="1.2rem" />
-      </button>
-    </Tooltip>
-
-    <Tooltip tooltipText={$localLang.global.filter} placement="left">
-      <button
-        onclick={() => (searchModal = true)}
-        class="cursor-pointer grid place-items-center relative"
-      >
-        <FilterIcon size="1.2rem" />
-      </button>
-    </Tooltip>
-  </div>
-
-  <!-- Solve Actions -->
-  <div
-    class:isVisible={solveFeature.selectedCount}
-    class="fixed rounded-md p-2 top-0 opacity-0 transition-all duration-300 shadow-md shadow-base-100
-      pointer-events-none flex flex-wrap max-w-full justify-evenly actions bg-base-200 z-20"
-  >
-    <Button aria-label={$localLang.TIMER.selectAll} onclick={() => selectAll()}>
-      {$localLang.TIMER.selectAll} &nbsp; <span class={HISTORY_ACTION_SHORTCUT_CLASS}>A</span>
-    </Button>
-
-    <Button aria-label={$localLang.TIMER.selectInterval} onclick={() => selectInterval()}>
-      {$localLang.TIMER.selectInterval} &nbsp;
-      <span class={HISTORY_ACTION_SHORTCUT_CLASS}>T</span>
-    </Button>
-
-    <Button aria-label={$localLang.TIMER.invertSelection} onclick={() => selectInvert()}>
-      {$localLang.TIMER.invertSelection} &nbsp;
-      <span class={HISTORY_ACTION_SHORTCUT_CLASS}>V</span>
-    </Button>
-
-    <Button aria-label={$localLang.global.cancel} onclick={() => selectNone()}>
-      {$localLang.global.cancel} &nbsp; <span class={HISTORY_ACTION_SHORTCUT_CLASS}>Esc</span>
-    </Button>
-
-    <Button aria-label={$localLang.global.delete} onclick={() => deleteSelected()}>
-      {$localLang.global.delete} &nbsp; <span class={HISTORY_ACTION_SHORTCUT_CLASS}>D</span>
-    </Button>
-  </div>
+  <HistorySelectionToolbar
+    selectedCount={solveFeature.selectedCount}
+    onselectAll={selectAll}
+    onselectInterval={selectInterval}
+    oninvertSelection={selectInvert}
+    oncancel={selectNone}
+    ondeleteSelected={deleteSelected}
+  />
 
   <!-- Context Menu -->
   <ul
@@ -585,16 +445,10 @@
   bind:show
   bind:solve={sSolve}
   {preview}
-  {solveSteps}
-  stepNames={$session?.settings.stepNames || []}
-  isMultiStepSession={isMultiStepSession()}
-  {reconstructionError}
-  penalties={PENALTIES}
+  session={$session}
   transitionNames={solveEditTransitionNames}
   onclose={closeHandler}
   ondelete={() => requestDeleteSolve(sSolve)}
-  oncheckReconstruction={checkReconstruction}
-  onparse={parse}
   onsetPenalty={setPenalty}
 />
 
@@ -602,9 +456,8 @@
 
 <AdvancedSearchModal
   bind:show={searchModal}
-  fields={advancedSearchFields}
   bind:gate={advancedSearchGate}
-  onapply={updatePaginator}
+  onapply={updateFilteredSolves}
 />
 
 <style lang="postcss">
@@ -612,16 +465,6 @@
 
   section {
     grid-area: tabs;
-  }
-
-  .actions {
-    left: 50%;
-    transform: translateX(-50%);
-    width: min(100%, 40rem);
-  }
-
-  .isVisible {
-    @apply top-4 z-50 opacity-100 pointer-events-auto;
   }
 
   .context-menu.active {

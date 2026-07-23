@@ -8,13 +8,21 @@
   } from "lucide-svelte";
 
   export let pg: Paginator;
+  export let data: any[] = [];
+  export let items: any[] = [];
   export let onupdate: () => void = () => {};
 
   function setPage(p: number) {
     p === -1 && pg.nextPage();
     p === -2 && pg.prevPage();
     p != -1 && p != -2 && pg.setPage(p);
+    items = data.slice(pg.start, pg.end);
     onupdate();
+  }
+
+  $: {
+    pg.setData(data);
+    items = data.slice(pg.start, pg.end);
   }
 </script>
 

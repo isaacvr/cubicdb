@@ -95,12 +95,13 @@ describe("modal behavior contracts", () => {
   });
 
   it("hides solve steps outside multi-step sessions and keeps invalid comments visually neutral", () => {
-    const historyTab = source("../timer/HistoryTab/HistoryTab.svelte");
     const solveDetailsModal = source("../timer/HistoryTab/components/SolveDetailsModal.svelte");
 
-    expect(historyTab).toContain("function isMultiStepSession()");
+    expect(solveDetailsModal).toContain('session?.settings.sessionType === "multi-step"');
     expect(solveDetailsModal).toContain("{#if isMultiStepSession && solve?.steps?.length}");
-    expect(historyTab).toContain("return res.hasError ? defaultInner(s, true) : res.result");
-    expect(historyTab).toContain("res.hasError || res.finalAlpha === 0");
+    expect(solveDetailsModal).toContain(
+      "return res.hasError ? defaultInner(text, true) : res.result"
+    );
+    expect(solveDetailsModal).toContain("res.hasError || res.finalAlpha === 0");
   });
 });
