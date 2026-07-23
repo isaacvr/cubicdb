@@ -60,10 +60,11 @@ describe("modal behavior contracts", () => {
     expect(solveDetailsModal).toContain("closeOnClickOutside");
     expect(historyTab).toContain("<SolveDetailsModal");
     expect(historyTab).toContain("onclose={closeHandler}");
-    expect(historyTab).toContain("showDeleteSolve");
+    expect(historyTab).toContain("createConfirmationModalModel");
+    expect(historyTab).toContain("openConfirmationModal");
     expect(historyTab).toContain("confirmDeleteSolve");
     expect(historyTab).toContain("replaceParams($localLang.global.deleteWarning");
-    expect(historyTab).toContain("<ConfirmationModal");
+    expect(historyTab).toContain("<ConfirmationModal bind:modal={confirmationModal}");
   });
 
   it("closes outside-click modals by checking clicks against modal content, not dialog backdrop", () => {

@@ -24,6 +24,10 @@
   import { startViewTransition } from "@helpers/DOM";
   import { navigate } from "svelte-routing";
   import ConfirmationModal from "@components/ConfirmationModal.svelte";
+  import {
+    createConfirmationModalModel,
+    type ConfirmationModalModel,
+  } from "@components/ConfirmationModal.types";
   import AdvancedSearchModal from "./components/AdvancedSearchModal.svelte";
   import SolveDetailsModal from "./components/SolveDetailsModal.svelte";
   import SolveGrid from "./components/SolveGrid.svelte";
@@ -61,8 +65,7 @@
 
   let pg = $state(new Paginator([], 100));
   let show = $state(false);
-  let showDeleteSolve = $state(false);
-  let showDeleteAll = $state(false);
+  let confirmationModal = $state(createConfirmationModalModel());
   let sSolve: Solve = $state(createEmptySolve());
   let gSolve: Solve;
   let preview: string[] = $state([""]);
@@ -196,8 +199,26 @@
     sSolve.penalty = p;
   }
 
+  function openConfirmationModal(config: Omit<ConfirmationModalModel, "show">) {
+    confirmationModal.title = config.title;
+    confirmationModal.message = config.message;
+    confirmationModal.cancelLabel = config.cancelLabel;
+    confirmationModal.confirmLabel = config.confirmLabel;
+    confirmationModal.confirmType = config.confirmType;
+    confirmationModal.closeOnClickOutside = config.closeOnClickOutside;
+    confirmationModal.oncancel = config.oncancel;
+    confirmationModal.onconfirm = config.onconfirm;
+    confirmationModal.show = true;
+  }
+
   function deleteAll() {
-    showDeleteAll = true;
+    openConfirmationModal({
+      message: $localLang.TIMER.removeAllSolves,
+      cancelLabel: $localLang.global.cancel,
+      confirmLabel: $localLang.global.delete,
+      confirmType: "danger",
+      onconfirm: confirmDeleteAll,
+    });
   }
 
   function selectAll() {
@@ -218,13 +239,20 @@
 
   function requestDeleteSolve(s: Solve) {
     sSolve = s;
-    showDeleteSolve = true;
     showContextMenu = false;
+    openConfirmationModal({
+      title: $localLang.global.delete,
+      message: replaceParams($localLang.global.deleteWarning, [sTimer(s, true)]),
+      cancelLabel: $localLang.global.cancel,
+      confirmLabel: $localLang.global.delete,
+      confirmType: "danger",
+      onconfirm: confirmDeleteSolve,
+    });
   }
 
   function confirmDeleteSolve() {
     void solveFeature.remove([sSolve]);
-    showDeleteSolve = false;
+    confirmationModal.show = false;
     closeHandler();
   }
 
@@ -233,7 +261,7 @@
   }
 
   function confirmDeleteAll() {
-    showDeleteAll = false;
+    confirmationModal.show = false;
     void solveFeature.remove(solveFeature.solves);
   }
 
@@ -261,7 +289,7 @@
         e.ctrlKey && !show && !searchModal && (searchModal = true);
         break;
       case "Enter":
-        showDeleteAll && confirmDeleteAll();
+        confirmationModal.show && confirmationModal.onconfirm?.();
     }
   }
 
@@ -564,28 +592,13 @@
   penalties={PENALTIES}
   transitionNames={solveEditTransitionNames}
   onclose={closeHandler}
-  ondelete={() => (showDeleteSolve = true)}
+  ondelete={() => requestDeleteSolve(sSolve)}
   oncheckReconstruction={checkReconstruction}
   onparse={parse}
   onsetPenalty={setPenalty}
 />
 
-<ConfirmationModal
-  bind:show={showDeleteSolve}
-  title={$localLang.global.delete}
-  message={replaceParams($localLang.global.deleteWarning, [sTimer(sSolve, true)])}
-  cancelLabel={$localLang.global.cancel}
-  confirmLabel={$localLang.global.delete}
-  onconfirm={confirmDeleteSolve}
-/>
-
-<ConfirmationModal
-  bind:show={showDeleteAll}
-  message={$localLang.TIMER.removeAllSolves}
-  cancelLabel={$localLang.global.cancel}
-  confirmLabel={$localLang.global.delete}
-  onconfirm={confirmDeleteAll}
-/>
+<ConfirmationModal bind:modal={confirmationModal} />
 
 <AdvancedSearchModal
   bind:show={searchModal}

@@ -1,41 +1,24 @@
 <script lang="ts">
   import Button from "$lib/cubicdbKit/Button.svelte";
   import Modal from "@components/Modal.svelte";
+  import type { ConfirmationModalModel } from "./ConfirmationModal.types";
 
   interface ConfirmationModalProps {
-    show?: boolean;
-    title?: string;
-    message: string;
-    cancelLabel: string;
-    confirmLabel: string;
-    confirmType?: "danger" | "primary" | "secondary" | "success" | "warning";
-    closeOnClickOutside?: boolean;
-    oncancel?: () => void;
-    onconfirm?: () => void;
+    modal: ConfirmationModalModel;
   }
 
-  let {
-    show = $bindable(false),
-    title = "",
-    message,
-    cancelLabel,
-    confirmLabel,
-    confirmType = "danger",
-    closeOnClickOutside = true,
-    oncancel = () => {},
-    onconfirm = () => {},
-  }: ConfirmationModalProps = $props();
+  let { modal = $bindable() }: ConfirmationModalProps = $props();
 
   let confirmed = false;
 
   function cancel() {
-    show = false;
+    modal.show = false;
   }
 
   function confirm() {
     confirmed = true;
-    show = false;
-    onconfirm();
+    modal.show = false;
+    modal.onconfirm?.();
   }
 
   function handleClose() {
@@ -44,26 +27,26 @@
       return;
     }
 
-    oncancel();
+    modal.oncancel?.();
   }
 </script>
 
 <Modal
   class="shaded-card"
-  bind:show
-  {title}
+  bind:show={modal.show}
+  title={modal.title || ""}
   showCloseButton
-  {closeOnClickOutside}
+  closeOnClickOutside={modal.closeOnClickOutside ?? true}
   onclose={handleClose}
 >
-  <h1 class="mb-4 text-lg">{message}</h1>
+  <h1 class="mb-4 text-lg">{modal.message}</h1>
   <div class="flex justify-center gap-2">
-    <Button type="secondary" aria-label={cancelLabel} onclick={cancel}>
-      {cancelLabel}
+    <Button type="secondary" aria-label={modal.cancelLabel} onclick={cancel}>
+      {modal.cancelLabel}
     </Button>
 
-    <Button type={confirmType} aria-label={confirmLabel} onclick={confirm}>
-      {confirmLabel}
+    <Button type={modal.confirmType || "danger"} aria-label={modal.confirmLabel} onclick={confirm}>
+      {modal.confirmLabel}
     </Button>
   </div>
 </Modal>
